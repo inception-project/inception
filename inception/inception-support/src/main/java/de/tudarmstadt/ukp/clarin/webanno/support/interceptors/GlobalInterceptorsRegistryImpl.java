@@ -62,10 +62,12 @@ public class GlobalInterceptorsRegistryImpl
             AnnotationAwareOrderComparator.sort(fsp);
 
             for (GlobalInterceptor fs : fsp) {
-                log.info("Found global interceptor: {}",
+                log.debug("Found global interceptor: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
+
+        log.info("Found [{}] global interceptors", fsp.size());
 
         interceptors = Collections.unmodifiableList(fsp);
     }

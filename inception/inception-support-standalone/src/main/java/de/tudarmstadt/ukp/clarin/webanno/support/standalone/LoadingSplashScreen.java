@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
+import static java.awt.BorderLayout.CENTER;
+import static java.awt.BorderLayout.SOUTH;
+import static java.awt.Color.WHITE;
+import static javax.swing.BorderFactory.createEmptyBorder;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.awt.AWTException;
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
 import java.awt.Point;
@@ -36,11 +39,23 @@ import java.util.Optional;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 
 import org.slf4j.Logger;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceSchemaCreatedEvent;
+import org.springframework.boot.availability.AvailabilityChangeEvent;
+import org.springframework.boot.context.event.ApplicationContextInitializedEvent;
+import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
+import org.springframework.boot.context.event.ApplicationPreparedEvent;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.boot.context.event.ApplicationStartingEvent;
+import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.context.ApplicationEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
+
+import de.tudarmstadt.ukp.inception.support.spring.StartupProgressInfoEvent;
 
 public class LoadingSplashScreen
 {
@@ -81,10 +96,13 @@ public class LoadingSplashScreen
             applicationName = aApplicationName;
 
             JLabel l = new JLabel(new ImageIcon(aSplashScreenImageUrl));
-            getContentPane().add(l, BorderLayout.CENTER);
+            getContentPane().add(l, CENTER);
 
-            info = new JLabel(applicationName + " is loading...");
-            getContentPane().add(info, BorderLayout.SOUTH);
+            info = new JLabel(applicationName + " is loading...", SwingConstants.CENTER);
+            info.setBackground(WHITE);
+            info.setOpaque(true);
+            info.setBorder(createEmptyBorder(5, 5, 5, 5));
+            getContentPane().add(info, SOUTH);
 
             ImageIcon img = new ImageIcon(aIconUrl);
             setIconImage(img.getImage());
@@ -166,14 +184,61 @@ public class LoadingSplashScreen
                 return;
             }
 
+            if (aEvent instanceof AvailabilityChangeEvent) {
+                // We can ignore this one...
+                return;
+            }
+
             if (!isDisposed()) {
-                setInfo(applicationName + " is loading... - " + aEvent.getClass().getSimpleName());
+                setInfo(applicationName + " is loading... - " + mapEvent(aEvent));
             }
 
             if (aEvent instanceof ApplicationFailedEvent) {
                 new StartupErrorHandler(applicationName)
                         .handleError((ApplicationFailedEvent) aEvent);
             }
+        }
+
+        public String mapEvent(ApplicationEvent aEvent)
+        {
+            if (aEvent instanceof ApplicationStartingEvent) {
+                return "Application starting";
+            }
+
+            if (aEvent instanceof ApplicationEnvironmentPreparedEvent) {
+                return "Application environment prepared";
+            }
+
+            if (aEvent instanceof ApplicationContextInitializedEvent) {
+                return "Application context initialized";
+            }
+
+            if (aEvent instanceof ApplicationPreparedEvent) {
+                return "Application prepared";
+            }
+
+            if (aEvent instanceof DataSourceSchemaCreatedEvent) {
+                return "Data source schema created";
+            }
+
+            if (aEvent instanceof ServletWebServerInitializedEvent) {
+                return "Servlet web server initialized";
+            }
+
+            if (aEvent instanceof ContextRefreshedEvent) {
+                return "Context refreshed";
+            }
+
+            if (aEvent instanceof ApplicationStartedEvent) {
+                return "Application started";
+            }
+
+            if (aEvent instanceof StartupProgressInfoEvent) {
+                return ((StartupProgressInfoEvent) aEvent).getMessage();
+            }
+
+            LOG.debug("Unmapped event: " + aEvent);
+            return aEvent.getClass().getSimpleName();
         }
     }
 }

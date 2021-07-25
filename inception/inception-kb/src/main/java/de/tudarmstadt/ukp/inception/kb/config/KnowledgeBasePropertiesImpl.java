@@ -37,6 +37,7 @@ public class KnowledgeBasePropertiesImpl
     private int defaultMaxResults = 1_000;
     private int hardMaxResults = 10_000;
     private long cacheSize = 100_000;
+    private boolean removeOrphansOnStart = false;
 
     @DurationUnit(ChronoUnit.MINUTES)
     private Duration cacheExpireDelay = Duration.ofMinutes(15);
@@ -97,5 +98,16 @@ public class KnowledgeBasePropertiesImpl
     public void setCacheRefreshDelay(Duration aCacheRefreshDelay)
     {
         cacheRefreshDelay = aCacheRefreshDelay;
+    }
+
+    @Override
+    public boolean isRemoveOrphansOnStart()
+    {
+        return removeOrphansOnStart;
+    }
+
+    public void setRemoveOrphansOnStart(boolean aRemoveOrphansOnStart)
+    {
+        removeOrphansOnStart = aRemoveOrphansOnStart;
     }
 }

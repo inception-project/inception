@@ -289,12 +289,6 @@ export default class Highlighter {
             getAnnotationsRecursive(parent, annotations) : annotations;
         },
 
-        sortByQuoteLength = function(annotations) {
-          return annotations.sort(function(a, b) {
-            return a.quote.length - b.quote.length;
-          });
-        },
-
         sortByRangeLength = function(annotations) {
           return annotations.sort(function(a, b) {
             return (a.end - a.start) - (b.end - b.start);

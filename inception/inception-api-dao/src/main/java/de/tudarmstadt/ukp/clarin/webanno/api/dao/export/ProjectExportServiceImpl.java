@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskStat
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.RUNNING;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.File;
@@ -29,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -139,7 +139,7 @@ public class ProjectExportServiceImpl
             Set<Class<? extends ProjectExporter>> exporterClasses = new HashSet<>();
             for (ProjectExporter init : exps) {
                 if (exporterClasses.add(init.getClass())) {
-                    log.info("Found project exporter: {}",
+                    log.debug("Found project exporter: {}",
                             ClassUtils.getAbbreviatedName(init.getClass(), 20));
                 }
                 else {
@@ -150,7 +150,9 @@ public class ProjectExportServiceImpl
             }
         }
 
-        exporters = Collections.unmodifiableList(exps);
+        log.info("Found [{}] project exporters", exps.size());
+
+        exporters = unmodifiableList(exps);
     }
 
     @Override

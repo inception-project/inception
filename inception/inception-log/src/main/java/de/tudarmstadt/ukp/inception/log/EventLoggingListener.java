@@ -18,33 +18,27 @@
 package de.tudarmstadt.ukp.inception.log;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.collections4.map.HashedMap;
-import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
-import de.tudarmstadt.ukp.inception.log.adapter.GenericEventAdapter;
+import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingProperties;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.support.spring.StartupProgressInfoEvent;
 
 /**
  * <p>
@@ -57,29 +51,21 @@ public class EventLoggingListener
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<EventLoggingAdapter<?>> adapterProxy;
-    private List<EventLoggingAdapter<?>> adapters;
-
-    private final Map<Class<?>, EventLoggingAdapter<?>> adapterCache;
-
     private final EventRepository repo;
-
     private final ScheduledExecutorService scheduler;
-
     private final Deque<LoggedEvent> queue;
-
     private final EventLoggingProperties properties;
+    private final EventLoggingAdapterRegistry adapterRegistry;
 
     private volatile boolean flushing = false;
 
-    public EventLoggingListener(@Autowired EventRepository aRepo,
-            @Lazy @Autowired(required = false) List<EventLoggingAdapter<?>> aAdapters,
-            EventLoggingProperties aProperties)
+    @Autowired
+    public EventLoggingListener(EventRepository aRepo, EventLoggingProperties aProperties,
+            EventLoggingAdapterRegistry aAdapterRegistry)
     {
         repo = aRepo;
-        adapterProxy = aAdapters;
-        adapterCache = new HashedMap<>();
         properties = aProperties;
+        adapterRegistry = aAdapterRegistry;
 
         queue = new ConcurrentLinkedDeque<>();
 
@@ -88,57 +74,14 @@ public class EventLoggingListener
     }
 
     @EventListener
-    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
-    {
-        init();
-    }
-
-    /* package private */ void init()
-    {
-        List<EventLoggingAdapter<?>> exts = new ArrayList<>();
-
-        if (adapterProxy != null) {
-            exts.addAll(adapterProxy);
-            AnnotationAwareOrderComparator.sort(exts);
-
-            for (EventLoggingAdapter<?> fs : exts) {
-                log.info("Found event logging adapter: {}",
-                        ClassUtils.getAbbreviatedName(fs.getClass(), 20));
-            }
-        }
-
-        adapters = Collections.unmodifiableList(exts);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public <T> Optional<EventLoggingAdapter<T>> getAdapter(T aEvent)
-    {
-        // Try to obtain the adapter from the cache
-        EventLoggingAdapter<T> adapter = (EventLoggingAdapter) adapterCache.get(aEvent.getClass());
-
-        // This happens for events generated during applications startup.
-        if (adapter == null && adapters != null) {
-            for (EventLoggingAdapter a : adapters) {
-                if (a.accepts(aEvent)) {
-                    adapter = a;
-                    adapterCache.put(aEvent.getClass(), adapter);
-                    break;
-                }
-            }
-        }
-
-        // If no adapter could be found, check if the generic adapter applies
-        if (adapter == null && GenericEventAdapter.INSTANCE.accepts(aEvent)) {
-            adapter = (EventLoggingAdapter<T>) GenericEventAdapter.INSTANCE;
-        }
-
-        return Optional.ofNullable(adapter);
-    }
-
-    @EventListener
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
-        Optional<EventLoggingAdapter<ApplicationEvent>> adapter = getAdapter(aEvent);
+        if (aEvent instanceof StartupProgressInfoEvent) {
+            return;
+        }
+
+        Optional<EventLoggingAdapter<ApplicationEvent>> adapter = adapterRegistry
+                .getAdapter(aEvent);
 
         if (adapter.isPresent()) {
             EventLoggingAdapter<ApplicationEvent> a = adapter.get();

@@ -28,6 +28,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,10 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
+import org.apache.wicket.ajax.markup.html.navigation.paging.AjaxPagingNavigator;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -65,6 +69,9 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.AbstractResourceStream;
+import org.apache.wicket.util.resource.IResourceStream;
+import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -93,6 +100,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
@@ -103,6 +111,7 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
+import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -144,6 +153,7 @@ public class SearchAnnotationSidebar
     private final Form<CreateAnnotationsOptions> annotationOptionsForm;
     private final LambdaAjaxLink createOptionsLink;
     private final LambdaAjaxButton<Void> deleteButton;
+
     private final Form<DeleteAnnotationsOptions> deleteOptionsForm;
     private final LambdaAjaxButton<Void> annotateButton;
     private final LambdaAjaxLink deleteOptionsLink;
@@ -170,6 +180,7 @@ public class SearchAnnotationSidebar
                 this::actionSearch);
         searchForm.add(searchButton);
         searchForm.setDefaultButton(searchButton);
+
         mainContainer.add(searchForm);
 
         WebMarkupContainer searchOptionsPanel = new WebMarkupContainer("searchOptionsPanel");
@@ -179,6 +190,7 @@ public class SearchAnnotationSidebar
         groupingFeature = new BootstrapSelect<>("groupingFeature", emptyList(),
                 new ChoiceRenderer<>("uiName"));
         groupingFeature.setNullValid(true);
+
         searchOptionsPanel.add(groupingFeature);
         searchOptionsPanel.add(createResultsPerPageSelection("itemsPerPage"));
         searchOptionsPanel.add(visibleWhen(() -> searchForm.getModelObject().isVisible()));
@@ -222,7 +234,7 @@ public class SearchAnnotationSidebar
         searchOptions.getObject().setItemsPerPage(searchProperties.getPageSizes()[0]);
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
         resultsGroupContainer.add(searchResultGroups);
-        PagingNavigator pagingNavigator = new PagingNavigator("pagingNavigator",
+        PagingNavigator pagingNavigator = new AjaxPagingNavigator("pagingNavigator",
                 searchResultGroups);
         pagingNavigator.add(visibleWhen(() -> groupedSearchResults.getObject() != null
                 && !groupedSearchResults.getObject().isEmpty()));
@@ -283,6 +295,12 @@ public class SearchAnnotationSidebar
                 this::actionClearResults);
         annotationForm.add(clearButton);
 
+        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults.csv",
+                this::exportSearchResults);
+        exportButton.add(visibleWhen(() -> groupedSearchResults.getObject() != null
+                && !groupedSearchResults.getObject().isEmpty()));
+        annotationForm.add(exportButton);
+
         mainContainer.add(annotationForm);
     }
 
@@ -293,6 +311,15 @@ public class SearchAnnotationSidebar
 
         setChangeAnnotationsElementsEnabled(
                 !getModelObject().isUserViewingOthersWork(userRepository.getCurrentUsername()));
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        // CSS
+        aResponse.render(CssHeaderItem.forReference(SearchAnnotationSidebarCssReference.get()));
     }
 
     private void setChangeAnnotationsElementsEnabled(boolean aEnabled)
@@ -409,6 +436,34 @@ public class SearchAnnotationSidebar
         aTarget.addChildren(getPage(), IFeedback.class);
     }
 
+    private IResourceStream exportSearchResults()
+    {
+        return new AbstractResourceStream()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public InputStream getInputStream() throws ResourceStreamNotFoundException
+            {
+                SearchResultsExporter exporter = new SearchResultsExporter();
+                try {
+                    return exporter.generateCsv(resultsProvider.getAllResults());
+                }
+                catch (Exception e) {
+                    LOG.error("Unable to generate search results csv", e);
+                    error("Error: " + e.getMessage());
+                    throw new ResourceStreamNotFoundException(e);
+                }
+            }
+
+            @Override
+            public void close() throws IOException
+            {
+                // Nothing to do
+            }
+        };
+    }
+
     private void actionClearResults(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         targetQuery.setObject("");
@@ -427,8 +482,11 @@ public class SearchAnnotationSidebar
         AnnotatorState state = getModelObject();
         Project project = state.getProject();
 
-        if (searchService.isIndexInProgress(state.getProject())) {
-            info("Indexing in progress... cannot perform query at this time");
+        Optional<Progress> maybeProgress = searchService.getIndexProgress(project);
+        if (maybeProgress.isPresent()) {
+            Progress p = maybeProgress.get();
+            info("Indexing in progress... cannot perform query at this time. " + p.percent() + "% ("
+                    + p.getDone() + "/" + p.getTotal() + ")");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
@@ -592,9 +650,22 @@ public class SearchAnnotationSidebar
             return;
         }
 
+        boolean match = false;
+
         // create a new annotation if not already there or if stacking is enabled and the
         // new annotation has different features than the existing one
-        if (annoFS == null || (!overrideExisting && !featureValuesMatchCurrentState(annoFS))) {
+        for (AnnotationFS eannoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd())) {
+            if (overrideExisting) {
+                setFeatureValues(aDocument, aCas, aAdapter, state, eannoFS);
+                aBulkResult.updated++;
+            }
+            else if (featureValuesMatchCurrentState(eannoFS)) {
+                match = true;
+            }
+        }
+
+        if (annoFS == null || (!match && !overrideExisting)) {
             try {
                 annoFS = aAdapter.add(aDocument, currentUser.getUsername(), aCas,
                         aSearchResult.getOffsetStart(), aSearchResult.getOffsetEnd());
@@ -604,12 +675,15 @@ public class SearchAnnotationSidebar
                 aBulkResult.conflict++;
                 return;
             }
-        }
-        else {
-            aBulkResult.updated++;
-        }
 
-        // set values for all features according to current state
+            // set values for all features according to current state
+            setFeatureValues(aDocument, aCas, aAdapter, state, annoFS);
+        }
+    }
+
+    private void setFeatureValues(SourceDocument aDocument, CAS aCas, SpanAdapter aAdapter,
+            AnnotatorState state, AnnotationFS annoFS)
+    {
         int addr = getAddr(annoFS);
         List<FeatureState> featureStates = state.getFeatureStates();
         for (FeatureState featureState : featureStates) {
@@ -626,16 +700,15 @@ public class SearchAnnotationSidebar
             SpanAdapter aAdapter, SearchResult aSearchResult, BulkOperationResult aBulkResult)
     {
         Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectAt(aCas, type, aSearchResult.getOffsetStart(),
-                aSearchResult.getOffsetEnd()).stream().findFirst().orElse(null);
 
-        if (annoFS == null || !featureValuesMatchCurrentState(annoFS)
-                && deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
-            return;
+        for (AnnotationFS annoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd())) {
+            if ((annoFS != null && featureValuesMatchCurrentState(annoFS))
+                    || !deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
+                aAdapter.delete(aDocument, currentUser.getUsername(), aCas, new VID(annoFS));
+                aBulkResult.deleted++;
+            }
         }
-
-        aAdapter.delete(aDocument, currentUser.getUsername(), aCas, new VID(annoFS));
-        aBulkResult.deleted++;
     }
 
     private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, CAS aCas)

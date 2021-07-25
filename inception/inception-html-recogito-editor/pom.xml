@@ -41,11 +41,16 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
+
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-html-editor</artifactId>
     </dependency>
     
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
@@ -201,6 +206,7 @@
               <configuration>
                 <excludes combine.children="append">
                   <exclude>src/main/js/recogito-js/**/*</exclude>
+                  <exclude>src/main/js/recogito-js-upstream/**/*</exclude>
                   <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>

@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,12 +70,14 @@ public class LayerBehaviorRegistryImpl
             AnnotationAwareOrderComparator.sort(lsp);
 
             for (LayerBehavior fs : lsp) {
-                log.info("Found layer behavior: {}",
+                log.debug("Found layer behavior: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        layerBehaviors = Collections.unmodifiableList(lsp);
+        log.info("Found [{}] layer behaviors", lsp.size());
+
+        layerBehaviors = unmodifiableList(lsp);
     }
 
     @Override

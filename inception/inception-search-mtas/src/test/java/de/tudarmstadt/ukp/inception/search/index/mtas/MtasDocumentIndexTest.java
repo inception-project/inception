@@ -168,9 +168,11 @@ public class MtasDocumentIndexTest
         // Avoid the compiler complaining about project not being an effectively final variable
         log.info("Waiting for uploaded documents to be indexed...");
         Project p = project;
-        await("Waiting for indexing process to complete").atMost(60, SECONDS)
-                .pollInterval(5, SECONDS)
-                .until(() -> searchService.isIndexValid(p) && !searchService.isIndexInProgress(p));
+        await("Waiting for indexing process to complete") //
+                .atMost(60, SECONDS) //
+                .pollInterval(5, SECONDS) //
+                .until(() -> searchService.isIndexValid(p)
+                        && searchService.getIndexProgress(p).isEmpty());
         log.info("Indexing complete!");
     }
 
@@ -220,9 +222,11 @@ public class MtasDocumentIndexTest
         }
 
         log.info("Writing for annotated document to be indexed");
-        await("Waiting for indexing process to complete").atMost(60, SECONDS)
-                .pollInterval(5, SECONDS).until(() -> searchService.isIndexValid(aProject)
-                        && !searchService.isIndexInProgress(aProject));
+        await("Waiting for indexing process to complete") //
+                .atMost(60, SECONDS) //
+                .pollInterval(5, SECONDS) //
+                .until(() -> searchService.isIndexValid(aProject)
+                        && searchService.getIndexProgress(aProject).isEmpty());
         log.info("Indexing complete!");
     }
 

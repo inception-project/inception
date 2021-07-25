@@ -23,6 +23,7 @@ import org.apache.wicket.feedback.FeedbackMessage;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
 
@@ -59,6 +60,8 @@ public class BootstrapFeedbackPanel
 
         aResponse.render(
                 JavaScriptHeaderItem.forReference(BootstrapFeedbackPanelJavascriptReference.get()));
+
+        aResponse.render(OnDomReadyHeaderItem.forScript("bootstrapFeedbackPanelFade();"));
     }
 
     @Override

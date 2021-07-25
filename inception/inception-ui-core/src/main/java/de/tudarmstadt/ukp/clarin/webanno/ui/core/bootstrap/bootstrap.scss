@@ -37,3 +37,11 @@
 @import "package!shim-wicketstuff";
 @import "package!shim-bootstrapselect";
 @import "package!shim-jquery";
+
+.w-min-220px {
+  min-width: 220px;
+}
+
+.w-min-440px {
+  min-width: 440px;
+}

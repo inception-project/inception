@@ -70,9 +70,9 @@ public class TutorialFooterPanel
                 ".enjoyhint_next_btn{\n" + //
                         "  margin-top: 8px;\n" + //
                         "}\n" + //
-                ".enjoyhint{\n" + //
+                        ".enjoyhint{\n" + //
                         "  z-index: 10000;\n" + //
-                "}", //
+                        "}", //
                 "enjoyhint"));
         // check if the tutorial will need to be run
         aResponse.render(OnLoadHeaderItem.forScript(

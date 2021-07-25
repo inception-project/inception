@@ -75,7 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreferen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
@@ -126,33 +125,6 @@ public class AnnotationPage
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;
     private SidebarPanel leftSidebar;
-
-    // public AnnotationPage()
-    // {
-    // super();
-    // LOG.debug("Setting up annotation page without parameters");
-    //
-    // setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
-    // // Ensure that a user is set
-    // getModelObject().setUser(userRepository.getCurrentUser());
-    //
-    // Map<String, StringValue> fragmentParameters = Session.get()
-    // .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
-    // StringValue focus = StringValue.valueOf(0);
-    // if (fragmentParameters != null) {
-    // // Clear the URL fragment parameters - we only use them once!
-    // Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-    //
-    // StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
-    // StringValue projectName = fragmentParameters.get(PAGE_PARAM_PROJECT_NAME);
-    // StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-    // StringValue name = fragmentParameters.get(PAGE_PARAM_DOCUMENT_NAME);
-    // focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-    //
-    // handleParameters(project, projectName, document, name, focus, false);
-    // }
-    // commonInit(focus);
-    // }
 
     public AnnotationPage(final PageParameters aPageParameters)
     {
@@ -456,7 +428,8 @@ public class AnnotationPage
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
             createAnnotationEditor(aTarget);
-            // update paging, only do it during document load so we load the cas after it has been upgraded
+            // update paging, only do it during document load so we load the cas after it has been
+            // upgraded
             try {
                 state.getPagingStrategy().recalculatePage(state, getEditorCas());
             }
@@ -657,7 +630,7 @@ public class AnnotationPage
 
         if (state.isUserViewingOthersWork(userRepository.getCurrentUsername())
                 || state.getUser().getUsername().equals(CURATION_USER)) {
-            PreferencesUtil.loadPreferences(userPreferenceService, annotationService, state,
+            userPreferenceService.loadPreferences(state,
                     userRepository.getCurrentUser().getUsername());
         }
         else {
@@ -671,9 +644,8 @@ public class AnnotationPage
     {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
 
-        // Remove from the list source documents that are in IGNORE state OR
-        // that do not have at least one annotation document marked as
-        // finished for curation dialog
+        // FIXME: This should be changed to call getListOfDocs or getListOfDocs should base on
+        // this call - in any case, the selection/filtering code should only be there once
         Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(aProject,
                 aUser);
 

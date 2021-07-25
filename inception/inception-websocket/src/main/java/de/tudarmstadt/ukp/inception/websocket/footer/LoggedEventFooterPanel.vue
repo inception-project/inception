@@ -29,7 +29,7 @@
         <div class="scrolling card-body small p-0">
         <ul class="list-group list-group-flush">
           <li v-show="!events.length" class="list-group-item p-1">No recent events</li>
-          <li v-for="event in events" class="list-group-item p-1">{{formatTime(event.timestamp)}}: {{event.eventMsg}}</li>
+          <li v-for="event in events" class="list-group-item p-1">{{formatTime(event.timestamp)}}: {{event.eventType}}</li>
         </ul>
         </div>
       </div>
@@ -50,7 +50,7 @@ module.exports = {
       socket: null,
       stompClient: null,
       connected: false,
-      feedbackPanel: null
+      feedbackPanelExtension: new FeedbackPanelExtension(this.feedbackPanelId)
     }
   },
   methods: {
@@ -74,7 +74,8 @@ module.exports = {
             var msgBody = JSON.parse(msg.body);
             that.events.unshift(msgBody);
             that.events.pop();
-            that.addEventToFeedbackPanel(msgBody);
+            var msg = that.formatTime(msgBody.timestamp) + ': ' + msgBody.eventType;
+            that.feedbackPanelExtension.addInfoToFeedbackPanel(msg);
           });
         },
         function(error){
@@ -90,28 +91,10 @@ module.exports = {
     },
     formatTime(timestamp) {
       return dayjs(timestamp).format("LLLL")
-    },
-    addEventToFeedbackPanel(event) {
-      // create event item with new event content
-      var eventItem = document.createElement('li');
-      eventItem.classList.add('alert', 'alert-info', 'alert-dismissable');
-      var eventSpan = document.createElement('span');
-      eventSpan.textContent = this.formatTime(event.timestamp) + ': ' + event.eventMsg;
-      eventItem.appendChild(eventSpan);
-      // get or create list in feedbackPanel and add new message item to it
-      var feedbackMsgList = this.feedbackPanel.querySelector('ul');
-      if (feedbackMsgList == null){
-        feedbackMsgList = document.createElement('ul');
-        feedbackMsgList.className = 'feedbackPanel';
-        this.feedbackPanel.appendChild(feedbackMsgList);
-      }
-      feedbackMsgList.appendChild(eventItem);
-      bootstrapFeedbackPanelFade();
     }
   },
   mounted(){
     this.connect();
-    this.feedbackPanel = document.getElementById(this.feedbackPanelId);
   },
   beforeUnmount(){
     this.disconnect();

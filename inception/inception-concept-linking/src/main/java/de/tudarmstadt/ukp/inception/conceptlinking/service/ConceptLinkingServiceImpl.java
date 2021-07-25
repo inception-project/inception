@@ -125,10 +125,12 @@ public class ConceptLinkingServiceImpl
             AnnotationAwareOrderComparator.sort(generators);
 
             for (EntityRankingFeatureGenerator generator : generators) {
-                log.info("Found entity ranking feature generator: {}",
+                log.debug("Found entity ranking feature generator: {}",
                         ClassUtils.getAbbreviatedName(generator.getClass(), 20));
             }
         }
+
+        log.info("Found [{}] entity ranking feature generators", generators.size());
 
         featureGenerators = unmodifiableList(generators);
     }

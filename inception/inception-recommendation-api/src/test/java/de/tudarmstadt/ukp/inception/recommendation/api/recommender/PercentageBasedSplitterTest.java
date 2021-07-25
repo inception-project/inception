@@ -62,7 +62,6 @@ public class PercentageBasedSplitterTest
         assertThat(testSet).as("Test set has correct size").hasSize(aTestSetSize);
     }
 
-
     public static Collection<Object[]> data()
     {
         // k, trainingSetSize, testSetSize
@@ -77,7 +76,6 @@ public class PercentageBasedSplitterTest
                 { 0.8, 8, 2 }, //
                 { 0.9, 8, 2 } });
     }
-
 
     @Test()
     public void thatPercentageHasToBePercentage()

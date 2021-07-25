@@ -86,8 +86,8 @@ public class LearningRecordServiceImplIntegrationTest
                 feature.getName(), sourceDoc.getName(), 7, 14, "aCoveredText", "testLabel",
                 "testUiLabel", 0.42, "Test confidence");
 
-        sut.logSpanRecord(sourceDoc, USER_NAME, suggestion, layer, feature, LearningRecordType.ACCEPTED,
-                MAIN_EDITOR);
+        sut.logSpanRecord(sourceDoc, USER_NAME, suggestion, layer, feature,
+                LearningRecordType.ACCEPTED, MAIN_EDITOR);
 
         List<LearningRecord> records = sut.listRecords(USER_NAME, layer);
         assertThat(records).hasSize(1);
@@ -120,8 +120,8 @@ public class LearningRecordServiceImplIntegrationTest
                 layer.getId(), feature.getName(), sourceDoc.getName(), 7, 14, 21, 28, "testLabel",
                 "testUiLabel", 0.42, "Test confidence");
 
-        sut.logRelationRecord(sourceDoc, USER_NAME, suggestion, layer, feature, LearningRecordType.REJECTED,
-                DETAIL_EDITOR);
+        sut.logRelationRecord(sourceDoc, USER_NAME, suggestion, layer, feature,
+                LearningRecordType.REJECTED, DETAIL_EDITOR);
 
         List<LearningRecord> records = sut.listRecords(USER_NAME, layer);
         assertThat(records).hasSize(1);

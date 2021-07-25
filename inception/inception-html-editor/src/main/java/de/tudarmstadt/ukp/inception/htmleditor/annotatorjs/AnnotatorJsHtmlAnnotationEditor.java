@@ -92,7 +92,8 @@ public class AnnotatorJsHtmlAnnotationEditor
                 JavaScriptHeaderItem.forReference(AnnotatorJsJavascriptResourceReference.get()));
 
         if (getModelObject().getDocument() != null) {
-            aResponse.render(OnDomReadyHeaderItem.forScript(initAnnotatorJs(vis, storeAdapter)));
+            aResponse.render(OnDomReadyHeaderItem
+                    .forScript(WicketUtil.wrapInTryCatch(initAnnotatorJs(vis, storeAdapter))));
         }
     }
 
@@ -100,8 +101,8 @@ public class AnnotatorJsHtmlAnnotationEditor
     {
         String callbackUrl = aAdapter.getCallbackUrl().toString();
         StringBuilder script = new StringBuilder();
-        script.append(
-                "var ann = $('#" + aContainer.getMarkupId() + "').annotator({readOnly: false});");
+        script.append("var $annVis = $('#" + aContainer.getMarkupId() + "');");
+        script.append("var ann = $annVis.annotator({readOnly: false});");
         script.append("ann.annotator('addPlugin', 'Store', {");
         script.append("    prefix: null,");
         script.append("    emulateJSON: true,");
@@ -115,17 +116,22 @@ public class AnnotatorJsHtmlAnnotationEditor
         script.append("        select:  '" + callbackUrl + "'");
         script.append("    }");
         script.append("});");
-        return WicketUtil.wrapInTryCatch(script.toString());
+        return script.toString();
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        // REC: I didn't find a good way of clearing the annotations, so we do it the hard way:
-        // - re-render the entire document
-        // - re-add all the annotations
-        aTarget.add(vis);
-        aTarget.appendJavaScript(initAnnotatorJs(vis, storeAdapter));
+        // REC: I didn't find a good way of clearing the annotations, so we do it the hard way
+        // - destroy the annotator
+        // - re-create the annotator
+        StringBuilder script = new StringBuilder();
+        script.append("var $annVis = Wicket.$('" + vis.getMarkupId() + "');");
+        script.append("var ann = $.data($annVis, 'annotator');");
+        script.append("ann.destroy();");
+        script.append("$.removeData(this, 'annotator');");
+        script.append(initAnnotatorJs(vis, storeAdapter));
+        aTarget.appendJavaScript(WicketUtil.wrapInTryCatch(script.toString()));
     }
 
     private class StoreAdapter

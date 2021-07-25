@@ -31,6 +31,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
 import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
@@ -46,7 +47,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -147,38 +147,15 @@ public class DocumentImportExportServiceImpl
             AnnotationAwareOrderComparator.sort(forms);
             forms.forEach(format -> {
                 formatMap.put(format.getId(), format);
-                log.info("Found format: {} ({}, {})",
+                log.debug("Found format: {} ({}, {})",
                         ClassUtils.getAbbreviatedName(format.getClass(), 20), format.getId(),
                         readWriteMsg(format));
             });
         }
 
-        // Parse "formats.properties" information into format supports
-        // if (readWriteFileFormats != null) {
-        // for (String key : readWriteFileFormats.stringPropertyNames()) {
-        // if (key.endsWith(".label")) {
-        // String formatId = key.substring(0, key.lastIndexOf(".label"));
-        // String formatName = readWriteFileFormats.getProperty(key);
-        // String readerClass = readWriteFileFormats.getProperty(formatId + ".reader");
-        // String writerClass = readWriteFileFormats.getProperty(formatId + ".writer");
-        //
-        // if (formatMap.containsKey(formatId)) {
-        // log.info("Found format (format.properties): {} - format already defined by "
-        // + "a built-in format support, ignoring entry from "
-        // + "formats.properties file", formatId);
-        // }
-        // else {
-        // FormatSupport format = new FormatSupportDescription(formatId, formatName,
-        // readerClass, writerClass);
-        // formatMap.put(format.getId(), format);
-        // log.info("Found format (format.properties): {} ({})", formatId,
-        // readWriteMsg(format));
-        // }
-        // }
-        // }
-        // }
+        log.info("Found [{}] format supports", formatMap.size());
 
-        formats = Collections.unmodifiableMap(formatMap);
+        formats = unmodifiableMap(formatMap);
     }
 
     private String readWriteMsg(FormatSupport aFormat)

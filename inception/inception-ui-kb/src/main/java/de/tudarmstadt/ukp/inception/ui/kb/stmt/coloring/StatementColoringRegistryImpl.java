@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.ClassUtils;
@@ -69,12 +70,14 @@ public class StatementColoringRegistryImpl
             AnnotationAwareOrderComparator.sort(fsp);
 
             for (StatementColoringStrategy fs : fsp) {
-                log.info("Found value type support: {}",
+                log.debug("Found statement coloring strategies: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
         }
 
-        statementColoringStrategies = Collections.unmodifiableList(fsp);
+        log.info("Found [{}] statement coloring strategies", fsp.size());
+
+        statementColoringStrategies = unmodifiableList(fsp);
     }
 
     @Override

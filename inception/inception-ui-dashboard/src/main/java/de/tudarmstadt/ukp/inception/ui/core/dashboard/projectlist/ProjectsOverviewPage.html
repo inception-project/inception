@@ -26,7 +26,7 @@
             <span class="btn-group" role="group">
               <button wicket:id="newProject" class="btn btn-primary"><wicket:message key="newProject"/></button> 
               <button class="btn btn-primary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
-              <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 220px;">
+              <div class="dropdown-menu shadow-lg pt-0 pb-0 w-min-220px" role="menu">
                 <div class="dropdown-header">Instantly create a project using one of these templates.</div>
                 <div wicket:id="templatesContainer">
                   <div wicket:id="templates" class="flex-content flex-v-container">
@@ -77,7 +77,7 @@
             <div class="flex-h-container flex-gutter flex-only-internal-gutter">
               <div class="flex-content">
                 <div class="float-right">
-                  <span wicket:id="role" class="badge badge-secondary" style="margin-left: 5px;"><wicket:container wicket:id="label"/></span>
+                  <span wicket:id="role" class="badge badge-secondary ml-1"><wicket:container wicket:id="label"/></span>
                 </div>
                   <a wicket:id="projectLink"><wicket:container wicket:id="name"/></a>
                 <div class="list-group-item-text">
