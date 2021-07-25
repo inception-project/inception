@@ -15,36 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api.model;
+package de.tudarmstadt.ukp.inception.search.model;
 
-public class Progress
+public class Monitor
 {
-    private final int done;
-    private final int todo;
+    private int done;
+    private int todo;
 
-    public Progress(int aDone, int aTodo)
+    public synchronized void setDone(int aDone)
+    {
+        done = aDone;
+    }
+
+    public synchronized void setTodo(int aTodo)
+    {
+        todo = aTodo;
+    }
+
+    public synchronized void set(int aDone, int aTodo)
     {
         done = aDone;
         todo = aTodo;
     }
 
-    public int getDone()
+    public synchronized Progress toProgress()
     {
-        return done;
+        return new Progress(done, todo);
     }
 
-    public int getTodo()
+    public synchronized void incDone()
     {
-        return todo;
-    }
-
-    public float percent()
-    {
-        if ((done + todo) > 0) {
-            return (done / (done + todo)) * 100.0f;
-        }
-        else {
-            return Float.NaN;
-        }
+        done++;
     }
 }

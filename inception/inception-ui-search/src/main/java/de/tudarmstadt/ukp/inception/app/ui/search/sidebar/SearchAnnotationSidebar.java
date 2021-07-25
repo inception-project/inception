@@ -111,6 +111,7 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
+import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -481,8 +482,11 @@ public class SearchAnnotationSidebar
         AnnotatorState state = getModelObject();
         Project project = state.getProject();
 
-        if (searchService.isIndexInProgress(state.getProject())) {
-            info("Indexing in progress... cannot perform query at this time");
+        Optional<Progress> maybeProgress = searchService.getIndexProgress(project);
+        if (maybeProgress.isPresent()) {
+            Progress p = maybeProgress.get();
+            info("Indexing in progress... cannot perform query at this time. " + p.percent() + "% ("
+                    + p.getDone() + "/" + p.getTotal() + ")");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
