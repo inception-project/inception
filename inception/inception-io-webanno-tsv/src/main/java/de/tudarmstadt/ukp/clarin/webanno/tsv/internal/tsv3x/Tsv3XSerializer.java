@@ -187,7 +187,7 @@ public class Tsv3XSerializer
             aOut.print(escapeText(sentenceId));
             aOut.print(LINE_BREAK);
         }
-        
+
         for (String line : lines) {
             aOut.print(PREFIX_TEXT);
             aOut.print(escapeText(line));

@@ -29,18 +29,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 @JsonInclude(Include.NON_NULL)
-@JsonPropertyOrder({"@context", "id", "type", "motivation", "body", "target"})
+@JsonPropertyOrder({ "@context", "id", "type", "motivation", "body", "target" })
 public class WebAnnotation
 {
     @JsonProperty("@context")
     private String context;
-    
+
     private String id;
-    
+
     private String type;
-    
+
     private String motivation;
-    
+
     private List<WebAnnotationBodyItem> body;
 
     @JsonFormat(with = { ACCEPT_SINGLE_VALUE_AS_ARRAY, WRITE_SINGLE_ELEM_ARRAYS_UNWRAPPED })

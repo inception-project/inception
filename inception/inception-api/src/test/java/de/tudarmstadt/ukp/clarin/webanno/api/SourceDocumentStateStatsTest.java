@@ -29,8 +29,6 @@ import java.util.Random;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
-
 @Disabled("This worked well for hundreds of builds - turning it off now")
 public class SourceDocumentStateStatsTest
 {

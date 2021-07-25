@@ -59,15 +59,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ReadonlyColoringBehaviour;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Modal Window to configure layers, window size, etc.
@@ -191,8 +190,7 @@ public class AnnotationPreferencesDialogContent
                     .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                     .collect(Collectors.toList()));
 
-            PreferencesUtil.savePreference(userPreferencesService, state,
-                    userDao.getCurrentUsername());
+            userPreferencesService.savePreference(state, userDao.getCurrentUsername());
         }
         catch (IOException e) {
             error("Preference file not found");
@@ -234,8 +232,8 @@ public class AnnotationPreferencesDialogContent
         model.annotationLayers = annotationService.listAnnotationLayer(state.getProject()).stream()
                 // hide disabled Layers
                 .filter(layer -> layer.isEnabled())
-                // hide Token layer
-                .filter(layer -> !Token.class.getName().equals(layer.getName()))
+                // hide blocked layers
+                .filter(layer -> annotationEditorProperties.isLayerBlocked(layer))
                 .filter(layer -> !(layer.getType().equals(CHAIN_TYPE)
                         && CURATION == state.getMode()))
                 .collect(Collectors.toList());

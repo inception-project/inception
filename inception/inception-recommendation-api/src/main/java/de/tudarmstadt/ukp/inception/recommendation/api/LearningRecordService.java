@@ -57,9 +57,9 @@ public interface LearningRecordService
             AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
             LearningRecordChangeLocation aLocation);
 
-    void logRelationRecord(SourceDocument aDocument, String aUsername, RelationSuggestion aPrediction,
-            AnnotationLayer aLayer, AnnotationFeature aFeature, LearningRecordType aUserAction,
-            LearningRecordChangeLocation aLocation);
+    void logRelationRecord(SourceDocument aDocument, String aUsername,
+            RelationSuggestion aPrediction, AnnotationLayer aLayer, AnnotationFeature aFeature,
+            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
 
     /**
      * Updates the learning log with an entry for the given suggestion. Any entries which are
@@ -75,9 +75,10 @@ public interface LearningRecordService
      * duplicates of the new action are removed as part of this action. Note that the actual action
      * the user performed is not taken into account to determine duplicateness.
      */
-    void logRelationRecord(SourceDocument aDocument, String aUsername, RelationSuggestion aSuggestion,
-            String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
-            LearningRecordType aUserAction, LearningRecordChangeLocation aLocation);
+    void logRelationRecord(SourceDocument aDocument, String aUsername,
+            RelationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
+            AnnotationFeature aFeature, LearningRecordType aUserAction,
+            LearningRecordChangeLocation aLocation);
 
     /**
      * Checks if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
