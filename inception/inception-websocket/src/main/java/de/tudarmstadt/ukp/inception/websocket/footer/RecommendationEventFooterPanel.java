@@ -49,16 +49,16 @@ public class RecommendationEventFooterPanel
 {
     private static final Logger log = LoggerFactory.getLogger(RecommendationEventFooterPanel.class);
     private static final long serialVersionUID = 1L;
-    
+
     private FeedbackPanelExtensionBehavior feedback;
     private @SpringBean ServletContext servletContext;
-    
+
     public RecommendationEventFooterPanel(String aId)
     {
         super(aId, "RecommendationEventFooterPanel.vue");
         feedback = new FeedbackPanelExtensionBehavior();
         add(feedback);
-        
+
     }
 
     @Override
@@ -66,10 +66,9 @@ public class RecommendationEventFooterPanel
     {
         super.onConfigure();
         // model will be added as props to vue component
-        setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(),
-                "topicChannel", RecommendationEventMessageControllerImpl.REC_EVENTS, 
-                "feedbackPanelId", feedback.retrieveFeedbackPanelId(this),
-                "projectId", getProjectId())));
+        setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(), "topicChannel",
+                RecommendationEventMessageControllerImpl.REC_EVENTS, "feedbackPanelId",
+                feedback.retrieveFeedbackPanelId(this), "projectId", getProjectId())));
     }
 
     private long getProjectId()
@@ -94,7 +93,8 @@ public class RecommendationEventFooterPanel
         return project.getId();
     }
 
-    private String constructEndpointUrl() {
+    private String constructEndpointUrl()
+    {
         Url endPointUrl = Url.parse(String.format("%s%s", servletContext.getContextPath(),
                 WebsocketConfig.WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
@@ -106,7 +106,8 @@ public class RecommendationEventFooterPanel
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        aResponse.render(forReference(new WebjarsJavaScriptResourceReference("webstomp-client/current/dist/webstomp.min.js")));
+        aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
+                "webstomp-client/current/dist/webstomp.min.js")));
     }
 
 }

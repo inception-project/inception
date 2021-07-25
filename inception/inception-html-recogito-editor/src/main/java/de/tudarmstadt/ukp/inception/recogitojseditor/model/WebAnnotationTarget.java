@@ -44,7 +44,7 @@ public class WebAnnotationTarget
     {
         selector = new ArrayList<>();
         selector.add(new WebAnnotationTextPositionSelector(aBegin, aEnd));
-//        selector.add(new WebAnnotationTextQuoteSelector(aText));
+        // selector.add(new WebAnnotationTextQuoteSelector(aText));
     }
 
     public String getId()

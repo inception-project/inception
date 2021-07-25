@@ -25,10 +25,11 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
 
 @Order(FooterItem.ORDER_LEFT + 500)
 @org.springframework.stereotype.Component
-@ConditionalOnProperty({"websocket.enabled", "websocket.loggedevent.enabled"})
-public class LoggedEventFooterItem implements FooterItem
+@ConditionalOnProperty({ "websocket.enabled", "websocket.loggedevent.enabled" })
+public class LoggedEventFooterItem
+    implements FooterItem
 {
-    
+
     @Override
     public Component create(String aId)
     {

@@ -28,9 +28,6 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.DefaultPagingNavigator;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 
 public class NoPagingStrategy
     implements PagingStrategy

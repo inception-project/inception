@@ -33,10 +33,12 @@ public interface LoggedEventMessageController
 
     /**
      * Return the most recent logged events to the subscribing client
-     * @param aPrincipal the subscribing client
+     * 
+     * @param aPrincipal
+     *            the subscribing client
      * @return the most recent events
      */
     public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal);
-    
+
     public String handleException(Throwable exception);
 }

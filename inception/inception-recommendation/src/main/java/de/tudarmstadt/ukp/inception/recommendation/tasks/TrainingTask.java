@@ -247,15 +247,16 @@ public class TrainingTask
                         }
                         else {
                             int docNum = casses.get().size();
-                            int trainDocNum = cassesForTraining.size(); 
+                            int trainDocNum = cassesForTraining.size();
                             log.debug(
                                     "[{}][{}][{}]: Training on [{}] out of [{}] documents failed ({} ms)",
-                                    getId(), user.getUsername(), recommender.getName(),
-                                    trainDocNum, docNum, duration);
+                                    getId(), user.getUsername(), recommender.getName(), trainDocNum,
+                                    docNum, duration);
                             logMessages.add(error(this, "Training failed (%d ms).", duration));
                             appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
                                     user.getUsername(),
-                                    String.format("Training on %d out of %d documents failed (%d ms)", 
+                                    String.format(
+                                            "Training on %d out of %d documents failed (%d ms)",
                                             trainDocNum, docNum, duration),
                                     recommender));
                         }
@@ -273,10 +274,10 @@ public class TrainingTask
                         logMessages.add(error(this, "Training failed (%d ms): %s", duration,
                                 getRootCauseMessage(e)));
                         appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                                user.getUsername(),
-                                String.format("Training failed (%d ms) with %s", duration, e.getMessage()),
+                                user.getUsername(), String.format("Training failed (%d ms) with %s",
+                                        duration, e.getMessage()),
                                 recommender));
-                    }                    
+                    }
                 }
             }
 

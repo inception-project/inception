@@ -35,7 +35,7 @@ public class FeedbackPanelExtensionBehavior
 {
     private static final long serialVersionUID = 1L;
     private final static Logger LOG = LoggerFactory.getLogger(FeedbackPanelExtensionBehavior.class);
-    
+
     public String retrieveFeedbackPanelId(Component aComponent)
     {
         Page page = null;
@@ -49,28 +49,29 @@ public class FeedbackPanelExtensionBehavior
         }
         if (page != null) {
             feedbackPanel = aComponent.getPage().visitChildren(BootstrapFeedbackPanel.class,
-                new IVisitor<BootstrapFeedbackPanel, BootstrapFeedbackPanel>()
-                {
-
-                    @Override
-                    public void component(BootstrapFeedbackPanel aFeedbackPanel,
-                            IVisit<BootstrapFeedbackPanel> aVisit)
+                    new IVisitor<BootstrapFeedbackPanel, BootstrapFeedbackPanel>()
                     {
-                        aVisit.stop(aFeedbackPanel);
-                    }
-                });
+
+                        @Override
+                        public void component(BootstrapFeedbackPanel aFeedbackPanel,
+                                IVisit<BootstrapFeedbackPanel> aVisit)
+                        {
+                            aVisit.stop(aFeedbackPanel);
+                        }
+                    });
             if (feedbackPanel != null) {
                 feedbackPanelId = feedbackPanel.getMarkupId();
             }
         }
         return feedbackPanelId;
     }
-    
+
     @Override
     public void renderHead(Component aComponent, IHeaderResponse aResponse)
     {
         super.renderHead(aComponent, aResponse);
-        aResponse.render(JavaScriptHeaderItem.forReference(FeedbackPanelExtensionJavascriptReference.get()));
+        aResponse.render(
+                JavaScriptHeaderItem.forReference(FeedbackPanelExtensionJavascriptReference.get()));
     }
-    
+
 }

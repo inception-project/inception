@@ -42,14 +42,15 @@ import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageContr
 import de.tudarmstadt.ukp.inception.websocket.feedback.FeedbackPanelExtensionBehavior;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_ADMIN")
-public class LoggedEventFooterPanel extends VueComponent
+public class LoggedEventFooterPanel
+    extends VueComponent
 {
     private static final long serialVersionUID = -9006607500867612027L;
 
     private @SpringBean LoggedEventMessageController loggedEventService;
     private @SpringBean ServletContext servletContext;
     private FeedbackPanelExtensionBehavior feedback;
-    
+
     public LoggedEventFooterPanel(String aId)
     {
         super(aId, "LoggedEventFooterPanel.vue");
@@ -57,31 +58,33 @@ public class LoggedEventFooterPanel extends VueComponent
         add(feedback);
         setOutputMarkupPlaceholderTag(true);
     }
-    
+
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
         // model will be added as props to vue component
-        setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(),
-                "topicChannel", LoggedEventMessageControllerImpl.LOGGED_EVENTS, 
-                "feedbackPanelId", feedback.retrieveFeedbackPanelId(this))));
+        setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(), "topicChannel",
+                LoggedEventMessageControllerImpl.LOGGED_EVENTS, "feedbackPanelId",
+                feedback.retrieveFeedbackPanelId(this))));
     }
 
-    private String constructEndpointUrl() {
+    private String constructEndpointUrl()
+    {
         Url endPointUrl = Url.parse(String.format("%s%s", servletContext.getContextPath(),
                 WebsocketConfig.WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
         String fullUrl = RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
         return fullUrl;
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
 
         aResponse.render(forReference(new DayJsResourceReference(RELATIVE_TIME, LOCALIZED_FORMAT)));
-        aResponse.render(forReference(new WebjarsJavaScriptResourceReference("webstomp-client/current/dist/webstomp.min.js")));
+        aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
+                "webstomp-client/current/dist/webstomp.min.js")));
     }
 }

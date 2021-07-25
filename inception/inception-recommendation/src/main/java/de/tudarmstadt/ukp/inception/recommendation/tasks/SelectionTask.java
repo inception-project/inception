@@ -247,7 +247,7 @@ public class SelectionTask
                         appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
                                 recommender, user.getUsername(), result,
                                 System.currentTimeMillis() - start, activated));
-                        
+
                         Optional<String> recError = result.getErrorMsg();
                         SelectionTaskEvent evalEvent = new SelectionTaskEvent(this, recommender,
                                 user.getUsername(), result);
@@ -261,8 +261,8 @@ public class SelectionTask
                     // even if a particular recommender fails.
                     catch (Throwable e) {
                         log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
-                        appEventPublisher.publishEvent(new SelectionTaskEvent(this, recommender, user.getUsername(),
-                                e.getMessage()));
+                        appEventPublisher.publishEvent(new SelectionTaskEvent(this, recommender,
+                                user.getUsername(), e.getMessage()));
                     }
                 }
 
