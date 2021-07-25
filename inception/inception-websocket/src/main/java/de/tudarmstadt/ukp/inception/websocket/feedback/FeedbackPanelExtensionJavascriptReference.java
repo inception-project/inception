@@ -15,30 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recogitojseditor.model;
+package de.tudarmstadt.ukp.inception.websocket.feedback;
 
-import static java.nio.file.Files.newInputStream;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-import java.io.InputStream;
-import java.nio.file.Paths;
-
-import org.junit.jupiter.api.Test;
-
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-
-public class WebAnnotationTest
+public class FeedbackPanelExtensionJavascriptReference
+    extends JavaScriptResourceReference
 {
-    @Test
-    public void thatExampleCanBeLoaded() throws Exception
+    private static final long serialVersionUID = 1L;
+
+    private static final FeedbackPanelExtensionJavascriptReference INSTANCE = //
+            new FeedbackPanelExtensionJavascriptReference();
+
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static FeedbackPanelExtensionJavascriptReference get()
     {
-        WebAnnotations annotations;
-        try (InputStream is = newInputStream(
-                Paths.get("src/test/resources/annotations.w3c.json"))) {
-            annotations = JSONUtil.fromJsonStream(WebAnnotations.class, is);
-        }
-
-        String json = JSONUtil.toPrettyJsonString(annotations);
-
-        // System.out.println(json);
+        return INSTANCE;
     }
+
+    private FeedbackPanelExtensionJavascriptReference()
+    {
+        super(FeedbackPanelExtensionJavascriptReference.class, "FeedbackPanelExtension.js");
+    }
+
 }

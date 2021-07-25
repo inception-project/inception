@@ -15,30 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recogitojseditor.model;
+package de.tudarmstadt.ukp.inception.websocket.controller;
 
-import static java.nio.file.Files.newInputStream;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 
-import java.io.InputStream;
-import java.nio.file.Paths;
-
-import org.junit.jupiter.api.Test;
-
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-
-public class WebAnnotationTest
+public interface RecommendationEventMessageController
 {
-    @Test
-    public void thatExampleCanBeLoaded() throws Exception
-    {
-        WebAnnotations annotations;
-        try (InputStream is = newInputStream(
-                Paths.get("src/test/resources/annotations.w3c.json"))) {
-            annotations = JSONUtil.fromJsonStream(WebAnnotations.class, is);
-        }
+    String handleException(Throwable exception);
 
-        String json = JSONUtil.toPrettyJsonString(annotations);
-
-        // System.out.println(json);
-    }
+    void onRecommenderErrorEvent(RecommenderTaskEvent aEvent);
 }

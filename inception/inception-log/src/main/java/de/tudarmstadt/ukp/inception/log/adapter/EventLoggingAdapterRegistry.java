@@ -15,28 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket;
+package de.tudarmstadt.ukp.inception.log.adapter;
 
-import java.security.Principal;
-import java.util.List;
+import java.util.Optional;
 
-import org.springframework.context.ApplicationEvent;
-
-import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
-
-public interface LoggedEventMessageController
+public interface EventLoggingAdapterRegistry
 {
-    /***
-     * Push messages on received application events to named user
-     */
-    public void onApplicationEvent(ApplicationEvent aEvent);
-
-    /**
-     * Return the most recent logged events to the subscribing client
-     * @param aPrincipal the subscribing client
-     * @return the most recent events
-     */
-    public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal);
-    
-    public String handleException(Throwable exception);
+    <T> Optional<EventLoggingAdapter<T>> getAdapter(T aEvent);
 }

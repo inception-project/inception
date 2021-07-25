@@ -30,7 +30,6 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
@@ -53,6 +52,8 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 public class EventRepositoryImpl
     implements EventRepository
 {
+    private final int RECENT_ACTIVITY_HORIZON = 3500;
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
@@ -107,7 +108,8 @@ public class EventRepositoryImpl
                 .setParameter("project", aProject.getId()) //
                 .setParameter("event", aEventType) //
                 .setParameter("details", aDetail) //
-                .setMaxResults(aMaxSize).getResultList();
+                .setMaxResults(aMaxSize) //
+                .getResultList();
     }
 
     @Override
@@ -158,7 +160,7 @@ public class EventRepositoryImpl
                 .setParameter("user", aUsername) //
                 .setParameter("project", aProject.getId()) //
                 .setParameter("eventTypes", aEventTypes) //
-                .setMaxResults(3500) //
+                .setMaxResults(RECENT_ACTIVITY_HORIZON) //
                 .getResultList();
 
         List<LoggedEvent> reducedResults = new ArrayList<>();
@@ -180,28 +182,19 @@ public class EventRepositoryImpl
 
         return reducedResults;
     }
-    
+
     @Override
-    @Transactional
-    public List<LoggedEvent> listFilteredRecentActivity(Collection<String> aEventTypes, int aMaxSize)
+    public List<LoggedEvent> listRecentActivity(String aUsername, int aMaxSize)
     {
         String query = join("\n", //
                 "FROM  LoggedEvent", //
-                "WHERE event not in (:eventTypes)", //
+                "WHERE user = :user", //
                 "ORDER BY created DESC");
 
-        List<LoggedEvent> result = new ArrayList<>();
-        try {
-            result = entityManager.createQuery(query, LoggedEvent.class) //
-                    .setParameter("eventTypes", aEventTypes) //
-                    .setMaxResults(aMaxSize) //
-                    .getResultList();
-        }
-        catch (NoResultException e) {
-            log.debug(e.getMessage());
-        }
-
-        return result;
+        return entityManager.createQuery(query, LoggedEvent.class) //
+                .setParameter("user", aUsername) //
+                .setMaxResults(aMaxSize) //
+                .getResultList();
     }
 
     @Override

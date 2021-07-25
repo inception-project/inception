@@ -15,30 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recogitojseditor.model;
+package de.tudarmstadt.ukp.inception.websocket.footer;
 
-import static java.nio.file.Files.newInputStream;
+import org.apache.wicket.Component;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
 
-import java.io.InputStream;
-import java.nio.file.Paths;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
 
-import org.junit.jupiter.api.Test;
-
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-
-public class WebAnnotationTest
+@Order(FooterItem.ORDER_RIGHT - 100)
+@org.springframework.stereotype.Component
+@ConditionalOnProperty("websocket.enabled")
+public class RecommendationEventFooterItem
+    implements FooterItem
 {
-    @Test
-    public void thatExampleCanBeLoaded() throws Exception
+
+    @Override
+    public Component create(String aId)
     {
-        WebAnnotations annotations;
-        try (InputStream is = newInputStream(
-                Paths.get("src/test/resources/annotations.w3c.json"))) {
-            annotations = JSONUtil.fromJsonStream(WebAnnotations.class, is);
-        }
-
-        String json = JSONUtil.toPrettyJsonString(annotations);
-
-        // System.out.println(json);
+        return new RecommendationEventFooterPanel(aId);
     }
+
 }

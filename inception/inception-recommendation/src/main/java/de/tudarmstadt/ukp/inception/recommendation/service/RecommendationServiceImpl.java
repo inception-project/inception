@@ -142,6 +142,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
@@ -1295,6 +1296,9 @@ public class RecommendationServiceImpl
                                         username, document.getName(), document.getId(),
                                         document.getProject().getName(),
                                         document.getProject().getId(), e);
+                                applicationEventPublisher.publishEvent(new RecommenderTaskEvent(
+                                        this, username, "Cannot read annotation CAS... skipping",
+                                        recommender));
                                 continue nextDocument;
                             }
                         }
@@ -1371,6 +1375,8 @@ public class RecommendationServiceImpl
                                     document.getName(), document.getId(),
                                     document.getProject().getName(), document.getProject().getId(),
                                     e);
+                            applicationEventPublisher.publishEvent(new RecommenderTaskEvent(this,
+                                    username, e.getMessage(), recommender));
 
                             // If there was a previous successful run of the recommender, inherit
                             // its suggestions to avoid that all the suggestions of the recommender
@@ -1382,6 +1388,7 @@ public class RecommendationServiceImpl
                                 if (!suggestions.isEmpty()) {
                                     predictions.putPredictions(suggestions);
                                 }
+
                                 predictions.log(LogMessage.info(r.getRecommender().getName(),
                                         "Inherited [%d] predictions from previous run",
                                         suggestions.size()));

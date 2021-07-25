@@ -46,6 +46,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -64,6 +65,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 
@@ -79,6 +81,7 @@ public class TrainingTask
     private @Autowired DocumentService documentService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired SchedulingService schedulingService;
+    private @Autowired ApplicationEventPublisher appEventPublisher;
 
     private final SourceDocument currentDocument;
     private final List<LogMessage> logMessages = new ArrayList<>();
@@ -175,6 +178,10 @@ public class TrainingTask
                             logMessages.add(error(this,
                                     "Recommender [%s] configured with invalid layer or feature - skipping recommender.",
                                     r.getRecommender().getName()));
+                            appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
+                                    user.getUsername(),
+                                    "Recommender configured with invalid layer or feature - skipping training recommender.",
+                                    recommender));
                             continue;
                         }
 
@@ -239,11 +246,19 @@ public class TrainingTask
                             seenSuccessfulTraining = true;
                         }
                         else {
+                            int docNum = casses.get().size();
+                            int trainDocNum = cassesForTraining.size();
                             log.debug(
                                     "[{}][{}][{}]: Training on [{}] out of [{}] documents failed ({} ms)",
-                                    getId(), user.getUsername(), recommender.getName(),
-                                    cassesForTraining.size(), casses.get().size(), duration);
+                                    getId(), user.getUsername(), recommender.getName(), trainDocNum,
+                                    docNum, duration);
                             logMessages.add(error(this, "Training failed (%d ms).", duration));
+                            appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
+                                    user.getUsername(),
+                                    String.format(
+                                            "Training on %d out of %d documents failed (%d ms)",
+                                            trainDocNum, docNum, duration),
+                                    recommender));
                         }
 
                         ctx.close();
@@ -258,6 +273,10 @@ public class TrainingTask
                                 (System.currentTimeMillis() - startTime), e);
                         logMessages.add(error(this, "Training failed (%d ms): %s", duration,
                                 getRootCauseMessage(e)));
+                        appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
+                                user.getUsername(), String.format("Training failed (%d ms) with %s",
+                                        duration, e.getMessage()),
+                                recommender));
                     }
                 }
             }

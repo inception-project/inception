@@ -15,30 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recogitojseditor.model;
+package de.tudarmstadt.ukp.inception.websocket.controller;
 
-import static java.nio.file.Files.newInputStream;
+import java.security.Principal;
+import java.util.List;
 
-import java.io.InputStream;
-import java.nio.file.Paths;
+import org.springframework.context.ApplicationEvent;
 
-import org.junit.jupiter.api.Test;
+import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-
-public class WebAnnotationTest
+public interface LoggedEventMessageController
 {
-    @Test
-    public void thatExampleCanBeLoaded() throws Exception
-    {
-        WebAnnotations annotations;
-        try (InputStream is = newInputStream(
-                Paths.get("src/test/resources/annotations.w3c.json"))) {
-            annotations = JSONUtil.fromJsonStream(WebAnnotations.class, is);
-        }
+    /***
+     * Push messages on received application events to named user
+     */
+    public void onApplicationEvent(ApplicationEvent aEvent);
 
-        String json = JSONUtil.toPrettyJsonString(annotations);
+    /**
+     * Return the most recent logged events to the subscribing client
+     * 
+     * @param aPrincipal
+     *            the subscribing client
+     * @return the most recent events
+     */
+    public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal);
 
-        // System.out.println(json);
-    }
+    public String handleException(Throwable exception);
 }
