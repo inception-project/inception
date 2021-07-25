@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.api.model;
+package de.tudarmstadt.ukp.inception.search.model;
 
 public class Progress
 {
     private final int done;
-    private final int todo;
+    private final int total;
 
-    public Progress(int aDone, int aTodo)
+    public Progress(int aDone, int aTotal)
     {
         done = aDone;
-        todo = aTodo;
+        total = aTotal;
     }
 
     public int getDone()
@@ -33,18 +33,18 @@ public class Progress
         return done;
     }
 
-    public int getTodo()
+    public int getTotal()
     {
-        return todo;
+        return total;
     }
 
-    public float percent()
+    public int percent()
     {
-        if ((done + todo) > 0) {
-            return (done / (done + todo)) * 100.0f;
+        if (total > 0) {
+            return done * 100 / total;
         }
         else {
-            return Float.NaN;
+            return 0;
         }
     }
 }
