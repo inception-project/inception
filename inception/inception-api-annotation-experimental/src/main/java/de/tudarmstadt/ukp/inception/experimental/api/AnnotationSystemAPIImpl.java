@@ -212,11 +212,11 @@ public class AnnotationSystemAPIImpl
 
             AnnotationFS annotation = selectAnnotationByAddr(cas,
                     aUpdateSpanRequest.getSpanAddress().getId());
-            // TODO update feature
+
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during handleUpdateSpan()");
-            LOG.error("CAUSE: " + e.getCause());
+            e.printStackTrace();
             createErrorMessage(e.getMessage(), aUpdateSpanRequest.getClientName());
         }
     }

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.editor.config;
 
-import de.tudarmstadt.ukp.inception.experimental.editor.ExperimentalWordAlignmentEditor;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -25,13 +24,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.experimental.editor.ExperimentalAdvancedEditor;
-
+import de.tudarmstadt.ukp.inception.experimental.editor.ExperimentalWordAlignmentEditor;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ExperimentalAnnotationEditorAutoConfiguration#experimentalAnnotationWordAlignmentEditorFactory()} ()}
+ * {@link ExperimentalAnnotationEditorAutoConfiguration#experimentalAnnotationWordAlignmentEditorFactory()}
+ * ()}
  * </p>
  */
 public class ExperimentalAnnotationWordAlignmentEditorFactory

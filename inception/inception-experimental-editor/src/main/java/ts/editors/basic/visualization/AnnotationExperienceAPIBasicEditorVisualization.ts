@@ -89,7 +89,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
                 char.textContent = sentences[i][j];
                 char.setAttribute("x", xPrev.toString());
                 char.setAttribute("y", ((i + 1) * 20 - 5).toString());
-                char.setAttribute("char_pos", ((this.annotationExperienceAPI.viewport[i][0]) + j).toString());
+                char.setAttribute("char_pos", ((this.annotationExperienceAPI.viewport.viewport[i][0]) + j).toString());
                 xPrev += this.CHARACTER_WIDTH;
                 sentence.appendChild(char);
             }

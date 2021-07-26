@@ -227,11 +227,11 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         });
     }
 
-    requestUpdateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number, aNewType: string)
+    requestUpdateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number, aNewFeature: string[])
     {
         this._stompClient.publish({
             destination: "/app/update_annotation_from_client",
-            body: JSON.stringify(new UpdateSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress, aNewType))
+            body: JSON.stringify(new UpdateSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress, aNewFeature))
         });
     }
 

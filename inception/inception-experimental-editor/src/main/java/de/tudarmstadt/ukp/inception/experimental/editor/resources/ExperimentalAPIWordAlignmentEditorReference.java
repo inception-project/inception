@@ -19,11 +19,13 @@ package de.tudarmstadt.ukp.inception.experimental.editor.resources;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class ExperimentalAPIWordAlignmentEditorReference extends JavaScriptResourceReference
+public class ExperimentalAPIWordAlignmentEditorReference
+    extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final ExperimentalAPIWordAlignmentEditorReference INSTANCE = new ExperimentalAPIWordAlignmentEditorReference();
+    private static final ExperimentalAPIWordAlignmentEditorReference INSTANCE =
+        new ExperimentalAPIWordAlignmentEditorReference();
 
     /**
      * Gets the instance of the resource reference
@@ -40,6 +42,7 @@ public class ExperimentalAPIWordAlignmentEditorReference extends JavaScriptResou
      */
     private ExperimentalAPIWordAlignmentEditorReference()
     {
-        super(ExperimentalAPIWordAlignmentEditorReference.class, "AnnotationExperienceAPIWordAlignmentEditor.js");
+        super(ExperimentalAPIWordAlignmentEditorReference.class,
+                "AnnotationExperienceAPIWordAlignmentEditor.js");
     }
 }

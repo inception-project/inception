@@ -23,6 +23,11 @@ public class Viewport
 {
     List<List<Integer>> viewport;
 
+    public Viewport()
+    {
+        //DEFAULT
+    }
+
     public Viewport(List<List<Integer>> aViewport)
     {
         viewport = aViewport;

@@ -371,7 +371,7 @@ public class AnnotationProcessAPIImpl
     @MessageMapping(SERVER_RECEIVE_CLIENT_ALL_RELATIONS)
     public void receiveAllRelationsRequest(Message<String> aMessage) throws IOException
     {
-        LOG.debug("RECEIVED ALL SPANS BY CLIENT");
+        LOG.debug("RECEIVED ALL RELATIONS BY CLIENT");
         annotationSystemAPIImpl.handleAllRelations(
                 JSONUtil.fromJsonString(AllRelationRequest.class, aMessage.getPayload()));
     }

@@ -22,10 +22,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public class UpdateSpanResponse
 {
     private VID spanAddress;
-    private String feature;
+    private String[] feature;
     private String color;
 
-    public UpdateSpanResponse(VID aSpanAddress, String aFeature, String aColor)
+    public UpdateSpanResponse(VID aSpanAddress, String[] aFeature, String aColor)
     {
         spanAddress = aSpanAddress;
         feature = aFeature;
@@ -42,12 +42,12 @@ public class UpdateSpanResponse
     }
 
 
-    public String getFeature()
+    public String[] getFeature()
     {
         return feature;
     }
 
-    public void setFeature(String aFeature)
+    public void setFeature(String[] aFeature)
     {
         feature = aFeature;
     }

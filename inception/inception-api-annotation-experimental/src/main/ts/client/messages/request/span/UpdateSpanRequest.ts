@@ -22,15 +22,15 @@ export class UpdateSpanRequest
     projectId : number;
     documentId : number;
     spanAddress : number;
-    newType : string;
+    newFeature : string[];
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aSpanAddress: number, aNewType: string)
+    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aSpanAddress: number, aNewFeature: string[])
     {
         this.clientName = aClientName;
         this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.spanAddress = aSpanAddress;
-        this.newType = aNewType;
+        this.newFeature = aNewFeature;
     }
 }

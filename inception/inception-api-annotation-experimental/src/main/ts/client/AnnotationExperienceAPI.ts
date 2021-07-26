@@ -60,7 +60,7 @@ export interface AnnotationExperienceAPI
                                 aDocumentId: number, aSpanAddress: number);
 
     requestUpdateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                aDocumentId: number, aSpanAddress: number, aNewType: string)
+                                aDocumentId: number, aSpanAddress: number, aNewFeature: string[])
 
     requestCreateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                 aDocumentId: number, aBegin: number, aEnd: number, aType: string, aFeature: string);
