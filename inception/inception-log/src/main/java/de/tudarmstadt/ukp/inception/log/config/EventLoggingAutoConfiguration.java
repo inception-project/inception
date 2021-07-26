@@ -32,6 +32,8 @@ import de.tudarmstadt.ukp.inception.log.EventLoggingListener;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.EventRepositoryImpl;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
+import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistryImpl;
 
 /**
  * Provides support event logging.
@@ -50,10 +52,17 @@ public class EventLoggingAutoConfiguration
 
     @Bean
     @Autowired
-    public EventLoggingListener eventLoggingListener(EventRepository aRepo,
-            @Lazy @Autowired(required = false) List<EventLoggingAdapter<?>> aAdapters,
-            EventLoggingProperties aProperties)
+    public EventLoggingAdapterRegistry eventLoggingAdapterRegistry(
+            @Lazy @Autowired(required = false) List<EventLoggingAdapter<?>> aAdapters)
     {
-        return new EventLoggingListener(aRepo, aAdapters, aProperties);
+        return new EventLoggingAdapterRegistryImpl(aAdapters);
+    }
+
+    @Bean
+    @Autowired
+    public EventLoggingListener eventLoggingListener(EventRepository aRepo,
+            EventLoggingAdapterRegistry aAdapterRegistry, EventLoggingProperties aProperties)
+    {
+        return new EventLoggingListener(aRepo, aProperties, aAdapterRegistry);
     }
 }

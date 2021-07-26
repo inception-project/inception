@@ -15,28 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket;
+package de.tudarmstadt.ukp.inception.search.model;
 
-import java.security.Principal;
-import java.util.List;
-
-import org.springframework.context.ApplicationEvent;
-
-import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
-
-public interface LoggedEventMessageController
+public class Monitor
 {
-    /***
-     * Push messages on received application events to named user
-     */
-    public void onApplicationEvent(ApplicationEvent aEvent);
+    private int done;
+    private int todo;
 
-    /**
-     * Return the most recent logged events to the subscribing client
-     * @param aPrincipal the subscribing client
-     * @return the most recent events
-     */
-    public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal);
-    
-    public String handleException(Throwable exception);
+    public synchronized void setDone(int aDone)
+    {
+        done = aDone;
+    }
+
+    public synchronized void setTodo(int aTodo)
+    {
+        todo = aTodo;
+    }
+
+    public synchronized void set(int aDone, int aTodo)
+    {
+        done = aDone;
+        todo = aTodo;
+    }
+
+    public synchronized Progress toProgress()
+    {
+        return new Progress(done, todo);
+    }
+
+    public synchronized void incDone()
+    {
+        done++;
+    }
 }

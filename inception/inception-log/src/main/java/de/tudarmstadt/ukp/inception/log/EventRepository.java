@@ -55,11 +55,14 @@ public interface EventRepository
 
     List<LoggedEvent> listRecentActivity(Project aProject, String aUsername,
             Collection<String> aEventTypes, int aMaxSize);
-    
+
     /**
-     * List recently logged events that are not of the given types 
-     * @param aNotTheseEventTypes these types will not be included
-     * @param aMaxSize return this number of recent events or less
+     * List recently logged events.
+     * 
+     * @param aUsername
+     *            the user to list events for.
+     * @param aMaxSize
+     *            return this number of recent events or less
      */
-    List<LoggedEvent> listFilteredRecentActivity(Collection<String> aNotTheseEventTypes, int aMaxSize);
+    List<LoggedEvent> listRecentActivity(String aUsername, int aMaxSize);
 }

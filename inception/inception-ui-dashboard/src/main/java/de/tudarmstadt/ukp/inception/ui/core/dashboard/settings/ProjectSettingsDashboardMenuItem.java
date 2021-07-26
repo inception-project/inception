@@ -61,7 +61,7 @@ public class ProjectSettingsDashboardMenuItem
     {
         return ProjectDetailPage.class;
     }
-    
+
     @Override
     public boolean applies(Project aProject)
     {

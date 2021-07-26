@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 /**
  * Document indexer task. Indexes the given document in a project
@@ -41,6 +42,8 @@ public class IndexSourceDocumentTask
     extends IndexingTask_ImplBase
 {
     private @Autowired SearchService searchService;
+
+    private int done = 0;
 
     public IndexSourceDocumentTask(SourceDocument aSourceDocument, String aTrigger,
             byte[] aBinaryCas)
@@ -60,6 +63,14 @@ public class IndexSourceDocumentTask
         try (CasStorageSession session = CasStorageSession.open()) {
             searchService.indexDocument(super.getSourceDocument(), super.getBinaryCas());
         }
+
+        done++;
+    }
+
+    @Override
+    public Progress getProgress()
+    {
+        return new Progress(done, 1);
     }
 
     @Override

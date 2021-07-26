@@ -85,7 +85,6 @@
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.1</mariadb.driver.version>
-    <mysql-driver.version>8.0.20</mysql-driver.version>
     <hibernate.version>5.4.30.Final</hibernate.version>
     <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
 
@@ -171,6 +170,11 @@
       </snapshots>
     </repository>
     -->
+    <!-- For a jsass version that works on Apple Silicon -->
+    <repository>
+      <id>clojars.org</id>
+      <url>https://repo.clojars.org</url>
+    </repository>
   </repositories>
   <pluginRepositories>
     <!--
@@ -483,11 +487,13 @@
         <artifactId>inception-imls-opennlp</artifactId>
         <version>0.21.0-SNAPSHOT</version>
       </dependency>
+      <!--
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-dl4j</artifactId>
         <version>0.21.0-SNAPSHOT</version>
       </dependency>
+      -->
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
@@ -662,6 +668,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
+        <version>0.21.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-support-jsass</artifactId>
         <version>0.21.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -869,6 +880,10 @@
             <groupId>org.junit.vintage</groupId>
             <artifactId>junit-vintage-engine</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>io.bit3</groupId>
+            <artifactId>jsass</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -890,6 +905,11 @@
         <groupId>org.webjars</groupId>
         <artifactId>font-awesome</artifactId>
         <version>5.15.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>webstomp-client</artifactId>
+        <version>1.2.6</version>
       </dependency>
       <dependency>
         <groupId>org.webjars.bower</groupId>
@@ -920,9 +940,9 @@
         <version>${hover.version}</version>
       </dependency>
       <dependency>
-        <groupId>io.bit3</groupId>
+        <groupId>ua.kasta</groupId>
         <artifactId>jsass</artifactId>
-        <version>5.10.3</version>
+        <version>5.10.5</version>
       </dependency>
       <dependency>
         <groupId>org.sharegov</groupId>
@@ -1079,12 +1099,6 @@
         <groupId>com.github.openjson</groupId>
         <artifactId>openjson</artifactId>
         <version>1.0.10</version>
-      </dependency>
-
-      <dependency>
-        <groupId>mysql</groupId>
-        <artifactId>mysql-connector-java</artifactId>
-        <version>${mysql-driver.version}</version>
       </dependency>
 
       <dependency>
@@ -1711,6 +1725,7 @@
     <!-- Core -->
     <module>inception-support</module>
     <module>inception-support-standalone</module>
+    <module>inception-support-jsass</module>
     <module>inception-model</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
@@ -1797,7 +1812,7 @@
     <module>inception-app-webapp</module>
     <!-- Examples -->
     <module>inception-example-imls-data-majority</module>
-    <module>inception-imls-dl4j</module>
+    <!--<module>inception-imls-dl4j</module>-->
     <!-- Packaging -->
     <module>inception-docker</module>
     <!-- Versioning -->

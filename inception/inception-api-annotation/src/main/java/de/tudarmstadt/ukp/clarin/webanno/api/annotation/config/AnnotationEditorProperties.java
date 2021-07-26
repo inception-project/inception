@@ -15,15 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public interface AnnotationEditorProperties
 {
-    int getPageSize();
+    boolean isTokenLayerEditable();
 
-    boolean isAutoScroll();
-
-    boolean isRememberLayer();
+    boolean isSentenceLayerEditable();
 
     /**
      * @return whether the "forward annotation" setting is available to annotators.
@@ -32,7 +35,20 @@ public interface AnnotationEditorProperties
 
     /**
      * @return whether the "remember layer" setting is configurable by the user as preference. When
-     *         disabled, {@link #isRememberLayer} always returns true.
+     *         disabled, {@link AnnotationPreference#setRememberLayer} is set to true.
      */
     boolean isRememberLayerEnabled();
+
+    default boolean isLayerBlocked(AnnotationLayer aLayer)
+    {
+        if (!isTokenLayerEditable() && Token.class.getName().equals(aLayer.getName())) {
+            return true;
+        }
+
+        if (!isSentenceLayerEditable() && Sentence.class.getName().equals(aLayer.getName())) {
+            return true;
+        }
+
+        return false;
+    }
 }

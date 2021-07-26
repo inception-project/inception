@@ -28,7 +28,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMe
 @Component
 @Order(100)
 public class ProjectDetailMenuItem
-extends ProjectSettingsMenuItemBase
+    extends ProjectSettingsMenuItemBase
 {
     @Override
     public String getPath()
