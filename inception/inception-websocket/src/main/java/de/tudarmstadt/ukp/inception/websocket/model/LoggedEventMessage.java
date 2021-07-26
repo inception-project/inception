@@ -27,6 +27,7 @@ public class LoggedEventMessage
     private String projectName;
     private String documentName;
     private long timestamp;
+    private String eventType;
 
     private String eventMsg;
 
@@ -36,22 +37,16 @@ public class LoggedEventMessage
     }
 
     public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
-            long aTimestamp, String aEventMsg)
+            Date aCreationDate, String aEventType)
     {
-        actorName = aActorName;
-        projectName = aProjectName;
-        documentName = aDocumentName;
-        timestamp = aTimestamp;
-        eventMsg = aEventMsg;
+        this(aActorName, aProjectName, aDocumentName, aCreationDate.getTime());
+        eventType = aEventType;
     }
 
     public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
             Date aCreationDate)
     {
-        actorName = aActorName;
-        projectName = aProjectName;
-        documentName = aDocumentName;
-        timestamp = aCreationDate.getTime();
+        this(aActorName, aProjectName, aDocumentName, aCreationDate.getTime());
     }
 
     public LoggedEventMessage(LoggedEvent aEvent, String aProjectName, String aDocumentName)
@@ -61,6 +56,21 @@ public class LoggedEventMessage
         documentName = aDocumentName;
         timestamp = aEvent.getCreated().getTime();
         eventMsg = aEvent.getEvent();
+    }
+
+    public LoggedEventMessage(String aUser, String aProjectName, long aTimestamp, String aEventType)
+    {
+        this(aUser, aProjectName, null, aTimestamp);
+        eventType = aEventType;
+    }
+
+    public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
+            long aTime)
+    {
+        actorName = aActorName;
+        projectName = aProjectName;
+        documentName = aDocumentName;
+        timestamp = aTime;
     }
 
     public String getActorName()
@@ -111,5 +121,15 @@ public class LoggedEventMessage
     public void setEventMsg(String aEventMsg)
     {
         eventMsg = aEventMsg;
+    }
+
+    public String getEventType()
+    {
+        return eventType;
+    }
+
+    public void setEventType(String aEventType)
+    {
+        eventType = aEventType;
     }
 }

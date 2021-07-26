@@ -102,7 +102,7 @@ public class BasicRelationLayerInitializer
                 aProject);
 
         annotationSchemaService.createFeature(
-                new AnnotationFeature(aProject, relationLayer, BASIC_RELATION_LABEL_FEATURE_NAME, "Label",
-                        TYPE_NAME_STRING, "Relation label", relationTagSet));
+                new AnnotationFeature(aProject, relationLayer, BASIC_RELATION_LABEL_FEATURE_NAME,
+                        "Label", TYPE_NAME_STRING, "Relation label", relationTagSet));
     }
 }

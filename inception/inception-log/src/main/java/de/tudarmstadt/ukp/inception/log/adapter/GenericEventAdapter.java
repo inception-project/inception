@@ -46,12 +46,12 @@ public class GenericEventAdapter
                         || aEvent instanceof SessionDestroyedEvent //
                         || aEvent instanceof AbstractAuthorizationEvent //
                         || aEvent instanceof AbstractAuthenticationEvent //
-                        || aEvent instanceof WebServerInitializedEvent  //
-                        // Websocket events 
+                        || aEvent instanceof WebServerInitializedEvent //
+                        // Websocket events
                         || aEvent instanceof SessionConnectedEvent //
                         || aEvent instanceof SessionConnectEvent //
-                        || aEvent instanceof SessionDisconnectEvent  //
+                        || aEvent instanceof SessionDisconnectEvent //
                         || aEvent instanceof SessionSubscribeEvent //
-                        || aEvent instanceof SessionUnsubscribeEvent );
+                        || aEvent instanceof SessionUnsubscribeEvent);
     }
 }
