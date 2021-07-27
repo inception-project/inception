@@ -41,7 +41,7 @@
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 
 var Visualizer = (function ($, window, undefined) {
-  var svg;
+  let svg;
 
   /**
    * Document data prepared for rendering. The JSON data we get from the server is converted into
@@ -50,9 +50,9 @@ var Visualizer = (function ($, window, undefined) {
    */
   class DocumentData {
     /** @type {String} */ text;
-    /** @type {Chunk} */ chunks = [];
+    /** @type {Chunk[]} */ chunks = [];
     /** @type {Object.<string, Span>} */ spans = {};
-    /** @type {EventDesc} */ eventDescs = {};
+    /** @type {Object.<string, EventDesc>} */ eventDescs = {};
     /** @type {Arc} */arcs = [];
     arcById = {};
     sentComment = {};
@@ -76,7 +76,7 @@ var Visualizer = (function ($, window, undefined) {
     /** @type {Number} */ to;
     rectBox;
     text;
-    chunk;
+    /** @type {Chunk} */ chunk;
     indexNumber;
     drawOrder;
     towerId;
@@ -99,10 +99,10 @@ var Visualizer = (function ($, window, undefined) {
     highlightPos;
 
     /**
-     * @param {Number} id 
-     * @param {Span} span 
-     * @param {Number} from 
-     * @param {Number} to 
+     * @param {Number} id
+     * @param {Span} span
+     * @param {Number} from
+     * @param {Number} to
      */
     constructor(id, span, from, to) {
       Object.seal(this);
@@ -114,13 +114,13 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     /**
-     * @param {Fragment} a 
-     * @param {Fragment} b 
+     * @param {Fragment} a
+     * @param {Fragment} b
      */
     static compare(a, b) {
-      var tmp;
-      var aSpan = a.span;
-      var bSpan = b.span;
+      let tmp;
+      const aSpan = a.span;
+      const bSpan = b.span;
 
       // spans with more fragments go first
       tmp = aSpan.fragments.length - bSpan.fragments.length;
@@ -143,10 +143,10 @@ var Visualizer = (function ($, window, undefined) {
       // compare the span widths,
       // put wider on bottom so they don't mess with arcs, or shorter
       // on bottom if there are no arcs.
-      var ad = a.to - a.from;
-      var bd = b.to - b.from;
+      const ad = a.to - a.from;
+      const bd = b.to - b.from;
       tmp = ad - bd;
-      if (aSpan.numArcs == 0 && bSpan.numArcs == 0) {
+      if (aSpan.numArcs === 0 && bSpan.numArcs === 0) {
         tmp = -tmp;
       }
 
@@ -209,10 +209,10 @@ var Visualizer = (function ($, window, undefined) {
     /** @type {String} */ text;
 
     /**
-     * @param {*} id 
-     * @param {String} type 
-     * @param {Array.<Array.<Number>>} offsets 
-     * @param {String} generalType 
+     * @param {*} id
+     * @param {String} type
+     * @param {Array.<Array.<Number>>} offsets
+     * @param {String} generalType
      */
     constructor(id, type, offsets, generalType) {
       Object.seal(this);
@@ -225,7 +225,33 @@ var Visualizer = (function ($, window, undefined) {
       this.initContainers();
     }
 
-    initContainers(offsets) {
+    /**
+     * @param {Span} a
+     * @param {Span} b
+     */
+    static compare(a, b) {
+      var aSpan = this.data.spans[a];
+      var bSpan = this.data.spans[b];
+      var tmp = aSpan.headFragment.from + aSpan.headFragment.to - bSpan.headFragment.from - bSpan.headFragment.to;
+      if (tmp) {
+        return tmp < 0 ? -1 : 1;
+      }
+      return 0;
+    }
+
+    /**
+     * @param {Span} a
+     * @param {Span} b
+     */
+    static midpointComparator = (a, b) => {
+      let tmp = a.from + a.to - b.from - b.to;
+      if (!tmp) {
+        return 0;
+      }
+      return tmp < 0 ? -1 : 1;
+    };
+
+    initContainers() {
       this.incoming = [];
       this.outgoing = [];
       this.attributes = {};
@@ -246,14 +272,13 @@ var Visualizer = (function ($, window, undefined) {
 
         for (var ti = begin; ti < end; ti++) {
           const c = text.charAt(ti);
-          if (c == '\n' || c == '\r') {
+          if (c === '\n' || c === '\r') {
             if (begin !== null) {
               this.offsets.push([begin, ti]);
               this.segmentedOffsetsMap[nfi++] = fi;
               begin = null;
             }
-          }
-          else if (begin === null) {
+          } else if (begin === null) {
             begin = ti;
           }
         }
@@ -267,8 +292,8 @@ var Visualizer = (function ($, window, undefined) {
 
     /**
      * Create a partial copy of the span with a new ID.
-     * 
-     * @param {String} id 
+     *
+     * @param {String} id
      * @returns the copy.
      */
     copy(id) {
@@ -295,34 +320,8 @@ var Visualizer = (function ($, window, undefined) {
       this.fragments.sort(Span.midpointComparator);
       this.wholeFrom = this.fragments[0].from;
       this.wholeTo = this.fragments[this.fragments.length - 1].to;
-      this.headFragment = this.fragments[(true) ? this.fragments.length - 1 : 0];
+      this.headFragment = this.fragments[true ? this.fragments.length - 1 : 0];
     }
-
-    /**
-     * @param {Span} a 
-     * @param {Span} b 
-     */
-    static compare(a, b) {
-      var aSpan = this.data.spans[a];
-      var bSpan = this.data.spans[b];
-      var tmp = aSpan.headFragment.from + aSpan.headFragment.to - bSpan.headFragment.from - bSpan.headFragment.to;
-      if (tmp) {
-        return tmp < 0 ? -1 : 1;
-      }
-      return 0;
-    }
-
-    /**
-     * @param {Span} a 
-     * @param {Span} b 
-     */
-    static midpointComparator = (a, b) => {
-      let tmp = a.from + a.to - b.from - b.to;
-      if (!tmp) {
-        return 0;
-      }
-      return tmp < 0 ? -1 : 1;
-    };
   }
 
   class EventDesc {
@@ -344,10 +343,10 @@ var Visualizer = (function ($, window, undefined) {
 
       this.id = id;
       this.triggerId = triggerId;
-      roles.map(role => this.roles.push({ type: role[0], targetId: role[1] }));
+      roles.map(role => this.roles.push({type: role[0], targetId: role[1]}));
 
-      this.equiv = klass == "equiv";
-      this.relation = klass == "relation";
+      this.equiv = klass === "equiv";
+      this.relation = klass === "relation";
     }
   }
 
@@ -371,8 +370,9 @@ var Visualizer = (function ($, window, undefined) {
     translation = undefined;
     firstFragmentIndex;
     lastFragmentIndex;
+    rtlsizes;
 
-    constructor(index, text, from, to, space, spans) {
+    constructor(index, text, from, to, space) {
       Object.seal(this);
 
       this.index = index;
@@ -437,7 +437,7 @@ var Visualizer = (function ($, window, undefined) {
     translation;
 
     constructor(svg) {
-      this.group = svg.group({ 'class': 'row' });
+      this.group = svg.group({'class': 'row'});
       this.background = svg.group(this.group);
       Object.seal(this);
     }
@@ -557,8 +557,8 @@ var Visualizer = (function ($, window, undefined) {
     collapseArcs = false;
     collapseArcSpace = false;
     roundCoordinates = true; // try to have exact pixel offsets
-    boxTextMargin = { x: 0, y: 1.5 }; // effect is inverse of "margin" for some reason
-    highlightRounding = { x: 3, y: 3 }; // rx, ry for highlight boxes
+    boxTextMargin = {x: 0, y: 1.5}; // effect is inverse of "margin" for some reason
+    highlightRounding = {x: 3, y: 3}; // rx, ry for highlight boxes
     spaceWidths = {
       ' ': 4,
       '\u00a0': 4,
@@ -597,7 +597,6 @@ var Visualizer = (function ($, window, undefined) {
     highlightSpanSequence;
     highlightArcSequence;
     highlightTextSequence;
-    highlightDuration = '2s';
     // different sequence for "mere" matches (as opposed to "focus" and "edited" highlights)
     highlightMatchSequence = '#FFFF00'; // plain yellow
 
@@ -657,24 +656,7 @@ var Visualizer = (function ($, window, undefined) {
         'resize'
       ]);
 
-      this.dispatcher.
-        on('collectionChanged', this, this.collectionChanged).
-        on('collectionLoaded', this, this.collectionLoaded).
-        on('renderData', this, this.renderData).
-        on('rerender', this, this.rerender).
-        on('renderDataPatch', this, this.renderDataPatch).
-        on('triggerRender', this, this.triggerRender).
-        on('requestRenderData', this, this.requestRenderData).
-        on('isReloadOkay', this, this.isReloadOkay).
-        on('resetData', this, this.resetData).
-        on('abbrevs', this, this.setAbbrevs).
-        on('textBackgrounds', this, this.setTextBackgrounds).
-        on('layoutDensity', this, this.setLayoutDensity).
-        on('svgWidth', this, this.setSvgWidth).
-        on('current', this, this.gotCurrent).
-        on('clearSVG', this, this.clearSVG).
-        on('mouseover', this, this.onMouseOver).
-        on('mouseout', this, this.onMouseOut);
+      this.dispatcher.on('collectionChanged', this, this.collectionChanged).on('collectionLoaded', this, this.collectionLoaded).on('renderData', this, this.renderData).on('rerender', this, this.rerender).on('renderDataPatch', this, this.renderDataPatch).on('triggerRender', this, this.triggerRender).on('requestRenderData', this, this.requestRenderData).on('isReloadOkay', this, this.isReloadOkay).on('resetData', this, this.resetData).on('abbrevs', this, this.setAbbrevs).on('textBackgrounds', this, this.setTextBackgrounds).on('layoutDensity', this, this.setLayoutDensity).on('svgWidth', this, this.setSvgWidth).on('current', this, this.gotCurrent).on('clearSVG', this, this.clearSVG).on('mouseover', this, this.onMouseOver).on('mouseout', this, this.onMouseOut);
     }
 
     rowBBox(fragment) {
@@ -687,7 +669,7 @@ var Visualizer = (function ($, window, undefined) {
 
     /**
      * Get the priority of the given comment class.
-     * 
+     *
      * @param {String} commentClass
      * @returns a numerical value representing the priority.
      */
@@ -698,7 +680,7 @@ var Visualizer = (function ($, window, undefined) {
 
       const len = this.commentPrioLevels.length;
       for (var i = 0; i < len; i++) {
-        if (commentClass.indexOf(this.commentPrioLevels[i]) != -1) {
+        if (commentClass.indexOf(this.commentPrioLevels[i]) !== -1) {
           return i;
         }
       }
@@ -719,21 +701,21 @@ var Visualizer = (function ($, window, undefined) {
       }
 
       this.args[markedType].map(marked => {
-        if (marked[0] == 'sent') {
+        if (marked[0] === 'sent') {
           data.markedSent[marked[1]] = true;
           return;
         }
 
-        if (marked[0] == 'equiv') { // [equiv, Equiv, T1]
-          $.each(sourceData.equivs, (equivNo, equiv) => {
-            if (equiv[1] == marked[1]) {
+        if (marked[0] === 'equiv') { // [equiv, Equiv, T1]
+          $.each(this.sourceData.equivs, (equivNo, equiv) => {
+            if (equiv[1] === marked[1]) {
               let len = equiv.length;
-              for (var i = 2; i < len; i++) {
-                if (equiv[i] == marked[2]) {
+              for (let i = 2; i < len; i++) {
+                if (equiv[i] === marked[2]) {
                   // found it
                   len -= 3;
-                  for (var i = 1; i <= len; i++) {
-                    let arc = this.data.eventDescs[equiv[0] + "*" + i].equivArc;
+                  for (let n = 1; n <= len; n++) {
+                    let arc = this.data.eventDescs[equiv[0] + "*" + n].equivArc;
                     arc.marked = markedType;
                   }
                   return; // next equiv
@@ -744,16 +726,16 @@ var Visualizer = (function ($, window, undefined) {
           return;
         }
 
-        if (marked.length == 2) {
+        if (marked.length === 2) {
           this.markedText.push([parseInt(marked[0], 10), parseInt(marked[1], 10), markedType]);
           return;
         }
 
         let span = this.data.spans[marked[0]];
         if (span) {
-          if (marked.length == 3) { // arc
+          if (marked.length === 3) { // arc
             $.each(span.outgoing, (arcNo, arc) => {
-              if (arc.target == marked[2] && arc.type == marked[1]) {
+              if (arc.target === marked[2] && arc.type === marked[1]) {
                 arc.marked = markedType;
               }
             });
@@ -767,7 +749,7 @@ var Visualizer = (function ($, window, undefined) {
         let eventDesc = this.data.eventDescs[marked[0]];
         if (eventDesc) { // relation
           $.each(this.data.spans[eventDesc.triggerId].outgoing, (arcNo, arc) => {
-            if (arc.eventDescId == marked[0]) {
+            if (arc.eventDescId === marked[0]) {
               arc.marked = markedType;
             }
           });
@@ -776,7 +758,7 @@ var Visualizer = (function ($, window, undefined) {
 
         // try for trigger
         $.each(this.data.eventDescs, (eventDescNo, eventDesc) => {
-          if (eventDesc.triggerId == marked[0]) {
+          if (eventDesc.triggerId === marked[0]) {
             this.data.spans[eventDesc.id].marked = markedType;
           }
         });
@@ -784,8 +766,8 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     findArcHeight(fromIndex, toIndex, fragmentHeights) {
-      var height = 0;
-      for (var i = fromIndex; i <= toIndex; i++) {
+      let height = 0;
+      for (let i = fromIndex; i <= toIndex; i++) {
         if (fragmentHeights[i] > height)
           height = fragmentHeights[i];
       }
@@ -794,7 +776,7 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     adjustFragmentHeights(fromIndex, toIndex, fragmentHeights, height) {
-      for (var i = fromIndex; i <= toIndex; i++) {
+      for (let i = fromIndex; i <= toIndex; i++) {
         if (fragmentHeights[i] < height)
           fragmentHeights[i] = height;
       }
@@ -810,7 +792,7 @@ var Visualizer = (function ($, window, undefined) {
 
     /**
      * Calculate average arc distances. Average distance of arcs (0 for no arcs).
-     * 
+     *
      * @param {Span[]} spans
      */
     calculateAverageArcDistances(spans) {
@@ -819,7 +801,7 @@ var Visualizer = (function ($, window, undefined) {
 
     /**
      * Collect fragment texts into span texts
-     * 
+     *
      * @param {Span[]} spans
      */
     collectFragmentTextsIntoSpanTexts(spans) {
@@ -831,7 +813,7 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     /**
-     * @param {Object.<*,Span>} spans 
+     * @param {Object.<*,Span>} spans
      * @returns list of span IDs in the order they should be drawn.
      */
     determineDrawOrder(spans) {
@@ -842,7 +824,7 @@ var Visualizer = (function ($, window, undefined) {
 
         // We're jumping all over the chunks, but it's enough that we're doing everything inside
         // each chunk in the right order. Should it become necessary to actually do these in
-        // linear order, put in a similar condition for spanX.headFragment.chunk.index; but it 
+        // linear order, put in a similar condition for spanX.headFragment.chunk.index; but it
         // should not be needed.
         var tmp = spanA.headFragment.drawOrder - spanB.headFragment.drawOrder;
         if (tmp) {
@@ -859,7 +841,7 @@ var Visualizer = (function ($, window, undefined) {
       var towerId = -1;
 
       sortedFragments.map(fragment => {
-        if (!lastFragment || (lastFragment.from != fragment.from || lastFragment.to != fragment.to)) {
+        if (!lastFragment || (lastFragment.from !== fragment.from || lastFragment.to !== fragment.to)) {
           towerId++;
         }
         fragment.towerId = towerId;
@@ -895,7 +877,7 @@ var Visualizer = (function ($, window, undefined) {
           startChunk++;
         }
 
-        if (startChunk == numChunks) {
+        if (startChunk === numChunks) {
           this.dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
           return;
         }
@@ -910,11 +892,10 @@ var Visualizer = (function ($, window, undefined) {
           currentChunk++;
         }
 
-        if (currentChunk == numChunks) {
+        if (currentChunk === numChunks) {
           this.dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
           let chunk = chunks[chunks.length - 1];
           chunk.markedTextEnd.push([textNo, false, chunk.text.length]);
-          return;
         }
       }); // markedText
     }
@@ -1125,7 +1106,7 @@ var Visualizer = (function ($, window, undefined) {
         let valText = (attrValue && attrValue.name) || attr[3];
         let attrText = attrType
           ? (attrType.bool ? attrType.name : (attrType.name + ': ' + valText))
-          : (attr[3] == true ? attr[1] : attr[1] + ': ' + attr[3]);
+          : (attr[3] ? attr[1] : attr[1] + ': ' + attr[3]);
         span.attributeText.push(attrText);
         span.attributes[attr[1]] = attr[3];
 
@@ -1149,14 +1130,14 @@ var Visualizer = (function ($, window, undefined) {
         // comment: [entityId, type, text]
         // TODO error handling
         // sentence id: ['sent', sentId]
-        if (comment[0] instanceof Array && comment[0][0] == 'sent') {
+        if (comment[0] instanceof Array && comment[0][0] === 'sent') {
           // sentence comment
           let sent = comment[0][1];
           let text = comment[2];
           if (this.data.sentComment[sent]) {
             text = this.data.sentComment[sent].text + '<br/>' + text;
           }
-          this.data.sentComment[sent] = { type: comment[1], text: text };
+          this.data.sentComment[sent] = {type: comment[1], text: text};
           return;
         }
 
@@ -1174,14 +1155,14 @@ var Visualizer = (function ($, window, undefined) {
           // if duplicate comment for entity:
           // overwrite type, concatenate comment with a newline
           if (!entity.comment) {
-            entity.comment = { type: comment[1], text: comment[2] };
+            entity.comment = {type: comment[1], text: comment[2]};
           } else {
             entity.comment.type = comment[1];
             entity.comment.text += "\n" + comment[2];
           }
 
           // partially duplicate marking of annotator note comments
-          if (comment[1] == "AnnotatorNotes") {
+          if (comment[1] === "AnnotatorNotes") {
             entity.annotatorNotes = comment[2];
           }
 
@@ -1207,7 +1188,7 @@ var Visualizer = (function ($, window, undefined) {
       sortedFragments.sort(function (a, b) {
         let x = a.from;
         let y = b.from;
-        if (x == y) {
+        if (x === y) {
           x = a.to;
           y = b.to;
         }
@@ -1328,13 +1309,13 @@ var Visualizer = (function ($, window, undefined) {
 
     /**
      * Builds the args based on the EventDescs and links them up to the spans.
-     * 
+     *
      * Side effects:
      * - Fields on spans are changed: totalDist, numArcs, outgoing, incoming
      * - data.arcById index is populated.
      */
     assignArcsToSpans(eventDescs, spans) {
-      if (!eventDescs || !spans) {
+      if (!eventDescs || !spans) {
         return [];
       }
 
@@ -1379,8 +1360,8 @@ var Visualizer = (function ($, window, undefined) {
 
     /**
      * Populates the "data" field based on the "sourceData" JSON that we recieved from the server.
-     * 
-     * @param {*} sourceData 
+     *
+     * @param {*} sourceData
      */
     setData(sourceData) {
       this.sourceData = sourceData;
@@ -1477,48 +1458,43 @@ var Visualizer = (function ($, window, undefined) {
         });
       });
 
-      var spanAnnTexts = {};
+      const spanAnnTexts = {};
       this.data.chunks.map(chunk => {
         chunk.markedTextStart = [];
         chunk.markedTextEnd = [];
 
         $.each(chunk.fragments, (fragmentNo, fragment) => {
-          if (chunk.firstFragmentIndex == undefined) {
+          if (chunk.firstFragmentIndex === undefined) {
             chunk.firstFragmentIndex = fragment.towerId;
           }
           chunk.lastFragmentIndex = fragment.towerId;
 
-          var spanLabels = Util.getSpanLabels(this.spanTypes, fragment.span.type);
+          const spanLabels = Util.getSpanLabels(this.spanTypes, fragment.span.type);
           fragment.labelText = Util.spanDisplayForm(this.spanTypes, fragment.span.type);
           // Find the most appropriate label according to text width
           if (Configuration.abbrevsOn && spanLabels) {
-            var labelIdx = 1; // first abbrev
-            var maxLength = (fragment.to - fragment.from) / 0.8;
+            let labelIdx = 1; // first abbrev
+            const maxLength = (fragment.to - fragment.from) / 0.8;
             while (fragment.labelText.length > maxLength &&
-              spanLabels[labelIdx]) {
+            spanLabels[labelIdx]) {
               fragment.labelText = spanLabels[labelIdx];
               labelIdx++;
             }
           }
 
-          // WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
           fragment.labelText = "(" + fragment.labelText + ")";
-          // WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
-          // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
           if (fragment.span.labelText) {
             fragment.labelText = fragment.span.labelText;
           }
-          // WEBANNO EXTENSION END
-          var svgtext = this.svg.createText(); // one "text" element per row
-          var postfixArray = [];
-          var prefix = '';
-          var postfix = '';
-          var warning = false;
+          const svgtext = this.svg.createText(); // one "text" element per row
+          const postfixArray = [];
+          let prefix = '';
+          let postfix = '';
+          let warning = false;
           $.each(fragment.span.attributes, (attrType, valType) => {
             // TODO: might wish to check what's appropriate for the type
             // instead of using the first attribute def found
-            var attr = (eventAttributeTypes[attrType] ||
-              entityAttributeTypes[attrType]);
+            var attr = (this.eventAttributeTypes[attrType] || this.entityAttributeTypes[attrType]);
             if (!attr) {
               // non-existent type
               warning = true;
@@ -1536,9 +1512,9 @@ var Visualizer = (function ($, window, undefined) {
               return;
             }
             if (val.glyph) {
-              if (val.position == "left") {
+              if (val.position === "left") {
                 prefix = val.glyph + prefix;
-                var tspan_attrs = { 'class': 'glyph' };
+                const tspan_attrs = {'class': 'glyph'};
                 if (val.glyphColor) {
                   tspan_attrs.fill = val.glyphColor;
                 }
@@ -1559,7 +1535,7 @@ var Visualizer = (function ($, window, undefined) {
             text += ' ' + postfix;
             svgtext.string(' ');
             $.each(postfixArray, function (elNo, el) {
-              var tspan_attrs = { 'class': 'glyph' };
+              var tspan_attrs = {'class': 'glyph'};
               if (el[1].glyphColor) {
                 tspan_attrs.fill = el[1].glyphColor;
               }
@@ -1567,7 +1543,7 @@ var Visualizer = (function ($, window, undefined) {
             });
           }
           if (warning) {
-            svgtext.span("#", { 'class': 'glyph attribute_warning' });
+            svgtext.span("#", {'class': 'glyph attribute_warning'});
             text += ' #';
           }
           fragment.glyphedLabelText = text;
@@ -1594,7 +1570,7 @@ var Visualizer = (function ($, window, undefined) {
 
     translate(element, x, y) {
       $(element.group).attr('transform', 'translate(' + x + ', ' + y + ')');
-      element.translation = { x: x, y: y };
+      element.translation = {x: x, y: y};
     }
 
     addHeaderAndDefs() {
@@ -1657,59 +1633,56 @@ var Visualizer = (function ($, window, undefined) {
       var textSizes = this.getTextMeasurements(chunkTexts, undefined, (fragment, text) => {
         if (fragment instanceof Fragment) { // it's a fragment!
           // measure the fragment text position in pixels
-          var firstChar = fragment.from - fragment.chunk.from;
+          let firstChar = fragment.from - fragment.chunk.from;
           if (firstChar < 0) {
             firstChar = 0;
             this.dispatcher.post('messages', [[['<strong>WARNING</strong>' +
-              '<br/> ' +
-              'The fragment [' + fragment.from + ', ' + fragment.to + '] (' + fragment.text + ') is not ' +
-              'contained in its designated chunk [' +
-              fragment.chunk.from + ', ' + fragment.chunk.to + '] most likely ' +
-              'due to the fragment starting or ending with a space, please ' +
-              'verify the sanity of your data since we are unable to ' +
-              'visualise this fragment correctly and will drop leading ' +
-              'space characters',
+            '<br/> ' +
+            'The fragment [' + fragment.from + ', ' + fragment.to + '] (' + fragment.text + ') is not ' +
+            'contained in its designated chunk [' +
+            fragment.chunk.from + ', ' + fragment.chunk.to + '] most likely ' +
+            'due to the fragment starting or ending with a space, please ' +
+            'verify the sanity of your data since we are unable to ' +
+            'visualise this fragment correctly and will drop leading ' +
+            'space characters',
               'warning', 15]]]);
           }
-          var lastChar = fragment.to - fragment.chunk.from - 1;
+          let lastChar = fragment.to - fragment.chunk.from - 1;
 
           // Adjust for XML whitespace (#832, #1009)
-          var textUpToFirstChar = fragment.chunk.text.substring(0, firstChar);
-          var textUpToLastChar = fragment.chunk.text.substring(0, lastChar);
-          var textUpToFirstCharUnspaced = textUpToFirstChar.replace(/\s\s+/g, ' ');
-          var textUpToLastCharUnspaced = textUpToLastChar.replace(/\s\s+/g, ' ');
+          const textUpToFirstChar = fragment.chunk.text.substring(0, firstChar);
+          const textUpToLastChar = fragment.chunk.text.substring(0, lastChar);
+          const textUpToFirstCharUnspaced = textUpToFirstChar.replace(/\s\s+/g, ' ');
+          const textUpToLastCharUnspaced = textUpToLastChar.replace(/\s\s+/g, ' ');
           firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
           lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
 
-          // BEGIN WEBANNO EXTENSION - RTL support 
-          // - #265 rendering with quotation marks 
-          // - #278 Sub-token annotation of LTR text in RTL mode  
+          // BEGIN WEBANNO EXTENSION - RTL support
+          // - #265 rendering with quotation marks
+          // - #278 Sub-token annotation of LTR text in RTL mode
           if (this.rtlmode) {
             // This rendering is much slower than the "old" version that brat uses, but it
             // is more reliable in RTL mode.
-            var charDirection = null;
-            var charAttrs = null;
-            var corrFactor = 1;
+            let charDirection;
+            let charAttrs;
+            let corrFactor = 1;
 
-            if ('rtlsizes' in fragment.chunk) {
+            if (fragment.chunk.rtlsizes) {
               // Use cached metrics
               charDirection = fragment.chunk.rtlsizes.charDirection;
               charAttrs = fragment.chunk.rtlsizes.charAttrs;
               corrFactor = fragment.chunk.rtlsizes.corrFactor;
-            }
-            else {
+            } else {
               // Calculate metrics
-              var start = new Date();
-
               charDirection = [];
               charAttrs = [];
 
               // WebAnno #307 Cannot use fragment.chunk.text.length here because invisible
               // characters do not count. Using text.getNumberOfChars() instead.
               //var step1Start = new Date();
-              for (var idx = 0; idx < text.getNumberOfChars(); idx++) {
-                var cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x;
-                var dir = isRTL(text.textContent.charCodeAt(idx)) ? "rtl" : "ltr";
+              for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
+                const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x;
+                const dir = isRTL(text.textContent.charCodeAt(idx)) ? "rtl" : "ltr";
                 charAttrs.push({
                   order: idx,
                   width: Math.abs(cw),
@@ -1717,26 +1690,26 @@ var Visualizer = (function ($, window, undefined) {
                 });
                 charDirection.push(dir);
                 //		            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
-                //		            	  		"begin:" + text.getStartPositionOfChar(idx).x + 
-                //		            	  		" end:" + text.getEndPositionOfChar(idx).x + 
-                //		            	  		" width:" + Math.abs(cw) + 
+                //		            	  		"begin:" + text.getStartPositionOfChar(idx).x +
+                //		            	  		" end:" + text.getEndPositionOfChar(idx).x +
+                //		            	  		" width:" + Math.abs(cw) +
                 //		            	  		" dir:" + charDirection[charDirection.length-1]);
               }
               //console.log("Collected widths in " + (new Date() - step1Start));
               // Re-order widths if necessary
               //var step2Start = new Date();
               if (charAttrs.length > 1) {
-                var idx = 0;
-                var blockBegin = idx;
-                var blockEnd = idx;
+                let idx = 0;
+                let blockBegin = idx;
+                let blockEnd = idx;
 
                 // Figure out next block
                 while (blockEnd < charAttrs.length) {
-                  while (charDirection[blockBegin] == charDirection[blockEnd]) {
+                  while (charDirection[blockBegin] === charDirection[blockEnd]) {
                     blockEnd++;
                   }
 
-                  if (charDirection[blockBegin] == (rtlmode ? "ltr" : "rtl")) {
+                  if (charDirection[blockBegin] === (this.rtlmode ? "ltr" : "rtl")) {
                     charAttrs = charAttrs.slice(0, blockBegin)
                       .concat(charAttrs.slice(blockBegin, blockEnd).reverse())
                       .concat(charAttrs.slice(blockEnd));
@@ -1752,8 +1725,8 @@ var Visualizer = (function ($, window, undefined) {
               // obtained by subtracting start from end position. In particular Arabic connects
               // characters quite a bit such that the width on screen may be less. Here we
               // try to compensate for this using a correction factor.
-              var widthsSum = 0;
-              for (var idx = 0; idx < charAttrs.length; idx++) {
+              let widthsSum = 0;
+              for (let idx = 0; idx < charAttrs.length; idx++) {
                 widthsSum += charAttrs[idx].width;
               }
               corrFactor = text.getComputedTextLength() / widthsSum;
@@ -1767,39 +1740,40 @@ var Visualizer = (function ($, window, undefined) {
                 corrFactor: corrFactor
               };
 
-              //console.log("Completed calculating static RTL metrics in " + (new Date() - 
+              //console.log("Completed calculating static RTL metrics in " + (new Date() -
               //		  start) + " for " + text.getNumberOfChars() + " characters.");
             }
 
-            //startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
+            // startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
             var startPos = 0;
-            //	           	  console.log("startPos[initial]: " + startPos);
-            for (var i = 0; charAttrs[i].order != firstChar && i < charAttrs.length; i++) {
+            // console.log("startPos[initial]: " + startPos);
+            for (let i = 0; charAttrs[i].order !== firstChar && i < charAttrs.length; i++) {
               startPos += charAttrs[i].width;
-              //	            	  console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
+              // console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
             }
-            if (charDirection[i] == (this.rtlmode ? "ltr" : "rtl")) {
+            /* REC: Not sure if this served a purpose or ever worked...
+            if (charDirection[i] === (this.rtlmode ? "ltr" : "rtl")) {
               startPos += charAttrs[i].width;
-              //	            	  console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
+              // console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
             }
+            */
             startPos = startPos * corrFactor;
-            //	        	  console.log("startPos: " + startPos);
-            //endPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
+            // console.log("startPos: " + startPos);
+            // endPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
             var endPos = 0;
             //	           	  console.log("endPos[initial]: " + endPos);
-            for (var i = 0; charAttrs[i].order != lastChar && i < charAttrs.length; i++) {
+            for (let i = 0; charAttrs[i].order !== lastChar && i < charAttrs.length; i++) {
               endPos += charAttrs[i].width;
               //	            	  console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
             }
-            if (charDirection[i] == (this.rtlmode ? "rtl" : "ltr")) {
+            if (charDirection[i] === (this.rtlmode ? "rtl" : "ltr")) {
               //	            	  console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
               endPos += charAttrs[i].width;
             }
             endPos = endPos * corrFactor;
             //	        	  console.log("endPos: " + endPos);
-          }
-          else {
-            // Using the old faster method in LTR mode. YES, this means that subtoken 
+          } else {
+            // Using the old faster method in LTR mode. YES, this means that subtoken
             // annotations of RTL tokens in LTR mode will render incorrectly. If somebody
             // needs that, we should do a smarter selection of the rendering mode.
             // This is the old measurement code which doesn't work properly because browsers
@@ -1816,7 +1790,7 @@ var Visualizer = (function ($, window, undefined) {
               ? startPos
               : text.getEndPositionOfChar(lastChar).x;
           }
-          // END WEBANNO EXTENSION - RTL support - #265 rendering with quotation marks 
+          // END WEBANNO EXTENSION - RTL support - #265 rendering with quotation marks
           // WEBANNO EXTENSION BEGIN - RTL support - Curlies coordinates
           // In RTL mode, positions are negative (left to right)
           if (this.rtlmode) {
@@ -1842,8 +1816,8 @@ var Visualizer = (function ($, window, undefined) {
       });
 
       // get the fragment annotation text sizes
-      var fragmentTexts = {};
-      var noSpans = true;
+      const fragmentTexts = {};
+      let noSpans = true;
       $.each(this.data.spans, (spanNo, span) => {
         $.each(span.fragments, (fragmentNo, fragment) => {
           fragmentTexts[fragment.glyphedLabelText] = true;
@@ -1855,7 +1829,7 @@ var Visualizer = (function ($, window, undefined) {
         fragmentTexts.$ = true; // dummy so we can at least get the height
       }
 
-      var fragmentSizes = this.getTextMeasurements(fragmentTexts, { 'class': 'span' });
+      const fragmentSizes = this.getTextMeasurements(fragmentTexts, {'class': 'span'});
 
       return {
         texts: textSizes,
@@ -1865,34 +1839,31 @@ var Visualizer = (function ($, window, undefined) {
 
     addArcTextMeasurements(sizes) {
       // get the arc annotation text sizes (for all labels)
-      var arcTexts = {};
+      const arcTexts = {};
       $.each(this.data.arcs, (arcNo, arc) => {
-        var labels = Util.getArcLabels(this.spanTypes, this.data.spans[arc.origin].type, arc.type, this.relationTypesHash);
+        let labels = Util.getArcLabels(this.spanTypes, this.data.spans[arc.origin].type, arc.type, this.relationTypesHash);
         if (!labels.length) {
           labels = [arc.type];
         }
 
-        // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
         if (arc.eventDescId && this.data.eventDescs[arc.eventDescId] &&
           this.data.eventDescs[arc.eventDescId].labelText) {
           labels = [this.data.eventDescs[arc.eventDescId].labelText];
         }
-        // WEBANNO EXTENSION END - #820 - Allow setting label/color individually
 
         $.each(labels, (labelNo, label) => arcTexts[label] = true);
       });
 
-      var arcSizes = this.getTextMeasurements(arcTexts, { 'class': 'arcs' });
-      sizes.arcs = arcSizes;
+      sizes.arcs = this.getTextMeasurements(arcTexts, {'class': 'arcs'});
     }
 
     adjustTowerAnnotationSizes() {
       // find biggest annotation in each tower
       $.each(this.data.towers, (towerNo, tower) => {
-        var maxWidth = 0;
+        let maxWidth = 0;
 
         $.each(tower, (fragmentNo, fragment) => {
-          var width = this.data.sizes.fragments.widths[fragment.glyphedLabelText];
+          const width = this.data.sizes.fragments.widths[fragment.glyphedLabelText];
           if (width > maxWidth) {
             maxWidth = width;
           }
@@ -1903,15 +1874,15 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     makeArrow(defs, spec) {
-      var parsedSpec = spec.split(',');
-      var type = parsedSpec[0];
-      if (type == 'none') {
+      const parsedSpec = spec.split(',');
+      const type = parsedSpec[0];
+      if (type === 'none') {
         return;
       }
 
-      var width = 5;
-      var height = 5;
-      var color = "black";
+      let width = 5;
+      let height = 5;
+      let color = "black";
       if ($.isNumeric(parsedSpec[1]) && parsedSpec[2]) {
         if ($.isNumeric(parsedSpec[2]) && parsedSpec[3]) {
           // 3 args, 2 numeric: assume width, height, color
@@ -1928,11 +1899,12 @@ var Visualizer = (function ($, window, undefined) {
         width = height = 5;
         color = parsedSpec[1] || 'black';
       }
-      // hash needs to be replaced as IDs don't permit it.
-      var arrowId = 'arrow_' + spec.replace(/#/g, '').replace(/,/g, '_');
 
-      var arrow;
-      if (type == 'triangle') {
+      // hash needs to be replaced as IDs don't permit it.
+      const arrowId = 'arrow_' + spec.replace(/#/g, '').replace(/,/g, '_');
+
+      let arrow;
+      if (type === 'triangle') {
         arrow = this.svg.marker(defs, arrowId,
           width, height / 2, width, height, 'auto',
           {
@@ -1945,6 +1917,7 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     renderDataReal(sourceData) {
+      let width;
       Util.profileEnd('before render');
       Util.profileStart('render');
       Util.profileStart('init');
@@ -1975,10 +1948,10 @@ var Visualizer = (function ($, window, undefined) {
         return;
       }
 
-      // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
+      // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size
       this.$svg.css("font-size", this.fontZoom + "%");
       this.sentNumMargin = 40 * (this.fontZoom / 100.0);
-      // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
+      // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size
       // WEBANNO EXTENSION BEGIN - Flex-Layout - need to discover scrollbar width programmatically
       /*
       // establish the width according to the enclosing element
@@ -1988,21 +1961,21 @@ var Visualizer = (function ($, window, undefined) {
       this.baseCanvasWidth = this.forceWidth || this.$svgDiv.width();
       this.canvasWidth = this.forceWidth || (this.$svgDiv.width() - $.scrollbarWidth());
       // WEBANNO EXTENSION END - Flex-Layout - need to discover scrollbar width programmatically
-      // WEBANNO EXTENSION BEGIN - #289 - Layout slightly shifts when SVG is rendered 
+      // WEBANNO EXTENSION BEGIN - #289 - Layout slightly shifts when SVG is rendered
       // Take hairline border of SVG into account
       this.canvasWidth -= 4;
-      // WEBANNO EXTENSION END - #289 - Layout slightly shifts when SVG is rendered 
+      // WEBANNO EXTENSION END - #289 - Layout slightly shifts when SVG is rendered
       var defs = this.addHeaderAndDefs();
 
       // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       /*
               var backgroundGroup = svg.group({ 'class': 'background' });
       */
-      var backgroundGroup = this.svg.group({ 'class': 'background', 'pointer-events': 'none' });
+      var backgroundGroup = this.svg.group({'class': 'background', 'pointer-events': 'none'});
       // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      var glowGroup = this.svg.group({ 'class': 'glow' });
-      this.highlightGroup = this.svg.group({ 'class': 'highlight' });
-      var textGroup = this.svg.group({ 'class': 'text' });
+      var glowGroup = this.svg.group({'class': 'glow'});
+      this.highlightGroup = this.svg.group({'class': 'highlight'});
+      var textGroup = this.svg.group({'class': 'text'});
 
       Util.profileEnd('init');
       Util.profileStart('measures');
@@ -2014,7 +1987,7 @@ var Visualizer = (function ($, window, undefined) {
       var maxTextWidth = 0;
       for (var text in sizes.texts.widths) {
         if (sizes.texts.widths.hasOwnProperty(text)) {
-          var width = sizes.texts.widths[text];
+          width = sizes.texts.widths[text];
           if (width > maxTextWidth)
             maxTextWidth = width;
         }
@@ -2060,26 +2033,26 @@ var Visualizer = (function ($, window, undefined) {
       var inf = 1.0 / 0.0;
 
       $.each(this.data.spanDrawOrderPermutation, (spanIdNo, spanId) => {
-        var span = this.data.spans[spanId];
-        var spanDesc = this.spanTypes[span.type];
-        var bgColor = ((spanDesc && spanDesc.bgColor) ||
+        const span = this.data.spans[spanId];
+        const spanDesc = this.spanTypes[span.type];
+        const bgColor = ((spanDesc && spanDesc.bgColor) ||
           (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) || '#ffffff');
 
-        if (bgColor == "hidden") {
+        if (bgColor === "hidden") {
           span.hidden = true;
           return;
         }
 
-        var f1 = span.fragments[0];
-        var f2 = span.fragments[span.fragments.length - 1];
+        const f1 = span.fragments[0];
+        const f2 = span.fragments[span.fragments.length - 1];
 
-        var x1 = (f1.curly.from + f1.curly.to - f1.width) / 2 -
+        const x1 = (f1.curly.from + f1.curly.to - f1.width) / 2 -
           Configuration.visual.margin.x - (sizes.fragments.height / 2);
-        var i1 = f1.chunk.index;
+        const i1 = f1.chunk.index;
 
-        var x2 = (f2.curly.from + f2.curly.to + f2.width) / 2 +
+        const x2 = (f2.curly.from + f2.curly.to + f2.width) / 2 +
           Configuration.visual.margin.x + (sizes.fragments.height / 2);
-        var i2 = f2.chunk.index;
+        const i2 = f2.chunk.index;
 
         // Start from the ground level, going up floor by floor.
         // If no more floors, make a new available one.
@@ -2096,19 +2069,19 @@ var Visualizer = (function ($, window, undefined) {
         //
         // TODO drawCurly and height could be prettified to only check
         // actual positions of curlies
-        var carpet = 0;
-        var outside = true;
-        var thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0;
-        var height = sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
+        let carpet = 0;
+        let outside = true;
+        const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0;
+        const height = sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
           2 * Configuration.visual.margin.y - 3;
         $.each(floors, (floorNo, floor) => {
-          var floorAvailable = true;
-          for (var i = i1; i <= i2; i++) {
+          let floorAvailable = true;
+          for (let i = i1; i <= i2; i++) {
             if (!(reservations[i] && reservations[i][floor])) {
               continue;
             }
-            var from = (i == i1) ? x1 : -inf;
-            var to = (i == i2) ? x2 : inf;
+            const from = (i === i1) ? x1 : -inf;
+            const to = (i === i2) ? x2 : inf;
             $.each(reservations[i][floor], (resNo, res) => {
               if (res[0] < to && from < res[1]) {
                 floorAvailable = false;
@@ -2128,22 +2101,23 @@ var Visualizer = (function ($, window, undefined) {
             carpet = null;
           }
         });
-        var reslen = reservations.length;
-        var makeNewFloorIfNeeded = function (floor) {
-          var floorNo = $.inArray(floor, floors);
-          if (floorNo == -1) {
+
+        const reslen = reservations.length;
+        const makeNewFloorIfNeeded = function (floor) {
+          let floorNo = $.inArray(floor, floors);
+          if (floorNo === -1) {
             floors.push(floor);
             floors.sort(Util.cmp);
             floorNo = $.inArray(floor, floors);
-            if (floorNo != 0) {
+            if (floorNo !== 0) {
               // copy reservations from the floor below
-              var parquet = floors[floorNo - 1];
-              for (var i = 0; i <= reslen; i++) {
+              const parquet = floors[floorNo - 1];
+              for (let i = 0; i <= reslen; i++) {
                 if (reservations[i]) {
                   if (!reservations[i][parquet]) {
                     reservations[i][parquet] = [];
                   }
-                  var footroom = floor - parquet;
+                  const footroom = floor - parquet;
                   $.each(reservations[i][parquet], function (resNo, res) {
                     if (res[2] > footroom) {
                       if (!reservations[i][floor]) {
@@ -2158,16 +2132,16 @@ var Visualizer = (function ($, window, undefined) {
           }
           return floorNo;
         };
-        var ceiling = carpet + height;
-        var ceilingNo = makeNewFloorIfNeeded(ceiling);
-        var carpetNo = makeNewFloorIfNeeded(carpet);
+        const ceiling = carpet + height;
+        const ceilingNo = makeNewFloorIfNeeded(ceiling);
+        const carpetNo = makeNewFloorIfNeeded(carpet);
         // make the reservation
-        var floor, floorNo;
+        let floor, floorNo;
         for (floorNo = carpetNo; (floor = floors[floorNo]) !== undefined && floor < ceiling; floorNo++) {
-          var headroom = ceiling - floor;
-          for (var i = i1; i <= i2; i++) {
-            var from = (i == i1) ? x1 : 0;
-            var to = (i == i2) ? x2 : inf;
+          const headroom = ceiling - floor;
+          for (let i = i1; i <= i2; i++) {
+            const from = (i === i1) ? x1 : 0;
+            const to = (i === i2) ? x2 : inf;
             if (!reservations[i])
               reservations[i] = {};
             if (!reservations[i][floor])
@@ -2179,83 +2153,63 @@ var Visualizer = (function ($, window, undefined) {
       });
 
       $.each(this.data.chunks, (chunkNo, chunk) => {
-        var spaceWidth = 0;
+        let spaceWidth = 0;
         if (chunk.lastSpace) {
-          // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
-          /*
-          var spaceLen = chunk.lastSpace.length || 0;
-          var spacePos = chunk.lastSpace.lastIndexOf("\n") + 1;
-          if (spacePos || !chunkNo || !chunk.sentence) {
-            // indent if
-            // * non-first paragraph first word
-            // * first paragraph first word
-            // * non-first word in a line
-            // don't indent if
-            // * the first word in a non-paragraph line
-            for (var i = spacePos; i < spaceLen; i++) spaceWidth += spaceWidths[chunk.lastSpace[i]] || 0;
-            currentX += spaceWidth;
-          }
-          */
-          var spaceLen = chunk.lastSpace.length || 0;
-          var spacePos;
+          const spaceLen = chunk.lastSpace.length || 0;
+          let spacePos;
           if (chunk.sentence) {
             // If this is line-initial spacing, fetch the sentence to which the chunk belongs
             // so we can determine where it begins
-            var sentFrom = sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
+            const sentFrom = sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
             spacePos = spaceLen - (chunk.from - sentFrom);
-          }
-          else {
+          } else {
             spacePos = 0;
           }
-          for (var i = spacePos; i < spaceLen; i++) {
+          for (let i = spacePos; i < spaceLen; i++) {
             spaceWidth += this.spaceWidths[chunk.lastSpace[i]] * (this.fontZoom / 100.0) || 0;
           }
           currentX += this.rtlmode ? -spaceWidth : spaceWidth;
-          // WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
         }
 
         chunk.group = this.svg.group(row.group);
         chunk.highlightGroup = this.svg.group(chunk.group);
 
-        var y = 0;
-        var minArcDist;
-        var hasLeftArcs, hasRightArcs, hasInternalArcs;
-        var hasAnnotations;
-        var chunkFrom = Infinity;
-        var chunkTo = 0;
-        var chunkHeight = 0;
-        var spacing = 0;
-        var spacingChunkId = null;
-        var spacingRowBreak = 0;
+        let y = 0;
+        let hasLeftArcs, hasRightArcs, hasInternalArcs;
+        let hasAnnotations;
+        let chunkFrom = Infinity;
+        let chunkTo = 0;
+        let chunkHeight = 0;
+        let spacing = 0;
+        let spacingChunkId = null;
+        let spacingRowBreak = 0;
 
         $.each(chunk.fragments, (fragmentNo, fragment) => {
-          var span = fragment.span;
+          const span = fragment.span;
 
           if (span.hidden) {
             return;
           }
 
-          var spanDesc = this.spanTypes[span.type];
-          var bgColor = ((spanDesc && spanDesc.bgColor) ||
+          const spanDesc = this.spanTypes[span.type];
+          let bgColor = ((spanDesc && spanDesc.bgColor) ||
             (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) || '#ffffff');
-          var fgColor = ((spanDesc && spanDesc.fgColor) ||
+          let fgColor = ((spanDesc && spanDesc.fgColor) ||
             (this.spanTypes.SPAN_DEFAULT &&
               this.spanTypes.SPAN_DEFAULT.fgColor) || '#000000');
-          var borderColor = ((spanDesc && spanDesc.borderColor) ||
+          let borderColor = ((spanDesc && spanDesc.borderColor) ||
             (this.spanTypes.SPAN_DEFAULT &&
               this.spanTypes.SPAN_DEFAULT.borderColor) || '#000000');
 
-          // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
           if (span.color) {
             bgColor = span.color;
             fgColor = bgToFgColor(bgColor);
             borderColor = 'darken';
           }
-          // WEBANNO EXTENSION END
 
           // special case: if the border 'color' value is 'darken',
           // then just darken the BG color a bit for the border.
-          if (borderColor == 'darken') {
+          if (borderColor === 'darken') {
             borderColor = Util.adjustColorLightness(bgColor, -0.6);
           }
 
@@ -2263,29 +2217,29 @@ var Visualizer = (function ($, window, undefined) {
             'class': 'span',
           });
 
-          var fragmentHeight = 0;
+          let fragmentHeight = 0;
 
           if (!y) {
             y = -sizes.texts.height;
           }
           // x : center of fragment on x axis
-          var x = (fragment.curly.from + fragment.curly.to) / 2;
+          let x = (fragment.curly.from + fragment.curly.to) / 2;
 
           // XXX is it maybe sizes.texts?
-          var yy = y + sizes.fragments.y;
+          let yy = y + sizes.fragments.y;
           // hh : fragment height
-          var hh = sizes.fragments.height;
+          let hh = sizes.fragments.height;
           // ww : fragment width
-          var ww = fragment.width;
+          let ww = fragment.width;
           // xx : left edge of fragment
-          var xx = x - ww / 2;
+          let xx = x - ww / 2;
 
           // text margin fine-tuning
           yy += this.boxTextMargin.y;
           hh -= 2 * this.boxTextMargin.y;
           xx += this.boxTextMargin.x;
           ww -= 2 * this.boxTextMargin.x;
-          var rectClass = 'span_' + (span.cue || span.type) + ' span_default'; // TODO XXX first part unneeded I think; remove
+          let rectClass = 'span_' + (span.cue || span.type) + ' span_default'; // TODO XXX first part unneeded I think; remove
 
           // attach e.g. "False_positive" into the type
           if (span.comment && span.comment.type) {
@@ -2293,86 +2247,68 @@ var Visualizer = (function ($, window, undefined) {
           }
 
           // inner coordinates of fragment (excluding margins)
-          var bx = xx - Configuration.visual.margin.x - this.boxTextMargin.x;
-          var by = yy - Configuration.visual.margin.y;
-          var bw = ww + 2 * Configuration.visual.margin.x;
-          var bh = hh + 2 * Configuration.visual.margin.y;
+          let bx = xx - Configuration.visual.margin.x - this.boxTextMargin.x;
+          const by = yy - Configuration.visual.margin.y;
+          const bw = ww + 2 * Configuration.visual.margin.x;
+          const bh = hh + 2 * Configuration.visual.margin.y;
 
           if (this.roundCoordinates) {
             x = (x | 0) + 0.5;
             bx = (bx | 0) + 0.5;
           }
 
-          var shadowRect;
-          var markedRect;
+          let shadowRect;
+          let markedRect;
           if (span.marked) {
             markedRect = this.svg.rect(chunk.highlightGroup,
               bx - this.markedSpanSize, by - this.markedSpanSize,
               bw + 2 * this.markedSpanSize, bh + 2 * this.markedSpanSize, {
-              filter: 'url(#Gaussian_Blur)',
-              'class': "shadow_EditHighlight",
-              rx: this.markedSpanSize,
-              ry: this.markedSpanSize,
-            });
+                filter: 'url(#Gaussian_Blur)',
+                'class': "shadow_EditHighlight",
+                rx: this.markedSpanSize,
+                ry: this.markedSpanSize,
+              });
           }
-          // BEGIN WEBANNO EXTENSION - Issue #273 - Layout doesn't space out labels sufficiently 
           // Nicely spread out labels/text and leave space for mark highlight such that adding
           // the mark doesn't change the overall layout
           chunkFrom = Math.min(bx - this.markedSpanSize, chunkFrom);
           chunkTo = Math.max(bx + bw + this.markedSpanSize, chunkTo);
           fragmentHeight = Math.max(bh + 2 * this.markedSpanSize, fragmentHeight);
-          // WEBANNO EXTENSION END - Issue #273 - Layout doesn't space out labels sufficiently 
-          // .match() removes unconfigured shadows, whic    h were
-          // always showing up as black.
           // TODO: don't hard-code configured shadowclasses.
           if (span.shadowClass &&
             span.shadowClass.match('True_positive|False_positive|False_negative|AnnotationError|AnnotationWarning|AnnotatorNotes|Normalized|AnnotationIncomplete|AnnotationUnconfirmed|rectEditHighlight|EditHighlight_arc|MissingAnnotation|ChangedAnnotation ')) {
             shadowRect = this.svg.rect(fragment.group,
               bx - this.rectShadowSize, by - this.rectShadowSize,
               bw + 2 * this.rectShadowSize, bh + 2 * this.rectShadowSize, {
-              'class': 'shadow_' + span.shadowClass,
-              filter: 'url(#Gaussian_Blur)',
-              rx: this.rectShadowRounding,
-              ry: this.rectShadowRounding,
-            });
+                'class': 'shadow_' + span.shadowClass,
+                filter: 'url(#Gaussian_Blur)',
+                rx: this.rectShadowRounding,
+                ry: this.rectShadowRounding,
+              });
             chunkFrom = Math.min(bx - this.rectShadowSize, chunkFrom);
             chunkTo = Math.max(bx + bw + this.rectShadowSize, chunkTo);
             fragmentHeight = Math.max(bh + 2 * this.rectShadowSize, fragmentHeight);
           }
-          /*
-          fragment.rect = svg.rect(fragment.group,
-              bx, by, bw, bh, {
 
-              'class': rectClass,
-              fill: bgColor,
-              stroke: borderColor,
-              rx: Configuration.visual.margin.x,
-              ry: Configuration.visual.margin.y,
-              'data-span-id': span.id,
-              'data-fragment-id': span.segmentedOffsetsMap[fragment.id],
-              'strokeDashArray': span.attributeMerge.dashArray,
-            });*/
-          var bx1 = bx;
-          var bx2 = bx1 + bw;
-          var by1 = yy - Configuration.visual.margin.y - span.floor;
-          var by2 = by1 + bh;
-          var poly = [];
-          if (span.clippedAtStart && span.fragments[0] == fragment) {
+          const bx1 = bx;
+          const bx2 = bx1 + bw;
+          const by1 = yy - Configuration.visual.margin.y - span.floor;
+          const by2 = by1 + bh;
+          const poly = [];
+          if (span.clippedAtStart && span.fragments[0] === fragment) {
             poly.push([bx1, by2]);
             poly.push([bx1 - bh / 2, (by1 + by2) / 2]);
             poly.push([bx1, by1]);
-          }
-          else {
+          } else {
             poly.push([bx1, by2]);
             poly.push([bx1, by1]);
           }
 
-          if (span.clippedAtEnd && span.fragments[span.fragments.length - 1] == fragment) {
+          if (span.clippedAtEnd && span.fragments[span.fragments.length - 1] === fragment) {
             poly.push([bx2, by1]);
             poly.push([bx2 + bh / 2, (by1 + by2) / 2]);
             poly.push([bx2, by2]);
-          }
-          else {
+          } else {
             poly.push([bx2, by1]);
             poly.push([bx2, by2]);
           }
@@ -2388,19 +2324,7 @@ var Visualizer = (function ($, window, undefined) {
             'strokeDashArray': span.attributeMerge.dashArray,
           });
 
-          // BEGIN WEBANNO EXTENSION - WebAnno does not support marking normalizations
-          /*
-          // TODO XXX: quick nasty hack to allow normalizations
-          // to be marked visually; do something cleaner!
-          if (span.normalized) {
-            $(fragment.rect).addClass(span.normalized);
-          }
-          */
-          // WEBANNO EXTENSION END
-          // BEGIN WEBANNO EXTENSION - RTL support
           fragment.left = bx; // TODO put it somewhere nicer?
-
-          // WEBANNO EXTENSION END
           fragment.right = bx + bw; // TODO put it somewhere nicer?
           if (!(span.shadowClass || span.marked)) {
             chunkFrom = Math.min(bx, chunkFrom);
@@ -2408,9 +2332,9 @@ var Visualizer = (function ($, window, undefined) {
             fragmentHeight = Math.max(bh, fragmentHeight);
           }
 
-          fragment.rectBox = { x: bx, y: by - span.floor, width: bw, height: bh };
+          fragment.rectBox = {x: bx, y: by - span.floor, width: bw, height: bh};
           fragment.height = span.floor + hh + 3 * Configuration.visual.margin.y + Configuration.visual.curlyHeight + Configuration.visual.arcSpacing;
-          var spacedTowerId = fragment.towerId * 2;
+          const spacedTowerId = fragment.towerId * 2;
           if (!fragmentHeights[spacedTowerId] || fragmentHeights[spacedTowerId] < fragment.height) {
             fragmentHeights[spacedTowerId] = fragment.height;
           }
@@ -2422,43 +2346,41 @@ var Visualizer = (function ($, window, undefined) {
             $(markedRect).attr('y', yy - this.markedSpanSize - Configuration.visual.margin.y - span.floor);
           }
           if (span.attributeMerge.box === "crossed") {
-            this.svg.path(fragment.group, svg.createPath().
-              move(xx, yy - Configuration.visual.margin.y - span.floor).
-              line(xx + fragment.width,
-                yy + hh + Configuration.visual.margin.y - span.floor),
-              { 'class': 'boxcross' });
-            this.svg.path(fragment.group, svg.createPath().
-              move(xx + fragment.width, yy - Configuration.visual.margin.y - span.floor).
-              line(xx, yy + hh + Configuration.visual.margin.y - span.floor),
-              { 'class': 'boxcross' });
+            this.svg.path(fragment.group, svg.createPath().move(xx, yy - Configuration.visual.margin.y - span.floor).line(xx + fragment.width,
+              yy + hh + Configuration.visual.margin.y - span.floor),
+              {'class': 'boxcross'});
+            this.svg.path(fragment.group, svg.createPath().move(xx + fragment.width, yy - Configuration.visual.margin.y - span.floor).line(xx, yy + hh + Configuration.visual.margin.y - span.floor),
+              {'class': 'boxcross'});
           }
-          this.svg.text(fragment.group, x, y - span.floor, this.data.spanAnnTexts[fragment.glyphedLabelText], { fill: fgColor });
+          this.svg.text(fragment.group, x, y - span.floor, this.data.spanAnnTexts[fragment.glyphedLabelText], {fill: fgColor});
 
           // Make curlies to show the fragment
           if (fragment.drawCurly) {
-            var curlyColor = 'grey';
+            let curlyColor = 'grey';
             if (this.coloredCurlies) {
-              var spanDesc = this.spanTypes[span.type];
-              var bgColor = ((spanDesc && spanDesc.bgColor) ||
-                (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.fgColor) ||
-                '#000000');
-              // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+              let spanDesc = this.spanTypes[span.type];
+              let bgColor;
               if (span.color) {
                 bgColor = span.color;
               }
-              // WEBANNO EXTENSION END
+              else {
+                bgColor = ((spanDesc && spanDesc.bgColor) ||
+                  (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.fgColor) ||
+                  '#000000');
+              }
+
               curlyColor = Util.adjustColorLightness(bgColor, -0.6);
             }
 
-            var bottom = yy + hh + Configuration.visual.margin.y - span.floor + 1;
+            const bottom = yy + hh + Configuration.visual.margin.y - span.floor + 1;
             this.svg.path(fragment.group, this.svg.createPath()
-              .move(fragment.curly.from, bottom + Configuration.visual.curlyHeight)
-              .curveC(fragment.curly.from, bottom,
-                x, bottom + Configuration.visual.curlyHeight,
-                x, bottom)
-              .curveC(x, bottom + Configuration.visual.curlyHeight,
-                fragment.curly.to, bottom,
-                fragment.curly.to, bottom + Configuration.visual.curlyHeight),
+                .move(fragment.curly.from, bottom + Configuration.visual.curlyHeight)
+                .curveC(fragment.curly.from, bottom,
+                  x, bottom + Configuration.visual.curlyHeight,
+                  x, bottom)
+                .curveC(x, bottom + Configuration.visual.curlyHeight,
+                  fragment.curly.to, bottom,
+                  fragment.curly.to, bottom + Configuration.visual.curlyHeight),
               {
                 'class': 'curly',
                 'stroke': curlyColor,
@@ -2468,38 +2390,29 @@ var Visualizer = (function ($, window, undefined) {
             fragmentHeight = Math.max(Configuration.visual.curlyHeight, fragmentHeight);
           }
 
-          if (fragment == span.headFragment) {
+          if (fragment === span.headFragment) {
             // find the gap to fit the backwards arcs, but only on
             // head fragment - other fragments don't have arcs
             $.each(span.incoming, (arcId, arc) => {
-              var leftSpan = this.data.spans[arc.origin];
-              var origin = leftSpan.headFragment.chunk;
-              var border;
-              if (chunk.index == origin.index) {
+              const leftSpan = this.data.spans[arc.origin];
+              const origin = leftSpan.headFragment.chunk;
+              let border;
+              if (chunk.index === origin.index) {
                 hasInternalArcs = true;
               }
               if (origin.row) {
-                var labels = Util.getArcLabels(this.spanTypes, leftSpan.type, arc.type, this.relationTypesHash);
+                let labels = Util.getArcLabels(this.spanTypes, leftSpan.type, arc.type, this.relationTypesHash);
                 if (!labels.length) {
                   labels = [arc.type];
                 }
-                // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+
                 if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
                   if (this.data.eventDescs[arc.eventDescId].labelText) {
                     labels = [this.data.eventDescs[arc.eventDescId].labelText];
                   }
                 }
-                // WEBANNO EXTENSION END
-                // WEBANNO EXTENSION BEGIN - RTL support - chunk spacing with arcs                  
-                /*
-                if (origin.row.index == rowIndex) {
-                  // same row, but before this
-                  border = origin.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
-                } else {
-                  border = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
-                }
-                */
-                if (origin.row.index == rowIndex) {
+
+                if (origin.row.index === rowIndex) {
                   border = origin.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
                 } else {
                   if (this.rtlmode) {
@@ -2508,16 +2421,13 @@ var Visualizer = (function ($, window, undefined) {
                     border = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
                   }
                 }
-                // WEBANNO EXTENSION END
-                var labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
-                var smallestLabelWidth = sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
-                // WEBANNO EXTENSION BEGIN - RTL support - chunk spacing with arcs
-                /*
-                var gap = currentX + bx - border;
-                */
-                var gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border);
-                // WEBANNO EXTENSION END
-                var arcSpacing = smallestLabelWidth - gap;
+
+                const labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
+                const smallestLabelWidth = sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
+
+                const gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border);
+
+                let arcSpacing = smallestLabelWidth - gap;
                 if (!hasLeftArcs || spacing < arcSpacing) {
                   spacing = arcSpacing;
                   spacingChunkId = origin.index + 1;
@@ -2533,30 +2443,21 @@ var Visualizer = (function ($, window, undefined) {
             });
 
             $.each(span.outgoing, (arcId, arc) => {
-              var leftSpan = this.data.spans[arc.target];
-              var target = leftSpan.headFragment.chunk;
-              var border;
+              const leftSpan = this.data.spans[arc.target];
+              const target = leftSpan.headFragment.chunk;
+              let border;
               if (target.row) {
-                var labels = Util.getArcLabels(this.spanTypes, span.type, arc.type, this.relationTypesHash);
+                let labels = Util.getArcLabels(this.spanTypes, span.type, arc.type, this.relationTypesHash);
                 if (!labels.length)
                   labels = [arc.type];
-                // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+
                 if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
                   if (this.data.eventDescs[arc.eventDescId].labelText) {
                     labels = [this.data.eventDescs[arc.eventDescId].labelText];
                   }
                 }
-                // WEBANNO EXTENSION END
-                // WEBANNO EXTENSION BEGIN - RTL support - chunk spacing with arcs
-                /*
-                if (target.row.index == rowIndex) {
-                  // same row, but before this
-                  border = target.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
-                } else {
-                  border = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
-                }
-                */
-                if (target.row.index == rowIndex) {
+
+                if (target.row.index === rowIndex) {
                   // same row, but before this
                   border = target.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
                 } else {
@@ -2566,16 +2467,13 @@ var Visualizer = (function ($, window, undefined) {
                     border = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
                   }
                 }
-                // WEBANNO EXTENSION END
-                var labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
-                var smallestLabelWidth = sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
-                // WEBANNO EXTENSION BEGIN - RTL support - chunk spacing with arcs
-                /*
-                var gap = currentX + bx - border;
-                */
-                var gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border);
-                // WEBANNO EXTENSION END
-                var arcSpacing = smallestLabelWidth - gap;
+
+                const labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
+                const smallestLabelWidth = sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
+
+                const gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border);
+
+                let arcSpacing = smallestLabelWidth - gap;
                 if (!hasLeftArcs || spacing < arcSpacing) {
                   spacing = arcSpacing;
                   spacingChunkId = target.index + 1;
@@ -2608,7 +2506,7 @@ var Visualizer = (function ($, window, undefined) {
         */
         // If chunkFrom becomes negative (LTR) or chunkTo becomes positive (RTL), then boxX becomes positive
         var boxX = this.rtlmode ? chunkTo : -Math.min(chunkFrom, 0);
-        // WEBANNO EXTENSION END         
+        // WEBANNO EXTENSION END
         // WEBANNO EXTENSION BEGIN - RTL support - [boxWidth] calculation of boxWidth
         /*
                   var boxWidth =
@@ -2618,8 +2516,7 @@ var Visualizer = (function ($, window, undefined) {
         var boxWidth;
         if (this.rtlmode) {
           boxWidth = Math.max(textWidth, -chunkFrom) - Math.min(0, -chunkTo);
-        }
-        else {
+        } else {
           boxWidth = Math.max(textWidth, chunkTo) - Math.min(0, chunkFrom);
         }
         // WEBANNO EXTENSION END
@@ -2644,7 +2541,7 @@ var Visualizer = (function ($, window, undefined) {
         var lastRow = row;
 
         // Is there a sentence break at the current chunk (i.e. it is the first chunk in a new
-        // sentence) - if yes and the current sentence is not the same as the sentence to which 
+        // sentence) - if yes and the current sentence is not the same as the sentence to which
         // the chunk belongs, then fill in additional rows
         if (chunk.sentence) {
           // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
@@ -2662,7 +2559,7 @@ var Visualizer = (function ($, window, undefined) {
           */
           while (sentenceNumber < chunk.sentence - 1) {
             sentenceNumber++;
-            row.arcs = this.svg.group(row.group, { 'class': 'arcs' });
+            row.arcs = this.svg.group(row.group, {'class': 'arcs'});
             rows.push(row);
 
             row = new Row(this.svg);
@@ -2685,8 +2582,7 @@ var Visualizer = (function ($, window, undefined) {
         if (this.rtlmode) {
           chunkDoesNotFit = currentX - boxWidth - leftBorderForArcs <=
             2 * Configuration.visual.margin.x;
-        }
-        else {
+        } else {
           chunkDoesNotFit = currentX + boxWidth + rightBorderForArcs >=
             this.canvasWidth - 2 * Configuration.visual.margin.x;
         }
@@ -2696,7 +2592,7 @@ var Visualizer = (function ($, window, undefined) {
           // WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
           // WEBANNO EXTENSION END
           // the chunk does not fit
-          row.arcs = this.svg.group(row.group, { 'class': 'arcs' });
+          row.arcs = this.svg.group(row.group, {'class': 'arcs'});
           // WEBANNO EXTENSION BEGIN - RTL support - [currentX] reset after soft-wrap
           /*
           // TODO: related to issue #571
@@ -2715,8 +2611,7 @@ var Visualizer = (function ($, window, undefined) {
               // so we can determine where it begins
               var sentFrom = sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
               spacePos = spaceLen - (chunk.from - sentFrom);
-            }
-            else {
+            } else {
               spacePos = 0;
             }
             for (var i = spacePos; i < spaceLen; i++) {
@@ -2729,8 +2624,7 @@ var Visualizer = (function ($, window, undefined) {
               (hasRightArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0)) /* +
                           spaceWidth*/
               - indent);
-          }
-          else {
+          } else {
             currentX = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding +
               (hasLeftArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0)) /*+
                         spaceWidth*/
@@ -2739,18 +2633,13 @@ var Visualizer = (function ($, window, undefined) {
           // WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
           // WEBANNO EXTENSION END - RTL support - [currentX] reset after soft-wrap
           if (hasLeftArcs) {
-            var adjustedCurTextWidth = sizes.texts.widths[chunk.text] + this.arcHorizontalSpacing;
+            const adjustedCurTextWidth = sizes.texts.widths[chunk.text] + this.arcHorizontalSpacing;
             if (adjustedCurTextWidth > maxTextWidth) {
               maxTextWidth = adjustedCurTextWidth;
             }
           }
           if (spacingRowBreak > 0) {
-            // WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for spacingRowBreak (for arcs)
-            /*
-            currentX += spacingRowBreak;
-            */
             currentX += this.rtlmode ? -spacingRowBreak : spacingRowBreak;
-            // WEBANNO EXTENSION END
             spacing = 0; // do not center intervening elements
           }
 
@@ -2759,37 +2648,28 @@ var Visualizer = (function ($, window, undefined) {
 
           this.svg.remove(chunk.group);
           row = new Row(this.svg);
-          // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
           // Change row background color if a new sentence is starting
           if (chunk.sentence) {
             sentenceToggle = 1 - sentenceToggle;
           }
-          // WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
           row.backgroundIndex = sentenceToggle;
           row.index = ++rowIndex;
           this.svg.add(row.group, chunk.group);
           chunk.group = row.group.lastElementChild;
-          $(chunk.group).children("g[class='span']").
-            each((index, element) => chunk.fragments[index].group = element);
-          $(chunk.group).find("rect[data-span-id]").
-            each((index, element) => chunk.fragments[index].rect = element);
+          $(chunk.group).children("g[class='span']").each((index, element) => chunk.fragments[index].group = element);
+          $(chunk.group).find("rect[data-span-id]").each((index, element) => chunk.fragments[index].rect = element);
         }
 
         // break the text highlights when the row breaks
         if (row.index !== lastRow.index) {
           $.each(openTextHighlights, (textId, textDesc) => {
-            if (textDesc[3] != lastX) {
-              // WEBANNO EXTENSION BEGIN - RTL support - breaking highlights (?)
-              /*
-              var newDesc = [lastRow, textDesc[3], lastX + boxX, textDesc[4]];
-              */
-              var newDesc;
+            if (textDesc[3] !== lastX) {
+              let newDesc;
               if (this.rtlmode) {
                 newDesc = [lastRow, textDesc[3], lastX - boxX, textDesc[4]];
               } else {
                 newDesc = [lastRow, textDesc[3], lastX + boxX, textDesc[4]];
               }
-              // WEBANNO EXTENSION END
               textMarkedRows.push(newDesc);
             }
             textDesc[3] = currentX;
@@ -2798,23 +2678,13 @@ var Visualizer = (function ($, window, undefined) {
 
         // open text highlights
         $.each(chunk.markedTextStart, (textNo, textDesc) => {
-          // WEBANNO EXTENSION BEGIN - RTL support - breaking highlights (?)
-          /*
-          textDesc[3] += currentX + boxX;
-          */
           textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
-          // WEBANNO EXTENSION END
           openTextHighlights[textDesc[0]] = textDesc;
         });
 
         // close text highlights
         $.each(chunk.markedTextEnd, (textNo, textDesc) => {
-          // WEBANNO EXTENSION BEGIN - RTL support - breaking highlights (?)
-          /*
-          textDesc[3] += currentX + boxX;
-          */
           textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
-          // WEBANNO EXTENSION END
           let startDesc = openTextHighlights[textDesc[0]];
           delete openTextHighlights[textDesc[0]];
           textMarkedRows.push([row, startDesc[3], textDesc[3], startDesc[4]]);
@@ -2825,12 +2695,7 @@ var Visualizer = (function ($, window, undefined) {
           row.hasAnnotations = true;
         }
 
-        // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
-        /*
-        if (chunk.sentence) {
-        */
         if (chunk.sentence > sourceData.sentence_number_offset) {
-          // WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
           row.sentence = ++sentenceNumber;
         }
 
@@ -2855,27 +2720,15 @@ var Visualizer = (function ($, window, undefined) {
         row.chunks.push(chunk);
         chunk.row = row;
 
-        // WEBANNO EXTENSION BEGIN - RTL support - chunk - translate position (based on currentX/boxX)
-        /*
-        this.translate(chunk, currentX + boxX, 0);
-        chunk.textX = currentX + boxX;
-        */
         this.translate(chunk, currentX + (this.rtlmode ? -boxX : boxX), 0);
         chunk.textX = currentX + (this.rtlmode ? -boxX : boxX);
-        // WEBANNO EXTENSION END
-        // WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for boxWidth (chunk)
-        /*
-        currentX += boxWidth;
-        */
         currentX += this.rtlmode ? -boxWidth : boxWidth;
-        // WEBANNO EXTENSION END
       }); // chunks
 
-      // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
       // Add trailing empty rows
       while (sentenceNumber < (sourceData.sentence_offsets.length + sourceData.sentence_number_offset - 1)) {
         sentenceNumber++;
-        row.arcs = this.svg.group(row.group, { 'class': 'arcs' });
+        row.arcs = this.svg.group(row.group, {'class': 'arcs'});
         rows.push(row);
         row = new Row(this.svg);
         row.sentence = sentenceNumber;
@@ -2883,22 +2736,21 @@ var Visualizer = (function ($, window, undefined) {
         row.backgroundIndex = sentenceToggle;
         row.index = ++rowIndex;
       }
-      // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+
       // finish the last row
-      row.arcs = this.svg.group(row.group, { 'class': 'arcs' });
+      row.arcs = this.svg.group(row.group, {'class': 'arcs'});
       rows.push(row);
-
       Util.profileEnd('chunks');
-      Util.profileStart('arcsPrep');
 
-      var arrows = {};
-      var arrow = this.makeArrow(defs, 'none');
+      Util.profileStart('arcsPrep');
+      const arrows = {};
+      const arrow = this.makeArrow(defs, 'none');
       if (arrow) {
         arrows['none'] = arrow;
       }
 
-      var len = fragmentHeights.length;
-      for (var i = 0; i < len; i++) {
+      const len = fragmentHeights.length;
+      for (let i = 0; i < len; i++) {
         if (!fragmentHeights[i] || fragmentHeights[i] < Configuration.visual.arcStartHeight) {
           fragmentHeights[i] = Configuration.visual.arcStartHeight;
         }
@@ -2907,17 +2759,19 @@ var Visualizer = (function ($, window, undefined) {
       // find out how high the arcs have to go
       $.each(this.data.arcs, (arcNo, arc) => {
         arc.jumpHeight = 0;
-        var fromFragment = this.data.spans[arc.origin].headFragment;
-        var toFragment = this.data.spans[arc.target].headFragment;
+        let fromFragment = this.data.spans[arc.origin].headFragment;
+        let toFragment = this.data.spans[arc.target].headFragment;
         if (fromFragment.span.hidden || toFragment.span.hidden) {
           arc.hidden = true;
           return;
         }
         if (fromFragment.towerId > toFragment.towerId) {
-          var tmp = fromFragment; fromFragment = toFragment; toFragment = tmp;
+          var tmp = fromFragment;
+          fromFragment = toFragment;
+          toFragment = tmp;
         }
-        var from, to;
-        if (fromFragment.chunk.index == toFragment.chunk.index) {
+        let from, to;
+        if (fromFragment.chunk.index === toFragment.chunk.index) {
           from = fromFragment.towerId;
           to = toFragment.towerId;
         } else {
@@ -2955,22 +2809,22 @@ var Visualizer = (function ($, window, undefined) {
       });
 
       // see which fragments are in each row
-      var heightsStart = 0;
-      var heightsRowsAdded = 0;
+      let heightsStart = 0;
+      let heightsRowsAdded = 0;
       $.each(rows, (rowId, row) => {
-        var seenFragment = false;
+        let seenFragment = false;
         row.heightsStart = row.heightsEnd = heightsStart;
         $.each(row.chunks, (chunkId, chunk) => {
           if (chunk.lastFragmentIndex !== undefined) {
             // fragmentful chunk
             seenFragment = true;
-            var heightsIndex = chunk.lastFragmentIndex * 2 + heightsRowsAdded;
-            if (row.heightsEnd < heightsIndex) {
-              row.heightsEnd = heightsIndex;
+            const heightsEndIndex = chunk.lastFragmentIndex * 2 + heightsRowsAdded;
+            if (row.heightsEnd < heightsEndIndex) {
+              row.heightsEnd = heightsEndIndex;
             }
-            var heightsIndex = chunk.firstFragmentIndex * 2 + heightsRowsAdded;
-            if (row.heightsStart > heightsIndex) {
-              row.heightsStart = heightsIndex;
+            const heightsStartIndex = chunk.firstFragmentIndex * 2 + heightsRowsAdded;
+            if (row.heightsStart > heightsStartIndex) {
+              row.heightsStart = heightsStartIndex;
             }
           }
         });
@@ -2985,25 +2839,24 @@ var Visualizer = (function ($, window, undefined) {
       });
 
       // draw the drag arc marker
-      var arrowhead = this.svg.marker(defs, 'drag_arrow',
+      const arrowhead = this.svg.marker(defs, 'drag_arrow',
         5, 2.5, 5, 5, 'auto',
         {
           markerUnits: 'strokeWidth',
           'class': 'drag_fill',
         });
       this.svg.polyline(arrowhead, [[0, 0], [5, 2.5], [0, 5], [0.2, 2.5]]);
-      var arcDragArc = this.svg.path(this.svg.createPath(), {
+      const arcDragArc = this.svg.path(this.svg.createPath(), {
         markerEnd: 'url(#drag_arrow)',
         'class': 'drag_stroke',
         fill: 'none',
         visibility: 'hidden',
       });
       this.dispatcher.post('arcDragArcDrawn', [arcDragArc]);
-
       Util.profileEnd('arcsPrep');
-      Util.profileStart('arcs');
 
-      var arcCache = {};
+      Util.profileStart('arcs');
+      const arcCache = {};
       // add the arcs
       $.each(this.data.arcs, (arcNo, arc) => {
         if (arc.hidden) {
@@ -3011,18 +2864,18 @@ var Visualizer = (function ($, window, undefined) {
         }
 
         // separate out possible numeric suffix from type
-        var noNumArcType;
-        var splitArcType;
+        let noNumArcType;
+        let splitArcType;
         if (arc.type) {
           splitArcType = arc.type.match(/^(.*)(\d*)$/);
           noNumArcType = splitArcType[1];
         }
 
-        var originSpan = this.data.spans[arc.origin];
-        var targetSpan = this.data.spans[arc.target];
+        const originSpan = this.data.spans[arc.origin];
+        const targetSpan = this.data.spans[arc.target];
 
-        var leftToRight = originSpan.headFragment.towerId < targetSpan.headFragment.towerId;
-        var left, right;
+        const leftToRight = originSpan.headFragment.towerId < targetSpan.headFragment.towerId;
+        let left, right;
         if (leftToRight) {
           left = originSpan.headFragment;
           right = targetSpan.headFragment;
@@ -3033,26 +2886,26 @@ var Visualizer = (function ($, window, undefined) {
 
         // fall back on relation types in case we still don't have
         // an arc description, with final fallback to unnumbered relation
-        var arcDesc = this.relationTypesHash[arc.type] || this.relationTypesHash[noNumArcType];
+        let arcDesc = this.relationTypesHash[arc.type] || this.relationTypesHash[noNumArcType];
 
         // if it's not a relationship, see if we can find it in span
         // descriptions
         // TODO: might make more sense to reformat this as dict instead
         // of searching through the list every type
-        var spanDesc = this.spanTypes[originSpan.type];
+        const spanDesc = this.spanTypes[originSpan.type];
         if (!arcDesc && spanDesc && spanDesc.arcs) {
           $.each(spanDesc.arcs, (arcDescNo, arcDescIter) => {
-            if (arcDescIter.type == arc.type) {
+            if (arcDescIter.type === arc.type) {
               arcDesc = arcDescIter;
             }
           });
         }
 
         // last fall back on unnumbered type if not found in full
-        if (!arcDesc && noNumArcType && noNumArcType != arc.type &&
+        if (!arcDesc && noNumArcType && noNumArcType !== arc.type &&
           spanDesc && spanDesc.arcs) {
           $.each(spanDesc.arcs, (arcDescNo, arcDescIter) => {
-            if (arcDescIter.type == noNumArcType) {
+            if (arcDescIter.type === noNumArcType) {
               arcDesc = arcDescIter;
             }
           });
@@ -3063,52 +2916,51 @@ var Visualizer = (function ($, window, undefined) {
           arcDesc = {};
         }
 
-        var color = ((arcDesc && arcDesc.color) ||
-          (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.color) ||
-          '#000000');
-        if (color == 'hidden') {
+        let color = ((arcDesc && arcDesc.color) ||
+          (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.color) || '#000000');
+        if (color === 'hidden') {
           return;
         }
 
-        // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+
         if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
           if (this.data.eventDescs[arc.eventDescId].color) {
             color = [this.data.eventDescs[arc.eventDescId].color];
           }
         }
-        // WEBANNO EXTENSION END
-        var symmetric = arcDesc && arcDesc.properties && arcDesc.properties.symmetric;
-        var dashArray = arcDesc && arcDesc.dashArray;
-        var arrowHead = ((arcDesc && arcDesc.arrowHead) ||
+
+        const symmetric = arcDesc && arcDesc.properties && arcDesc.properties.symmetric;
+        const dashArray = arcDesc && arcDesc.dashArray;
+        const arrowHead = ((arcDesc && arcDesc.arrowHead) ||
           (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.arrowHead) ||
           'triangle,5') + ',' + color;
-        var labelArrowHead = ((arcDesc && arcDesc.labelArrow) ||
+        const labelArrowHead = ((arcDesc && arcDesc.labelArrow) ||
           (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.labelArrow) ||
           'triangle,5') + ',' + color;
 
-        var leftBox = this.rowBBox(left);
-        var rightBox = this.rowBBox(right);
-        var leftRow = left.chunk.row.index;
-        var rightRow = right.chunk.row.index;
+        const leftBox = this.rowBBox(left);
+        const rightBox = this.rowBBox(right);
+        const leftRow = left.chunk.row.index;
+        const rightRow = right.chunk.row.index;
 
         if (!arrows[arrowHead]) {
-          var arrow = this.makeArrow(defs, arrowHead);
+          const arrow = this.makeArrow(defs, arrowHead);
           if (arrow) {
             arrows[arrowHead] = arrow;
           }
         }
         if (!arrows[labelArrowHead]) {
-          var arrow = this.makeArrow(defs, labelArrowHead);
+          const arrow = this.makeArrow(defs, labelArrowHead);
           if (arrow) {
             arrows[labelArrowHead] = arrow;
           }
         }
 
         // find the next height
-        var height;
+        let height;
 
-        var fromIndex2, toIndex2;
-        if (left.chunk.index == right.chunk.index) {
+        let fromIndex2, toIndex2;
+        if (left.chunk.index === right.chunk.index) {
           fromIndex2 = left.towerId * 2 + left.chunk.row.heightsAdjust;
           toIndex2 = right.towerId * 2 + right.chunk.row.heightsAdjust;
         } else {
@@ -3124,42 +2976,33 @@ var Visualizer = (function ($, window, undefined) {
           // the lines come out pixel-width even without it. Check.
           height += 0.5;
         }
-        var leftSlantBound, rightSlantBound;
 
-        var chunkReverse = false;
-        var ufoCatcher = originSpan.headFragment.chunk.index == targetSpan.headFragment.chunk.index;
+        let chunkReverse = false;
+        const ufoCatcher = originSpan.headFragment.chunk.index === targetSpan.headFragment.chunk.index;
         if (ufoCatcher) {
           chunkReverse = leftBox.x + leftBox.width / 2 < rightBox.x + rightBox.width / 2;
         }
-        var ufoCatcherMod = ufoCatcher ? chunkReverse ? -0.5 : 0.5 : 1;
+        const ufoCatcherMod = ufoCatcher ? chunkReverse ? -0.5 : 0.5 : 1;
 
-        for (var rowIndex = leftRow; rowIndex <= rightRow; rowIndex++) {
-          var row = rows[rowIndex];
+        for (let rowIndex = leftRow; rowIndex <= rightRow; rowIndex++) {
+          const row = rows[rowIndex];
           if (row.chunks.length) {
             row.hasAnnotations = true;
 
             if (this.collapseArcSpace) {
-              var fromIndex2R = rowIndex == leftRow ? fromIndex2 : row.heightsStart;
-              var toIndex2R = rowIndex == rightRow ? toIndex2 : row.heightsEnd;
-              height = findArcHeight(fromIndex2R, toIndex2R, fragmentHeights);
+              const fromIndex2R = rowIndex === leftRow ? fromIndex2 : row.heightsStart;
+              const toIndex2R = rowIndex === rightRow ? toIndex2 : row.heightsEnd;
+              height = this.findArcHeight(fromIndex2R, toIndex2R, fragmentHeights);
             }
 
-            var arcGroup = this.svg.group(row.arcs, {
+            const arcGroup = this.svg.group(row.arcs, {
               'data-from': arc.origin,
               'data-to': arc.target,
               'data-id': arc.eventDescId
             });
-            var from, to;
 
-            // WEBANNO EXTENSION BEGIN - RTL support - arc from
-            /*
-            if (rowIndex == leftRow) {
-              from = leftBox.x + (chunkReverse ? 0 : leftBox.width);
-            } else {
-              from = this.sentNumMargin;
-            }
-            */
-            if (rowIndex == leftRow) {
+            let from;
+            if (rowIndex === leftRow) {
               if (this.rtlmode) {
                 from = leftBox.x + (chunkReverse ? leftBox.width : 0);
               } else {
@@ -3168,16 +3011,9 @@ var Visualizer = (function ($, window, undefined) {
             } else {
               from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin;
             }
-            // WEBANNO EXTENSION END
-            // WEBANNO EXTENSION BEGIN - RTL support - arc to
-            /*
-            if (rowIndex == rightRow) {
-              to = rightBox.x + (chunkReverse ? rightBox.width : 0);
-            } else {
-              to = this.canvasWidth - 2 * Configuration.visual.margin.y;
-            }
-            */
-            if (rowIndex == rightRow) {
+
+            let to;
+            if (rowIndex === rightRow) {
               if (this.rtlmode) {
                 to = rightBox.x + (chunkReverse ? 0 : rightBox.width);
               } else {
@@ -3186,15 +3022,15 @@ var Visualizer = (function ($, window, undefined) {
             } else {
               to = this.rtlmode ? 0 : this.canvasWidth - 2 * Configuration.visual.margin.y;
             }
-            // WEBANNO EXTENSION END
-            var adjustHeight = true;
+
+            let adjustHeight = true;
             if (this.collapseArcs) {
-              var arcCacheKey = arc.type + ' ' + rowIndex + ' ' + from + ' ' + to;
-              if (rowIndex == leftRow)
+              let arcCacheKey = arc.type + ' ' + rowIndex + ' ' + from + ' ' + to;
+              if (rowIndex === leftRow)
                 arcCacheKey = left.span.id + ' ' + arcCacheKey;
-              if (rowIndex == rightRow)
+              if (rowIndex === rightRow)
                 arcCacheKey += ' ' + right.span.id;
-              var rowHeight = arcCache[arcCacheKey];
+              const rowHeight = arcCache[arcCacheKey];
               if (rowHeight !== undefined) {
                 height = rowHeight;
                 adjustHeight = false;
@@ -3212,9 +3048,9 @@ var Visualizer = (function ($, window, undefined) {
               height += 0.5;
             }
 
-            var originType = this.data.spans[arc.origin].type;
-            var arcLabels = Util.getArcLabels(this.spanTypes, originType, arc.type, this.relationTypesHash);
-            var labelText = Util.arcDisplayForm(this.spanTypes, originType, arc.type, this.relationTypesHash);
+            const originType = this.data.spans[arc.origin].type;
+            const arcLabels = Util.getArcLabels(this.spanTypes, originType, arc.type, this.relationTypesHash);
+            let labelText = Util.arcDisplayForm(this.spanTypes, originType, arc.type, this.relationTypesHash);
             // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
             if (Configuration.abbrevsOn && arcLabels) {
               var labelIdx = 1; // first abbreviation
@@ -3224,7 +3060,7 @@ var Visualizer = (function ($, window, undefined) {
               // to be more important than the space for arcs.
               var maxLength = (to - from) - (this.arcSlant);
               while (sizes.arcs.widths[labelText] > maxLength &&
-                arcLabels[labelIdx]) {
+              arcLabels[labelIdx]) {
                 labelText = arcLabels[labelIdx];
                 labelIdx++;
               }
@@ -3237,11 +3073,11 @@ var Visualizer = (function ($, window, undefined) {
               }
             }
             // WEBANNO EXTENSION END - #820 - Allow setting label/color individually
-            var shadowGroup;
+            let shadowGroup;
             if (arc.shadowClass || arc.marked) {
               shadowGroup = this.svg.group(arcGroup);
             }
-            var options = {
+            const options = {
               //'fill': color,
               'fill': '#000000',
               'data-arc-role': arc.type,
@@ -3254,15 +3090,15 @@ var Visualizer = (function ($, window, undefined) {
 
             // construct SVG text, showing possible trailing index
             // numbers (as in e.g. "Theme2") as subscripts
-            var svgText;
+            let svgText;
             if (!splitArcType[2]) {
               // no subscript, simple string suffices
               svgText = labelText;
             } else {
               // Need to parse out possible numeric suffixes to avoid
               // duplicating number in label and its subscript
-              var splitLabelText = labelText.match(/^(.*?)(\d*)$/);
-              var noNumLabelText = splitLabelText[1];
+              const splitLabelText = labelText.match(/^(.*?)(\d*)$/);
+              const noNumLabelText = splitLabelText[1];
 
               svgText = this.svg.createText();
               // TODO: to address issue #453, attaching options also
@@ -3283,13 +3119,12 @@ var Visualizer = (function ($, window, undefined) {
             }
 
             // guess at the correct baseline shift to get vertical centering.
-            // (CSS dominant-baseline can't be used as not all SVG rendereds support it.)
-            var baseline_shift = sizes.arcs.height / 4;
-            var text = this.svg.text(arcGroup, (from + to) / 2, -height + baseline_shift,
-              svgText, options);
+            // (CSS dominant-baseline can't be used as not all SVG renders support it.)
+            const baseline_shift = sizes.arcs.height / 4;
+            this.svg.text(arcGroup, (from + to) / 2, -height + baseline_shift, svgText, options);
 
-            var width = sizes.arcs.widths[labelText];
-            var textBox = {
+            const width = sizes.arcs.widths[labelText];
+            const textBox = {
               x: (from + to - width) / 2,
               width: width,
               y: -height - sizes.arcs.height / 2,
@@ -3299,11 +3134,11 @@ var Visualizer = (function ($, window, undefined) {
               this.svg.rect(shadowGroup,
                 textBox.x - this.markedArcSize, textBox.y - this.markedArcSize,
                 textBox.width + 2 * this.markedArcSize, textBox.height + 2 * this.markedArcSize, {
-                filter: 'url(#Gaussian_Blur)',
-                'class': "shadow_EditHighlight",
-                rx: this.markedArcSize,
-                ry: this.markedArcSize,
-              });
+                  filter: 'url(#Gaussian_Blur)',
+                  'class': "shadow_EditHighlight",
+                  rx: this.markedArcSize,
+                  ry: this.markedArcSize,
+                });
             }
             if (arc.shadowClass) {
               this.svg.rect(shadowGroup,
@@ -3311,21 +3146,23 @@ var Visualizer = (function ($, window, undefined) {
                 textBox.y - this.arcLabelShadowSize,
                 textBox.width + 2 * this.arcLabelShadowSize,
                 textBox.height + 2 * this.arcLabelShadowSize, {
-                'class': 'shadow_' + arc.shadowClass,
-                filter: 'url(#Gaussian_Blur)',
-                rx: this.arcLabelShadowRounding,
-                ry: this.arcLabelShadowRounding,
-              });
+                  'class': 'shadow_' + arc.shadowClass,
+                  filter: 'url(#Gaussian_Blur)',
+                  rx: this.arcLabelShadowRounding,
+                  ry: this.arcLabelShadowRounding,
+                });
             }
-            var textStart = textBox.x;
-            var textEnd = textBox.x + textBox.width;
+            let textStart = textBox.x;
+            let textEnd = textBox.x + textBox.width;
 
             // adjust by margin for arc drawing
             textStart -= Configuration.visual.arcTextMargin;
             textEnd += Configuration.visual.arcTextMargin;
 
             if (from > to) {
-              var tmp = textStart; textStart = textEnd; textEnd = tmp;
+              var tmp = textStart;
+              textStart = textEnd;
+              textEnd = tmp;
             }
 
             var path;
@@ -3340,7 +3177,7 @@ var Visualizer = (function ($, window, undefined) {
             var myArrowHead = ((arcDesc && arcDesc.arrowHead) ||
               (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.arrowHead));
             var arrowName = (symmetric ? myArrowHead || 'none' :
-              (leftToRight ? 'none' : myArrowHead || 'triangle,5')
+                (leftToRight ? 'none' : myArrowHead || 'triangle,5')
             ) + ',' + color;
             var arrowType = arrows[arrowName];
             var arrowDecl = arrowType && ('url(#' + arrowType + ')');
@@ -3350,43 +3187,32 @@ var Visualizer = (function ($, window, undefined) {
             var myLabelArrowHead = ((arcDesc && arcDesc.labelArrow) ||
               (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.labelArrow));
             if (myLabelArrowHead) {
-              var labelArrowName = (leftToRight ?
+              const labelArrowName = (leftToRight ?
                 symmetric && myLabelArrowHead || 'none' :
                 myLabelArrowHead || 'triangle,5') + ',' + color;
-              var labelArrowSplit = labelArrowName.split(',');
-              arrowAtLabelAdjust = labelArrowSplit[0] != 'none' && parseInt(labelArrowSplit[1], 10) || 0;
-              var labelArrowType = arrows[labelArrowName];
-              var labelArrowDecl = labelArrowType && ('url(#' + labelArrowType + ')');
+              const labelArrowSplit = labelArrowName.split(',');
+              arrowAtLabelAdjust = labelArrowSplit[0] !== 'none' && parseInt(labelArrowSplit[1], 10) || 0;
               if (ufoCatcher) {
                 arrowAtLabelAdjust = -arrowAtLabelAdjust;
               }
             }
             var arrowStart = textStart - arrowAtLabelAdjust;
             path = this.svg.createPath().move(arrowStart, -height);
-            if (rowIndex == leftRow) {
-              // WEBANNO EXTENSION BEGIN - RTL support - arc slant
-              /*
-              var cornerx = from + ufoCatcherMod * arcSlant;
-              */
-              var cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant;
-              // WEBANNO EXTENSION END
-              // for normal cases, should not be past textStart even if narrow
-              // WEBANNO EXTENSION BEGIN - RTL support - arc slant     
-              /*
-              if (!ufoCatcher && cornerx > arrowStart - 1) { cornerx = arrowStart - 1; }
-              */
+            if (rowIndex === leftRow) {
+              let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant;
               if (this.rtlmode) {
-                if (!ufoCatcher && cornerx < arrowStart + 1) { cornerx = arrowStart + 1; }
+                if (!ufoCatcher && cornerx < arrowStart + 1) {
+                  cornerx = arrowStart + 1;
+                }
               } else {
-                if (!ufoCatcher && cornerx > arrowStart - 1) { cornerx = arrowStart - 1; }
+                if (!ufoCatcher && cornerx > arrowStart - 1) {
+                  cornerx = arrowStart - 1;
+                }
               }
-              // WEBANNO EXTENSION END
+
               if (this.smoothArcCurves) {
-                // WEBANNO EXTENSION BEGIN - RTL support - arc slant
-                // var controlx = ufoCatcher ? cornerx + 2*ufoCatcherMod*this.reverseArcControlx : this.smoothArcSteepness*from+(1-this.smoothArcSteepness)*cornerx;
-                // var endy = leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y);
-                var controlx;
-                var endy;
+                let controlx;
+                let endy;
                 if (this.rtlmode) {
                   controlx = ufoCatcher ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx;
                   endy = leftBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : leftBox.height / 2);
@@ -3394,18 +3220,16 @@ var Visualizer = (function ($, window, undefined) {
                   controlx = ufoCatcher ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx;
                   endy = leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y);
                 }
-                // WEBANNO EXTENSION END
+
                 // no curving for short lines covering short vertical
                 // distances, the arrowheads can go off (#925)
                 if (Math.abs(-height - endy) < 2 &&
                   Math.abs(cornerx - from) < 5) {
                   endy = -height;
                 }
-                path.line(cornerx, -height).
-                  curveQ(controlx, -height, from, endy);
+                path.line(cornerx, -height).curveQ(controlx, -height, from, endy);
               } else {
-                path.line(cornerx, -height).
-                  line(from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y));
+                path.line(cornerx, -height).line(from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y));
               }
             } else {
               path.line(from, -height);
@@ -3445,45 +3269,34 @@ var Visualizer = (function ($, window, undefined) {
             var myLabelArrowHead = ((arcDesc && arcDesc.labelArrow) ||
               (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.labelArrow));
             if (myLabelArrowHead) {
-              var labelArrowName = (leftToRight ?
+              const labelArrowName = (leftToRight ?
                 myLabelArrowHead || 'triangle,5' :
                 symmetric && myLabelArrowHead || 'none') + ',' + color;
-              var labelArrowSplit = labelArrowName.split(',');
-              arrowAtLabelAdjust = labelArrowSplit[0] != 'none' && parseInt(labelArrowSplit[1], 10) || 0;
-              var labelArrowType = arrows[labelArrowName];
-              var labelArrowDecl = labelArrowType && ('url(#' + labelArrowType + ')');
+              const labelArrowSplit = labelArrowName.split(',');
+              arrowAtLabelAdjust = labelArrowSplit[0] !== 'none' && parseInt(labelArrowSplit[1], 10) || 0;
               if (ufoCatcher) {
                 arrowAtLabelAdjust = -arrowAtLabelAdjust;
               }
             }
-            var arrowEnd = textEnd + arrowAtLabelAdjust;
+            const arrowEnd = textEnd + arrowAtLabelAdjust;
             path = this.svg.createPath().move(arrowEnd, -height);
-            if (rowIndex == rightRow) {
-              // WEBANNO EXTENSION BEGIN - RTL support - arc slant
-              /*
-              var cornerx  = to - ufoCatcherMod * arcSlant;
-              */
-              var cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant;
-              // WEBANNO EXTENSION END
+            if (rowIndex === rightRow) {
+              let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant;
+
               // TODO: duplicates above in part, make funcs
               // for normal cases, should not be past textEnd even if narrow
-              // WEBANNO EXTENSION BEGIN - RTL support - arc slant
-              /*
-              if (!ufoCatcher && cornerx < arrowEnd + 1) { cornerx = arrowEnd + 1; }
-              */
               if (this.rtlmode) {
-                if (!ufoCatcher && cornerx > arrowEnd - 1) { cornerx = arrowEnd - 1; }
+                if (!ufoCatcher && cornerx > arrowEnd - 1) {
+                  cornerx = arrowEnd - 1;
+                }
               } else {
-                if (!ufoCatcher && cornerx < arrowEnd + 1) { cornerx = arrowEnd + 1; }
+                if (!ufoCatcher && cornerx < arrowEnd + 1) {
+                  cornerx = arrowEnd + 1;
+                }
               }
               if (this.smoothArcCurves) {
-                // WEBANNO EXTENSION BEGIN - RTL support - arc slant
-                /*
-                var controlx = ufoCatcher ? cornerx - 2*ufoCatcherMod*this.reverseArcControlx : this.smoothArcSteepness*to+(1-this.smoothArcSteepness)*cornerx;
-                var endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
-                */
-                var controlx;
-                var endy;
+                let controlx;
+                let endy;
                 if (this.rtlmode) {
                   controlx = ufoCatcher ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
                   endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
@@ -3491,18 +3304,16 @@ var Visualizer = (function ($, window, undefined) {
                   controlx = ufoCatcher ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
                   endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
                 }
-                // WEBANNO EXTENSION END
+
                 // no curving for short lines covering short vertical
                 // distances, the arrowheads can go off (#925)
                 if (Math.abs(-height - endy) < 2 &&
                   Math.abs(cornerx - to) < 5) {
                   endy = -height;
                 }
-                path.line(cornerx, -height).
-                  curveQ(controlx, -height, to, endy);
+                path.line(cornerx, -height).curveQ(controlx, -height, to, endy);
               } else {
-                path.line(cornerx, -height).
-                  line(to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2));
+                path.line(cornerx, -height).line(to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2));
               }
             } else {
               path.line(to, -height);
@@ -3530,47 +3341,46 @@ var Visualizer = (function ($, window, undefined) {
           }
         } // arc rows
       }); // arcs
-
       Util.profileEnd('arcs');
+
       Util.profileStart('fragmentConnectors');
-
       $.each(this.data.spans, (spanNo, span) => {
-        var numConnectors = span.fragments.length - 1;
-        for (var connectorNo = 0; connectorNo < numConnectors; connectorNo++) {
-          var left = span.fragments[connectorNo];
-          var right = span.fragments[connectorNo + 1];
+        const numConnectors = span.fragments.length - 1;
+        for (let connectorNo = 0; connectorNo < numConnectors; connectorNo++) {
+          const left = span.fragments[connectorNo];
+          const right = span.fragments[connectorNo + 1];
 
-          var leftBox = this.rowBBox(left);
-          var rightBox = this.rowBBox(right);
-          var leftRow = left.chunk.row.index;
-          var rightRow = right.chunk.row.index;
+          const leftBox = this.rowBBox(left);
+          const rightBox = this.rowBBox(right);
+          const leftRow = left.chunk.row.index;
+          const rightRow = right.chunk.row.index;
 
-          for (var rowIndex = leftRow; rowIndex <= rightRow; rowIndex++) {
-            var row = rows[rowIndex];
+          for (let rowIndex = leftRow; rowIndex <= rightRow; rowIndex++) {
+            const row = rows[rowIndex];
             if (row.chunks.length) {
               row.hasAnnotations = true;
 
-              var from;
-              if (rowIndex == leftRow) {
+              let from;
+              if (rowIndex === leftRow) {
                 from = this.rtlmode ? leftBox.x : leftBox.x + leftBox.width;
               } else {
                 from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin;
               }
 
-              var to;
-              if (rowIndex == rightRow) {
+              let to;
+              if (rowIndex === rightRow) {
                 to = this.rtlmode ? rightBox.x + rightBox.width : rightBox.x;
               } else {
                 to = this.rtlmode ? 0 : this.canvasWidth - 2 * Configuration.visual.margin.y;
               }
-              // WEBANNO EXTENSION END
-              var height = leftBox.y + leftBox.height - Configuration.visual.margin.y;
+
+              let height = leftBox.y + leftBox.height - Configuration.visual.margin.y;
               if (this.roundCoordinates) {
                 // don't ask
                 height = (height | 0) + 0.5;
               }
 
-              var path = this.svg.createPath().move(from, height).line(to, height);
+              const path = this.svg.createPath().move(from, height).line(to, height);
               this.svg.path(row.arcs, path, {
                 style: 'stroke: ' + this.fragmentConnectorColor,
                 'strokeDashArray': this.fragmentConnectorDashArray
@@ -3584,14 +3394,9 @@ var Visualizer = (function ($, window, undefined) {
       Util.profileStart('rows');
 
       // position the rows
-      var y = Configuration.visual.margin.y;
-      // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      /*
-      var sentNumGroup = this.svg.group({'class': 'sentnum'});
-      */
-      var sentNumGroup = this.svg.group({ 'class': 'sentnum unselectable' });
-      // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      var currentSent;
+      let y = Configuration.visual.margin.y;
+      const sentNumGroup = this.svg.group({'class': 'sentnum unselectable'});
+      let currentSent;
       $.each(rows, (rowId, row) => {
         // find the maximum fragment height
         $.each(row.chunks, function (chunkId, chunk) {
@@ -3614,7 +3419,7 @@ var Visualizer = (function ($, window, undefined) {
         // }
         // XXX TODO HACK: find out where 5 and 1.5 come from!
         // This is the fix for #724, but the numbers are guessed.
-        var rowBoxHeight = Math.max(row.maxArcHeight + 5, row.maxSpanHeight + 1.5); // XXX TODO HACK: why 5, 1.5?
+        let rowBoxHeight = Math.max(row.maxArcHeight + 5, row.maxSpanHeight + 1.5); // XXX TODO HACK: why 5, 1.5?
         if (row.hasAnnotations) {
           // rowBox.height = -rowBox.y + rowSpacing;
           rowBoxHeight += this.rowSpacing + 1.5; // XXX TODO HACK: why 1.5?
@@ -3624,27 +3429,8 @@ var Visualizer = (function ($, window, undefined) {
 
         rowBoxHeight += this.rowPadding;
 
-        // WEBANNO EXTENSION BEGIN - RTL support - Sentence number in margin
-        /*
-        var bgClass;
-        if (data.markedSent[currentSent]) {
-          // specifically highlighted
-          bgClass = 'backgroundHighlight';
-        } else if (Configuration.textBackgrounds == "striped") {
-          // give every other sentence a different bg class
-          bgClass = 'background'+ row.backgroundIndex;
-        } else {
-          // plain "standard" bg
-          bgClass = 'background0';
-        }
-        svg.rect(backgroundGroup,
-          0, y + sizes.texts.y + sizes.texts.height,
-          this.canvasWidth, rowBoxHeight + sizes.texts.height + 1, {
-          'class': bgClass,
-        });
-        */
-        var bgClass;
-        if (Configuration.textBackgrounds == "striped") {
+        let bgClass;
+        if (Configuration.textBackgrounds === "striped") {
           // give every other sentence a different bg class
           bgClass = 'background' + row.backgroundIndex;
         } else {
@@ -3654,8 +3440,8 @@ var Visualizer = (function ($, window, undefined) {
         this.svg.rect(backgroundGroup,
           0, y + sizes.texts.y + sizes.texts.height,
           this.canvasWidth, rowBoxHeight + sizes.texts.height + 1, {
-          'class': bgClass,
-        });
+            'class': bgClass,
+          });
 
         if (row.sentence && this.data.markedSent[currentSent]) {
           if (this.rtlmode) {
@@ -3664,92 +3450,70 @@ var Visualizer = (function ($, window, undefined) {
               y + sizes.texts.y + sizes.texts.height,
               this.sentNumMargin,
               rowBoxHeight + sizes.texts.height + 1,
-              { 'class': 'backgroundHighlight' });
+              {'class': 'backgroundHighlight'});
           } else {
             this.svg.rect(backgroundGroup,
               0,
               y + sizes.texts.y + sizes.texts.height,
               this.sentNumMargin,
               rowBoxHeight + sizes.texts.height + 1,
-              { 'class': 'backgroundHighlight' });
+              {'class': 'backgroundHighlight'});
           }
         }
-        // WEBANNO EXTENSION END
+
         y += rowBoxHeight;
         y += sizes.texts.height;
         row.textY = y - this.rowPadding;
         if (row.sentence) {
-          // WEBANNO EXTENSION BEGIN - Just render sentence number as text to avoid need to load url_monitor    
-          /*
-          var sentence_hash = new URLHash(coll, doc, { focus: [[ 'sent', row.sentence ]] } );
-          var link = this.svg.link(sentNumGroup, sentence_hash.getHash());
-          */
-          var link = sentNumGroup;
-          // WEBANNO EXTENSION END
-          // WEBANNO EXTENSION BEGIN - RTL support - Sentence number in margin           
-          /*
-          var text = this.svg.text(link, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
-              '' + row.sentence, { 'data-sent': row.sentence });
-          */
+          const link = sentNumGroup;
+
           // Render sentence number as link
-          var text;
-          if (this.rtlmode) {
-            text = this.svg.text(link, this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding,
-              '' + row.sentence, { 'data-sent': row.sentence });
-          } else {
-            text = this.svg.text(link, this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding,
-              '' + row.sentence, { 'data-sent': row.sentence });
+          {
+            let text;
+            if (this.rtlmode) {
+              text = this.svg.text(link, this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding,
+                '' + row.sentence, {'data-sent': row.sentence});
+            } else {
+              text = this.svg.text(link, this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding,
+                '' + row.sentence, {'data-sent': row.sentence});
+            }
+            $(text).css('cursor', 'pointer');
           }
-          // WEBANNO EXTENSION END
-          // WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
-          $(text).css('cursor', 'pointer');
-          // WEBANNO EXTENSION END - #406 Sharable link for annotation documents
-          var sentComment = this.data.sentComment[row.sentence];
+
+          const sentComment = this.data.sentComment[row.sentence];
           if (sentComment) {
-            var box = text.getBBox();
+            const box = text.getBBox();
             this.svg.remove(text);
             // TODO: using rectShadowSize, but this shadow should
             // probably have its own setting for shadow size
-            shadowRect = this.svg.rect(sentNumGroup,
-              // WEBANNO EXTENSION BEGIN - RTL support - Sentence comment in margin
-              /*
-              box.x - rectShadowSize, box.y - rectShadowSize,
-              box.width + 2 * rectShadowSize, box.height + 2 * rectShadowSize, {
-              */
+            const shadowRect = this.svg.rect(sentNumGroup,
               this.rtlmode ? box.x + this.rowPadding + this.rectShadowSize : box.x - this.rectShadowSize,
               box.y - this.rectShadowSize,
               box.width + 2 * this.rectShadowSize,
               box.height + 2 * this.rectShadowSize,
               {
-                // WEBANNO EXTENSION END - RTL support - Sentence comment in margin
                 'class': 'shadow_' + sentComment.type,
                 filter: 'url(#Gaussian_Blur)',
                 rx: this.rectShadowRounding,
                 ry: this.rectShadowRounding,
                 'data-sent': row.sentence,
               });
-            // WEBANNO EXTENSION BEGIN - RTL support - Sentence comment in margin           
-            /*
-            var text = this.svg.text(sentNumGroup, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
-                '' + row.sentence, { 'data-sent': row.sentence });
-            */
-            // Render sentence comment
-            var text;
-            if (this.rtlmode) {
-              text = this.svg.text(sentNumGroup, this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding,
-                '' + row.sentence, { 'data-sent': row.sentence });
-            } else {
-              text = this.svg.text(sentNumGroup, this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding,
-                '' + row.sentence, { 'data-sent': row.sentence });
+
+            {
+              let text;
+              if (this.rtlmode) {
+                text = this.svg.text(sentNumGroup, this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding,
+                  '' + row.sentence, {'data-sent': row.sentence});
+              } else {
+                text = this.svg.text(sentNumGroup, this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding,
+                  '' + row.sentence, {'data-sent': row.sentence});
+              }
+              $(text).css('cursor', 'pointer');
             }
-            // WEBANNO EXTENSION END            
-            // WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
-            $(text).css('cursor', 'pointer');
-            // WEBANNO EXTENSION END - #406 Sharable link for annotation documents
           }
         }
 
-        var rowY = y - this.rowPadding;
+        let rowY = y - this.rowPadding;
         if (this.roundCoordinates) {
           rowY = rowY | 0;
         }
@@ -3757,85 +3521,54 @@ var Visualizer = (function ($, window, undefined) {
         y += Configuration.visual.margin.y;
       });
       y += Configuration.visual.margin.y;
-
       Util.profileEnd('rows');
-      Util.profileStart('chunkFinish');
 
+      Util.profileStart('chunkFinish');
       // chunk index sort functions for overlapping fragment drawing
       // algorithm; first for left-to-right pass, sorting primarily
       // by start offset, second for right-to-left pass by end
       // offset. Secondary sort by fragment length in both cases.
-      var currentChunk;
-      var lrChunkComp = (a, b) => {
-        var ac = currentChunk.fragments[a];
-        var bc = currentChunk.fragments[b];
-        var startDiff = Util.cmp(ac.from, bc.from);
-        return startDiff != 0 ? startDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
-      };
-      var rlChunkComp = (a, b) => {
-        var ac = currentChunk.fragments[a];
-        var bc = currentChunk.fragments[b];
-        var endDiff = Util.cmp(bc.to, ac.to);
-        return endDiff != 0 ? endDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
+      let currentChunk;
+
+      const lrChunkComp = (a, b) => {
+        const ac = currentChunk.fragments[a];
+        const bc = currentChunk.fragments[b];
+        const startDiff = Util.cmp(ac.from, bc.from);
+        return startDiff !== 0 ? startDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
       };
 
-      // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      /*
-      var sentenceText = null;
-      */
-      var prevChunk = null;
-      var rowTextGroup = null;
-      // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+      const rlChunkComp = (a, b) => {
+        const ac = currentChunk.fragments[a];
+        const bc = currentChunk.fragments[b];
+        const endDiff = Util.cmp(bc.to, ac.to);
+        return endDiff !== 0 ? endDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
+      };
+
+      let prevChunk = null;
+      let rowTextGroup = null;
       $.each(this.data.chunks, (chunkNo, chunk) => {
         // context for sort
         currentChunk = chunk;
 
-        // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-        /*
-        // text rendering
-        if (chunk.sentence) {
-          if (sentenceText) {
-            // svg.text(textGroup, sentenceText); // avoids jQuerySVG bug
-            svg.text(textGroup, 0, 0, sentenceText);
-          }
-          sentenceText = null;
-        }
-        if (!sentenceText) {
-          sentenceText = svg.createText();
-        }
-        */
-        if (!rowTextGroup || prevChunk.row != chunk.row) {
+        // Add spacers to reduce jumpyness of selection
+        if (!rowTextGroup || prevChunk.row !== chunk.row) {
           if (rowTextGroup) {
             this.horizontalSpacer(this.svg, rowTextGroup, 0, prevChunk.row.textY, 1, {
               'data-chunk-id': prevChunk.index,
               'class': 'row-final spacing'
             });
           }
-          rowTextGroup = this.svg.group(textGroup, { 'class': 'text-row' });
+          rowTextGroup = this.svg.group(textGroup, {'class': 'text-row'});
         }
         prevChunk = chunk;
-        // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-        var nextChunk = this.data.chunks[chunkNo + 1];
-        var nextSpace = nextChunk ? nextChunk.space : '';
-        // WEBANNO EXTENSION BEGIN - RTL support - Render chunks as SVG text
-        /*
-        sentenceText.span(chunk.text + nextSpace, {
-          x: chunk.textX,
-          y: chunk.row.textY,
-          'data-chunk-id': chunk.index
-        });
-        */
+
+        const nextChunk = this.data.chunks[chunkNo + 1];
+        const nextSpace = nextChunk ? nextChunk.space : '';
+
         if (this.rtlmode) {
-          // Render every text chunk as a SVG text so we maintain control over the layout. When 
-          // rendering as a SVG span (as brat does), then the browser changes the layout on the 
+          // Render every text chunk as a SVG text so we maintain control over the layout. When
+          // rendering as a SVG span (as brat does), then the browser changes the layout on the
           // X-axis as it likes in RTL mode.
-          // BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
-          // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-          /*
-          svg.text(textGroup, chunk.textX, chunk.row.textY, chunk.text + nextSpace, {
-            'data-chunk-id': chunk.index
-          });
-          */
           if (!rowTextGroup.firstChild) {
             this.horizontalSpacer(svg, rowTextGroup, 0, chunk.row.textY, 1, {
               'class': 'row-initial spacing',
@@ -3847,29 +3580,18 @@ var Visualizer = (function ($, window, undefined) {
             'data-chunk-id': chunk.index
           });
 
-          // If there needs to be space between this chunk and the next one, add a spacer 
-          // item that stretches across the entire inter-chunk space. This ensures a 
+          // If there needs to be space between this chunk and the next one, add a spacer
+          // item that stretches across the entire inter-chunk space. This ensures a
           // smooth selection.
           if (nextChunk) {
-            var spaceX = chunk.textX - sizes.texts.widths[chunk.text];
-            var spaceWidth = chunk.textX - sizes.texts.widths[chunk.text] - nextChunk.textX;
+            const spaceX = chunk.textX - sizes.texts.widths[chunk.text];
+            const spaceWidth = chunk.textX - sizes.texts.widths[chunk.text] - nextChunk.textX;
             this.horizontalSpacer(this.svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
               'data-chunk-id': chunk.index
             });
           }
-          // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-          // END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
-        }
-        else {
+        } else {
           // Original rendering using tspan in ltr mode as it play nicer with selection
-          // BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
-          // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-          /*
-          sentenceText.span(chunk.text + nextSpace, {
-            x: chunk.textX,
-            y: chunk.row.textY,
-            'data-chunk-id': chunk.index});
-          */
           if (!rowTextGroup.firstChild) {
             this.horizontalSpacer(this.svg, rowTextGroup, 0, chunk.row.textY, 1, {
               'class': 'row-initial spacing',
@@ -3881,24 +3603,22 @@ var Visualizer = (function ($, window, undefined) {
             'data-chunk-id': chunk.index
           });
 
-          // If there needs to be space between this chunk and the next one, add a spacer 
-          // item that stretches across the entire inter-chunk space. This ensures a 
+          // If there needs to be space between this chunk and the next one, add a spacer
+          // item that stretches across the entire inter-chunk space. This ensures a
           // smooth selection.
           if (nextChunk) {
-            var spaceX = chunk.textX + sizes.texts.widths[chunk.text];
-            var spaceWidth = nextChunk.textX - spaceX;
+            const spaceX = chunk.textX + sizes.texts.widths[chunk.text];
+            const spaceWidth = nextChunk.textX - spaceX;
             this.horizontalSpacer(this.svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
               'data-chunk-id': chunk.index
             });
           }
-          // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-          // END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
         }
-        // WEBANNO EXTENSION END
+
         // chunk backgrounds
         if (chunk.fragments.length) {
-          var orderedIdx = [];
-          for (var i = chunk.fragments.length - 1; i >= 0; i--) {
+          const orderedIdx = [];
+          for (let i = chunk.fragments.length - 1; i >= 0; i--) {
             orderedIdx.push(i);
           }
 
@@ -3909,62 +3629,68 @@ var Visualizer = (function ($, window, undefined) {
           // and a right-to-left traversal.
           orderedIdx.sort(lrChunkComp);
 
-          var openFragments = [];
-          for (var i = 0; i < orderedIdx.length; i++) {
-            var current = chunk.fragments[orderedIdx[i]];
-            current.nestingHeightLR = 0;
-            current.nestingDepthLR = 0;
-            var stillOpen = [];
-            for (var o = 0; o < openFragments.length; o++) {
-              if (openFragments[o].to > current.from) {
-                stillOpen.push(openFragments[o]);
-                openFragments[o].nestingHeightLR++;
+          {
+            let openFragments = [];
+            for (let i = 0; i < orderedIdx.length; i++) {
+              const current = chunk.fragments[orderedIdx[i]];
+              current.nestingHeightLR = 0;
+              current.nestingDepthLR = 0;
+              const stillOpen = [];
+              for (let o = 0; o < openFragments.length; o++) {
+                if (openFragments[o].to > current.from) {
+                  stillOpen.push(openFragments[o]);
+                  openFragments[o].nestingHeightLR++;
+                }
               }
+              openFragments = stillOpen;
+              current.nestingDepthLR = openFragments.length;
+              openFragments.push(current);
             }
-            openFragments = stillOpen;
-            current.nestingDepthLR = openFragments.length;
-            openFragments.push(current);
           }
 
           // re-sort for right-to-left traversal by end position
           orderedIdx.sort(rlChunkComp);
 
-          openFragments = [];
-          for (var i = 0; i < orderedIdx.length; i++) {
-            var current = chunk.fragments[orderedIdx[i]];
-            current.nestingHeightRL = 0;
-            current.nestingDepthRL = 0;
-            var stillOpen = [];
-            for (var o = 0; o < openFragments.length; o++) {
-              if (openFragments[o].from < current.to) {
-                stillOpen.push(openFragments[o]);
-                openFragments[o].nestingHeightRL++;
+          {
+            let openFragments = [];
+            for (let i = 0; i < orderedIdx.length; i++) {
+              const current = chunk.fragments[orderedIdx[i]];
+              current.nestingHeightRL = 0;
+              current.nestingDepthRL = 0;
+              const stillOpen = [];
+              for (var o = 0; o < openFragments.length; o++) {
+                if (openFragments[o].from < current.to) {
+                  stillOpen.push(openFragments[o]);
+                  openFragments[o].nestingHeightRL++;
+                }
               }
+              openFragments = stillOpen;
+              current.nestingDepthRL = openFragments.length;
+              openFragments.push(current);
             }
-            openFragments = stillOpen;
-            current.nestingDepthRL = openFragments.length;
-            openFragments.push(current);
           }
 
           // the effective depth and height are the max of those
           // for the left-to-right and right-to-left traversals.
-          for (var i = 0; i < orderedIdx.length; i++) {
-            var c = chunk.fragments[orderedIdx[i]];
+          for (let i = 0; i < orderedIdx.length; i++) {
+            const c = chunk.fragments[orderedIdx[i]];
             c.nestingHeight = c.nestingHeightLR > c.nestingHeightRL ? c.nestingHeightLR : c.nestingHeightRL;
             c.nestingDepth = c.nestingDepthLR > c.nestingDepthRL ? c.nestingDepthLR : c.nestingDepthRL;
           }
 
           // Re-order by nesting height and draw in order
-          orderedIdx.sort(function (a, b) { return Util.cmp(chunk.fragments[b].nestingHeight, chunk.fragments[a].nestingHeight); });
+          orderedIdx.sort(function (a, b) {
+            return Util.cmp(chunk.fragments[b].nestingHeight, chunk.fragments[a].nestingHeight);
+          });
 
-          for (var i = 0; i < chunk.fragments.length; i++) {
-            var fragment = chunk.fragments[orderedIdx[i]];
+          for (let i = 0; i < chunk.fragments.length; i++) {
+            const fragment = chunk.fragments[orderedIdx[i]];
             if (fragment.span.hidden) {
               continue;
             }
 
-            var spanDesc = this.spanTypes[fragment.span.type];
-            var bgColor = ((spanDesc && spanDesc.bgColor) ||
+            const spanDesc = this.spanTypes[fragment.span.type];
+            let bgColor = ((spanDesc && spanDesc.bgColor) ||
               (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) ||
               '#ffffff');
 
@@ -3978,20 +3704,20 @@ var Visualizer = (function ($, window, undefined) {
             // nested+nesting yields normal. (Currently testing
             // minor tweak: don't shrink for depth 1 as the nesting
             // highlight will grow anyway [check nestingDepth > 1])
-            var shrink = 0;
-            if (fragment.nestingDepth > 1 && fragment.nestingHeight == 0) {
+            let shrink = 0;
+            if (fragment.nestingDepth > 1 && fragment.nestingHeight === 0) {
               shrink = 1;
-            } else if (fragment.nestingDepth == 0 && fragment.nestingHeight > 0) {
+            } else if (fragment.nestingDepth === 0 && fragment.nestingHeight > 0) {
               shrink = -1;
             }
-            var yShrink = shrink * this.nestingAdjustYStepSize;
-            var xShrink = shrink * this.nestingAdjustXStepSize;
+            const yShrink = shrink * this.nestingAdjustYStepSize;
+            const xShrink = shrink * this.nestingAdjustXStepSize;
             // bit lighter
-            var lightBgColor = Util.adjustColorLightness(bgColor, 0.8);
+            const lightBgColor = Util.adjustColorLightness(bgColor, 0.8);
             // tweak for Y start offset (and corresponding height
             // reduction): text rarely hits font max height, so this
             // tends to look better
-            var yStartTweak = 1;
+            const yStartTweak = 1;
             // store to have same mouseover highlight without recalc
             // WEBANNO EXTENSION BEGIN - RTL support - Highlight positions
             /*
@@ -4010,7 +3736,7 @@ var Visualizer = (function ($, window, undefined) {
               h: sizes.texts.height - 2 * yShrink - yStartTweak,
             };
             // WEBANNO EXTENSION END
-            // WEBANNO EXTENSION BEGIN - #361 Avoid rendering exception with zero-width spans               
+            // WEBANNO EXTENSION BEGIN - #361 Avoid rendering exception with zero-width spans
             // Avoid exception because width < 0 is not allowed
             if (fragment.highlightPos.w <= 0) {
               fragment.highlightPos.w = 1;
@@ -4029,102 +3755,57 @@ var Visualizer = (function ($, window, undefined) {
         }
       });
 
-      // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      /*
-      if (sentenceText) {
-        // this.svg.text(textGroup, sentenceText); // avoids jQuerySVG bug
-        this.svg.text(textGroup, 0, 0, sentenceText);
-      }
-      */
+      // Prevent text selection from being jumpy
       if (rowTextGroup) {
         this.horizontalSpacer(this.svg, rowTextGroup, 0, currentChunk.row.textY, 1, {
           'data-chunk-id': currentChunk.index,
           'class': 'row-final spacing'
         });
       }
-      // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+
       // draw the markedText
       $.each(textMarkedRows, (textRowNo, textRowDesc) => {
-        var textHighlight = this.svg.rect(this.highlightGroup,
+        this.svg.rect(this.highlightGroup,
           textRowDesc[1] - 2, textRowDesc[0].textY - sizes.fragments.height,
           textRowDesc[2] - textRowDesc[1] + 4, sizes.fragments.height + 4,
-          // WEBANNO EXTENSION BEGIN - #876 - Add ability to highlight text in brat view
-          // WEBANNO EXTENSION BEGIN - #1119 - Improve control over markers
-          /*
-          { fill: 'yellow' } // TODO: put into css file, as default - turn into class
-          */
-          { 'class': textRowDesc[3] }
-          // WEBANNO EXTENSION END - #1119 - Improve control over markers
-          // WEBANNO EXTENSION END - #876 - Add ability to highlight text in brat view
+          {'class': textRowDesc[3]}
         );
-        // WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
-        /*
-        // NOTE: changing highlightTextSequence here will give
-        // different-colored highlights
-        // TODO: entirely different settings for non-animations?
-        var markedType = textRowDesc[3];
-        svg.other(textHighlight, 'animate', {
-          'data-type': markedType,
-          attributeName: 'fill',
-          values: (markedType == 'match' ? highlightMatchSequence
-                    : highlightTextSequence),
-          dur: highlightDuration,
-          repeatCount: 'indefinite',
-          begin: 'indefinite'
-        });
-        */
-        // WEBANNO EXTENSION END - Issue #1319 - Glowing highlight causes 100% CPU load
       });
-
-
       Util.profileEnd('chunkFinish');
+
       Util.profileStart('finish');
 
-      // WEBANNO EXTENSION BEGIN - RTL support - Render sentence number margin separator
-      /*
-      this.svg.path(sentNumGroup, this.svg.createPath().
-        move(sentNumMargin, 0).
-        line(sentNumMargin, y));
-      */
       Util.profileStart('adjust margin');
       if (this.rtlmode) {
-        this.svg.path(sentNumGroup, this.svg.createPath().
-          move(this.canvasWidth - this.sentNumMargin, 0).
-          line(this.canvasWidth - this.sentNumMargin, y));
+        this.svg.path(sentNumGroup, this.svg.createPath().move(this.canvasWidth - this.sentNumMargin, 0).line(this.canvasWidth - this.sentNumMargin, y));
       } else {
-        this.svg.path(sentNumGroup, this.svg.createPath().
-          move(this.sentNumMargin, 0).
-          line(this.sentNumMargin, y));
+        this.svg.path(sentNumGroup, this.svg.createPath().move(this.sentNumMargin, 0).line(this.sentNumMargin, y));
       }
-      // WEBANNO EXTENSION END        
+
       Util.profileEnd('adjust margin');
+
       Util.profileStart('resize SVG');
       // resize the SVG
-      var width = maxTextWidth + this.sentNumMargin + 2 * Configuration.visual.margin.x + 1;
-      // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
-      // Add scrolling box
-      /*
-      if (width > this.canvasWidth) this.canvasWidth = width;
-      */
+      width = maxTextWidth + this.sentNumMargin + 2 * Configuration.visual.margin.x + 1;
+
       // Loops over the rows to check if the width calculated so far is still not enough. This
       // currently happens sometimes if there is a single annotation on many words preventing
       // wrapping within the annotation (aka oversizing).
       $(textGroup).children(".text-row").each((rowIndex, textRow) => {
-        var rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
-        var rowFinalSpacing = $($(textRow).children('.row-final')[0]);
-        var lastChunkWidth = sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
-        var lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
+        const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+        const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
+        const lastChunkWidth = sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
+        const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
         if (this.rtlmode) {
           // Not sure what to calculate here
-        }
-        else {
+        } else {
           if (lastChunkOffset + lastChunkWidth > width) {
             width = lastChunkOffset + lastChunkWidth;
           }
         }
       });
 
-      var oversized = Math.max(width - this.canvasWidth, 0);
+      let oversized = Math.max(width - this.canvasWidth, 0);
       if (oversized > 0) {
         this.$svgDiv.width(this.baseCanvasWidth);
         this.canvasWidth = width;
@@ -4132,107 +3813,100 @@ var Visualizer = (function ($, window, undefined) {
         this.canvasWidth += 32;
         oversized += 32;
       }
-      // WEBANNO EXTENSION END
+
       this.$svg.width(this.canvasWidth);
       Util.profileStart('height');
       this.$svg.height(y);
       Util.profileEnd('height');
       this.$svg.attr("viewBox", "0 0 " + this.canvasWidth + " " + y);
 
-      // WEBANNO EXTENSION BEGIN #331 - Interface jumps to the top
       // Originally, this code was within the oversized > 0 block above, but we moved it here
       // to prevent erratic jumping
       this.$svgDiv.height(y + 4); // Need to take the hairline border into account here
-
-      // WEBANNO EXTENSION END #331 - Interface jumps to the top
       Util.profileEnd('resize SVG');
-      Util.profileStart('set up RTL');
 
-      // WEBANNO EXTENSION BEGIN - RTL support - Set SVG canvas to RTL mode
+      Util.profileStart('set up RTL');
       if (this.rtlmode) {
         this.$svg.attr("direction", "rtl");
-        // WEBANNO EXTENSION BEGIN - #300 - RTL, line breaks and Scrollbars
         if (oversized > 0) {
           $.each(rows, (index, row) => this.translate(row, oversized, row.translation.y));
           $(glowGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
           $(this.highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
           $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
           $(sentNumGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-          var scrollable = findClosestHorizontalScrollable($svgDiv);
+          const scrollable = findClosestHorizontalScrollable(this.$svgDiv);
           if (scrollable) {
             scrollable.scrollLeft(oversized + 4);
           }
         }
-        // WEBANNO EXTENSION END - #300 - RTL, line breaks and Scrollbars
       }
-      // WEBANNO EXTENSION END
+
       Util.profileEnd('set up RTL');
       Util.profileStart('adjust backgrounds');
-      // WEBANNO EXTENSION BEGIN - #286 - Very long span annotations cause ADEP to disappear 
+
       // Allow some extra space for arcs
       if (oversized > 0) {
         $(backgroundGroup).attr('width', this.canvasWidth);
         $(backgroundGroup).children().each((index, element) => {
           // We render the backgroundHighlight only in the margin, so we have to translate
           // it instead of transforming it.
-          if ($(element).attr('class') == 'backgroundHighlight') {
+          if ($(element).attr('class') === 'backgroundHighlight') {
             if (this.rtlmode) {
               $(element).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
             }
-          }
-          else {
+          } else {
             $(element).attr('width', this.canvasWidth);
           }
         });
       }
-      // WEBANNO EXTENSION END
+
       Util.profileEnd('adjust backgrounds');
       Util.profileStart('row-spacing-adjust');
+
       // Go through each row and adjust the row-initial and row-final spacing
       $(textGroup).children(".text-row").each((rowIndex, textRow) => {
-        var rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
-        var rowFinalSpacing = $($(textRow).children('.row-final')[0]);
-        var firstChunkWidth = sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
-        var lastChunkWidth = sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
-        var lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
+        const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+        const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
+        const firstChunkWidth = sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
+        const lastChunkWidth = sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
+        const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
 
         if (this.rtlmode) {
-          var initialSpacingX = this.canvasWidth - this.sentNumMargin;
-          var initialSpacingWidth = initialSpacingX - (Configuration.visual.margin.x + this.rowPadding + 1 + firstChunkWidth);
+          const initialSpacingX = this.canvasWidth - this.sentNumMargin;
+          const initialSpacingWidth = initialSpacingX - (Configuration.visual.margin.x + this.rowPadding + 1 + firstChunkWidth);
           rowInitialSpacing.attr('x', initialSpacingX);
           rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
-          var finalSpacingX = lastChunkOffset + 1;
-          var finalSpacingWidth = lastChunkWidth;
+          const finalSpacingX = lastChunkOffset + 1;
+          const finalSpacingWidth = lastChunkWidth;
           rowFinalSpacing.attr('x', finalSpacingX);
           rowFinalSpacing.attr('textLength', finalSpacingWidth);
-        }
-        else {
-          var initialSpacingX = this.sentNumMargin;
-          var initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
+        } else {
+          const initialSpacingX = this.sentNumMargin;
+          const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
           rowInitialSpacing.attr('x', initialSpacingX);
           rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
-          var finalSpacingX = lastChunkOffset + lastChunkWidth + 1;
-          var finalSpacingWidth = this.canvasWidth - finalSpacingX;
+          const finalSpacingX = lastChunkOffset + lastChunkWidth + 1;
+          const finalSpacingWidth = this.canvasWidth - finalSpacingX;
           rowFinalSpacing.attr('x', finalSpacingX);
           rowFinalSpacing.attr('textLength', finalSpacingWidth);
         }
       });
       Util.profileEnd('row-spacing-adjust');
-      // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
+      // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       Util.profileStart('inter-row space');
       // Go through each row and add an unselectable spacer between this row and the next row
       // While the space is unselectable, it will still help in guiding the browser into which
       // direction the selection should in principle go and thus avoids jumpyness.
-      var prevRowRect = { y: 0, height: 0 };
+      let prevRowRect = {y: 0, height: 0};
 
-      var textRows = $(textGroup).children(".text-row");
+      const textRows = $(textGroup).children(".text-row");
       textRows.each((rowIndex, textRow) => {
-        var rowRect = {
+        const rowRect = {
           y: parseFloat($(textRow).children()[0].getAttribute('y')) + 2, height: sizes.texts.height
         };
-        var spaceHeight = rowRect.y - (prevRowRect.y + rowRect.height) + 2;
+        const spaceHeight = rowRect.y - (prevRowRect.y + rowRect.height) + 2;
 
         // Adding a spacer between the rows. We make is a *little* bit larger than necessary
         // to avoid exposing areas where the background shines through and which would again
@@ -4244,15 +3918,15 @@ var Visualizer = (function ($, window, undefined) {
         prevRowRect = rowRect;
 
         // Add a spacer below the final row until the end of the canvas
-        if (rowIndex == textRows.length - 1) {
-          var lastSpacerY = Math.floor(rowRect.y + rowRect.height);
+        if (rowIndex === textRows.length - 1) {
+          const lastSpacerY = Math.floor(rowRect.y + rowRect.height);
           textRow.after(this.verticalSpacer(
             Math.floor(rowRect.y + rowRect.height),
             Math.ceil(y - lastSpacerY) + 1));
         }
       });
       Util.profileEnd('inter-row space');
-      // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy 
+      // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       Util.profileEnd('finish');
       Util.profileEnd('render');
       Util.profileReport();
@@ -4261,11 +3935,7 @@ var Visualizer = (function ($, window, undefined) {
       if (this.redraw) {
         this.redraw = false;
       }
-      this.$svg.find('animate').each(function () {
-        if (this.beginElement) { // protect against non-SMIL browsers
-          this.beginElement();
-        }
-      });
+
       this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
     }
 
@@ -4326,8 +3996,8 @@ var Visualizer = (function ($, window, undefined) {
 
     /**
      * Differential updates for brat view.
-     * 
-     * @param {*} patchData 
+     *
+     * @param {*} patchData
      */
     renderDataPatch(patchData) {
       Util.profileEnd('invoke getDocument');
@@ -4391,11 +4061,12 @@ var Visualizer = (function ($, window, undefined) {
 
     // event handlers
     onMouseOver(evt) {
-      var target = $(evt.target);
-      var id;
-      if (id = target.attr('data-span-id')) {
+      let comment;
+      const target = $(evt.target);
+      let id = target.attr('data-span-id');
+      if (id) {
         this.commentId = id;
-        var span = this.data.spans[id];
+        const span = this.data.spans[id];
         this.dispatcher.post('displaySpanComment', [
           evt, target, id, span.type, span.attributeText,
           span.text,
@@ -4404,22 +4075,22 @@ var Visualizer = (function ($, window, undefined) {
           span.comment && span.comment.type,
           span.normalizations
         ]);
-        // BEGIN WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
+
         if (span.actionButtons) {
           this.dispatcher.post('displaySpanButtons', [evt, target, span.id]);
         }
-        // END WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
-        var spanDesc = this.spanTypes[span.type];
-        var bgColor = ((spanDesc && spanDesc.bgColor) ||
+
+        const spanDesc = this.spanTypes[span.type];
+        let bgColor = ((spanDesc && spanDesc.bgColor) ||
           (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) ||
           '#ffffff');
+
         if (span.hidden)
           return;
-        // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+
         if (span.color) {
           bgColor = span.color;
         }
-        // WEBANNO EXTENSION END
         this.highlight = [];
         $.each(span.fragments, (fragmentNo, fragment) => {
           this.highlight.push(this.svg.rect(this.highlightGroup,
@@ -4451,28 +4122,11 @@ var Visualizer = (function ($, window, undefined) {
           };
           $.each(span.incoming, (arcNo, arc) => addArcAndSpan(arc, arc.origin));
           $.each(span.outgoing, (arcNo, arc) => addArcAndSpan(arc, arc.target));
-          var equivSelector = [];
+          const equivSelector = [];
           $.each(equivs, (equiv, dummy) => equivSelector.push('[data-arc-ed^="' + equiv + '"]'));
-
-          // BEGIN WEBANNO EXTENSION - #246 - Highlighting in curation confused
-          /*
-          this.highlightArcs = $svg.
-              find(equivSelector.join(', ')).
-              parent().
-              add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector).
-              addClass('highlight');
-          */
-          this.highlightArcs = this.$svg.
-            find(equivSelector.join(', ')).
-            parent().
-            add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector, this.$svg).
-            addClass('highlight');
-          // END WEBANNO EXTENSION - #246 - Highlighting in curation confused 
+          this.highlightArcs = this.$svg.find(equivSelector.join(', ')).parent().add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector, this.$svg).addClass('highlight');
           $.each(spans, (spanId, dummy) => spanIds.push('rect[data-span-id="' + spanId + '"]'));
-          this.highlightSpans = this.$svg.
-            find(spanIds.join(', ')).
-            parent().
-            addClass('highlight');
+          this.highlightSpans = this.$svg.find(spanIds.join(', ')).parent().addClass('highlight');
         }
       } else if (!this.arcDragOrigin && (id = target.attr('data-arc-role'))) {
         var originSpanId = target.attr('data-arc-origin');
@@ -4483,17 +4137,17 @@ var Visualizer = (function ($, window, undefined) {
           this.relationTypesHash[role].properties &&
           this.relationTypesHash[role].properties.symmetric);
         // NOTE: no commentText, commentType for now
-        var arcEventDescId = target.attr('data-arc-ed');
-        var commentText = '';
-        var commentType = '';
-        var arcId;
+        const arcEventDescId = target.attr('data-arc-ed');
+        let commentText = '';
+        let commentType = '';
+        let arcId;
         if (arcEventDescId) {
-          var eventDesc = this.data.eventDescs[arcEventDescId];
-          var comment = eventDesc.comment;
+          const eventDesc = this.data.eventDescs[arcEventDescId];
+          comment = eventDesc.comment;
           if (comment) {
             commentText = comment.text;
             commentType = comment.type;
-            if (commentText == '' && commentType) {
+            if (commentText === '' && commentType) {
               // default to type if missing text
               commentText = commentType;
             }
@@ -4504,9 +4158,9 @@ var Visualizer = (function ($, window, undefined) {
             arcId = arcEventDescId;
           }
         }
-        var originSpanType = this.data.spans[originSpanId].type || '';
-        var targetSpanType = this.data.spans[targetSpanId].type || '';
-        var normalizations = [];
+        const originSpanType = this.data.spans[originSpanId].type || '';
+        const targetSpanType = this.data.spans[targetSpanId].type || '';
+        let normalizations = [];
         if (arcId) {
           normalizations = this.data.arcById[arcId].normalizations;
         }
@@ -4519,22 +4173,14 @@ var Visualizer = (function ($, window, undefined) {
         ]);
 
         if (arcId) {
-          this.highlightArcs = this.$svg.
-            find('g[data-id="' + arcId + '"]').
-            addClass('highlight');
-        }
-        else {
-          this.highlightArcs = this.$svg.
-            find('g[data-from="' + originSpanId + '"][data-to="' + targetSpanId + '"]').
-            addClass('highlight');
+          this.highlightArcs = this.$svg.find('g[data-id="' + arcId + '"]').addClass('highlight');
+        } else {
+          this.highlightArcs = this.$svg.find('g[data-from="' + originSpanId + '"][data-to="' + targetSpanId + '"]').addClass('highlight');
         }
 
-        this.highlightSpans = $(this.$svg).
-          find('rect[data-span-id="' + originSpanId + '"], rect[data-span-id="' + targetSpanId + '"]').
-          parent().
-          addClass('highlight');
+        this.highlightSpans = $(this.$svg).find('rect[data-span-id="' + originSpanId + '"], rect[data-span-id="' + targetSpanId + '"]').parent().addClass('highlight');
       } else if (id = target.attr('data-sent')) {
-        var comment = this.data.sentComment[id];
+        comment = this.data.sentComment[id];
         if (comment) {
           this.dispatcher.post('displaySentComment', [evt, target, comment.text, comment.type]);
         }
@@ -4573,21 +4219,21 @@ var Visualizer = (function ($, window, undefined) {
       // them here (again)
       if (_density < 2) {
         // dense
-        Configuration.visual.margin = { x: 1, y: 0 };
+        Configuration.visual.margin = {x: 1, y: 0};
         Configuration.visual.boxSpacing = 1;
         Configuration.visual.curlyHeight = 1;
         Configuration.visual.arcSpacing = 7;
         Configuration.visual.arcStartHeight = 18;
       } else if (_density > 2) {
         // spacious
-        Configuration.visual.margin = { x: 2, y: 1 };
+        Configuration.visual.margin = {x: 2, y: 1};
         Configuration.visual.boxSpacing = 3;
         Configuration.visual.curlyHeight = 6;
         Configuration.visual.arcSpacing = 12;
         Configuration.visual.arcStartHeight = 23;
       } else {
         // standard
-        Configuration.visual.margin = { x: 2, y: 1 };
+        Configuration.visual.margin = {x: 2, y: 1};
         Configuration.visual.boxSpacing = 1;
         Configuration.visual.curlyHeight = 4;
         Configuration.visual.arcSpacing = 9;
@@ -4598,7 +4244,7 @@ var Visualizer = (function ($, window, undefined) {
 
     setSvgWidth(_width) {
       this.$svgDiv.width(_width);
-      if (Configuration.svgWidth != _width) {
+      if (Configuration.svgWidth !== _width) {
         Configuration.svgWidth = _width;
         this.dispatcher.post('configurationChanged');
       }
@@ -4624,17 +4270,17 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     loadAttributeTypes(response_types) {
-      var processed = {};
+      const processed = {};
       $.each(response_types, (aTypeNo, aType) => {
         processed[aType.type] = aType;
         // count the values; if only one, it's a boolean attribute
-        var values = [];
-        for (var i in aType.values) {
+        const values = [];
+        for (const i in aType.values) {
           if (aType.values.hasOwnProperty(i)) {
             values.push(i);
           }
         }
-        if (values.length == 1) {
+        if (values.length === 1) {
           aType.bool = values[0];
         }
       });
@@ -4645,7 +4291,7 @@ var Visualizer = (function ($, window, undefined) {
       $.each(relation_types, (relTypeNo, relType) => {
         if (relType) {
           this.relationTypesHash[relType.type] = relType;
-          var children = relType.children;
+          const children = relType.children;
           if (children && children.length) {
             this.loadRelationTypes(children);
           }
@@ -4674,9 +4320,9 @@ var Visualizer = (function ($, window, undefined) {
       // TODO XXX: isn't the following completely redundant with
       // loadRelationTypes?
       $.each(response.relation_types, (relTypeNo, relType) => this.relationTypesHash[relType.type] = relType);
-      var arcBundle = (response.visual_options || {}).arc_bundle || 'none';
-      this.collapseArcs = arcBundle == "all";
-      this.collapseArcSpace = arcBundle != "none";
+      const arcBundle = (response.visual_options || {}).arc_bundle || 'none';
+      this.collapseArcs = arcBundle === "all";
+      this.collapseArcSpace = arcBundle !== "none";
 
       this.dispatcher.post('spanAndAttributeTypesLoaded', [
         this.spanTypes, this.entityAttributeTypes, this.eventAttributeTypes, this.relationTypesHash]);
@@ -4690,17 +4336,15 @@ var Visualizer = (function ($, window, undefined) {
       return !this.drawing;
     }
 
-    // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
     verticalSpacer(y, height) {
       if (height > 0) {
-        var foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
-        var spacer = document.createElement('span');
+        const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+        const spacer = document.createElement('span');
         $(spacer)
           .addClass('unselectable')
           .css('display', 'inline-block')
           .css('width', '100%')
           .css('height', '100%')
-          // .css('background-color', 'yellow')
           .text('\u00a0');
         $(foreignObject)
           .attr("x", this.rtlmode ? 0 : this.sentNumMargin)
@@ -4714,47 +4358,35 @@ var Visualizer = (function ($, window, undefined) {
 
     horizontalSpacer(svg, group, x, y, width, attrs) {
       if (width > 0) {
-        var attributes = $.extend({
+        const attributes = $.extend({
           textLength: width,
           lengthAdjust: 'spacingAndGlyphs',
-          //'fill': 'blue',
           'class': 'spacing'
         }, attrs);
         // To visualize the spacing use \u2588, otherwise \u00a0
         this.svg.text(group, x, y, this.rtlmode ? '\u200f\u00a0' : '\u00a0', attributes);
-        /*
-        svg.rect(group,
-          x - (rtlmode ? width : 0), y - 10,
-          width, 10,
-          { fill: 'blue' });
-        */
       }
     }
-    // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
   }
 
-  // BEGIN WEBANNO EXTENSION - RTL support - #278 Sub-token annotation of LTR text in RTL mode  
-  var isRTL = function isRTL(charCode) {
-    var t1 = (0x0591 <= charCode && charCode <= 0x07FF);
-    var t2 = (charCode == 0x200F);
-    var t3 = (charCode == 0x202E);
-    var t4 = (0xFB1D <= charCode && charCode <= 0xFDFD);
-    var t5 = (0xFE70 <= charCode && charCode <= 0xFEFC);
+  const isRTL = function isRTL(charCode) {
+    const t1 = (0x0591 <= charCode && charCode <= 0x07FF);
+    const t2 = (charCode === 0x200F);
+    const t3 = (charCode === 0x202E);
+    const t4 = (0xFB1D <= charCode && charCode <= 0xFDFD);
+    const t5 = (0xFE70 <= charCode && charCode <= 0xFEFC);
     return t1 || t2 || t3 || t4 || t5;
   };
-  // WEBANNO EXTENSION END - RTL support - #278 Sub-token annotation of LTR text in RTL mode  
 
-  // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
   // http://24ways.org/2010/calculating-color-contrast/
   // http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
-  var bgToFgColor = function (hexcolor) {
-    var r = parseInt(hexcolor.substr(1, 2), 16);
-    var g = parseInt(hexcolor.substr(3, 2), 16);
-    var b = parseInt(hexcolor.substr(5, 2), 16);
-    var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  const bgToFgColor = function (hexcolor) {
+    const r = parseInt(hexcolor.substr(1, 2), 16);
+    const g = parseInt(hexcolor.substr(3, 2), 16);
+    const b = parseInt(hexcolor.substr(5, 2), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
     return (yiq >= 128) ? '#000000' : '#ffffff';
   }
-  // WEBANNO EXTENSION END
 
   // WEBANNO EXTENSION BEGIN - RTL - Need to find scrollable ancestor
   // https://stackoverflow.com/a/35940276/2511197
@@ -4764,24 +4396,25 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     if (
-      (node.css('overflow-x') == 'auto' && node.prop('scrollWidth') > node.prop('clientWidth')) ||
-      (node.css('overflow-x') == 'scroll')
+      (node.css('overflow-x') === 'auto' && node.prop('scrollWidth') > node.prop('clientWidth')) ||
+      (node.css('overflow-x') === 'scroll')
     ) {
       return node;
     } else {
       return findClosestHorizontalScrollable(node.parent());
     }
   }
+
   // WEBANNO EXTENSION END - RTL - Need to find scrollable ancestor
 
   // A naive whitespace tokeniser
   var tokenise = function (text) {
-    var tokenOffsets = [];
-    var tokenStart = null;
-    var lastCharPos = null;
+    const tokenOffsets = [];
+    let tokenStart = null;
+    let lastCharPos = null;
 
-    for (var i = 0; i < text.length; i++) {
-      var c = text[i];
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
       // Have we found the start of a token?
       if (tokenStart == null && !/\s/.test(c)) {
         tokenStart = i;
@@ -4805,18 +4438,18 @@ var Visualizer = (function ($, window, undefined) {
 
   // A naive newline sentence splitter
   var sentenceSplit = function (text) {
-    var sentenceOffsets = [];
-    var sentStart = null;
-    var lastCharPos = null;
+    const sentenceOffsets = [];
+    let sentStart = null;
+    let lastCharPos = null;
 
-    for (var i = 0; i < text.length; i++) {
-      var c = text[i];
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
       // Have we found the start of a sentence?
       if (sentStart == null && !/\s/.test(c)) {
         sentStart = i;
         lastCharPos = i;
         // Have we found the end of a sentence?
-      } else if (c == '\n' && sentStart != null) {
+      } else if (c === '\n' && sentStart != null) {
         sentenceOffsets.push([sentStart, i]);
         sentStart = null;
         // Is it a non-whitespace character?
