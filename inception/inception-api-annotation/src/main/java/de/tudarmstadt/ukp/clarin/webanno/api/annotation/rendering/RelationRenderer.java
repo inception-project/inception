@@ -168,8 +168,8 @@ public class RelationRenderer
     }
 
     @Override
-    public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin, int aWindowEnd)
+    public List<VObject> render(VDocument aVDocument, AnnotationFS aFS,
+            List<AnnotationFeature> aFeatures, int aWindowBegin, int aWindowEnd)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return Collections.emptyList();
