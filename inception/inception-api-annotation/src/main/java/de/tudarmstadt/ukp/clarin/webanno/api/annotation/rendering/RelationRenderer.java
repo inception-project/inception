@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
@@ -67,6 +69,7 @@ public class RelationRenderer
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final List<RelationLayerBehavior> behaviors;
+    private final RelationLayerTraits traits;
 
     private Type type;
     private Type spanType;
@@ -88,6 +91,10 @@ public class RelationRenderer
             AnnotationAwareOrderComparator.sort(temp);
             behaviors = temp;
         }
+
+        RelationAdapter typeAdapter = getTypeAdapter();
+        traits = typeAdapter.getTraits(RelationLayerTraits.class)
+                .orElseGet(RelationLayerTraits::new);
     }
 
     @Override
@@ -119,6 +126,7 @@ public class RelationRenderer
         }
 
         RelationAdapter typeAdapter = getTypeAdapter();
+
         Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBegin, aWindowEnd);
 
         // if this is a governor for more than one dependent, avoid duplicate yield
@@ -128,7 +136,7 @@ public class RelationRenderer
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
 
         for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
-            for (VObject arc : render(fs, aFeatures, aWindowBegin, aWindowEnd)) {
+            for (VObject arc : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
                 if (!(arc instanceof VArc)) {
                     continue;
                 }
@@ -151,19 +159,19 @@ public class RelationRenderer
     private void renderYield(VDocument aResponse, AnnotationFS fs,
             Map<Integer, Set<Integer>> relationLinks, List<Integer> yieldDeps)
     {
-        FeatureStructure governorFs = getDependentFs(fs);
+        FeatureStructure dependentFs = getDependentFs(fs);
 
-        if (relationLinks.keySet().contains(getAddr(governorFs))
-                && !yieldDeps.contains(getAddr(governorFs))) {
-            yieldDeps.add(getAddr(governorFs));
+        if (relationLinks.keySet().contains(getAddr(dependentFs))
+                && !yieldDeps.contains(getAddr(dependentFs))) {
+            yieldDeps.add(getAddr(dependentFs));
 
             // sort the annotations (begin, end)
-            List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(governorFs)));
+            List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(dependentFs)));
             sortedDepFs.sort(
                     comparingInt(arg0 -> selectAnnotationByAddr(fs.getCAS(), arg0).getBegin()));
 
             String cm = getYieldMessage(fs.getCAS(), sortedDepFs);
-            aResponse.add(new VComment(governorFs, VCommentType.YIELD, cm));
+            aResponse.add(new VComment(dependentFs, VCommentType.YIELD, cm));
         }
     }
 
@@ -202,8 +210,35 @@ public class RelationRenderer
         String bratTypeName = typeAdapter.getEncodedTypeName();
         Map<String, String> labelFeatures = renderLabelFeatureValues(typeAdapter, aFS, aFeatures);
 
-        return asList(new VArc(typeAdapter.getLayer(), aFS, bratTypeName, governorFs, dependentFs,
-                labelFeatures));
+        if (traits.isRenderArcs()) {
+            return asList(new VArc(typeAdapter.getLayer(), aFS, bratTypeName, governorFs,
+                    dependentFs, labelFeatures));
+        }
+        else {
+            AnnotationFS governor = (AnnotationFS) governorFs;
+            AnnotationFS dependent = (AnnotationFS) dependentFs;
+
+            StringBuilder noteBuilder = new StringBuilder();
+            noteBuilder.append(typeAdapter.getLayer().getUiName());
+            noteBuilder.append("\n");
+            noteBuilder.append(governor.getCoveredText());
+            noteBuilder.append(" -> ");
+            noteBuilder.append(dependent.getCoveredText());
+            noteBuilder.append("\n");
+
+            for (Entry<String, String> entry : labelFeatures.entrySet()) {
+                noteBuilder.append(entry.getKey());
+                noteBuilder.append(" = ");
+                noteBuilder.append(entry.getValue());
+                noteBuilder.append("\n");
+            }
+
+            String note = noteBuilder.toString().stripTrailing();
+            aVDocument.add(new VComment(governorFs, VCommentType.INFO, "\n⬆️ " + note));
+            aVDocument.add(new VComment(dependentFs, VCommentType.INFO, "\n⬇️ " + note));
+
+            return Collections.emptyList();
+        }
     }
 
     /**
