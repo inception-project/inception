@@ -190,6 +190,7 @@ var Visualizer = (function ($, window, undefined) {
     attributeText = [];
     attributeCues = {};
     attributeCueFor = {};
+    annotatorNotes = undefined;
     attributeMerge = {}; // for box, cross, etc. that are span-global
     fragments = [];
     normalized;
@@ -333,8 +334,10 @@ var Visualizer = (function ($, window, undefined) {
     leftSpans = undefined;
     rightSpans = undefined;
     annotatorNotes = undefined;
+    comment = undefined;
     labelText = undefined;
     color = undefined
+    shadowClass = undefined;
 
     constructor(id, triggerId, roles, klass) {
       Object.seal(this);
@@ -381,6 +384,8 @@ var Visualizer = (function ($, window, undefined) {
   }
 
   class Arc {
+    annotatorNotes = undefined;
+    comment = undefined;
     origin;
     target;
     dist;
@@ -392,6 +397,7 @@ var Visualizer = (function ($, window, undefined) {
     relation = false;
     normalizations = [];
     marked;
+    normalized;
 
     constructor(eventDesc, role, dist, eventNo) {
       Object.seal(this);
@@ -2316,22 +2322,22 @@ var Visualizer = (function ($, window, undefined) {
           chunkTo = Math.max(bx + bw + this.markedSpanSize, chunkTo);
           fragmentHeight = Math.max(bh + 2 * this.markedSpanSize, fragmentHeight);
           // WEBANNO EXTENSION END - Issue #273 - Layout doesn't space out labels sufficiently 
-          // .match() removes unconfigured shadows, which were
+          // .match() removes unconfigured shadows, whic    h were
           // always showing up as black.
           // TODO: don't hard-code configured shadowclasses.
           if (span.shadowClass &&
             span.shadowClass.match('True_positive|False_positive|False_negative|AnnotationError|AnnotationWarning|AnnotatorNotes|Normalized|AnnotationIncomplete|AnnotationUnconfirmed|rectEditHighlight|EditHighlight_arc|MissingAnnotation|ChangedAnnotation ')) {
-            shadowRect = svg.rect(fragment.group,
-              bx - rectShadowSize, by - rectShadowSize,
-              bw + 2 * rectShadowSize, bh + 2 * rectShadowSize, {
+            shadowRect = this.svg.rect(fragment.group,
+              bx - this.rectShadowSize, by - this.rectShadowSize,
+              bw + 2 * this.rectShadowSize, bh + 2 * this.rectShadowSize, {
               'class': 'shadow_' + span.shadowClass,
               filter: 'url(#Gaussian_Blur)',
-              rx: rectShadowRounding,
-              ry: rectShadowRounding,
+              rx: this.rectShadowRounding,
+              ry: this.rectShadowRounding,
             });
-            chunkFrom = Math.min(bx - rectShadowSize, chunkFrom);
-            chunkTo = Math.max(bx + bw + rectShadowSize, chunkTo);
-            fragmentHeight = Math.max(bh + 2 * rectShadowSize, fragmentHeight);
+            chunkFrom = Math.min(bx - this.rectShadowSize, chunkFrom);
+            chunkTo = Math.max(bx + bw + this.rectShadowSize, chunkTo);
+            fragmentHeight = Math.max(bh + 2 * this.rectShadowSize, fragmentHeight);
           }
           /*
           fragment.rect = svg.rect(fragment.group,
@@ -2410,7 +2416,7 @@ var Visualizer = (function ($, window, undefined) {
           }
           $(fragment.rect).attr('y', yy - Configuration.visual.margin.y - span.floor);
           if (shadowRect) {
-            $(shadowRect).attr('y', yy - rectShadowSize - Configuration.visual.margin.y - span.floor);
+            $(shadowRect).attr('y', yy - this.rectShadowSize - Configuration.visual.margin.y - span.floor);
           }
           if (markedRect) {
             $(markedRect).attr('y', yy - this.markedSpanSize - Configuration.visual.margin.y - span.floor);
@@ -3301,14 +3307,14 @@ var Visualizer = (function ($, window, undefined) {
             }
             if (arc.shadowClass) {
               this.svg.rect(shadowGroup,
-                textBox.x - arcLabelShadowSize,
-                textBox.y - arcLabelShadowSize,
-                textBox.width + 2 * arcLabelShadowSize,
-                textBox.height + 2 * arcLabelShadowSize, {
+                textBox.x - this.arcLabelShadowSize,
+                textBox.y - this.arcLabelShadowSize,
+                textBox.width + 2 * this.arcLabelShadowSize,
+                textBox.height + 2 * this.arcLabelShadowSize, {
                 'class': 'shadow_' + arc.shadowClass,
                 filter: 'url(#Gaussian_Blur)',
-                rx: arcLabelShadowRounding,
-                ry: arcLabelShadowRounding,
+                rx: this.arcLabelShadowRounding,
+                ry: this.arcLabelShadowRounding,
               });
             }
             var textStart = textBox.x;
@@ -3420,7 +3426,7 @@ var Visualizer = (function ($, window, undefined) {
             if (arc.shadowClass) {
               this.svg.path(shadowGroup, path, {
                 'class': 'shadow_' + arc.shadowClass,
-                strokeWidth: shadowStroke,
+                strokeWidth: this.shadowStroke,
                 'strokeDashArray': dashArray,
               });
             }
@@ -3710,16 +3716,16 @@ var Visualizer = (function ($, window, undefined) {
               box.x - rectShadowSize, box.y - rectShadowSize,
               box.width + 2 * rectShadowSize, box.height + 2 * rectShadowSize, {
               */
-              this.rtlmode ? box.x + rowPadding + rectShadowSize : box.x - rectShadowSize,
-              box.y - rectShadowSize,
-              box.width + 2 * rectShadowSize,
-              box.height + 2 * rectShadowSize,
+              this.rtlmode ? box.x + this.rowPadding + this.rectShadowSize : box.x - this.rectShadowSize,
+              box.y - this.rectShadowSize,
+              box.width + 2 * this.rectShadowSize,
+              box.height + 2 * this.rectShadowSize,
               {
                 // WEBANNO EXTENSION END - RTL support - Sentence comment in margin
                 'class': 'shadow_' + sentComment.type,
                 filter: 'url(#Gaussian_Blur)',
-                rx: rectShadowRounding,
-                ry: rectShadowRounding,
+                rx: this.rectShadowRounding,
+                ry: this.rectShadowRounding,
                 'data-sent': row.sentence,
               });
             // WEBANNO EXTENSION BEGIN - RTL support - Sentence comment in margin           
