@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.EventListener;
@@ -40,8 +41,8 @@ import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @Controller
-@ConditionalOnProperty(name = { "websocket.enabled", "websocket.loggedevent.enabled",
-        "event-logging.enabled" }, havingValue = "true", matchIfMissing = false)
+@ConditionalOnBean(SimpMessagingTemplate.class)
+@ConditionalOnProperty(name = "websocket.loggedevent.enabled", havingValue = "true", matchIfMissing = false)
 public class LoggedEventMessageControllerImpl
     implements LoggedEventMessageController
 {
