@@ -36,6 +36,9 @@ public class StatisticRequest
     private final AnnotationLayer annotationLayer;
     private final AnnotationFeature annotationFeature;
 
+    private final Double lowerDocumentSize;
+    private final Double upperDocumentSize;
+
     public StatisticRequest(Project aProject, User aUser, String aStatistic)
     {
         this(aProject, aUser, aStatistic, null);
@@ -44,12 +47,13 @@ public class StatisticRequest
     public StatisticRequest(Project aProject, User aUser, String aStatistic,
             SourceDocument aLimitedToDocument)
     {
-        this(aProject, aUser, aStatistic, aLimitedToDocument, null, null);
+        this(aProject, aUser, aStatistic, aLimitedToDocument, null, null, null, null);
     }
 
     public StatisticRequest(Project aProject, User aUser, String aStatistic,
             SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature)
+            AnnotationFeature aAnnotationFeature, Double aLowerDocumentSize,
+            Double aUpperDocumentSize)
     {
         super();
         project = aProject;
@@ -58,6 +62,8 @@ public class StatisticRequest
         limitedToDocument = aLimitedToDocument;
         annotationLayer = aAnnotationLayer;
         annotationFeature = aAnnotationFeature;
+        lowerDocumentSize = aLowerDocumentSize;
+        upperDocumentSize = aUpperDocumentSize;
     }
 
     public Project getProject()
@@ -88,6 +94,16 @@ public class StatisticRequest
     public AnnotationFeature getAnnotationFeature()
     {
         return annotationFeature;
+    }
+
+    public Double getLowerDocumentSize()
+    {
+        return lowerDocumentSize;
+    }
+
+    public Double getUpperDocumentSize()
+    {
+        return upperDocumentSize;
     }
 
 }

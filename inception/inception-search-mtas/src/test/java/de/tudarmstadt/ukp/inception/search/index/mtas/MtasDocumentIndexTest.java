@@ -17,41 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.List;
-
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.uima.fit.factory.JCasBuilder;
-import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.FileSystemUtils;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
@@ -81,6 +46,40 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.fit.factory.JCasBuilder;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileSystemUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.List;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 @EnableAutoConfiguration
 @EntityScan({ //
@@ -458,7 +457,7 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void testAnnotationQueryStatistics() throws Exception
+    public void testStatisticsOld() throws Exception
     {
         Project project = new Project();
         project.setName("TestAnnotationQueryStatistics");
@@ -505,10 +504,10 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void testMtas() throws Exception
+    public void testStatisticsNew() throws Exception
     {
         Project project = new Project();
-        project.setName("TestMtas");
+        project.setName("TestStatistics");
 
         createProject(project);
 
@@ -519,33 +518,26 @@ public class MtasDocumentIndexTest
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
 
-        // AnnotationLayer layer = new AnnotationLayer();
-        // layer.setName("Named Entity");
-        // String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
-
-        // String sourceContent = "Hello World x";
-        // String sourceContent = "The capital of Galicia is Santiago de Compostela! Actually, its
-        // history is fascinating; nonetheless: Madrid is Spain's capital?";
         String sourceContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(sourceDocument, sourceContent));
-        // annotateDocument(project, user, sourceDocument);
+        annotateDocument(project, user, sourceDocument);
 
         SourceDocument otherDocument = new SourceDocument();
         otherDocument.setName("Other document");
         otherDocument.setProject(project);
         otherDocument.setFormat("text");
 
-        String otherContent = "Goodbye moon y";
+        String otherContent = "Goodbye moon";
 
         uploadDocument(Pair.of(otherDocument, otherContent));
 
-        String statistic = "NumTokens";
+        String statistic = "n,min,max,mean,median,standarddeviation";
+        Double lowerDocSize = 4.0;
+        Double upperDocSize = null;
 
-        // System.out.println("number of tokens ="
-        // + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
-
-        searchService.executeTest(user, project, statistic, sourceDocument, null, null);
+        searchService.getProjectStatistics(user, project, statistic, sourceDocument, null, null,
+                lowerDocSize, upperDocSize);
 
         assertThat(0).isEqualTo(0);
     }

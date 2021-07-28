@@ -533,9 +533,10 @@ public class SearchServiceImpl
         }
     }
 
-    public void executeTest(User aUser, Project aProject, String aStatistic,
+    @Override
+    public void getProjectStatistics(User aUser, Project aProject, String aStatistic,
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature)
+            AnnotationFeature aAnnotationFeature, Double aLowerDocSize, Double aUpperDocSize)
         throws IOException, ExecutionException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
@@ -543,8 +544,9 @@ public class SearchServiceImpl
 
             ensureIndexIsCreatedAndValid(aProject, index);
 
-            index.getPhysicalIndex().testMtas(new StatisticRequest(aProject, aUser, aStatistic,
-                    aDocument, aAnnotationLayer, aAnnotationFeature));
+            index.getPhysicalIndex()
+                    .getTokenStatistics(new StatisticRequest(aProject, aUser, aStatistic, aDocument,
+                            aAnnotationLayer, aAnnotationFeature, aLowerDocSize, aUpperDocSize));
         }
     }
 

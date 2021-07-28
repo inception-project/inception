@@ -59,10 +59,7 @@ public interface PhysicalIndex
             String[] aPunctuationMarks)
         throws IOException, ExecutionException;
 
-    public void testMtas(StatisticRequest aStatisticRequest);
-
-    long fetchAnnotationStatistic(StatisticRequest aStatisticRequest)
-        throws IOException, ExecutionException;
+    public void getTokenStatistics(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
 

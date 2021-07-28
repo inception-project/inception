@@ -116,9 +116,9 @@ public interface SearchService
             String[] aPunctuationMarks)
         throws IOException, ExecutionException;
 
-    public void executeTest(User aUser, Project aProject, String aStatistic,
-                            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-                            AnnotationFeature aAnnotationFeature)
+    public void getProjectStatistics(User aUser, Project aProject, String aStatistic,
+            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature, Double aLowerDocSize, Double aUpperDocSize)
         throws IOException, ExecutionException;
 
     void enqueueReindexTask(Project aProject, String aTrigger);
