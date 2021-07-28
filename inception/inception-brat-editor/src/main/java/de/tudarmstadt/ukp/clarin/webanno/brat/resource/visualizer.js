@@ -53,7 +53,7 @@ var Visualizer = (function ($, window, undefined) {
     /** @type {Chunk[]} */ chunks = [];
     /** @type {Object.<string, Span>} */ spans = {};
     /** @type {Object.<string, EventDesc>} */ eventDescs = {};
-    /** @type {Arc} */arcs = [];
+    /** @type {Arc®[]} */arcs = [];
     arcById = {};
     sentComment = {};
     markedSent = {};
@@ -112,6 +112,18 @@ var Visualizer = (function ($, window, undefined) {
       this.from = from;
       this.to = to;
     }
+
+    /**
+     * @param {Fragment} a
+     * @param {Fragment} b
+     */
+    static midpointComparator = (a, b) => {
+      let tmp = a.from + a.to - b.from - b.to;
+      if (!tmp) {
+        return 0;
+      }
+      return tmp < 0 ? -1 : 1;
+    };
 
     /**
      * @param {Fragment} a
@@ -229,27 +241,15 @@ var Visualizer = (function ($, window, undefined) {
      * @param {Span} a
      * @param {Span} b
      */
-    static compare(a, b) {
-      var aSpan = this.data.spans[a];
-      var bSpan = this.data.spans[b];
-      var tmp = aSpan.headFragment.from + aSpan.headFragment.to - bSpan.headFragment.from - bSpan.headFragment.to;
+    static compare(spans, a, b) {
+      const aSpan = spans[a];
+      const bSpan = spans[b];
+      const tmp = aSpan.headFragment.from + aSpan.headFragment.to - bSpan.headFragment.from - bSpan.headFragment.to;
       if (tmp) {
         return tmp < 0 ? -1 : 1;
       }
       return 0;
     }
-
-    /**
-     * @param {Span} a
-     * @param {Span} b
-     */
-    static midpointComparator = (a, b) => {
-      let tmp = a.from + a.to - b.from - b.to;
-      if (!tmp) {
-        return 0;
-      }
-      return tmp < 0 ? -1 : 1;
-    };
 
     initContainers() {
       this.incoming = [];
@@ -266,11 +266,11 @@ var Visualizer = (function ($, window, undefined) {
     splitMultilineOffsets(text) {
       this.segmentedOffsetsMap = {};
 
-      for (var fi = 0, nfi = 0; fi < this.unsegmentedOffsets.length; fi++) {
+      for (let fi = 0, nfi = 0; fi < this.unsegmentedOffsets.length; fi++) {
         let begin = this.unsegmentedOffsets[fi][0];
         const end = this.unsegmentedOffsets[fi][1];
 
-        for (var ti = begin; ti < end; ti++) {
+        for (let ti = begin; ti < end; ti++) {
           const c = text.charAt(ti);
           if (c === '\n' || c === '\r') {
             if (begin !== null) {
@@ -317,7 +317,7 @@ var Visualizer = (function ($, window, undefined) {
       });
 
       // ensure ascending order
-      this.fragments.sort(Span.midpointComparator);
+      this.fragments.sort(Fragment.midpointComparator);
       this.wholeFrom = this.fragments[0].from;
       this.wholeTo = this.fragments[this.fragments.length - 1].to;
       this.headFragment = this.fragments[true ? this.fragments.length - 1 : 0];
@@ -1032,11 +1032,11 @@ var Visualizer = (function ($, window, undefined) {
         });
 
         // sort spans in the equiv by their midpoint
-        okEquivSpans.sort(Span.compare);
+        okEquivSpans.sort((a, b) => Span.compare(spans, a, b));
 
         // generate the arcs
-        var len = okEquivSpans.length;
-        for (var i = 1; i < len; i++) {
+        const len = okEquivSpans.length;
+        for (let i = 1; i < len; i++) {
           let id = okEquivSpans[i - 1];
           let tiggerId = okEquivSpans[i - 1];
           let roles = [[equiv[1], okEquivSpans[i]]];
@@ -1054,13 +1054,13 @@ var Visualizer = (function ($, window, undefined) {
 
       relations.map(rel => {
         // rel[2] is args, rel[2][a][0] is role and rel[2][a][1] is value for a in (0,1)
-        var argsDesc = this.relationTypesHash[rel[1]];
+        let argsDesc = this.relationTypesHash[rel[1]];
         argsDesc = argsDesc && argsDesc.args;
 
-        var t1, t2;
+        let t1, t2;
         if (argsDesc) {
           // sort the arguments according to the config
-          var args = {};
+          const args = {};
           args[rel[2][0][0]] = rel[2][0][1];
           args[rel[2][1][0]] = rel[2][1][1];
           t1 = args[argsDesc[0].role];
@@ -1313,6 +1313,8 @@ var Visualizer = (function ($, window, undefined) {
      * Side effects:
      * - Fields on spans are changed: totalDist, numArcs, outgoing, incoming
      * - data.arcById index is populated.
+     *
+     * @returns {Arc[]}
      */
     assignArcsToSpans(eventDescs, spans) {
       if (!eventDescs || !spans) {
@@ -1379,7 +1381,7 @@ var Visualizer = (function ($, window, undefined) {
       // REC 2021-06-29: Not sure if we need this at all since INCEpTION only uses "entities" and
       // doesn't do brat-style events/trigger. We prepare spans-with-slots on the server side
       // already and render them as brat-entities and brat-relations
-      var triggerHash = this.buildSpansFromTriggers(this.sourceData.triggers);
+      const triggerHash = this.buildSpansFromTriggers(this.sourceData.triggers);
       this.buildEventDescsFromTriggers(triggerHash);
 
       // split spans into span fragments (for discontinuous spans)
@@ -1391,7 +1393,7 @@ var Visualizer = (function ($, window, undefined) {
 
       // prepare span boundaries for token containment testing
       // sort fragments by beginning, then by end
-      var sortedFragments = this.buildSortedFragments(this.data.spans);
+      const sortedFragments = this.buildSortedFragments(this.data.spans);
 
       // token containment testing (chunk recognition)
       this.data.chunks = this.buildChunksFromTokenOffsets(this.sourceData.token_offsets, sortedFragments);
@@ -1439,14 +1441,14 @@ var Visualizer = (function ($, window, undefined) {
 
       this.data.spanDrawOrderPermutation = this.determineDrawOrder(this.data.spans);
 
-      // resort the spans for linear order by center so we can organize them into towers
-      sortedFragments.sort(Span.midpointComparator);
+      // resort the fragments for linear order by center so we can organize them into towers
+      sortedFragments.sort(Fragment.midpointComparator);
       // sort fragments into towers, calculate average arc distances
       this.organizeFragmentsIntoTowers(sortedFragments);
 
       // find curlies (only the first fragment drawn in a tower)
       this.data.spanDrawOrderPermutation.map(spanId => {
-        var span = this.data.spans[spanId];
+        const span = this.data.spans[spanId];
 
         span.fragments.map(fragment => {
           if (!this.data.towers[fragment.towerId]) {
@@ -1494,13 +1496,13 @@ var Visualizer = (function ($, window, undefined) {
           $.each(fragment.span.attributes, (attrType, valType) => {
             // TODO: might wish to check what's appropriate for the type
             // instead of using the first attribute def found
-            var attr = (this.eventAttributeTypes[attrType] || this.entityAttributeTypes[attrType]);
+            const attr = (this.eventAttributeTypes[attrType] || this.entityAttributeTypes[attrType]);
             if (!attr) {
               // non-existent type
               warning = true;
               return;
             }
-            var val = attr.values[attr.bool || valType];
+            const val = attr.values[attr.bool || valType];
             if (!val) {
               // non-existent value
               warning = true;
@@ -1525,7 +1527,7 @@ var Visualizer = (function ($, window, undefined) {
               }
             }
           });
-          var text = fragment.labelText;
+          let text = fragment.labelText;
           if (prefix !== '') {
             text = prefix + ' ' + text;
             svgtext.string(' ');
@@ -1574,17 +1576,17 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     addHeaderAndDefs() {
-      var commentName = (this.coll + '/' + this.doc).replace('--', '-\\-');
+      const commentName = (this.coll + '/' + this.doc).replace('--', '-\\-');
       this.$svg.append('<!-- document: ' + commentName + ' -->');
-      var defs = this.svg.defs();
-      var $blurFilter = $($.parseXML(('<filter id="Gaussian_Blur"><feGaussianBlur in="SourceGraphic" stdDeviation="2" /></filter>')));
+      const defs = this.svg.defs();
+      const $blurFilter = $($.parseXML(('<filter id="Gaussian_Blur"><feGaussianBlur in="SourceGraphic" stdDeviation="2" /></filter>')));
       this.svg.add(defs, $blurFilter.children(0));
       return defs;
     }
 
     getTextMeasurements(textsHash, options, callback) {
       // make some text elements, find out the dimensions
-      var textMeasureGroup = this.svg.group(options);
+      const textMeasureGroup = this.svg.group(options);
 
       // changed from $.each because of #264 ('length' can appear)
       for (var text in textsHash) {
@@ -1594,9 +1596,9 @@ var Visualizer = (function ($, window, undefined) {
       }
 
       // measuring goes on here
-      var widths = {};
+      const widths = {};
       $(textMeasureGroup).find('text').each(function (svgTextNo, svgText) {
-        var text = $(svgText).text();
+        const text = $(svgText).text();
         widths[text] = this.getComputedTextLength();
 
         if (callback) {
@@ -1605,7 +1607,7 @@ var Visualizer = (function ($, window, undefined) {
           });
         }
       });
-      var bbox = textMeasureGroup.getBBox();
+      const bbox = textMeasureGroup.getBBox();
       this.svg.remove(textMeasureGroup);
 
       return new Measurements(widths, bbox.height, bbox.y);
@@ -1613,7 +1615,7 @@ var Visualizer = (function ($, window, undefined) {
 
     getTextAndSpanTextMeasurements() {
       // get the span text sizes
-      var chunkTexts = {}; // set of span texts
+      const chunkTexts = {}; // set of span texts
       this.data.chunks.map(chunk => {
         chunk.row = undefined; // reset
         if (!chunkTexts.hasOwnProperty(chunk.text)) {
@@ -1623,14 +1625,14 @@ var Visualizer = (function ($, window, undefined) {
         // here we also need all the spans that are contained in
         // chunks with this text, because we need to know the position
         // of the span text within the respective chunk text
-        var chunkText = chunkTexts[chunk.text];
+        const chunkText = chunkTexts[chunk.text];
         chunkText.push.apply(chunkText, chunk.fragments);
         // and also the markedText boundaries
         chunkText.push.apply(chunkText, chunk.markedTextStart);
         chunkText.push.apply(chunkText, chunk.markedTextEnd);
       });
 
-      var textSizes = this.getTextMeasurements(chunkTexts, undefined, (fragment, text) => {
+      const textSizes = this.getTextMeasurements(chunkTexts, undefined, (fragment, text) => {
         if (fragment instanceof Fragment) { // it's a fragment!
           // measure the fragment text position in pixels
           let firstChar = fragment.from - fragment.chunk.from;
@@ -1917,6 +1919,7 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     renderDataReal(sourceData) {
+      let text;
       let width;
       Util.profileEnd('before render');
       Util.profileStart('render');
@@ -1944,48 +1947,41 @@ var Visualizer = (function ($, window, undefined) {
       // clear the SVG
       this.svg.clear(true);
 
-      if (!this.data || this.data.length == 0) {
+      if (!this.data) {
         return;
       }
 
-      // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size
       this.$svg.css("font-size", this.fontZoom + "%");
       this.sentNumMargin = 40 * (this.fontZoom / 100.0);
-      // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size
-      // WEBANNO EXTENSION BEGIN - Flex-Layout - need to discover scrollbar width programmatically
-      /*
-      // establish the width according to the enclosing element
-      this.canvasWidth = this.forceWidth || $svgDiv.width();
-      */
+
       // establish the width according to the enclosing element
       this.baseCanvasWidth = this.forceWidth || this.$svgDiv.width();
       this.canvasWidth = this.forceWidth || (this.$svgDiv.width() - $.scrollbarWidth());
-      // WEBANNO EXTENSION END - Flex-Layout - need to discover scrollbar width programmatically
-      // WEBANNO EXTENSION BEGIN - #289 - Layout slightly shifts when SVG is rendered
+
       // Take hairline border of SVG into account
       this.canvasWidth -= 4;
-      // WEBANNO EXTENSION END - #289 - Layout slightly shifts when SVG is rendered
-      var defs = this.addHeaderAndDefs();
+
+      const defs = this.addHeaderAndDefs();
 
       // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       /*
               var backgroundGroup = svg.group({ 'class': 'background' });
       */
-      var backgroundGroup = this.svg.group({'class': 'background', 'pointer-events': 'none'});
+      const backgroundGroup = this.svg.group({'class': 'background', 'pointer-events': 'none'});
       // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      var glowGroup = this.svg.group({'class': 'glow'});
+      const glowGroup = this.svg.group({'class': 'glow'});
       this.highlightGroup = this.svg.group({'class': 'highlight'});
-      var textGroup = this.svg.group({'class': 'text'});
+      const textGroup = this.svg.group({'class': 'text'});
 
       Util.profileEnd('init');
       Util.profileStart('measures');
 
-      var sizes = this.getTextAndSpanTextMeasurements();
+      const sizes = this.getTextAndSpanTextMeasurements();
       this.data.sizes = sizes;
 
       this.adjustTowerAnnotationSizes();
-      var maxTextWidth = 0;
-      for (var text in sizes.texts.widths) {
+      let maxTextWidth = 0;
+      for (text in sizes.texts.widths) {
         if (sizes.texts.widths.hasOwnProperty(text)) {
           width = sizes.texts.widths[text];
           if (width > maxTextWidth)
@@ -1996,41 +1992,34 @@ var Visualizer = (function ($, window, undefined) {
       Util.profileEnd('measures');
       Util.profileStart('chunks');
 
-      // WEBANNO EXTENSION BEGIN - RTL support - [currentX] initial position
-      /*
-      var currentX = Configuration.visual.margin.x + this.sentNumMargin + rowPadding;
-      */
-      var currentX;
+      let currentX;
       if (this.rtlmode) {
         currentX = this.canvasWidth - (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding);
       } else {
         currentX = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
       }
-      // WEBANNO EXTENSION END
-      var rows = [];
-      var fragmentHeights = [];
-      var sentenceToggle = 0;
-      // WEBANNO EXTENSION BEGIN - #180 - Use sentence number offset received from server
-      var sentenceNumber = sourceData.sentence_number_offset;
-      // WEBANNO EXTENSION END
-      var row = new Row(this.svg);
+
+      const rows = [];
+      const fragmentHeights = [];
+      let sentenceToggle = 0;
+      let sentenceNumber = sourceData.sentence_number_offset;
+      let row = new Row(this.svg);
       row.sentence = sentenceNumber;
       row.backgroundIndex = sentenceToggle;
       row.index = 0;
-      var rowIndex = 0;
-      var twoBarWidths; // HACK to avoid measuring space's width
-      var openTextHighlights = {};
-      var textMarkedRows = [];
+      let rowIndex = 0;
+      const openTextHighlights = {};
+      const textMarkedRows = [];
 
       this.addArcTextMeasurements(sizes);
 
       // reserve places for spans
-      var floors = [];
-      var reservations = []; // reservations[chunk][floor] = [[from, to, headroom]...]
-      for (var i = 0; i <= this.data.lastFragmentIndex; i++) {
-        reservation[i] = {};
+      const floors = [];
+      const reservations = []; // reservations[chunk][floor] = [[from, to, headroom]...]
+      for (let i = 0; i <= this.data.lastFragmentIndex; i++) {
+        reservations[i] = {};
       }
-      var inf = 1.0 / 0.0;
+      const inf = 1.0 / 0.0;
 
       $.each(this.data.spanDrawOrderPermutation, (spanIdNo, spanId) => {
         const span = this.data.spans[spanId];
