@@ -24,10 +24,12 @@ package de.tudarmstadt.ukp.inception.recommendation.tasks;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.info;
+import static java.text.MessageFormat.format;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -55,6 +57,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.SelectionTaskEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 
@@ -149,6 +152,10 @@ public class SelectionTask
                         if (factory == null) {
                             log.error("[{}][{}]: No recommender factory available for [{}]",
                                     user.getUsername(), r.getName(), r.getTool());
+                            appEventPublisher.publishEvent(
+                                    new SelectionTaskEvent(this, recommender, user.getUsername(),
+                                            String.format("No recommender factory available for %s",
+                                                    recommender.getTool())));
                             continue;
                         }
 
@@ -214,8 +221,10 @@ public class SelectionTask
                         boolean activated;
                         if (score >= threshold) {
                             activated = true;
-                            evaluatedRecommenders
-                                    .add(EvaluatedRecommender.makeActive(recommender, result));
+                            evaluatedRecommenders.add(EvaluatedRecommender.makeActive(recommender,
+                                    result,
+                                    format("Score {0,number,#.####} >= threshold {1,number,#.####}",
+                                            score, threshold)));
                             log.info("[{}][{}]: Activated ({} >= threshold {})", user.getUsername(),
                                     recommenderName, score, threshold);
                             logMessages.add(
@@ -227,21 +236,33 @@ public class SelectionTask
                             log.info("[{}][{}]: Not activated ({} < threshold {})",
                                     user.getUsername(), recommenderName, score, threshold);
                             logMessages.add(
-                                    info(this, "Recommender [%s] not activated (%d < threshold %d)",
+                                    info(this, "Recommender [%s] not activated (%f < threshold %f)",
                                             recommenderName, score, threshold));
                             evaluatedRecommenders.add(EvaluatedRecommender.makeInactive(recommender,
-                                    result, String.format("%f >= threshold %f", score, threshold)));
+                                    result,
+                                    format("Score {0,number,#.####} < threshold {1,number,#.####}",
+                                            score, threshold)));
                         }
 
                         appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
                                 recommender, user.getUsername(), result,
                                 System.currentTimeMillis() - start, activated));
+
+                        Optional<String> recError = result.getErrorMsg();
+                        SelectionTaskEvent evalEvent = new SelectionTaskEvent(this, recommender,
+                                user.getUsername(), result);
+                        if (recError.isPresent()) {
+                            evalEvent.setErrorMsg(recError.get());
+                        }
+                        appEventPublisher.publishEvent(evalEvent);
                     }
 
                     // Catching Throwable is intentional here as we want to continue the execution
                     // even if a particular recommender fails.
                     catch (Throwable e) {
                         log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
+                        appEventPublisher.publishEvent(new SelectionTaskEvent(this, recommender,
+                                user.getUsername(), e.getMessage()));
                     }
                 }
 

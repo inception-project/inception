@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import java.util.Optional;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-
-import java.util.Optional;
 
 public class StatisticRequest
 {

@@ -28,6 +28,13 @@ For a release build:
         
     docker run -p8080:8080 -v inception-data:/export -it inceptionproject/inception
 
+## Cross-platform build for AMD64
+
+If you are e.g. on a ARM machine and wish to create a cross-platform build targeting AMD64, use:
+
+    mvn -Pdocker-buildx-amd64 clean package
+    mvn -Pdocker docker:push   (only if the build should be published)
+
 ## Options
 If you want to keep the application data easily accessible in a folder on your host (e.g. if you
 want to use a custom settings.properties file), you can provide a path on the host to the `-v` 

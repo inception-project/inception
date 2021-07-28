@@ -25,19 +25,20 @@ import java.nio.file.Paths;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
 
 public class WebAnnotationTest
 {
     @Test
-    public void thatExampleCanBeLoaded() throws Exception {
+    public void thatExampleCanBeLoaded() throws Exception
+    {
         WebAnnotations annotations;
-        try (InputStream is = newInputStream(Paths.get("src/test/resources/annotations.w3c.json"))) {
+        try (InputStream is = newInputStream(
+                Paths.get("src/test/resources/annotations.w3c.json"))) {
             annotations = JSONUtil.fromJsonStream(WebAnnotations.class, is);
         }
-        
+
         String json = JSONUtil.toPrettyJsonString(annotations);
-        
+
         // System.out.println(json);
     }
 }

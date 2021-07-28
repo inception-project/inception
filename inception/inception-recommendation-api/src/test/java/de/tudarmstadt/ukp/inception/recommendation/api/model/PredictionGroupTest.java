@@ -74,8 +74,7 @@ public class PredictionGroupTest
 
         SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
 
-        assertThat(sut)
-                .as("Sorted by score (decreasing) but retain insertion order on tie")
+        assertThat(sut).as("Sorted by score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
 
         assertThat(sut.stream())

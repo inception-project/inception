@@ -81,7 +81,7 @@ public class ChainRenderer
     {
         ChainAdapter typeAdapter = getTypeAdapter();
         chainType = aTypeSystem.getType(typeAdapter.getChainTypeName());
-        
+
         if (chainType == null) {
             // If the types are not defined, then we do not need to try and render them because the
             // CAS does not contain any instances of them

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.21.0-SNAPSHOT</version>
+    <version>21.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -501,10 +501,6 @@
       <groupId>org.mariadb.jdbc</groupId>
       <artifactId>mariadb-java-client</artifactId>
     </dependency>
-    <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-    </dependency>
 
     <!-- JAXB DEPENDENCIES -->
     <dependency>
@@ -873,7 +869,6 @@
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
               <usedDependency>org.hibernate:hibernate-jcache</usedDependency>
               <usedDependency>org.mariadb.jdbc:mariadb-java-client</usedDependency>
-              <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.ehcache:ehcache</usedDependency>
               <!-- Logging - used via reflection / optional -->

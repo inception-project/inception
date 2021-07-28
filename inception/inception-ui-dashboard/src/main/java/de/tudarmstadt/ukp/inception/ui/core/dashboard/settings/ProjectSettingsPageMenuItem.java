@@ -70,7 +70,7 @@ public class ProjectSettingsPageMenuItem
         if (aProject == null) {
             return false;
         }
-        
+
         // Visible if the current user is a project manager or global admin
         User user = userRepo.getCurrentUser();
         return userRepo.isAdministrator(user) || projectService.isManager(aProject, user);

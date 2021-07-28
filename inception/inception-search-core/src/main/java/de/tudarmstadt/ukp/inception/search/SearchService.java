@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -28,6 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.search.model.Monitor;
+import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 public interface SearchService
 {
@@ -84,7 +87,7 @@ public interface SearchService
             AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
         throws IOException, ExecutionException;
 
-    void reindex(Project aproject) throws IOException;
+    void reindex(Project aproject, Monitor aMonitor) throws IOException;
 
     /**
      * This method is only for testing. It allows waiting until the indexing process has completed
@@ -100,7 +103,7 @@ public interface SearchService
 
     void indexDocument(AnnotationDocument aAnnotationDocument, byte[] aBinaryCas);
 
-    boolean isIndexInProgress(Project aProject);
+    Optional<Progress> getIndexProgress(Project aProject);
 
     long determineNumOfQueryResults(User aUser, Project aProject, String aQuery,
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,

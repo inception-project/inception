@@ -17,6 +17,41 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.fit.factory.JCasBuilder;
+import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.jcas.JCas;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.FileSystemUtils;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
@@ -46,40 +81,6 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.uima.fit.factory.JCasBuilder;
-import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.TestMethodOrder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.FileSystemUtils;
-
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.util.List;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 @EnableAutoConfiguration
 @EntityScan({ //
@@ -168,9 +169,11 @@ public class MtasDocumentIndexTest
         // Avoid the compiler complaining about project not being an effectively final variable
         log.info("Waiting for uploaded documents to be indexed...");
         Project p = project;
-        await("Waiting for indexing process to complete").atMost(60, SECONDS)
-                .pollInterval(5, SECONDS)
-                .until(() -> searchService.isIndexValid(p) && !searchService.isIndexInProgress(p));
+        await("Waiting for indexing process to complete") //
+                .atMost(60, SECONDS) //
+                .pollInterval(5, SECONDS) //
+                .until(() -> searchService.isIndexValid(p)
+                        && searchService.getIndexProgress(p).isEmpty());
         log.info("Indexing complete!");
     }
 
@@ -213,7 +216,6 @@ public class MtasDocumentIndexTest
         AnnotationDocument annotationDocument = documentService
                 .createOrGetAnnotationDocument(aSourceDocument, aUser);
 
-
         // Write annotated CAS to annotated document
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
             log.info("Writing annotated document using documentService.writeAnnotationCas");
@@ -221,9 +223,11 @@ public class MtasDocumentIndexTest
         }
 
         log.info("Writing for annotated document to be indexed");
-        await("Waiting for indexing process to complete").atMost(60, SECONDS)
-                .pollInterval(5, SECONDS).until(() -> searchService.isIndexValid(aProject)
-                        && !searchService.isIndexInProgress(aProject));
+        await("Waiting for indexing process to complete") //
+                .atMost(60, SECONDS) //
+                .pollInterval(5, SECONDS) //
+                .until(() -> searchService.isIndexValid(aProject)
+                        && searchService.getIndexProgress(aProject).isEmpty());
         log.info("Indexing complete!");
     }
 
@@ -473,7 +477,8 @@ public class MtasDocumentIndexTest
         String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
 
         // String sourceContent = "Hello World x";
-        //String sourceContent = "The capital of Galicia is Santiago de Compostela! Actually, its history is fascinating; nonetheless: Madrid is Spain's capital?";
+        // String sourceContent = "The capital of Galicia is Santiago de Compostela! Actually, its
+        // history is fascinating; nonetheless: Madrid is Spain's capital?";
         String sourceContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(sourceDocument, sourceContent));
@@ -490,11 +495,11 @@ public class MtasDocumentIndexTest
 
         String statistic = "NumTokens";
 
-        //System.out.println("number of tokens ="
-        //        + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
+        // System.out.println("number of tokens ="
+        // + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
 
-        System.out.println("number of tokens ="
-                    + searchService.getProjectTextStatistics(user, project, statistic, sourceDocument, layer, null, punctuationMarks));
+        System.out.println("number of tokens =" + searchService.getProjectTextStatistics(user,
+                project, statistic, sourceDocument, layer, null, punctuationMarks));
 
         assertThat(0).isEqualTo(0);
     }
@@ -514,16 +519,17 @@ public class MtasDocumentIndexTest
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
 
-        //AnnotationLayer layer = new AnnotationLayer();
-        //layer.setName("Named Entity");
-        //String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
+        // AnnotationLayer layer = new AnnotationLayer();
+        // layer.setName("Named Entity");
+        // String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
 
         // String sourceContent = "Hello World x";
-        //String sourceContent = "The capital of Galicia is Santiago de Compostela! Actually, its history is fascinating; nonetheless: Madrid is Spain's capital?";
+        // String sourceContent = "The capital of Galicia is Santiago de Compostela! Actually, its
+        // history is fascinating; nonetheless: Madrid is Spain's capital?";
         String sourceContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(sourceDocument, sourceContent));
-        //annotateDocument(project, user, sourceDocument);
+        // annotateDocument(project, user, sourceDocument);
 
         SourceDocument otherDocument = new SourceDocument();
         otherDocument.setName("Other document");
@@ -536,14 +542,13 @@ public class MtasDocumentIndexTest
 
         String statistic = "NumTokens";
 
-        //System.out.println("number of tokens ="
-        //        + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
+        // System.out.println("number of tokens ="
+        // + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
 
         searchService.executeTest(user, project, statistic, sourceDocument, null, null);
 
         assertThat(0).isEqualTo(0);
     }
-
 
     @SpringBootConfiguration
     public static class TestContext

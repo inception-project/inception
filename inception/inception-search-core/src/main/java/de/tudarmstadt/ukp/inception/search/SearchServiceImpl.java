@@ -27,11 +27,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -66,6 +68,8 @@ import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
+import de.tudarmstadt.ukp.inception.search.model.Monitor;
+import de.tudarmstadt.ukp.inception.search.model.Progress;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexSourceDocumentTask;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexingTask_ImplBase;
@@ -662,9 +666,11 @@ public class SearchServiceImpl
      */
     @Override
     @Transactional
-    public void reindex(Project aProject) throws IOException
+    public void reindex(Project aProject, Monitor aMonitor) throws IOException
     {
         log.info("Re-indexing project [{}]({}) ", aProject.getName(), aProject.getId());
+
+        Monitor monitor = aMonitor != null ? aMonitor : new Monitor();
 
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
             if (isPerformNoMoreActions(pooledIndex)) {
@@ -678,28 +684,34 @@ public class SearchServiceImpl
             index.getPhysicalIndex().clear();
 
             // Index all the annotation documents
+            List<AnnotationDocument> annotationDocuments = new ArrayList<>();
             for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
-                List<AnnotationDocument> annotationDocumentsForUser = documentService
-                        .listAnnotationDocuments(aProject, user);
-                for (AnnotationDocument doc : annotationDocumentsForUser) {
-                    if (isPerformNoMoreActions(pooledIndex)) {
-                        return;
-                    }
+                annotationDocuments.addAll(documentService.listAnnotationDocuments(aProject, user));
+            }
+            List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(aProject);
 
-                    // Because serialization is a process which modifies internal data structures of
-                    // the CAS, we need exclusive access the CAS for the time being.
-                    // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
-                    // for https://issues.apache.org/jira/browse/UIMA-6162
-                    byte[] casAsByteArray;
-                    try (CasStorageSession session = CasStorageSession.openNested()) {
-                        casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
-                    }
-                    indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
+            monitor.setTodo(annotationDocuments.size() + sourceDocuments.size());
+
+            for (AnnotationDocument doc : annotationDocuments) {
+                if (isPerformNoMoreActions(pooledIndex)) {
+                    return;
                 }
+
+                // Because serialization is a process which modifies internal data structures of
+                // the CAS, we need exclusive access the CAS for the time being.
+                // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
+                // for https://issues.apache.org/jira/browse/UIMA-6162
+                byte[] casAsByteArray;
+                try (CasStorageSession session = CasStorageSession.openNested()) {
+                    casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
+                }
+                indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
+
+                monitor.incDone();
             }
 
             // Index all the source documents
-            for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
+            for (SourceDocument doc : sourceDocuments) {
                 if (isPerformNoMoreActions(pooledIndex)) {
                     return;
                 }
@@ -714,6 +726,8 @@ public class SearchServiceImpl
                 }
 
                 indexDocument(pooledIndex, doc, casAsByteArray);
+
+                monitor.incDone();
             }
 
             // After re-indexing, reset the invalid flag
@@ -740,14 +754,28 @@ public class SearchServiceImpl
     }
 
     @Override
-    public boolean isIndexInProgress(Project aProject)
+    public Optional<Progress> getIndexProgress(Project aProject)
     {
         Validate.notNull(aProject, "Project cannot be null");
 
-        return schedulingService.getAllTasks().stream() //
+        List<IndexingTask_ImplBase> tasks = schedulingService.getAllTasks().stream() //
                 .filter(task -> task instanceof IndexingTask_ImplBase)
                 .map(task -> (IndexingTask_ImplBase) task)
-                .anyMatch(task -> aProject.equals(task.getProject()));
+                .filter(task -> aProject.equals(task.getProject())).collect(Collectors.toList());
+
+        if (tasks.isEmpty()) {
+            return Optional.empty();
+        }
+
+        int total = 0;
+        int done = 0;
+        for (IndexingTask_ImplBase task : tasks) {
+            Progress p = task.getProgress();
+            total += p.getTotal();
+            done += p.getDone();
+        }
+
+        return Optional.of(new Progress(done, total));
     }
 
     @Override
@@ -792,7 +820,7 @@ public class SearchServiceImpl
 
         // Is the index valid?
         if (aIndex.getInvalid()) {
-            if (!isIndexInProgress(aProject)) {
+            if (getIndexProgress(aProject).isEmpty()) {
                 // Index is invalid, schedule a new index rebuild
                 enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[invalid]");
             }

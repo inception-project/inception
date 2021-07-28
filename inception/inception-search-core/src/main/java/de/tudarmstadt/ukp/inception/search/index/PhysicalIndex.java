@@ -55,10 +55,14 @@ public interface PhysicalIndex
     long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
 
-    HashMap<String, Double> fetchTextStatistics(SourceDocument aSourceDocument, String[] aPunctuationMarks) throws IOException, ExecutionException;
+    HashMap<String, Double> fetchTextStatistics(SourceDocument aSourceDocument,
+            String[] aPunctuationMarks)
+        throws IOException, ExecutionException;
+
     public void testMtas(StatisticRequest aStatisticRequest);
 
-    long fetchAnnotationStatistic(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
+    long fetchAnnotationStatistic(StatisticRequest aStatisticRequest)
+        throws IOException, ExecutionException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
 
