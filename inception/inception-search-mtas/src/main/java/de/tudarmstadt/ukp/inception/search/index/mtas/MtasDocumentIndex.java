@@ -79,6 +79,7 @@ import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ReferenceManager;
 import org.apache.lucene.search.SearcherFactory;
@@ -118,6 +119,7 @@ import mtas.analysis.util.MtasTokenizerFactory;
 import mtas.codec.util.CodecComponent;
 import mtas.codec.util.CodecInfo;
 import mtas.codec.util.CodecUtil;
+import mtas.codec.util.Status;
 import mtas.codec.util.collector.MtasDataItem;
 import mtas.parser.cql.MtasCQLParser;
 import mtas.parser.cql.ParseException;
@@ -419,6 +421,9 @@ public class MtasDocumentIndex
             searcher = getSearcherManager().acquire();
             IndexReader indexReader = searcher.getIndexReader();
             System.out.println(indexReader.getDocCount("is"));
+            CollectionStatistics stats = searcher.collectionStatistics(FIELD_CONTENT);
+            System.out.println("Hallo?");
+
 
             // IndexReader indexReader = DirectoryReader.open(directory);
             // IndexSearcher searcher = new IndexSearcher(indexReader);
@@ -428,39 +433,40 @@ public class MtasDocumentIndex
                     FIELD_CONTENT);
 
             ArrayList<Integer> fullDocSet = new ArrayList<Integer>(
-                    Arrays.asList(new Integer[] { 0, 1, 2 }));
-            //ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
-            //fullDocSet.add(0);
+                    Arrays.asList(new Integer[] { 0,1 }));
+            // ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
+            // fullDocSet.add(0);
             ArrayList<Integer> fullDocList = new ArrayList<Integer>();
-            Collections.sort(fullDocList);
-            //fullDocList.add(0);
-                // fieldStats.termVectorList.add(new CodecComponent.ComponentTermVector("wordList",
-                // ));
-                fieldStats.termVectorList.add(new CodecComponent.ComponentTermVector("wordList",
-                       DEFAULT_PREFIX, null, null, null, null, null, null, "n,sum",
-                      false, null, CodecUtil.STATS_TYPE_SUM , CodecUtil.SORT_DESC, null, 0, null, null, null, null, null, null,
-                       null, null, null));
-                if (fullDocSet == null) {
-                    System.out.println("ist null");
-                } else {
-                    System.out.println("ist nicht null");
+            //Collections.sort(fullDocList);
+            // fullDocList.add(0);
+            // fieldStats.termVectorList.add(new CodecComponent.ComponentTermVector("wordList",
+            // ));
+            fieldStats.termVectorList.add(new CodecComponent.ComponentTermVector("wordList",
+                    DEFAULT_PREFIX, null, null, null, null, null, null, "sum", false, null,
+                    CodecUtil.STATS_TYPE_SUM, CodecUtil.SORT_DESC, null, 10, null, null, null, null,
+                    null, null, null, null, null));
+            if (fieldStats == null) {
+                System.out.println("ist null");
+            }
+            else {
+                System.out.println("ist nicht null");
+            }
+            CodecUtil.collectField(FIELD_CONTENT, searcher, indexReader, fullDocList, fullDocSet,
+                    fieldStats, new Status());
+            for (CodecComponent.ComponentTermVector ct : fieldStats.termVectorList) {
+                HashMap<String, Map<String, Object>> tvList = new HashMap<String, Map<String, Object>>();
+                Map<String, ?> tcList = ct.subComponentFunction.dataCollector.getResult().getList();
+                for (String key : tcList.keySet()) {
+                    tvList.put(key, ((MtasDataItem<?, ?>) tcList.get(key)).rewrite(false));
                 }
-                CodecUtil.collectField(FIELD_CONTENT, searcher, indexReader, fullDocList,
-                        fullDocSet, fieldStats, null);
-                for (CodecComponent.ComponentTermVector ct : fieldStats.termVectorList) {
-                    HashMap<String, Map<String, Object>> tvList = new HashMap<String, Map<String, Object>>();
-                    Map<String, ?> tcList = ct.subComponentFunction.dataCollector.getResult()
-                            .getList();
-                    for (String key : tcList.keySet()) {
-                        tvList.put(key, ((MtasDataItem<?, ?>) tcList.get(key)).rewrite(false));
-                    }
-                    System.out.println(tvList);
-                }
+                System.out.println(tvList);
+            }
 
         }
         catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     @Override
