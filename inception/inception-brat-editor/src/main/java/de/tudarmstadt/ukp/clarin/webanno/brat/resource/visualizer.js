@@ -40,7 +40,7 @@
 // -*- Mode: JavaScript; tab-width: 2; indent-tabs-mode: nil; -*-
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 
-var Visualizer = (function ($, window, undefined) {
+const Visualizer = (function ($, window, undefined) {
   let svg;
 
   /**
@@ -61,6 +61,10 @@ var Visualizer = (function ($, window, undefined) {
     /** @type {number[][]} */ sentence_offsets;
     /** @type {number[][]} */ token_offsets;
     /** @type {number} */ sentence_number_offset;
+    /** @type {boolean} */ rtl_mode;
+    /** @type {number} */ font_zoom;
+    /** @type {{}} */ args;
+    exception;
   }
 
   /**
@@ -94,10 +98,10 @@ var Visualizer = (function ($, window, undefined) {
     /** @type {Chunk[]} */ chunks = [];
     /** @type {Object.<string, Span>} */ spans = {};
     /** @type {Object.<string, EventDesc>} */ eventDescs = {};
-    /** @type {Arc[]} */arcs = [];
-    arcById = {};
+    /** @type {Arc[]} */ arcs = [];
+    /** @type {Object.<string, Arc>} */ arcById = {};
     sentComment = {};
-    markedSent = {};
+    /** @type {Object.<string, boolean>} */ markedSent = {};
     spanAnnTexts = {};
     towers = {};
     /** @type {Array.<*>} */ spanDrawOrderPermutation = []
@@ -226,18 +230,18 @@ var Visualizer = (function ($, window, undefined) {
   }
 
   class Span {
-    id;
-    /** @type {String} */ type;
-    /** @type {Number} */ totalDist = 0;
-    numArcs = 0;
+    /** @type {string} */ id;
+    /** @type {string} */ type;
+    /** @type {number} */ totalDist = 0;
+    /** @type {number} */ numArcs = 0;
     generalType;
     /** @type {Fragment} */ headFragment = null;
-    /** @type {number[][]} */ unsegmentedOffsets;
-    /** @type {number[][]} */ offsets = [];
+    /** @type {[number, number]} */ unsegmentedOffsets;
+    /** @type {[number, number]} */ offsets = [];
     segmentedOffsetsMap = {};
     /** @type {boolean} */ hidden = false;
-    clippedAtStart = false;
-    clippedAtEnd = false;
+    /** @type {boolean} */ clippedAtStart = false;
+    /** @type {boolean} */ clippedAtEnd = false;
     incoming = [];
     outgoing = [];
     attributes = {};
@@ -247,16 +251,16 @@ var Visualizer = (function ($, window, undefined) {
     annotatorNotes = undefined;
     attributeMerge = {}; // for box, cross, etc. that are span-global
     fragments = [];
-    normalized;
-    normalizations = [];
+    /** @type {string} */ normalized;
+    /** @type {[[string, string, string]]} */ normalizations = [];
     wholeFrom = undefined;
     wholeTo = undefined;
     comment = undefined; // { type: undefined, text: undefined };
     drawCurly = false;
     /** @type {string} */ labelText;
     refedIndexSum = undefined;
-    color;
-    shadowClass;
+    /** @type {string} */ color;
+    /** @type {string} */ shadowClass;
     floor;
     marked;
     avgDist;
@@ -265,7 +269,7 @@ var Visualizer = (function ($, window, undefined) {
     /**
      * @param {*} id
      * @param {string} type
-     * @param {Array.<Array.<number>>} offsets
+     * @param {[number, number]} offsets
      * @param {string} generalType
      */
     constructor(id, type, offsets, generalType) {
@@ -280,6 +284,7 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     /**
+     * @param {Object<string, Span>} spans
      * @param {Span} a
      * @param {Span} b
      */
@@ -342,11 +347,7 @@ var Visualizer = (function ($, window, undefined) {
      * @returns the copy.
      */
     copy(id) {
-      let span = $.extend(new Span(), this); // clone
-      span.id = id;
-      // protect from shallow copy
-      span.initContainers();
-      span.unsegmentedOffsets = this.unsegmentedOffsets.slice();
+      let span = $.extend(new Span(id, undefined, this.unsegmentedOffsets.slice(), undefined), this); // clone
       // read-only; shallow copy is fine
       span.offsets = this.offsets;
       span.segmentedOffsetsMap = this.segmentedOffsetsMap;
@@ -370,15 +371,15 @@ var Visualizer = (function ($, window, undefined) {
   }
 
   class Comment {
-    text;
-    type;
+    /** @type {string} */ text;
+    /** @type {string} */ type;
   }
 
   class EventDesc {
     id;
     triggerId;
     roles = [];
-    equiv = false;
+    /** @type {boolean} */ equiv = false;
     /** @type {Arc} */ equivArc = undefined;
     relation = false;
     leftSpans = undefined;
@@ -386,8 +387,8 @@ var Visualizer = (function ($, window, undefined) {
     annotatorNotes = undefined;
     /** @type {Comment} */ comment = undefined;
     labelText = undefined;
-    color = undefined
-    shadowClass = undefined;
+    /** @type {string} */ color = undefined
+    /** @type {string} */ shadowClass = undefined;
 
     constructor(id, triggerId, roles, klass) {
       Object.seal(this);
@@ -437,18 +438,18 @@ var Visualizer = (function ($, window, undefined) {
   class Arc {
     annotatorNotes = undefined;
     comment = undefined;
-    origin;
-    target;
+    /** @type {string} ID */ origin;
+    /** @type {string} ID */ target;
     dist;
     type;
-    shadowClass;
-    jumpHeight = 0;
-    equiv = false;
+    /** @type {string} */ shadowClass;
+    /** @type {number} */ jumpHeight = 0;
+    /** @type {boolean} */ equiv = false;
     eventDescId;
-    relation = false;
-    normalizations = [];
+    /** @type {boolean} */ relation = false;
+    /** @type {[[string, string, string]]} */ normalizations = [];
     marked;
-    normalized;
+    /** @type {string} */ normalized;
     /** @type {boolean} */ hidden = false;
 
     /**
@@ -482,9 +483,9 @@ var Visualizer = (function ($, window, undefined) {
     group;
     background;
     chunks = [];
-    hasAnnotations = false;
-    maxArcHeight = 0;
-    maxSpanHeight = 0;
+    /** @type {boolean} */ hasAnnotations = false;
+    /** @type {number} */ maxArcHeight = 0;
+    /** @type {number} */ maxSpanHeight = 0;
     sentence;
     index;
     backgroundIndex;
@@ -521,7 +522,7 @@ var Visualizer = (function ($, window, undefined) {
    *
    * @param {SourceData} sourceData
    */
-  const setSourceDataDefaults = function (sourceData) {
+  function setSourceDataDefaults(sourceData) {
     // The following are empty lists if not set
     $.each([
       'attributes',
@@ -538,12 +539,10 @@ var Visualizer = (function ($, window, undefined) {
       }
     });
 
-    // BEGIN WEBANNO EXTENSION - #1074 - Fix potential NPE
     // Avoid exception due to undefined text in tokenise and sentenceSplit
     if (sourceData.text === undefined) {
       sourceData.text = "";
     }
-    // END WEBANNO EXTENSION
 
     // If we lack sentence offsets we fall back on naive sentence splitting
     if (sourceData.sentence_offsets === undefined) {
@@ -554,10 +553,10 @@ var Visualizer = (function ($, window, undefined) {
     if (sourceData.token_offsets === undefined) {
       sourceData.token_offsets = tokenise(sourceData.text);
     }
-  };
+  }
 
   // Set default values for a variety of collection attributes
-  var setCollectionDefaults = function (collectionData) {
+  function setCollectionDefaults(collectionData) {
     // The following are empty lists if not set
     $.each([
       'entity_attribute_types',
@@ -572,7 +571,7 @@ var Visualizer = (function ($, window, undefined) {
         collectionData[attr] = [];
       }
     });
-  };
+  }
 
   /**
    * Class currently defined only for documentation purposes
@@ -594,7 +593,10 @@ var Visualizer = (function ($, window, undefined) {
    * Class currently defined only for documentation purposes
    */
   class SpanType {
-    bgColor;
+    /** @type {string} */ bgColor;
+    /** @type {string} */ borderColor;
+    /** @type {string} */ fgColor;
+    arcs;
   }
 
   /**
@@ -603,10 +605,12 @@ var Visualizer = (function ($, window, undefined) {
   class RelationType {
     /** @type {Object.<string, PropertyDefinition>} */ properties;
     arrowHead;
+    labelArrow;
+    args;
   }
 
   class Visualizer {
-    dispatcher;
+    /** @type {Dispatcher} */ dispatcher;
 
     /** @type {boolean} */ rtlmode = false;
     /** @type {number} */ fontZoom = 100;
@@ -626,7 +630,7 @@ var Visualizer = (function ($, window, undefined) {
 
     coll = null;
     doc = null;
-    args = null;
+    /** @type {Object.<string, string[]>} */ args = null;
 
     /** @type {boolean} */ isRenderRequested = false;
     /** @type {boolean} */ drawing = false;
@@ -639,7 +643,7 @@ var Visualizer = (function ($, window, undefined) {
     /** @type {Object.<string, AttributeType>} */ eventAttributeTypes = {};
     /** @type {boolean} */ isCollectionLoaded = false;
 
-    markedText = [];
+    /** @type {[[number, number, string]]} */ markedText = [];
     highlight;
     highlightArcs;
     highlightSpans;
@@ -652,7 +656,7 @@ var Visualizer = (function ($, window, undefined) {
     /** @type {boolean} */ roundCoordinates = true; // try to have exact pixel offsets
     boxTextMargin = {x: 0, y: 1.5}; // effect is inverse of "margin" for some reason
     highlightRounding = {x: 3, y: 3}; // rx, ry for highlight boxes
-    spaceWidths = {
+    /** @type {Object.<string, number>} */ spaceWidths = {
       ' ': 4,
       '\u00a0': 4,
       '\u200b': 0,
@@ -789,7 +793,7 @@ var Visualizer = (function ($, window, undefined) {
       }
 
       const len = this.commentPrioLevels.length;
-      for (var i = 0; i < len; i++) {
+      for (let i = 0; i < len; i++) {
         if (commentClass.indexOf(this.commentPrioLevels[i]) !== -1) {
           return i;
         }
@@ -923,7 +927,7 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     /**
-     * @param {Object.<*,Span>} spans
+     * @param {Object.<string,Span>} spans
      * @returns list of span IDs in the order they should be drawn.
      */
     determineDrawOrder(spans) {
@@ -1016,19 +1020,19 @@ var Visualizer = (function ($, window, undefined) {
       }
 
       normalizations.map(norm => {
-        let target = norm[0];
-        let refdb = norm.length > 1 ? norm[1] : "#"; // See Renderer.QUERY_LAYER_LEVEL_DETAILS
-        let refid = norm.length > 2 ? norm[2] : "";
-        let reftext = norm.length > 3 ? norm[3] : null;
+        const target = norm[0];
+        const refdb = norm.length > 1 ? norm[1] : "#"; // See Renderer.QUERY_LAYER_LEVEL_DETAILS
+        const refid = norm.length > 2 ? norm[2] : "";
+        const reftext = norm.length > 3 ? norm[3] : null;
 
-        let span = this.data.spans[target];
+        const span = this.data.spans[target];
         if (span) {
           span.normalizations.push([refdb, refid, reftext]);
           span.normalized = 'Normalized';
           return;
         }
 
-        let arc = this.data.arcById[target];
+        const arc = this.data.arcById[target];
         if (arc) {
           arc.normalizations.push([refdb, refid, reftext]);
           arc.normalized = "Normalized";
@@ -1039,6 +1043,12 @@ var Visualizer = (function ($, window, undefined) {
       });
     }
 
+    /**
+     *
+     * @param {string} documentText
+     * @param {[[string, string, [number, number], {}]]} entities
+     * @return {Object.<string, Span>}
+     */
     buildSpansFromEntities(documentText, entities) {
       if (!entities) {
         return {};
@@ -1046,13 +1056,13 @@ var Visualizer = (function ($, window, undefined) {
 
       let spans = {};
       entities.map(entity => {
-        let id = entity[0];
-        let type = entity[1];
-        let offsets = entity[2]; // offsets given as array of (start, end) pairs
-        let span = new Span(id, type, offsets, 'entity');
+        const id = entity[0];
+        const type = entity[1];
+        const offsets = entity[2]; // offsets given as array of (start, end) pairs
+        const span = new Span(id, type, offsets, 'entity');
 
         if (entity[3]) {
-          let attributes = entity[3];
+          const attributes = entity[3];
           if (attributes.hasOwnProperty('l')) {
             span.labelText = attributes.l;
           }
@@ -1132,6 +1142,12 @@ var Visualizer = (function ($, window, undefined) {
       spans.map(span => span.buildFragments());
     }
 
+    /**
+     *
+     * @param equivs
+     * @param {Object<string, Span>} spans
+     * @param {Object.<string, EventDesc>} eventDescs
+     */
     buildEventDescsFromEquivs(equivs, spans, eventDescs) {
       if (!equivs) {
         return;
@@ -1157,10 +1173,10 @@ var Visualizer = (function ($, window, undefined) {
         // generate the arcs
         const len = okEquivSpans.length;
         for (let i = 1; i < len; i++) {
-          let id = okEquivSpans[i - 1];
-          let tiggerId = okEquivSpans[i - 1];
-          let roles = [[equiv[1], okEquivSpans[i]]];
-          let eventDesc = eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, 'equiv');
+          const id = okEquivSpans[i - 1];
+          const tiggerId = okEquivSpans[i - 1];
+          const roles = [[equiv[1], okEquivSpans[i]]];
+          const eventDesc = eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, 'equiv');
           eventDesc.leftSpans = okEquivSpans.slice(0, i);
           eventDesc.rightSpans = okEquivSpans.slice(i);
         }
@@ -1488,7 +1504,7 @@ var Visualizer = (function ($, window, undefined) {
     /**
      * Populates the "data" field based on the "sourceData" JSON that we recieved from the server.
      *
-     * @param {*} sourceData
+     * @param {SourceData} sourceData
      */
     setData(sourceData) {
       this.sourceData = sourceData;
@@ -1535,7 +1551,7 @@ var Visualizer = (function ($, window, undefined) {
         this.collectFragmentTextsIntoSpanTexts(Object.values(this.data.spans));
       }
 
-      for (var i = 0; i < 2; i++) {
+      for (let i = 0; i < 2; i++) {
         // preliminary sort to assign heights for basic cases
         // (first round) and cases resolved in the previous round(s).
         this.data.chunks.map(chunk => {
@@ -1784,9 +1800,9 @@ var Visualizer = (function ($, window, undefined) {
           firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
           lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
 
-          // BEGIN WEBANNO EXTENSION - RTL support
-          // - #265 rendering with quotation marks
-          // - #278 Sub-token annotation of LTR text in RTL mode
+          let startPos = 0;
+          let endPos = 0;
+
           if (this.rtlmode) {
             // This rendering is much slower than the "old" version that brat uses, but it
             // is more reliable in RTL mode.
@@ -1804,7 +1820,7 @@ var Visualizer = (function ($, window, undefined) {
               charDirection = [];
               charAttrs = [];
 
-              // WebAnno #307 Cannot use fragment.chunk.text.length here because invisible
+              // Cannot use fragment.chunk.text.length here because invisible
               // characters do not count. Using text.getNumberOfChars() instead.
               //var step1Start = new Date();
               for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
@@ -1872,7 +1888,7 @@ var Visualizer = (function ($, window, undefined) {
             }
 
             // startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
-            var startPos = 0;
+            startPos = 0;
             // console.log("startPos[initial]: " + startPos);
             for (let i = 0; charAttrs[i].order !== firstChar && i < charAttrs.length; i++) {
               startPos += charAttrs[i].width;
@@ -1887,7 +1903,7 @@ var Visualizer = (function ($, window, undefined) {
             startPos = startPos * corrFactor;
             // console.log("startPos: " + startPos);
             // endPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
-            var endPos = 0;
+            endPos = 0;
             //	           	  console.log("endPos[initial]: " + endPos);
             for (let i = 0; charAttrs[i].order !== lastChar && i < charAttrs.length; i++) {
               endPos += charAttrs[i].width;
@@ -1906,7 +1922,7 @@ var Visualizer = (function ($, window, undefined) {
             // This is the old measurement code which doesn't work properly because browsers
             // treat the x coordinate very differently. Our width-based measurement is more
             // reliable.
-            // WebAnno #307 Cannot use fragment.chunk.text.length here because invisible
+            // Cannot use fragment.chunk.text.length here because invisible
             // characters do not count. Using text.getNumberOfChars() instead.
             if (firstChar < text.getNumberOfChars()) {
               startPos = text.getStartPositionOfChar(firstChar).x;
@@ -1917,8 +1933,7 @@ var Visualizer = (function ($, window, undefined) {
               ? startPos
               : text.getEndPositionOfChar(lastChar).x;
           }
-          // END WEBANNO EXTENSION - RTL support - #265 rendering with quotation marks
-          // WEBANNO EXTENSION BEGIN - RTL support - Curlies coordinates
+
           // In RTL mode, positions are negative (left to right)
           if (this.rtlmode) {
             startPos = -startPos;
@@ -1930,7 +1945,6 @@ var Visualizer = (function ($, window, undefined) {
             from: Math.min(startPos, endPos),
             to: Math.max(startPos, endPos)
           };
-          // WEBANNO EXTENSION END
         } else { // it's markedText [id, start?, char#, offset]
           if (fragment[2] < 0)
             fragment[2] = 0;
@@ -2138,16 +2152,12 @@ var Visualizer = (function ($, window, undefined) {
       // reserve places for spans
       const floors = [];
       const reservations = []; // reservations[chunk][floor] = [[from, to, headroom]...]
-      for (let i = 0; i <= this.data.lastFragmentIndex; i++) {
-        reservations[i] = {};
-      }
       const inf = 1.0 / 0.0;
 
       $.each(this.data.spanDrawOrderPermutation, (spanIdNo, spanId) => {
         const span = this.data.spans[spanId];
         const spanDesc = this.spanTypes[span.type];
-        const bgColor = ((spanDesc && spanDesc.bgColor) ||
-          (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) || '#ffffff');
+        const bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
 
         if (bgColor === "hidden") {
           span.hidden = true;
@@ -2303,14 +2313,9 @@ var Visualizer = (function ($, window, undefined) {
           }
 
           const spanDesc = this.spanTypes[span.type];
-          let bgColor = ((spanDesc && spanDesc.bgColor) ||
-            (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) || '#ffffff');
-          let fgColor = ((spanDesc && spanDesc.fgColor) ||
-            (this.spanTypes.SPAN_DEFAULT &&
-              this.spanTypes.SPAN_DEFAULT.fgColor) || '#000000');
-          let borderColor = ((spanDesc && spanDesc.borderColor) ||
-            (this.spanTypes.SPAN_DEFAULT &&
-              this.spanTypes.SPAN_DEFAULT.borderColor) || '#000000');
+          let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
+          let fgColor = ((spanDesc && spanDesc.fgColor) ||  '#000000');
+          let borderColor = ((spanDesc && spanDesc.borderColor) || '#000000');
 
           if (span.color) {
             bgColor = span.color;
@@ -2475,9 +2480,7 @@ var Visualizer = (function ($, window, undefined) {
                 bgColor = span.color;
               }
               else {
-                bgColor = ((spanDesc && spanDesc.bgColor) ||
-                  (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.fgColor) ||
-                  '#000000');
+                bgColor = ((spanDesc && spanDesc.bgColor) || '#000000');
               }
 
               curlyColor = Util.adjustColorLightness(bgColor, -0.6);
@@ -2973,8 +2976,7 @@ var Visualizer = (function ($, window, undefined) {
           arcDesc = {};
         }
 
-        let color = ((arcDesc && arcDesc.color) ||
-          (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.color) || '#000000');
+        let color = ((arcDesc && arcDesc.color) || '#000000');
         if (color === 'hidden') {
           return;
         }
@@ -2988,12 +2990,8 @@ var Visualizer = (function ($, window, undefined) {
 
         const symmetric = arcDesc && arcDesc.properties && arcDesc.properties.symmetric;
         const dashArray = arcDesc && arcDesc.dashArray;
-        const arrowHead = ((arcDesc && arcDesc.arrowHead) ||
-          (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.arrowHead) ||
-          'triangle,5') + ',' + color;
-        const labelArrowHead = ((arcDesc && arcDesc.labelArrow) ||
-          (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.labelArrow) ||
-          'triangle,5') + ',' + color;
+        const arrowHead = ((arcDesc && arcDesc.arrowHead) || 'triangle,5') + ',' + color;
+        const labelArrowHead = ((arcDesc && arcDesc.labelArrow) || 'triangle,5') + ',' + color;
 
         const leftBox = this.rowBBox(left);
         const rightBox = this.rowBBox(right);
@@ -3046,9 +3044,9 @@ var Visualizer = (function ($, window, undefined) {
           if (row.chunks.length) {
             row.hasAnnotations = true;
 
+            const fromIndex2R = rowIndex === leftRow ? fromIndex2 : row.heightsStart;
+            const toIndex2R = rowIndex === rightRow ? toIndex2 : row.heightsEnd;
             if (this.collapseArcSpace) {
-              const fromIndex2R = rowIndex === leftRow ? fromIndex2 : row.heightsStart;
-              const toIndex2R = rowIndex === rightRow ? toIndex2 : row.heightsEnd;
               height = this.findArcHeight(fromIndex2R, toIndex2R, fragmentHeights);
             }
 
@@ -3110,30 +3108,30 @@ var Visualizer = (function ($, window, undefined) {
             let labelText = Util.arcDisplayForm(this.spanTypes, originType, arc.type, this.relationTypesHash);
             // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
             if (Configuration.abbrevsOn && arcLabels) {
-              var labelIdx = 1; // first abbreviation
+              let labelIdx = 1; // first abbreviation
 
               // strictly speaking 2*arcSlant would be needed to allow for
               // the full-width arcs to fit, but judged unabbreviated text
               // to be more important than the space for arcs.
-              var maxLength = (to - from) - (this.arcSlant);
-              while (sizes.arcs.widths[labelText] > maxLength &&
-              arcLabels[labelIdx]) {
+              const maxLength = (to - from) - (this.arcSlant);
+              while (sizes.arcs.widths[labelText] > maxLength && arcLabels[labelIdx]) {
                 labelText = arcLabels[labelIdx];
                 labelIdx++;
               }
             }
 
-            // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
+
             if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
               if (this.data.eventDescs[arc.eventDescId].labelText) {
                 labelText = this.data.eventDescs[arc.eventDescId].labelText;
               }
             }
-            // WEBANNO EXTENSION END - #820 - Allow setting label/color individually
+
             let shadowGroup;
             if (arc.shadowClass || arc.marked) {
               shadowGroup = this.svg.group(arcGroup);
             }
+
             const options = {
               //'fill': color,
               'fill': '#000000',
@@ -3162,7 +3160,7 @@ var Visualizer = (function ($, window, undefined) {
               // to spans, not only primary text. Make sure there
               // are no problems with this.
               svgText.span(noNumLabelText, options);
-              var subscriptSettings = {
+              const subscriptSettings = {
                 'dy': '0.3em',
                 'font-size': '80%'
               };
@@ -3217,7 +3215,7 @@ var Visualizer = (function ($, window, undefined) {
             textEnd += Configuration.visual.arcTextMargin;
 
             if (from > to) {
-              var tmp = textStart;
+              const tmp = textStart;
               textStart = textEnd;
               textEnd = tmp;
             }
@@ -3231,8 +3229,7 @@ var Visualizer = (function ($, window, undefined) {
             if (height > row.maxArcHeight)
               row.maxArcHeight = height;
 
-            var myArrowHead = ((arcDesc && arcDesc.arrowHead) ||
-              (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.arrowHead));
+            var myArrowHead = (arcDesc && arcDesc.arrowHead);
             var arrowName = (symmetric ? myArrowHead || 'none' :
                 (leftToRight ? 'none' : myArrowHead || 'triangle,5')
             ) + ',' + color;
@@ -3241,8 +3238,7 @@ var Visualizer = (function ($, window, undefined) {
 
             var arrowAtLabelAdjust = 0;
             var labelArrowDecl = null;
-            var myLabelArrowHead = ((arcDesc && arcDesc.labelArrow) ||
-              (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.labelArrow));
+            var myLabelArrowHead = (arcDesc && arcDesc.labelArrow);
             if (myLabelArrowHead) {
               const labelArrowName = (leftToRight ?
                 symmetric && myLabelArrowHead || 'none' :
@@ -3253,7 +3249,7 @@ var Visualizer = (function ($, window, undefined) {
                 arrowAtLabelAdjust = -arrowAtLabelAdjust;
               }
             }
-            var arrowStart = textStart - arrowAtLabelAdjust;
+            const arrowStart = textStart - arrowAtLabelAdjust;
             path = this.svg.createPath().move(arrowStart, -height);
             if (rowIndex === leftRow) {
               let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant;
@@ -3316,8 +3312,7 @@ var Visualizer = (function ($, window, undefined) {
             }
 
             if (!symmetric) {
-              myArrowHead = ((arcDesc && arcDesc.arrowHead) ||
-                (spanTypes.ARC_DEFAULT && spanTypes.ARC_DEFAULT.arrowHead));
+              myArrowHead = (arcDesc && arcDesc.arrowHead);
               arrowName = (leftToRight ?
                 myArrowHead || 'triangle,5' :
                 'none') + ',' + color;
@@ -3328,8 +3323,7 @@ var Visualizer = (function ($, window, undefined) {
 
             var arrowAtLabelAdjust = 0;
             var labelArrowDecl = null;
-            var myLabelArrowHead = ((arcDesc && arcDesc.labelArrow) ||
-              (this.spanTypes.ARC_DEFAULT && this.spanTypes.ARC_DEFAULT.labelArrow));
+            var myLabelArrowHead = (arcDesc && arcDesc.labelArrow);
             if (myLabelArrowHead) {
               const labelArrowName = (leftToRight ?
                 myLabelArrowHead || 'triangle,5' :
@@ -3753,9 +3747,7 @@ var Visualizer = (function ($, window, undefined) {
             }
 
             const spanDesc = this.spanTypes[fragment.span.type];
-            let bgColor = ((spanDesc && spanDesc.bgColor) ||
-              (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) ||
-              '#ffffff');
+            let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
 
             // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
             if (fragment.span.color) {
@@ -3993,11 +3985,14 @@ var Visualizer = (function ($, window, undefined) {
       this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
     }
 
+    /**
+     * @param {SourceData} sourceData
+     */
     renderData(sourceData) {
       Util.profileEnd('invoke getDocument');
 
       if (sourceData && sourceData.exception) {
-        if (this.renderErrors[this.sourceData.exception]) {
+        if (this.renderErrors[sourceData.exception]) {
           this.dispatcher.post('renderError:' + sourceData.exception, [sourceData]);
         } else {
           this.dispatcher.post('unknownError', [sourceData.exception]);
@@ -4135,9 +4130,7 @@ var Visualizer = (function ($, window, undefined) {
       }
 
       const spanDesc = this.spanTypes[span.type];
-      let bgColor = ((spanDesc && spanDesc.bgColor) ||
-        (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) ||
-        '#ffffff');
+      let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
 
       if (span.hidden)
         return;
@@ -4465,18 +4458,18 @@ var Visualizer = (function ($, window, undefined) {
     }
   }
 
-  const isRTL = function isRTL(charCode) {
+  function isRTL(charCode) {
     const t1 = (0x0591 <= charCode && charCode <= 0x07FF);
     const t2 = (charCode === 0x200F);
     const t3 = (charCode === 0x202E);
     const t4 = (0xFB1D <= charCode && charCode <= 0xFDFD);
     const t5 = (0xFE70 <= charCode && charCode <= 0xFEFC);
     return t1 || t2 || t3 || t4 || t5;
-  };
+  }
 
   // http://24ways.org/2010/calculating-color-contrast/
   // http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
-  const bgToFgColor = function (hexcolor) {
+  function bgToFgColor(hexcolor) {
     const r = parseInt(hexcolor.substr(1, 2), 16);
     const g = parseInt(hexcolor.substr(3, 2), 16);
     const b = parseInt(hexcolor.substr(5, 2), 16);
@@ -4506,7 +4499,7 @@ var Visualizer = (function ($, window, undefined) {
    * A naive whitespace tokeniser
    * @returns {number[][]}
    */
-  const tokenise = function (text) {
+  function tokenise(text) {
     const tokenOffsets = [];
     let tokenStart = null;
     let lastCharPos = null;
@@ -4532,14 +4525,14 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     return tokenOffsets;
-  };
+  }
 
   /**
    * A naive newline sentence splitter
    *
    * @returns {number[][]}
    */
-  const sentenceSplit = function (text) {
+  function sentenceSplit(text) {
     const sentenceOffsets = [];
     let sentStart = null;
     let lastCharPos = null;
@@ -4565,7 +4558,7 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     return sentenceOffsets;
-  };
+  }
 
   return Visualizer;
 })(jQuery, window);
