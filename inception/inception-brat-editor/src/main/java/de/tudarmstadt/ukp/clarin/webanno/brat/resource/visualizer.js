@@ -44,16 +44,57 @@ var Visualizer = (function ($, window, undefined) {
   let svg;
 
   /**
+   * This class represents the JSON object that we receive from the server. Note that the class is
+   * currently only used for documentation purposes. The JSON we get is not really cast into an
+   * object of this class.
+   */
+  class SourceData {
+    /** @type {String} */ text;
+    attributes = [];
+    /** @type {[]} */ comments = [];
+    entities = [];
+    equivs = [];
+    events = [];
+    normalizations = [];
+    relations = [];
+    triggers = [];
+    /** @type {number[][]} */ sentence_offsets;
+    /** @type {number[][]} */ token_offsets;
+    /** @type {number} */ sentence_number_offset;
+  }
+
+  /**
+   * Class currently defined only for documentation purposes
+   */
+  class VisualOptions {
+    /** @type {boolean} */ arc_bundle;
+  }
+
+  /**
+   * Class currently defined only for documentation purposes
+   */
+  class CollectionLoadedResponse {
+    exception;
+    event_attribute_types;
+    entity_attribute_types;
+    entity_types;
+    event_types;
+    unconfigured_types;
+    relation_types;
+    /** @type {VisualOptions} */ visual_options;
+  }
+
+  /**
    * Document data prepared for rendering. The JSON data we get from the server is converted into
    * this pre-rendering representation which already determines e.g. the draw orders and such but
    * which doesn't yet create the actual SVG representation.
    */
   class DocumentData {
-    /** @type {String} */ text;
+    /** @type {string} */ text;
     /** @type {Chunk[]} */ chunks = [];
     /** @type {Object.<string, Span>} */ spans = {};
     /** @type {Object.<string, EventDesc>} */ eventDescs = {};
-    /** @type {Arc®[]} */arcs = [];
+    /** @type {Arc[]} */arcs = [];
     arcById = {};
     sentComment = {};
     markedSent = {};
@@ -191,9 +232,10 @@ var Visualizer = (function ($, window, undefined) {
     numArcs = 0;
     generalType;
     /** @type {Fragment} */ headFragment = null;
-    unsegmentedOffsets;
-    offsets = [];
+    /** @type {number[][]} */ unsegmentedOffsets;
+    /** @type {number[][]} */ offsets = [];
     segmentedOffsetsMap = {};
+    /** @type {boolean} */ hidden = false;
     clippedAtStart = false;
     clippedAtEnd = false;
     incoming = [];
@@ -211,20 +253,20 @@ var Visualizer = (function ($, window, undefined) {
     wholeTo = undefined;
     comment = undefined; // { type: undefined, text: undefined };
     drawCurly = false;
-    /** @type {String} */ labelText;
+    /** @type {string} */ labelText;
     refedIndexSum = undefined;
     color;
     shadowClass;
     floor;
     marked;
     avgDist;
-    /** @type {String} */ text;
+    /** @type {string} */ text;
 
     /**
      * @param {*} id
-     * @param {String} type
-     * @param {Array.<Array.<Number>>} offsets
-     * @param {String} generalType
+     * @param {string} type
+     * @param {Array.<Array.<number>>} offsets
+     * @param {string} generalType
      */
     constructor(id, type, offsets, generalType) {
       Object.seal(this);
@@ -263,6 +305,9 @@ var Visualizer = (function ($, window, undefined) {
       this.normalizations = [];
     }
 
+    /**
+     * @param {string} text
+     */
     splitMultilineOffsets(text) {
       this.segmentedOffsetsMap = {};
 
@@ -324,16 +369,22 @@ var Visualizer = (function ($, window, undefined) {
     }
   }
 
+  class Comment {
+    text;
+    type;
+  }
+
   class EventDesc {
     id;
     triggerId;
     roles = [];
     equiv = false;
+    /** @type {Arc} */ equivArc = undefined;
     relation = false;
     leftSpans = undefined;
     rightSpans = undefined;
     annotatorNotes = undefined;
-    comment = undefined;
+    /** @type {Comment} */ comment = undefined;
     labelText = undefined;
     color = undefined
     shadowClass = undefined;
@@ -398,7 +449,15 @@ var Visualizer = (function ($, window, undefined) {
     normalizations = [];
     marked;
     normalized;
+    /** @type {boolean} */ hidden = false;
 
+    /**
+     *
+     * @param {EventDesc} eventDesc
+     * @param role
+     * @param dist
+     * @param eventNo
+     */
     constructor(eventDesc, role, dist, eventNo) {
       Object.seal(this);
 
@@ -459,8 +518,10 @@ var Visualizer = (function ($, window, undefined) {
 
   /**
    * Sets default values for a wide range of optional attributes.
+   *
+   * @param {SourceData} sourceData
    */
-  var setSourceDataDefaults = function (sourceData) {
+  const setSourceDataDefaults = function (sourceData) {
     // The following are empty lists if not set
     $.each([
       'attributes',
@@ -513,11 +574,42 @@ var Visualizer = (function ($, window, undefined) {
     });
   };
 
+  /**
+   * Class currently defined only for documentation purposes
+   */
+  class AttributeType {
+    /** @type {string} */ name;
+    values = {};
+    bool;
+  }
+
+  /**
+   * Class currently defined only for documentation purposes
+   */
+  class PropertyDefinition {
+    /** @type {boolean} */ symmetric;
+  }
+
+  /**
+   * Class currently defined only for documentation purposes
+   */
+  class SpanType {
+    bgColor;
+  }
+
+  /**
+   * Class currently defined only for documentation purposes
+   */
+  class RelationType {
+    /** @type {Object.<string, PropertyDefinition>} */ properties;
+    arrowHead;
+  }
+
   class Visualizer {
     dispatcher;
 
-    rtlmode = false;
-    fontZoom = 100;
+    /** @type {boolean} */ rtlmode = false;
+    /** @type {number} */ fontZoom = 100;
 
     svg;
     $svg;
@@ -529,23 +621,23 @@ var Visualizer = (function ($, window, undefined) {
     canvasWidth = 0;
 
     /** @type {DocumentData} */ data = null;
-    sourceData = null;
+    /** @type {SourceData} */ sourceData = null;
     requestedData = null;
 
     coll = null;
     doc = null;
     args = null;
 
-    isRenderRequested = false;
-    drawing = false;
-    redraw = false;
+    /** @type {boolean} */ isRenderRequested = false;
+    /** @type {boolean} */ drawing = false;
+    /** @type {boolean} */ redraw = false;
     arcDragOrigin;
 
-    spanTypes = {};
-    relationTypesHash = {};
-    entityAttributeTypes = {};
-    eventAttributeTypes = {};
-    isCollectionLoaded = false;
+    /** @type {Object.<string, SpanType>} */ spanTypes = {};
+    /** @type {Object.<string, RelationType>} */ relationTypesHash = {};
+    /** @type {Object.<string, AttributeType>} */ entityAttributeTypes = {};
+    /** @type {Object.<string, AttributeType>} */ eventAttributeTypes = {};
+    /** @type {boolean} */ isCollectionLoaded = false;
 
     markedText = [];
     highlight;
@@ -554,9 +646,10 @@ var Visualizer = (function ($, window, undefined) {
     commentId;
 
     // OPTIONS
-    collapseArcs = false;
-    collapseArcSpace = false;
-    roundCoordinates = true; // try to have exact pixel offsets
+    /** @type {number} */ forceWidth = undefined;
+    /** @type {boolean} */ collapseArcs = false;
+    /** @type {boolean} */ collapseArcSpace = false;
+    /** @type {boolean} */ roundCoordinates = true; // try to have exact pixel offsets
     boxTextMargin = {x: 0, y: 1.5}; // effect is inverse of "margin" for some reason
     highlightRounding = {x: 3, y: 3}; // rx, ry for highlight boxes
     spaceWidths = {
@@ -567,32 +660,32 @@ var Visualizer = (function ($, window, undefined) {
       '\t': 12,
       '\n': 4
     };
-    coloredCurlies = true; // color curlies by box BG
-    arcSlant = 15; //10;
-    minArcSlant = 8;
-    arcHorizontalSpacing = 10; // min space boxes with connecting arc
-    rowSpacing = -5; // for some funny reason approx. -10 gives "tight" packing.
+    /** @type {boolean} */ coloredCurlies = true; // color curlies by box BG
+    /** @type {number} */ arcSlant = 15; //10;
+    /** @type {number} */ minArcSlant = 8;
+    /** @type {number} */ arcHorizontalSpacing = 10; // min space boxes with connecting arc
+    /** @type {number} */ rowSpacing = -5; // for some funny reason approx. -10 gives "tight" packing.
 
-    sentNumMargin = 40;
-    smoothArcCurves = true; // whether to use curves (vs lines) in arcs
-    smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
-    reverseArcControlx = 5; // control point distance for "UFO catchers"
+    /** @type {number} */ sentNumMargin = 40;
+    /** @type {boolean} */ smoothArcCurves = true; // whether to use curves (vs lines) in arcs
+    /** @type {number} */ smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
+    /** @type {number} */ reverseArcControlx = 5; // control point distance for "UFO catchers"
 
     // "shadow" effect settings (note, error, incompelete)
-    rectShadowSize = 3;
-    rectShadowRounding = 2.5;
-    arcLabelShadowSize = 1;
-    arcLabelShadowRounding = 5;
-    shadowStroke = 2.5; // TODO XXX: this doesn't affect anything..?
+    /** @type {number} */ rectShadowSize = 3;
+    /** @type {number} */ rectShadowRounding = 2.5;
+    /** @type {number} */ arcLabelShadowSize = 1;
+    /** @type {number} */ arcLabelShadowRounding = 5;
+    /** @type {number} */ shadowStroke = 2.5; // TODO XXX: this doesn't affect anything..?
 
     // "marked" effect settings (edited, focus, match)
-    markedSpanSize = 6;
-    markedArcSize = 2;
-    markedArcStroke = 7; // TODO XXX: this doesn't seem to do anything..?
+    /** @type {number} */  markedSpanSize = 6;
+    /** @type {number} */ markedArcSize = 2;
+    /** @type {number} */ markedArcStroke = 7; // TODO XXX: this doesn't seem to do anything..?
 
-    rowPadding = 2;
-    nestingAdjustYStepSize = 2; // size of height adjust for nested/nesting spans
-    nestingAdjustXStepSize = 1; // size of height adjust for nested/nesting spans
+    /** @type {number} */ rowPadding = 2;
+    /** @type {number} */ nestingAdjustYStepSize = 2; // size of height adjust for nested/nesting spans
+    /** @type {number} */ nestingAdjustXStepSize = 1; // size of height adjust for nested/nesting spans
 
     highlightSpanSequence;
     highlightArcSequence;
@@ -629,14 +722,14 @@ var Visualizer = (function ($, window, undefined) {
       this.$svgDiv = $(this.$svgDiv).hide();
       this.$svgDiv.svg({
         onLoad: (_svg) => {
-          this.svg = Visualizer.svg = _svg;
+          this.svg = _svg;
           this.$svg = $(this.svg._svg);
           this.triggerRender();
         }
       });
 
       //var highlightSequence = '#FFFC69;#FFCC00;#FFFC69'; // a bit toned town
-      var highlightSequence = '#FF9632;#FFCC00;#FF9632'; // yellow - deep orange
+      const highlightSequence = '#FF9632;#FFCC00;#FF9632'; // yellow - deep orange
       this.highlightSpanSequence = highlightSequence;
       this.highlightArcSequence = highlightSequence;
       this.highlightTextSequence = highlightSequence;
@@ -656,12 +749,29 @@ var Visualizer = (function ($, window, undefined) {
         'resize'
       ]);
 
-      this.dispatcher.on('collectionChanged', this, this.collectionChanged).on('collectionLoaded', this, this.collectionLoaded).on('renderData', this, this.renderData).on('rerender', this, this.rerender).on('renderDataPatch', this, this.renderDataPatch).on('triggerRender', this, this.triggerRender).on('requestRenderData', this, this.requestRenderData).on('isReloadOkay', this, this.isReloadOkay).on('resetData', this, this.resetData).on('abbrevs', this, this.setAbbrevs).on('textBackgrounds', this, this.setTextBackgrounds).on('layoutDensity', this, this.setLayoutDensity).on('svgWidth', this, this.setSvgWidth).on('current', this, this.gotCurrent).on('clearSVG', this, this.clearSVG).on('mouseover', this, this.onMouseOver).on('mouseout', this, this.onMouseOut);
+      this.dispatcher //
+        .on('collectionChanged', this, this.collectionChanged) //
+        .on('collectionLoaded', this, this.collectionLoaded) //
+        .on('renderData', this, this.renderData) //
+        .on('rerender', this, this.rerender) //
+        .on('renderDataPatch', this, this.renderDataPatch) //
+        .on('triggerRender', this, this.triggerRender) //
+        .on('requestRenderData', this, this.requestRenderData) //
+        .on('isReloadOkay', this, this.isReloadOkay) //
+        .on('resetData', this, this.resetData) //
+        .on('abbrevs', this, this.setAbbrevs) //
+        .on('textBackgrounds', this, this.setTextBackgrounds) //
+        .on('layoutDensity', this, this.setLayoutDensity) //
+        .on('svgWidth', this, this.setSvgWidth) //
+        .on('current', this, this.gotCurrent) //
+        .on('clearSVG', this, this.clearSVG) //
+        .on('mouseover', this, this.onMouseOver) //
+        .on('mouseout', this, this.onMouseOut);
     }
 
     rowBBox(fragment) {
-      var box = $.extend({}, fragment.rectBox); // clone
-      var chunkTranslation = fragment.chunk.translation;
+      const box = $.extend({}, fragment.rectBox); // clone
+      const chunkTranslation = fragment.chunk.translation;
       box.x += chunkTranslation.x;
       box.y += chunkTranslation.y;
       return box;
@@ -819,14 +929,14 @@ var Visualizer = (function ($, window, undefined) {
     determineDrawOrder(spans) {
       let spanDrawOrderPermutation = Object.keys(spans);
       spanDrawOrderPermutation.sort((a, b) => {
-        var spanA = spans[a];
-        var spanB = spans[b];
+        const spanA = spans[a];
+        const spanB = spans[b];
 
         // We're jumping all over the chunks, but it's enough that we're doing everything inside
         // each chunk in the right order. Should it become necessary to actually do these in
         // linear order, put in a similar condition for spanX.headFragment.chunk.index; but it
         // should not be needed.
-        var tmp = spanA.headFragment.drawOrder - spanB.headFragment.drawOrder;
+        const tmp = spanA.headFragment.drawOrder - spanB.headFragment.drawOrder;
         if (tmp) {
           return tmp < 0 ? -1 : 1;
         }
@@ -837,8 +947,8 @@ var Visualizer = (function ($, window, undefined) {
     }
 
     organizeFragmentsIntoTowers(sortedFragments) {
-      var lastFragment = null;
-      var towerId = -1;
+      let lastFragment = null;
+      let towerId = -1;
 
       sortedFragments.map(fragment => {
         if (!lastFragment || (lastFragment.from !== fragment.from || lastFragment.to !== fragment.to)) {
@@ -969,15 +1079,19 @@ var Visualizer = (function ($, window, undefined) {
       return spans;
     }
 
+    /**
+     * @param {[][]}  triggers
+     * @return {Object<string,any[]>} values are [triggerSpan, [event, event, event, ...]]
+     */
     buildSpansFromTriggers(triggers) {
       if (!triggers) {
         return {};
       }
 
-      let triggerHash = {};
+      const triggerHash = {};
       triggers.map(trigger => {
-        //                        (id,         type,       offsets,    generalType)
-        var triggerSpan = new Span(trigger[0], trigger[1], trigger[2], 'trigger');
+        //                          (id,         type,       offsets,    generalType)
+        const triggerSpan = new Span(trigger[0], trigger[1], trigger[2], 'trigger');
 
         triggerSpan.splitMultilineOffsets(this.data.text);
 
@@ -986,24 +1100,30 @@ var Visualizer = (function ($, window, undefined) {
       return triggerHash;
     }
 
+    /**
+     * @param {Object.<string,any[]>} triggerHash
+     */
     buildEventDescsFromTriggers(triggerHash) {
       if (!triggerHash) {
         return;
       }
 
       this.sourceData.events.map(eventRow => {
-        let id = eventRow[0];
-        let triggerId = eventRow[1];
-        let roles = eventRow[2]
+        const id = eventRow[0];
+        const triggerId = eventRow[1];
+        const roles = eventRow[2]
 
-        let eventDesc = this.data.eventDescs[id] = new EventDesc(id, triggerId, roles);
-        let trigger = triggerHash[eventDesc.triggerId];
-        let span = trigger[0].copy(eventDesc.id);
+        const eventDesc = this.data.eventDescs[id] = new EventDesc(id, triggerId, roles);
+        const trigger = triggerHash[eventDesc.triggerId];
+        const span = trigger[0].copy(eventDesc.id);
         trigger[1].push(span);
         this.data.spans[eventDesc.id] = span;
       });
     }
 
+    /**
+     * @param {Span[]} spans
+     */
     splitSpansIntoFragments(spans) {
       if (!spans) {
         return;
@@ -1121,6 +1241,10 @@ var Visualizer = (function ($, window, undefined) {
       });
     }
 
+    /**
+     * @param {[]} comments
+     * @param triggerHash
+     */
     assignComments(comments, triggerHash) {
       if (!comments) {
         return;
@@ -1179,8 +1303,7 @@ var Visualizer = (function ($, window, undefined) {
         return [];
       }
 
-
-      var sortedFragments = [];
+      const sortedFragments = [];
 
       Object.values(spans).map(span => span.fragments.map(
         fragment => sortedFragments.push(fragment)));
@@ -1314,6 +1437,8 @@ var Visualizer = (function ($, window, undefined) {
      * - Fields on spans are changed: totalDist, numArcs, outgoing, incoming
      * - data.arcById index is populated.
      *
+     * @param {Object.<string, EventDesc>} eventDescs;
+     * @param {Object.<string, Span>} spans
      * @returns {Arc[]}
      */
     assignArcsToSpans(eventDescs, spans) {
@@ -1328,7 +1453,7 @@ var Visualizer = (function ($, window, undefined) {
 
         if (!origin) {
           // TODO: include missing trigger ID in error message
-          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found in ' + this.data.document + '<br/>(please correct the source data)', 'error', 5]]]);
+          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found <br/>(please correct the source data)', 'error', 5]]]);
           return;
         }
 
@@ -1336,7 +1461,7 @@ var Visualizer = (function ($, window, undefined) {
         eventDesc.roles.map(role => {
           let target = spans[role.targetId];
           if (!target) {
-            this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found in ' + this.data.document + '<br/>(please correct the source data)', 'error', 5]]]);
+            this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found <br/>(please correct the source data)', 'error', 5]]]);
             return;
           }
 
@@ -1537,7 +1662,7 @@ var Visualizer = (function ($, window, undefined) {
             text += ' ' + postfix;
             svgtext.string(' ');
             $.each(postfixArray, function (elNo, el) {
-              var tspan_attrs = {'class': 'glyph'};
+              const tspan_attrs = {'class': 'glyph'};
               if (el[1].glyphColor) {
                 tspan_attrs.fill = el[1].glyphColor;
               }
@@ -1589,7 +1714,7 @@ var Visualizer = (function ($, window, undefined) {
       const textMeasureGroup = this.svg.group(options);
 
       // changed from $.each because of #264 ('length' can appear)
-      for (var text in textsHash) {
+      for (let text in textsHash) {
         if (textsHash.hasOwnProperty(text)) {
           this.svg.text(textMeasureGroup, 0, 0, text);
         }
@@ -1918,9 +2043,10 @@ var Visualizer = (function ($, window, undefined) {
       return arrowId;
     }
 
+    /**
+     * @param {SourceData} sourceData
+     */
     renderDataReal(sourceData) {
-      let text;
-      let width;
       Util.profileEnd('before render');
       Util.profileStart('render');
       Util.profileStart('init');
@@ -1962,13 +2088,7 @@ var Visualizer = (function ($, window, undefined) {
       this.canvasWidth -= 4;
 
       const defs = this.addHeaderAndDefs();
-
-      // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      /*
-              var backgroundGroup = svg.group({ 'class': 'background' });
-      */
       const backgroundGroup = this.svg.group({'class': 'background', 'pointer-events': 'none'});
-      // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       const glowGroup = this.svg.group({'class': 'glow'});
       this.highlightGroup = this.svg.group({'class': 'highlight'});
       const textGroup = this.svg.group({'class': 'text'});
@@ -1980,6 +2100,8 @@ var Visualizer = (function ($, window, undefined) {
       this.data.sizes = sizes;
 
       this.adjustTowerAnnotationSizes();
+      let text;
+      let width;
       let maxTextWidth = 0;
       for (text in sizes.texts.widths) {
         if (sizes.texts.widths.hasOwnProperty(text)) {
@@ -2486,66 +2608,31 @@ var Visualizer = (function ($, window, undefined) {
 
         // positioning of the chunk
         chunk.right = chunkTo;
-        var textWidth = sizes.texts.widths[chunk.text];
+        const textWidth = sizes.texts.widths[chunk.text];
         chunkHeight += sizes.texts.height;
-        // WEBANNO EXTENSION BEGIN - RTL support - [boxX] adjustment for decoration
-        /*
-                  // If chunkFrom becomes negative, then boxX becomes positive
-                  var boxX = -Math.min(chunkFrom, 0);
-        */
         // If chunkFrom becomes negative (LTR) or chunkTo becomes positive (RTL), then boxX becomes positive
-        var boxX = this.rtlmode ? chunkTo : -Math.min(chunkFrom, 0);
-        // WEBANNO EXTENSION END
-        // WEBANNO EXTENSION BEGIN - RTL support - [boxWidth] calculation of boxWidth
-        /*
-                  var boxWidth =
-                      Math.max(textWidth, chunkTo) -
-                      Math.min(0, chunkFrom);
-        */
-        var boxWidth;
+        const boxX = this.rtlmode ? chunkTo : -Math.min(chunkFrom, 0);
+
+        let boxWidth;
         if (this.rtlmode) {
           boxWidth = Math.max(textWidth, -chunkFrom) - Math.min(0, -chunkTo);
         } else {
           boxWidth = Math.max(textWidth, chunkTo) - Math.min(0, chunkFrom);
         }
-        // WEBANNO EXTENSION END
-        // if (hasLeftArcs) {
-        // TODO change this with smallestLeftArc
-        // var spacing = this.arcHorizontalSpacing - (currentX - lastArcBorder);
-        // arc too small?
-        // WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for spacing (arcs)
-        /*
-        if (spacing > 0) currentX += spacing;
-        */
+
         if (spacing > 0) {
           currentX += this.rtlmode ? -spacing : spacing;
         }
-        // WEBANNO EXTENSION END
-        // }
-        var rightBorderForArcs = hasRightArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0);
-        // WEBANNO EXTENSION BEGIN - RTL support - leftBorderForArcs
-        var leftBorderForArcs = hasLeftArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0);
-        // WEBANNO EXTENSION END
-        var lastX = currentX;
-        var lastRow = row;
+
+        const rightBorderForArcs = hasRightArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0);
+        const leftBorderForArcs = hasLeftArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0);
+        const lastX = currentX;
+        const lastRow = row;
 
         // Is there a sentence break at the current chunk (i.e. it is the first chunk in a new
         // sentence) - if yes and the current sentence is not the same as the sentence to which
         // the chunk belongs, then fill in additional rows
         if (chunk.sentence) {
-          // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
-          /*
-          while (sentenceNumber < chunk.sentence) {
-            sentenceNumber++;
-            row.arcs = this.svg.group(row.group, { 'class': 'arcs' });
-            rows.push(row);
-            row = new Row(this.svg);
-            sentenceToggle = 1 - sentenceToggle;
-            row.backgroundIndex = sentenceToggle;
-            row.index = ++rowIndex;
-          }
-          sentenceToggle = 1 - sentenceToggle;
-          */
           while (sentenceNumber < chunk.sentence - 1) {
             sentenceNumber++;
             row.arcs = this.svg.group(row.group, {'class': 'arcs'});
@@ -2559,15 +2646,9 @@ var Visualizer = (function ($, window, undefined) {
           }
           // Not changing row background color here anymore - we do this later now when the next
           // row is added
-          // WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
         }
 
-        // WEBANNO EXTENSION BEGIN - RTL support - soft-wrap long sentences
-        /*
-        if (chunk.sentence ||
-            currentX + boxWidth + rightBorderForArcs >= this.canvasWidth - 2 * Configuration.visual.margin.x) {
-        */
-        var chunkDoesNotFit = false;
+        let chunkDoesNotFit = false;
         if (this.rtlmode) {
           chunkDoesNotFit = currentX - boxWidth - leftBorderForArcs <=
             2 * Configuration.visual.margin.x;
@@ -2576,21 +2657,9 @@ var Visualizer = (function ($, window, undefined) {
             this.canvasWidth - 2 * Configuration.visual.margin.x;
         }
 
-        // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
         if (chunk.sentence > sourceData.sentence_number_offset || chunkDoesNotFit) {
-          // WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
-          // WEBANNO EXTENSION END
           // the chunk does not fit
           row.arcs = this.svg.group(row.group, {'class': 'arcs'});
-          // WEBANNO EXTENSION BEGIN - RTL support - [currentX] reset after soft-wrap
-          /*
-          // TODO: related to issue #571
-          // replace arcHorizontalSpacing with a calculated value
-          currentX = Configuration.visual.margin.x + sentNumMargin + rowPadding +
-              (hasLeftArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0)) +
-              spaceWidth;
-          */
-          // WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
           var indent = 0;
           if (chunk.lastSpace) {
             var spaceLen = chunk.lastSpace.length || 0;
@@ -2619,8 +2688,7 @@ var Visualizer = (function ($, window, undefined) {
                         spaceWidth*/
               + indent;
           }
-          // WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
-          // WEBANNO EXTENSION END - RTL support - [currentX] reset after soft-wrap
+
           if (hasLeftArcs) {
             const adjustedCurTextWidth = sizes.texts.widths[chunk.text] + this.arcHorizontalSpacing;
             if (adjustedCurTextWidth > maxTextWidth) {
@@ -2691,15 +2759,15 @@ var Visualizer = (function ($, window, undefined) {
         if (spacing > 0) {
           // if we added a gap, center the intervening elements
           spacing /= 2;
-          var firstChunkInRow = row.chunks[row.chunks.length - 1];
+          const firstChunkInRow = row.chunks[row.chunks.length - 1];
           if (firstChunkInRow === undefined) {
             console.log('warning: firstChunkInRow undefined, chunk:', chunk);
           } else { // valid firstChunkInRow
             if (spacingChunkId < firstChunkInRow.index) {
               spacingChunkId = firstChunkInRow.index + 1;
             }
-            for (var chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
-              var movedChunk = this.data.chunks[chunkIndex];
+            for (let chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
+              const movedChunk = this.data.chunks[chunkIndex];
               this.translate(movedChunk, movedChunk.translation.x + spacing, 0);
               movedChunk.textX += spacing;
             }
@@ -2755,7 +2823,7 @@ var Visualizer = (function ($, window, undefined) {
           return;
         }
         if (fromFragment.towerId > toFragment.towerId) {
-          var tmp = fromFragment;
+          const tmp = fromFragment;
           fromFragment = toFragment;
           toFragment = tmp;
         }
@@ -2767,7 +2835,7 @@ var Visualizer = (function ($, window, undefined) {
           from = fromFragment.towerId + 1;
           to = toFragment.towerId - 1;
         }
-        for (var i = from; i <= to; i++) {
+        for (let i = from; i <= to; i++) {
           if (arc.jumpHeight < fragmentHeights[i * 2]) {
             arc.jumpHeight = fragmentHeights[i * 2];
           }
@@ -2777,7 +2845,7 @@ var Visualizer = (function ($, window, undefined) {
       // sort the arcs
       this.data.arcs.sort((a, b) => {
         // first write those that have less to jump over
-        var tmp = a.jumpHeight - b.jumpHeight;
+        let tmp = a.jumpHeight - b.jumpHeight;
         if (tmp)
           return tmp < 0 ? -1 : 1;
         // if equal, then those that span less distance
@@ -3154,7 +3222,7 @@ var Visualizer = (function ($, window, undefined) {
               textEnd = tmp;
             }
 
-            var path;
+            let path;
 
             if (this.roundCoordinates) {
               // don't ask
@@ -3223,12 +3291,14 @@ var Visualizer = (function ($, window, undefined) {
             } else {
               path.line(from, -height);
             }
+
             this.svg.path(arcGroup, path, {
               markerEnd: arrowDecl,
               markerStart: labelArrowDecl,
               style: 'stroke: ' + color,
               'strokeDashArray': dashArray,
             });
+
             if (arc.marked) {
               this.svg.path(shadowGroup, path, {
                 'class': 'shadow_EditHighlight_arc',
@@ -3236,6 +3306,7 @@ var Visualizer = (function ($, window, undefined) {
                 'strokeDashArray': dashArray,
               });
             }
+
             if (arc.shadowClass) {
               this.svg.path(shadowGroup, path, {
                 'class': 'shadow_' + arc.shadowClass,
@@ -3243,6 +3314,7 @@ var Visualizer = (function ($, window, undefined) {
                 'strokeDashArray': dashArray,
               });
             }
+
             if (!symmetric) {
               myArrowHead = ((arcDesc && arcDesc.arrowHead) ||
                 (spanTypes.ARC_DEFAULT && spanTypes.ARC_DEFAULT.arrowHead));
@@ -3250,6 +3322,7 @@ var Visualizer = (function ($, window, undefined) {
                 myArrowHead || 'triangle,5' :
                 'none') + ',' + color;
             }
+
             var arrowType = arrows[arrowName];
             var arrowDecl = arrowType && ('url(#' + arrowType + ')');
 
@@ -3267,6 +3340,7 @@ var Visualizer = (function ($, window, undefined) {
                 arrowAtLabelAdjust = -arrowAtLabelAdjust;
               }
             }
+
             const arrowEnd = textEnd + arrowAtLabelAdjust;
             path = this.svg.createPath().move(arrowEnd, -height);
             if (rowIndex === rightRow) {
@@ -3707,16 +3781,7 @@ var Visualizer = (function ($, window, undefined) {
             // reduction): text rarely hits font max height, so this
             // tends to look better
             const yStartTweak = 1;
-            // store to have same mouseover highlight without recalc
-            // WEBANNO EXTENSION BEGIN - RTL support - Highlight positions
-            /*
-                          fragment.highlightPos = {
-                              x: chunk.textX + fragment.curly.from + xShrink,
-                              y: chunk.row.textY + sizes.texts.y + yShrink + yStartTweak,
-                              w: fragment.curly.to - fragment.curly.from - 2*xShrink,
-                              h: sizes.texts.height - 2*yShrink - yStartTweak,
-                          };
-            */
+
             // Store highlight coordinates
             fragment.highlightPos = {
               x: chunk.textX + (this.rtlmode ? (fragment.curly.from - xShrink) : (fragment.curly.from + xShrink)),
@@ -3724,13 +3789,13 @@ var Visualizer = (function ($, window, undefined) {
               w: fragment.curly.to - fragment.curly.from - 2 * xShrink,
               h: sizes.texts.height - 2 * yShrink - yStartTweak,
             };
-            // WEBANNO EXTENSION END
-            // WEBANNO EXTENSION BEGIN - #361 Avoid rendering exception with zero-width spans
+
+
             // Avoid exception because width < 0 is not allowed
             if (fragment.highlightPos.w <= 0) {
               fragment.highlightPos.w = 1;
             }
-            // WEBANNO EXTENSION END - #361 Avoid rendering exception with zero-width spans
+
             // Render highlight
             this.svg.rect(this.highlightGroup,
               fragment.highlightPos.x, fragment.highlightPos.y,
@@ -4013,7 +4078,7 @@ var Visualizer = (function ($, window, undefined) {
         if (this.requestedData) {
           Util.profileClear();
           Util.profileStart('before render');
-          this.renderData(requestedData);
+          this.renderData(this.requestedData);
           return;
         }
 
@@ -4048,142 +4113,181 @@ var Visualizer = (function ($, window, undefined) {
       }
     }
 
-    // event handlers
-    onMouseOver(evt) {
-      let comment;
+    /**
+     * @param {MouseEvent} evt
+     */
+    onMouseOverSpan(evt) {
       const target = $(evt.target);
       let id = target.attr('data-span-id');
-      if (id) {
-        this.commentId = id;
-        const span = this.data.spans[id];
-        this.dispatcher.post('displaySpanComment', [
-          evt, target, id, span.type, span.attributeText,
-          span.text,
-          span.hovertext,
-          span.comment && span.comment.text,
-          span.comment && span.comment.type,
-          span.normalizations
-        ]);
+      this.commentId = id;
+      const span = this.data.spans[id];
+      this.dispatcher.post('displaySpanComment', [
+        evt, target, id, span.type, span.attributeText,
+        span.text,
+        span.hovertext,
+        span.comment && span.comment.text,
+        span.comment && span.comment.type,
+        span.normalizations
+      ]);
 
-        if (span.actionButtons) {
-          this.dispatcher.post('displaySpanButtons', [evt, target, span.id]);
-        }
+      if (span.actionButtons) {
+        this.dispatcher.post('displaySpanButtons', [evt, target, span.id]);
+      }
 
-        const spanDesc = this.spanTypes[span.type];
-        let bgColor = ((spanDesc && spanDesc.bgColor) ||
-          (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) ||
-          '#ffffff');
+      const spanDesc = this.spanTypes[span.type];
+      let bgColor = ((spanDesc && spanDesc.bgColor) ||
+        (this.spanTypes.SPAN_DEFAULT && this.spanTypes.SPAN_DEFAULT.bgColor) ||
+        '#ffffff');
 
-        if (span.hidden)
-          return;
+      if (span.hidden)
+        return;
 
-        if (span.color) {
-          bgColor = span.color;
-        }
-        this.highlight = [];
-        $.each(span.fragments, (fragmentNo, fragment) => {
-          this.highlight.push(this.svg.rect(this.highlightGroup,
-            fragment.highlightPos.x, fragment.highlightPos.y,
-            fragment.highlightPos.w, fragment.highlightPos.h,
-            {
-              'fill': bgColor, opacity: 0.75,
-              rx: this.highlightRounding.x,
-              ry: this.highlightRounding.y,
-            }));
-        });
+      if (span.color) {
+        bgColor = span.color;
+      }
 
-        if (this.arcDragOrigin) {
-          target.parent().addClass('highlight');
-        } else {
-          var equivs = {};
-          var spans = {};
-          spans[id] = true;
-          var spanIds = [];
-          // find all arcs, normal and equiv. Equivs need to go far (#1023)
-          var addArcAndSpan = (arc, span) => {
-            if (arc.equiv) {
-              equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true;
-              var eventDesc = this.data.eventDescs[arc.eventDescId];
-              $.each(eventDesc.leftSpans.concat(eventDesc.rightSpans), (ospanId, ospan) => spans[ospan] = true);
-            } else {
-              spans[arc.origin] = true;
-            }
-          };
-          $.each(span.incoming, (arcNo, arc) => addArcAndSpan(arc, arc.origin));
-          $.each(span.outgoing, (arcNo, arc) => addArcAndSpan(arc, arc.target));
-          const equivSelector = [];
-          $.each(equivs, (equiv, dummy) => equivSelector.push('[data-arc-ed^="' + equiv + '"]'));
-          this.highlightArcs = this.$svg.find(equivSelector.join(', ')).parent().add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector, this.$svg).addClass('highlight');
-          $.each(spans, (spanId, dummy) => spanIds.push('rect[data-span-id="' + spanId + '"]'));
-          this.highlightSpans = this.$svg.find(spanIds.join(', ')).parent().addClass('highlight');
-        }
-      } else if (!this.arcDragOrigin && (id = target.attr('data-arc-role'))) {
-        var originSpanId = target.attr('data-arc-origin');
-        var targetSpanId = target.attr('data-arc-target');
-        var role = target.attr('data-arc-role');
-        var symmetric = (this.relationTypesHash &&
-          this.relationTypesHash[role] &&
-          this.relationTypesHash[role].properties &&
-          this.relationTypesHash[role].properties.symmetric);
-        // NOTE: no commentText, commentType for now
-        const arcEventDescId = target.attr('data-arc-ed');
-        let commentText = '';
-        let commentType = '';
-        let arcId;
-        if (arcEventDescId) {
-          const eventDesc = this.data.eventDescs[arcEventDescId];
-          comment = eventDesc.comment;
-          if (comment) {
-            commentText = comment.text;
-            commentType = comment.type;
-            if (commentText === '' && commentType) {
-              // default to type if missing text
-              commentText = commentType;
-            }
+      this.highlight = [];
+      $.each(span.fragments, (fragmentNo, fragment) => {
+        this.highlight.push(this.svg.rect(this.highlightGroup,
+          fragment.highlightPos.x, fragment.highlightPos.y,
+          fragment.highlightPos.w, fragment.highlightPos.h,
+          {
+            'fill': bgColor, opacity: 0.75,
+            rx: this.highlightRounding.x,
+            ry: this.highlightRounding.y,
+          }));
+      });
+
+      if (this.arcDragOrigin) {
+        target.parent().addClass('highlight');
+      } else {
+        /** @type {Object.<string, boolean>} */ const equivs = {};
+        /** @type {Object.<string, boolean>} */ const spans = {};
+        spans[id] = true;
+        // find all arcs, normal and equiv. Equivs need to go far (#1023)
+        const addArcAndSpan = (arc, span) => {
+          if (arc.equiv) {
+            equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true;
+            const eventDesc = this.data.eventDescs[arc.eventDescId];
+            $.each(eventDesc.leftSpans.concat(eventDesc.rightSpans), (ospanId, ospan) => spans[ospan] = true);
+          } else {
+            spans[arc.origin] = true;
           }
-          if (eventDesc.relation) {
-            // among arcs, only ones corresponding to relations have
-            // "independent" IDs
-            arcId = arcEventDescId;
-          }
-        }
-        const originSpanType = this.data.spans[originSpanId].type || '';
-        const targetSpanType = this.data.spans[targetSpanId].type || '';
-        let normalizations = [];
-        if (arcId) {
-          normalizations = this.data.arcById[arcId].normalizations;
-        }
+        };
+        $.each(span.incoming, (arcNo, arc) => addArcAndSpan(arc, arc.origin));
+        $.each(span.outgoing, (arcNo, arc) => addArcAndSpan(arc, arc.target));
 
-        this.dispatcher.post('displayArcComment', [
-          evt, target, symmetric, arcId,
-          originSpanId, originSpanType, role,
-          targetSpanId, targetSpanType,
-          commentText, commentType, normalizations
-        ]);
+        const equivSelector = [];
+        $.each(equivs, (equiv, dummy) => equivSelector.push('[data-arc-ed^="' + equiv + '"]'));
+        this.highlightArcs = this.$svg.find(equivSelector.join(', ')).parent().add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector, this.$svg).addClass('highlight');
 
-        if (arcId) {
-          this.highlightArcs = this.$svg.find('g[data-id="' + arcId + '"]').addClass('highlight');
-        } else {
-          this.highlightArcs = this.$svg.find('g[data-from="' + originSpanId + '"][data-to="' + targetSpanId + '"]').addClass('highlight');
-        }
+        /** @type {string[]} */ const spanIds = [];
+        $.each(spans, (spanId, dummy) => spanIds.push('rect[data-span-id="' + spanId + '"]'));
+        this.highlightSpans = this.$svg.find(spanIds.join(', ')).parent().addClass('highlight');
+      }
+    }
 
-        this.highlightSpans = $(this.$svg).find('rect[data-span-id="' + originSpanId + '"], rect[data-span-id="' + targetSpanId + '"]').parent().addClass('highlight');
-      } else if (id = target.attr('data-sent')) {
-        comment = this.data.sentComment[id];
+    /**
+     * @param {MouseEvent} evt
+     */
+    onMouseOverArc(evt) {
+      const target = $(evt.target);
+      const originSpanId = target.attr('data-arc-origin');
+      const targetSpanId = target.attr('data-arc-target');
+      const role = target.attr('data-arc-role');
+      const symmetric = (this.relationTypesHash &&
+        this.relationTypesHash[role] &&
+        this.relationTypesHash[role].properties &&
+        this.relationTypesHash[role].properties.symmetric);
+
+      // NOTE: no commentText, commentType for now
+      /** @type {string} */ const arcEventDescId = target.attr('data-arc-ed');
+      let commentText = '';
+      let commentType = '';
+      let arcId;
+
+      if (arcEventDescId) {
+        const eventDesc = this.data.eventDescs[arcEventDescId];
+        let comment = eventDesc.comment;
         if (comment) {
-          this.dispatcher.post('displaySentComment', [evt, target, comment.text, comment.type]);
+          commentText = comment.text;
+          commentType = comment.type;
+          if (commentText === '' && commentType) {
+            // default to type if missing text
+            commentText = commentType;
+          }
         }
+        if (eventDesc.relation) {
+          // among arcs, only ones corresponding to relations have "independent" IDs
+          arcId = arcEventDescId;
+        }
+      }
+
+      const originSpanType = this.data.spans[originSpanId].type || '';
+      const targetSpanType = this.data.spans[targetSpanId].type || '';
+      let normalizations = [];
+      if (arcId) {
+        normalizations = this.data.arcById[arcId].normalizations;
+      }
+
+      this.dispatcher.post('displayArcComment', [
+        evt, target, symmetric, arcId,
+        originSpanId, originSpanType, role,
+        targetSpanId, targetSpanType,
+        commentText, commentType, normalizations
+      ]);
+
+      if (arcId) {
+        this.highlightArcs = this.$svg.find('g[data-id="' + arcId + '"]').addClass('highlight');
+      } else {
+        this.highlightArcs = this.$svg.find('g[data-from="' + originSpanId + '"][data-to="' + targetSpanId + '"]').addClass('highlight');
+      }
+
+      this.highlightSpans = $(this.$svg).find('rect[data-span-id="' + originSpanId + '"], rect[data-span-id="' + targetSpanId + '"]').parent().addClass('highlight');
+    }
+
+    /**
+     * @param {MouseEvent} evt
+     */
+    onMouseOverSentence(evt) {
+      const target = $(evt.target);
+      let id = target.attr('data-span-id');
+      let comment = this.data.sentComment[id];
+      if (comment) {
+        this.dispatcher.post('displaySentComment', [evt, target, comment.text, comment.type]);
+      }
+    }
+
+    /**
+     * @param {MouseEvent} evt
+     */
+    onMouseOver(evt) {
+      const target = $(evt.target);
+      if (target.attr('data-span-id')) {
+        this.onMouseOverSpan(evt);
+        return;
+      }
+
+      if (!this.arcDragOrigin && target.attr('data-arc-role')) {
+        this.onMouseOverArc(evt);
+        return;
+      }
+
+      if (target.attr('data-sent')) {
+        this.onMouseOverSentence(evt);
       }
     }
 
     onMouseOut(evt) {
-      var target = $(evt.target);
+      const target = $(evt.target);
       target.removeClass('badTarget');
       this.dispatcher.post('hideComment');
+
       if (this.highlight) {
         this.highlight.map((h) => this.svg.remove(h));
         this.highlight = undefined;
       }
+
       if (this.highlightSpans) {
         this.highlightArcs.removeClass('highlight');
         this.highlightSpans.removeClass('highlight');
@@ -4250,7 +4354,7 @@ var Visualizer = (function ($, window, undefined) {
       $.each(types, (typeNo, type) => {
         if (type) {
           this.spanTypes[type.type] = type;
-          var children = type.children;
+          const children = type.children;
           if (children && children.length) {
             this.loadSpanTypes(children);
           }
@@ -4288,6 +4392,9 @@ var Visualizer = (function ($, window, undefined) {
       });
     }
 
+    /**
+     * @param {CollectionLoadedResponse} response
+     */
     collectionLoaded(response) {
       if (response.exception) {
         return;
@@ -4393,11 +4500,13 @@ var Visualizer = (function ($, window, undefined) {
       return findClosestHorizontalScrollable(node.parent());
     }
   }
-
   // WEBANNO EXTENSION END - RTL - Need to find scrollable ancestor
 
-  // A naive whitespace tokeniser
-  var tokenise = function (text) {
+  /**
+   * A naive whitespace tokeniser
+   * @returns {number[][]}
+   */
+  const tokenise = function (text) {
     const tokenOffsets = [];
     let tokenStart = null;
     let lastCharPos = null;
@@ -4425,8 +4534,12 @@ var Visualizer = (function ($, window, undefined) {
     return tokenOffsets;
   };
 
-  // A naive newline sentence splitter
-  var sentenceSplit = function (text) {
+  /**
+   * A naive newline sentence splitter
+   *
+   * @returns {number[][]}
+   */
+  const sentenceSplit = function (text) {
     const sentenceOffsets = [];
     let sentStart = null;
     let lastCharPos = null;
