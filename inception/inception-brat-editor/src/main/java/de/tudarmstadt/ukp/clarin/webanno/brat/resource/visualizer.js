@@ -50,9 +50,9 @@ const Visualizer = (function ($, window, undefined) {
    */
   class SourceData {
     /** @type {String} */ text;
-    attributes = [];
-    /** @type {[]} */ comments = [];
-    entities = [];
+    /** @type {[string, string, string, string, string]} id, name, spanId, value, cueSpanId */ attributes = [];
+    /** @type {[[string, string, string]]} id, type, comment */ comments = [];
+    /** @type {[[string, string, [[number, number]], {}]]} id, type, offsets, attributes */ entities = [];
     equivs = [];
     events = [];
     normalizations = [];
@@ -65,6 +65,18 @@ const Visualizer = (function ($, window, undefined) {
     /** @type {number} */ font_zoom;
     /** @type {{}} */ args;
     exception;
+
+    /**
+     * @type {string}
+     * @deprecated INCEpTION does not use the collection name.
+     */
+    collection;
+
+    /**
+     * @type {string}
+     * @deprecated INCEpTION does not use the document name.
+     */
+    document;
   }
 
   /**
@@ -236,16 +248,16 @@ const Visualizer = (function ($, window, undefined) {
     /** @type {number} */ numArcs = 0;
     generalType;
     /** @type {Fragment} */ headFragment = null;
-    /** @type {[number, number]} */ unsegmentedOffsets;
-    /** @type {[number, number]} */ offsets = [];
+    /** @type {[[number, number]]} */ unsegmentedOffsets;
+    /** @type {[[number, number]]} */ offsets = [];
     segmentedOffsetsMap = {};
     /** @type {boolean} */ hidden = false;
     /** @type {boolean} */ clippedAtStart = false;
     /** @type {boolean} */ clippedAtEnd = false;
     incoming = [];
     outgoing = [];
-    attributes = {};
-    attributeText = [];
+    /** @type {Object.<string, string>} */ attributes = {};
+    /** @type {string[]} */attributeText = [];
     attributeCues = {};
     attributeCueFor = {};
     annotatorNotes = undefined;
@@ -269,7 +281,7 @@ const Visualizer = (function ($, window, undefined) {
     /**
      * @param {*} id
      * @param {string} type
-     * @param {[number, number]} offsets
+     * @param {[[number, number]]} offsets
      * @param {string} generalType
      */
     constructor(id, type, offsets, generalType) {
@@ -317,7 +329,7 @@ const Visualizer = (function ($, window, undefined) {
       this.segmentedOffsetsMap = {};
 
       for (let fi = 0, nfi = 0; fi < this.unsegmentedOffsets.length; fi++) {
-        let begin = this.unsegmentedOffsets[fi][0];
+        /** @type {number | any} */ let begin = this.unsegmentedOffsets[fi][0];
         const end = this.unsegmentedOffsets[fi][1];
 
         for (let ti = begin; ti < end; ti++) {
@@ -628,8 +640,17 @@ const Visualizer = (function ($, window, undefined) {
     /** @type {SourceData} */ sourceData = null;
     requestedData = null;
 
-    coll = null;
-    doc = null;
+    /**
+     * @type {string}
+     * @deprecated INCEpTION does not use the collection name.
+     */
+    coll = undefined;
+    /**
+     * @type {string}
+     * @deprecated INCEpTION does not use the document name.
+     */
+    doc = undefined;
+
     /** @type {Object.<string, string[]>} */ args = null;
 
     /** @type {boolean} */ isRenderRequested = false;
@@ -1046,7 +1067,7 @@ const Visualizer = (function ($, window, undefined) {
     /**
      *
      * @param {string} documentText
-     * @param {[[string, string, [number, number], {}]]} entities
+     * @param {[[string, string, [[number, number]], {}]]} entities
      * @return {Object.<string, Span>}
      */
     buildSpansFromEntities(documentText, entities) {
@@ -1220,36 +1241,46 @@ const Visualizer = (function ($, window, undefined) {
       });
     }
 
+    // INCEpTION does not use attributes...
+    /**
+     * @param {[string, string, string, string, string]} attributes id, name, spanId, value, cueSpanId
+     * @param {Object.<string, Span>} spans
+     */
     assignAttributesToSpans(attributes, spans) {
       if (!attributes) {
         return;
       }
 
       attributes.map(attr => {
-        // attr: [id, name, spanId, value, cueSpanId
+        // attr: [id, name, spanId, value, cueSpanId]
+        const id = attr[0];
+        const name = attr[1];
+        const spanId = attr[2];
+        const value = attr[3];
+        const cueSpanId = attr[4];
+
         // TODO: might wish to check what's appropriate for the type
         // instead of using the first attribute def found
-        let attrType = (this.eventAttributeTypes[attr[1]] ||
-          this.entityAttributeTypes[attr[1]]);
-        let attrValue = attrType && attrType.values[attrType.bool || attr[3]];
-        let span = spans[attr[2]];
+        const attrType = (this.eventAttributeTypes[name] || this.entityAttributeTypes[name]);
+        const attrValue = attrType && attrType.values[attrType.bool || value];
+        const span = spans[spanId];
 
         if (!span) {
-          this.dispatcher.post('messages', [[['Annotation ' + attr[2] + ', referenced from attribute ' + attr[0] + ', does not exist.', 'error']]]);
+          this.dispatcher.post('messages', [[['Annotation ' + spanId + ', referenced from attribute ' + id + ', does not exist.', 'error']]]);
           return;
         }
 
-        let valText = (attrValue && attrValue.name) || attr[3];
+        let valText = (attrValue && attrValue.name) || value;
         let attrText = attrType
           ? (attrType.bool ? attrType.name : (attrType.name + ': ' + valText))
-          : (attr[3] ? attr[1] : attr[1] + ': ' + attr[3]);
+          : (value ? name : name + ': ' + value);
         span.attributeText.push(attrText);
-        span.attributes[attr[1]] = attr[3];
+        span.attributes[name] = value;
 
-        if (attr[4]) { // cue
-          span.attributeCues[attr[1]] = attr[4];
-          let cueSpan = spans[attr[4]];
-          cueSpan.attributeCueFor[spans[1]] = attr[2];
+        if (cueSpanId) { // cue
+          span.attributeCues[name] = cueSpanId;
+          let cueSpan = spans[cueSpanId];
+          cueSpan.attributeCueFor[spans[1]] = spanId;
           cueSpan.cue = 'CUE'; // special css type
         }
 
@@ -1708,7 +1739,7 @@ const Visualizer = (function ($, window, undefined) {
 
     resetData() {
       this.setData(this.sourceData);
-      this.renderData();
+      this.renderData(undefined);
     }
 
     translate(element, x, y) {
@@ -2058,76 +2089,27 @@ const Visualizer = (function ($, window, undefined) {
     }
 
     /**
-     * @param {SourceData} sourceData
+     * @return {number}
      */
-    renderDataReal(sourceData) {
-      Util.profileEnd('before render');
-      Util.profileStart('render');
-      Util.profileStart('init');
-
-      if (!sourceData && !this.data) {
-        this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
-        return;
-      }
-
-      this.$svgDiv.show();
-      if ((this.sourceData && this.sourceData.collection && (this.sourceData.document !== this.doc || this.sourceData.collection !== this.coll)) || this.drawing) {
-        this.redraw = true;
-        this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
-        return;
-      }
-
-      this.redraw = false;
-      this.drawing = true;
-
-      if (sourceData) {
-        this.setData(sourceData);
-      }
-
-      // clear the SVG
-      this.svg.clear(true);
-
-      if (!this.data) {
-        return;
-      }
-
-      this.$svg.css("font-size", this.fontZoom + "%");
-      this.sentNumMargin = 40 * (this.fontZoom / 100.0);
-
-      // establish the width according to the enclosing element
-      this.baseCanvasWidth = this.forceWidth || this.$svgDiv.width();
-      this.canvasWidth = this.forceWidth || (this.$svgDiv.width() - $.scrollbarWidth());
-
-      // Take hairline border of SVG into account
-      this.canvasWidth -= 4;
-
-      const defs = this.addHeaderAndDefs();
-      const backgroundGroup = this.svg.group({'class': 'background', 'pointer-events': 'none'});
-      const glowGroup = this.svg.group({'class': 'glow'});
-      this.highlightGroup = this.svg.group({'class': 'highlight'});
-      const textGroup = this.svg.group({'class': 'text'});
-
-      Util.profileEnd('init');
-      Util.profileStart('measures');
-
-      const sizes = this.getTextAndSpanTextMeasurements();
-      this.data.sizes = sizes;
-
-      this.adjustTowerAnnotationSizes();
-      let text;
-      let width;
+    calculateMaxTextWidth(sizes) {
       let maxTextWidth = 0;
-      for (text in sizes.texts.widths) {
+      this.adjustTowerAnnotationSizes();
+      for (let text in sizes.texts.widths) {
         if (sizes.texts.widths.hasOwnProperty(text)) {
-          width = sizes.texts.widths[text];
+          let width = sizes.texts.widths[text];
           if (width > maxTextWidth)
             maxTextWidth = width;
         }
       }
+      return maxTextWidth;
+    }
 
-      Util.profileEnd('measures');
-      Util.profileStart('chunks');
-
+    /**
+     * @param {SourceData} sourceData
+     * @param {number} maxTextWidth
+     * @returns
+     */
+    renderChunks(sourceData, maxTextWidth, sizes) {
       let currentX;
       if (this.rtlmode) {
         currentX = this.canvasWidth - (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding);
@@ -2463,7 +2445,7 @@ const Visualizer = (function ($, window, undefined) {
           }
           if (span.attributeMerge.box === "crossed") {
             this.svg.path(fragment.group, svg.createPath().move(xx, yy - Configuration.visual.margin.y - span.floor).line(xx + fragment.width,
-              yy + hh + Configuration.visual.margin.y - span.floor),
+                yy + hh + Configuration.visual.margin.y - span.floor),
               {'class': 'boxcross'});
             this.svg.path(fragment.group, svg.createPath().move(xx + fragment.width, yy - Configuration.visual.margin.y - span.floor).line(xx, yy + hh + Configuration.visual.margin.y - span.floor),
               {'class': 'boxcross'});
@@ -2663,19 +2645,19 @@ const Visualizer = (function ($, window, undefined) {
         if (chunk.sentence > sourceData.sentence_number_offset || chunkDoesNotFit) {
           // the chunk does not fit
           row.arcs = this.svg.group(row.group, {'class': 'arcs'});
-          var indent = 0;
+          let indent = 0;
           if (chunk.lastSpace) {
-            var spaceLen = chunk.lastSpace.length || 0;
-            var spacePos;
+            const spaceLen = chunk.lastSpace.length || 0;
+            let spacePos;
             if (chunk.sentence) {
               // If this is line-initial spacing, fetch the sentence to which the chunk belongs
               // so we can determine where it begins
-              var sentFrom = sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
+              const sentFrom = sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
               spacePos = spaceLen - (chunk.from - sentFrom);
             } else {
               spacePos = 0;
             }
-            for (var i = spacePos; i < spaceLen; i++) {
+            for (let i = spacePos; i < spaceLen; i++) {
               indent += this.spaceWidths[chunk.lastSpace[i]] * (this.fontZoom / 100.0) || 0;
             }
           }
@@ -2800,9 +2782,11 @@ const Visualizer = (function ($, window, undefined) {
       // finish the last row
       row.arcs = this.svg.group(row.group, {'class': 'arcs'});
       rows.push(row);
-      Util.profileEnd('chunks');
 
-      Util.profileStart('arcsPrep');
+      return [rows, fragmentHeights, textMarkedRows];
+    }
+
+    prepareRenderArcs(defs, fragmentHeights, rows) {
       const arrows = {};
       const arrow = this.makeArrow(defs, 'none');
       if (arrow) {
@@ -2913,9 +2897,11 @@ const Visualizer = (function ($, window, undefined) {
         visibility: 'hidden',
       });
       this.dispatcher.post('arcDragArcDrawn', [arcDragArc]);
-      Util.profileEnd('arcsPrep');
 
-      Util.profileStart('arcs');
+      return arrows;
+    }
+
+    renderArcs(rows, fragmentHeights, defs, arrows) {
       const arcCache = {};
       // add the arcs
       $.each(this.data.arcs, (arcNo, arc) => {
@@ -3229,8 +3215,8 @@ const Visualizer = (function ($, window, undefined) {
             if (height > row.maxArcHeight)
               row.maxArcHeight = height;
 
-            var myArrowHead = (arcDesc && arcDesc.arrowHead);
-            var arrowName = (symmetric ? myArrowHead || 'none' :
+            let myArrowHead = (arcDesc && arcDesc.arrowHead);
+            let arrowName = (symmetric ? myArrowHead || 'none' :
                 (leftToRight ? 'none' : myArrowHead || 'triangle,5')
             ) + ',' + color;
             var arrowType = arrows[arrowName];
@@ -3398,9 +3384,9 @@ const Visualizer = (function ($, window, undefined) {
           }
         } // arc rows
       }); // arcs
-      Util.profileEnd('arcs');
+    }
 
-      Util.profileStart('fragmentConnectors');
+    renderFragmentConnectors(rows) {
       $.each(this.data.spans, (spanNo, span) => {
         const numConnectors = span.fragments.length - 1;
         for (let connectorNo = 0; connectorNo < numConnectors; connectorNo++) {
@@ -3446,10 +3432,9 @@ const Visualizer = (function ($, window, undefined) {
           } // rowIndex
         } // connectorNo
       }); // spans
+    }
 
-      Util.profileEnd('fragmentConnectors');
-      Util.profileStart('rows');
-
+    renderRows(rows, backgroundGroup) {
       // position the rows
       let y = Configuration.visual.margin.y;
       const sentNumGroup = this.svg.group({'class': 'sentnum unselectable'});
@@ -3494,6 +3479,8 @@ const Visualizer = (function ($, window, undefined) {
           // plain "standard" bg
           bgClass = 'background0';
         }
+
+        let sizes = this.data.sizes;
         this.svg.rect(backgroundGroup,
           0, y + sizes.texts.y + sizes.texts.height,
           this.canvasWidth, rowBoxHeight + sizes.texts.height + 1, {
@@ -3578,6 +3565,89 @@ const Visualizer = (function ($, window, undefined) {
         y += Configuration.visual.margin.y;
       });
       y += Configuration.visual.margin.y;
+
+      return [y, sentNumGroup];
+    }
+
+    /**
+     * @param {SourceData} sourceData
+     */
+    renderDataReal(sourceData) {
+      Util.profileEnd('before render');
+      Util.profileStart('render');
+
+      Util.profileStart('init');
+      if (!sourceData && !this.data) {
+        this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
+        return;
+      }
+
+      this.$svgDiv.show();
+      if ((this.sourceData && this.sourceData.collection && (this.sourceData.document !== this.doc || this.sourceData.collection !== this.coll)) || this.drawing) {
+        this.redraw = true;
+        this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
+        return;
+      }
+
+      this.redraw = false;
+      this.drawing = true;
+
+      if (sourceData) {
+        this.setData(sourceData);
+      }
+
+      // clear the SVG
+      this.svg.clear(true);
+
+      if (!this.data) {
+        return;
+      }
+
+      this.$svg.css("font-size", this.fontZoom + "%");
+      this.sentNumMargin = 40 * (this.fontZoom / 100.0);
+
+      // establish the width according to the enclosing element
+      this.baseCanvasWidth = this.forceWidth || this.$svgDiv.width();
+      this.canvasWidth = this.forceWidth || (this.$svgDiv.width() - $.scrollbarWidth());
+
+      // Take hairline border of SVG into account
+      this.canvasWidth -= 4;
+
+      const defs = this.addHeaderAndDefs();
+      const backgroundGroup = this.svg.group({'class': 'background', 'pointer-events': 'none'});
+      const glowGroup = this.svg.group({'class': 'glow'});
+      this.highlightGroup = this.svg.group({'class': 'highlight'});
+      const textGroup = this.svg.group({'class': 'text'});
+      Util.profileEnd('init');
+
+      Util.profileStart('measures');
+      this.data.sizes = this.getTextAndSpanTextMeasurements();
+      let maxTextWidth = this.calculateMaxTextWidth(this.data.sizes);
+      Util.profileEnd('measures');
+
+      Util.profileStart('chunks');
+      let fragmentHeights;
+      let rows;
+      let textMarkedRows;
+      [rows, fragmentHeights, textMarkedRows] = this.renderChunks(sourceData, maxTextWidth, this.data.sizes);
+      Util.profileEnd('chunks');
+
+      Util.profileStart('arcsPrep');
+      let arrows = this.prepareRenderArcs(defs, fragmentHeights, rows);
+      Util.profileEnd('arcsPrep');
+
+      Util.profileStart('arcs');
+      this.renderArcs(rows, fragmentHeights, defs, arrows);
+      Util.profileEnd('arcs');
+
+      Util.profileStart('fragmentConnectors');
+      this.renderFragmentConnectors(rows);
+      Util.profileEnd('fragmentConnectors');
+
+      Util.profileStart('rows');
+      let sentNumGroup;
+      let y;
+      [y, sentNumGroup] = this.renderRows(rows, backgroundGroup);
       Util.profileEnd('rows');
 
       Util.profileStart('chunkFinish');
@@ -3664,7 +3734,7 @@ const Visualizer = (function ($, window, undefined) {
           // item that stretches across the entire inter-chunk space. This ensures a
           // smooth selection.
           if (nextChunk) {
-            const spaceX = chunk.textX + sizes.texts.widths[chunk.text];
+            const spaceX = chunk.textX + this.data.sizes.texts.widths[chunk.text];
             const spaceWidth = nextChunk.textX - spaceX;
             this.horizontalSpacer(this.svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
               'data-chunk-id': chunk.index
@@ -3715,7 +3785,7 @@ const Visualizer = (function ($, window, undefined) {
               current.nestingHeightRL = 0;
               current.nestingDepthRL = 0;
               const stillOpen = [];
-              for (var o = 0; o < openFragments.length; o++) {
+              for (let o = 0; o < openFragments.length; o++) {
                 if (openFragments[o].from < current.to) {
                   stillOpen.push(openFragments[o]);
                   openFragments[o].nestingHeightRL++;
@@ -3777,9 +3847,9 @@ const Visualizer = (function ($, window, undefined) {
             // Store highlight coordinates
             fragment.highlightPos = {
               x: chunk.textX + (this.rtlmode ? (fragment.curly.from - xShrink) : (fragment.curly.from + xShrink)),
-              y: chunk.row.textY + sizes.texts.y + yShrink + yStartTweak,
+              y: chunk.row.textY + this.data.sizes.texts.y + yShrink + yStartTweak,
               w: fragment.curly.to - fragment.curly.from - 2 * xShrink,
-              h: sizes.texts.height - 2 * yShrink - yStartTweak,
+              h: this.data.sizes.texts.height - 2 * yShrink - yStartTweak,
             };
 
 
@@ -3812,7 +3882,7 @@ const Visualizer = (function ($, window, undefined) {
       // draw the markedText
       $.each(textMarkedRows, (textRowNo, textRowDesc) => {
         this.svg.rect(this.highlightGroup,
-          textRowDesc[1] - 2, textRowDesc[0].textY - sizes.fragments.height,
+          textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height,
           textRowDesc[2] - textRowDesc[1] + 4, sizes.fragments.height + 4,
           {'class': textRowDesc[3]}
         );
@@ -3827,12 +3897,11 @@ const Visualizer = (function ($, window, undefined) {
       } else {
         this.svg.path(sentNumGroup, this.svg.createPath().move(this.sentNumMargin, 0).line(this.sentNumMargin, y));
       }
-
       Util.profileEnd('adjust margin');
 
       Util.profileStart('resize SVG');
       // resize the SVG
-      width = maxTextWidth + this.sentNumMargin + 2 * Configuration.visual.margin.x + 1;
+      let width = maxTextWidth + this.sentNumMargin + 2 * Configuration.visual.margin.x + 1;
 
       // Loops over the rows to check if the width calculated so far is still not enough. This
       // currently happens sometimes if there is a single annotation on many words preventing
@@ -3840,7 +3909,7 @@ const Visualizer = (function ($, window, undefined) {
       $(textGroup).children(".text-row").each((rowIndex, textRow) => {
         const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
         const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
-        const lastChunkWidth = sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
+        const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
         const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
         if (this.rtlmode) {
           // Not sure what to calculate here
@@ -3913,8 +3982,8 @@ const Visualizer = (function ($, window, undefined) {
       $(textGroup).children(".text-row").each((rowIndex, textRow) => {
         const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
         const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
-        const firstChunkWidth = sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
-        const lastChunkWidth = sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
+        const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
+        const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
         const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
 
         if (this.rtlmode) {
@@ -3950,7 +4019,7 @@ const Visualizer = (function ($, window, undefined) {
       const textRows = $(textGroup).children(".text-row");
       textRows.each((rowIndex, textRow) => {
         const rowRect = {
-          y: parseFloat($(textRow).children()[0].getAttribute('y')) + 2, height: sizes.texts.height
+          y: parseFloat($(textRow).children()[0].getAttribute('y')) + 2, height: this.data.sizes.texts.height
         };
         const spaceHeight = rowRect.y - (prevRowRect.y + rowRect.height) + 2;
 
