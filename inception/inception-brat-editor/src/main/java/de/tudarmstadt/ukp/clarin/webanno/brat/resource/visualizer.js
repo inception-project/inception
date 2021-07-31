@@ -43,6 +43,18 @@
 const Visualizer = (function ($, window, undefined) {
   let svg;
 
+  class Sizes {
+    /** @type {Measurements} */ texts;
+    /** @type {Measurements} */ fragments;
+    /** @type {Measurements} */ arcs;
+
+    constructor(texts, fragments) {
+      Object.seal(this);
+      this.texts = texts;
+      this.fragments = fragments;
+    }
+  }
+
   /**
    * This class represents the JSON object that we receive from the server. Note that the class is
    * currently only used for documentation purposes. The JSON we get is not really cast into an
@@ -77,6 +89,10 @@ const Visualizer = (function ($, window, undefined) {
      * @deprecated INCEpTION does not use the document name.
      */
     document;
+
+    constructor() {
+      Object.seal(this);
+    }
   }
 
   /**
@@ -84,6 +100,10 @@ const Visualizer = (function ($, window, undefined) {
    */
   class VisualOptions {
     /** @type {boolean} */ arc_bundle;
+
+    constructor() {
+      Object.seal(this);
+    }
   }
 
   /**
@@ -98,6 +118,10 @@ const Visualizer = (function ($, window, undefined) {
     unconfigured_types;
     relation_types;
     /** @type {VisualOptions} */ visual_options;
+
+    constructor() {
+      Object.seal(this);
+    }
   }
 
   /**
@@ -117,7 +141,7 @@ const Visualizer = (function ($, window, undefined) {
     spanAnnTexts = {};
     towers = {};
     /** @type {Array.<*>} */ spanDrawOrderPermutation = []
-    sizes = {};
+    /** @type {Sizes} */ sizes = new Sizes();
 
     constructor(text) {
       Object.seal(this);
@@ -262,7 +286,7 @@ const Visualizer = (function ($, window, undefined) {
     attributeCueFor = {};
     annotatorNotes = undefined;
     attributeMerge = {}; // for box, cross, etc. that are span-global
-    fragments = [];
+    /** @type {Fragment[]} */ fragments = [];
     /** @type {string} */ normalized;
     /** @type {[[string, string, string]]} */ normalizations = [];
     wholeFrom = undefined;
@@ -385,6 +409,10 @@ const Visualizer = (function ($, window, undefined) {
   class Comment {
     /** @type {string} */ text;
     /** @type {string} */ type;
+
+    constructor() {
+      Object.seal(this);
+    }
   }
 
   class EventDesc {
@@ -516,10 +544,15 @@ const Visualizer = (function ($, window, undefined) {
   }
 
   class Measurements {
-    widths;
-    height;
-    y;
+    /** @type {Object.<string, number>} */ widths;
+    /** @type {number} */ height;
+    /** @type {number} */ y;
 
+    /**
+     * @param {Object.<string, number>} widths
+     * @param {number} height
+     * @param {number} y
+     */
     constructor(widths, height, y) {
       Object.seal(this);
 
@@ -627,10 +660,9 @@ const Visualizer = (function ($, window, undefined) {
     /** @type {boolean} */ rtlmode = false;
     /** @type {number} */ fontZoom = 100;
 
-    svg;
-    $svg;
-    $svgDiv;
-    _svg;
+    /** @type {SVGWrapper} */ svg;
+    /** @type {jQuery} */ $svg;
+    /** @type {jQuery} */$svgDiv;
     highlightGroup;
 
     baseCanvasWidth = 0;
@@ -746,9 +778,12 @@ const Visualizer = (function ($, window, undefined) {
       // create the svg wrapper
       this.$svgDiv = $(this.$svgDiv).hide();
       this.$svgDiv.svg({
+        /**
+         * @param {SVGWrapper} _svg
+         */
         onLoad: (_svg) => {
           this.svg = _svg;
-          this.$svg = $(this.svg._svg);
+          this.$svg = $(_svg.root());
           this.triggerRender();
         }
       });
@@ -1204,6 +1239,10 @@ const Visualizer = (function ($, window, undefined) {
       });
     }
 
+    /**
+     * @param relations
+     * @param {Object.<string, EventDesc>} eventDescs
+     */
     buildEventDescsFromRelations(relations, eventDescs) {
       if (!relations) {
         return;
@@ -1345,6 +1384,10 @@ const Visualizer = (function ($, window, undefined) {
       });
     }
 
+    /**
+     * @param {Object.<string, Span>} spans
+     * @return {Fragment[]}
+     */
     buildSortedFragments(spans) {
       if (!spans) {
         return [];
@@ -1368,6 +1411,11 @@ const Visualizer = (function ($, window, undefined) {
       return sortedFragments;
     }
 
+    /**
+     * @param {number[][]} tokenOffsets
+     * @param {Fragment[]} sortedFragments
+     * @return {Chunk[]}
+     */
     buildChunksFromTokenOffsets(tokenOffsets, sortedFragments) {
       if (!tokenOffsets) {
         return [];
@@ -1756,9 +1804,16 @@ const Visualizer = (function ($, window, undefined) {
       return defs;
     }
 
+    /**
+     * @param textsHash
+     * @param options arguments to the {@link SVGWrapper.group}} call creating the temporary group used for measurement
+     * @param callback
+     * @return {Measurements}
+     */
     getTextMeasurements(textsHash, options, callback) {
       // make some text elements, find out the dimensions
-      const textMeasureGroup = this.svg.group(options);
+      // noinspection JSValidateTypes
+      /** @type {SVGGElement} */ const textMeasureGroup = this.svg.group(options);
 
       // changed from $.each because of #264 ('length' can appear)
       for (let text in textsHash) {
@@ -1768,7 +1823,7 @@ const Visualizer = (function ($, window, undefined) {
       }
 
       // measuring goes on here
-      const widths = {};
+      /** @type {Object.<string, number>} */ const widths = {};
       $(textMeasureGroup).find('text').each(function (svgTextNo, svgText) {
         const text = $(svgText).text();
         widths[text] = this.getComputedTextLength();
@@ -2003,12 +2058,12 @@ const Visualizer = (function ($, window, undefined) {
 
       const fragmentSizes = this.getTextMeasurements(fragmentTexts, {'class': 'span'});
 
-      return {
-        texts: textSizes,
-        fragments: fragmentSizes
-      };
+      return new Sizes(textSizes, fragmentSizes);
     }
 
+    /**
+     * @param {Sizes} sizes
+     */
     addArcTextMeasurements(sizes) {
       // get the arc annotation text sizes (for all labels)
       const arcTexts = {};
@@ -2107,18 +2162,19 @@ const Visualizer = (function ($, window, undefined) {
     /**
      * @param {SourceData} sourceData
      * @param {number} maxTextWidth
-     * @returns
+     * @param {Sizes} sizes
+     * @returns {[Row[], number[], []]} [rows, fragmentHeights, textMarkedRows]
      */
     renderChunks(sourceData, maxTextWidth, sizes) {
-      let currentX;
+      /** @type {number} */ let currentX;
       if (this.rtlmode) {
         currentX = this.canvasWidth - (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding);
       } else {
         currentX = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
       }
 
-      const rows = [];
-      const fragmentHeights = [];
+      /** @type {Row[]} */ const rows = [];
+      /** @type {number[]} */ const fragmentHeights = [];
       let sentenceToggle = 0;
       let sentenceNumber = sourceData.sentence_number_offset;
       let row = new Row(this.svg);
@@ -2786,6 +2842,245 @@ const Visualizer = (function ($, window, undefined) {
       return [rows, fragmentHeights, textMarkedRows];
     }
 
+    renderChunksPass2(textGroup, textMarkedRows) {
+      // chunk index sort functions for overlapping fragment drawing
+      // algorithm; first for left-to-right pass, sorting primarily
+      // by start offset, second for right-to-left pass by end
+      // offset. Secondary sort by fragment length in both cases.
+      let currentChunk;
+
+      const lrChunkComp = (a, b) => {
+        const ac = currentChunk.fragments[a];
+        const bc = currentChunk.fragments[b];
+        const startDiff = Util.cmp(ac.from, bc.from);
+        return startDiff !== 0 ? startDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
+      };
+
+      const rlChunkComp = (a, b) => {
+        const ac = currentChunk.fragments[a];
+        const bc = currentChunk.fragments[b];
+        const endDiff = Util.cmp(bc.to, ac.to);
+        return endDiff !== 0 ? endDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
+      };
+
+      let prevChunk = null;
+      let rowTextGroup = null;
+      $.each(this.data.chunks, (chunkNo, chunk) => {
+        // context for sort
+        currentChunk = chunk;
+
+        // Add spacers to reduce jumpyness of selection
+        if (!rowTextGroup || prevChunk.row !== chunk.row) {
+          if (rowTextGroup) {
+            this.horizontalSpacer(this.svg, rowTextGroup, 0, prevChunk.row.textY, 1, {
+              'data-chunk-id': prevChunk.index,
+              'class': 'row-final spacing'
+            });
+          }
+          rowTextGroup = this.svg.group(textGroup, {'class': 'text-row'});
+        }
+        prevChunk = chunk;
+
+        const nextChunk = this.data.chunks[chunkNo + 1];
+        const nextSpace = nextChunk ? nextChunk.space : '';
+
+        if (this.rtlmode) {
+          // Render every text chunk as a SVG text so we maintain control over the layout. When
+          // rendering as a SVG span (as brat does), then the browser changes the layout on the
+          // X-axis as it likes in RTL mode.
+          if (!rowTextGroup.firstChild) {
+            this.horizontalSpacer(svg, rowTextGroup, 0, chunk.row.textY, 1, {
+              'class': 'row-initial spacing',
+              'data-chunk-id': chunk.index
+            });
+          }
+
+          this.svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
+            'data-chunk-id': chunk.index
+          });
+
+          // If there needs to be space between this chunk and the next one, add a spacer
+          // item that stretches across the entire inter-chunk space. This ensures a
+          // smooth selection.
+          if (nextChunk) {
+            const spaceX = chunk.textX - sizes.texts.widths[chunk.text];
+            const spaceWidth = chunk.textX - sizes.texts.widths[chunk.text] - nextChunk.textX;
+            this.horizontalSpacer(this.svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+              'data-chunk-id': chunk.index
+            });
+          }
+        } else {
+          // Original rendering using tspan in ltr mode as it play nicer with selection
+          if (!rowTextGroup.firstChild) {
+            this.horizontalSpacer(this.svg, rowTextGroup, 0, chunk.row.textY, 1, {
+              'class': 'row-initial spacing',
+              'data-chunk-id': chunk.index
+            });
+          }
+
+          this.svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
+            'data-chunk-id': chunk.index
+          });
+
+          // If there needs to be space between this chunk and the next one, add a spacer
+          // item that stretches across the entire inter-chunk space. This ensures a
+          // smooth selection.
+          if (nextChunk) {
+            const spaceX = chunk.textX + this.data.sizes.texts.widths[chunk.text];
+            const spaceWidth = nextChunk.textX - spaceX;
+            this.horizontalSpacer(this.svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+              'data-chunk-id': chunk.index
+            });
+          }
+        }
+
+        // chunk backgrounds
+        if (chunk.fragments.length) {
+          const orderedIdx = [];
+          for (let i = chunk.fragments.length - 1; i >= 0; i--) {
+            orderedIdx.push(i);
+          }
+
+          // Mark entity nesting height/depth (number of
+          // nested/nesting entities). To account for crossing
+          // brackets in a (mostly) reasonable way, determine
+          // depth/height separately in a left-to-right traversal
+          // and a right-to-left traversal.
+          orderedIdx.sort(lrChunkComp);
+
+          {
+            let openFragments = [];
+            for (let i = 0; i < orderedIdx.length; i++) {
+              const current = chunk.fragments[orderedIdx[i]];
+              current.nestingHeightLR = 0;
+              current.nestingDepthLR = 0;
+              const stillOpen = [];
+              for (let o = 0; o < openFragments.length; o++) {
+                if (openFragments[o].to > current.from) {
+                  stillOpen.push(openFragments[o]);
+                  openFragments[o].nestingHeightLR++;
+                }
+              }
+              openFragments = stillOpen;
+              current.nestingDepthLR = openFragments.length;
+              openFragments.push(current);
+            }
+          }
+
+          // re-sort for right-to-left traversal by end position
+          orderedIdx.sort(rlChunkComp);
+
+          {
+            let openFragments = [];
+            for (let i = 0; i < orderedIdx.length; i++) {
+              const current = chunk.fragments[orderedIdx[i]];
+              current.nestingHeightRL = 0;
+              current.nestingDepthRL = 0;
+              const stillOpen = [];
+              for (let o = 0; o < openFragments.length; o++) {
+                if (openFragments[o].from < current.to) {
+                  stillOpen.push(openFragments[o]);
+                  openFragments[o].nestingHeightRL++;
+                }
+              }
+              openFragments = stillOpen;
+              current.nestingDepthRL = openFragments.length;
+              openFragments.push(current);
+            }
+          }
+
+          // the effective depth and height are the max of those
+          // for the left-to-right and right-to-left traversals.
+          for (let i = 0; i < orderedIdx.length; i++) {
+            const c = chunk.fragments[orderedIdx[i]];
+            c.nestingHeight = c.nestingHeightLR > c.nestingHeightRL ? c.nestingHeightLR : c.nestingHeightRL;
+            c.nestingDepth = c.nestingDepthLR > c.nestingDepthRL ? c.nestingDepthLR : c.nestingDepthRL;
+          }
+
+          // Re-order by nesting height and draw in order
+          orderedIdx.sort(function (a, b) {
+            return Util.cmp(chunk.fragments[b].nestingHeight, chunk.fragments[a].nestingHeight);
+          });
+
+          for (let i = 0; i < chunk.fragments.length; i++) {
+            const fragment = chunk.fragments[orderedIdx[i]];
+            if (fragment.span.hidden) {
+              continue;
+            }
+
+            const spanDesc = this.spanTypes[fragment.span.type];
+            let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
+
+
+            if (fragment.span.color) {
+              bgColor = fragment.span.color;
+            }
+
+            // Tweak for nesting depth/height. Recognize just three
+            // levels for now: normal, nested, and nesting, where
+            // nested+nesting yields normal. (Currently testing
+            // minor tweak: don't shrink for depth 1 as the nesting
+            // highlight will grow anyway [check nestingDepth > 1])
+            let shrink = 0;
+            if (fragment.nestingDepth > 1 && fragment.nestingHeight === 0) {
+              shrink = 1;
+            } else if (fragment.nestingDepth === 0 && fragment.nestingHeight > 0) {
+              shrink = -1;
+            }
+
+            const yShrink = shrink * this.nestingAdjustYStepSize;
+            const xShrink = shrink * this.nestingAdjustXStepSize;
+            // bit lighter
+            const lightBgColor = Util.adjustColorLightness(bgColor, 0.8);
+            // tweak for Y start offset (and corresponding height
+            // reduction): text rarely hits font max height, so this
+            // tends to look better
+            const yStartTweak = 1;
+
+            // Store highlight coordinates
+            fragment.highlightPos = {
+              x: chunk.textX + (this.rtlmode ? (fragment.curly.from - xShrink) : (fragment.curly.from + xShrink)),
+              y: chunk.row.textY + this.data.sizes.texts.y + yShrink + yStartTweak,
+              w: fragment.curly.to - fragment.curly.from - 2 * xShrink,
+              h: this.data.sizes.texts.height - 2 * yShrink - yStartTweak,
+            };
+
+            // Avoid exception because width < 0 is not allowed
+            if (fragment.highlightPos.w <= 0) {
+              fragment.highlightPos.w = 1;
+            }
+
+            // Render highlight
+            this.svg.rect(this.highlightGroup,
+              fragment.highlightPos.x, fragment.highlightPos.y,
+              fragment.highlightPos.w, fragment.highlightPos.h,
+              {
+                fill: lightBgColor,
+                rx: this.highlightRounding.x,
+                ry: this.highlightRounding.y,
+              });
+          }
+        }
+      });
+
+      // Prevent text selection from being jumpy
+      if (rowTextGroup) {
+        this.horizontalSpacer(this.svg, rowTextGroup, 0, currentChunk.row.textY, 1, {
+          'data-chunk-id': currentChunk.index,
+          'class': 'row-final spacing'
+        });
+      }
+
+      // draw the markedText
+      $.each(textMarkedRows, (textRowNo, textRowDesc) => {
+        this.svg.rect(this.highlightGroup,
+          textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height,
+          textRowDesc[2] - textRowDesc[1] + 4, sizes.fragments.height + 4,
+          {'class': textRowDesc[3]}
+        );
+      });
+    }
+
     prepareRenderArcs(defs, fragmentHeights, rows) {
       const arrows = {};
       const arrow = this.makeArrow(defs, 'none');
@@ -3434,6 +3729,60 @@ const Visualizer = (function ($, window, undefined) {
       }); // spans
     }
 
+    /**
+     * @param {number} y
+     * @param {SVGElement} textGroup
+     * @param {number} maxTextWidth
+     * @return {number} how much the actual horizontal space required extends over the allocated space
+     */
+    renderResizeSvg(y, textGroup, maxTextWidth) {
+      // resize the SVG
+      let width = maxTextWidth + this.sentNumMargin + 2 * Configuration.visual.margin.x + 1;
+
+      // Loops over the rows to check if the width calculated so far is still not enough. This
+      // currently happens sometimes if there is a single annotation on many words preventing
+      // wrapping within the annotation (aka oversizing).
+      $(textGroup).children(".text-row").each((rowIndex, textRow) => {
+        const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+        const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
+        const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
+        const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
+        if (this.rtlmode) {
+          // Not sure what to calculate here
+        } else {
+          if (lastChunkOffset + lastChunkWidth > width) {
+            width = lastChunkOffset + lastChunkWidth;
+          }
+        }
+      });
+
+      let oversized = Math.max(width - this.canvasWidth, 0);
+      if (oversized > 0) {
+        this.$svgDiv.width(this.baseCanvasWidth);
+        this.canvasWidth = width;
+        // Allow some extra space for arcs
+        this.canvasWidth += 32;
+        oversized += 32;
+      }
+
+      this.$svg.width(this.canvasWidth);
+      Util.profileStart('height');
+      this.$svg.height(y);
+      Util.profileEnd('height');
+      this.$svg.attr("viewBox", "0 0 " + this.canvasWidth + " " + y);
+
+      // Originally, this code was within the oversized > 0 block above, but we moved it here
+      // to prevent erratic jumping
+      this.$svgDiv.height(y + 4); // Need to take the hairline border into account here
+
+      return oversized;
+    }
+
+    /**
+     * @param rows
+     * @param {SVGElement} backgroundGroup
+     * @return {[number, SVGElement]}
+     */
     renderRows(rows, backgroundGroup) {
       // position the rows
       let y = Configuration.visual.margin.y;
@@ -3569,6 +3918,110 @@ const Visualizer = (function ($, window, undefined) {
       return [y, sentNumGroup];
     }
 
+    renderAdjustLayoutForRtl(oversized, rows, glowGroup, textGroup, sentNumGroup) {
+      this.$svg.attr("direction", "rtl");
+      if (oversized > 0) {
+        $.each(rows, (index, row) => this.translate(row, oversized, row.translation.y));
+        $(glowGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+        $(this.highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+        $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+        $(sentNumGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+        const scrollable = findClosestHorizontalScrollable(this.$svgDiv);
+        if (scrollable) {
+          scrollable.scrollLeft(oversized + 4);
+        }
+      }
+    }
+
+    /**
+     * @param {number} oversized
+     * @param backgroundGroup
+     */
+    renderAdjustLayoutForOversize(oversized, backgroundGroup) {
+      if (oversized <= 0) {
+        return;
+      }
+
+      // Allow some extra space for arcs
+      $(backgroundGroup).attr('width', this.canvasWidth);
+      $(backgroundGroup).children().each((index, element) => {
+        // We render the backgroundHighlight only in the margin, so we have to translate
+        // it instead of transforming it.
+        if ($(element).attr('class') === 'backgroundHighlight') {
+          if (this.rtlmode) {
+            $(element).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
+          }
+        } else {
+          $(element).attr('width', this.canvasWidth);
+        }
+      });
+    }
+
+    renderAdjustLayoutRowSpacing(textGroup) {
+      // Go through each row and adjust the row-initial and row-final spacing
+      $(textGroup).children(".text-row").each((rowIndex, textRow) => {
+        const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+        const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
+        const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
+        const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
+        const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
+
+        if (this.rtlmode) {
+          const initialSpacingX = this.canvasWidth - this.sentNumMargin;
+          const initialSpacingWidth = initialSpacingX - (Configuration.visual.margin.x + this.rowPadding + 1 + firstChunkWidth);
+          rowInitialSpacing.attr('x', initialSpacingX);
+          rowInitialSpacing.attr('textLength', initialSpacingWidth);
+
+          const finalSpacingX = lastChunkOffset + 1;
+          const finalSpacingWidth = lastChunkWidth;
+          rowFinalSpacing.attr('x', finalSpacingX);
+          rowFinalSpacing.attr('textLength', finalSpacingWidth);
+        } else {
+          const initialSpacingX = this.sentNumMargin;
+          const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
+          rowInitialSpacing.attr('x', initialSpacingX);
+          rowInitialSpacing.attr('textLength', initialSpacingWidth);
+
+          const finalSpacingX = lastChunkOffset + lastChunkWidth + 1;
+          const finalSpacingWidth = this.canvasWidth - finalSpacingX;
+          rowFinalSpacing.attr('x', finalSpacingX);
+          rowFinalSpacing.attr('textLength', finalSpacingWidth);
+        }
+      });
+    }
+
+    renderAdjustLayoutInterRowSpacers(textGroup) {
+      // Go through each row and add an unselectable spacer between this row and the next row
+      // While the space is unselectable, it will still help in guiding the browser into which
+      // direction the selection should in principle go and thus avoids jumpyness.
+      let prevRowRect = {y: 0, height: 0};
+
+      const textRows = $(textGroup).children(".text-row");
+      textRows.each((rowIndex, textRow) => {
+        const rowRect = {
+          y: parseFloat($(textRow).children()[0].getAttribute('y')) + 2, height: this.data.sizes.texts.height
+        };
+        const spaceHeight = rowRect.y - (prevRowRect.y + rowRect.height) + 2;
+
+        // Adding a spacer between the rows. We make is a *little* bit larger than necessary
+        // to avoid exposing areas where the background shines through and which would again
+        // cause jumpyness during selection.
+        textRow.before(this.verticalSpacer(
+          Math.floor(prevRowRect.y),
+          Math.ceil(spaceHeight)));
+
+        prevRowRect = rowRect;
+
+        // Add a spacer below the final row until the end of the canvas
+        if (rowIndex === textRows.length - 1) {
+          const lastSpacerY = Math.floor(rowRect.y + rowRect.height);
+          textRow.after(this.verticalSpacer(
+            Math.floor(rowRect.y + rowRect.height),
+            Math.ceil(y - lastSpacerY) + 1));
+        }
+      });
+    }
+
     /**
      * @param {SourceData} sourceData
      */
@@ -3651,242 +4104,7 @@ const Visualizer = (function ($, window, undefined) {
       Util.profileEnd('rows');
 
       Util.profileStart('chunkFinish');
-      // chunk index sort functions for overlapping fragment drawing
-      // algorithm; first for left-to-right pass, sorting primarily
-      // by start offset, second for right-to-left pass by end
-      // offset. Secondary sort by fragment length in both cases.
-      let currentChunk;
-
-      const lrChunkComp = (a, b) => {
-        const ac = currentChunk.fragments[a];
-        const bc = currentChunk.fragments[b];
-        const startDiff = Util.cmp(ac.from, bc.from);
-        return startDiff !== 0 ? startDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
-      };
-
-      const rlChunkComp = (a, b) => {
-        const ac = currentChunk.fragments[a];
-        const bc = currentChunk.fragments[b];
-        const endDiff = Util.cmp(bc.to, ac.to);
-        return endDiff !== 0 ? endDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
-      };
-
-      let prevChunk = null;
-      let rowTextGroup = null;
-      $.each(this.data.chunks, (chunkNo, chunk) => {
-        // context for sort
-        currentChunk = chunk;
-
-        // Add spacers to reduce jumpyness of selection
-        if (!rowTextGroup || prevChunk.row !== chunk.row) {
-          if (rowTextGroup) {
-            this.horizontalSpacer(this.svg, rowTextGroup, 0, prevChunk.row.textY, 1, {
-              'data-chunk-id': prevChunk.index,
-              'class': 'row-final spacing'
-            });
-          }
-          rowTextGroup = this.svg.group(textGroup, {'class': 'text-row'});
-        }
-        prevChunk = chunk;
-
-        const nextChunk = this.data.chunks[chunkNo + 1];
-        const nextSpace = nextChunk ? nextChunk.space : '';
-
-        if (this.rtlmode) {
-          // Render every text chunk as a SVG text so we maintain control over the layout. When
-          // rendering as a SVG span (as brat does), then the browser changes the layout on the
-          // X-axis as it likes in RTL mode.
-          if (!rowTextGroup.firstChild) {
-            this.horizontalSpacer(svg, rowTextGroup, 0, chunk.row.textY, 1, {
-              'class': 'row-initial spacing',
-              'data-chunk-id': chunk.index
-            });
-          }
-
-          this.svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
-            'data-chunk-id': chunk.index
-          });
-
-          // If there needs to be space between this chunk and the next one, add a spacer
-          // item that stretches across the entire inter-chunk space. This ensures a
-          // smooth selection.
-          if (nextChunk) {
-            const spaceX = chunk.textX - sizes.texts.widths[chunk.text];
-            const spaceWidth = chunk.textX - sizes.texts.widths[chunk.text] - nextChunk.textX;
-            this.horizontalSpacer(this.svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
-              'data-chunk-id': chunk.index
-            });
-          }
-        } else {
-          // Original rendering using tspan in ltr mode as it play nicer with selection
-          if (!rowTextGroup.firstChild) {
-            this.horizontalSpacer(this.svg, rowTextGroup, 0, chunk.row.textY, 1, {
-              'class': 'row-initial spacing',
-              'data-chunk-id': chunk.index
-            });
-          }
-
-          this.svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
-            'data-chunk-id': chunk.index
-          });
-
-          // If there needs to be space between this chunk and the next one, add a spacer
-          // item that stretches across the entire inter-chunk space. This ensures a
-          // smooth selection.
-          if (nextChunk) {
-            const spaceX = chunk.textX + this.data.sizes.texts.widths[chunk.text];
-            const spaceWidth = nextChunk.textX - spaceX;
-            this.horizontalSpacer(this.svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
-              'data-chunk-id': chunk.index
-            });
-          }
-        }
-
-        // chunk backgrounds
-        if (chunk.fragments.length) {
-          const orderedIdx = [];
-          for (let i = chunk.fragments.length - 1; i >= 0; i--) {
-            orderedIdx.push(i);
-          }
-
-          // Mark entity nesting height/depth (number of
-          // nested/nesting entities). To account for crossing
-          // brackets in a (mostly) reasonable way, determine
-          // depth/height separately in a left-to-right traversal
-          // and a right-to-left traversal.
-          orderedIdx.sort(lrChunkComp);
-
-          {
-            let openFragments = [];
-            for (let i = 0; i < orderedIdx.length; i++) {
-              const current = chunk.fragments[orderedIdx[i]];
-              current.nestingHeightLR = 0;
-              current.nestingDepthLR = 0;
-              const stillOpen = [];
-              for (let o = 0; o < openFragments.length; o++) {
-                if (openFragments[o].to > current.from) {
-                  stillOpen.push(openFragments[o]);
-                  openFragments[o].nestingHeightLR++;
-                }
-              }
-              openFragments = stillOpen;
-              current.nestingDepthLR = openFragments.length;
-              openFragments.push(current);
-            }
-          }
-
-          // re-sort for right-to-left traversal by end position
-          orderedIdx.sort(rlChunkComp);
-
-          {
-            let openFragments = [];
-            for (let i = 0; i < orderedIdx.length; i++) {
-              const current = chunk.fragments[orderedIdx[i]];
-              current.nestingHeightRL = 0;
-              current.nestingDepthRL = 0;
-              const stillOpen = [];
-              for (let o = 0; o < openFragments.length; o++) {
-                if (openFragments[o].from < current.to) {
-                  stillOpen.push(openFragments[o]);
-                  openFragments[o].nestingHeightRL++;
-                }
-              }
-              openFragments = stillOpen;
-              current.nestingDepthRL = openFragments.length;
-              openFragments.push(current);
-            }
-          }
-
-          // the effective depth and height are the max of those
-          // for the left-to-right and right-to-left traversals.
-          for (let i = 0; i < orderedIdx.length; i++) {
-            const c = chunk.fragments[orderedIdx[i]];
-            c.nestingHeight = c.nestingHeightLR > c.nestingHeightRL ? c.nestingHeightLR : c.nestingHeightRL;
-            c.nestingDepth = c.nestingDepthLR > c.nestingDepthRL ? c.nestingDepthLR : c.nestingDepthRL;
-          }
-
-          // Re-order by nesting height and draw in order
-          orderedIdx.sort(function (a, b) {
-            return Util.cmp(chunk.fragments[b].nestingHeight, chunk.fragments[a].nestingHeight);
-          });
-
-          for (let i = 0; i < chunk.fragments.length; i++) {
-            const fragment = chunk.fragments[orderedIdx[i]];
-            if (fragment.span.hidden) {
-              continue;
-            }
-
-            const spanDesc = this.spanTypes[fragment.span.type];
-            let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
-
-            // WEBANNO EXTENSION BEGIN - #820 - Allow setting label/color individually
-            if (fragment.span.color) {
-              bgColor = fragment.span.color;
-            }
-            // WEBANNO EXTENSION END
-            // Tweak for nesting depth/height. Recognize just three
-            // levels for now: normal, nested, and nesting, where
-            // nested+nesting yields normal. (Currently testing
-            // minor tweak: don't shrink for depth 1 as the nesting
-            // highlight will grow anyway [check nestingDepth > 1])
-            let shrink = 0;
-            if (fragment.nestingDepth > 1 && fragment.nestingHeight === 0) {
-              shrink = 1;
-            } else if (fragment.nestingDepth === 0 && fragment.nestingHeight > 0) {
-              shrink = -1;
-            }
-            const yShrink = shrink * this.nestingAdjustYStepSize;
-            const xShrink = shrink * this.nestingAdjustXStepSize;
-            // bit lighter
-            const lightBgColor = Util.adjustColorLightness(bgColor, 0.8);
-            // tweak for Y start offset (and corresponding height
-            // reduction): text rarely hits font max height, so this
-            // tends to look better
-            const yStartTweak = 1;
-
-            // Store highlight coordinates
-            fragment.highlightPos = {
-              x: chunk.textX + (this.rtlmode ? (fragment.curly.from - xShrink) : (fragment.curly.from + xShrink)),
-              y: chunk.row.textY + this.data.sizes.texts.y + yShrink + yStartTweak,
-              w: fragment.curly.to - fragment.curly.from - 2 * xShrink,
-              h: this.data.sizes.texts.height - 2 * yShrink - yStartTweak,
-            };
-
-
-            // Avoid exception because width < 0 is not allowed
-            if (fragment.highlightPos.w <= 0) {
-              fragment.highlightPos.w = 1;
-            }
-
-            // Render highlight
-            this.svg.rect(this.highlightGroup,
-              fragment.highlightPos.x, fragment.highlightPos.y,
-              fragment.highlightPos.w, fragment.highlightPos.h,
-              {
-                fill: lightBgColor,
-                rx: this.highlightRounding.x,
-                ry: this.highlightRounding.y,
-              });
-          }
-        }
-      });
-
-      // Prevent text selection from being jumpy
-      if (rowTextGroup) {
-        this.horizontalSpacer(this.svg, rowTextGroup, 0, currentChunk.row.textY, 1, {
-          'data-chunk-id': currentChunk.index,
-          'class': 'row-final spacing'
-        });
-      }
-
-      // draw the markedText
-      $.each(textMarkedRows, (textRowNo, textRowDesc) => {
-        this.svg.rect(this.highlightGroup,
-          textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height,
-          textRowDesc[2] - textRowDesc[1] + 4, sizes.fragments.height + 4,
-          {'class': textRowDesc[3]}
-        );
-      });
+      this.renderChunksPass2(textMarkedRows, textMarkedRows);
       Util.profileEnd('chunkFinish');
 
       Util.profileStart('finish');
@@ -3900,147 +4118,28 @@ const Visualizer = (function ($, window, undefined) {
       Util.profileEnd('adjust margin');
 
       Util.profileStart('resize SVG');
-      // resize the SVG
-      let width = maxTextWidth + this.sentNumMargin + 2 * Configuration.visual.margin.x + 1;
-
-      // Loops over the rows to check if the width calculated so far is still not enough. This
-      // currently happens sometimes if there is a single annotation on many words preventing
-      // wrapping within the annotation (aka oversizing).
-      $(textGroup).children(".text-row").each((rowIndex, textRow) => {
-        const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
-        const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
-        const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
-        const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
-        if (this.rtlmode) {
-          // Not sure what to calculate here
-        } else {
-          if (lastChunkOffset + lastChunkWidth > width) {
-            width = lastChunkOffset + lastChunkWidth;
-          }
-        }
-      });
-
-      let oversized = Math.max(width - this.canvasWidth, 0);
-      if (oversized > 0) {
-        this.$svgDiv.width(this.baseCanvasWidth);
-        this.canvasWidth = width;
-        // Allow some extra space for arcs
-        this.canvasWidth += 32;
-        oversized += 32;
-      }
-
-      this.$svg.width(this.canvasWidth);
-      Util.profileStart('height');
-      this.$svg.height(y);
-      Util.profileEnd('height');
-      this.$svg.attr("viewBox", "0 0 " + this.canvasWidth + " " + y);
-
-      // Originally, this code was within the oversized > 0 block above, but we moved it here
-      // to prevent erratic jumping
-      this.$svgDiv.height(y + 4); // Need to take the hairline border into account here
+      let oversized = this.renderResizeSvg(y, textGroup, maxTextWidth);
       Util.profileEnd('resize SVG');
 
       Util.profileStart('set up RTL');
       if (this.rtlmode) {
-        this.$svg.attr("direction", "rtl");
-        if (oversized > 0) {
-          $.each(rows, (index, row) => this.translate(row, oversized, row.translation.y));
-          $(glowGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-          $(this.highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-          $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-          $(sentNumGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-          const scrollable = findClosestHorizontalScrollable(this.$svgDiv);
-          if (scrollable) {
-            scrollable.scrollLeft(oversized + 4);
-          }
-        }
+        this.renderAdjustLayoutForRtl(oversized, rows, glowGroup, textGroup, sentNumGroup);
       }
-
       Util.profileEnd('set up RTL');
+
       Util.profileStart('adjust backgrounds');
-
-      // Allow some extra space for arcs
-      if (oversized > 0) {
-        $(backgroundGroup).attr('width', this.canvasWidth);
-        $(backgroundGroup).children().each((index, element) => {
-          // We render the backgroundHighlight only in the margin, so we have to translate
-          // it instead of transforming it.
-          if ($(element).attr('class') === 'backgroundHighlight') {
-            if (this.rtlmode) {
-              $(element).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-            }
-          } else {
-            $(element).attr('width', this.canvasWidth);
-          }
-        });
-      }
-
+      this.renderAdjustLayoutForOversize(oversized, backgroundGroup);
       Util.profileEnd('adjust backgrounds');
+
       Util.profileStart('row-spacing-adjust');
-
-      // Go through each row and adjust the row-initial and row-final spacing
-      $(textGroup).children(".text-row").each((rowIndex, textRow) => {
-        const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
-        const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
-        const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
-        const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
-        const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
-
-        if (this.rtlmode) {
-          const initialSpacingX = this.canvasWidth - this.sentNumMargin;
-          const initialSpacingWidth = initialSpacingX - (Configuration.visual.margin.x + this.rowPadding + 1 + firstChunkWidth);
-          rowInitialSpacing.attr('x', initialSpacingX);
-          rowInitialSpacing.attr('textLength', initialSpacingWidth);
-
-          const finalSpacingX = lastChunkOffset + 1;
-          const finalSpacingWidth = lastChunkWidth;
-          rowFinalSpacing.attr('x', finalSpacingX);
-          rowFinalSpacing.attr('textLength', finalSpacingWidth);
-        } else {
-          const initialSpacingX = this.sentNumMargin;
-          const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
-          rowInitialSpacing.attr('x', initialSpacingX);
-          rowInitialSpacing.attr('textLength', initialSpacingWidth);
-
-          const finalSpacingX = lastChunkOffset + lastChunkWidth + 1;
-          const finalSpacingWidth = this.canvasWidth - finalSpacingX;
-          rowFinalSpacing.attr('x', finalSpacingX);
-          rowFinalSpacing.attr('textLength', finalSpacingWidth);
-        }
-      });
+      this.renderAdjustLayoutRowSpacing(textGroup);
       Util.profileEnd('row-spacing-adjust');
+
       // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       Util.profileStart('inter-row space');
-      // Go through each row and add an unselectable spacer between this row and the next row
-      // While the space is unselectable, it will still help in guiding the browser into which
-      // direction the selection should in principle go and thus avoids jumpyness.
-      let prevRowRect = {y: 0, height: 0};
-
-      const textRows = $(textGroup).children(".text-row");
-      textRows.each((rowIndex, textRow) => {
-        const rowRect = {
-          y: parseFloat($(textRow).children()[0].getAttribute('y')) + 2, height: this.data.sizes.texts.height
-        };
-        const spaceHeight = rowRect.y - (prevRowRect.y + rowRect.height) + 2;
-
-        // Adding a spacer between the rows. We make is a *little* bit larger than necessary
-        // to avoid exposing areas where the background shines through and which would again
-        // cause jumpyness during selection.
-        textRow.before(this.verticalSpacer(
-          Math.floor(prevRowRect.y),
-          Math.ceil(spaceHeight)));
-
-        prevRowRect = rowRect;
-
-        // Add a spacer below the final row until the end of the canvas
-        if (rowIndex === textRows.length - 1) {
-          const lastSpacerY = Math.floor(rowRect.y + rowRect.height);
-          textRow.after(this.verticalSpacer(
-            Math.floor(rowRect.y + rowRect.height),
-            Math.ceil(y - lastSpacerY) + 1));
-        }
-      });
+      this.renderAdjustLayoutInterRowSpacers(textGroup);
       Util.profileEnd('inter-row space');
+
       // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       Util.profileEnd('finish');
       Util.profileEnd('render');
