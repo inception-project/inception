@@ -295,8 +295,8 @@ const Visualizer = (function ($, window, undefined) {
     /** @type {boolean} */ hidden = false;
     /** @type {boolean} */ clippedAtStart = false;
     /** @type {boolean} */ clippedAtEnd = false;
-    incoming = [];
-    outgoing = [];
+    /** @type {Arc[]} */ incoming = [];
+    /** @type {Arc[]} */ outgoing = [];
     /** @type {Object.<string, string>} */ attributes = {};
     /** @type {string[]} */attributeText = [];
     attributeCues = {};
@@ -2178,7 +2178,6 @@ const Visualizer = (function ($, window, undefined) {
         }
       } else {
         // other: assume color only
-        width = height = 5;
         color = parsedSpec[1] || 'black';
       }
 
@@ -2205,9 +2204,7 @@ const Visualizer = (function ($, window, undefined) {
       let maxTextWidth = 0;
       for (let text in sizes.texts.widths) {
         if (sizes.texts.widths.hasOwnProperty(text)) {
-          let width = sizes.texts.widths[text];
-          if (width > maxTextWidth)
-            maxTextWidth = width;
+          maxTextWidth = Math.max(maxTextWidth, sizes.texts.widths[text]);
         }
       }
       return maxTextWidth;
@@ -2666,7 +2663,7 @@ const Visualizer = (function ($, window, undefined) {
           // row is added
         }
 
-        let chunkDoesNotFit = false;
+        let chunkDoesNotFit;
         if (this.rtlmode) {
           chunkDoesNotFit = currentX - boxWidth - leftBorderForArcs <=
             2 * Configuration.visual.margin.x;
@@ -2860,7 +2857,6 @@ const Visualizer = (function ($, window, undefined) {
         prevChunk = chunk;
 
         const nextChunk = this.data.chunks[chunkNo + 1];
-        const nextSpace = nextChunk ? nextChunk.space : '';
 
         if (this.rtlmode) {
           // Render every text chunk as a SVG text so we maintain control over the layout. When
@@ -3506,12 +3502,12 @@ const Visualizer = (function ($, window, undefined) {
           let arrowName = (symmetric ? myArrowHead || 'none' :
               (leftToRight ? 'none' : myArrowHead || 'triangle,5')
           ) + ',' + color;
-          var arrowType = arrows[arrowName];
-          var arrowDecl = arrowType && ('url(#' + arrowType + ')');
+          let arrowType = arrows[arrowName];
+          let arrowDecl = arrowType && ('url(#' + arrowType + ')');
 
-          var arrowAtLabelAdjust = 0;
-          var labelArrowDecl = null;
-          var myLabelArrowHead = (arcDesc && arcDesc.labelArrow);
+          let arrowAtLabelAdjust = 0;
+          const labelArrowDecl = null;
+          const myLabelArrowHead = (arcDesc && arcDesc.labelArrow);
           if (myLabelArrowHead) {
             const labelArrowName = (leftToRight ?
               symmetric && myLabelArrowHead || 'none' :
@@ -3591,22 +3587,8 @@ const Visualizer = (function ($, window, undefined) {
               'none') + ',' + color;
           }
 
-          var arrowType = arrows[arrowName];
-          var arrowDecl = arrowType && ('url(#' + arrowType + ')');
-
-          var arrowAtLabelAdjust = 0;
-          var labelArrowDecl = null;
-          var myLabelArrowHead = (arcDesc && arcDesc.labelArrow);
-          if (myLabelArrowHead) {
-            const labelArrowName = (leftToRight ?
-              myLabelArrowHead || 'triangle,5' :
-              symmetric && myLabelArrowHead || 'none') + ',' + color;
-            const labelArrowSplit = labelArrowName.split(',');
-            arrowAtLabelAdjust = labelArrowSplit[0] !== 'none' && parseInt(labelArrowSplit[1], 10) || 0;
-            if (ufoCatcher) {
-              arrowAtLabelAdjust = -arrowAtLabelAdjust;
-            }
-          }
+          arrowType = arrows[arrowName];
+          arrowDecl = arrowType && ('url(#' + arrowType + ')');
 
           const arrowEnd = textEnd + arrowAtLabelAdjust;
           path = this.svg.createPath().move(arrowEnd, -height);
@@ -3648,12 +3630,14 @@ const Visualizer = (function ($, window, undefined) {
           } else {
             path.line(to, -height);
           }
+
           this.svg.path(arcGroup, path, {
             markerEnd: arrowDecl,
             markerStart: labelArrowDecl,
             style: 'stroke: ' + color,
             'strokeDashArray': dashArray,
           });
+
           if (arc.marked) {
             this.svg.path(shadowGroup, path, {
               'class': 'shadow_EditHighlight_arc',
@@ -3661,6 +3645,7 @@ const Visualizer = (function ($, window, undefined) {
               'strokeDashArray': dashArray,
             });
           }
+
           if (shadowGroup) {
             this.svg.path(shadowGroup, path, {
               'class': 'shadow_' + arc.shadowClass,
@@ -3734,7 +3719,7 @@ const Visualizer = (function ($, window, undefined) {
       // currently happens sometimes if there is a single annotation on many words preventing
       // wrapping within the annotation (aka oversizing).
       $(textGroup).children(".text-row").each((rowIndex, textRow) => {
-        const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+        // const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
         const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
         const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
         const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
@@ -3870,7 +3855,7 @@ const Visualizer = (function ($, window, undefined) {
             this.svg.remove(text);
             // TODO: using rectShadowSize, but this shadow should
             // probably have its own setting for shadow size
-            const shadowRect = this.svg.rect(sentNumGroup,
+            this.svg.rect(sentNumGroup,
               this.rtlmode ? box.x + this.rowPadding + this.rectShadowSize : box.x - this.rectShadowSize,
               box.y - this.rectShadowSize,
               box.width + 2 * this.rectShadowSize,
@@ -4279,15 +4264,11 @@ const Visualizer = (function ($, window, undefined) {
         this.dispatcher.post('displaySpanButtons', [evt, target, span.id]);
       }
 
-      const spanDesc = this.spanTypes[span.type];
-      let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
-
       if (span.hidden)
         return;
 
-      if (span.color) {
-        bgColor = span.color;
-      }
+      const spanDesc = this.spanTypes[span.type];
+      let bgColor = span.color || ((spanDesc && spanDesc.bgColor) || '#ffffff');
 
       this.highlight = [];
       $.each(span.fragments, (fragmentNo, fragment) => {
@@ -4303,31 +4284,34 @@ const Visualizer = (function ($, window, undefined) {
 
       if (this.arcDragOrigin) {
         target.parent().addClass('highlight');
-      } else {
-        /** @type {Object.<string, boolean>} */ const equivs = {};
-        /** @type {Object.<string, boolean>} */ const spans = {};
-        spans[id] = true;
-        // find all arcs, normal and equiv. Equivs need to go far (#1023)
-        const addArcAndSpan = (arc, span) => {
-          if (arc.equiv) {
-            equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true;
-            const eventDesc = this.data.eventDescs[arc.eventDescId];
-            $.each(eventDesc.leftSpans.concat(eventDesc.rightSpans), (ospanId, ospan) => spans[ospan] = true);
-          } else {
-            spans[arc.origin] = true;
-          }
-        };
-        $.each(span.incoming, (arcNo, arc) => addArcAndSpan(arc, arc.origin));
-        $.each(span.outgoing, (arcNo, arc) => addArcAndSpan(arc, arc.target));
-
-        const equivSelector = [];
-        $.each(equivs, (equiv, dummy) => equivSelector.push('[data-arc-ed^="' + equiv + '"]'));
-        this.highlightArcs = this.$svg.find(equivSelector.join(', ')).parent().add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector, this.$svg).addClass('highlight');
-
-        /** @type {string[]} */ const spanIds = [];
-        $.each(spans, (spanId, dummy) => spanIds.push('rect[data-span-id="' + spanId + '"]'));
-        this.highlightSpans = this.$svg.find(spanIds.join(', ')).parent().addClass('highlight');
+        return;
       }
+
+      /** @type {Object.<string, boolean>} */ const equivs = {};
+      /** @type {Object.<string, boolean>} */ const spans = {};
+      spans[id] = true;
+      // find all arcs, normal and equiv. Equivs need to go far (#1023)
+      const addArcAndSpan = (arc, span) => {
+        if (arc.equiv) {
+          equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true;
+          const eventDesc = this.data.eventDescs[arc.eventDescId];
+          $.each(eventDesc.leftSpans.concat(eventDesc.rightSpans), (ospanId, ospan) => spans[ospan] = true);
+        } else {
+          spans[arc.origin] = true;
+        }
+      };
+      span.incoming.map(arc => addArcAndSpan(arc, arc.origin));
+      span.outgoing.map(arc => addArcAndSpan(arc, arc.target));
+
+      /** @type {string[]} */ const equivSelector = [];
+      Object.keys(equivs).map(equiv => equivSelector.push('[data-arc-ed^="' + equiv + '"]'));
+      this.highlightArcs = this.$svg.find(equivSelector.join(', ')).parent()
+        .add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector, this.$svg)
+        .addClass('highlight');
+
+      /** @type {string[]} */ const spanIds = [];
+      Object.keys(spans).map(spanId => spanIds.push('rect[data-span-id="' + spanId + '"]'));
+      this.highlightSpans = this.$svg.find(spanIds.join(', ')).parent().addClass('highlight');
     }
 
     /**
@@ -4640,7 +4624,7 @@ const Visualizer = (function ($, window, undefined) {
      * @param {number} by
      * @param {number} bw
      * @param {number} bh
-     * @param {Fragment} span
+     * @param {Fragment} fragment
      * @return {SVGElement}
      */
     renderFragmentShadowRect(bx, by, bw, bh, fragment) {
