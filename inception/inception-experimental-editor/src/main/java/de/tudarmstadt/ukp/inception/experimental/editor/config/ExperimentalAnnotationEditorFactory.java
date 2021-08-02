@@ -24,7 +24,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.experimental.editor.ExperimentalAnnotationEditor;
+import de.tudarmstadt.ukp.inception.experimental.editor.basic.ExperimentalAnnotationEditor;
 
 
 /**
@@ -49,4 +49,6 @@ public class ExperimentalAnnotationEditorFactory
     {
         return new ExperimentalAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
+
+
 }

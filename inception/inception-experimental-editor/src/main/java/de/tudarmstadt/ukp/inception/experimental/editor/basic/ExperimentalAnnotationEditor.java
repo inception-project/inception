@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor;
+package de.tudarmstadt.ukp.inception.experimental.editor.basic;
 
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 

@@ -1,21 +1,4 @@
-/*
- * Licensed to the Technische Universität Darmstadt under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
- * licenses this file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package de.tudarmstadt.ukp.inception.experimental.editor;
+package de.tudarmstadt.ukp.inception.experimental.editor.wordalignment;
 
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
@@ -33,19 +16,35 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.experimental.api.resources.ExperimentalAnnotationAPIReference;
-import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIBasicEditorReference;
+import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIWordAlignmentEditorReference;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
-
-public class ExperimentalAdvancedEditor
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+public class ExperimentalWordAlignmentEditor
     extends AnnotationEditorBase
 {
-    private static final long serialVersionUID = -5928851124630974531L;
+    private static final long serialVersionUID = -3812646280364767142L;
 
-    private @SpringBean ServletContext servletContext;
+    private @SpringBean
+    ServletContext servletContext;
 
-    public ExperimentalAdvancedEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+    public ExperimentalWordAlignmentEditor(String aId, IModel<AnnotatorState> aModel,
+                                        final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
     }
@@ -56,8 +55,7 @@ public class ExperimentalAdvancedEditor
         super.renderHead(aResponse);
         aResponse.render(JavaScriptHeaderItem
             .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
-        aResponse.render(forReference(ExperimentalAnnotationAPIReference.get()));
-        aResponse.render(forReference(ExperimentalAPIBasicEditorReference.get()));
+        aResponse.render(forReference(ExperimentalAPIWordAlignmentEditorReference.get()));
     }
 
     private String constructEndpointUrl()

@@ -17,7 +17,6 @@
  */
 export class UpdateSpanResponse
 {
-    annotationAddress : number;
-    feature: string;
-    color: string;
+    spanAddress : number;
+    feature: string[];
 }

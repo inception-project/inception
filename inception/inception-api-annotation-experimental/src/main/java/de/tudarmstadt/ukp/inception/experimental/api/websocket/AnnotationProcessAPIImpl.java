@@ -222,7 +222,7 @@ public class AnnotationProcessAPIImpl
 
     @Override
     @MessageMapping(SERVER_RECEIVE_CLIENT_UPDATE_ANNOTATION)
-    public void receiveUpdateAnnotationRequest(Message<String> aMessage) throws IOException
+    public void receiveUpdateAnnotationRequest(Message<String> aMessage) throws Exception
     {
         LOG.debug("RECEIVED UPDATE ANNOTATION BY CLIENT, Message: " + aMessage);
         annotationSystemAPIImpl.handleUpdateSpan(
@@ -231,7 +231,7 @@ public class AnnotationProcessAPIImpl
 
     @Override
     @MessageMapping(SERVER_RECEIVE_CLIENT_UPDATE_RELATION)
-    public void receiveUpdateRelationRequest(Message<String> aMessage) throws IOException
+    public void receiveUpdateRelationRequest(Message<String> aMessage) throws Exception
     {
         LOG.debug("RECEIVED UPDATE RELATION BY CLIENT, Message: " + aMessage);
         annotationSystemAPIImpl.handleUpdateRelation(
@@ -367,7 +367,6 @@ public class AnnotationProcessAPIImpl
     }
 
     @Override
-
     @MessageMapping(SERVER_RECEIVE_CLIENT_ALL_RELATIONS)
     public void receiveAllRelationsRequest(Message<String> aMessage) throws IOException
     {

@@ -23,13 +23,11 @@ public class UpdateSpanResponse
 {
     private VID spanAddress;
     private String[] feature;
-    private String color;
 
-    public UpdateSpanResponse(VID aSpanAddress, String[] aFeature, String aColor)
+    public UpdateSpanResponse(VID aSpanAddress, String[] aFeature)
     {
         spanAddress = aSpanAddress;
         feature = aFeature;
-        color = aColor;
     }
 
     public VID getSpanAddress()
@@ -50,15 +48,5 @@ public class UpdateSpanResponse
     public void setFeature(String[] aFeature)
     {
         feature = aFeature;
-    }
-
-    public String getColor()
-    {
-        return color;
-    }
-
-    public void setColor(String aColor)
-    {
-        color = aColor;
     }
 }

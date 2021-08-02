@@ -17,9 +17,13 @@
  */
 export class Viewport
 {
-    viewport: [number, number][]
+    private viewport: [number, number][]
+    private showSpans: boolean;
+    private showRelations: boolean;
 
     constructor(aViewports: [number, number][]) {
         this.viewport = aViewports;
+        this.showSpans = true;
+        this.showRelations = true;
     }
 }

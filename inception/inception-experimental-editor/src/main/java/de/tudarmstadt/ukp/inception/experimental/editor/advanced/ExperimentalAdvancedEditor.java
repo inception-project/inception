@@ -1,23 +1,3 @@
-package de.tudarmstadt.ukp.inception.experimental.editor;
-
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
-
-import javax.servlet.ServletContext;
-
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.Url;
-import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIWordAlignmentEditorReference;
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 /*
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
@@ -35,16 +15,37 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-public class ExperimentalWordAlignmentEditor
+package de.tudarmstadt.ukp.inception.experimental.editor.advanced;
+
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
+import javax.servlet.ServletContext;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.experimental.api.resources.ExperimentalAnnotationAPIReference;
+import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIBasicEditorReference;
+import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
+
+public class ExperimentalAdvancedEditor
     extends AnnotationEditorBase
 {
-    private static final long serialVersionUID = -3812646280364767142L;
+    private static final long serialVersionUID = -5928851124630974531L;
 
-    private @SpringBean
-    ServletContext servletContext;
+    private @SpringBean ServletContext servletContext;
 
-    public ExperimentalWordAlignmentEditor(String aId, IModel<AnnotatorState> aModel,
-                                        final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
+    public ExperimentalAdvancedEditor(String aId, IModel<AnnotatorState> aModel,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
     }
@@ -55,7 +56,8 @@ public class ExperimentalWordAlignmentEditor
         super.renderHead(aResponse);
         aResponse.render(JavaScriptHeaderItem
             .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
-        aResponse.render(forReference(ExperimentalAPIWordAlignmentEditorReference.get()));
+        aResponse.render(forReference(ExperimentalAnnotationAPIReference.get()));
+        aResponse.render(forReference(ExperimentalAPIBasicEditorReference.get()));
     }
 
     private String constructEndpointUrl()

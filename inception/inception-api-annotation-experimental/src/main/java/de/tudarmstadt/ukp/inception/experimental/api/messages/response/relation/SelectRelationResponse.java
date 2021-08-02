@@ -22,16 +22,20 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public class SelectRelationResponse
 {
     private VID relationAddress;
+    private VID governorId;
     private String governorCoveredText;
+    private VID dependentId;
     private String dependentCoveredText;
     private String flavor;
     private String relation;
 
-    public SelectRelationResponse(VID aRelationAddress, String aGovernorCoveredText,
-            String aDependentCoveredText, String aFlavor, String aRelation)
+    public SelectRelationResponse(VID aRelationAddress, VID aGovernorID, String aGovernorCoveredText,
+            VID aDependentID, String aDependentCoveredText, String aFlavor, String aRelation)
     {
         relationAddress = aRelationAddress;
+        governorId = aGovernorID;
         governorCoveredText = aGovernorCoveredText;
+        dependentId = aDependentID;
         dependentCoveredText = aDependentCoveredText;
         flavor = aFlavor;
         relation = aRelation;
@@ -85,5 +89,25 @@ public class SelectRelationResponse
     public void setRelation(String aRelation)
     {
         relation = aRelation;
+    }
+
+    public VID getGovernorId()
+    {
+        return governorId;
+    }
+
+    public void setGovernorId(VID aGovernorId)
+    {
+        governorId = aGovernorId;
+    }
+
+    public VID getDependentId()
+    {
+        return dependentId;
+    }
+
+    public void setDependentId(VID aDependentId)
+    {
+        dependentId = aDependentId;
     }
 }

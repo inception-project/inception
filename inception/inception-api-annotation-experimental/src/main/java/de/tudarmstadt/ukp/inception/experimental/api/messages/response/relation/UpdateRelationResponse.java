@@ -24,14 +24,12 @@ public class UpdateRelationResponse
     private VID relationAddress;
     private String newDependencyType;
     private String newFlavor;
-    private String color;
 
-    public UpdateRelationResponse(VID aRelationAddress, String aNewDependencyType, String aNewFlavor, String aColor)
+    public UpdateRelationResponse(VID aRelationAddress, String aNewDependencyType, String aNewFlavor)
     {
         relationAddress = aRelationAddress;
         newDependencyType = aNewDependencyType;
         newFlavor = aNewFlavor;
-        color = aColor;
     }
 
     public VID getRelationAddress()
@@ -62,15 +60,5 @@ public class UpdateRelationResponse
     public void setNewFlavor(String aNewFlavor)
     {
         newFlavor = aNewFlavor;
-    }
-
-    public String getColor()
-    {
-        return color;
-    }
-
-    public void setColor(String aColor)
-    {
-        color = aColor;
     }
 }

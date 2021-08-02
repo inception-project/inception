@@ -51,7 +51,7 @@ export interface AnnotationExperienceAPI
 
 
     requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                 aViewport: Viewport);
+                                 aDocumentId: number, aViewport: Viewport);
 
     requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                  aDocumentId: number, aViewport: Viewport);

@@ -58,9 +58,9 @@ public interface AnnotationProcessAPI
     void sendSelectRelationResponse(SelectRelationResponse aSelectRelationResponse, String aUser)
         throws IOException;
 
-    void receiveUpdateAnnotationRequest(Message<String> aMessage) throws IOException;
+    void receiveUpdateAnnotationRequest(Message<String> aMessage) throws Exception;
 
-    void receiveUpdateRelationRequest(Message<String> aMessage) throws IOException;
+    void receiveUpdateRelationRequest(Message<String> aMessage) throws Exception;
 
     void sendUpdateAnnotationResponse(UpdateSpanResponse aUpdateSpanResponse, String aProjectID,
             String aDocumentID, String aViewport)

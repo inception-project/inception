@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.experimental.api;
 
 import java.io.IOException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
@@ -47,7 +46,7 @@ public interface AnnotationSystemAPI
         throws IOException;
 
     void handleUpdateSpan(UpdateSpanRequest aUpdateSpanRequest)
-        throws IOException;
+        throws Exception;
 
     void handleCreateSpan(CreateSpanRequest aCreateSpanRequest)
         throws IOException;
@@ -58,7 +57,7 @@ public interface AnnotationSystemAPI
         throws IOException;
 
     void handleUpdateRelation(UpdateRelationRequest aUpdateRelationRequest)
-        throws IOException;
+        throws Exception;
 
     void handleCreateRelation(CreateRelationRequest aCreateRelationRequest)
         throws IOException;
@@ -70,8 +69,6 @@ public interface AnnotationSystemAPI
     void handleAllRelations(AllRelationRequest aAllRelationRequest) throws IOException;
 
     void createErrorMessage(String aMessage, String aUser) throws IOException;
-
-    void onFeatureUpdatedEventHandler(FeatureValueUpdatedEvent aEvent);
 
     void onSpanCreatedEventHandler(SpanCreatedEvent aEvent) throws IOException;
 

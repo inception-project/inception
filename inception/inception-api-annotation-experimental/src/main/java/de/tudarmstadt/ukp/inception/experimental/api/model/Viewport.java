@@ -21,16 +21,21 @@ import java.util.List;
 
 public class Viewport
 {
-    List<List<Integer>> viewport;
+    private List<List<Integer>> viewport;
+    private boolean showSpans;
+    private boolean showRelations;
 
     public Viewport()
     {
-        //DEFAULT
+        showSpans = true;
+        showRelations = true;
     }
 
     public Viewport(List<List<Integer>> aViewport)
     {
         viewport = aViewport;
+        showSpans = true;
+        showRelations = true;
     }
 
     public List<List<Integer>> getViewport()
@@ -41,5 +46,25 @@ public class Viewport
     public void setViewport(List<List<Integer>> aViewport)
     {
         viewport = aViewport;
+    }
+
+    public boolean isShowSpans()
+    {
+        return showSpans;
+    }
+
+    public void setShowSpans(boolean aShowSpans)
+    {
+        showSpans = aShowSpans;
+    }
+
+    public boolean isShowRelations()
+    {
+        return showRelations;
+    }
+
+    public void setShowRelations(boolean aShowRelations)
+    {
+        showRelations = aShowRelations;
     }
 }

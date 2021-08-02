@@ -19,8 +19,8 @@ export class SelectRelationResponse
 {
     relationAddress: number;
     governorId: number;
-    dependentId: number;
     governorCoveredText: string;
+    dependentId: number;
     dependentCoveredText: string;
     color: string;
     dependencyType : string;

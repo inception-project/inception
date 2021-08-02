@@ -81,7 +81,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             return new WebSocket(localStorage.getItem("url"));
         });
 
-        this._viewport = new Viewport([[30,40],[40,50],[0,12],[17,18],[19,19]]);
+        this._viewport = new Viewport([[0,79],[80,140],[141,189]]);
 
         const that = this;
 
@@ -201,12 +201,12 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this._stompClient.deactivate();
     }
 
-    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number, aViewport: Viewport) {
+    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aViewport: Viewport) {
         const that = this;
         this._viewport = aViewport;
         that._stompClient.publish({
             destination: "/app/new_document_from_client", body: JSON.stringify(
-                new NewDocumentRequest(aClientName, aUserName, aProjectId, aViewport))
+                new NewDocumentRequest(aClientName, aUserName, aProjectId, aDocumentId, aViewport))
         });
     }
 
@@ -338,11 +338,17 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     onSpanUpdate(aMessage: UpdateSpanResponse) {
         console.log('RECEIVED ANNOTATION UPDATE');
         console.log(aMessage);
+
+        this.spans[this.spans.findIndex(s => s.id == aMessage.spanAddress)].feature = aMessage.feature;
     }
 
 
     onRelationSelect(aMessage: SelectRelationResponse)
     {
+        console.log(aMessage.relationAddress)
+        console.log(aMessage.governorId)
+        console.log(aMessage.governorCoveredText)
+
         this.selectedRelation = new Relation(aMessage.relationAddress,aMessage.governorId, aMessage.dependentId,aMessage.governorCoveredText, aMessage.dependentCoveredText, aMessage.color, aMessage.dependencyType, aMessage.flavor)
     }
 
@@ -356,7 +362,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     {
         this._relations.forEach((item, index) => {
             if (item.id.toString() === aMessage.relationAddress.toString()) {
-                this._spans.splice(index, 1);
+                this._relations.splice(index, 1);
             }
         });
     }
@@ -364,6 +370,11 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     {
         console.log('RECEIVED UPDATE RELATION');
         console.log(aMessage);
+
+        let relation = this.relations.findIndex(r => r.id == aMessage.relationAddress);
+
+        this.relations[relation].dependencyType = aMessage.newDependencyType;
+        this.relations[relation].flavor = aMessage.newFlavor;
     }
 
     onAllSpans(aMessage: AllSpanResponse)

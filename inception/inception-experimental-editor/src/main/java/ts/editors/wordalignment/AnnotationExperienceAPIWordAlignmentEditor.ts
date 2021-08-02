@@ -19,97 +19,135 @@ import {AnnotationExperienceAPIImpl} from "../../../../../../../inception-api-an
 import {AnnotationExperienceAPIWordAlignmentEditorVisualization} from "./visualization/AnnotationExperienceAPIWordAlignmentEditorVisualization";
 import {AnnotationExperienceAPIWordAlignmentEditorActionHandler} from "./action/AnnotationExperienceAPIWordAlignmentEditorActionHandler";
 
-export class AnnotationExperienceAPIWordAlignmentEditor
-{
+export class AnnotationExperienceAPIWordAlignmentEditor {
     annotationExperienceAPI: AnnotationExperienceAPIImpl;
     annotationExperienceAPIVisualization: AnnotationExperienceAPIWordAlignmentEditorVisualization;
     annotationExperienceAPIWordAlignmentEditorActionHandler: AnnotationExperienceAPIWordAlignmentEditorActionHandler
-    projectId: number;
-    clientName: string;
-
-    pairs : [string, string][];
 
     originalLanguageSentence : string;
-    originalUser: string;
-    originalDocument: number;
-
+    originalOffsetBegin : number
     translatedLanguageSentence: string;
-    translatedUser: string;
-    translatedDocument : number;
+    translatedOffsetBegin: number;
 
-    constructor()
-    {
+    constructor() {
         this.annotationExperienceAPI = new AnnotationExperienceAPIImpl();
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIWordAlignmentEditorVisualization(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler = new AnnotationExperienceAPIWordAlignmentEditorActionHandler(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler.registerDefaultActionHandler();
 
+        //Remove actionbar and sidebar
+        document.getElementById("annotationFeatureForm").remove();
+        document.getElementsByClassName("action-bar")[0].remove();
+
     }
 
-    saveAlignments()
-    {
+    saveAlignments() {
+        let pairs = []
         let values = []
         const that = this;
-        for (let i = 0; i < document.getElementById("container_german").children.length - 2; i++) {
-             if (values.indexOf(document.getElementById("container_german").children[i+2].children[1].value) > -1) {
-                 alert("Word alignment is not 1:1.")
-                 return;
-             }
-             values.push(document.getElementById("container_german").children[i+2].children[1].value)
+
+        if (!document.getElementById("multipleSelect").checked) {
+            for (let i = 0; i < document.getElementById("container_german").children.length - 2; i++) {
+                if (values.indexOf(document.getElementById("container_german").children[i + 2].children[1].value) > -1) {
+                    alert("Word alignment is not 1:1.")
+                    return;
+                }
+                values.push(document.getElementById("container_german").children[i + 2].children[1].value)
+            }
         }
 
-
-        this.projectId = this.annotationExperienceAPI.projectID
         for (let i = 0; i < document.getElementById("container_english").children.length - 2; i++) {
             for (let j = 0; j < document.getElementById("container_german").children.length - 2; j++) {
                 if ((document.getElementById("container_english").children[i + 2].children[0].value) ===
                     (document.getElementById("container_german").children[j + 2].children[1].value)) {
-                    this.pairs.push([document.getElementById("container_english").children[i + 2].children[1].id.split("_")[2],
-                        (document.getElementById("container_german").children[j + 2].children[0].id.split("_")[2])]);
+                    console.log(pairs)
+                    pairs.push([
+                        document.getElementById("container_english").children[i + 2].children[1].id.split("_")[2],
+                        document.getElementById("container_english").children[i + 2].children[1].innerText,
+                        document.getElementById("container_german").children[j + 2].children[0].id.split("_")[2],
+                        document.getElementById("container_german").children[j + 2].children[0].innerText]
+                        );
                     this.annotationExperienceAPI.requestCreateSpanFromServer(
-                        this.clientName,
-                        this.originalUser,
-                        this.projectId,
-                        this.originalDocument,
+                        that.annotationExperienceAPI.clientName,
+                        that.annotationExperienceAPI.clientName,
+                        that.annotationExperienceAPI.projectID,
+                        this.annotationExperienceAPI.documentID,
                         Number(document.getElementById("container_english").children[i + 2].children[1].id.split("_")[2]),
                         Number(document.getElementById("container_english").children[i + 2].children[1].id.split("_")[3]),
-                        "Word_Alignment_Span",
-                        "Word_Alignment_Span")
+                        "webanno.custom.Word_Alignment_Span",
+                        "webanno.custom.Word_Alignment_Span")
 
                     this.annotationExperienceAPI.requestCreateSpanFromServer(
-                        this.clientName,
-                        this.translatedUser,
-                        this.projectId,
-                        this.translatedDocument,
+                        that.annotationExperienceAPI.clientName,
+                        that.annotationExperienceAPI.clientName,
+                        that.annotationExperienceAPI.projectID,
+                        this.annotationExperienceAPI.documentID,
                         Number(document.getElementById("container_german").children[i + 2].children[0].id.split("_")[2]),
                         Number(document.getElementById("container_german").children[i + 2].children[0].id.split("_")[3]),
-                        "Word_Alignment_Span",
-                        "Word_Alignment_Span")
+                        "webanno.custom.Word_Alignment_Span",
+                        "webanno.custom.Word_Alignment_Span")
+
+                    document.getElementById("container_german").children[j + 2].children[1].setAttribute("disabled", "true");
                 }
             }
         }
 
-       setTimeout(function () {
-           let spans = that.annotationExperienceAPI.spans;
-           for (let i = 0; i < that.pairs.length; i++) {
-               for (let j = 0; j < spans.length; j++) {
-                   let gov, dep;
-                   console.log(that.pairs[i])
-                   console.log(spans[j])
-               }
-           }
-        /*
-           that.annotationExperienceAPI.requestCreateRelationFromServer(
-               that.clientName,
-               that.clientName,
-               that.projectId,
-               that.translatedDocument,null,null, "Word_Alignment_Relation", "Relation")
+        setTimeout(function () {
+            let governor, dependent;
+            for (let i = 0; i < pairs.length; i++) {
+                for (let j = 0; j < that.annotationExperienceAPI.spans.length; j++) {
+                    if (pairs[i][0] == that.annotationExperienceAPI.spans[j].begin &&
+                        pairs[i][1] == that.annotationExperienceAPI.spans[j].coveredText) {
+                        governor = that.annotationExperienceAPI.spans[j];
+                    }
+                    if (pairs[i][2] == that.annotationExperienceAPI.spans[j].begin &&
+                        pairs[i][3] == that.annotationExperienceAPI.spans[j].coveredText) {
+                        dependent = that.annotationExperienceAPI.spans[j];
+                    }
+                }
+                that.annotationExperienceAPI.requestCreateRelationFromServer(
+                    that.annotationExperienceAPI.clientName,
+                    that.annotationExperienceAPI.clientName,
+                    that.annotationExperienceAPI.projectID,
+                    that.annotationExperienceAPI.documentID,
+                    governor.id,
+                    dependent.id,
+                    "webanno.custom.Word_Alignment_Relation",
+                    "None")
+            }
+        }, 5000)
 
-         */
-       }, 4000)
+        document.getElementById("save_alignment").disabled= true
 
     }
+
+    resetAlignments() {
+
+        let that = this;
+
+        for (let i = 0; i <this.annotationExperienceAPI.relations.length; i++) {
+            this.annotationExperienceAPI.requestDeleteRelationFromServer(
+                that.annotationExperienceAPI.clientName,
+                that.annotationExperienceAPI.clientName,
+                that.annotationExperienceAPI.projectID,
+                that.annotationExperienceAPI.documentID,
+                that.annotationExperienceAPI.relations[i].id
+            )
+        }
+
+        for (let i = 0; i <this.annotationExperienceAPI.spans.length; i++) {
+            this.annotationExperienceAPI.requestDeleteSpanFromServer(
+                that.annotationExperienceAPI.clientName,
+                that.annotationExperienceAPI.clientName,
+                that.annotationExperienceAPI.projectID,
+                that.annotationExperienceAPI.documentID,
+                that.annotationExperienceAPI.spans[i].id
+            )
+        }
+        document.getElementById("save_alignment").disabled = false;
+    }
+
 //requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aDependencyType : string, aFlavor : string)
 
-  //
+    //
 }

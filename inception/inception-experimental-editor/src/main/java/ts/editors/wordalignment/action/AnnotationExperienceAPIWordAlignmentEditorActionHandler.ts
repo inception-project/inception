@@ -33,21 +33,20 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
             if (elem.id === 'next_sentence') {
-                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, new Viewport([[0,15]]));
-
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41721, new Viewport([[0,34],[36,74]]));
                 setTimeout(function () {
                     that.annotationExperienceAPIWordAlignmentEditor.originalLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[0];
-                    that.annotationExperienceAPIWordAlignmentEditor.originalDocument = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.documentID
-                    that.annotationExperienceAPIWordAlignmentEditor.originalUser = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName
-                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, new Viewport([[0,16]]));
-
-                    setTimeout(function () {
-                        that.annotationExperienceAPIWordAlignmentEditor.translatedLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[0];
-                        that.annotationExperienceAPIWordAlignmentEditor.translatedDocument = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.documentID;
-                        that.annotationExperienceAPIWordAlignmentEditor.translatedUser = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName
-                    }, 2000)
+                    that.annotationExperienceAPIWordAlignmentEditor.originalOffsetBegin = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.viewport[0][0]
+                    that.annotationExperienceAPIWordAlignmentEditor.translatedLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[1];
+                    that.annotationExperienceAPIWordAlignmentEditor.translatedOffsetBegin = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.viewport[1][0]
                 }, 2000)
+
+                document.getElementById("save_alignment").disabled= false;
             }
+            if (elem.id === 'delete_alignment') {
+                that.annotationExperienceAPIWordAlignmentEditor.resetAlignments();
+            }
+
 
             if (elem.id === 'save_alignment') {
                 that.annotationExperienceAPIWordAlignmentEditor.saveAlignments();

@@ -28,13 +28,14 @@ public class CreateRelationResponse
     private long documentId;
     private VID governorId;
     private VID dependentId;
+    private String color;
     private String governorCoveredText;
     private String dependentCoveredText;
     private String dependencyType;
     private String flavor;
 
     public CreateRelationResponse(VID aRelationAddress, String aClientName, String aUserName,
-            long aProjectId, long aDocumentId, VID aGovernorId, VID aDependentId,
+            long aProjectId, long aDocumentId, VID aGovernorId, VID aDependentId, String aColor,
             String aGovernorCoveredText, String aDependentCoveredText, String aDependencyType,
             String aFlavor)
     {
@@ -45,6 +46,7 @@ public class CreateRelationResponse
         documentId = aDocumentId;
         governorId = aGovernorId;
         dependentId = aDependentId;
+        color = aColor;
         governorCoveredText = aGovernorCoveredText;
         dependentCoveredText = aDependentCoveredText;
         dependencyType = aDependencyType;
