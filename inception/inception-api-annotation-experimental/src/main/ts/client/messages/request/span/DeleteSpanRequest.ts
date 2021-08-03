@@ -22,13 +22,15 @@ export class DeleteSpanRequest
     projectId : number;
     documentId : number;
     spanAddress : number;
+    layer : string;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aSpanAddress: number)
+    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aSpanAddress: number, aLayer: string)
     {
         this.clientName = aClientName;
         this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.spanAddress = aSpanAddress;
+        this.layer = aLayer;
     }
 }

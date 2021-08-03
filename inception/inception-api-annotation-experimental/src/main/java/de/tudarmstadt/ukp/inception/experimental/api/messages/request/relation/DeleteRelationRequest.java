@@ -26,6 +26,7 @@ public class DeleteRelationRequest
     private long projectId;
     private long documentId;
     private VID relationAddress;
+    private String layer;
 
     public String getClientName()
     {
@@ -75,5 +76,15 @@ public class DeleteRelationRequest
     public void setRelationAddress(VID aRelationAddress)
     {
         relationAddress = aRelationAddress;
+    }
+
+    public String getLayer()
+    {
+        return layer;
+    }
+
+    public void setLayer(String aLayer)
+    {
+        layer = aLayer;
     }
 }

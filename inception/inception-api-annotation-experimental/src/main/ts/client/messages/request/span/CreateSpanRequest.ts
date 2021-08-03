@@ -23,10 +23,9 @@ export class CreateSpanRequest
     documentId : number;
     begin : number;
     end : number;
-    type : string;
-    feature : string;
+    layer : string;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aType: string, aFeature: string)
+    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: string)
     {
         this.clientName = aClientName;
         this.userName = aUserName;
@@ -34,7 +33,6 @@ export class CreateSpanRequest
         this.documentId = aDocumentId;
         this.begin = aBegin;
         this.end = aEnd;
-        this.type = aType;
-        this.feature = aFeature;
+        this.layer = aLayer;
     }
 }

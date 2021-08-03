@@ -22,20 +22,21 @@ import java.util.List;
 public class Viewport
 {
     private List<List<Integer>> viewport;
-    private boolean showSpans;
-    private boolean showRelations;
+    private List<String> disabledLayers;
 
     public Viewport()
     {
-        showSpans = true;
-        showRelations = true;
     }
 
     public Viewport(List<List<Integer>> aViewport)
     {
         viewport = aViewport;
-        showSpans = true;
-        showRelations = true;
+    }
+
+    public Viewport(List<List<Integer>> aViewport, List<String> aDisabledLayers)
+    {
+        viewport = aViewport;
+        disabledLayers = aDisabledLayers;
     }
 
     public List<List<Integer>> getViewport()
@@ -48,23 +49,13 @@ public class Viewport
         viewport = aViewport;
     }
 
-    public boolean isShowSpans()
+    public List<String> getDisabledLayers()
     {
-        return showSpans;
+        return disabledLayers;
     }
 
-    public void setShowSpans(boolean aShowSpans)
+    public void setDisabledLayers(List<String> aDisabledLayers)
     {
-        showSpans = aShowSpans;
-    }
-
-    public boolean isShowRelations()
-    {
-        return showRelations;
-    }
-
-    public void setShowRelations(boolean aShowRelations)
-    {
-        showRelations = aShowRelations;
+        disabledLayers = aDisabledLayers;
     }
 }

@@ -66,7 +66,7 @@ export interface AnnotationExperienceAPI
                                 aDocumentId: number, aBegin: number, aEnd: number, aType: string, aFeature: string);
 
     requestDeleteSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                aDocumentId: number, aSpanAddress: number);
+                                aDocumentId: number, aSpanAddress: number, aLayer: string);
 
     requestSelectRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                     aDocumentId: number, aRelationAddress: number);
@@ -74,10 +74,10 @@ export interface AnnotationExperienceAPI
     requestUpdateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                     aDocumentId: number, aRelationAddress: number, aNewFlavor: string, aNewRelation: string)
 
-    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aDependencyType : string, aFlavor : string)
+    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aLayer: string)
 
     requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                    aDocumentId: number, aRelationAddress: number);
+                                    aDocumentId: number, aRelationAddress: number, aLayer: string);
 
     requestAllSpansFromServer(aClientName: string, aUserName: string, aProjectId: number,
                                aDocumentId: number);

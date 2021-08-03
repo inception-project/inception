@@ -17,15 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.response.span;
 
+import java.util.List;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class SelectSpanResponse
 {
     private VID spanAddress;
     private String type;
-    private String[] feature;
+    private List<String> feature;
 
-    public SelectSpanResponse(VID aSpanAddress, String aType, String[] aFeature)
+    public SelectSpanResponse(VID aSpanAddress, String aType, List<String> aFeature)
     {
         spanAddress = aSpanAddress;
         type = aType;
@@ -51,12 +53,12 @@ public class SelectSpanResponse
         type = aType;
     }
 
-    public String[] getFeature()
+    public List<String> getFeature()
     {
         return feature;
     }
 
-    public void setFeature(String[] aFeature)
+    public void setFeature(List<String> aFeature)
     {
         feature = aFeature;
     }

@@ -27,8 +27,7 @@ public class CreateSpanRequest
     private int begin;
     private int end;
 
-    private String type;
-    private String feature;
+    private String layer;
 
     public String getClientName()
     {
@@ -90,23 +89,13 @@ public class CreateSpanRequest
         end = aEnd;
     }
 
-    public String getType()
+    public String getLayer()
     {
-        return type;
+        return layer;
     }
 
-    public void setType(String aType)
+    public void setLayer(String aLayer)
     {
-        type = aType;
-    }
-
-    public String getFeature()
-    {
-        return feature;
-    }
-
-    public void setFeature(String aFeature)
-    {
-        feature = aFeature;
+        layer = aLayer;
     }
 }

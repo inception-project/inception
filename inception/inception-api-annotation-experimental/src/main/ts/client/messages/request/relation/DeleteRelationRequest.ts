@@ -22,14 +22,16 @@ export class DeleteRelationRequest
     projectId : number;
     documentId : number;
     relationAddress : number;
+    layer : string;
 
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aRelationAddress: number)
+    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aRelationAddress: number, aLayer: string)
     {
         this.clientName = aClientName;
         this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.relationAddress = aRelationAddress;
+        this.layer = aLayer;
     }
 }

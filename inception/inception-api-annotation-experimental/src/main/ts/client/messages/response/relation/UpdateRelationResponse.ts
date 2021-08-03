@@ -18,6 +18,5 @@
 export class UpdateRelationResponse
 {
     relationAddress: number;
-    newDependencyType : string;
-    newFlavor: string;
+    newFeatures : string[];
 }

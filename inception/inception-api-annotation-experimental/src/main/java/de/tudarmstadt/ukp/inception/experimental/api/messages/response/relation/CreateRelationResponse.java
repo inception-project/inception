@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation;
 
+import java.util.List;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class CreateRelationResponse
@@ -31,13 +33,12 @@ public class CreateRelationResponse
     private String color;
     private String governorCoveredText;
     private String dependentCoveredText;
-    private String dependencyType;
-    private String flavor;
+    private String type;
+    private List<String> features;
 
     public CreateRelationResponse(VID aRelationAddress, String aClientName, String aUserName,
             long aProjectId, long aDocumentId, VID aGovernorId, VID aDependentId, String aColor,
-            String aGovernorCoveredText, String aDependentCoveredText, String aDependencyType,
-            String aFlavor)
+            String aGovernorCoveredText, String aDependentCoveredText, String aType, List<String> aFeatures)
     {
         relationAddress = aRelationAddress;
         clientName = aClientName;
@@ -49,8 +50,8 @@ public class CreateRelationResponse
         color = aColor;
         governorCoveredText = aGovernorCoveredText;
         dependentCoveredText = aDependentCoveredText;
-        dependencyType = aDependencyType;
-        flavor = aFlavor;
+        type = aType;
+        features = aFeatures;
     }
 
     public VID getRelationAddress()
@@ -143,23 +144,34 @@ public class CreateRelationResponse
         dependentCoveredText = aDependentCoveredText;
     }
 
-    public String getDependencyType()
+    public String getColor()
     {
-        return dependencyType;
+        return color;
     }
 
-    public void setDependencyType(String aDependencyType)
+    public void setColor(String aColor)
     {
-        dependencyType = aDependencyType;
+        color = aColor;
     }
 
-    public String getFlavor()
+
+    public String getType()
     {
-        return flavor;
+        return type;
     }
 
-    public void setFlavor(String aFlavor)
+    public void setType(String aType)
     {
-        flavor = aFlavor;
+        type = aType;
+    }
+
+    public List<String> getFeatures()
+    {
+        return features;
+    }
+
+    public void setFeatures(List<String> aFeatures)
+    {
+        features = aFeatures;
     }
 }

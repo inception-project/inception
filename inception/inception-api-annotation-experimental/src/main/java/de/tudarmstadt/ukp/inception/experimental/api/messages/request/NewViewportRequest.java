@@ -76,4 +76,5 @@ public class NewViewportRequest
     {
         viewport = aViewport;
     }
+
 }

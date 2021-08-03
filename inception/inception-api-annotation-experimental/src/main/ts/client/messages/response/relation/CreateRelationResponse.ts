@@ -17,17 +17,12 @@
  */
 export class CreateRelationResponse
 {
-
     relationAddress : number;
-    clientName : string;
-    userName : string;
-    projectId : number;
-    documentId : number;
     governorId : number;
-    dependentId : number;
-    color: string;
     governorCoveredText: string;
+    dependentId : number;
     dependentCoveredText: string;
-    dependencyType : string;
-    flavor: string;
+    color: string;
+    type: string;
+    features : String[];
 }

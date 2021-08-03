@@ -23,10 +23,10 @@ export class Relation
     governorCoveredText : string;
     dependentCoveredText : string
     color : string;
-    dependencyType : string;
-    flavor : string;
+    type: string;
+    features: string[];
 
-    constructor(aId: number, aGovernorId: number, aDependentId: number, aGovernorCoveredText: string, aDependentCoveredText: string, aColor: string, aDependencyType: string, aFlavor: string)
+    constructor(aId: number, aGovernorId: number, aDependentId: number, aGovernorCoveredText: string, aDependentCoveredText: string, aColor: string, aType: string, aFeatures: string[])
     {
         this.id = aId;
         this.governorId = aGovernorId;
@@ -34,8 +34,8 @@ export class Relation
         this.governorCoveredText = aGovernorCoveredText;
         this.dependentCoveredText = aDependentCoveredText;
         this.color = aColor;
-        this.dependencyType = aDependencyType;
-        this.flavor = aFlavor;
+        this.type = aType;
+        this.features = aFeatures;
     }
 
 }

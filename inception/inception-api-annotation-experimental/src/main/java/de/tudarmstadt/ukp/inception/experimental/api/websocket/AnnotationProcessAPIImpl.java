@@ -38,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIImpl;
-import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIService;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.AllRelationRequest;
@@ -131,13 +130,12 @@ public class AnnotationProcessAPIImpl
             RepositoryProperties aRepositoryProperties,
             SimpMessagingTemplate aSimpMessagingTemplate,
             AnnotationSchemaService aAnnotationSchemaService,
-            AnnotationSystemAPIService aAnnotationSystemAPIService,
             ColoringService aColoringService, UserPreferencesService aUserPreferencesService)
     {
         this.simpMessagingTemplate = aSimpMessagingTemplate;
         this.annotationSystemAPIImpl = new AnnotationSystemAPIImpl(aProjectService,
                 aDocumentService, aUserDao, aRepositoryProperties, this, aAnnotationSchemaService,
-                aAnnotationSystemAPIService, aColoringService, aUserPreferencesService);
+                aColoringService, aUserPreferencesService);
     }
 
     /**

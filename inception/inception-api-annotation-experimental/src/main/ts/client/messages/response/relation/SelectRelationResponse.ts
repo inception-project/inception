@@ -23,6 +23,6 @@ export class SelectRelationResponse
     dependentId: number;
     dependentCoveredText: string;
     color: string;
-    dependencyType : string;
-    flavor: string;
+    type: string;
+    features: string[];
 }

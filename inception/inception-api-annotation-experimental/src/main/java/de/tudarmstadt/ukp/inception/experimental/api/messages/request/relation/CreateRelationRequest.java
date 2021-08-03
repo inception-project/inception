@@ -27,8 +27,7 @@ public class CreateRelationRequest
     private long documentId;
     private VID governorId;
     private VID dependentId;
-    private String dependencyType;
-    private String flavor;
+    private String layer;
 
     public String getClientName()
     {
@@ -89,24 +88,14 @@ public class CreateRelationRequest
     {
         dependentId = aDependentId;
     }
-
-    public String getDependencyType()
+    
+    public String getLayer()
     {
-        return dependencyType;
+        return layer;
     }
 
-    public void setDependencyType(String aDependencyType)
+    public void setLayer(String aLayer)
     {
-        dependencyType = aDependencyType;
-    }
-
-    public String getFlavor()
-    {
-        return flavor;
-    }
-
-    public void setFlavor(String aFlavor)
-    {
-        flavor = aFlavor;
+        layer = aLayer;
     }
 }

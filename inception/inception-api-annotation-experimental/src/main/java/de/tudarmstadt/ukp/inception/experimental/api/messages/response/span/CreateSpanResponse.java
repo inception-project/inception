@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.response.span;
 
+import java.util.List;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class CreateSpanResponse
@@ -25,11 +27,12 @@ public class CreateSpanResponse
     private String coveredText;
     private int begin;
     private int end;
-    private String type;
     private String color;
+    private String type;
+    private List<String> features;
 
     public CreateSpanResponse(VID aSpanAddress, String aCoveredText, int aBegin, int aEnd,
-            String aType, String aColor)
+            String aType, String aColor, List<String> aFeatures)
     {
         spanAddress = aSpanAddress;
         coveredText = aCoveredText;
@@ -37,6 +40,7 @@ public class CreateSpanResponse
         end = aEnd;
         type = aType;
         color = aColor;
+        features = aFeatures;
     }
 
     public VID getSpanAddress()
@@ -79,6 +83,16 @@ public class CreateSpanResponse
         end = aEnd;
     }
 
+    public String getColor()
+    {
+        return color;
+    }
+
+    public void setColor(String aColor)
+    {
+        color = aColor;
+    }
+
     public String getType()
     {
         return type;
@@ -89,13 +103,13 @@ public class CreateSpanResponse
         type = aType;
     }
 
-    public String getColor()
+    public List<String> getFeatures()
     {
-        return color;
+        return features;
     }
 
-    public void setColor(String aColor)
+    public void setFeatures(List<String> aFeatures)
     {
-        color = aColor;
+        features = aFeatures;
     }
 }

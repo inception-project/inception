@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.request.span;
 
+import java.util.List;
+
 public class AllSpanRequest
 {
     private String clientName;
     private String userName;
     private long projectId;
     private long documentId;
+    private List<String> disabledLayers;
 
     public String getClientName()
     {
@@ -64,4 +67,13 @@ public class AllSpanRequest
         documentId = aDocumentId;
     }
 
+    public List<String> getDisabledLayers()
+    {
+        return disabledLayers;
+    }
+
+    public void setDisabledLayers(List<String> aDisabledLayers)
+    {
+        disabledLayers = aDisabledLayers;
+    }
 }

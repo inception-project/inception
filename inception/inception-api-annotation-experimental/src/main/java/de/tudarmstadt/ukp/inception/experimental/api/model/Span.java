@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.model;
 
+import java.util.List;
+
 public class Span
 {
     private int id;
@@ -24,10 +26,10 @@ public class Span
     private int begin;
     private int end;
     private String type;
-    private String[] feature;
+    private List<String> features;
     private String color;
 
-    public Span(int aId, int aBegin, int aEnd, String aType, String aColor, String aCoveredText, String[] aFeature)
+    public Span(int aId, int aBegin, int aEnd, String aType, String aColor, String aCoveredText, List<String> aFeatures)
     {
         id = aId;
         begin = aBegin;
@@ -35,7 +37,7 @@ public class Span
         type = aType;
         color = aColor;
         coveredText = aCoveredText;
-        feature = aFeature;
+        features = aFeatures;
     }
 
     public int getId()
@@ -98,14 +100,14 @@ public class Span
         color = aColor;
     }
 
-    public String[] getFeature()
+    public List<String> getFeatures()
     {
-        return feature;
+        return features;
     }
 
-    public void setFeature(String[] aFeature)
+    public void setFeature(List<String> aFeatures)
     {
-        feature = aFeature;
+        features = aFeatures;
     }
 }
 

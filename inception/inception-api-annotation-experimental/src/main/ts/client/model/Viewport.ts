@@ -18,12 +18,11 @@
 export class Viewport
 {
     private viewport: [number, number][]
-    private showSpans: boolean;
-    private showRelations: boolean;
+    private disabledLayers: []
 
-    constructor(aViewports: [number, number][]) {
+    constructor(aViewports: [number, number][], aDisabledLayers: [])
+    {
         this.viewport = aViewports;
-        this.showSpans = true;
-        this.showRelations = true;
+        this.disabledLayers = aDisabledLayers;
     }
 }

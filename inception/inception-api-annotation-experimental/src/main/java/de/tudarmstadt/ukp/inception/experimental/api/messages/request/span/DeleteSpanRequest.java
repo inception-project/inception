@@ -25,6 +25,7 @@ public class DeleteSpanRequest
     private long documentId;
     private long projectId;
     private VID spanAddress;
+    private String layer;
 
     public String getClientName()
     {
@@ -73,5 +74,15 @@ public class DeleteSpanRequest
 
     public void setSpanAddress(VID aSpanAddress) {
         spanAddress = aSpanAddress;
+    }
+
+    public String getLayer()
+    {
+        return layer;
+    }
+
+    public void setLayer(String aLayer)
+    {
+        layer = aLayer;
     }
 }

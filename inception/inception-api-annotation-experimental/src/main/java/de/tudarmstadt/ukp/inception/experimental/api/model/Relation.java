@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.model;
 
+import java.util.List;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class Relation
@@ -27,21 +29,19 @@ public class Relation
     private String governorCoveredText;
     private String dependentCoveredText;
     private String color;
-    private String dependencyType;
-    private String flavor;
+    private String type;
+    private List<String> features;
 
     public Relation(VID aId, VID aGovernorId, VID aDependentId, String aColor,
-            String aDependencyType, String aFlavor, String aGovernorCoveredText,
-            String aDependentCoveredText)
+            String aGovernorCoveredText, String aDependentCoveredText, String aType, List<String> aFeatures)
     {
         id = aId;
         governorId = aGovernorId;
         dependentId = aDependentId;
         color = aColor;
-        dependencyType = aDependencyType;
-        flavor = aFlavor;
         governorCoveredText = aGovernorCoveredText;
         dependentCoveredText = aDependentCoveredText;
+        features = aFeatures;
     }
 
     public VID getId()
@@ -104,23 +104,23 @@ public class Relation
         color = aColor;
     }
 
-    public String getDependencyType()
+    public String getType()
     {
-        return dependencyType;
+        return type;
     }
 
-    public void setDependencyType(String aDependencyType)
+    public void setType(String aType)
     {
-        dependencyType = aDependencyType;
+        type = aType;
     }
 
-    public String getFlavor()
+    public List<String> getFeatures()
     {
-        return flavor;
+        return features;
     }
 
-    public void setFlavor(String aFlavor)
+    public void setFeatures(List<String> aFeatures)
     {
-        flavor = aFlavor;
+        features = aFeatures;
     }
 }

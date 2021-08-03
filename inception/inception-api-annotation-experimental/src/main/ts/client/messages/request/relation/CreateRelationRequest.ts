@@ -23,10 +23,9 @@ export class CreateRelationRequest
     documentId : number;
     governorId : number;
     dependentId : number;
-    dependencyType : string;
-    flavor : string;
+    layer : string;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId: number, aDependentId: number, aDependencyType: string, aFlavor: string)
+    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId: number, aDependentId: number, aLayer: string)
     {
         this.clientName = aClientName;
         this.userName = aUserName;
@@ -34,7 +33,6 @@ export class CreateRelationRequest
         this.documentId = aDocumentId;
         this.governorId = aGovernorId;
         this.dependentId = aDependentId;
-        this.dependencyType = aDependencyType;
-        this.flavor = aFlavor;
+        this.layer = aLayer;
     }
 }

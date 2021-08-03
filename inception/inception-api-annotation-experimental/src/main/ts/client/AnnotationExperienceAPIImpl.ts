@@ -81,7 +81,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             return new WebSocket(localStorage.getItem("url"));
         });
 
-        this._viewport = new Viewport([[0,79],[80,140],[141,189]]);
+        this._viewport = new Viewport([[0,79],[80,140],[141,189]],null);
 
         const that = this;
 
@@ -235,17 +235,17 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         });
     }
 
-    requestCreateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aType: string, aFeature: string) {
+    requestCreateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: string) {
         this._stompClient.publish({
             destination: "/app/new_annotation_from_client",
-            body: JSON.stringify(new CreateSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aBegin, aEnd, aType, aFeature))
+            body: JSON.stringify(new CreateSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aBegin, aEnd, aLayer))
         });
     }
 
-    requestDeleteSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number) {
+    requestDeleteSpanFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aAnnotationAddress: number, aLayer: string) {
         this._stompClient.publish({
             destination: "/app/delete_annotation_from_client",
-            body: JSON.stringify(new DeleteSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress))
+            body: JSON.stringify(new DeleteSpanRequest(aClientName, aUserName, aProjectId, aDocumentId, aAnnotationAddress, aLayer))
         });
     }
 
@@ -266,19 +266,19 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     });
     }
 
-    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aDependencyType : string, aFlavor : string)
+    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aLayer: string)
     {
         this._stompClient.publish({
             destination: "/app/new_relation_from_client",
-            body: JSON.stringify(new CreateRelationRequest(aClientName, aUserName, aProjectId, aDocumentId, aGovernorId, aDependentId, aDependencyType, aFlavor))
+            body: JSON.stringify(new CreateRelationRequest(aClientName, aUserName, aProjectId, aDocumentId, aGovernorId, aDependentId, aLayer))
         });
     }
 
-    requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aRelationAddress: number)
+    requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aRelationAddress: number, aLayer: string)
     {
         this._stompClient.publish({
             destination: "/app/delete_relation_from_client",
-            body: JSON.stringify(new DeleteRelationRequest(aClientName, aUserName, aProjectId, aDocumentId, aRelationAddress))
+            body: JSON.stringify(new DeleteRelationRequest(aClientName, aUserName, aProjectId, aDocumentId, aRelationAddress, aLayer))
         });
     }
 
@@ -327,7 +327,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     }
 
     onSpanCreate(aMessage: CreateSpanResponse) {
-        let span = new Span(aMessage.spanAddress, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.feature, aMessage.color)
+        let span = new Span(aMessage.spanAddress, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.features, aMessage.color)
         this.spans.push(span)
     }
 
@@ -336,25 +336,19 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     }
 
     onSpanUpdate(aMessage: UpdateSpanResponse) {
-        console.log('RECEIVED ANNOTATION UPDATE');
-        console.log(aMessage);
-
-        this.spans[this.spans.findIndex(s => s.id == aMessage.spanAddress)].feature = aMessage.feature;
+        console.log('RECEIVED ANNOTATION UPDATE')
+        this.spans[this.spans.findIndex(s => s.id == aMessage.spanAddress)].features = aMessage.feature;
     }
 
 
     onRelationSelect(aMessage: SelectRelationResponse)
     {
-        console.log(aMessage.relationAddress)
-        console.log(aMessage.governorId)
-        console.log(aMessage.governorCoveredText)
-
-        this.selectedRelation = new Relation(aMessage.relationAddress,aMessage.governorId, aMessage.dependentId,aMessage.governorCoveredText, aMessage.dependentCoveredText, aMessage.color, aMessage.dependencyType, aMessage.flavor)
+        this.selectedRelation = new Relation(aMessage.relationAddress,aMessage.governorId, aMessage.dependentId,aMessage.governorCoveredText, aMessage.dependentCoveredText, aMessage.color,aMessage.type, aMessage.features)
     }
 
     onRelationCreate(aMessage: CreateRelationResponse)
     {
-        let relation = new Relation(aMessage.relationAddress, aMessage.governorId, aMessage.dependentId,aMessage.governorCoveredText, aMessage.dependentCoveredText, aMessage.color, aMessage.dependencyType, aMessage.flavor)
+        let relation = new Relation(aMessage.relationAddress, aMessage.governorId, aMessage.dependentId,aMessage.governorCoveredText, aMessage.dependentCoveredText, aMessage.color, aMessage.type, aMessage.features)
         this.relations.push(relation)
     }
 
@@ -369,12 +363,9 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     onRelationUpdate(aMessage: UpdateRelationResponse)
     {
         console.log('RECEIVED UPDATE RELATION');
-        console.log(aMessage);
-
         let relation = this.relations.findIndex(r => r.id == aMessage.relationAddress);
 
-        this.relations[relation].dependencyType = aMessage.newDependencyType;
-        this.relations[relation].flavor = aMessage.newFlavor;
+        this.relations[relation].features = aMessage.newFeatures;
     }
 
     onAllSpans(aMessage: AllSpanResponse)

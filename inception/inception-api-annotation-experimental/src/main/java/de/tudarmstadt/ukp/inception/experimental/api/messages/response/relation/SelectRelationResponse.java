@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation;
 
+import java.util.List;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class SelectRelationResponse
@@ -26,19 +28,21 @@ public class SelectRelationResponse
     private String governorCoveredText;
     private VID dependentId;
     private String dependentCoveredText;
-    private String flavor;
-    private String relation;
+    private String color;
+    private String type;
+    private List<String> features;
 
     public SelectRelationResponse(VID aRelationAddress, VID aGovernorID, String aGovernorCoveredText,
-            VID aDependentID, String aDependentCoveredText, String aFlavor, String aRelation)
+            VID aDependentID, String aDependentCoveredText, String aColor, String aType, List<String> aFeatures)
     {
         relationAddress = aRelationAddress;
         governorId = aGovernorID;
         governorCoveredText = aGovernorCoveredText;
         dependentId = aDependentID;
         dependentCoveredText = aDependentCoveredText;
-        flavor = aFlavor;
-        relation = aRelation;
+        color = aColor;
+        type = aType;
+        features = aFeatures;
     }
 
     public VID getRelationAddress()
@@ -71,26 +75,6 @@ public class SelectRelationResponse
         dependentCoveredText = aDependentCoveredText;
     }
 
-    public String getFlavor()
-    {
-        return flavor;
-    }
-
-    public void setFlavor(String aFlavor)
-    {
-        flavor = aFlavor;
-    }
-
-    public String getRelation()
-    {
-        return relation;
-    }
-
-    public void setRelation(String aRelation)
-    {
-        relation = aRelation;
-    }
-
     public VID getGovernorId()
     {
         return governorId;
@@ -109,5 +93,35 @@ public class SelectRelationResponse
     public void setDependentId(VID aDependentId)
     {
         dependentId = aDependentId;
+    }
+
+    public String getColor()
+    {
+        return color;
+    }
+
+    public void setColor(String aColor)
+    {
+        color = aColor;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String aType)
+    {
+        type = aType;
+    }
+
+    public List<String> getFeatures()
+    {
+        return features;
+    }
+
+    public void setFeatures(List<String> aFeatures)
+    {
+        features = aFeatures;
     }
 }

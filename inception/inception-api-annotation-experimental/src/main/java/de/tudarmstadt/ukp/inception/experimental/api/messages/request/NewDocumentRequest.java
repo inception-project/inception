@@ -76,4 +76,5 @@ public class NewDocumentRequest
     {
         viewport = aViewport;
     }
+
 }

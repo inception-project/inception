@@ -33,7 +33,7 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
             if (elem.id === 'next_sentence') {
-                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41721, new Viewport([[0,34],[36,74]]));
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41721, new Viewport([[0,34],[36,74]],null));
                 setTimeout(function () {
                     that.annotationExperienceAPIWordAlignmentEditor.originalLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[0];
                     that.annotationExperienceAPIWordAlignmentEditor.originalOffsetBegin = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.viewport[0][0]

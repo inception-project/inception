@@ -29,16 +29,12 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
     translatedLanguageSentence: string;
     translatedOffsetBegin: number;
 
-    constructor() {
+    constructor()
+    {
         this.annotationExperienceAPI = new AnnotationExperienceAPIImpl();
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIWordAlignmentEditorVisualization(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler = new AnnotationExperienceAPIWordAlignmentEditorActionHandler(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler.registerDefaultActionHandler();
-
-        //Remove actionbar and sidebar
-        document.getElementById("annotationFeatureForm").remove();
-        document.getElementsByClassName("action-bar")[0].remove();
-
     }
 
     saveAlignments() {
@@ -60,7 +56,6 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
             for (let j = 0; j < document.getElementById("container_german").children.length - 2; j++) {
                 if ((document.getElementById("container_english").children[i + 2].children[0].value) ===
                     (document.getElementById("container_german").children[j + 2].children[1].value)) {
-                    console.log(pairs)
                     pairs.push([
                         document.getElementById("container_english").children[i + 2].children[1].id.split("_")[2],
                         document.getElementById("container_english").children[i + 2].children[1].innerText,
@@ -74,7 +69,6 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                         this.annotationExperienceAPI.documentID,
                         Number(document.getElementById("container_english").children[i + 2].children[1].id.split("_")[2]),
                         Number(document.getElementById("container_english").children[i + 2].children[1].id.split("_")[3]),
-                        "webanno.custom.Word_Alignment_Span",
                         "webanno.custom.Word_Alignment_Span")
 
                     this.annotationExperienceAPI.requestCreateSpanFromServer(
@@ -84,7 +78,6 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                         this.annotationExperienceAPI.documentID,
                         Number(document.getElementById("container_german").children[i + 2].children[0].id.split("_")[2]),
                         Number(document.getElementById("container_german").children[i + 2].children[0].id.split("_")[3]),
-                        "webanno.custom.Word_Alignment_Span",
                         "webanno.custom.Word_Alignment_Span")
 
                     document.getElementById("container_german").children[j + 2].children[1].setAttribute("disabled", "true");
@@ -112,8 +105,7 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                     that.annotationExperienceAPI.documentID,
                     governor.id,
                     dependent.id,
-                    "webanno.custom.Word_Alignment_Relation",
-                    "None")
+                    "webanno.custom.Word_Alignment_Relation")
             }
         }, 5000)
 
@@ -131,7 +123,9 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                 that.annotationExperienceAPI.clientName,
                 that.annotationExperienceAPI.projectID,
                 that.annotationExperienceAPI.documentID,
-                that.annotationExperienceAPI.relations[i].id
+                that.annotationExperienceAPI.relations[i].id,
+                that.annotationExperienceAPI.relations[i].type
+
             )
         }
 
@@ -141,13 +135,10 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                 that.annotationExperienceAPI.clientName,
                 that.annotationExperienceAPI.projectID,
                 that.annotationExperienceAPI.documentID,
-                that.annotationExperienceAPI.spans[i].id
+                that.annotationExperienceAPI.spans[i].id,
+                that.annotationExperienceAPI.spans[i].type
             )
         }
         document.getElementById("save_alignment").disabled = false;
     }
-
-//requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aDependencyType : string, aFlavor : string)
-
-    //
 }

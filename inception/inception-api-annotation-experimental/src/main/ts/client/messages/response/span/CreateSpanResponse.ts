@@ -21,7 +21,7 @@ export class CreateSpanResponse
     coveredText : string;
     begin : number;
     end : number;
-    type : string;
-    feature : string[];
     color: string;
+    type: string;
+    features : String[];
 }

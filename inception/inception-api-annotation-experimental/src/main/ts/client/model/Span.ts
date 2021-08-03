@@ -23,16 +23,16 @@ export class Span
     begin: number;
     end: number;
     type: string;
-    feature: string[];
+    features: string[];
 
-    constructor(aId: number, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeature: string[], aColor: string)
+    constructor(aId: number, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeatures: string[], aColor: string)
     {
         this.id = aId;
         this.coveredText = aCoveredText;
         this.begin = aBegin;
         this.end = aEnd;
         this.type = aType;
-        this.feature = aFeature;
+        this.features = aFeatures;
         this.color = aColor;
     }
 
