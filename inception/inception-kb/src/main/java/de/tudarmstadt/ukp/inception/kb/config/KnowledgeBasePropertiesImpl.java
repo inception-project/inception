@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.kb.config;
 
+import static java.time.Duration.ofMinutes;
+import static java.time.temporal.ChronoUnit.MINUTES;
+
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.convert.DurationUnit;
@@ -36,14 +38,16 @@ public class KnowledgeBasePropertiesImpl
 
     private int defaultMaxResults = 1_000;
     private int hardMaxResults = 10_000;
-    private long cacheSize = 100_000;
+
     private boolean removeOrphansOnStart = false;
 
-    @DurationUnit(ChronoUnit.MINUTES)
-    private Duration cacheExpireDelay = Duration.ofMinutes(15);
+    private long cacheSize = 100_000;
+    private @DurationUnit(MINUTES) Duration cacheExpireDelay = ofMinutes(15);
+    private @DurationUnit(MINUTES) Duration cacheRefreshDelay = ofMinutes(5);
 
-    @DurationUnit(ChronoUnit.MINUTES)
-    private Duration cacheRefreshDelay = Duration.ofMinutes(5);
+    private long renderCacheSize = 10_000;
+    private @DurationUnit(MINUTES) Duration renderCacheExpireDelay = ofMinutes(10);
+    private @DurationUnit(MINUTES) Duration renderCacheRefreshDelay = ofMinutes(1);
 
     @Override
     public int getDefaultMaxResults()
@@ -109,5 +113,38 @@ public class KnowledgeBasePropertiesImpl
     public void setRemoveOrphansOnStart(boolean aRemoveOrphansOnStart)
     {
         removeOrphansOnStart = aRemoveOrphansOnStart;
+    }
+
+    @Override
+    public long getRenderCacheSize()
+    {
+        return renderCacheSize;
+    }
+
+    public void setRenderCacheSize(long aRenderCacheSize)
+    {
+        renderCacheSize = aRenderCacheSize;
+    }
+
+    @Override
+    public Duration getRenderCacheExpireDelay()
+    {
+        return renderCacheExpireDelay;
+    }
+
+    public void setRenderCacheExpireDelay(Duration aRenderCacheExpireDelay)
+    {
+        renderCacheExpireDelay = aRenderCacheExpireDelay;
+    }
+
+    @Override
+    public Duration getRenderCacheRefreshDelay()
+    {
+        return renderCacheRefreshDelay;
+    }
+
+    public void setRenderCacheRefreshDelay(Duration aRenderCacheRefreshDelay)
+    {
+        renderCacheRefreshDelay = aRenderCacheRefreshDelay;
     }
 }
