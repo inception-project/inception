@@ -18,22 +18,25 @@
 package de.tudarmstadt.ukp.inception.websocket.footer;
 
 import org.apache.wicket.Component;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
+import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WebsocketAutoConfiguration#recommendationEventFooterItem}.
+ * </p>
+ */
 @Order(FooterItem.ORDER_RIGHT - 100)
-@org.springframework.stereotype.Component
-@ConditionalOnProperty("websocket.enabled")
 public class RecommendationEventFooterItem
     implements FooterItem
 {
-
     @Override
     public Component create(String aId)
     {
         return new RecommendationEventFooterPanel(aId);
     }
-
 }

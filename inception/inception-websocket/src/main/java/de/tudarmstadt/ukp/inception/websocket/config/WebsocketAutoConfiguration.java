@@ -17,38 +17,35 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.config;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
+import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageController;
+import de.tudarmstadt.ukp.inception.websocket.footer.LoggedEventFooterItem;
+import de.tudarmstadt.ukp.inception.websocket.footer.RecommendationEventFooterItem;
 
 @Configuration
 @EnableWebSocketMessageBroker
+@AutoConfigureAfter(EventLoggingAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class WebsocketConfig
-    implements WebSocketMessageBrokerConfigurer
+public class WebsocketAutoConfiguration
 {
-    public static final String WS_ENDPOINT = "/ws-endpoint";
-
-    @Override
-    public void registerStompEndpoints(StompEndpointRegistry aRegistry)
+    @ConditionalOnBean(LoggedEventMessageController.class)
+    @ConditionalOnProperty(name = "websocket.loggedevent.enabled", havingValue = "true")
+    @Bean
+    public LoggedEventFooterItem loggedEventFooterItem()
     {
-        // client will use this endpoint to first establish connection
-        aRegistry.addEndpoint(WS_ENDPOINT);
+        return new LoggedEventFooterItem();
     }
 
-    @Override
-    public void configureMessageBroker(MessageBrokerRegistry aRegistry)
+    @Bean
+    public RecommendationEventFooterItem recommendationEventFooterItem()
     {
-        // broker will send to destinations with this prefix, queue is custom for user-specific
-        // channels. client will subscribe to /queue/{subtopic} where subtopic is a specific topic
-        // that controller or service will address messages to
-        aRegistry.enableSimpleBroker("/queue", "/topic");
-        // clients should send messages to channels pre-fixed with this
-        aRegistry.setApplicationDestinationPrefixes("/app");
-        // messages to clients are by default not ordered, need to explicitly set order here
-        aRegistry.setPreservePublishOrder(true);
+        return new RecommendationEventFooterItem();
     }
 }
