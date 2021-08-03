@@ -49,8 +49,6 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistryImpl;
 import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageControllerImpl;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
@@ -107,10 +105,7 @@ public class LoggedEventMessageControllerImplTest
     }
 
     @SpringBootConfiguration
-
-    @EnableAutoConfiguration(exclude = { //
-            WebsocketAutoConfiguration.class, //
-            EventLoggingAutoConfiguration.class, //
+    @EnableAutoConfiguration(exclude = { EventLoggingAutoConfiguration.class,
             LiquibaseAutoConfiguration.class })
     @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.websocket" })
     public static class SpringConfig

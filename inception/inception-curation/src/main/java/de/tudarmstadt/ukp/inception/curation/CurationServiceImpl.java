@@ -271,7 +271,6 @@ public class CurationServiceImpl
     }
 
     @Override
-    @Transactional
     public List<User> listFinishedUsers(Project aProject, SourceDocument aSourceDocument)
     {
         Validate.notNull(aSourceDocument, "Document must be specified");

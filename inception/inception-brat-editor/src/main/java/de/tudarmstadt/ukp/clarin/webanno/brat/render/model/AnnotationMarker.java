@@ -28,18 +28,18 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
 public class AnnotationMarker
     implements Marker
 {
-    private final VID vid;
+    private final VID[] vid;
     private String type;
 
     public AnnotationMarker(String aType, VID aVid)
     {
-        vid = aVid;
+        vid = new VID[] { aVid };
         type = aType;
     }
 
     public VID getVid()
     {
-        return vid;
+        return vid[0];
     }
 
     @Override

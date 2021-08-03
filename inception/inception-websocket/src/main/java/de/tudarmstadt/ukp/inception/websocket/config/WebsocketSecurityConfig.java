@@ -26,7 +26,7 @@ import org.springframework.security.config.annotation.web.messaging.MessageSecur
 import org.springframework.security.config.annotation.web.socket.AbstractSecurityWebSocketMessageBrokerConfigurer;
 
 @Configuration
-@ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
 public class WebsocketSecurityConfig
     extends AbstractSecurityWebSocketMessageBrokerConfigurer
 {
