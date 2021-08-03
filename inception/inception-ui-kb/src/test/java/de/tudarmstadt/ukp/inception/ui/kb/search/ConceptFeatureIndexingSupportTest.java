@@ -127,11 +127,10 @@ public class ConceptFeatureIndexingSupportTest
         when(kbService.readInstance(any(Project.class), any(String.class)))
                 .thenReturn(Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
 
-        KBInstance kbInstance = new KBInstance("urn:dummy-concept", "Dummy concept");
-        kbInstance.setKB(kb);
-
-        when(kbService.readItem(any(Project.class), any(String.class)))
-                .thenReturn(Optional.of(kbInstance));
+        KBHandle kbHandle = new KBHandle("urn:dummy-concept", "Dummy concept");
+        kbHandle.setKB(kb);
+        when(kbService.readHandle(any(Project.class), any(String.class)))
+                .thenReturn(Optional.of(kbHandle));
 
         List<KBHandle> dummyValue = new ArrayList<KBHandle>();
         dummyValue.add(new KBHandle("urn:dummy-parent-concept", "Dummy Parent Concept"));
@@ -150,8 +149,9 @@ public class ConceptFeatureIndexingSupportTest
         tc.iterator().forEachRemaining(tokens::add);
 
         assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-                .extracting(MtasToken::getPrefix).contains("Named_Entity",
-                        "Named_Entity.identifier", "Named_Entity.identifier-exact");
+                .extracting(MtasToken::getPrefix) //
+                .contains("Named_Entity", "Named_Entity.identifier",
+                        "Named_Entity.identifier-exact");
 
         assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
                 .extracting(MtasToken::getPostfix)

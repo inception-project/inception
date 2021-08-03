@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 
 public class ConceptFeatureSupportTest
 {
@@ -47,8 +46,7 @@ public class ConceptFeatureSupportTest
     {
         initMocks(this);
 
-        ConceptFeatureSupport sut = new ConceptFeatureSupport(kbService,
-                new KnowledgeBasePropertiesImpl());
+        sut = new ConceptFeatureSupport(kbService, new KnowledgeBasePropertiesImpl());
     }
 
     @Test
@@ -71,14 +69,14 @@ public class ConceptFeatureSupportTest
 
         KBHandle referenceHandle = new KBHandle("id", "name");
 
-        when(kbService.readItem((Project) any(), anyString()))
-                .thenReturn(Optional.of(new KBInstance("id", "name")));
+        when(kbService.readHandle((Project) any(), anyString()))
+                .thenReturn(Optional.of(new KBHandle("id", "name")));
 
-        when(kbService.readItem((Project) any(), anyString()))
-                .thenReturn(Optional.of(new KBInstance("id", "name")));
+        when(kbService.readHandle((Project) any(), anyString()))
+                .thenReturn(Optional.of(new KBHandle("id", "name")));
 
-        assertThat(sut.wrapFeatureValue(feat1, null, "id"))
-                .isEqualToComparingFieldByField(referenceHandle);
+        assertThat(sut.wrapFeatureValue(feat1, null, "id")).usingRecursiveComparison()
+                .isEqualTo(referenceHandle);
         assertThat(sut.wrapFeatureValue(feat1, null, referenceHandle)).isSameAs(referenceHandle);
         assertThat(sut.wrapFeatureValue(feat1, null, null)).isNull();
         assertThatThrownBy(() -> sut.wrapFeatureValue(feat1, null, new Object()))
