@@ -207,7 +207,7 @@ public class AcceptInvitePage
 
         User user;
         if (aForm.getModelObject().registeredLogin) {
-            user = signInAsRegisteredUserIfNecessary(aTarget);
+            user = signInAsRegisteredUserIfNecessary();
         }
         else {
             user = signInAsProjectUser(aForm.getModelObject());
@@ -255,7 +255,7 @@ public class AcceptInvitePage
         return user;
     }
 
-    private User signInAsRegisteredUserIfNecessary(AjaxRequestTarget aTarget)
+    private User signInAsRegisteredUserIfNecessary()
     {
         User user = userRepository.getCurrentUser();
 
