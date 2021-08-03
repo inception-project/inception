@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static org.apache.commons.io.FilenameUtils.separatorsToUnix;
 
 import java.io.File;
@@ -38,6 +39,7 @@ import org.apache.wicket.request.resource.ContentDisposition;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
+import org.apache.wicket.util.string.StringValue;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -149,6 +151,22 @@ public class PdfAnnoPanel
                 String pdfUrl = toRelativeUrl(viewerUrl, pdfProvider.getCallbackUrl());
                 String pdftxtUrl = toRelativeUrl(viewerUrl, pdftxtProvider.getCallbackUrl());
                 String apiUrl = toRelativeUrl(viewerUrl, apiProvider.getCallbackUrl());
+
+                // When accessing the annotator page using a URL in the form with the last
+                // path element being the document ID, then the AnnotationPageBase rewrites
+                // the URL, stripping the last path element and instead rendering it as a
+                // fragment. However, the URLRenderer does not notice this and does not get
+                // updated. Thus, we get the wrong relative URL for the viewer and need to
+                // fix it here.
+                StringValue documentParameter = getPage().getPageParameters()
+                        .get(PAGE_PARAM_DOCUMENT);
+                if (!documentParameter.isEmpty()) {
+                    // Why only the apiUrl? Timing probably. The text and PDF load ok
+                    // but at the time when the annotations are loaded, they URL has already
+                    // been updated by the AnnotationPageBase causing the client-side JS
+                    // to resolve the API URL against the wrong page URL...
+                    apiUrl = "../" + apiUrl;
+                }
 
                 viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&api=" + apiUrl;
 
