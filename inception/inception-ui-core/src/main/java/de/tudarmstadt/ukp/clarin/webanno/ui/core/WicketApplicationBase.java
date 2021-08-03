@@ -35,6 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Page;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
+import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
+import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
@@ -58,6 +60,7 @@ import de.agilecoders.wicket.sass.SassCompilerOptionsFactory;
 import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.BootstrapAwareJQueryUIJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
@@ -88,7 +91,11 @@ public abstract class WicketApplicationBase
 
         getCspSettings().blocking().disabled();
 
-        getSecuritySettings().setCrossOriginEmbedderPolicyConfiguration(ENFORCING);
+        // Enforce COEP while inheriting any exemptions that might already have been set e.g. via
+        // WicketApplicationInitConfiguration beans
+        getSecuritySettings().setCrossOriginEmbedderPolicyConfiguration(ENFORCING,
+                getSecuritySettings().getCrossOriginEmbedderPolicyConfiguration().getExemptions()
+                        .stream().toArray(String[]::new));
         getSecuritySettings().setCrossOriginOpenerPolicyConfiguration(SAME_ORIGIN);
 
         initStatelessChecker();
@@ -97,6 +104,29 @@ public abstract class WicketApplicationBase
             initOnce();
 
             isInitialized = true;
+        }
+    }
+
+    @Override
+    protected void validateInit()
+    {
+        super.validateInit();
+
+        CrossOriginEmbedderPolicyConfiguration coepConfig = getSecuritySettings()
+                .getCrossOriginEmbedderPolicyConfiguration();
+        if (coepConfig.isEnabled()) {
+            // Remove the CrossOriginEmbedderPolicyRequestCycleListener that was configured
+            // by Wicket
+            List<IRequestCycleListener> toRemove = new ArrayList<>();
+            for (IRequestCycleListener listener : getRequestCycleListeners()) {
+                if (listener instanceof CrossOriginEmbedderPolicyRequestCycleListener) {
+                    toRemove.add(listener);
+                }
+            }
+            toRemove.forEach(listener -> getRequestCycleListeners().remove(listener));
+
+            getRequestCycleListeners().add(
+                    new PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener(coepConfig));
         }
     }
 
