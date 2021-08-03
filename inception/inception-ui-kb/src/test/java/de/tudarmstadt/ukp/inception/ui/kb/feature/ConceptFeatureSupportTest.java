@@ -33,24 +33,27 @@ import org.mockito.Mock;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 
 public class ConceptFeatureSupportTest
 {
     private @Mock KnowledgeBaseService kbService;
+    private ConceptFeatureSupport sut;
 
     @BeforeEach
     public void setUp()
     {
         initMocks(this);
+
+        ConceptFeatureSupport sut = new ConceptFeatureSupport(kbService,
+                new KnowledgeBasePropertiesImpl());
     }
 
     @Test
     public void testAccepts()
     {
-        ConceptFeatureSupport sut = new ConceptFeatureSupport(kbService);
-
         AnnotationFeature feat1 = new AnnotationFeature("Dummy feature",
                 ConceptFeatureSupport.PREFIX + "someConcept");
 
@@ -63,8 +66,6 @@ public class ConceptFeatureSupportTest
     @Test
     public void testWrapUnwrap() throws Exception
     {
-        ConceptFeatureSupport sut = new ConceptFeatureSupport(kbService);
-
         AnnotationFeature feat1 = new AnnotationFeature("Dummy feature",
                 ConceptFeatureSupport.PREFIX + "someConcept");
 

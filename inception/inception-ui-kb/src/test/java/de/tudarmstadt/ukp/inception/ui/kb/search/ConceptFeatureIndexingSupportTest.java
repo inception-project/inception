@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -81,9 +82,9 @@ public class ConceptFeatureIndexingSupportTest
 
         kb = new KnowledgeBase();
 
-        featureSupportRegistry = new FeatureSupportRegistryImpl(
-                asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
-                        new NumberFeatureSupport(), new ConceptFeatureSupport(kbService)));
+        featureSupportRegistry = new FeatureSupportRegistryImpl(asList(new StringFeatureSupport(),
+                new BooleanFeatureSupport(), new NumberFeatureSupport(),
+                new ConceptFeatureSupport(kbService, new KnowledgeBasePropertiesImpl())));
         featureSupportRegistry.init();
 
         featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(
