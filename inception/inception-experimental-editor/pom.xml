@@ -20,7 +20,7 @@
     <parent>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-app</artifactId>
-        <version>0.21.0-SNAPSHOT</version>
+        <version>21.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <artifactId>inception-experimental-editor</artifactId>
@@ -61,6 +61,10 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-api-annotation-experimental</artifactId>
         </dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>

@@ -119,10 +119,10 @@ public class CurationDocumentServiceImpl
 
         String query = String.join("\n", //
                 "SELECT DISTINCT adoc.document", //
-                "FROM AnnotationDocument AS adoc ", //
+                "FROM AnnotationDocument AS adoc", //
                 "WHERE adoc.project = :project", //
-                "AND user in (:users)", //
-                "AND adoc.state = (:state)");
+                "AND adoc.user in (:users)", //
+                "AND adoc.state = :state");
 
         List<SourceDocument> docs = entityManager.createQuery(query, SourceDocument.class) //
                 .setParameter("project", aProject) //
