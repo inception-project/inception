@@ -43,30 +43,45 @@ an example of how the parameter can be configured below:
 | true
 | false
 
-| knowledge-base.defaultMaxResults
+| knowledge-base.default-max-results
 | default result limit for SPARQL query
 | 1000
 | 10000
 
-| knowledge-base.hardMaxResults
+| knowledge-base.hard-max-results
 | hard limit for the maximum number of results from a query
 | 10000
 | 5000
 
-| knowledge-base.cacheSize
+| knowledge-base.cache-size
 | number of items (classes, instances and properties) to cache
 | 100000
 | 500000
 
-| knowledge-base.cacheExpireDelay
+| knowledge-base.cache-expire-delay
 | time before items are expunged from the cache
 | 15m
 | 1h
 
-| knowledge-base.cacheRefreshDelay
+| knowledge-base.cache-refresh-delay
 | time before items are asynchronously refreshed
 | 5m
 | 30m
+
+| knowledge-base.render-cache-size
+| number of items (classes, instances and properties) to cache during rendering
+| 10000
+| 50000
+
+| knowledge-base.render-cache-expire-delay
+| time before items are expunged from the render cache
+| 10m
+| 1h
+
+| knowledge-base.render-cache-refresh-delay
+| time before items are asynchronously refreshed when rendering
+| 1m
+| 5m
 
 | knowledge-base.remove-orphans-on-start
 | whether to delete orphaned KBs on start
