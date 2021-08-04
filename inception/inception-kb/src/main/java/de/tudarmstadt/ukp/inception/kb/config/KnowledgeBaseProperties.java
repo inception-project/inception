@@ -46,4 +46,10 @@ public interface KnowledgeBaseProperties
      * @return whether do delete orphaned knowledge bases during startup.
      */
     boolean isRemoveOrphansOnStart();
+
+    Duration getRenderCacheRefreshDelay();
+
+    Duration getRenderCacheExpireDelay();
+
+    long getRenderCacheSize();
 }
