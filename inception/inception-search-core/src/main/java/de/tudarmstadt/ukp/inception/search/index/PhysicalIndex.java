@@ -60,6 +60,10 @@ public interface PhysicalIndex
         throws IOException, ExecutionException;
 
     public void getTokenStatistics(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
+    public void getAnnotationStatistics(StatisticRequest aStatisticRequest, SearchQueryRequest aSearchQueryRequest) throws IOException, ExecutionException;
+    public HashMap<Long, Long> getFeatureStatistics(
+        SearchQueryRequest aSearchQueryRequest)
+        throws IOException, ExecutionException;
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
 

@@ -532,12 +532,20 @@ public class MtasDocumentIndexTest
 
         uploadDocument(Pair.of(otherDocument, otherContent));
 
+
+
         String statistic = "n,min,max,mean,median,standarddeviation";
-        Double lowerDocSize = 4.0;
+        Double lowerDocSize = null;
         Double upperDocSize = null;
 
-        searchService.getProjectStatistics(user, project, statistic, sourceDocument, null, null,
-                lowerDocSize, upperDocSize);
+        String query = "<Named_entity.value=\"\"/>";
+
+        List<SearchResult> results = searchService.query(user, project, query);
+
+
+        searchService.getProjectStatistics(user, project, statistic, null, null, null,
+                lowerDocSize, upperDocSize, "<Named_entity.value=\"LOC\"/>");
+
 
         assertThat(0).isEqualTo(0);
     }

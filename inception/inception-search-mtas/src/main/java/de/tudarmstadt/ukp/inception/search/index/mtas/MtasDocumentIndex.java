@@ -412,27 +412,34 @@ public class MtasDocumentIndex
     {
         IndexSearcher searcher = null;
 
-        long docId = aStatisticRequest.getLimitedToDocument().get().getId();
-        int docNumber = (int) docId - 1;
+        //List<SourceDocument> textDocuments = documentService.listSourceDocuments(aStatisticRequest.getProject());
+        //List<AnnotationDocument> annoDocs = documentService.listAnnotationDocuments(aStatisticRequest.getProject());
+        //Map<SourceDocument, AnnotationDocument> annoDocs = documentService.listAnnotatableDocuments(aStatisticRequest.getProject(), aStatisticRequest.getUser());
+        Map<Long, Long> annoDocs = listAnnotatableDocuments(aStatisticRequest.getProject(), aStatisticRequest.getUser());
 
         try {
             searcher = getSearcherManager().acquire();
             IndexReader reader = searcher.getIndexReader();
 
+            ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
+
+            for (long i = 0L; i < reader.maxDoc(); i++) {
+                if (!annoDocs.containsValue(i)) {
+                    fullDocSet.add((int) i);
+                }
+            }
+
             CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
                     FIELD_CONTENT);
 
-            //this integer array determines which documents we consider. the annotation of a doc is a doc itself.
-            //currently, the two text docs and one annotation doc are taken into account
-            Integer[] respectedDocNumbers = {0,1,2};
-            ArrayList<Integer> fullDocSet = new ArrayList<Integer>(
-                    Arrays.asList(respectedDocNumbers));
-
             // what does this parameter do?
             ArrayList<Integer> fullDocList = new ArrayList<Integer>();
-
-            fieldStats.statsTokenList           //key is somewhat arbitrary //documents whose token count is outside this borders are not considered //the regex determining the sought after stats (comma separated)
-                    .add(new CodecComponent.ComponentToken("ax1", aStatisticRequest.getLowerDocumentSize(), aStatisticRequest.getUpperDocumentSize(), aStatisticRequest.getStatistic()));
+            // key is somewhat arbitrary //documents whose token count is outside this borders are
+            // not considered
+            // the regex determining the sought after stats (comma separated)
+            fieldStats.statsTokenList.add(new CodecComponent.ComponentToken("ax1",
+                    aStatisticRequest.getLowerDocumentSize(),
+                    aStatisticRequest.getUpperDocumentSize(), aStatisticRequest.getStatistic()));
 
             CodecUtil.collectField(FIELD_CONTENT, searcher, reader, fullDocList, fullDocSet,
                     fieldStats, new Status());
@@ -461,6 +468,97 @@ public class MtasDocumentIndex
             }
         }
 
+    }
+
+    private long getAnnotationStatistics(IndexSearcher searcher, SearchQueryRequest aRequest,
+            MtasSpanQuery q)
+        throws IOException
+    {
+
+        try {
+            // String preprocessedQuery = preprocessQuery(aRequest.getQuery());
+            // StringReader reader = new StringReader(preprocessedQuery);
+            IndexReader reader = searcher.getIndexReader();
+            // searcher = new IndexSearcher(reader);
+
+            CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
+                    FIELD_CONTENT);
+
+            // this integer array determines which documents we consider. the annotation of a doc is
+            // a doc itself.
+            // currently, the two text docs and one annotation doc are taken into account
+            Integer[] respectedDocNumbers = { 0, 1, 2 };
+            ArrayList<Integer> fullDocSet = new ArrayList<Integer>(
+                    Arrays.asList(respectedDocNumbers));
+
+            // what does this parameter do?
+            ArrayList<Integer> fullDocList = new ArrayList<Integer>();
+
+            fieldStats.statsTokenList // key is somewhat arbitrary //documents whose token count is
+                    // outside this borders are not considered //the regex
+                    // determining the sought after stats (comma separated)
+                    .add(new CodecComponent.ComponentToken("ax1", null, null,
+                            "n,min,max,mean,median,standarddeviation"));
+
+            CodecUtil.collectField(FIELD_CONTENT, searcher, reader, fullDocList, fullDocSet,
+                    fieldStats, new Status());
+            // getList();
+            MtasDataItem<?, ?> results = fieldStats.statsTokenList.get(0).dataCollector.getResult()
+                    .getData();
+            Map<String, Object> resultsMap = results.rewrite(true);
+            for (String str : resultsMap.keySet()) {
+                System.out.print(str + ": ");
+                System.out.println(resultsMap.get(str));
+            }
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (searcher != null) {
+                // Releasing and setting to null per recommendation in JavaDoc of
+                // release(searcher)
+                // method
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
+        return 0L;
+    }
+
+    @Override
+    public void getAnnotationStatistics(StatisticRequest aStatisticRequest,
+            SearchQueryRequest aSearchQueryRequest)
+        throws IOException, ExecutionException
+    {
+        Map<String, List<SearchResult>> results = _executeQuery(this::doQuery, aSearchQueryRequest);
+        System.out.println("x");
+
+    }
+
+    @Override
+    public HashMap<Long, Long> getFeatureStatistics(
+            SearchQueryRequest aSearchQueryRequest)
+        throws IOException, ExecutionException
+    {
+        // from docId to number of hits
+        HashMap<Long, Long> docHits = new HashMap<Long, Long>();
+
+        Map<String, List<SearchResult>> groupedResults = executeQuery(aSearchQueryRequest);
+        List<SearchResult> results = new ArrayList<>();
+        groupedResults.values().stream().forEach(resultsGroup -> results.addAll(resultsGroup));
+        for (int i = 0; i < results.size(); i++) {
+            Long docId = results.get(i).getDocumentId();
+            if (docHits.containsKey(docId)) {
+                docHits.replace(docId, docHits.get(docId), docHits.get(docId) + 1);
+            }
+            else {
+                docHits.put(docId, 1L);
+            }
+        }
+
+        return docHits;
     }
 
     @Override
