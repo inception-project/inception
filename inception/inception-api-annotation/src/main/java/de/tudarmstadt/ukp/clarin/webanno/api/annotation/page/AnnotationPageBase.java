@@ -34,15 +34,14 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.wicket.Component;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.OnLoadHeaderItem;
+import org.apache.wicket.markup.html.pages.RedirectPage;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.Url;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -90,30 +89,22 @@ public abstract class AnnotationPageBase
     protected AnnotationPageBase(PageParameters aParameters)
     {
         super(aParameters);
-    }
-
-    @Override
-    protected void onInitialize()
-    {
-        super.onInitialize();
 
         StringValue documentParameter = getPageParameters().get(PAGE_PARAM_DOCUMENT);
 
+        // If the page was accessed using an URL form ending in a document ID, let's move
+        // the document ID into the fragment and redirect to the form without the document ID.
+        // This ensures that any links on the page do not carry the document ID, so that we can
+        // happily switch between documents using AJAX without having to worry about links with
+        // a document ID potentially sending us back to a specific document.
         if (!documentParameter.isEmpty()) {
-            add(new Behavior()
-            {
-                private static final long serialVersionUID = 3142725677020364341L;
-
-                @Override
-                public void renderHead(Component aComponent, IHeaderResponse aResponse)
-                {
-                    aResponse.render(OnLoadHeaderItem
-                            .forScript("try{history.replaceState({}, '', './')}catch(e){}"));
-                    aResponse.render(OnLoadHeaderItem.forScript(String.format(
-                            "try{if(window.UrlUtil){window.UrlUtil.putFragmentParameter('%s','%s');}}catch(e){}",
-                            PAGE_PARAM_DOCUMENT, documentParameter.toString())));
-                }
-            });
+            Url clientUrl = getRequestCycle().getRequest().getClientUrl();
+            clientUrl.resolveRelative(Url.parse("./"));
+            clientUrl.setFragment(
+                    String.format("!%s=%d", PAGE_PARAM_DOCUMENT, documentParameter.toInt()));
+            String url = getRequestCycle().getUrlRenderer()
+                    .renderContextRelativeUrl(clientUrl.toString());
+            throw new RestartResponseException(new RedirectPage(url.toString()));
         }
     }
 
