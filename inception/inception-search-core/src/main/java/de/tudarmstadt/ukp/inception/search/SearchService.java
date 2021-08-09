@@ -109,16 +109,18 @@ public interface SearchService
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
             AnnotationFeature aAnnotationFeature)
         throws ExecutionException, IOException;
-
+    /*
     public HashMap<String, HashMap<String, Double>> getProjectTextStatistics(User aUser,
             Project aProject, String aStatistic, SourceDocument aDocument,
             AnnotationLayer aAnnotationLayer, AnnotationFeature aAnnotationFeature,
             String[] aPunctuationMarks)
         throws IOException, ExecutionException;
 
-    public void getProjectStatistics(User aUser, Project aProject, String aStatistic,
+     */
+
+    public Map<String, Map<String, Object>> getProjectStatistics(User aUser, Project aProject, String aStatistic,
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, Double aLowerDocSize, Double aUpperDocSize, String aSearchQueryRequest)
+            AnnotationFeature aAnnotationFeature, Double aLowerDocSize, Double aUpperDocSize)
         throws IOException, ExecutionException;
 
     void enqueueReindexTask(Project aProject, String aTrigger);

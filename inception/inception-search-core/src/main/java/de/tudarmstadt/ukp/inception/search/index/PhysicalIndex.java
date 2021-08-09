@@ -54,16 +54,23 @@ public interface PhysicalIndex
 
     long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
-
+    /*
     HashMap<String, Double> fetchTextStatistics(SourceDocument aSourceDocument,
             String[] aPunctuationMarks)
         throws IOException, ExecutionException;
 
-    public void getTokenStatistics(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
-    public void getAnnotationStatistics(StatisticRequest aStatisticRequest, SearchQueryRequest aSearchQueryRequest) throws IOException, ExecutionException;
+     */
+
+    //public Map<String, Object> getTokenStatistics(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
+    public Map<String, Object> getLayerStatistics(StatisticRequest aStatisticRequest, String aFeatureQuery) throws IOException, ExecutionException;
+    public Map<String, Map<String, Object>> getAnnotationStatistics(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
+
+    /*
     public HashMap<Long, Long> getFeatureStatistics(
         SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
+
+     */
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
 

@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImpo
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
@@ -75,6 +74,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -227,6 +227,69 @@ public class MtasDocumentIndexTest
                 .pollInterval(5, SECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
+        log.info("Indexing complete!");
+    }
+
+    public void annotateDocumentAdvanced(Project aProject, User aUser,
+                                         SourceDocument aSourceDocument)
+        throws Exception
+    {
+        log.info("Preparing annotated document....");
+
+        // Manually build annotated CAS
+        JCas jCas = JCasFactory.createJCas();
+
+        JCasBuilder builder = new JCasBuilder(jCas);
+
+        builder.add("The", Token.class);
+        builder.add(" ");
+        builder.add("capital", Token.class);
+        builder.add(" ");
+        builder.add("of", Token.class);
+        builder.add(" ");
+
+        int begin = builder.getPosition();
+        builder.add("Galicia", Token.class);
+
+        NamedEntity ne = new NamedEntity(jCas, begin, builder.getPosition());
+        ne.setValue("LOC");
+        ne.addToIndexes();
+
+        builder.add(" ");
+        builder.add("is", Token.class);
+        builder.add(" ");
+
+        begin = builder.getPosition();
+
+        builder.add("Santiago", Token.class);
+        builder.add(" ");
+        builder.add("de", Token.class);
+        builder.add(" ");
+        builder.add("Compostela", Token.class);
+
+        ne = new NamedEntity(jCas, begin, builder.getPosition());
+        ne.setValue("LOC");
+        ne.addToIndexes();
+
+        builder.add(" ");
+        builder.add(".", Token.class);
+
+        // Create annotation document
+        AnnotationDocument annotationDocument = documentService
+            .createOrGetAnnotationDocument(aSourceDocument, aUser);
+
+        // Write annotated CAS to annotated document
+        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+            log.info("Writing annotated document using documentService.writeAnnotationCas");
+            documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
+        }
+
+        log.info("Writing for annotated document to be indexed");
+        await("Waiting for indexing process to complete") //
+            .atMost(60, SECONDS) //
+            .pollInterval(5, SECONDS) //
+            .until(() -> searchService.isIndexValid(aProject)
+                && searchService.getIndexProgress(aProject).isEmpty());
         log.info("Indexing complete!");
     }
 
@@ -457,54 +520,7 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void testStatisticsOld() throws Exception
-    {
-        Project project = new Project();
-        project.setName("TestAnnotationQueryStatistics");
-
-        createProject(project);
-
-        User user = userRepository.get("admin");
-
-        SourceDocument sourceDocument = new SourceDocument();
-        sourceDocument.setName("Annotation document");
-        sourceDocument.setProject(project);
-        sourceDocument.setFormat("text");
-
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setName("Named Entity");
-        String[] punctuationMarks = { ".", "!", "?", ",", ":", ";" };
-
-        // String sourceContent = "Hello World x";
-        // String sourceContent = "The capital of Galicia is Santiago de Compostela! Actually, its
-        // history is fascinating; nonetheless: Madrid is Spain's capital?";
-        String sourceContent = "The capital of Galicia is Santiago de Compostela.";
-
-        uploadDocument(Pair.of(sourceDocument, sourceContent));
-        annotateDocument(project, user, sourceDocument);
-
-        SourceDocument otherDocument = new SourceDocument();
-        otherDocument.setName("Other document");
-        otherDocument.setProject(project);
-        otherDocument.setFormat("text");
-
-        String otherContent = "Goodbye moon y";
-
-        uploadDocument(Pair.of(otherDocument, otherContent));
-
-        String statistic = "NumTokens";
-
-        // System.out.println("number of tokens ="
-        // + searchService.getStatistic(user, project, statistic, sourceDocument, null, null));
-
-        System.out.println("number of tokens =" + searchService.getProjectTextStatistics(user,
-                project, statistic, sourceDocument, layer, null, punctuationMarks));
-
-        assertThat(0).isEqualTo(0);
-    }
-
-    @Test
-    public void testStatisticsNew() throws Exception
+    public void testStatistics() throws Exception
     {
         Project project = new Project();
         project.setName("TestStatistics");
@@ -521,7 +537,7 @@ public class MtasDocumentIndexTest
         String sourceContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(sourceDocument, sourceContent));
-        annotateDocument(project, user, sourceDocument);
+        annotateDocumentAdvanced(project, user, sourceDocument);
 
         SourceDocument otherDocument = new SourceDocument();
         otherDocument.setName("Other document");
@@ -531,8 +547,7 @@ public class MtasDocumentIndexTest
         String otherContent = "Goodbye moon";
 
         uploadDocument(Pair.of(otherDocument, otherContent));
-
-
+        annotateDocument(project, user, otherDocument);
 
         String statistic = "n,min,max,mean,median,standarddeviation";
         Double lowerDocSize = null;
@@ -542,10 +557,8 @@ public class MtasDocumentIndexTest
 
         List<SearchResult> results = searchService.query(user, project, query);
 
-
-        searchService.getProjectStatistics(user, project, statistic, null, null, null,
-                lowerDocSize, upperDocSize, "<Named_entity.value=\"LOC\"/>");
-
+        Map<String, Map<String, Object>> statsResults = searchService.getProjectStatistics(user, project,
+                statistic, null, null, null, lowerDocSize, upperDocSize);
 
         assertThat(0).isEqualTo(0);
     }

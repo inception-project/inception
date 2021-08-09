@@ -39,7 +39,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.text.BreakIterator;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -52,7 +51,6 @@ import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.stream.Stream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -65,9 +63,8 @@ import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.StringField;
-import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -75,7 +72,6 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.SegmentReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
-import org.apache.lucene.index.TermsEnum;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -87,7 +83,6 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.BytesRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -407,109 +402,110 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public void getTokenStatistics(StatisticRequest aStatisticRequest)
+    public Map<String, Map<String, Object>> getAnnotationStatistics(
+            StatisticRequest aStatisticRequest)
+        throws IOException, ExecutionException
+    {
+        Map<String, Map<String, Object>> allStats = new HashMap<String, Map<String, Object>>();
+        List<AnnotationLayer> layers = schemaService
+                .listAnnotationLayer(aStatisticRequest.getProject());
+        List<AnnotationFeature> features;
+        for (AnnotationLayer layer : layers) {
+            features = schemaService.listAnnotationFeature(layer);
+            for (AnnotationFeature feature : features) {
+                String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
+                        + feature.getUiName().replace(' ', '_') + "=\"\"/>";
+                Map<String, Object> results = getLayerStatistics(aStatisticRequest, searchString);
+                results.remove("stats");
+                results.remove("sourceNumber");
+                results.remove("n");
+                if ((double) results.get("max") > 0.0) {
+                    allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
+                }
+            }
+        }
+        Map<String, Object> results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>");
+        results.remove("stats");
+        results.remove("sourceNumber");
+        results.remove("n");
+        allStats.put("Token Count", results);
+        return allStats;
+    }
+
+    @Override
+    public Map<String, Object> getLayerStatistics(StatisticRequest aStatisticRequest,
+            String aFeatureQuery)
         throws IOException, ExecutionException
     {
         IndexSearcher searcher = null;
-
-        //List<SourceDocument> textDocuments = documentService.listSourceDocuments(aStatisticRequest.getProject());
-        //List<AnnotationDocument> annoDocs = documentService.listAnnotationDocuments(aStatisticRequest.getProject());
-        //Map<SourceDocument, AnnotationDocument> annoDocs = documentService.listAnnotatableDocuments(aStatisticRequest.getProject(), aStatisticRequest.getUser());
-        Map<Long, Long> annoDocs = listAnnotatableDocuments(aStatisticRequest.getProject(), aStatisticRequest.getUser());
-
+        Map<String, Object> resultsMap = null;
         try {
             searcher = getSearcherManager().acquire();
             IndexReader reader = searcher.getIndexReader();
 
-            ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
+            CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
+                    FIELD_CONTENT);
 
-            for (long i = 0L; i < reader.maxDoc(); i++) {
-                if (!annoDocs.containsValue(i)) {
-                    fullDocSet.add((int) i);
+            ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
+            Boolean isToken = false;
+            if (aFeatureQuery.equals("<Token=\"\"/>")) {
+                isToken = true;
+            }
+            for (int i = 0; i < reader.maxDoc(); i++) {
+                // -1 indicates sourceDocument
+                // do we need to check for the correct user here? i.e. add to if
+                // && reader.document(i).getField(FIELD_USER) == aStatisticRequest.getUser()
+                if (reader.document(i).getField(FIELD_ID).stringValue().contains("-") == isToken) {
+                    fullDocSet.add(i);
                 }
             }
 
-            CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
-                    FIELD_CONTENT);
+            // fullDocSet.add(0);
+            // fullDocSet.add(2);
+
+            final MtasSpanQuery mtasSpanQuery;
+            try {
+                String modifiedQuery = preprocessQuery(aFeatureQuery);
+                MtasSpanQuery mtasSpanQuery1;
+                try (Reader queryReader = new StringReader(modifiedQuery)) {
+                    MtasCQLParser parser = new MtasCQLParser(queryReader);
+                    mtasSpanQuery1 = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+                }
+                mtasSpanQuery = mtasSpanQuery1;
+            }
+            catch (ParseException | Error e) {
+                // The exceptions thrown by the MTAS CQL Parser are inheriting from
+                // java.lang.Error...
+                throw new ExecutionException("Unable to parse query [" + aFeatureQuery + "]", e);
+            }
+            catch (Exception e) {
+                throw e;
+            }
+
+            MtasSpanQuery[] spanQuerys = new MtasSpanQuery[1];
+            spanQuerys[0] = mtasSpanQuery;
 
             // what does this parameter do?
             ArrayList<Integer> fullDocList = new ArrayList<Integer>();
-            // key is somewhat arbitrary //documents whose token count is outside this borders are
-            // not considered
-            // the regex determining the sought after stats (comma separated)
-            fieldStats.statsTokenList.add(new CodecComponent.ComponentToken("ax1",
+
+            fieldStats.spanQueryList.add(mtasSpanQuery);
+
+            fieldStats.statsSpanList.add(new CodecComponent.ComponentSpan(spanQuerys, "ax2",
                     aStatisticRequest.getLowerDocumentSize(),
-                    aStatisticRequest.getUpperDocumentSize(), aStatisticRequest.getStatistic()));
+                    aStatisticRequest.getUpperDocumentSize(), aStatisticRequest.getStatistic(),
+                    null, null, null));
 
             CodecUtil.collectField(FIELD_CONTENT, searcher, reader, fullDocList, fullDocSet,
                     fieldStats, new Status());
             // getList();
-            MtasDataItem<?, ?> results = fieldStats.statsTokenList.get(0).dataCollector.getResult()
+            MtasDataItem<?, ?> results = fieldStats.statsSpanList.get(0).dataCollector.getResult()
                     .getData();
-            Map<String, Object> resultsMap = results.rewrite(true);
+            resultsMap = results.rewrite(true);
             for (String str : resultsMap.keySet()) {
                 System.out.print(str + ": ");
                 System.out.println(resultsMap.get(str));
             }
-
-        }
-        catch (Exception e) {
-            throw new ExecutionException(
-                    "Unable to fetch text statistics, exception message: [" + e.getMessage() + "]",
-                    e);
-        }
-        finally {
-            if (searcher != null) {
-                // Releasing and setting to null per recommendation in JavaDoc of
-                // release(searcher)
-                // method
-                getSearcherManager().release(searcher);
-                searcher = null;
-            }
-        }
-
-    }
-
-    private long getAnnotationStatistics(IndexSearcher searcher, SearchQueryRequest aRequest,
-            MtasSpanQuery q)
-        throws IOException
-    {
-
-        try {
-            // String preprocessedQuery = preprocessQuery(aRequest.getQuery());
-            // StringReader reader = new StringReader(preprocessedQuery);
-            IndexReader reader = searcher.getIndexReader();
-            // searcher = new IndexSearcher(reader);
-
-            CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
-                    FIELD_CONTENT);
-
-            // this integer array determines which documents we consider. the annotation of a doc is
-            // a doc itself.
-            // currently, the two text docs and one annotation doc are taken into account
-            Integer[] respectedDocNumbers = { 0, 1, 2 };
-            ArrayList<Integer> fullDocSet = new ArrayList<Integer>(
-                    Arrays.asList(respectedDocNumbers));
-
-            // what does this parameter do?
-            ArrayList<Integer> fullDocList = new ArrayList<Integer>();
-
-            fieldStats.statsTokenList // key is somewhat arbitrary //documents whose token count is
-                    // outside this borders are not considered //the regex
-                    // determining the sought after stats (comma separated)
-                    .add(new CodecComponent.ComponentToken("ax1", null, null,
-                            "n,min,max,mean,median,standarddeviation"));
-
-            CodecUtil.collectField(FIELD_CONTENT, searcher, reader, fullDocList, fullDocSet,
-                    fieldStats, new Status());
-            // getList();
-            MtasDataItem<?, ?> results = fieldStats.statsTokenList.get(0).dataCollector.getResult()
-                    .getData();
-            Map<String, Object> resultsMap = results.rewrite(true);
-            for (String str : resultsMap.keySet()) {
-                System.out.print(str + ": ");
-                System.out.println(resultsMap.get(str));
-            }
+            return resultsMap;
 
         }
         catch (Exception e) {
@@ -524,124 +520,7 @@ public class MtasDocumentIndex
                 searcher = null;
             }
         }
-        return 0L;
-    }
-
-    @Override
-    public void getAnnotationStatistics(StatisticRequest aStatisticRequest,
-            SearchQueryRequest aSearchQueryRequest)
-        throws IOException, ExecutionException
-    {
-        Map<String, List<SearchResult>> results = _executeQuery(this::doQuery, aSearchQueryRequest);
-        System.out.println("x");
-
-    }
-
-    @Override
-    public HashMap<Long, Long> getFeatureStatistics(
-            SearchQueryRequest aSearchQueryRequest)
-        throws IOException, ExecutionException
-    {
-        // from docId to number of hits
-        HashMap<Long, Long> docHits = new HashMap<Long, Long>();
-
-        Map<String, List<SearchResult>> groupedResults = executeQuery(aSearchQueryRequest);
-        List<SearchResult> results = new ArrayList<>();
-        groupedResults.values().stream().forEach(resultsGroup -> results.addAll(resultsGroup));
-        for (int i = 0; i < results.size(); i++) {
-            Long docId = results.get(i).getDocumentId();
-            if (docHits.containsKey(docId)) {
-                docHits.replace(docId, docHits.get(docId), docHits.get(docId) + 1);
-            }
-            else {
-                docHits.put(docId, 1L);
-            }
-        }
-
-        return docHits;
-    }
-
-    @Override
-    public HashMap<String, Double> fetchTextStatistics(SourceDocument aSourceDocument,
-            String[] aPunctuationMarks)
-        throws ExecutionException, IOException
-    {
-        HashMap<String, Double> textStatistics = new HashMap<String, Double>();
-        String[] punctuationMarks = aPunctuationMarks;
-
-        // long docNumberLong = aStatisticRequest.getLimitedToDocument().get().getId();
-        long docNumberLong = aSourceDocument.getId();
-
-        int docNumber = (int) docNumberLong - 1;
-
-        IndexSearcher searcher = null;
-        try {
-            searcher = getSearcherManager().acquire();
-            IndexReader reader = searcher.getIndexReader();
-            // Document doc = reader.document(docNumber);
-
-            Terms termVector = reader.getTermVector(docNumber, FIELD_CONTENT);
-            TermsEnum itr = termVector.iterator();
-            BytesRef term = null;
-
-            double noOfSents = 0;
-            double noOfTokens = 0;
-            double noOfPunctMarks = 0;
-            // Types are unique tokens
-            double noOfTypes = 0;
-
-            while ((term = itr.next()) != null) {
-                String termText = term.utf8ToString();
-                Term termInstance = new Term(FIELD_CONTENT, term);
-                long termFreq = reader.totalTermFreq(termInstance);
-                long docCount = reader.docFreq(termInstance);
-
-                System.out.println("term: " + termText + ", termFreq = " + termFreq
-                        + ", docCount = " + docCount);
-                // Is it a sentence?
-                if (termText.startsWith("s")) {
-                    noOfSents = noOfSents + reader.totalTermFreq(termInstance);
-                }
-                else if (termText.startsWith("T")) {
-                    // Is it a punctuation mark from the list?
-                    if (Stream.of(punctuationMarks).anyMatch(termText::endsWith)
-                            && termText.toCharArray()[termText.toCharArray().length - 3] == 'n') {
-                        noOfPunctMarks = noOfPunctMarks + reader.totalTermFreq(termInstance);
-                    }
-                    else {
-                        noOfTokens = noOfTokens + reader.totalTermFreq(termInstance);
-                        noOfTypes = noOfTypes + 1;
-                    }
-                }
-                else {
-                    throw new ExecutionException(
-                            "Found instance which is neither sentence nor token!");
-                }
-
-            }
-
-            textStatistics.put("Number of Sentences", noOfSents);
-            textStatistics.put("Number of Tokens", noOfTokens);
-            textStatistics.put("Number of Types", noOfTypes);
-            textStatistics.put("Number of Punctuation Marks", noOfPunctMarks);
-
-            return textStatistics;
-
-        }
-        catch (Exception e) {
-            throw new ExecutionException(
-                    "Unable to fetch text statistics, exception message: [" + e.getMessage() + "]",
-                    e);
-        }
-        finally {
-            if (searcher != null) {
-                // Releasing and setting to null per recommendation in JavaDoc of
-                // release(searcher)
-                // method
-                getSearcherManager().release(searcher);
-                searcher = null;
-            }
-        }
+        return resultsMap;
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)
@@ -1157,15 +1036,16 @@ public class MtasDocumentIndex
         doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
         doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
         doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
-        FieldType fieldTypeForContent = new FieldType();
+        // FieldType fieldTypeForContent = new FieldType();
         // fieldTypeForContent.setIndexed(true);
-        fieldTypeForContent.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS);
-        fieldTypeForContent.setStored(false);
-        fieldTypeForContent.setStoreTermVectors(true);
-        fieldTypeForContent.setStoreTermVectorPositions(true);
-        fieldTypeForContent.setTokenized(true);
-        fieldTypeForContent.freeze();
-        doc.add(new Field(FIELD_CONTENT, encodedCAS, fieldTypeForContent));
+        /*
+         * fieldTypeForContent.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
+         * ); fieldTypeForContent.setStored(false); fieldTypeForContent.setStoreTermVectors(true);
+         * fieldTypeForContent.setStoreTermVectorPositions(true);
+         * fieldTypeForContent.setTokenized(true); fieldTypeForContent.freeze();
+         * 
+         */
+        doc.add(new TextField(FIELD_CONTENT, encodedCAS, Field.Store.NO));
 
         // Add document to the Lucene index
         indexWriter.addDocument(doc);

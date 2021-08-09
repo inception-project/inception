@@ -23,7 +23,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -534,10 +533,9 @@ public class SearchServiceImpl
     }
 
     @Override
-    public void getProjectStatistics(User aUser, Project aProject, String aStatistic,
-            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, Double aLowerDocSize, Double aUpperDocSize,
-            String aQuery)
+    public Map<String, Map<String, Object>> getProjectStatistics(User aUser, Project aProject,
+            String aStatistic, SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature, Double aLowerDocSize, Double aUpperDocSize)
         throws IOException, ExecutionException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
@@ -545,257 +543,12 @@ public class SearchServiceImpl
 
             ensureIndexIsCreatedAndValid(aProject, index);
 
-            index.getPhysicalIndex()
-                    .getTokenStatistics(new StatisticRequest(aProject, aUser, aStatistic, aDocument,
-                            aAnnotationLayer, aAnnotationFeature, aLowerDocSize, aUpperDocSize));
-
-             //index.getPhysicalIndex().getAnnotationStatistics(null, new
-             //SearchQueryRequest(aProject,
-             //aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
-
-            //Map<String, List<SearchResult>> results = query(aUser, aProject, aQuery, null, null,
-             //       null, 0, 0);
-        }
-    }
-
-    @Override
-    @Transactional
-    public HashMap<String, HashMap<String, Double>> getProjectTextStatistics(User aUser,
-            Project aProject, String aStatistic, SourceDocument aDocument,
-            AnnotationLayer aAnnotationLayer, AnnotationFeature aAnnotationFeature,
-            String[] aPunctuationMarks)
-        throws IOException, ExecutionException
-    {
-        log.trace("Statistics for user [{}] in project [{}]({})", aUser.getUsername(),
-                aProject.getName(), aProject.getId());
-
-        // TODO : irgendwie diese zahl aus aProject rauskriegen
-        int noOfTextDocuments = 2;
-
-        HashMap<String, HashMap<String, Double>> textStatisticsTable = new HashMap<String, HashMap<String, Double>>();
-
-        HashMap<String, Double> averages = new HashMap<String, Double>();
-        HashMap<String, Double> minima = new HashMap<String, Double>();
-        HashMap<String, Double> maxima = new HashMap<String, Double>();
-        HashMap<String, Double> medians = new HashMap<String, Double>();
-        // uses unbiased sample variance, i.e. we divide by (n-1) and not by n
-        HashMap<String, Double> standardDeviations = new HashMap<String, Double>();
-
-        ArrayList<Double> tokenCounts = new ArrayList<Double>();
-        ArrayList<Double> sentenceCounts = new ArrayList<Double>();
-        ArrayList<Double> typeCounts = new ArrayList<Double>();
-        ArrayList<Double> punctuationCounts = new ArrayList<Double>();
-        ArrayList<Double> typeTokenCounts = new ArrayList<Double>();
-        ArrayList<Double> tokenSentenceCounts = new ArrayList<Double>();
-
-        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
-            Index index = pooledIndex.get();
-
-            ensureIndexIsCreatedAndValid(aProject, index);
-
-            for (int i = 0; i < noOfTextDocuments; i++) {
-                // TODO: Textdokument aus aProject rauskriegen
-                SourceDocument currentDocument = aDocument;
-
-                HashMap<String, Double> currentResults = index.getPhysicalIndex()
-                        .fetchTextStatistics(aDocument, aPunctuationMarks);
-
-                Double currentTypeToken = currentResults.get("Number of Types")
-                        / currentResults.get("Number of Tokens");
-                Double currentTokenSentence = currentResults.get("Number of Tokens")
-                        / currentResults.get("Number of Sentences");
-
-                currentResults.put("Type-Token Ratio", currentTypeToken);
-                currentResults.put("Token-Sentence Ratio", currentTokenSentence);
-
-                tokenCounts.add(currentResults.get("Number of Tokens"));
-                sentenceCounts.add(currentResults.get("Number of Sentences"));
-                typeCounts.add(currentResults.get("Number of Types"));
-                punctuationCounts.add(currentResults.get("Number of Punctuation Marks"));
-                typeTokenCounts.add(currentTypeToken);
-                tokenSentenceCounts.add(currentTokenSentence);
-
-                textStatisticsTable.put("Doc" + String.valueOf(i), currentResults);
-
-            }
-            HashMap<String, ArrayList<Double>> calculationList = new HashMap<String, ArrayList<Double>>();
-            calculationList.put("Number of Tokens", tokenCounts);
-            calculationList.put("Number of Sentences", sentenceCounts);
-            calculationList.put("Number of Types", typeCounts);
-            calculationList.put("Number of Punctuation Marks", punctuationCounts);
-            calculationList.put("Type-Token Ratio", typeTokenCounts);
-            calculationList.put("Token-Sentence Ratio", tokenSentenceCounts);
-
-            for (String dataName : calculationList.keySet()) {
-                ArrayList<Double> data = calculationList.get(dataName);
-                Collections.sort(data);
-
-                minima.put(dataName, data.get(0));
-                maxima.put(dataName, data.get(data.size() - 1));
-
-                if (data.size() % 2 == 0) {
-                    medians.put(dataName,
-                            (data.get(data.size() / 2) + data.get(data.size() / 2 + 1)) / 2);
-                }
-                else {
-                    medians.put(dataName, data.get((data.size() - 1) / 2));
-                }
-
-                double total = 0;
-                for (double num : data) {
-                    total = total + num;
-                }
-                double avg = total / data.size();
-                averages.put(dataName, avg);
-
-                if (data.size() == 1) {
-                    standardDeviations.put(dataName, 0.0);
-                }
-                else {
-                    double diffs = 0;
-                    for (double num : data) {
-                        diffs = diffs + Math.pow((num - avg), 2);
-                    }
-                    standardDeviations.put(dataName, Math.pow(diffs / (data.size() - 1), 0.5));
-                }
-
-            }
+            return index.getPhysicalIndex()
+                    .getAnnotationStatistics(new StatisticRequest(aProject, aUser, aStatistic,
+                            aDocument, aAnnotationLayer, aAnnotationFeature, aLowerDocSize,
+                            aUpperDocSize));
 
         }
-        textStatisticsTable.put("Minimum", minima);
-        textStatisticsTable.put("Maximum", maxima);
-        textStatisticsTable.put("Median", medians);
-        textStatisticsTable.put("Average", averages);
-        textStatisticsTable.put("Standard Deviation", standardDeviations);
-
-        return textStatisticsTable;
-    }
-
-    @Transactional
-    public HashMap<String, HashMap<String, Double>> getProjectAnnotationStatistics(User aUser,
-            Project aProject)
-        throws IOException, ExecutionException
-    {
-        log.trace("Statistics for user [{}] in project [{}]({})", aUser.getUsername(),
-                aProject.getName(), aProject.getId());
-
-        HashMap<String, HashMap<String, Double>> annotationStatisticsTable = new HashMap<String, HashMap<String, Double>>();
-
-        HashMap<String, Double> averages = new HashMap<String, Double>();
-        HashMap<String, Double> minima = new HashMap<String, Double>();
-        HashMap<String, Double> maxima = new HashMap<String, Double>();
-        HashMap<String, Double> medians = new HashMap<String, Double>();
-        // uses unbiased sample variance, i.e. we divide by (n-1) and not by n
-        HashMap<String, Double> standardDeviations = new HashMap<String, Double>();
-
-        // from docId to layer name to counts
-        HashMap<Long, HashMap<String, Long>> fullCounts = new HashMap<Long, HashMap<String, Long>>();
-
-        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
-            Index index = pooledIndex.get();
-
-            ensureIndexIsCreatedAndValid(aProject, index);
-            // List<AnnotationDocument> annotationDocs =
-            // documentService.listAnnotationDocuments(aProject);
-
-            List<String> layerNames = new ArrayList<>();
-            layerNames.add("Chunk");
-            layerNames.add("Coreference");
-            layerNames.add("Dependency");
-            layerNames.add("Fact");
-            layerNames.add("Lemma");
-            layerNames.add("Morphological features");layerNames.add("Chunk");
-            layerNames.add("Named");
-            layerNames.add("Chunk");
-            layerNames.add("Chunk");
-
-
-            List<String> featureNames = new ArrayList<>();
-
-            for (String layerName : layerNames) {
-                for (String featureName : featureNames) {
-                    // String layerName = annotationDocs.get(i).getName();
-                    // String featureName = annotationDocs.get(i);
-
-                    String searchString = "<" + layerName + "." + featureName + "=\"\"/>";
-                    HashMap<Long, Long> currentResults = index.getPhysicalIndex()
-                        .getFeatureStatistics(
-                            new SearchQueryRequest(aProject, aUser, searchString));
-
-                    for (Long key : currentResults.keySet()) {
-                        if (fullCounts.keySet().contains(key)) {
-                            HashMap<String, Long> updateRow = fullCounts.get(key);
-                            updateRow.put(layerName + "." + featureName, currentResults.get(key));
-                            fullCounts.replace(key, fullCounts.get(key), updateRow);
-                        } else {
-                            HashMap<String, Long> newRow = new HashMap<String, Long>();
-                            newRow.put(layerName + "." + featureName, currentResults.get(key));
-                            fullCounts.put(key, newRow);
-                        }
-                    }
-                }
-            }
-        }
-            /*
-            tokenCounts.add(currentResults.get("Number of Tokens"));
-            sentenceCounts.add(currentResults.get("Number of Sentences"));
-            typeCounts.add(currentResults.get("Number of Types"));
-            punctuationCounts.add(currentResults.get("Number of Punctuation Marks"));
-            typeTokenCounts.add(currentTypeToken);
-            tokenSentenceCounts.add(currentTokenSentence);
-
-            textStatisticsTable.put("Doc" + String.valueOf(i), currentResults);
-
-        }
-        HashMap<String, ArrayList<Double>> calculationList = new HashMap<String, ArrayList<Double>>();
-        calculationList.put("Number of Tokens", tokenCounts);
-        calculationList.put("Number of Sentences", sentenceCounts);
-        calculationList.put("Number of Types", typeCounts);
-        calculationList.put("Number of Punctuation Marks", punctuationCounts);
-        calculationList.put("Type-Token Ratio", typeTokenCounts);
-        calculationList.put("Token-Sentence Ratio", tokenSentenceCounts);
-
-        for (String dataName : calculationList.keySet()) {
-            ArrayList<Double> data = calculationList.get(dataName);
-            Collections.sort(data);
-
-            minima.put(dataName, data.get(0));
-            maxima.put(dataName, data.get(data.size() - 1));
-
-            if (data.size() % 2 == 0) {
-                medians.put(dataName,
-                        (data.get(data.size() / 2) + data.get(data.size() / 2 + 1)) / 2);
-            }
-            else {
-                medians.put(dataName, data.get((data.size() - 1) / 2));
-            }
-
-            double total = 0;
-            for (double num : data) {
-                total = total + num;
-            }
-            double avg = total / data.size();
-            averages.put(dataName, avg);
-
-            if (data.size() == 1) {
-                standardDeviations.put(dataName, 0.0);
-            }
-            else {
-                double diffs = 0;
-                for (double num : data) {
-                    diffs = diffs + Math.pow((num - avg), 2);
-                }
-                standardDeviations.put(dataName, Math.pow(diffs / (data.size() - 1), 0.5));
-            }
-
-        }
-
-    }textStatisticsTable.put("Minimum",minima);textStatisticsTable.put("Maximum",maxima);textStatisticsTable.put("Median",medians);textStatisticsTable.put("Average",averages);textStatisticsTable.put("Standard Deviation",standardDeviations);
-
-
-             */
-    return annotationStatisticsTable;
-
     }
 
     /**
