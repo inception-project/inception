@@ -45,6 +45,10 @@ public class RelationLayerTraitsEditor
     @Override
     protected void initializeForm(Form<RelationLayerTraits> aForm)
     {
+        CheckBox renderArcs = new CheckBox("renderArcs", getTraitsModel().bind("renderArcs"));
+        renderArcs.setOutputMarkupPlaceholderTag(true);
+        aForm.add(renderArcs);
+
         aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
 
         OverlapModeSelect overlapMode = new OverlapModeSelect("overlapMode", getLayerModel());

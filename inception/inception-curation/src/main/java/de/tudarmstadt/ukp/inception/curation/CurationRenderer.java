@@ -169,8 +169,8 @@ public class CurationRenderer
                 Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
                         .createRenderer(layer, () -> layerAllFeatures);
 
-                List<VObject> objects = renderer.render((AnnotationFS) fs, layerSupportedFeatures,
-                        aWindowBeginOffset, aWindowEndOffset);
+                List<VObject> objects = renderer.render(aVdoc, (AnnotationFS) fs,
+                        layerSupportedFeatures, aWindowBeginOffset, aWindowEndOffset);
 
                 for (VObject object : objects) {
                     VID curationVid = new CurationVID(user, object.getVid());
