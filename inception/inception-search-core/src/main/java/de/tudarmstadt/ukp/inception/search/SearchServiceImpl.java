@@ -534,8 +534,7 @@ public class SearchServiceImpl
 
     @Override
     public Map<String, Map<String, Object>> getProjectStatistics(User aUser, Project aProject,
-            String aStatistic, SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, Double aLowerDocSize, Double aUpperDocSize)
+            String aStatistic, Double aLowerDocSize, Double aUpperDocSize)
         throws IOException, ExecutionException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
@@ -543,10 +542,8 @@ public class SearchServiceImpl
 
             ensureIndexIsCreatedAndValid(aProject, index);
 
-            return index.getPhysicalIndex()
-                    .getAnnotationStatistics(new StatisticRequest(aProject, aUser, aStatistic,
-                            aDocument, aAnnotationLayer, aAnnotationFeature, aLowerDocSize,
-                            aUpperDocSize));
+            return index.getPhysicalIndex().getAnnotationStatistics(new StatisticRequest(aProject,
+                    aUser, aStatistic, aLowerDocSize, aUpperDocSize));
 
         }
     }

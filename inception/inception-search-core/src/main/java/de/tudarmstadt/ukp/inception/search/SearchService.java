@@ -119,8 +119,7 @@ public interface SearchService
      */
 
     public Map<String, Map<String, Object>> getProjectStatistics(User aUser, Project aProject, String aStatistic,
-            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, Double aLowerDocSize, Double aUpperDocSize)
+             Double aLowerDocSize, Double aUpperDocSize)
         throws IOException, ExecutionException;
 
     void enqueueReindexTask(Project aProject, String aTrigger);

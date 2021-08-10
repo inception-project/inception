@@ -429,6 +429,13 @@ public class MtasDocumentIndex
         results.remove("sourceNumber");
         results.remove("n");
         allStats.put("Token Count", results);
+
+        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>");
+        results.remove("stats");
+        results.remove("sourceNumber");
+        results.remove("n");
+        allStats.put("Sentence Count", results);
+
         return allStats;
     }
 
@@ -447,15 +454,15 @@ public class MtasDocumentIndex
                     FIELD_CONTENT);
 
             ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
-            Boolean isToken = false;
-            if (aFeatureQuery.equals("<Token=\"\"/>")) {
-                isToken = true;
+            Boolean isText = false;
+            if (aFeatureQuery.equals("<Token=\"\"/>") || aFeatureQuery.equals("<s=\"\"/>")) {
+                isText = true;
             }
             for (int i = 0; i < reader.maxDoc(); i++) {
                 // -1 indicates sourceDocument
                 // do we need to check for the correct user here? i.e. add to if
                 // && reader.document(i).getField(FIELD_USER) == aStatisticRequest.getUser()
-                if (reader.document(i).getField(FIELD_ID).stringValue().contains("-") == isToken) {
+                if (reader.document(i).getField(FIELD_ID).stringValue().contains("-") == isText) {
                     fullDocSet.add(i);
                 }
             }

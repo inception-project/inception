@@ -553,12 +553,8 @@ public class MtasDocumentIndexTest
         Double lowerDocSize = null;
         Double upperDocSize = null;
 
-        String query = "<Named_entity.value=\"\"/>";
-
-        List<SearchResult> results = searchService.query(user, project, query);
-
         Map<String, Map<String, Object>> statsResults = searchService.getProjectStatistics(user, project,
-                statistic, null, null, null, lowerDocSize, upperDocSize);
+                statistic, lowerDocSize, upperDocSize);
 
         assertThat(0).isEqualTo(0);
     }

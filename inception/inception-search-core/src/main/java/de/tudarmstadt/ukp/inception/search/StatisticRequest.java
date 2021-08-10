@@ -17,12 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import java.util.Optional;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class StatisticRequest
@@ -31,37 +26,22 @@ public class StatisticRequest
     private final User user;
     private final String statistic;
 
-    private final SourceDocument limitedToDocument;
-
-    private final AnnotationLayer annotationLayer;
-    private final AnnotationFeature annotationFeature;
-
     private final Double lowerDocumentSize;
     private final Double upperDocumentSize;
 
     public StatisticRequest(Project aProject, User aUser, String aStatistic)
     {
-        this(aProject, aUser, aStatistic, null);
+        this(aProject, aUser, aStatistic, null, null);
     }
 
     public StatisticRequest(Project aProject, User aUser, String aStatistic,
-            SourceDocument aLimitedToDocument)
-    {
-        this(aProject, aUser, aStatistic, aLimitedToDocument, null, null, null, null);
-    }
-
-    public StatisticRequest(Project aProject, User aUser, String aStatistic,
-            SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, Double aLowerDocumentSize,
-            Double aUpperDocumentSize)
+            Double aLowerDocumentSize, Double aUpperDocumentSize)
     {
         super();
         project = aProject;
         user = aUser;
         statistic = aStatistic;
-        limitedToDocument = aLimitedToDocument;
-        annotationLayer = aAnnotationLayer;
-        annotationFeature = aAnnotationFeature;
+
         lowerDocumentSize = aLowerDocumentSize;
         upperDocumentSize = aUpperDocumentSize;
     }
@@ -79,21 +59,6 @@ public class StatisticRequest
     public String getStatistic()
     {
         return statistic;
-    }
-
-    public Optional<SourceDocument> getLimitedToDocument()
-    {
-        return Optional.ofNullable(limitedToDocument);
-    }
-
-    public AnnotationLayer getAnnotationLayer()
-    {
-        return annotationLayer;
-    }
-
-    public AnnotationFeature getAnnotationFeature()
-    {
-        return annotationFeature;
     }
 
     public Double getLowerDocumentSize()
