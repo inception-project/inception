@@ -829,6 +829,10 @@
             <groupId>org.webjars</groupId>
             <artifactId>jquery</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>com.google.javascript</groupId>
+            <artifactId>closure-compiler-unshaded</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
