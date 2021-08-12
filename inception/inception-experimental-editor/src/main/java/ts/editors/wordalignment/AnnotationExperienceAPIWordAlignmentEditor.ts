@@ -24,8 +24,8 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
     annotationExperienceAPIVisualization: AnnotationExperienceAPIWordAlignmentEditorVisualization;
     annotationExperienceAPIWordAlignmentEditorActionHandler: AnnotationExperienceAPIWordAlignmentEditorActionHandler
 
-    originalLanguageSentence : string;
-    originalOffsetBegin : number
+    originalLanguageSentence: string;
+    originalOffsetBegin: number
     translatedLanguageSentence: string;
     translatedOffsetBegin: number;
 
@@ -34,68 +34,63 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
         this.annotationExperienceAPI = new AnnotationExperienceAPIImpl();
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIWordAlignmentEditorVisualization(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler = new AnnotationExperienceAPIWordAlignmentEditorActionHandler(this);
-        this.annotationExperienceAPIWordAlignmentEditorActionHandler.registerDefaultActionHandler();
     }
 
-    saveAlignments() {
+    saveAlignments()
+    {
         let pairs = []
-        let values = []
         const that = this;
 
-        if (!document.getElementById("multipleSelect").checked) {
-            for (let i = 0; i < document.getElementById("container_german").children.length - 2; i++) {
-                if (values.indexOf(document.getElementById("container_german").children[i + 2].children[1].value) > -1) {
-                    alert("Word alignment is not 1:1.")
-                    return;
-                }
-                values.push(document.getElementById("container_german").children[i + 2].children[1].value)
-            }
+        if (!this.inputsValid) {
+            alert("Word alignment is not 1:1.")
+            return;
         }
 
-        for (let i = 0; i < document.getElementById("container_english").children.length - 2; i++) {
-            for (let j = 0; j < document.getElementById("container_german").children.length - 2; j++) {
-                if ((document.getElementById("container_english").children[i + 2].children[0].value) ===
-                    (document.getElementById("container_german").children[j + 2].children[1].value)) {
+        let oddUnitContainerSize =  document.getElementById("odd_unit_container").children.length - 2;
+        let evenUnitContainerSize = document.getElementById("even_unit_container").children.length - 2;
+
+        for (let i = 0; i < oddUnitContainerSize; i++) {
+            for (let j = 0; j < evenUnitContainerSize; j++) {
+
+                let oddUnitContainerElementInputValue = document.getElementById("odd_unit_container").children[i + 2].children[0].value;
+                let evenUnitContainerElementInpupValue = document.getElementById("even_unit_container").children[j + 2].children[1].value;
+
+                if (oddUnitContainerElementInputValue === evenUnitContainerElementInpupValue) {
+
+                    let oddUnitContainerElementText = document.getElementById("odd_unit_container").children[i + 2].children[1];
+                    let evenUnitContainerElementText = document.getElementById("even_unit_container").children[j + 2].children[0];
+
+                    let oddUnitContainerElementTextId = oddUnitContainerElementText.id.split("_");
+                    let evenUnitContainerElementTextId = evenUnitContainerElementText.id.split("_");
+
+                    let selectedSpanLayer =  document.getElementsByClassName("filter-option-inner-inner")[0].innerText;
+
                     pairs.push([
-                        document.getElementById("container_english").children[i + 2].children[1].id.split("_")[2],
-                        document.getElementById("container_english").children[i + 2].children[1].innerText,
-                        document.getElementById("container_german").children[j + 2].children[0].id.split("_")[2],
-                        document.getElementById("container_german").children[j + 2].children[0].innerText]
-                        );
-                    this.annotationExperienceAPI.requestCreateSpanFromServer(
-                        that.annotationExperienceAPI.clientName,
-                        that.annotationExperienceAPI.clientName,
-                        that.annotationExperienceAPI.projectID,
-                        this.annotationExperienceAPI.documentID,
-                        Number(document.getElementById("container_english").children[i + 2].children[1].id.split("_")[2]),
-                        Number(document.getElementById("container_english").children[i + 2].children[1].id.split("_")[3]),
-                        "webanno.custom.Word_Alignment_Span")
+                        oddUnitContainerElementTextId[2],
+                        oddUnitContainerElementText.innerText,
+                        evenUnitContainerElementTextId[2],
+                        evenUnitContainerElementText.innerText]
+                    );
 
-                    this.annotationExperienceAPI.requestCreateSpanFromServer(
-                        that.annotationExperienceAPI.clientName,
-                        that.annotationExperienceAPI.clientName,
-                        that.annotationExperienceAPI.projectID,
-                        this.annotationExperienceAPI.documentID,
-                        Number(document.getElementById("container_german").children[i + 2].children[0].id.split("_")[2]),
-                        Number(document.getElementById("container_german").children[i + 2].children[0].id.split("_")[3]),
-                        "webanno.custom.Word_Alignment_Span")
+                    this.createSpanRequest(oddUnitContainerElementTextId[2], oddUnitContainerElementTextId[3], selectedSpanLayer);
+                    this.createSpanRequest(evenUnitContainerElementTextId[2], evenUnitContainerElementTextId[3], selectedSpanLayer);
 
-                    document.getElementById("container_german").children[j + 2].children[1].setAttribute("disabled", "true");
+                    document.getElementById("even_unit_container").children[j + 2].children[1].setAttribute("disabled", "true");
                 }
             }
         }
 
         setTimeout(function () {
-            let governor, dependent;
+            let source, target;
             for (let i = 0; i < pairs.length; i++) {
                 for (let j = 0; j < that.annotationExperienceAPI.spans.length; j++) {
                     if (pairs[i][0] == that.annotationExperienceAPI.spans[j].begin &&
                         pairs[i][1] == that.annotationExperienceAPI.spans[j].coveredText) {
-                        governor = that.annotationExperienceAPI.spans[j];
+                        source = that.annotationExperienceAPI.spans[j];
                     }
                     if (pairs[i][2] == that.annotationExperienceAPI.spans[j].begin &&
                         pairs[i][3] == that.annotationExperienceAPI.spans[j].coveredText) {
-                        dependent = that.annotationExperienceAPI.spans[j];
+                        target = that.annotationExperienceAPI.spans[j];
                     }
                 }
                 that.annotationExperienceAPI.requestCreateRelationFromServer(
@@ -103,21 +98,50 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                     that.annotationExperienceAPI.clientName,
                     that.annotationExperienceAPI.projectID,
                     that.annotationExperienceAPI.documentID,
-                    governor.id,
-                    dependent.id,
+                    source.id,
+                    target.id,
                     "webanno.custom.Word_Alignment_Relation")
             }
         }, 5000)
 
-        document.getElementById("save_alignment").disabled= true
+        document.getElementById("save_alignment").disabled = true
 
     }
 
-    resetAlignments() {
+    inputsValid()
+    {
+        let values = []
+        if (!document.getElementById("multipleSelect").checked) {
+            for (let i = 0; i < document.getElementById("even_unit_container").children.length - 2; i++) {
+                if (values.indexOf(document.getElementById("even_unit_container").children[i + 2].children[1].value) > -1) {
+                    return false;
+                }
+                values.push(document.getElementById("even_unit_container").children[i + 2].children[1].value)
+            }
+        }
+        return true;
+    }
+
+    createSpanRequest(aBegin: string, aEnd : string, aLayer: string)
+    {
+        let that = this;
+
+        this.annotationExperienceAPI.requestCreateSpanFromServer(
+            that.annotationExperienceAPI.clientName,
+            that.annotationExperienceAPI.clientName,
+            that.annotationExperienceAPI.projectID,
+            that.annotationExperienceAPI.documentID,
+            Number(aBegin),
+            Number(aEnd),
+            aLayer);
+    }
+
+    resetAlignments()
+    {
 
         let that = this;
 
-        for (let i = 0; i <this.annotationExperienceAPI.relations.length; i++) {
+        for (let i = 0; i < this.annotationExperienceAPI.relations.length; i++) {
             this.annotationExperienceAPI.requestDeleteRelationFromServer(
                 that.annotationExperienceAPI.clientName,
                 that.annotationExperienceAPI.clientName,
@@ -125,11 +149,10 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                 that.annotationExperienceAPI.documentID,
                 that.annotationExperienceAPI.relations[i].id,
                 that.annotationExperienceAPI.relations[i].type
-
             )
         }
 
-        for (let i = 0; i <this.annotationExperienceAPI.spans.length; i++) {
+        for (let i = 0; i < this.annotationExperienceAPI.spans.length; i++) {
             this.annotationExperienceAPI.requestDeleteSpanFromServer(
                 that.annotationExperienceAPI.clientName,
                 that.annotationExperienceAPI.clientName,

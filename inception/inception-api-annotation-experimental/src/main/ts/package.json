@@ -32,7 +32,6 @@
     "Annotation"
   ],
   "external": {},
-  "author": "Christoph Scheunemann",
   "license": "",
   "devDependencies": {
     "@stomp/stompjs": "^6.1.0",

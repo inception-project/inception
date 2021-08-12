@@ -15,27 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FeatureX} from "./FeatureX";
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc;
 
-export class Span
+import java.util.List;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
+
+public class UpdateArcMessage
 {
-    id: string;
-    coveredText: string;
-    color: string;
-    begin: number;
-    end: number;
-    type: string;
-    features: string[];
+    private VID arcId;
+    private List<FeatureX> features;
 
-    constructor(aId: string, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeatures: FeatureX[], aColor: string)
+    public UpdateArcMessage(VID aArcId, List<FeatureX> aFeatures)
     {
-        this.id = aId;
-        this.coveredText = aCoveredText;
-        this.begin = aBegin;
-        this.end = aEnd;
-        this.type = aType;
-        this.features = aFeatures;
-        this.color = aColor;
+        arcId = aArcId;
     }
 
+    public VID getArcId()
+    {
+        return arcId;
+    }
+
+    public void setArcId(VID aArcId)
+    {
+        arcId = aArcId;
+    }
+
+    public List<FeatureX> getFeatures()
+    {
+        return features;
+    }
+
+    public void setFeatures(List<FeatureX> aFeatures)
+    {
+        features = aFeatures;
+    }
 }

@@ -15,27 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FeatureX} from "./FeatureX";
+import {Viewport} from "../../model/Viewport";
 
-export class Span
-{
-    id: string;
-    coveredText: string;
-    color: string;
-    begin: number;
-    end: number;
-    type: string;
-    features: string[];
+export class ViewportRequest {
+    clientName: string;
+    userName: string;
+    projectId: number;
+    documentId: number;
+    viewport: Viewport;
 
-    constructor(aId: string, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeatures: FeatureX[], aColor: string)
-    {
-        this.id = aId;
-        this.coveredText = aCoveredText;
-        this.begin = aBegin;
-        this.end = aEnd;
-        this.type = aType;
-        this.features = aFeatures;
-        this.color = aColor;
+    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aViewport: Viewport) {
+        this.clientName = aClientName;
+        this.userName = aUserName;
+        this.projectId = aProjectId;
+        this.documentId = aDocumentId;
+        this.viewport = aViewport;
     }
-
 }

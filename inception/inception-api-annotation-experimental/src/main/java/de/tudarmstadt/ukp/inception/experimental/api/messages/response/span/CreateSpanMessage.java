@@ -15,41 +15,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.model;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.span;
 
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class Span
+public class CreateSpanMessage
 {
-    private VID id;
+    private VID spanId;
     private String coveredText;
     private int begin;
     private int end;
+    private String color;
     private String type;
     private List<String> features;
-    private String color;
 
-    public Span(VID aId, int aBegin, int aEnd, String aType, String aColor, String aCoveredText, List<String> aFeatures)
+    public CreateSpanMessage(VID aSpanId, String aCoveredText, int aBegin, int aEnd,
+                             String aType, String aColor, List<String> aFeatures)
     {
-        id = aId;
+        spanId = aSpanId;
+        coveredText = aCoveredText;
         begin = aBegin;
         end = aEnd;
         type = aType;
         color = aColor;
-        coveredText = aCoveredText;
         features = aFeatures;
     }
 
-    public VID getId()
+    public VID getSpanId()
     {
-        return id;
+        return spanId;
     }
 
-    public void setId(VID aId)
+    public void setSpanId(VID aSpanId)
     {
-        id = aId;
+        spanId = aSpanId;
+    }
+
+    public String getCoveredText()
+    {
+        return coveredText;
+    }
+
+    public void setCoveredText(String aCoveredText)
+    {
+        coveredText = aCoveredText;
     }
 
     public int getBegin()
@@ -72,26 +83,6 @@ public class Span
         end = aEnd;
     }
 
-    public String getType()
-    {
-        return type;
-    }
-
-    public void setType(String aType)
-    {
-        type = aType;
-    }
-
-    public String getCoveredText()
-    {
-        return coveredText;
-    }
-
-    public void setCoveredText(String aCoveredText)
-    {
-        coveredText = aCoveredText;
-    }
-
     public String getColor()
     {
         return color;
@@ -102,14 +93,23 @@ public class Span
         color = aColor;
     }
 
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String aType)
+    {
+        type = aType;
+    }
+
     public List<String> getFeatures()
     {
         return features;
     }
 
-    public void setFeature(List<String> aFeatures)
+    public void setFeatures(List<String> aFeatures)
     {
         features = aFeatures;
     }
 }
-

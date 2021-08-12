@@ -15,27 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FeatureX} from "./FeatureX";
-
-export class Span
+export class CreateArcRequest
 {
-    id: string;
-    coveredText: string;
-    color: string;
-    begin: number;
-    end: number;
-    type: string;
-    features: string[];
+    clientName : string;
+    userName : string;
+    projectId : number;
+    documentId : number;
+    sourceId : string;
+    targetId : string;
+    layer : string;
 
-    constructor(aId: string, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeatures: FeatureX[], aColor: string)
+    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aSourceId: string, aTargetId: string, aLayer: string)
     {
-        this.id = aId;
-        this.coveredText = aCoveredText;
-        this.begin = aBegin;
-        this.end = aEnd;
-        this.type = aType;
-        this.features = aFeatures;
-        this.color = aColor;
+        this.clientName = aClientName;
+        this.userName = aUserName;
+        this.projectId = aProjectId;
+        this.documentId = aDocumentId;
+        this.sourceId = aSourceId;
+        this.targetId = aTargetId;
+        this.layer = aLayer;
     }
-
 }

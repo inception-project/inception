@@ -15,22 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {NewDocumentResponse} from "./messages/response/NewDocumentResponse";
-import {NewViewportResponse} from "./messages/response/NewViewportResponse";
+import {DocumentResponse} from "./messages/response/NewDocumentResponse";
+import {ViewportResponse} from "./messages/response/NewViewportResponse";
 import {ErrorMessage} from "./messages/response/ErrorMessage";
 import {SelectSpanResponse} from "./messages/response/span/SelectSpanResponse";
-import {UpdateSpanResponse} from "./messages/response/span/UpdateSpanResponse";
-import {CreateSpanResponse} from "./messages/response/span/CreateSpanResponse";
-import {DeleteSpanResponse} from "./messages/response/span/DeleteSpanResponse";
-import {SelectRelationResponse} from "./messages/response/relation/SelectRelationResponse";
-import {UpdateRelationResponse} from "./messages/response/relation/UpdateRelationResponse";
-import {CreateRelationResponse} from "./messages/response/relation/CreateRelationResponse";
+import {UpdateSpanMessage} from "./messages/response/span/UpdateSpanResponse";
+import {CreateSpanMessage} from "./messages/response/span/CreateSpanResponse";
+import {DeleteSpanMessage} from "./messages/response/span/DeleteSpanResponse";
+import {SelectArcResponse} from "./messages/response/arc/SelectRelationResponse";
+import {UpdateArcResponse} from "./messages/response/arc/UpdateRelationResponse";
+import {CreateArcResponse} from "./messages/response/arc/CreateRelationResponse";
 import {Span} from "./model/Span";
-import {Relation} from "./model/Relation";
-import {DeleteRelationResponse} from "./messages/response/relation/DeleteRelationResponse";
-import {AllRelationResponse} from "./messages/response/relation/AllRelationResponse";
-import {AllSpanResponse} from "./messages/response/span/AllSpanResponse";
+import {Arc} from "./model/Relation";
+import {DeleteArcResponse} from "./messages/response/arc/DeleteRelationResponse";
 import {Viewport} from "./model/Viewport";
+import {FeatureX} from "./model/FeatureX";
 
 export interface AnnotationExperienceAPI
 {
@@ -39,8 +38,8 @@ export interface AnnotationExperienceAPI
     spans: Span[];
     selectedSpan: Span;
 
-    relations: Relation[];
-    selectedRelation: Relation;
+    arcs: Arc[];
+    selectedArc: Arc;
 
     //Viewport
     viewport: Viewport;
@@ -50,64 +49,54 @@ export interface AnnotationExperienceAPI
     disconnect();
 
 
-    requestNewDocumentFromServer(aClientName: string, aUserName: string, aProjectId: number,
+    requestDocument(aClientName: string, aUserName: string, aProjectId: number,
                                  aDocumentId: number, aViewport: Viewport);
 
-    requestNewViewportFromServer(aClientName: string, aUserName: string, aProjectId: number,
+    requestViewport(aClientName: string, aUserName: string, aProjectId: number,
                                  aDocumentId: number, aViewport: Viewport);
 
-    requestSelectSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                aDocumentId: number, aSpanAddress: number);
+    requestSelectSpan(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aSpanId: string);
 
-    requestUpdateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                aDocumentId: number, aSpanAddress: number, aNewFeature: string[])
+    requestUpdateSpan(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aSpanId: string, aNewFeature: FeatureX[])
 
-    requestCreateSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                aDocumentId: number, aBegin: number, aEnd: number, aType: string, aFeature: string);
+    requestCreateSpan(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aBegin: number, aEnd: number, aLayer: string);
 
-    requestDeleteSpanFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                aDocumentId: number, aSpanAddress: number, aLayer: string);
+    requestDeleteSpan(aClientName: string, aUserName: string, aProjectId: number,
+                                aDocumentId: number, aSpanId: string, aLayer: string);
 
-    requestSelectRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                    aDocumentId: number, aRelationAddress: number);
+    requestSelectArc(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number, aArcId: string);
 
-    requestUpdateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                    aDocumentId: number, aRelationAddress: number, aNewFlavor: string, aNewRelation: string)
+    requestUpdateArc(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number, aArcId: string, aNewFeature: FeatureX[])
 
-    requestCreateRelationFromServer(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aGovernorId : number, aDependentId : number, aLayer: string)
+    requestCreateArc(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aSourceId : string, aTargetId : string, aLayer: string)
 
-    requestDeleteRelationFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                    aDocumentId: number, aRelationAddress: number, aLayer: string);
+    requestDeleteArc(aClientName: string, aUserName: string, aProjectId: number,
+                                    aDocumentId: number, aArcId: string, aLayer: string);
 
-    requestAllSpansFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                               aDocumentId: number);
+    onDocument(aMessage: DocumentResponse);
 
-    requestAllRelationsFromServer(aClientName: string, aUserName: string, aProjectId: number,
-                                  aDocumentId: number);
-
-    onNewDocument(aMessage: NewDocumentResponse);
-
-    onNewViewport(aMessage: NewViewportResponse);
+    onViewport(aMessage: ViewportResponse);
 
     onSpanSelect(aMessage: SelectSpanResponse);
 
-    onSpanUpdate(aMessage: UpdateSpanResponse);
+    onSpanUpdate(aMessage: UpdateSpanMessage);
 
-    onSpanCreate(aMessage: CreateSpanResponse);
+    onSpanCreate(aMessage: CreateSpanMessage);
 
-    onSpanDelete(aMessage: DeleteSpanResponse);
+    onSpanDelete(aMessage: DeleteSpanMessage);
 
-    onRelationSelect(aMessage: SelectRelationResponse);
+    onArcSelect(aMessage: SelectArcResponse);
 
-    onRelationDelete(aMessage: DeleteRelationResponse);
+    onArcDelete(aMessage: DeleteArcResponse);
 
-    onRelationUpdate(aMessage: UpdateRelationResponse);
+    onArcUpdate(aMessage: UpdateArcResponse);
 
-    onRelationCreate(aMessage: CreateRelationResponse);
-
-    onAllSpans(aMessage: AllSpanResponse);
-
-    onAllRelations(aMessage: AllRelationResponse);
+    onArcCreate(aMessage: CreateArcResponse);
 
     onError(aMessage: ErrorMessage);
 }

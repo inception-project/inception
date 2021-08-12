@@ -20,27 +20,28 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response.span;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 
 public class SelectSpanResponse
 {
-    private VID spanAddress;
+    private VID spanId;
     private String type;
-    private List<String> feature;
+    private List<FeatureX> feature;
 
-    public SelectSpanResponse(VID aSpanAddress, String aType, List<String> aFeature)
+    public SelectSpanResponse(VID aSpanId, String aType, List<FeatureX> aFeature)
     {
-        spanAddress = aSpanAddress;
+        spanId = aSpanId;
         type = aType;
         feature = aFeature;
     }
 
-    public VID getSpanAddress()
+    public VID getSpanId()
     {
-        return spanAddress;
+        return spanId;
     }
 
-    public void setSpanAddress(VID aSpanAddress) {
-        spanAddress = aSpanAddress;
+    public void setSpanId(VID aSpanId) {
+        spanId = aSpanId;
     }
 
     public String getType()
@@ -53,12 +54,12 @@ public class SelectSpanResponse
         type = aType;
     }
 
-    public List<String> getFeature()
+    public List<FeatureX> getFeature()
     {
         return feature;
     }
 
-    public void setFeature(List<String> aFeature)
+    public void setFeature(List<FeatureX> aFeature)
     {
         feature = aFeature;
     }

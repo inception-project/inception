@@ -62,30 +62,29 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.AllRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.AllSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DocumentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.ViewportRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.CreateArcRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.DeleteArcRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.SelectArcRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.UpdateArcRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DocumentResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.CreateRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.DeleteRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.SelectRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.UpdateRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ViewportResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.CreateArcMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.DeleteArcMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.SelectArcResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.UpdateArcMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.model.Relation;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.model.Arc;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcessAPI;
@@ -123,75 +122,64 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void handleNewDocument(NewDocumentRequest aNewDocumentRequest) throws IOException
+    public void handleDocumentRequest(DocumentRequest aDocumentRequest) throws IOException
     {
         try {
             // TODO server decide on next document
-            if (aNewDocumentRequest.getDocumentId() == 0) {
-                aNewDocumentRequest.setDocumentId(41714);
+            if (aDocumentRequest.getDocumentId() == 0) {
+                aDocumentRequest.setDocumentId(41714);
             }
 
-            CAS cas = getCasForDocument(aNewDocumentRequest.getUserName(),
-                    aNewDocumentRequest.getProjectId(), aNewDocumentRequest.getDocumentId());
+            CAS cas = getCasForDocument(aDocumentRequest.getUserName(),
+                    aDocumentRequest.getProjectId(), aDocumentRequest.getDocumentId());
 
-            if (aNewDocumentRequest.getViewport().getDisabledLayers() == null) {
-                aNewDocumentRequest.getViewport().setDisabledLayers(new ArrayList<>());
-            }
-            Pair<List<Span>, List<Relation>> annotations = getAnnotations(cas,
-                    aNewDocumentRequest.getProjectId(),
-                    getValidLayers(aNewDocumentRequest.getProjectId(),
-                            aNewDocumentRequest.getViewport().getDisabledLayers()));
+            Pair<List<Span>, List<Arc>> annotations = getAnnotations(cas,
+                    aDocumentRequest.getProjectId(), getValidLayers(aDocumentRequest.getProjectId(),
+                            aDocumentRequest.getViewport().getDisabledLayers()));
 
-            List<Span> spans = filterSpans(annotations.getKey(), aNewDocumentRequest.getViewport());
+            List<Span> spans = filterSpans(annotations.getKey(), aDocumentRequest.getViewport());
 
-            List<Relation> relations = filterRelations(annotations.getValue(), cas,
-                    aNewDocumentRequest.getViewport());
+            List<Arc> relations = filterArcs(annotations.getValue(), cas,
+                    aDocumentRequest.getViewport());
 
-            NewDocumentResponse message = new NewDocumentResponse(
-                    toIntExact(documentService.getSourceDocument(aNewDocumentRequest.getProjectId(),
-                            aNewDocumentRequest.getDocumentId()).getId()),
-                    getViewportText(cas, aNewDocumentRequest.getViewport()), spans, relations);
-            annotationProcessAPI.sendNewDocumentResponse(message,
-                    aNewDocumentRequest.getClientName());
+            DocumentResponse message = new DocumentResponse(
+                    toIntExact(documentService.getSourceDocument(aDocumentRequest.getProjectId(),
+                            aDocumentRequest.getDocumentId()).getId()),
+                    getViewportText(cas, aDocumentRequest.getViewport()), spans, relations);
+            annotationProcessAPI.sendDocumentResponse(message, aDocumentRequest.getClientName());
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleNewDocument()");
-            e.printStackTrace();
-            createErrorMessage(e.getMessage(), aNewDocumentRequest.getClientName());
+            LOG.error("Exception has been thrown during handleNewDocument()", e);
+            createErrorMessage(e.getMessage(), aDocumentRequest.getClientName());
         }
 
     }
 
     @Override
-    public void handleNewViewport(NewViewportRequest aNewViewportRequest) throws IOException
+    public void handleViewportRequest(ViewportRequest aViewportRequest) throws IOException
     {
         try {
-            CAS cas = getCasForDocument(aNewViewportRequest.getUserName(),
-                    aNewViewportRequest.getProjectId(), aNewViewportRequest.getDocumentId());
+            CAS cas = getCasForDocument(aViewportRequest.getUserName(),
+                    aViewportRequest.getProjectId(), aViewportRequest.getDocumentId());
 
-            if (aNewViewportRequest.getViewport().getDisabledLayers() == null) {
-                aNewViewportRequest.getViewport().setDisabledLayers(new ArrayList<>());
-            }
-            Pair<List<Span>, List<Relation>> annotations = getAnnotations(cas,
-                    aNewViewportRequest.getProjectId(),
-                    getValidLayers(aNewViewportRequest.getProjectId(),
-                            aNewViewportRequest.getViewport().getDisabledLayers()));
+            Pair<List<Span>, List<Arc>> annotations = getAnnotations(cas,
+                    aViewportRequest.getProjectId(), getValidLayers(aViewportRequest.getProjectId(),
+                            aViewportRequest.getViewport().getDisabledLayers()));
 
-            List<Span> spans = filterSpans(annotations.getKey(), aNewViewportRequest.getViewport());
+            List<Span> spans = filterSpans(annotations.getKey(), aViewportRequest.getViewport());
 
-            List<Relation> relations = filterRelations(annotations.getValue(), cas,
-                    aNewViewportRequest.getViewport());
+            List<Arc> relations = filterArcs(annotations.getValue(), cas,
+                    aViewportRequest.getViewport());
 
-            NewViewportResponse message = new NewViewportResponse(
-                    getViewportText(cas, aNewViewportRequest.getViewport()), spans, relations);
+            ViewportResponse message = new ViewportResponse(
+                    getViewportText(cas, aViewportRequest.getViewport()), spans, relations);
 
-            annotationProcessAPI.sendNewViewportResponse(message,
-                    aNewViewportRequest.getClientName());
+            annotationProcessAPI.sendViewportResponse(message, aViewportRequest.getClientName());
 
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleNewViewport()");
-            createErrorMessage(e.getMessage(), aNewViewportRequest.getClientName());
+            LOG.error("Exception has been thrown during handleNewViewport()", e);
+            createErrorMessage(e.getMessage(), aViewportRequest.getClientName());
         }
 
     }
@@ -202,26 +190,24 @@ public class AnnotationSystemAPIImpl
         try {
             CAS cas = getCasForDocument(aSelectSpanRequest.getUserName(),
                     aSelectSpanRequest.getProjectId(), aSelectSpanRequest.getDocumentId());
-            AnnotationFS span = selectAnnotationByAddr(cas,
-                    aSelectSpanRequest.getSpanAddress().getId());
+            AnnotationFS span = selectAnnotationByAddr(cas, aSelectSpanRequest.getSpanId().getId());
 
-            List<String> features = new ArrayList<>();
+            List<FeatureX> features = new ArrayList<>();
 
             for (Feature f : span.getType().getFeatures()) {
                 if (f.getRange().isStringOrStringSubtype()) {
-                    features.add(span.getFeatureValueAsString(f));
+                    features.add(new FeatureX(f.getShortName(), span.getFeatureValueAsString(f)));
                 }
             }
-            SelectSpanResponse message = new SelectSpanResponse(
-                    VID.parse(String.valueOf(span.getAddress())), span.getType().getShortName(),
-                    features);
+            SelectSpanResponse message = new SelectSpanResponse(new VID(span.getAddress()),
+                    span.getType().getShortName(), features);
 
-            annotationProcessAPI.sendSelectAnnotationResponse(message,
+            annotationProcessAPI.sendSelectSpanResponse(message,
                     aSelectSpanRequest.getClientName());
 
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleSelectSpan()");
+            LOG.error("Exception has been thrown during handleSelectSpan()", e);
             createErrorMessage(e.getMessage(), aSelectSpanRequest.getClientName());
         }
     }
@@ -237,7 +223,7 @@ public class AnnotationSystemAPIImpl
                     aUpdateSpanRequest.getUserName());
 
             AnnotationFS annotation = selectAnnotationByAddr(cas,
-                    aUpdateSpanRequest.getSpanAddress().getId());
+                    aUpdateSpanRequest.getSpanId().getId());
 
             int i = 0;
 
@@ -250,15 +236,16 @@ public class AnnotationSystemAPIImpl
             }
             annotationService.upgradeCas(cas,
                     projectService.getProject(aUpdateSpanRequest.getProjectId()));
-            UpdateSpanResponse response = new UpdateSpanResponse(
-                    aUpdateSpanRequest.getSpanAddress(), aUpdateSpanRequest.getNewFeature());
-            this.annotationProcessAPI.sendUpdateAnnotationResponse(response,
+
+            UpdateSpanMessage response = new UpdateSpanMessage(aUpdateSpanRequest.getSpanId(),
+                    aUpdateSpanRequest.getNewFeature());
+            this.annotationProcessAPI.sendUpdateSpan(response,
                     String.valueOf(aUpdateSpanRequest.getProjectId()),
                     String.valueOf(aUpdateSpanRequest.getDocumentId()),
                     String.valueOf(annotation.getBegin()));
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleUpdateSpan()");
+            LOG.error("Exception has been thrown during handleUpdateSpan()", e);
             throw new Exception();
         }
     }
@@ -285,7 +272,7 @@ public class AnnotationSystemAPIImpl
                     aCreateSpanRequest.getEnd());
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleCreateSpan()");
+            LOG.error("Exception has been thrown during handleCreateSpan()", e);
             createErrorMessage(e.getMessage(), aCreateSpanRequest.getClientName());
         }
     }
@@ -307,218 +294,154 @@ public class AnnotationSystemAPIImpl
             adapter.delete(
                     documentService.getSourceDocument(aDeleteSpanRequest.getProjectId(),
                             aDeleteSpanRequest.getDocumentId()),
-                    aDeleteSpanRequest.getUserName(), cas,
-                    VID.parse(String.valueOf(aDeleteSpanRequest.getSpanAddress())));
+                    aDeleteSpanRequest.getUserName(), cas, aDeleteSpanRequest.getSpanId());
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleDeleteSpan()");
+            LOG.error("Exception has been thrown during handleDeleteSpan()", e);
             createErrorMessage(e.getMessage(), aDeleteSpanRequest.getClientName());
         }
     }
 
     @Override
-    public void handleSelectRelation(SelectRelationRequest aSelectRelationRequest)
-        throws IOException
+    public void handleSelectArc(SelectArcRequest aSelectArcRequest) throws IOException
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             SourceDocument sourceDocument = documentService.getSourceDocument(
-                    aSelectRelationRequest.getProjectId(), aSelectRelationRequest.getDocumentId());
+                    aSelectArcRequest.getProjectId(), aSelectArcRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aSelectRelationRequest.getUserName());
+                    aSelectArcRequest.getUserName());
 
-            FeatureStructure relation = selectFsByAddr(cas,
-                    aSelectRelationRequest.getRelationAddress().getId());
+            FeatureStructure arc = selectFsByAddr(cas, aSelectArcRequest.getArcId().getId());
 
             AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(cas,
-                    WebAnnoCasUtil.getAddr(relation));
+                    WebAnnoCasUtil.getAddr(arc));
 
-            AnnotationFS governor = null;
-            AnnotationFS dependent = null;
-            List<String> relationFeatures = new ArrayList<>();
+            AnnotationFS source = null;
+            AnnotationFS target = null;
+            List<FeatureX> arcFeatures = new ArrayList<>();
 
-            for (Feature f : relation.getType().getFeatures()) {
+            for (Feature f : arc.getType().getFeatures()) {
                 if (f.getName().contains("Governor")) {
-                    governor = WebAnnoCasUtil.selectAnnotationByAddr(cas,
-                            WebAnnoCasUtil.getAddr(relation.getFeatureValue(f)));
+                    source = WebAnnoCasUtil.selectAnnotationByAddr(cas,
+                            WebAnnoCasUtil.getAddr(arc.getFeatureValue(f)));
                 }
                 if (f.getName().contains("Dependent")) {
-                    dependent = WebAnnoCasUtil.selectAnnotationByAddr(cas,
-                            WebAnnoCasUtil.getAddr(relation.getFeatureValue(f)));
+                    target = WebAnnoCasUtil.selectAnnotationByAddr(cas,
+                            WebAnnoCasUtil.getAddr(arc.getFeatureValue(f)));
                 }
                 if (f.getRange().isStringOrStringSubtype()) {
-                    relationFeatures.add(relation.getFeatureValueAsString(f));
+                    arcFeatures.add(new FeatureX(f.getName(), arc.getFeatureValueAsString(f)));
                 }
             }
-            SelectRelationResponse message = new SelectRelationResponse(
-                    VID.parse(String.valueOf(relation._id())),
-                    VID.parse(String.valueOf(governor._id())), governor.getCoveredText(),
-                    VID.parse(String.valueOf(dependent._id())), dependent.getCoveredText(),
+            SelectArcResponse message = new SelectArcResponse(new VID(arc._id()),
+                    new VID(source._id()), target.getCoveredText(), new VID(target._id()),
+                    target.getCoveredText(),
                     getColorForAnnotation(annotation,
-                            projectService.getProject(aSelectRelationRequest.getProjectId())),
+                            projectService.getProject(aSelectArcRequest.getProjectId())),
 
-                    annotation.getType().getName(), relationFeatures);
+                    annotation.getType().getName(), arcFeatures);
 
-            annotationProcessAPI.sendSelectRelationResponse(message,
-                    aSelectRelationRequest.getClientName());
+            annotationProcessAPI.sendSelectArcResponse(message, aSelectArcRequest.getClientName());
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleSelectRelation()");
-            createErrorMessage(e.getMessage(), aSelectRelationRequest.getClientName());
+            LOG.error("Exception has been thrown during handleSelectRelation()", e);
+            createErrorMessage(e.getMessage(), aSelectArcRequest.getClientName());
         }
     }
 
     @Override
-    public void handleUpdateRelation(UpdateRelationRequest aUpdateRelationRequest) throws Exception
+    public void handleUpdateArc(UpdateArcRequest aUpdateArcRequest) throws Exception
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             SourceDocument sourceDocument = documentService.getSourceDocument(
-                    aUpdateRelationRequest.getProjectId(), aUpdateRelationRequest.getDocumentId());
+                    aUpdateArcRequest.getProjectId(), aUpdateArcRequest.getDocumentId());
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aUpdateRelationRequest.getUserName());
+                    aUpdateArcRequest.getUserName());
 
             AnnotationFS annotation = selectAnnotationByAddr(cas,
-                    aUpdateRelationRequest.getRelationAddress().getId());
+                    aUpdateArcRequest.getArcId().getId());
 
-            int i = 0;
             for (Feature f : annotation.getType().getFeatures()) {
-                if (f.getRange().getName().equals("uima.cas.String")) {
-                    if (i == 0) {
-                        annotation.setFeatureValueFromString(f,
-                                aUpdateRelationRequest.getNewDependencyType());
-                        i++;
-                    }
-                    else {
-                        annotation.setFeatureValueFromString(f,
-                                aUpdateRelationRequest.getNewFlavor());
-                        break;
+                for (FeatureX feat : aUpdateArcRequest.getFeatures()) {
+                    if (f.getShortName().equals(feat.getName())) {
+                        annotation.setFeatureValueFromString(f, feat.getValue());
                     }
                 }
             }
             annotationService.upgradeCas(cas,
-                    projectService.getProject(aUpdateRelationRequest.getProjectId()));
+                    projectService.getProject(aUpdateArcRequest.getProjectId()));
 
-            UpdateRelationResponse response = new UpdateRelationResponse(
-                    aUpdateRelationRequest.getRelationAddress(),
-                    aUpdateRelationRequest.getNewDependencyType(),
-                    aUpdateRelationRequest.getNewFlavor());
+            UpdateArcMessage response = new UpdateArcMessage(aUpdateArcRequest.getArcId(),
+                    aUpdateArcRequest.getFeatures());
 
-            this.annotationProcessAPI.sendUpdateRelationResponse(response,
-                    String.valueOf(aUpdateRelationRequest.getProjectId()),
-                    String.valueOf(aUpdateRelationRequest.getDocumentId()),
+            this.annotationProcessAPI.sendUpdateArc(response,
+                    String.valueOf(aUpdateArcRequest.getProjectId()),
+                    String.valueOf(aUpdateArcRequest.getDocumentId()),
                     String.valueOf(annotation.getBegin()));
+
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleUpdateRelation()");
+            LOG.error("Exception has been thrown during handleUpdateRelation()", e);
             throw new Exception();
         }
     }
 
     @Override
-    public void handleCreateRelation(CreateRelationRequest aCreateRelationRequest)
-        throws IOException
+    public void handleCreateArc(CreateArcRequest aCreateArcRequest) throws IOException
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             SourceDocument sourceDocument = documentService.getSourceDocument(
-                    aCreateRelationRequest.getProjectId(), aCreateRelationRequest.getDocumentId());
+                    aCreateArcRequest.getProjectId(), aCreateArcRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aCreateRelationRequest.getUserName());
+                    aCreateArcRequest.getUserName());
 
             AnnotationFS governor = selectAnnotationByAddr(cas,
-                    aCreateRelationRequest.getGovernorId().getId());
+                    aCreateArcRequest.getSourceId().getId());
             AnnotationFS dependent = selectAnnotationByAddr(cas,
-                    aCreateRelationRequest.getDependentId().getId());
+                    aCreateArcRequest.getTargetId().getId());
 
-            TypeAdapter adapter = annotationService.getAdapter(getLayer(
-                    aCreateRelationRequest.getProjectId(), aCreateRelationRequest.getLayer()));
+            TypeAdapter adapter = annotationService.getAdapter(
+                    getLayer(aCreateArcRequest.getProjectId(), aCreateArcRequest.getLayer()));
 
             ((RelationAdapter) adapter).add(
-                    documentService.getSourceDocument(aCreateRelationRequest.getProjectId(),
-                            aCreateRelationRequest.getDocumentId()),
-                    aCreateRelationRequest.getUserName(), governor, dependent, cas);
+                    documentService.getSourceDocument(aCreateArcRequest.getProjectId(),
+                            aCreateArcRequest.getDocumentId()),
+                    aCreateArcRequest.getUserName(), governor, dependent, cas);
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleCreateRelation()");
-            createErrorMessage(e.getMessage(), aCreateRelationRequest.getClientName());
+            LOG.error("Exception has been thrown during handleCreateRelation()", e);
+            createErrorMessage(e.getMessage(), aCreateArcRequest.getClientName());
         }
     }
 
     @Override
-    public void handleDeleteRelation(DeleteRelationRequest aDeleteRelationRequest)
-        throws IOException
+    public void handleDeleteArc(DeleteArcRequest aDeleteArcRequest) throws IOException
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             SourceDocument sourceDocument = documentService.getSourceDocument(
-                    aDeleteRelationRequest.getProjectId(), aDeleteRelationRequest.getDocumentId());
+                    aDeleteArcRequest.getProjectId(), aDeleteArcRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aDeleteRelationRequest.getUserName());
+                    aDeleteArcRequest.getUserName());
 
-            TypeAdapter adapter = annotationService.getAdapter(getLayer(
-                    aDeleteRelationRequest.getProjectId(), aDeleteRelationRequest.getLayer()));
+            TypeAdapter adapter = annotationService.getAdapter(
+                    getLayer(aDeleteArcRequest.getProjectId(), aDeleteArcRequest.getLayer()));
 
             adapter.delete(
-                    documentService.getSourceDocument(aDeleteRelationRequest.getProjectId(),
-                            aDeleteRelationRequest.getDocumentId()),
-                    aDeleteRelationRequest.getUserName(), cas,
-                    VID.parse(String.valueOf(aDeleteRelationRequest.getRelationAddress())));
+                    documentService.getSourceDocument(aDeleteArcRequest.getProjectId(),
+                            aDeleteArcRequest.getDocumentId()),
+                    aDeleteArcRequest.getUserName(), cas, aDeleteArcRequest.getArcId());
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during handleDeleteRelation()");
-            createErrorMessage(e.getMessage(), aDeleteRelationRequest.getClientName());
+            LOG.error("Exception has been thrown during handleDeleteRelation()", e);
+            createErrorMessage(e.getMessage(), aDeleteArcRequest.getClientName());
         }
-    }
-
-    @Override
-    public void handleAllSpans(AllSpanRequest aAllSpanRequest) throws IOException
-    {
-        try {
-            // TODO maybe to remove?
-            CAS cas = getCasForDocument(aAllSpanRequest.getUserName(),
-                    aAllSpanRequest.getProjectId(), aAllSpanRequest.getDocumentId());
-            /*
-             * AllSpanResponse message = new AllSpanResponse(getSpans(cas,
-             * aAllSpanRequest.getProjectId(), aAllSpanRequest.getDisabledLayers()));
-             * 
-             * annotationProcessAPI.sendAllSpansResponse(message, aAllSpanRequest.getClientName());
-             * 
-             */
-
-        }
-        catch (Exception e) {
-            LOG.error("Exception has been thrown during handleAllSpans()");
-            createErrorMessage(e.getMessage(), aAllSpanRequest.getClientName());
-        }
-    }
-
-    @Override
-    public void handleAllRelations(AllRelationRequest aAllRelationRequest) throws IOException
-    {
-        try {
-            // TODO maybe to remove?
-            CAS cas = getCasForDocument(aAllRelationRequest.getUserName(),
-                    aAllRelationRequest.getProjectId(), aAllRelationRequest.getDocumentId());
-
-            /*
-             * AllRelationResponse message = new AllRelationResponse( getRelations(cas,
-             * aAllRelationRequest.getProjectId()));
-             * 
-             * 
-             * annotationProcessAPI.sendAllRelationsResponse(message,
-             * aAllRelationRequest.getClientName());
-             * 
-             */
-        }
-        catch (Exception e) {
-            LOG.error("Exception has been thrown during handleAllRelations()");
-            createErrorMessage(e.getMessage(), aAllRelationRequest.getClientName());
-        }
-
     }
 
     @Override
@@ -531,13 +454,12 @@ public class AnnotationSystemAPIImpl
                 features.add(aEvent.getAnnotation().getFeatureValueAsString(feature));
             }
         }
-        CreateSpanResponse response = new CreateSpanResponse(
-                VID.parse(String.valueOf(aEvent.getAnnotation().getAddress())),
+        CreateSpanMessage response = new CreateSpanMessage(
+                new VID(aEvent.getAnnotation().getAddress()),
                 aEvent.getAnnotation().getCoveredText(), aEvent.getAnnotation().getBegin(),
                 aEvent.getAnnotation().getEnd(), aEvent.getAnnotation().getType().getName(),
                 getColorForAnnotation(aEvent.getAnnotation(), aEvent.getProject()), features);
-        annotationProcessAPI.sendCreateAnnotationResponse(response,
-                String.valueOf(aEvent.getProject().getId()),
+        annotationProcessAPI.sendCreateSpan(response, String.valueOf(aEvent.getProject().getId()),
                 String.valueOf(aEvent.getDocument().getId()),
                 String.valueOf(aEvent.getAnnotation().getBegin()));
     }
@@ -546,49 +468,47 @@ public class AnnotationSystemAPIImpl
     @EventListener
     public void onSpanDeletedEventHandler(SpanDeletedEvent aEvent) throws IOException
     {
-        DeleteSpanResponse response = new DeleteSpanResponse(
-                VID.parse(String.valueOf(aEvent.getAnnotation().getAddress())));
-        annotationProcessAPI.sendDeleteAnnotationResponse(response,
-                String.valueOf(aEvent.getProject().getId()),
+        DeleteSpanMessage response = new DeleteSpanMessage(
+                new VID(aEvent.getAnnotation().getAddress()));
+        annotationProcessAPI.sendDeleteSpan(response, String.valueOf(aEvent.getProject().getId()),
                 String.valueOf(aEvent.getDocument().getId()),
                 String.valueOf(aEvent.getAnnotation().getBegin()));
     }
 
     @Override
     @EventListener
-    public void onRelationCreatedEventHandler(RelationCreatedEvent aEvent) throws IOException
+    public void onArcCreatedEventHandler(RelationCreatedEvent aEvent) throws IOException
     {
-        List<String> features = new ArrayList<>();
+        List<FeatureX> features = new ArrayList<>();
         for (Feature feature : aEvent.getAnnotation().getType().getFeatures()) {
             if (feature.getRange().isStringOrStringSubtype()) {
-                features.add(aEvent.getAnnotation().getFeatureValueAsString(feature));
+
+                features.add(new FeatureX(feature.getShortName(),
+                        aEvent.getAnnotation().getFeatureValueAsString(feature)));
             }
         }
-        CreateRelationResponse response = new CreateRelationResponse(
-                VID.parse(String.valueOf(aEvent.getAnnotation()._id())), aEvent.getUser(),
-                aEvent.getUser(), aEvent.getProject().getId(), aEvent.getDocument().getId(),
-                VID.parse(String.valueOf(aEvent.getSourceAnnotation()._id())),
-                VID.parse(String.valueOf(aEvent.getTargetAnnotation()._id())),
+        CreateArcMessage response = new CreateArcMessage(new VID(aEvent.getAnnotation()._id()),
+                aEvent.getUser(), aEvent.getUser(), aEvent.getProject().getId(),
+                aEvent.getDocument().getId(), new VID(aEvent.getSourceAnnotation()._id()),
+                new VID(aEvent.getTargetAnnotation()._id()),
                 getColorForAnnotation(aEvent.getAnnotation(), aEvent.getProject()),
                 aEvent.getSourceAnnotation().getCoveredText(),
                 aEvent.getTargetAnnotation().getCoveredText(),
                 aEvent.getAnnotation().getType().getName(), features);
 
-        annotationProcessAPI.sendCreateRelationResponse(response,
-                String.valueOf(aEvent.getProject().getId()),
+        annotationProcessAPI.sendCreateArc(response, String.valueOf(aEvent.getProject().getId()),
                 String.valueOf(aEvent.getDocument().getId()),
                 String.valueOf(aEvent.getAnnotation().getBegin()));
     }
 
     @Override
     @EventListener
-    public void onRelationDeletedEventHandler(RelationDeletedEvent aEvent) throws IOException
+    public void onArcDeletedEventHandler(RelationDeletedEvent aEvent) throws IOException
     {
-        DeleteRelationResponse response = new DeleteRelationResponse(
-                VID.parse(String.valueOf(aEvent.getAnnotation().getAddress())));
+        DeleteArcMessage response = new DeleteArcMessage(
+                new VID(aEvent.getAnnotation().getAddress()));
 
-        annotationProcessAPI.sendDeleteRelationResponse(response,
-                String.valueOf(aEvent.getProject().getId()),
+        annotationProcessAPI.sendDeleteArc(response, String.valueOf(aEvent.getProject().getId()),
                 String.valueOf(aEvent.getDocument().getId()),
                 String.valueOf(aEvent.getAnnotation().getBegin()));
     }
@@ -600,9 +520,7 @@ public class AnnotationSystemAPIImpl
     }
 
     /**
-     *
      * Private support methods
-     *
      **/
 
     public CAS getCasForDocument(String aUser, long aProject, long aDocument) throws Exception
@@ -615,7 +533,7 @@ public class AnnotationSystemAPIImpl
             return cas;
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during getCasForDocument()");
+            LOG.error("Exception has been thrown during getCasForDocument()", e);
             throw new Exception();
         }
     }
@@ -634,7 +552,7 @@ public class AnnotationSystemAPIImpl
 
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during getLayer()");
+            LOG.error("Exception has been thrown during getLayer()", e);
             return null;
         }
 
@@ -670,7 +588,7 @@ public class AnnotationSystemAPIImpl
             return viewport;
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during getViewportText()");
+            LOG.error("Exception has been thrown during getViewportText()", e);
             throw new Exception();
         }
     }
@@ -693,18 +611,17 @@ public class AnnotationSystemAPIImpl
             return filteredAnnotations;
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during filterSpans()");
+            LOG.error("Exception has been thrown during filterSpans()", e);
             throw new Exception();
         }
     }
 
-    public List<Relation> filterRelations(List<Relation> aRelations, CAS aCas, Viewport aViewport)
-        throws Exception
+    public List<Arc> filterArcs(List<Arc> aRelations, CAS aCas, Viewport aViewport) throws Exception
     {
         try {
-            List<Relation> filteredRelations = new ArrayList<>();
+            List<Arc> filteredRelations = new ArrayList<>();
 
-            for (Relation relation : aRelations) {
+            for (Arc relation : aRelations) {
                 AnnotationFS annotation = selectAnnotationByAddr(aCas,
                         relation.getGovernorId().getId());
 
@@ -722,8 +639,7 @@ public class AnnotationSystemAPIImpl
 
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during filterRelations()");
-            LOG.error("CAUSE: " + e.getCause());
+            LOG.error("Exception has been thrown during filterRelations()", e);
             throw new Exception();
         }
     }
@@ -745,11 +661,11 @@ public class AnnotationSystemAPIImpl
         }
     }
 
-    public Pair<List<Span>, List<Relation>> getAnnotations(CAS aCas, long aProjectId,
+    public Pair<List<Span>, List<Arc>> getAnnotations(CAS aCas, long aProjectId,
             List<AnnotationLayer> validLayers)
     {
         List<Span> spans = new ArrayList<>();
-        List<Relation> relations = new ArrayList<>();
+        List<Arc> relations = new ArrayList<>();
 
         for (FeatureStructure fs : selectAllFS(aCas)) {
             if (fs.getType().getShortName().equals("Token")) {
@@ -767,37 +683,36 @@ public class AnnotationSystemAPIImpl
                                 spanFeatures.add(fs.getFeatureValueAsString(f));
                             }
                         }
-                        spans.add(new Span(annotation._id(), annotation.getBegin(),
+                        spans.add(new Span(new VID(annotation._id()), annotation.getBegin(),
                                 annotation.getEnd(), annotation.getType().getShortName(),
                                 getColorForAnnotation(annotation,
                                         projectService.getProject(aProjectId)),
                                 annotation.getCoveredText(), spanFeatures));
                         break;
                     case "relation":
-                        AnnotationFS governor = null;
-                        AnnotationFS dependent = null;
-                        List<String> relationFeatures = new ArrayList<>();
+                        AnnotationFS source = null;
+                        AnnotationFS target = null;
+                        List<String> arcFeatures = new ArrayList<>();
 
                         for (Feature f : annotation.getType().getFeatures()) {
                             if (f.getName().contains("Governor")) {
-                                governor = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
+                                source = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
                                         WebAnnoCasUtil.getAddr(fs.getFeatureValue(f)));
                             }
                             if (f.getName().contains("Dependent")) {
-                                dependent = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
+                                target = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
                                         WebAnnoCasUtil.getAddr(fs.getFeatureValue(f)));
                             }
                             if (f.getRange().isStringOrStringSubtype()) {
-                                relationFeatures.add(fs.getFeatureValueAsString(f));
+                                arcFeatures.add(fs.getFeatureValueAsString(f));
                             }
                         }
-                        relations.add(new Relation(VID.parse(String.valueOf(annotation._id())),
-                                VID.parse(String.valueOf(governor._id())),
-                                VID.parse(String.valueOf(dependent._id())),
+                        relations.add(new Arc(new VID(annotation._id()), new VID(source._id()),
+                                new VID(target._id()),
                                 getColorForAnnotation(annotation,
                                         projectService.getProject(aProjectId)),
-                                governor.getCoveredText(), dependent.getCoveredText(),
-                                layer.getName(), relationFeatures));
+                                source.getCoveredText(), target.getCoveredText(), layer.getName(),
+                                arcFeatures));
                         break;
                     default:
                         break;

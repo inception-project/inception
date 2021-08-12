@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request.span;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 
-public class SelectSpanRequest
+public class DocumentRequest
 {
     private String clientName;
     private String userName;
     private long projectId;
     private long documentId;
-    private VID spanId;
+    private Viewport viewport;
 
     public String getClientName()
     {
@@ -67,12 +67,14 @@ public class SelectSpanRequest
         documentId = aDocumentId;
     }
 
-    public VID getSpanId()
+    public Viewport getViewport()
     {
-        return spanId;
+        return viewport;
     }
 
-    public void setSpanAddress(VID aSpanId) {
-        spanId = aSpanId;
+    public void setViewport(Viewport aViewport)
+    {
+        viewport = aViewport;
     }
+
 }

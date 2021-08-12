@@ -38,31 +38,27 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIImpl;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.AllRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.AllSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DocumentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.ViewportRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.CreateArcRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.DeleteArcRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.SelectArcRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.UpdateArcRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DocumentResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.AllRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.CreateRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.DeleteRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.SelectRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.UpdateRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.AllSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ViewportResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.CreateArcMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.DeleteArcMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.SelectArcResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.UpdateArcMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanMessage;
 
 @Controller
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
@@ -79,48 +75,40 @@ public class AnnotationProcessAPIImpl
      * ----------------- PUB / SUB CHANNELS ---------------
      **/
     // NEXT DOCUMENT
-    private static final String SERVER_RECEIVE_CLIENT_NEW_DOCUMENT = "/new_document_from_client";
-    private static final String SERVER_SEND_CLIENT_NEW_DOCUMENT = "/queue/new_document_for_client/";
+    private static final String SERVER_RECEIVE_DOCUMENT_REQUEST = "/document_request";
+    private static final String SERVER_SEND_DOCUMENT_REQUEST = "/queue/document/";
 
     // VIEWPORT
-    private static final String SERVER_RECEIVE_CLIENT_NEW_VIEWPORT = "/new_viewport_from_client";
-    private static final String SERVER_SEND_CLIENT_NEW_VIEWPORT = "/queue/new_viewport_for_client/";
+    private static final String SERVER_RECEIVE_VIEWPORT_REQUEST = "/viewport_request";
+    private static final String SERVER_SEND_VIEWPORT_REQUEST = "/queue/viewport/";
 
     // SELECT
-    private static final String SERVER_RECEIVE_CLIENT_SELECTED_ANNOTATION = "/select_annotation_from_client";
-    private static final String SERVER_RECEIVE_CLIENT_SELECTED_RELATION = "/select_relation_from_client";
+    private static final String SERVER_RECEIVE_SELECTED_SPAN = "/select_span";
+    private static final String SERVER_RECEIVE_SELECTED_ARC = "/select_arc";
 
-    private static final String SERVER_SEND_CLIENT_SELECTED_ANNOTATION = "/queue/selected_annotation_for_client/";
-    private static final String SERVER_SEND_CLIENT_SELECTED_RELATION = "/queue/selected_relation_for_client/";
+    private static final String SERVER_SEND_SELECTED_SPAN = "/queue/selected_span/";
+    private static final String SERVER_SEND_SELECTED_ARC = "/queue/selected_arc/";
 
     // CREATE
-    private static final String SERVER_RECEIVE_CLIENT_NEW_ANNOTATION = "/new_annotation_from_client";
-    private static final String SERVER_RECEIVE_CLIENT_NEW_RELATION = "/new_relation_from_client";
+    private static final String SERVER_RECEIVE_CREATE_SPAN = "/create_span";
+    private static final String SERVER_RECEIVE_CREATE_ARC = "/create_arc";
 
-    private static final String SERVER_SEND_CLIENT_NEW_ANNOTATION = "/topic/span_create_for_clients/";
-    private static final String SERVER_SEND_CLIENT_NEW_RELATION = "/topic/relation_create_for_clients/";
+    private static final String SERVER_SEND_CREATE_SPAN = "/topic/span_create/";
+    private static final String SERVER_SEND_CREATE_ARC = "/topic/arc_create/";
 
     // DELETE
-    private static final String SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION = "/delete_annotation_from_client";
-    private static final String SERVER_RECEIVE_CLIENT_DELETE_RELATION = "/delete_relation_from_client";
+    private static final String SERVER_RECEIVE_DELETE_SPAN = "/delete_span";
+    private static final String SERVER_RECEIVE_DELETE_ARC = "/delete_arc";
 
-    private static final String SERVER_SEND_CLIENT_DELETE_ANNOTATION = "/topic/span_delete_for_clients/";
-    private static final String SERVER_SEND_CLIENT_DELETE_RELATION = "/topic/relation_delete_for_clients/";
+    private static final String SERVER_SEND_DELETE_SPAN = "/topic/span_delete/";
+    private static final String SERVER_SEND_DELETE_ARC = "/topic/arc_delete/";
 
     // UPDATE
-    private static final String SERVER_RECEIVE_CLIENT_UPDATE_ANNOTATION = "/update_annotation_from_client";
-    private static final String SERVER_RECEIVE_CLIENT_UPDATE_RELATION = "/update_relation_from_client";
+    private static final String SERVER_RECEIVE_UPDATE_SPAN = "/update_span";
+    private static final String SERVER_RECEIVE_UPDATE_ARC = "/update_arc";
 
-    private static final String SERVER_SEND_CLIENT_UPDATE_ANNOTATION = "/topic/span_update_for_clients/";
-    private static final String SERVER_SEND_CLIENT_UPDATE_RELATION = "/topic/relation_update_for_clients/";
-
-    // ALL SPANS
-    private static final String SERVER_RECEIVE_CLIENT_ALL_SPANS = "/all_spans_from_client";
-    private static final String SERVER_SEND_CLIENT_ALL_SPANS = "/topic/all_spans_for_client";
-
-    // ALL RELATIONS
-    private static final String SERVER_RECEIVE_CLIENT_ALL_RELATIONS = "/all_relations_from_client";
-    private static final String SERVER_SEND_CLIENT_ALL_RELATIONS = "/topic/all_relation_for_client";
+    private static final String SERVER_SEND_UPDATE_SPAN = "/topic/span_update/";
+    private static final String SERVER_SEND_UPDATE_ARC = "/topic/arc_update/";
 
     // ERROR
     private static final String SERVER_SEND_CLIENT_ERROR_MESSAGE = "/queue/error_message/";
@@ -143,243 +131,206 @@ public class AnnotationProcessAPIImpl
      **/
 
     @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_DOCUMENT)
-    public void receiveNewDocumentRequest(Message<String> aMessage) throws IOException
+    @MessageMapping(SERVER_RECEIVE_DOCUMENT_REQUEST)
+    public void receiveDocumentRequest(Message<String> aMessage) throws IOException
     {
-        LOG.debug("RECEIVED NEW DOCUMENT BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleNewDocument(
-                JSONUtil.fromJsonString(NewDocumentRequest.class, aMessage.getPayload()));
+        LOG.debug("RECEIVED DOCUMENT REQUEST BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleDocumentRequest(
+                JSONUtil.fromJsonString(DocumentRequest.class, aMessage.getPayload()));
 
     }
 
     @Override
-    public void sendNewDocumentResponse(NewDocumentResponse aNewDocumentResponse, String aUser)
+    public void sendDocumentResponse(DocumentResponse aDocumentResponse, String aUser)
         throws IOException
     {
         LOG.debug(
-                "SENDING NOW DOCUMENT UPDATE TO CLIENT " + aNewDocumentResponse.getViewportText());
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_DOCUMENT + aUser,
-                JSONUtil.toJsonString(aNewDocumentResponse));
+                "SENDING NOW DOCUMENT TO CLIENT " + aDocumentResponse.getViewportText());
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_DOCUMENT_REQUEST + aUser,
+                JSONUtil.toJsonString(aDocumentResponse));
     }
 
     @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_VIEWPORT)
-    public void receiveNewViewportRequest(Message<String> aMessage) throws IOException
+    @MessageMapping(SERVER_RECEIVE_VIEWPORT_REQUEST)
+    public void receiveViewportRequest(Message<String> aMessage) throws IOException
     {
-        LOG.debug("RECEIVED NEW VIEWPORT BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleNewViewport(
-                JSONUtil.fromJsonString(NewViewportRequest.class, aMessage.getPayload()));
+        LOG.debug("RECEIVED VIEWPORT REQUEST BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleViewportRequest(
+                JSONUtil.fromJsonString(ViewportRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void sendNewViewportResponse(NewViewportResponse aNewViewportResponse, String aUser)
+    public void sendViewportResponse(ViewportResponse aViewportResponse, String aUser)
         throws IOException
     {
-        LOG.debug("SENDING NOW VIEWPORT TO CLIENT: " + aNewViewportResponse.getViewportText());
+        LOG.debug("SENDING NOW VIEWPORT TO CLIENT: " + aViewportResponse.getViewportText());
 
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_VIEWPORT + aUser,
-                JSONUtil.toJsonString(aNewViewportResponse));
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_VIEWPORT_REQUEST + aUser,
+                JSONUtil.toJsonString(aViewportResponse));
     }
 
     @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_SELECTED_ANNOTATION)
-    public void receiveSelectAnnotationRequest(Message<String> aMessage) throws IOException
+    @MessageMapping(SERVER_RECEIVE_SELECTED_SPAN)
+    public void receiveSelectSpanRequest(Message<String> aMessage) throws IOException
     {
-        LOG.debug("RECEIVED SELECT_ANNOTATION BY CLIENT, Message: " + aMessage);
+        LOG.debug("RECEIVED SELECT_SPAN BY CLIENT, Message: " + aMessage);
         annotationSystemAPIImpl.handleSelectSpan(
                 JSONUtil.fromJsonString(SelectSpanRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_SELECTED_RELATION)
-    public void receiveSelectRelationRequest(Message<String> aMessage) throws IOException
+    @MessageMapping(SERVER_RECEIVE_SELECTED_ARC)
+    public void receiveSelectArcRequest(Message<String> aMessage) throws IOException
     {
-        LOG.debug("RECEIVED SELECT_RELATION BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleSelectRelation(
-                JSONUtil.fromJsonString(SelectRelationRequest.class, aMessage.getPayload()));
+        LOG.debug("RECEIVED SELECT_ARC BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleSelectArc(
+                JSONUtil.fromJsonString(SelectArcRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void sendSelectAnnotationResponse(SelectSpanResponse aSelectSpanResponse, String aUser)
+    public void sendSelectSpanResponse(SelectSpanResponse aSelectSpanResponse, String aUser)
         throws IOException
     {
-        LOG.debug("SENDING NOW ANNOTATION SELECT TO CLIENT: " + aUser);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_SELECTED_ANNOTATION + aUser,
+        LOG.debug("SENDING NOW SPAN SELECT TO CLIENT: " + aUser);
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_SELECTED_SPAN + aUser,
                 JSONUtil.toJsonString(aSelectSpanResponse));
     }
 
     @Override
-    public void sendSelectRelationResponse(SelectRelationResponse aSelectRelationResponse,
-            String aUser)
+    public void sendSelectArcResponse(SelectArcResponse aSelectArcResponse,
+                                           String aUser)
         throws IOException
     {
-        LOG.debug("SENDING NOW ANNOTATION SELECT TO CLIENT: " + aUser);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_SELECTED_RELATION + aUser,
-                JSONUtil.toJsonString(aSelectRelationResponse));
+        LOG.debug("SENDING NOW ARC SELECT TO CLIENT: " + aUser);
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_SELECTED_ARC + aUser,
+                JSONUtil.toJsonString(aSelectArcResponse));
     }
 
     @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_UPDATE_ANNOTATION)
-    public void receiveUpdateAnnotationRequest(Message<String> aMessage) throws Exception
+    @MessageMapping(SERVER_RECEIVE_UPDATE_SPAN)
+    public void receiveUpdateSpanRequest(Message<String> aMessage) throws Exception
     {
-        LOG.debug("RECEIVED UPDATE ANNOTATION BY CLIENT, Message: " + aMessage);
+        LOG.debug("RECEIVED UPDATE SPAN BY CLIENT, Message: " + aMessage);
         annotationSystemAPIImpl.handleUpdateSpan(
                 JSONUtil.fromJsonString(UpdateSpanRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_UPDATE_RELATION)
-    public void receiveUpdateRelationRequest(Message<String> aMessage) throws Exception
+    @MessageMapping(SERVER_RECEIVE_UPDATE_ARC)
+    public void receiveUpdateArcRequest(Message<String> aMessage) throws Exception
     {
-        LOG.debug("RECEIVED UPDATE RELATION BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleUpdateRelation(
-                JSONUtil.fromJsonString(UpdateRelationRequest.class, aMessage.getPayload()));
+        LOG.debug("RECEIVED UPDATE ARC BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleUpdateArc(
+                JSONUtil.fromJsonString(UpdateArcRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void sendUpdateAnnotationResponse(UpdateSpanResponse aUpdateSpanResponse,
-            String aProjectID, String aDocumentID, String aViewport)
+    public void sendUpdateSpan(UpdateSpanMessage aUpdateSpanMessage,
+                                             String aProjectID, String aDocumentID, String aViewport)
         throws IOException
     {
-        LOG.debug("SENDING NOW ANNOTATION UPDATE TO CLIENTS listening to: "
-                + SERVER_SEND_CLIENT_UPDATE_ANNOTATION + aProjectID + "/" + aDocumentID + "/"
+        LOG.debug("SENDING NOW SPAN UPDATE TO CLIENTS listening to: "
+                + SERVER_SEND_UPDATE_SPAN + aProjectID + "/" + aDocumentID + "/"
                 + aViewport);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_UPDATE_ANNOTATION + aProjectID + "/"
-                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aUpdateSpanResponse));
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_UPDATE_SPAN + aProjectID + "/"
+                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aUpdateSpanMessage));
     }
 
     @Override
-    public void sendUpdateRelationResponse(UpdateRelationResponse aUpdateRelationResponse,
-            String aProjectID, String aDocumentID, String aViewport)
+    public void sendUpdateArc(UpdateArcMessage aUpdateArcMessage,
+                                           String aProjectID, String aDocumentID, String aViewport)
         throws IOException
     {
-        LOG.debug("SENDING NOW RELATION UPDATE TO CLIENTS listening to: "
-                + SERVER_SEND_CLIENT_UPDATE_RELATION + aProjectID + "/" + aDocumentID + "/"
+        LOG.debug("SENDING NOW ARC UPDATE TO CLIENTS listening to: "
+                + SERVER_SEND_UPDATE_ARC + aProjectID + "/" + aDocumentID + "/"
                 + aViewport);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_UPDATE_RELATION + aProjectID + "/"
-                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aUpdateRelationResponse));
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_UPDATE_ARC + aProjectID + "/"
+                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aUpdateArcMessage));
     }
 
     @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_ANNOTATION)
-    public void receiveCreateAnnotationRequest(Message<String> aMessage) throws IOException
+    @MessageMapping(SERVER_RECEIVE_CREATE_SPAN)
+    public void receiveCreateSpanRequest(Message<String> aMessage) throws IOException
     {
-        LOG.debug("RECEIVED NEW ANNOTATION BY CLIENT, Message: " + aMessage);
+        LOG.debug("RECEIVED CREATE SPAN BY CLIENT, Message: " + aMessage);
         annotationSystemAPIImpl.handleCreateSpan(
                 JSONUtil.fromJsonString(CreateSpanRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void sendCreateAnnotationResponse(CreateSpanResponse aCreateSpanResponse,
-            String aProjectID, String aDocumentID, String aViewport)
+    public void sendCreateSpan(CreateSpanMessage aCreateSpanMessage,
+                                             String aProjectID, String aDocumentID, String aViewport)
         throws IOException
     {
-        LOG.debug("SENDING NOW CREATE ANNOTATION TO CLIENTS listening to: "
-                + SERVER_SEND_CLIENT_NEW_ANNOTATION + aProjectID + "/" + aDocumentID + "/"
+        LOG.debug("SENDING NOW CREATE SPAN TO CLIENTS listening to: "
+                + SERVER_SEND_CREATE_SPAN + aProjectID + "/" + aDocumentID + "/"
                 + aViewport);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_NEW_ANNOTATION + aProjectID + "/"
-                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aCreateSpanResponse));
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_CREATE_SPAN + aProjectID + "/"
+                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aCreateSpanMessage));
     }
 
     @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_NEW_RELATION)
-    public void receiveCreateRelationRequest(Message<String> aMessage) throws IOException
+    @MessageMapping(SERVER_RECEIVE_CREATE_ARC)
+    public void receiveCreateArcRequest(Message<String> aMessage) throws IOException
     {
-        LOG.debug("RECEIVED NEW RELATION BY CLIENT, Message: " + aMessage);
-        annotationSystemAPIImpl.handleCreateRelation(
-                JSONUtil.fromJsonString(CreateRelationRequest.class, aMessage.getPayload()));
+        LOG.debug("RECEIVED CREATE ARC BY CLIENT, Message: " + aMessage);
+        annotationSystemAPIImpl.handleCreateArc(
+                JSONUtil.fromJsonString(CreateArcRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void sendCreateRelationResponse(CreateRelationResponse aCreateRelationResponse,
-            String aProjectID, String aDocumentID, String aViewport)
+    public void sendCreateArc(CreateArcMessage aCreateArcMessage,
+                                           String aProjectID, String aDocumentID, String aViewport)
         throws IOException
     {
-        LOG.debug("SENDING NOW CREATE RELATION TO CLIENTS listening to: "
-                + SERVER_SEND_CLIENT_NEW_RELATION + aProjectID + "/" + aDocumentID + "/"
+        LOG.debug("SENDING NOW CREATE ARC TO CLIENTS listening to: "
+                + SERVER_SEND_CREATE_ARC + aProjectID + "/" + aDocumentID + "/"
                 + aViewport);
         simpMessagingTemplate.convertAndSend(
-                SERVER_SEND_CLIENT_NEW_RELATION + aProjectID + "/" + aDocumentID + "/" + aViewport,
-                JSONUtil.toJsonString(aCreateRelationResponse));
+            SERVER_SEND_CREATE_ARC + aProjectID + "/" + aDocumentID + "/" + aViewport,
+                JSONUtil.toJsonString(aCreateArcMessage));
     }
 
     @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_DELETE_ANNOTATION)
-    public void receiveDeleteAnnotationRequest(Message<String> aMessage) throws IOException
+    @MessageMapping(SERVER_RECEIVE_DELETE_SPAN)
+    public void receiveDeleteSpanRequest(Message<String> aMessage) throws IOException
     {
-        LOG.debug("RECEIVED DELETE ANNOTATION BY CLIENT");
+        LOG.debug("RECEIVED DELETE SPAN BY CLIENT");
         annotationSystemAPIImpl.handleDeleteSpan(
                 JSONUtil.fromJsonString(DeleteSpanRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void sendDeleteAnnotationResponse(DeleteSpanResponse aDeleteSpanResponse,
-            String aProjectID, String aDocumentID, String aViewport)
+    public void sendDeleteSpan(DeleteSpanMessage aDeleteSpanMessage,
+                                             String aProjectID, String aDocumentID, String aViewport)
         throws IOException
     {
-        LOG.debug("SENDING NOW DELETE ANNOTATION TO CLIENTS listening to: "
-                + SERVER_SEND_CLIENT_DELETE_ANNOTATION + aProjectID + "/" + aDocumentID + "/"
+        LOG.debug("SENDING NOW DELETE SPAN TO CLIENTS listening to: "
+                + SERVER_SEND_DELETE_SPAN + aProjectID + "/" + aDocumentID + "/"
                 + aViewport);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_DELETE_ANNOTATION + aProjectID + "/"
-                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aDeleteSpanResponse));
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_DELETE_SPAN + aProjectID + "/"
+                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aDeleteSpanMessage));
     }
 
     @Override
-
-    @MessageMapping(SERVER_RECEIVE_CLIENT_DELETE_RELATION)
-    public void receiveDeleteRelationRequest(Message<String> aMessage) throws IOException
+    @MessageMapping(SERVER_RECEIVE_DELETE_ARC)
+    public void receiveDeleteArcRequest(Message<String> aMessage) throws IOException
     {
-        LOG.debug("RECEIVED DELETE RELATION BY CLIENT");
-        annotationSystemAPIImpl.handleDeleteRelation(
-                JSONUtil.fromJsonString(DeleteRelationRequest.class, aMessage.getPayload()));
+        LOG.debug("RECEIVED DELETE ARC BY CLIENT");
+        annotationSystemAPIImpl.handleDeleteArc(
+                JSONUtil.fromJsonString(DeleteArcRequest.class, aMessage.getPayload()));
     }
 
     @Override
-    public void sendDeleteRelationResponse(DeleteRelationResponse aDeleteRelationResponse,
-            String aProjectID, String aDocumentID, String aViewport)
+    public void sendDeleteArc(DeleteArcMessage aDeleteArcMessage,
+                                           String aProjectID, String aDocumentID, String aViewport)
         throws IOException
     {
-        LOG.debug("SENDING NOW DELETE RELATION TO CLIENTS listening to: "
-                + SERVER_SEND_CLIENT_DELETE_RELATION + aProjectID + "/" + aDocumentID + "/"
+        LOG.debug("SENDING NOW DELETE ARC TO CLIENTS listening to: "
+                + SERVER_SEND_DELETE_ARC + aProjectID + "/" + aDocumentID + "/"
                 + aViewport);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_DELETE_RELATION + aProjectID + "/"
-                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aDeleteRelationResponse));
-    }
-
-    @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_ALL_SPANS)
-    public void receiveAllSpansRequest(Message<String> aMessage) throws IOException
-    {
-        LOG.debug("RECEIVED ALL SPANS BY CLIENT");
-        annotationSystemAPIImpl.handleAllSpans(
-                JSONUtil.fromJsonString(AllSpanRequest.class, aMessage.getPayload()));
-    }
-
-    @Override
-    public void sendAllSpansResponse(AllSpanResponse aAllSpanResponse, String aUser)
-        throws IOException
-    {
-        LOG.debug("SENDING NOW ALL SPANS TO CLIENT: " + aUser);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_ALL_SPANS + aUser,
-                JSONUtil.toJsonString(aAllSpanResponse));
-    }
-
-    @Override
-    @MessageMapping(SERVER_RECEIVE_CLIENT_ALL_RELATIONS)
-    public void receiveAllRelationsRequest(Message<String> aMessage) throws IOException
-    {
-        LOG.debug("RECEIVED ALL RELATIONS BY CLIENT");
-        annotationSystemAPIImpl.handleAllRelations(
-                JSONUtil.fromJsonString(AllRelationRequest.class, aMessage.getPayload()));
-    }
-
-    @Override
-    public void sendAllRelationsResponse(AllRelationResponse aAllRelationResponse, String aUser)
-        throws IOException
-    {
-        LOG.debug("SENDING NOW ANNOTATION SELECT TO CLIENT: " + aUser);
-        simpMessagingTemplate.convertAndSend(SERVER_SEND_CLIENT_ALL_RELATIONS + aUser,
-                JSONUtil.toJsonString(aAllRelationResponse));
+        simpMessagingTemplate.convertAndSend(SERVER_SEND_DELETE_ARC + aProjectID + "/"
+                + aDocumentID + "/" + aViewport, JSONUtil.toJsonString(aDeleteArcMessage));
     }
 
     @Override

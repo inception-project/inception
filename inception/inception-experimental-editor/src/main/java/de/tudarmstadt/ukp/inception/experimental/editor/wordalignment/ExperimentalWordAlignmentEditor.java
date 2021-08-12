@@ -69,6 +69,6 @@ public class ExperimentalWordAlignmentEditor
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-
+        //Rendering should be handled by the scripting language files
     }
 }

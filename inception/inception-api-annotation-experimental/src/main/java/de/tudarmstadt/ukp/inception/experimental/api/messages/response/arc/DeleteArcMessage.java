@@ -15,27 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FeatureX} from "./FeatureX";
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc;
 
-export class Span
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+
+public class DeleteArcMessage
 {
-    id: string;
-    coveredText: string;
-    color: string;
-    begin: number;
-    end: number;
-    type: string;
-    features: string[];
+    private VID arcId;
 
-    constructor(aId: string, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeatures: FeatureX[], aColor: string)
-    {
-        this.id = aId;
-        this.coveredText = aCoveredText;
-        this.begin = aBegin;
-        this.end = aEnd;
-        this.type = aType;
-        this.features = aFeatures;
-        this.color = aColor;
+    public DeleteArcMessage(VID aArcId) {
+        arcId = aArcId;
     }
 
+    public VID getArcId()
+    {
+        return arcId;
+    }
+
+    public void setArcId(VID aArcId)
+    {
+        arcId = aArcId;
+    }
 }

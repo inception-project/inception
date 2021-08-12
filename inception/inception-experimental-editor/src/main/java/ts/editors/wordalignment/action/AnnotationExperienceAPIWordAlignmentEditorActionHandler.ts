@@ -25,6 +25,7 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
 
     constructor(aAnnotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor) {
         this.annotationExperienceAPIWordAlignmentEditor = aAnnotationExperienceAPIWordAlignmentEditor;
+        this.registerDefaultActionHandler();
     }
 
 
@@ -33,7 +34,12 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
             if (elem.id === 'next_sentence') {
-                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer("admin", "admin", 20, 41721, new Viewport([[0,34],[36,74]],null));
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer(
+                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName,
+                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName,
+                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.projectID,
+                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.documentID,
+                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport);
                 setTimeout(function () {
                     that.annotationExperienceAPIWordAlignmentEditor.originalLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[0];
                     that.annotationExperienceAPIWordAlignmentEditor.originalOffsetBegin = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.viewport[0][0]

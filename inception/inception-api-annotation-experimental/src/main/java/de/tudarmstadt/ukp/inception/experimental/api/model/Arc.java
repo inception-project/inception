@@ -21,24 +21,26 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class Span
+public class Arc
 {
     private VID id;
-    private String coveredText;
-    private int begin;
-    private int end;
+    private VID governorId;
+    private VID dependentId;
+    private String governorCoveredText;
+    private String dependentCoveredText;
+    private String color;
     private String type;
     private List<String> features;
-    private String color;
 
-    public Span(VID aId, int aBegin, int aEnd, String aType, String aColor, String aCoveredText, List<String> aFeatures)
+    public Arc(VID aId, VID aGovernorId, VID aDependentId, String aColor,
+               String aGovernorCoveredText, String aDependentCoveredText, String aType, List<String> aFeatures)
     {
         id = aId;
-        begin = aBegin;
-        end = aEnd;
-        type = aType;
+        governorId = aGovernorId;
+        dependentId = aDependentId;
         color = aColor;
-        coveredText = aCoveredText;
+        governorCoveredText = aGovernorCoveredText;
+        dependentCoveredText = aDependentCoveredText;
         features = aFeatures;
     }
 
@@ -52,44 +54,44 @@ public class Span
         id = aId;
     }
 
-    public int getBegin()
+    public VID getGovernorId()
     {
-        return begin;
+        return governorId;
     }
 
-    public void setBegin(int aBegin)
+    public void setGovernorId(VID aGovernorId)
     {
-        begin = aBegin;
+        governorId = aGovernorId;
     }
 
-    public int getEnd()
+    public VID getDependentId()
     {
-        return end;
+        return dependentId;
     }
 
-    public void setEnd(int aEnd)
+    public void setDependentId(VID aDependentId)
     {
-        end = aEnd;
+        dependentId = aDependentId;
     }
 
-    public String getType()
+    public String getGovernorCoveredText()
     {
-        return type;
+        return governorCoveredText;
     }
 
-    public void setType(String aType)
+    public void setGovernorCoveredText(String aGovernorCoveredText)
     {
-        type = aType;
+        governorCoveredText = aGovernorCoveredText;
     }
 
-    public String getCoveredText()
+    public String getDependentCoveredText()
     {
-        return coveredText;
+        return dependentCoveredText;
     }
 
-    public void setCoveredText(String aCoveredText)
+    public void setDependentCoveredText(String aDependentCoveredText)
     {
-        coveredText = aCoveredText;
+        dependentCoveredText = aDependentCoveredText;
     }
 
     public String getColor()
@@ -102,14 +104,23 @@ public class Span
         color = aColor;
     }
 
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String aType)
+    {
+        type = aType;
+    }
+
     public List<String> getFeatures()
     {
         return features;
     }
 
-    public void setFeature(List<String> aFeatures)
+    public void setFeatures(List<String> aFeatures)
     {
         features = aFeatures;
     }
 }
-

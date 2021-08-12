@@ -15,27 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FeatureX} from "./FeatureX";
-
-export class Span
+export class FeatureX
 {
-    id: string;
-    coveredText: string;
-    color: string;
-    begin: number;
-    end: number;
-    type: string;
-    features: string[];
+    name : string;
+    value : string;
 
-    constructor(aId: string, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeatures: FeatureX[], aColor: string)
+    constructor(aName : string, aValue : string)
     {
-        this.id = aId;
-        this.coveredText = aCoveredText;
-        this.begin = aBegin;
-        this.end = aEnd;
-        this.type = aType;
-        this.features = aFeatures;
-        this.color = aColor;
+        this.name = aName;
+        this.value = aValue;
     }
-
 }

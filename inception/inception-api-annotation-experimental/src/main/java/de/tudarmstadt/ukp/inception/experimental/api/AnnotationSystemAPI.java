@@ -23,14 +23,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEve
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewDocumentRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.NewViewportRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.AllRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.CreateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.DeleteRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.SelectRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.relation.UpdateRelationRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.AllSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DocumentRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.ViewportRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.CreateArcRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.DeleteArcRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.SelectArcRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.UpdateArcRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.CreateSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.DeleteSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.SelectSpanRequest;
@@ -38,9 +36,9 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.Updat
 
 public interface AnnotationSystemAPI
 {
-    void handleNewDocument(NewDocumentRequest aNewDocumentRequest) throws IOException;
+    void handleDocumentRequest(DocumentRequest aDocumentRequest) throws IOException;
 
-    void handleNewViewport(NewViewportRequest aNewViewportRequest) throws IOException;
+    void handleViewportRequest(ViewportRequest aViewportRequest) throws IOException;
 
     void handleSelectSpan(SelectSpanRequest aSelectSpanRequest)
         throws IOException;
@@ -53,20 +51,17 @@ public interface AnnotationSystemAPI
 
     void handleDeleteSpan(DeleteSpanRequest aDeleteSpanRequest) throws IOException;
 
-    void handleSelectRelation(SelectRelationRequest aSelectSpanRequest)
+    void handleSelectArc(SelectArcRequest aSelectSpanRequest)
         throws IOException;
 
-    void handleUpdateRelation(UpdateRelationRequest aUpdateRelationRequest)
+    void handleUpdateArc(UpdateArcRequest aUpdateArcRequest)
         throws Exception;
 
-    void handleCreateRelation(CreateRelationRequest aCreateRelationRequest)
+    void handleCreateArc(CreateArcRequest aCreateArcRequest)
         throws IOException;
 
-    void handleDeleteRelation(DeleteRelationRequest aDeleteRelationRequest) throws IOException;
+    void handleDeleteArc(DeleteArcRequest aDeleteArcRequest) throws IOException;
 
-    void handleAllSpans(AllSpanRequest aAllSpanRequest) throws IOException;
-
-    void handleAllRelations(AllRelationRequest aAllRelationRequest) throws IOException;
 
     void createErrorMessage(String aMessage, String aUser) throws IOException;
 
@@ -74,7 +69,7 @@ public interface AnnotationSystemAPI
 
     void onSpanDeletedEventHandler(SpanDeletedEvent aEvent) throws IOException;
 
-    void onRelationCreatedEventHandler(RelationCreatedEvent aEvent) throws IOException;
+    void onArcCreatedEventHandler(RelationCreatedEvent aEvent) throws IOException;
 
-    void onRelationDeletedEventHandler(RelationDeletedEvent aEvent) throws IOException;
+    void onArcDeletedEventHandler(RelationDeletedEvent aEvent) throws IOException;
 }

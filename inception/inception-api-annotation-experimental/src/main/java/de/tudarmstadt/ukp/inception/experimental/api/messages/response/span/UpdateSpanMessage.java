@@ -15,27 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {FeatureX} from "./FeatureX";
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.span;
 
-export class Span
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+
+public class UpdateSpanMessage
 {
-    id: string;
-    coveredText: string;
-    color: string;
-    begin: number;
-    end: number;
-    type: string;
-    features: string[];
+    private VID spanId;
+    private String[] feature;
 
-    constructor(aId: string, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeatures: FeatureX[], aColor: string)
+    public UpdateSpanMessage(VID aSpanId, String[] aFeature)
     {
-        this.id = aId;
-        this.coveredText = aCoveredText;
-        this.begin = aBegin;
-        this.end = aEnd;
-        this.type = aType;
-        this.features = aFeatures;
-        this.color = aColor;
+        spanId = aSpanId;
+        feature = aFeature;
     }
 
+    public VID getSpanId()
+    {
+        return spanId;
+    }
+
+    public void setSpanId(VID aSpanId) {
+        spanId = aSpanId;
+    }
+
+
+    public String[] getFeature()
+    {
+        return feature;
+    }
+
+    public void setFeature(String[] aFeature)
+    {
+        feature = aFeature;
+    }
 }

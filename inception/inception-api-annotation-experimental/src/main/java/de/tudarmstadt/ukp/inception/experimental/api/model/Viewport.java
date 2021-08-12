@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Viewport
@@ -51,6 +52,9 @@ public class Viewport
 
     public List<String> getDisabledLayers()
     {
+        if (disabledLayers == null) {
+            return new ArrayList<>();
+        }
         return disabledLayers;
     }
 

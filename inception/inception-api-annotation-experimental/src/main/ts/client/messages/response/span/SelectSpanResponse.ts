@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {FeatureX} from "../../../model/FeatureX";
+
 export class SelectSpanResponse
 {
-    spanAddress: number;
+    spanId: string;
     coveredText : string;
     begin : number;
     end : number;
     type: string;
-    feature: string[];
+    feature: FeatureX[];
     color: string;
 }

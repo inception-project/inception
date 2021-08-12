@@ -15,17 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request.span;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc;
+
+import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 
-public class SelectSpanRequest
+public class UpdateArcRequest
 {
     private String clientName;
     private String userName;
     private long projectId;
     private long documentId;
-    private VID spanId;
+    private VID arcId;
+    private List<FeatureX> features;
 
     public String getClientName()
     {
@@ -67,12 +71,23 @@ public class SelectSpanRequest
         documentId = aDocumentId;
     }
 
-    public VID getSpanId()
+    public VID getArcId()
     {
-        return spanId;
+        return arcId;
     }
 
-    public void setSpanAddress(VID aSpanId) {
-        spanId = aSpanId;
+    public void setArcId(VID aArcId)
+    {
+        arcId = aArcId;
+    }
+
+    public List<FeatureX> getFeatures()
+    {
+        return features;
+    }
+
+    public void setFeatures(List<FeatureX> aFeatures)
+    {
+        features = aFeatures;
     }
 }

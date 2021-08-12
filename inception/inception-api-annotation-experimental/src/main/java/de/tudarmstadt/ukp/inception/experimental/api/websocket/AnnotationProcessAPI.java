@@ -21,86 +21,76 @@ import java.io.IOException;
 
 import org.springframework.messaging.Message;
 
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DocumentResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewDocumentResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.NewViewportResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.AllRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.CreateRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.DeleteRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.SelectRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.relation.UpdateRelationResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.AllSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ViewportResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.CreateArcMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.DeleteArcMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.SelectArcResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.UpdateArcMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanResponse;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanMessage;
 
 
 public interface AnnotationProcessAPI
 {
-    void receiveNewDocumentRequest(Message<String> aMessage) throws IOException;
+    void receiveDocumentRequest(Message<String> aMessage) throws IOException;
 
-    void sendNewDocumentResponse(NewDocumentResponse aNewDocumentResponse, String aUser)
+    void sendDocumentResponse(DocumentResponse aDocumentResponse, String aUser)
         throws IOException;
 
-    void receiveNewViewportRequest(Message<String> aMessage) throws IOException;
+    void receiveViewportRequest(Message<String> aMessage) throws IOException;
 
-    void sendNewViewportResponse(NewViewportResponse aNewViewportResponse, String aUser)
+    void sendViewportResponse(ViewportResponse aViewportResponse, String aUser)
         throws IOException;
 
-    void receiveSelectAnnotationRequest(Message<String> aMessage) throws IOException;
+    void receiveSelectSpanRequest(Message<String> aMessage) throws IOException;
 
-    void receiveSelectRelationRequest(Message<String> aMessage) throws IOException;
+    void receiveSelectArcRequest(Message<String> aMessage) throws IOException;
 
-    void sendSelectAnnotationResponse(SelectSpanResponse aSelectSpanResponse, String aUser)
+    void sendSelectSpanResponse(SelectSpanResponse aSelectSpanResponse, String aUser)
         throws IOException;
 
-    void sendSelectRelationResponse(SelectRelationResponse aSelectRelationResponse, String aUser)
+    void sendSelectArcResponse(SelectArcResponse aSelectArcResponse, String aUser)
         throws IOException;
 
-    void receiveUpdateAnnotationRequest(Message<String> aMessage) throws Exception;
+    void receiveUpdateSpanRequest(Message<String> aMessage) throws Exception;
 
-    void receiveUpdateRelationRequest(Message<String> aMessage) throws Exception;
+    void receiveUpdateArcRequest(Message<String> aMessage) throws Exception;
 
-    void sendUpdateAnnotationResponse(UpdateSpanResponse aUpdateSpanResponse, String aProjectID,
-            String aDocumentID, String aViewport)
+    void sendUpdateSpan(UpdateSpanMessage aUpdateSpanMessage, String aProjectID,
+                                      String aDocumentID, String aViewport)
         throws IOException;
 
-    void sendUpdateRelationResponse(UpdateRelationResponse aUpdateRelationResponse,
-            String aProjectID, String aDocumentID, String aViewport)
+    void sendUpdateArc(UpdateArcMessage aUpdateArcMessage,
+                                    String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
 
-    void receiveCreateAnnotationRequest(Message<String> aMessage) throws IOException;
+    void receiveCreateSpanRequest(Message<String> aMessage) throws IOException;
 
-    void sendCreateAnnotationResponse(CreateSpanResponse aCreateSpanResponse, String aProjectID,
-            String aDocumentID, String aViewport)
+    void sendCreateSpan(CreateSpanMessage aCreateSpanMessage, String aProjectID,
+                                      String aDocumentID, String aViewport)
         throws IOException;
 
-    void receiveCreateRelationRequest(Message<String> aMessage) throws IOException;
+    void receiveCreateArcRequest(Message<String> aMessage) throws IOException;
 
-    void sendCreateRelationResponse(CreateRelationResponse aCreateRelationResponse,
-            String aProjectID, String aDocumentID, String aViewport)
+    void sendCreateArc(CreateArcMessage aCreateArcMessage,
+                                    String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
 
-    void receiveDeleteAnnotationRequest(Message<String> aMessage) throws IOException;
+    void receiveDeleteSpanRequest(Message<String> aMessage) throws IOException;
 
-    void sendDeleteAnnotationResponse(DeleteSpanResponse aDeleteSpanResponse, String aProjectID,
-            String aDocumentID, String aViewport)
+    void sendDeleteSpan(DeleteSpanMessage aDeleteSpanMessage, String aProjectID,
+                                      String aDocumentID, String aViewport)
         throws IOException;
 
-    void receiveDeleteRelationRequest(Message<String> aMessage) throws IOException;
+    void receiveDeleteArcRequest(Message<String> aMessage) throws IOException;
 
-    void sendDeleteRelationResponse(DeleteRelationResponse aDeleteRelationResponse,
-            String aProjectID, String aDocumentID, String aViewport)
+    void sendDeleteArc(DeleteArcMessage aDeleteArcMessage,
+                                    String aProjectID, String aDocumentID, String aViewport)
         throws IOException;
-
-    void receiveAllSpansRequest(Message<String> aMessage) throws  IOException;
-
-    void sendAllSpansResponse(AllSpanResponse aAllSpanResponse, String aUser) throws IOException;
-
-    void receiveAllRelationsRequest(Message<String> aMessage) throws  IOException;
-
-    void sendAllRelationsResponse(AllRelationResponse aAllRelationResponse, String aUser) throws IOException;
 
     void sendErrorMessage(ErrorMessage aErrorMessage, String aUser) throws IOException;
 

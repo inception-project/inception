@@ -17,25 +17,27 @@
  */
 import {FeatureX} from "./FeatureX";
 
-export class Span
+export class Arc
 {
-    id: string;
-    coveredText: string;
-    color: string;
-    begin: number;
-    end: number;
+    id : string;
+    sourceId : string;
+    targetId : string;
+    sourceCoveredText : string;
+    targetCoveredText : string
+    color : string;
     type: string;
-    features: string[];
+    features: FeatureX[];
 
-    constructor(aId: string, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeatures: FeatureX[], aColor: string)
+    constructor(aId: string, aSourceId: string, aTargetId: string, aSourceCoveredText: string, aTargetCoveredText: string, aColor: string, aType: string, aFeatures: FeatureX[])
     {
         this.id = aId;
-        this.coveredText = aCoveredText;
-        this.begin = aBegin;
-        this.end = aEnd;
+        this.sourceId = aSourceId;
+        this.targetId = aTargetId;
+        this.sourceCoveredText = aSourceCoveredText;
+        this.targetCoveredText = aTargetCoveredText;
+        this.color = aColor;
         this.type = aType;
         this.features = aFeatures;
-        this.color = aColor;
     }
 
 }

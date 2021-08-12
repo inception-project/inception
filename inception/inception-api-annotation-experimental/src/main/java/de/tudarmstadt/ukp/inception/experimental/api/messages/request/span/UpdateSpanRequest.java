@@ -25,7 +25,7 @@ public class UpdateSpanRequest
    private String userName;
    private long projectId;
    private long documentId;
-   private VID spanAddress;
+   private VID spanId;
    private String[] newFeature;
 
     public String getClientName()
@@ -68,13 +68,13 @@ public class UpdateSpanRequest
         documentId = aDocumentId;
     }
 
-    public VID getSpanAddress()
+    public VID getSpanId()
     {
-        return spanAddress;
+        return spanId;
     }
 
-    public void setSpanAddress(VID aSpanAddress) {
-        spanAddress = aSpanAddress;
+    public void setSpanAddress(VID aSpanId) {
+        spanId = aSpanId;
     }
 
     public String[] getNewFeature()

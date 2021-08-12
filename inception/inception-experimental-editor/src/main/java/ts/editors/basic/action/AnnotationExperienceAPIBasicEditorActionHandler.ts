@@ -32,9 +32,17 @@ export class AnnotationExperienceAPIBasicEditorActionHandler {
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
             console.log(elem)
-            if (elem.tagName === 'rect') {
-                //TODO for correct user
+            if (elem.className === 'fas fa-step-forward') {
                 that.annotationExperienceAPI.requestSelectAnnotationFromServer("admin", elem.attributes[4].value)
+            }
+            if (elem.tagName === 'fas fa-step-backward') {
+                that.annotationExperienceAPI.requestNewViewportFromServer("admin", elem.attributes[4].value)
+            }
+            if (elem.tagName === 'far fa-caret-square-right') {
+                that.annotationExperienceAPI.requestNewDocumentFromServer("admin", elem.attributes[4].value)
+            }
+            if (elem.tagName === 'far fa-caret-square-left') {
+                that.annotationExperienceAPI.requestNewDocumentFromServer("admin", elem.attributes[4].value)
             }
         }
 

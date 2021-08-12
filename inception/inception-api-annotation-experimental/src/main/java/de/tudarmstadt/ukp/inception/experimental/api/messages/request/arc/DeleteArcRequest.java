@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request.span;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class SelectSpanRequest
+public class DeleteArcRequest
 {
     private String clientName;
     private String userName;
     private long projectId;
     private long documentId;
-    private VID spanId;
+    private VID arcId;
+    private String layer;
 
     public String getClientName()
     {
@@ -67,12 +68,23 @@ public class SelectSpanRequest
         documentId = aDocumentId;
     }
 
-    public VID getSpanId()
+    public VID getArcId()
     {
-        return spanId;
+        return arcId;
     }
 
-    public void setSpanAddress(VID aSpanId) {
-        spanId = aSpanId;
+    public void setArcId(VID aArcId)
+    {
+        arcId = aArcId;
+    }
+
+    public String getLayer()
+    {
+        return layer;
+    }
+
+    public void setLayer(String aLayer)
+    {
+        layer = aLayer;
     }
 }
