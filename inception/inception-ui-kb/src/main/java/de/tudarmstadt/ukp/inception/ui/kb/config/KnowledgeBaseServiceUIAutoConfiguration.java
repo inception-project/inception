@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
@@ -77,9 +78,10 @@ public class KnowledgeBaseServiceUIAutoConfiguration
 
     @Bean
     @Autowired
-    public ConceptFeatureSupport conceptFeatureSupport(KnowledgeBaseService aKbService)
+    public ConceptFeatureSupport conceptFeatureSupport(KnowledgeBaseService aKbService,
+            KnowledgeBaseProperties aKBProperties)
     {
-        return new ConceptFeatureSupport(aKbService);
+        return new ConceptFeatureSupport(aKbService, aKBProperties);
     }
 
     @Bean

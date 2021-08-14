@@ -45,7 +45,7 @@ The same is true for the object of a statement: After choosing the property for 
 
 Concept features are features that allow referencing concepts in the knowledge base during annotation.
 
-To create a new concept feature, a new feature has to be created under *Projects Settings* -> *Layers*. The type of the new feature should be *KB: Concept/Instance*. Features of this type also can be configured to either take only concepts (select *Only Concept*), only instances (select *Only Instances*) or both (select *Any Concept/Instance*).
+To create a new concept feature, a new feature has to be created under *Projects Settings* -> *Layers*. The type of the new feature should be *KB: Concept/Instance/Property*. Features of this type also can be configured to either take *only concepts*, *only instances*, *only properties* or either (select *any*).
 
 [.thumb]
 image::kb5.png[align="center"]

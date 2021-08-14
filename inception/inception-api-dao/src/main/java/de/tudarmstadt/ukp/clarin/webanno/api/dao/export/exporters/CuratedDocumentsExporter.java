@@ -49,6 +49,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -111,56 +112,60 @@ public class CuratedDocumentsExporter
         int initProgress = aMonitor.getProgress() - 1;
         int i = 1;
         for (SourceDocument sourceDocument : documents) {
-            File curationCasDir = new File(aStage, CURATION_CAS_FOLDER + sourceDocument.getName());
-            forceMkdir(curationCasDir);
+            try (CasStorageSession session = CasStorageSession.openNested()) {
+                File curationCasDir = new File(aStage,
+                        CURATION_CAS_FOLDER + sourceDocument.getName());
+                forceMkdir(curationCasDir);
 
-            File curationDir = new File(aStage, CURATION_FOLDER + sourceDocument.getName());
-            forceMkdir(curationDir);
+                File curationDir = new File(aStage, CURATION_FOLDER + sourceDocument.getName());
+                forceMkdir(curationDir);
 
-            // If depending on aInProgress, include only the the curation documents that are
-            // finished or also the ones that are in progress
-            if ((aRequest.isIncludeInProgress()
-                    && CURATION_IN_PROGRESS.equals(sourceDocument.getState()))
-                    || CURATION_FINISHED.equals(sourceDocument.getState())) {
-                if (documentService.existsCas(sourceDocument, CURATION_USER)) {
-                    // Copy CAS - this is used when importing the project again
-                    try (OutputStream os = new FileOutputStream(
-                            new File(curationDir, CURATION_USER + ".ser"))) {
-                        documentService.exportCas(sourceDocument, CURATION_USER, null);
-                    }
+                // If depending on aInProgress, include only the the curation documents that are
+                // finished or also the ones that are in progress
+                if ((aRequest.isIncludeInProgress()
+                        && CURATION_IN_PROGRESS.equals(sourceDocument.getState()))
+                        || CURATION_FINISHED.equals(sourceDocument.getState())) {
+                    if (documentService.existsCas(sourceDocument, CURATION_USER)) {
+                        // Copy CAS - this is used when importing the project again
+                        try (OutputStream os = new FileOutputStream(
+                                new File(curationDir, CURATION_USER + ".ser"))) {
+                            documentService.exportCas(sourceDocument, CURATION_USER, os);
+                        }
 
-                    // Determine which format to use for export
-                    String formatId = FORMAT_AUTO.equals(aRequest.getFormat())
-                            ? sourceDocument.getFormat()
-                            : aRequest.getFormat();
+                        // Determine which format to use for export
+                        String formatId = FORMAT_AUTO.equals(aRequest.getFormat())
+                                ? sourceDocument.getFormat()
+                                : aRequest.getFormat();
 
-                    FormatSupport format = importExportService.getWritableFormatById(formatId)
-                            .orElseGet(() -> {
-                                FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
-                                aMonitor.addMessage(LogMessage.warn(this, "Curation: [%s] No writer"
-                                        + " found for original format [%s] - exporting as [%s] "
-                                        + "instead.", sourceDocument.getName(), formatId,
-                                        fallbackFormat.getName()));
-                                return fallbackFormat;
-                            });
+                        FormatSupport format = importExportService.getWritableFormatById(formatId)
+                                .orElseGet(() -> {
+                                    FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
+                                    aMonitor.addMessage(LogMessage.warn(this,
+                                            "Curation: [%s] No writer"
+                                                    + " found for original format [%s] - exporting as [%s] "
+                                                    + "instead.",
+                                            sourceDocument.getName(), formatId,
+                                            fallbackFormat.getName()));
+                                    return fallbackFormat;
+                                });
 
-                    // Copy secondary export format for convenience - not used during import
-                    try {
-                        File curationFile = importExportService.exportAnnotationDocument(
-                                sourceDocument, CURATION_USER, format, CURATION_USER, CURATION,
-                                true, bulkOperationContext);
-                        copyFileToDirectory(curationFile, curationDir);
-                        forceDelete(curationFile);
-                    }
-                    catch (Exception e) {
-                        // error("Unexpected error while exporting project: " +
-                        // ExceptionUtils.getRootCauseMessage(e) );
-                        throw new ProjectExportException(
-                                "Aborting due to unrecoverable error while exporting!");
+                        // Copy secondary export format for convenience - not used during import
+                        try {
+                            File curationFile = importExportService.exportAnnotationDocument(
+                                    sourceDocument, CURATION_USER, format, CURATION_USER, CURATION,
+                                    true, bulkOperationContext);
+                            copyFileToDirectory(curationFile, curationDir);
+                            forceDelete(curationFile);
+                        }
+                        catch (Exception e) {
+                            // error("Unexpected error while exporting project: " +
+                            // ExceptionUtils.getRootCauseMessage(e) );
+                            throw new ProjectExportException(
+                                    "Aborting due to unrecoverable error while exporting!");
+                        }
                     }
                 }
             }
-
             aMonitor.setProgress(initProgress + (int) ceil(((double) i) / documents.size() * 10.0));
             i++;
         }

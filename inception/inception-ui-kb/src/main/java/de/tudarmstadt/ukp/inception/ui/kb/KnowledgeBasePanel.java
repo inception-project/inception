@@ -165,10 +165,14 @@ public class KnowledgeBasePanel
                 Optional<KBObject> optKbObject = kbService.readItem(kbModel.getObject(),
                         selectedResource.getIdentifier());
 
-                if (optKbObject.isPresent()) {
-                    KBObject kbObject = optKbObject.get();
-                    sendSelectionChangedEvents(aTarget, kbObject);
+                if (!optKbObject.isPresent()) {
+                    error("The selected item is neither a concept, nor an instance nor a property. "
+                            + "It cannot be viewed/edited on this page.");
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                    return;
                 }
+
+                sendSelectionChangedEvents(aTarget, optKbObject.get());
             }
         };
 
@@ -253,7 +257,7 @@ public class KnowledgeBasePanel
             models.stream().filter(model -> model.getObject() != null && model.getObject()
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
-                        Optional<KBObject> kbObject = kbService.readItem(kbModel.getObject(),
+                        Optional<KBHandle> kbObject = kbService.readHandle(kbModel.getObject(),
                                 model.getObject().getIdentifier());
                         if (kbObject.isPresent()) {
                             model.getObject().setName(kbObject.get().getName());
