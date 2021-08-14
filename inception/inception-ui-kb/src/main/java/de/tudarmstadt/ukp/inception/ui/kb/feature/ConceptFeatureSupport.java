@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -57,9 +56,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.graph.KBErrorHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
 /**
@@ -81,16 +80,21 @@ public class ConceptFeatureSupport
 
     private final KnowledgeBaseService kbService;
 
-    private LoadingCache<Key, KBHandle> labelCache = Caffeine.newBuilder().maximumSize(10_000)
-            .expireAfterWrite(10, TimeUnit.MINUTES).refreshAfterWrite(1, TimeUnit.MINUTES)
-            .build(key -> loadLabelValue(key));
+    private final LoadingCache<Key, KBHandle> labelCache;
 
     private String featureSupportId;
 
     @Autowired
-    public ConceptFeatureSupport(KnowledgeBaseService aKbService)
+    public ConceptFeatureSupport(KnowledgeBaseService aKbService,
+            KnowledgeBaseProperties aKBProperties)
     {
         kbService = aKbService;
+
+        labelCache = Caffeine.newBuilder() //
+                .maximumSize(aKBProperties.getRenderCacheSize()) //
+                .expireAfterWrite(aKBProperties.getRenderCacheExpireDelay()) //
+                .refreshAfterWrite(aKBProperties.getRenderCacheRefreshDelay()) //
+                .build(key -> loadLabelValue(key));
     }
 
     @Override
@@ -154,21 +158,21 @@ public class ConceptFeatureSupport
             ConceptFeatureTraits t = readTraits(aKey.getAnnotationFeature());
 
             // Use the concept from a particular knowledge base
-            Optional<KBObject> kbObject;
+            Optional<KBHandle> kbHandle;
             if (t.getRepositoryId() != null) {
-                kbObject = kbService
+                kbHandle = kbService
                         .getKnowledgeBaseById(aKey.getAnnotationFeature().getProject(),
                                 t.getRepositoryId())
-                        .flatMap(kb -> kbService.readItem(kb, aKey.getLabel()));
+                        .flatMap(kb -> kbService.readHandle(kb, aKey.getLabel()));
             }
 
             // Use the concept from any knowledge base (leave KB unselected)
             else {
-                kbObject = kbService.readItem(aKey.getAnnotationFeature().getProject(),
+                kbHandle = kbService.readHandle(aKey.getAnnotationFeature().getProject(),
                         aKey.getLabel());
 
             }
-            return kbObject.map(KBObject::toKBHandle).orElseThrow(NoSuchElementException::new);
+            return kbHandle.orElseThrow(NoSuchElementException::new);
         }
         catch (NoSuchElementException e) {
             LOG.error("No label for feature value [{}]", aKey.getLabel());

@@ -34,6 +34,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.model.Monitor;
+import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 /**
  * Search indexer task. Runs the re-indexing process for a given project
@@ -45,6 +47,8 @@ public class ReindexTask
 
     private @Autowired SearchService searchService;
 
+    private Monitor monitor = new Monitor();
+
     public ReindexTask(Project aProject, String aTrigger)
     {
         super(aProject, null, aTrigger);
@@ -54,12 +58,18 @@ public class ReindexTask
     public void execute()
     {
         try {
-            searchService.reindex(super.getProject());
+            searchService.reindex(super.getProject(), monitor);
         }
         catch (IOException e) {
             log.error("Unable to reindex project [{}]({})", getProject().getName(),
                     getProject().getId(), e);
         }
+    }
+
+    @Override
+    public Progress getProgress()
+    {
+        return monitor.toProgress();
     }
 
     @Override

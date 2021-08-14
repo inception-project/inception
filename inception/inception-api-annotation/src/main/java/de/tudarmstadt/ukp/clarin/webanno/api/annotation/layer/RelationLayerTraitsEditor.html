@@ -18,6 +18,16 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:extend>
+  <div class="row form-row" wicket:enclosure="renderArcs">
+    <div class="offset-sm-4 col-sm-8">
+      <div class="form-check">
+        <input wicket:id="renderArcs" class="form-check-input" type="checkbox" />
+        <label wicket:for="renderArcs" class="form-check-label">
+          <wicket:label key="renderArcs" />
+        </label>
+      </div>
+    </div>
+  </div>
   <div class="row form-row" wicket:enclosure="validationMode">
     <label wicket:for="validationMode" class="col-sm-4 col-form-label"> <wicket:label
         key="validationMode" />
@@ -37,9 +47,9 @@
   <div class="row form-row" wicket:enclosure="crossSentence">
     <div class="offset-sm-4 col-sm-8">
       <div class="form-check">
-        <input wicket:id="crossSentence" class="form-check-input" type="checkbox"/>
+        <input wicket:id="crossSentence" class="form-check-input" type="checkbox" /> 
         <label wicket:for="crossSentence" class="form-check-label">
-          <wicket:label key="allowCrossSentence"/>
+          <wicket:label key="allowCrossSentence" />
         </label>
       </div>
     </div>
@@ -47,7 +57,7 @@
   <div class="row form-row" >
     <label class="col-sm-4 col-form-label">Coloring rules</label>
     <div class="col-sm-8">
-      <div wicket:id="coloringRules"/>
+      <div wicket:id="coloringRules" />
     </div>
   </div>
   <div class="row form-row" wicket:enclosure="onClickJavascriptAction">

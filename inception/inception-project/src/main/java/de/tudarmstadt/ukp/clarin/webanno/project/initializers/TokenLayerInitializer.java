@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
 
@@ -55,7 +55,7 @@ public class TokenLayerInitializer
     @Override
     public String getName()
     {
-        return "Tokenization";
+        return "Tokens";
     }
 
     @Override
@@ -74,12 +74,14 @@ public class TokenLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                aProject, true, SINGLE_TOKEN, NO_OVERLAP);
+                aProject, true, CHARACTERS, NO_OVERLAP);
 
         // Since the user cannot turn off validation for the token layer if there is any kind of
         // problem with the validation functionality we are conservative here and disable validation
         // from the start.
         tokenLayer.setValidationMode(NEVER);
+        tokenLayer.setReadonly(true);
+        tokenLayer.setCrossSentence(false);
 
         annotationSchemaService.createOrUpdateLayer(tokenLayer);
     }

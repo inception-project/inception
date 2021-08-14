@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 /**
  * (Re)indexes the annotation document for a specific user.
@@ -40,6 +41,8 @@ public class IndexAnnotationDocumentTask
     extends IndexingTask_ImplBase
 {
     private @Autowired SearchService searchService;
+
+    private int done = 0;
 
     public IndexAnnotationDocumentTask(AnnotationDocument aAnnotationDocument, String aTrigger,
             byte[] aBinaryCas)
@@ -53,6 +56,14 @@ public class IndexAnnotationDocumentTask
         try (CasStorageSession session = CasStorageSession.open()) {
             searchService.indexDocument(super.getAnnotationDocument(), super.getBinaryCas());
         }
+
+        done++;
+    }
+
+    @Override
+    public Progress getProgress()
+    {
+        return new Progress(done, 1);
     }
 
     @Override

@@ -36,6 +36,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -233,11 +234,13 @@ public class ProjectExportPanel
                     default:
                         error("Invalid project export state after export: " + monitor.getState());
                     }
+                    setVisible(false);
                 }
             };
 
-            fileGenerationProgress.add(exportProject);
+            add(exportProject);
             add(fileGenerationProgress);
+            fileGenerationProgress.setVisible(false);
 
             add(exportProjectLink = new AjaxLink<Void>("exportProject")
             {
@@ -287,7 +290,12 @@ public class ProjectExportPanel
 
             cancelLink = new LambdaAjaxLink("cancel", this::actionCancel);
             cancelLink.add(enabledWhen(() -> exportInProgress));
+            cancelLink.add(visibleWhen(() -> exportInProgress));
             add(cancelLink);
+            
+            WebMarkupContainer warningContainer = new WebMarkupContainer("downloadWarning");
+            warningContainer.add(visibleWhen(() -> exportInProgress));
+            add(warningContainer);
         }
 
         private void actionCancel(AjaxRequestTarget aTarget)

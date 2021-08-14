@@ -129,8 +129,8 @@ public class PreferencesServiceImpl
             if (pref.isPresent()) {
                 String json = pref.get().getTraits();
                 T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
-                LOGGER.info("Loaded preferences for key {} and user {} and project {}: [{}]",
-                        aKey, aUser, aProject, result);
+                LOGGER.info("Loaded preferences for key {} and user {} and project {}: [{}]", aKey,
+                        aUser, aProject, result);
                 return result;
             }
             else {

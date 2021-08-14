@@ -263,8 +263,13 @@ public class RecommenderInfoPanel
 
         CAS cas = page.getEditorCas();
 
-        // SourceDocument document = state.getDocument();
         Predictions predictions = recommendationService.getPredictions(user, state.getProject());
+        if (predictions == null) {
+            error("Recommenders did not yet provide any suggestions.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
         Preferences pref = recommendationService.getPreferences(user, state.getProject());
 
         // TODO #176 use the document Id once it it available in the CAS
