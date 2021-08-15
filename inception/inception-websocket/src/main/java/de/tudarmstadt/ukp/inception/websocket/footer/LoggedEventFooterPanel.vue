@@ -101,8 +101,9 @@ module.exports = {
       html: true,
       placement: 'top',
       fallbackPlacements: ['top'],
-      customClass: 'shadow-lg',
+      customClass: 'shadow-lg above-modal w-auto mw-100',
       content: this.$el.querySelector('.log-popup'),
+      template: '<div class="popover" role="tooltip"><div class="popover-arrow"></div><h3 class="popover-header"></h3><div class="popover-body p-0"></div></div>'
     })
   },
   beforeUnmount(){

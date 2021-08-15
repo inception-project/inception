@@ -25,13 +25,12 @@
       <div class="card-body flex-v-container">
         <form wicket:id="searchForm">
           <div class="flex-v-container" wicket:enclosure="queryInput">
-            <div class=" from-row">
+            <div class="d-flex mb-2">
               <textarea wicket:id="queryInput" class="form-control"
                 style="resize: vertical; word-break: break-all;"
                 rows="5"></textarea>
             </div>
-            <div
-              class=" from-row flex-h-container flex-gutter flex-only-internal-gutter">
+            <div class="d-flex mb-2">
               <div class="btn-group flex-content flex-h-container"
                 role="group">
                 <button wicket:id="search" type="submit"
@@ -140,9 +139,9 @@
             </wicket:container>
           </table>
         </div>
+        
         <form wicket:id="annotateForm" style="margin-top: 5px">
-          <div
-            class=" flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="mb-2 d-flex">
             <div class="btn-group flex-content flex-h-container"
               role="group">
               <button wicket:id="annotateAllButton" type="submit"
@@ -159,12 +158,12 @@
               </button>
             </div>
           </div>
-          <form wicket:id="createOptions" class="card">
+          <form wicket:id="createOptions" class="card mb-2">
             <div class="card-header small">
               <wicket:message key="options" />
             </div>
             <div class="card-body small">
-              <div class="row form-row"
+              <div class="form-row"
                 wicket:enclosure="overrideExistingAnnotations">
                 <div class="form-check">
                   <input wicket:id="overrideExistingAnnotations"
@@ -178,8 +177,7 @@
             </div>
           </form>
 
-          <div
-            class=" flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="mb-2 d-flex">
             <div class="btn-group flex-content flex-h-container"
               role="group">
               <button wicket:id="deleteButton" type="submit"
@@ -196,12 +194,12 @@
               </button>
             </div>
           </div>
-          <form wicket:id="deleteOptions" class="card">
+          <form wicket:id="deleteOptions" class="card mb-2">
             <div class="card-header small">
               <wicket:message key="options" />
             </div>
             <div class="card-body small">
-              <div class="row form-row"
+              <div class="form-row"
                 wicket:enclosure="deleteOnlyMatchingFeatureValues">
                 <div class="form-check">
                   <input wicket:id="deleteOnlyMatchingFeatureValues"
@@ -215,8 +213,7 @@
             </div>
           </form>
 
-          <div
-            class=" flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="mb-2 d-flex">
             <button wicket:id="clearButton"
               class="btn btn-secondary flex-content"
               wicket:message="title:clear">
@@ -226,8 +223,7 @@
             </button>
           </div>
 
-          <div
-            class=" flex-h-container flex-gutter flex-only-internal-gutter mb-0">
+          <div class="d-flex">
             <button wicket:id="export"
               class="btn btn-primary flex-content">
               <i class="fas fa-download" aria-hidden="true"></i>
