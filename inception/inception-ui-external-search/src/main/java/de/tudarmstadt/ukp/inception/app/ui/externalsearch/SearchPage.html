@@ -15,49 +15,26 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<head>
-  <wicket:head>
-    <style>
-      span.inline-edit {
-        border: 1px solid green;
-        padding: 4px;
-      }
-      
-      span.inline-edit input {
-        border: 0;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-  </wicket:head>
-</head>
+<html xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:extend>
     <div class="flex-content flex-v-container flex-gutter">
       <form wicket:id="searchForm" class="flex-h-container flex-gutter">
         <div style="width: 240px;">
           <div class="input-group">
-            <span class="input-group-prepend">
-              <span class="input-group-text">
-                <i class="fas fa-database"></i>
-              </span>
+            <span class="input-group-text">
+              <i class="fas fa-database"></i>
             </span>
             <select wicket:id="repository" class="form-select" data-container="body"/>
           </div>
         </div>
         <div class="flex-content">
           <div class="input-group">
-            <span class="input-group-prepend">
-              <span class="input-group-text">
-                <i class="fas fa-search"></i>
-              </span>
+            <span class="input-group-text">
+              <i class="fas fa-search"></i>
             </span>
             <input wicket:id="query" class="form-control" type="text" />
-            <div class="input-group-append">
-              <button wicket:id="submitSearch" class="btn btn-secondary" type="submit">Search</button>
-            </div>
+            <button wicket:id="submitSearch" class="btn btn-secondary" type="submit">Search</button>
           </div>
         </div>
       </form>
