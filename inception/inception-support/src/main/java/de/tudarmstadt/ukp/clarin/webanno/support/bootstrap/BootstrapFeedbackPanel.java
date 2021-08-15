@@ -87,5 +87,4 @@ public class BootstrapFeedbackPanel
         }
         return cssClass;
     }
-
 }
