@@ -93,6 +93,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMar
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -111,6 +112,7 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
+import de.tudarmstadt.ukp.inception.search.model.Progress;
 
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -213,7 +215,7 @@ public class SearchAnnotationSidebar
         resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
         resultsGroupContainer.setOutputMarkupId(true);
         mainContainer.add(resultsGroupContainer);
-        
+
         searchResultGroups = new DataView<ResultsGroup>("searchResultGroups", resultsProvider)
         {
             private static final long serialVersionUID = -631500052426449048L;
@@ -481,8 +483,11 @@ public class SearchAnnotationSidebar
         AnnotatorState state = getModelObject();
         Project project = state.getProject();
 
-        if (searchService.isIndexInProgress(state.getProject())) {
-            info("Indexing in progress... cannot perform query at this time");
+        Optional<Progress> maybeProgress = searchService.getIndexProgress(project);
+        if (maybeProgress.isPresent()) {
+            Progress p = maybeProgress.get();
+            info("Indexing in progress... cannot perform query at this time. " + p.percent() + "% ("
+                    + p.getDone() + "/" + p.getTotal() + ")");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
@@ -646,9 +651,22 @@ public class SearchAnnotationSidebar
             return;
         }
 
+        boolean match = false;
+
         // create a new annotation if not already there or if stacking is enabled and the
         // new annotation has different features than the existing one
-        if (annoFS == null || (!overrideExisting && !featureValuesMatchCurrentState(annoFS))) {
+        for (AnnotationFS eannoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd())) {
+            if (overrideExisting) {
+                setFeatureValues(aDocument, aCas, aAdapter, state, eannoFS);
+                aBulkResult.updated++;
+            }
+            else if (featureValuesMatchCurrentState(eannoFS)) {
+                match = true;
+            }
+        }
+
+        if (annoFS == null || (!match && !overrideExisting)) {
             try {
                 annoFS = aAdapter.add(aDocument, currentUser.getUsername(), aCas,
                         aSearchResult.getOffsetStart(), aSearchResult.getOffsetEnd());
@@ -658,17 +676,24 @@ public class SearchAnnotationSidebar
                 aBulkResult.conflict++;
                 return;
             }
-        }
-        else {
-            aBulkResult.updated++;
-        }
 
-        // set values for all features according to current state
+            // set values for all features according to current state
+            setFeatureValues(aDocument, aCas, aAdapter, state, annoFS);
+        }
+    }
+
+    private void setFeatureValues(SourceDocument aDocument, CAS aCas, SpanAdapter aAdapter,
+            AnnotatorState state, AnnotationFS annoFS)
+    {
         int addr = getAddr(annoFS);
         List<FeatureState> featureStates = state.getFeatureStates();
         for (FeatureState featureState : featureStates) {
             Object featureValue = featureState.value;
             AnnotationFeature feature = featureState.feature;
+            // Ignore slot features - cf. https://github.com/inception-project/inception/issues/2505
+            if (feature.getLinkMode() != LinkMode.NONE) {
+                continue;
+            }
             if (featureValue != null) {
                 aAdapter.setFeatureValue(aDocument, currentUser.getUsername(), aCas, addr, feature,
                         featureValue);
@@ -680,16 +705,15 @@ public class SearchAnnotationSidebar
             SpanAdapter aAdapter, SearchResult aSearchResult, BulkOperationResult aBulkResult)
     {
         Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectAt(aCas, type, aSearchResult.getOffsetStart(),
-                aSearchResult.getOffsetEnd()).stream().findFirst().orElse(null);
 
-        if (annoFS == null || !featureValuesMatchCurrentState(annoFS)
-                && deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
-            return;
+        for (AnnotationFS annoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd())) {
+            if ((annoFS != null && featureValuesMatchCurrentState(annoFS))
+                    || !deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
+                aAdapter.delete(aDocument, currentUser.getUsername(), aCas, new VID(annoFS));
+                aBulkResult.deleted++;
+            }
         }
-
-        aAdapter.delete(aDocument, currentUser.getUsername(), aCas, new VID(annoFS));
-        aBulkResult.deleted++;
     }
 
     private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, CAS aCas)
@@ -714,6 +738,10 @@ public class SearchAnnotationSidebar
         for (FeatureState state : getModelObject().getFeatureStates()) {
             Object featureValue = state.value;
             AnnotationFeature feature = state.feature;
+            // Ignore slot features - cf. https://github.com/inception-project/inception/issues/2505
+            if (feature.getLinkMode() != LinkMode.NONE) {
+                continue;
+            }
             Object valueAtFS = aAdapter.getFeatureValue(feature, aAnnotationFS);
             if (!Objects.equals(valueAtFS, featureValue)) {
                 return false;

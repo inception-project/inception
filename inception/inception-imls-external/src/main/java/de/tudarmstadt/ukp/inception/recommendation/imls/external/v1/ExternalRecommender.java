@@ -276,7 +276,7 @@ public class ExternalRecommender
             return client.send(aRequest, BodyHandlers.ofString(UTF_8));
         }
         catch (IOException | InterruptedException e) {
-            throw new RecommendationException("Error while sending request!", e);
+            throw new RecommendationException("Error while sending request: " + e.getMessage(), e);
         }
     }
 

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.websocket;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -67,21 +66,25 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
-import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
-
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "websocket.enabled=true", "websocket.loggedevent.enabled=true"})
-@SpringBootApplication(exclude = { LiquibaseAutoConfiguration.class, 
-        SecurityAutoConfiguration.class})
+@SpringBootTest( //
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
+        properties = { //
+                "websocket.enabled=true", //
+                "websocket.loggedevent.enabled=true", //
+                "event-logging.enabled=true" })
+@SpringBootApplication( //
+        exclude = { //
+                LiquibaseAutoConfiguration.class, //
+                SecurityAutoConfiguration.class })
 public class WebSocketIntegrationTest
 {
     private WebSocketStompClient webSocketClient;
     private @LocalServerPort int port;
     private String websocketUrl;
     private StompSession session;
-    
+
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired DocumentService docService;
     private @Autowired ProjectService projectService;
@@ -90,10 +93,10 @@ public class WebSocketIntegrationTest
     // temporarily store data for test project
     @TempDir
     File repositoryDir;
-    
+
     private Project testProject;
     private SourceDocument testDoc;
-    
+
     @BeforeEach
     public void setup() throws IOException
     {
@@ -103,9 +106,10 @@ public class WebSocketIntegrationTest
         webSocketClient.setMessageConverter(new MappingJackson2MessageConverter());
         createTestdata();
     }
-    
+
     @AfterEach
-    public void tearDown() {
+    public void tearDown()
+    {
         entityManager.clear();
     }
 
@@ -113,19 +117,21 @@ public class WebSocketIntegrationTest
     {
         repositoryProperties.setPath(repositoryDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
-        
+
         testProject = new Project("testProject");
         testDoc = new SourceDocument("testDoc", testProject, "text");
         projectService.createProject(testProject);
         docService.createSourceDocument(testDoc);
     }
-    
+
     @Test
-    public void thatRecentMessageIsReceived() throws InterruptedException, ExecutionException, TimeoutException
+    public void thatRecentMessageIsReceived()
+        throws InterruptedException, ExecutionException, TimeoutException
     {
         List<LoggedEventMessage> receivedMessages = new ArrayList<>();
         CountDownLatch latch = new CountDownLatch(1);
-        StompSessionHandlerAdapter sessionHandler = new StompSessionHandlerAdapter() {
+        StompSessionHandlerAdapter sessionHandler = new StompSessionHandlerAdapter()
+        {
 
             @Override
             public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
@@ -145,9 +151,9 @@ public class WebSocketIntegrationTest
                         receivedMessages.add((LoggedEventMessage) aPayload);
                         latch.countDown();
                     }
-                });    
-                applicationEventPublisher.publishEvent(
-                        new DocumentStateChangedEvent(new Object(), testDoc, SourceDocumentState.NEW));
+                });
+                applicationEventPublisher.publishEvent(new DocumentStateChangedEvent(new Object(),
+                        testDoc, SourceDocumentState.NEW));
             }
 
             @Override
@@ -165,23 +171,23 @@ public class WebSocketIntegrationTest
                 aException.printStackTrace();
             }
         };
-        
+
         session = webSocketClient.connect(websocketUrl, sessionHandler).get(1, TimeUnit.SECONDS);
         latch.await(1, TimeUnit.SECONDS);
         session.disconnect();
-        
+
         assertThat(receivedMessages.size()).isEqualTo(1);
         LoggedEventMessage msg1 = receivedMessages.get(0);
-        assertThat(msg1.getEventMsg()).isEqualTo(DocumentStateChangedEvent.class.getSimpleName());    
+        assertThat(msg1.getEventType()).isEqualTo(DocumentStateChangedEvent.class.getSimpleName());
     }
 
-
     /**
-     * Test does not check correct authentication for websocket messages,
-     * instead we allow all to test communication assuming an authenticated user
+     * Test does not check correct authentication for websocket messages, instead we allow all to
+     * test communication assuming an authenticated user
      */
     @Configuration
-    public static class WebsocketSecurityTestConfig extends AbstractSecurityWebSocketMessageBrokerConfigurer
+    public static class WebsocketSecurityTestConfig
+        extends AbstractSecurityWebSocketMessageBrokerConfigurer
     {
 
         @Override
@@ -189,22 +195,25 @@ public class WebSocketIntegrationTest
         {
             aMessages.anyMessage().permitAll();
         }
+
         @Override
-        protected boolean sameOriginDisabled() {
+        protected boolean sameOriginDisabled()
+        {
             return true;
         }
     }
-    
+
     @Configuration
-    @EntityScan({ "de.tudarmstadt.ukp.clarin.webanno.model",
-    "de.tudarmstadt.ukp.clarin.webanno.security.model",
-    "de.tudarmstadt.ukp.inception.log.model"})
+    @EntityScan({ //
+            "de.tudarmstadt.ukp.clarin.webanno.model", //
+            "de.tudarmstadt.ukp.clarin.webanno.security.model", //
+            "de.tudarmstadt.ukp.inception.log.model" })
     public static class WebSocketTestConfig
     {
         @Bean
-        public List<EventLoggingAdapter<?>> eventLoggingAdapter()
+        public DocumentStateChangedEventAdapter documentStateChangedEventAdapter()
         {
-            return asList(new DocumentStateChangedEventAdapter());
+            return new DocumentStateChangedEventAdapter();
         }
     }
 }

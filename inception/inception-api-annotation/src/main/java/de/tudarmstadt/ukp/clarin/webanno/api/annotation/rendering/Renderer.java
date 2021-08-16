@@ -70,7 +70,8 @@ public interface Renderer
     void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             int windowBeginOffset, int windowEndOffset);
 
-    List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures, int aWindowBegin, int aWindowEnd);
+    List<VObject> render(VDocument aVDocument, AnnotationFS aFS, List<AnnotationFeature> aFeatures,
+            int aWindowBegin, int aWindowEnd);
 
     FeatureSupportRegistry getFeatureSupportRegistry();
 

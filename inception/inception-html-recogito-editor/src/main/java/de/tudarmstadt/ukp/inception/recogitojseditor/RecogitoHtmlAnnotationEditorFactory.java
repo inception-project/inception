@@ -49,7 +49,7 @@ public class RecogitoHtmlAnnotationEditorFactory
     {
         return new RecogitoHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
-    
+
     @Override
     public void initState(AnnotatorState aModelObject)
     {

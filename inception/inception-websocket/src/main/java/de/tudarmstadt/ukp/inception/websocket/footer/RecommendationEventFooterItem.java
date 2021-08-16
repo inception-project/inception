@@ -15,24 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
+package de.tudarmstadt.ukp.inception.websocket.footer;
 
-public interface AnnotationEditorProperties
+import org.apache.wicket.Component;
+import org.springframework.core.annotation.Order;
+
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
+import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WebsocketAutoConfiguration#recommendationEventFooterItem}.
+ * </p>
+ */
+@Order(FooterItem.ORDER_RIGHT - 100)
+public class RecommendationEventFooterItem
+    implements FooterItem
 {
-    int getPageSize();
-
-    boolean isAutoScroll();
-
-    boolean isRememberLayer();
-
-    /**
-     * @return whether the "forward annotation" setting is available to annotators.
-     */
-    boolean isForwardAnnotationEnabled();
-
-    /**
-     * @return whether the "remember layer" setting is configurable by the user as preference. When
-     *         disabled, {@link #isRememberLayer} always returns true.
-     */
-    boolean isRememberLayerEnabled();
+    @Override
+    public Component create(String aId)
+    {
+        return new RecommendationEventFooterPanel(aId);
+    }
 }
