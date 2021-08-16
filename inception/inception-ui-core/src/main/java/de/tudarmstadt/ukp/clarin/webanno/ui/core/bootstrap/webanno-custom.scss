@@ -342,7 +342,6 @@ tr.even:hover{
 .headers a:visited{
     background-color:#B90F22;
     color:white;
-    vertical-align:bottom;
 }
 
 tr.headers th.wicket_orderDown a::after {
@@ -350,7 +349,6 @@ tr.headers th.wicket_orderDown a::after {
     content: "\f0dd";
     display: inline-block;
     padding-left: 3px;
-    vertical-align: middle;
     font-weight: 900;
 }
 
@@ -359,7 +357,6 @@ tr.headers th.wicket_orderUp a::after {
     content: "\f0de";
     display: inline-block;
     padding-left: 3px;
-    vertical-align: middle;
     font-weight: 900;
 }
 
