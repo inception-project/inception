@@ -16,12 +16,12 @@
  * limitations under the License.
  */
 import {Span} from "../../model/Span";
-import {Arc} from "../../model/Relation";
+import {Arc} from "../../model/Arc";
+import {Viewport} from "../../model/Viewport";
 
 export class DocumentResponse
 {
-    documentId : number;
-    viewportText : string[];
+    viewport : Viewport;
     spans : Span[];
-    relations : Arc[];
+    arcs : Arc[];
 }

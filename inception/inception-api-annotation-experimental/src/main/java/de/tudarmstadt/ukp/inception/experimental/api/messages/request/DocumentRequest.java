@@ -22,7 +22,6 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 public class DocumentRequest
 {
     private String clientName;
-    private String userName;
     private long projectId;
     private long documentId;
     private Viewport viewport;
@@ -35,16 +34,6 @@ public class DocumentRequest
     public void setClientName(String aClientName)
     {
         clientName = aClientName;
-    }
-
-    public String getUserName()
-    {
-        return userName;
-    }
-
-    public void setUserName(String aUserName)
-    {
-        userName = aUserName;
     }
 
     public long getProjectId()

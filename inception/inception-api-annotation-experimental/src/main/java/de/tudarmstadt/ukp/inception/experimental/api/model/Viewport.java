@@ -23,6 +23,7 @@ import java.util.List;
 public class Viewport
 {
     private List<List<Integer>> viewport;
+    private String documentText;
     private List<String> disabledLayers;
 
     public Viewport()
@@ -34,9 +35,10 @@ public class Viewport
         viewport = aViewport;
     }
 
-    public Viewport(List<List<Integer>> aViewport, List<String> aDisabledLayers)
+    public Viewport(List<List<Integer>> aViewport, String aDocumentText, List<String> aDisabledLayers)
     {
         viewport = aViewport;
+        documentText = aDocumentText;
         disabledLayers = aDisabledLayers;
     }
 
@@ -49,6 +51,17 @@ public class Viewport
     {
         viewport = aViewport;
     }
+
+    public String getDocumentText()
+    {
+        return documentText;
+    }
+
+    public void setDocumentText(String aDocumentText)
+    {
+        documentText = aDocumentText;
+    }
+
 
     public List<String> getDisabledLayers()
     {

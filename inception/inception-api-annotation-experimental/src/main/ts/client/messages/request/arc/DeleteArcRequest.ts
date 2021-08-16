@@ -18,17 +18,15 @@
 export class DeleteArcRequest
 {
     clientName : string;
-    userName : string;
     projectId : number;
     documentId : number;
     arcId: string;
     layer : string;
 
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aArcId: string, aLayer: string)
+    constructor(aClientName: string, aProjectId: number, aDocumentId: number, aArcId: string, aLayer: string)
     {
         this.clientName = aClientName;
-        this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.arcId = aArcId;

@@ -17,16 +17,16 @@
  */
 import {Viewport} from "../../model/Viewport";
 
-export class DocumentRequest {
+export class DocumentRequest
+{
     clientName: string;
-    userName: string;
     projectId: number;
     documentId: number;
     viewport: Viewport;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aViewport: Viewport) {
+    constructor(aClientName: string, aProjectId: number, aDocumentId: number, aViewport: Viewport)
+    {
         this.clientName = aClientName;
-        this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.viewport = aViewport;

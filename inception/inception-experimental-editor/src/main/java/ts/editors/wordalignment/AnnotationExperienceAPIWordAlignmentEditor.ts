@@ -24,10 +24,13 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
     annotationExperienceAPIVisualization: AnnotationExperienceAPIWordAlignmentEditorVisualization;
     annotationExperienceAPIWordAlignmentEditorActionHandler: AnnotationExperienceAPIWordAlignmentEditorActionHandler
 
-    originalLanguageSentence: string;
-    originalOffsetBegin: number
-    translatedLanguageSentence: string;
-    translatedOffsetBegin: number;
+    currentSentence : number = 0;
+    oddSentence: string;
+    oddSentenceOffset: number = 0;
+    evenSentence: string;
+    evenSentenceOffset: number = 0;
+    spanType : string;
+    relationType : string;
 
     constructor()
     {
@@ -93,14 +96,13 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                         target = that.annotationExperienceAPI.spans[j];
                     }
                 }
-                that.annotationExperienceAPI.requestCreateRelationFromServer(
-                    that.annotationExperienceAPI.clientName,
+                that.annotationExperienceAPI.requestCreateArc(
                     that.annotationExperienceAPI.clientName,
                     that.annotationExperienceAPI.projectID,
                     that.annotationExperienceAPI.documentID,
                     source.id,
                     target.id,
-                    "webanno.custom.Word_Alignment_Relation")
+                    that.relationType)
             }
         }, 5000)
 
@@ -126,8 +128,7 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
     {
         let that = this;
 
-        this.annotationExperienceAPI.requestCreateSpanFromServer(
-            that.annotationExperienceAPI.clientName,
+        this.annotationExperienceAPI.requestCreateSpan(
             that.annotationExperienceAPI.clientName,
             that.annotationExperienceAPI.projectID,
             that.annotationExperienceAPI.documentID,
@@ -141,20 +142,18 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
 
         let that = this;
 
-        for (let i = 0; i < this.annotationExperienceAPI.relations.length; i++) {
-            this.annotationExperienceAPI.requestDeleteRelationFromServer(
-                that.annotationExperienceAPI.clientName,
+        for (let i = 0; i < this.annotationExperienceAPI.arcs.length; i++) {
+            this.annotationExperienceAPI.requestDeleteArc(
                 that.annotationExperienceAPI.clientName,
                 that.annotationExperienceAPI.projectID,
                 that.annotationExperienceAPI.documentID,
-                that.annotationExperienceAPI.relations[i].id,
-                that.annotationExperienceAPI.relations[i].type
+                that.annotationExperienceAPI.arcs[i].id,
+                that.annotationExperienceAPI.arcs[i].type
             )
         }
 
         for (let i = 0; i < this.annotationExperienceAPI.spans.length; i++) {
-            this.annotationExperienceAPI.requestDeleteSpanFromServer(
-                that.annotationExperienceAPI.clientName,
+            this.annotationExperienceAPI.requestDeleteSpan(
                 that.annotationExperienceAPI.clientName,
                 that.annotationExperienceAPI.projectID,
                 that.annotationExperienceAPI.documentID,

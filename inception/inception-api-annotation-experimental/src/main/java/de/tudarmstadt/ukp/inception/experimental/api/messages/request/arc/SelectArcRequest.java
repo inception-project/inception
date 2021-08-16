@@ -25,7 +25,6 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 public class SelectArcRequest
 {
     private String clientName;
-    private String userName;
     private long projectId;
     private long documentId;
     private VID arcId;
@@ -39,16 +38,6 @@ public class SelectArcRequest
     public void setClientName(String aClientName)
     {
         clientName = aClientName;
-    }
-
-    public String getUserName()
-    {
-        return userName;
-    }
-
-    public void setUserName(String aUserName)
-    {
-        userName = aUserName;
     }
 
     public long getProjectId()

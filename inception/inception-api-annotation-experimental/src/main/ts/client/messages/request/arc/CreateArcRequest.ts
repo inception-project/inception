@@ -18,17 +18,15 @@
 export class CreateArcRequest
 {
     clientName : string;
-    userName : string;
     projectId : number;
     documentId : number;
     sourceId : string;
     targetId : string;
     layer : string;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aSourceId: string, aTargetId: string, aLayer: string)
+    constructor(aClientName: string, aProjectId: number, aDocumentId: number, aSourceId: string, aTargetId: string, aLayer: string)
     {
         this.clientName = aClientName;
-        this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.sourceId = aSourceId;

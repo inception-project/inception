@@ -23,6 +23,8 @@ import {Viewport} from "../../../../../../../../inception-api-annotation-experim
 export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
     annotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor;
 
+    sentences : string[];
+
     constructor(aAnnotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor) {
         this.annotationExperienceAPIWordAlignmentEditor = aAnnotationExperienceAPIWordAlignmentEditor;
         this.registerDefaultActionHandler();
@@ -33,26 +35,34 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
         let that = this;
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
-            if (elem.id === 'next_sentence') {
-                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestNewDocumentFromServer(
-                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName,
+            if (elem.className === 'far fa-caret-square-right') {
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestDocument(
                     that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName,
                     that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.projectID,
-                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.documentID,
-                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport);
+                    Number(document.location.href.split("=")[1].split("&")[0]));
                 setTimeout(function () {
-                    that.annotationExperienceAPIWordAlignmentEditor.originalLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[0];
-                    that.annotationExperienceAPIWordAlignmentEditor.originalOffsetBegin = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.viewport[0][0]
-                    that.annotationExperienceAPIWordAlignmentEditor.translatedLanguageSentence = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.text[1];
-                    that.annotationExperienceAPIWordAlignmentEditor.translatedOffsetBegin = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.viewport[1][0]
+                    that.sentences = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.documentText.split(".");
+
+                    that.annotationExperienceAPIWordAlignmentEditor.oddSentence = that.sentences[0];
+                    that.annotationExperienceAPIWordAlignmentEditor.currentSentence++;
+                    that.annotationExperienceAPIWordAlignmentEditor.evenSentence = that.sentences[1];
+                    that.annotationExperienceAPIWordAlignmentEditor.currentSentence++;
                 }, 2000)
 
                 document.getElementById("save_alignment").disabled= false;
             }
+
+            if (elem.className === 'fas fa-step-forward' || elem.className === 'fas fa-step-backward') {
+
+                that.annotationExperienceAPIWordAlignmentEditor.oddSentence = that.sentences[String(Number(document.getElementsByTagName("input")[2].value) - 1)];;
+                that.annotationExperienceAPIWordAlignmentEditor.evenSentence = that.sentences[Number(document.getElementsByTagName("input")[2].value)];
+
+                document.getElementById("save_alignment").disabled= false;
+            }
+
             if (elem.id === 'delete_alignment') {
                 that.annotationExperienceAPIWordAlignmentEditor.resetAlignments();
             }
-
 
             if (elem.id === 'save_alignment') {
                 that.annotationExperienceAPIWordAlignmentEditor.saveAlignments();

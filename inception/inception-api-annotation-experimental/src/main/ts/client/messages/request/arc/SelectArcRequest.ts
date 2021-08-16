@@ -18,15 +18,13 @@
 export class SelectArcRequest
 {
     clientName : string;
-    userName : string;
     projectId : number;
     documentId : number;
     arcId : string;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aArcId: string)
+    constructor(aClientName: string, aProjectId: number, aDocumentId: number, aArcId: string)
     {
         this.clientName = aClientName;
-        this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.arcId = aArcId;

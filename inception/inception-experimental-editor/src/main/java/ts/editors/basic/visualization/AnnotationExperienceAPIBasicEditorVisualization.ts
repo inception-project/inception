@@ -49,7 +49,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         textArea.innerHTML = '';
 
         //Sentences
-        let sentences = this.annotationExperienceAPI.text;
+        let sentences = this.annotationExperienceAPI.viewport.documentText;
         this.sentenceCount = sentences.length - 1;
 
         //SVG element
@@ -156,7 +156,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         highlighting.innerHTML = "";
 
         if (aAnnotations.length > 0) {
-            let sentences = this.annotationExperienceAPI.text.join("").split("|");
+            let sentences = this.annotationExperienceAPI.viewport.documentText;
             this.sentenceCount = sentences.length - 1;
             let i = 0;
 

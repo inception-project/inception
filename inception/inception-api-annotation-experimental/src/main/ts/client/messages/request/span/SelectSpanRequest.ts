@@ -18,15 +18,13 @@
 export class SelectSpanRequest
 {
     clientName : string;
-    userName : string;
     projectId : number;
     documentId : number;
     spanId : string;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aSpanId: string)
+    constructor(aClientName: string, aProjectId: number, aDocumentId: number, aSpanId: string)
     {
         this.clientName = aClientName;
-        this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.spanId = aSpanId;

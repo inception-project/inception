@@ -15,26 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {DocumentResponse} from "./messages/response/NewDocumentResponse";
-import {ViewportResponse} from "./messages/response/NewViewportResponse";
-import {ErrorMessage} from "./messages/response/ErrorMessage";
-import {SelectSpanResponse} from "./messages/response/span/SelectSpanResponse";
-import {UpdateSpanMessage} from "./messages/response/span/UpdateSpanResponse";
-import {CreateSpanMessage} from "./messages/response/span/CreateSpanResponse";
-import {DeleteSpanMessage} from "./messages/response/span/DeleteSpanResponse";
-import {SelectArcResponse} from "./messages/response/arc/SelectRelationResponse";
-import {UpdateArcResponse} from "./messages/response/arc/UpdateRelationResponse";
-import {CreateArcResponse} from "./messages/response/arc/CreateRelationResponse";
-import {Span} from "./model/Span";
-import {Arc} from "./model/Relation";
-import {DeleteArcResponse} from "./messages/response/arc/DeleteRelationResponse";
 import {Viewport} from "./model/Viewport";
 import {FeatureX} from "./model/FeatureX";
+import {Span} from "./model/Span";
+import {Arc} from "./model/Arc";
+import {DocumentResponse} from "./messages/response/DocumentResponse";
+import {SelectSpanResponse} from "./messages/response/span/SelectSpanResponse";
+import {UpdateSpanMessage} from "./messages/response/span/UpdateSpanMessage";
+import {CreateSpanMessage} from "./messages/response/span/CreateSpanMessage";
+import {DeleteSpanMessage} from "./messages/response/span/DeleteSpanMessage";
+import {SelectArcResponse} from "./messages/response/arc/SelectArcResponse";
+import {ErrorMessage} from "./messages/response/ErrorMessage";
+import {UpdateArcMessage} from "./messages/response/arc/UpdateArcMessage";
+import {DeleteArcMessage} from "./messages/response/arc/DeleteArcMessage";
+import {CreateArcMessage} from "./messages/response/arc/CreateArcMessage";
 
 export interface AnnotationExperienceAPI
 {
     //Text and annotations
-    text: string[];
     spans: Span[];
     selectedSpan: Span;
 
@@ -49,38 +47,33 @@ export interface AnnotationExperienceAPI
     disconnect();
 
 
-    requestDocument(aClientName: string, aUserName: string, aProjectId: number,
+    requestDocument(aClientName: string, aProjectId: number,
                                  aDocumentId: number, aViewport: Viewport);
 
-    requestViewport(aClientName: string, aUserName: string, aProjectId: number,
-                                 aDocumentId: number, aViewport: Viewport);
-
-    requestSelectSpan(aClientName: string, aUserName: string, aProjectId: number,
+    requestSelectSpan(aClientName: string, aProjectId: number,
                                 aDocumentId: number, aSpanId: string);
 
-    requestUpdateSpan(aClientName: string, aUserName: string, aProjectId: number,
+    requestUpdateSpan(aClientName: string, aProjectId: number,
                                 aDocumentId: number, aSpanId: string, aNewFeature: FeatureX[])
 
-    requestCreateSpan(aClientName: string, aUserName: string, aProjectId: number,
+    requestCreateSpan(aClientName: string, aProjectId: number,
                                 aDocumentId: number, aBegin: number, aEnd: number, aLayer: string);
 
-    requestDeleteSpan(aClientName: string, aUserName: string, aProjectId: number,
+    requestDeleteSpan(aClientName: string,  aProjectId: number,
                                 aDocumentId: number, aSpanId: string, aLayer: string);
 
-    requestSelectArc(aClientName: string, aUserName: string, aProjectId: number,
+    requestSelectArc(aClientName: string, aProjectId: number,
                                     aDocumentId: number, aArcId: string);
 
-    requestUpdateArc(aClientName: string, aUserName: string, aProjectId: number,
+    requestUpdateArc(aClientName: string, aProjectId: number,
                                     aDocumentId: number, aArcId: string, aNewFeature: FeatureX[])
 
-    requestCreateArc(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aSourceId : string, aTargetId : string, aLayer: string)
+    requestCreateArc(aClientName: string, aProjectId: number, aDocumentId: number, aSourceId : string, aTargetId : string, aLayer: string)
 
-    requestDeleteArc(aClientName: string, aUserName: string, aProjectId: number,
+    requestDeleteArc(aClientName: string, aProjectId: number,
                                     aDocumentId: number, aArcId: string, aLayer: string);
 
     onDocument(aMessage: DocumentResponse);
-
-    onViewport(aMessage: ViewportResponse);
 
     onSpanSelect(aMessage: SelectSpanResponse);
 
@@ -92,11 +85,11 @@ export interface AnnotationExperienceAPI
 
     onArcSelect(aMessage: SelectArcResponse);
 
-    onArcDelete(aMessage: DeleteArcResponse);
+    onArcDelete(aMessage: DeleteArcMessage);
 
-    onArcUpdate(aMessage: UpdateArcResponse);
+    onArcUpdate(aMessage: UpdateArcMessage);
 
-    onArcCreate(aMessage: CreateArcResponse);
+    onArcCreate(aMessage: CreateArcMessage);
 
     onError(aMessage: ErrorMessage);
 }

@@ -21,41 +21,30 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.inception.experimental.api.model.Arc;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
+import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 
 public class DocumentResponse
 {
-    private int documentId;
-    private List<String> viewportText;
+    private Viewport viewport;
     private List<Span> spans;
-    private List<Arc> relations;
+    private List<Arc> arcs;
 
-    public DocumentResponse(int aDocumentId, List<String> aViewportText, List<Span> aSpans,
+    public DocumentResponse(Viewport aViewport, List<Span> aSpans,
                             List<Arc> aRelations)
     {
-        documentId = aDocumentId;
-        viewportText = aViewportText;
+        viewport = aViewport;
         spans = aSpans;
-        relations = aRelations;
+        arcs = aRelations;
     }
 
-    public int getDocumentId()
+    public Viewport getViewport()
     {
-        return documentId;
+        return viewport;
     }
 
-    public void setDocumentId(int aDocumentId)
+    public void setViewport(Viewport aViewport)
     {
-        documentId = aDocumentId;
-    }
-
-    public List<String> getViewportText()
-    {
-        return viewportText;
-    }
-
-    public void setViewportText(List<String> aViewportText)
-    {
-        this.viewportText = aViewportText;
+        viewport = aViewport;
     }
 
     public List<Span> getSpans()
@@ -68,13 +57,13 @@ public class DocumentResponse
         spans = aSpans;
     }
 
-    public List<Arc> getRelations()
+    public List<Arc> getArcs()
     {
-        return relations;
+        return arcs;
     }
 
-    public void setRelations(List<Arc> aRelations)
+    public void setArcs(List<Arc> aArcs)
     {
-        relations = aRelations;
+        arcs = aArcs;
     }
 }

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.experimental.api;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL_FILTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
-import static java.lang.Math.toIntExact;
 import static org.apache.uima.fit.util.CasUtil.selectAllFS;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -63,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DocumentRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.ViewportRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.CreateArcRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.DeleteArcRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.SelectArcRequest;
@@ -74,7 +72,6 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.Selec
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.UpdateSpanRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DocumentResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ViewportResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.CreateArcMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.DeleteArcMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.SelectArcResponse;
@@ -125,27 +122,33 @@ public class AnnotationSystemAPIImpl
     public void handleDocumentRequest(DocumentRequest aDocumentRequest) throws IOException
     {
         try {
-            // TODO server decide on next document
-            if (aDocumentRequest.getDocumentId() == 0) {
-                aDocumentRequest.setDocumentId(41714);
-            }
 
-            CAS cas = getCasForDocument(aDocumentRequest.getUserName(),
+            CAS cas = getCasForDocument(aDocumentRequest.getClientName(),
                     aDocumentRequest.getProjectId(), aDocumentRequest.getDocumentId());
 
+            String documentText = cas.getDocumentText();
+
+            List<List<Integer>> viewportList = new ArrayList<>();
+            ArrayList<Integer> documentOffset = new ArrayList<>();
+
+            documentOffset.add(0);
+            documentOffset.add(documentText.toCharArray().length);
+
+            viewportList.add(documentOffset);
+            Viewport viewport = new Viewport(viewportList, documentText,
+                    aDocumentRequest.getViewport().getDisabledLayers());
+
+            List<String> validLayers = aDocumentRequest.getViewport().getDisabledLayers();
+
             Pair<List<Span>, List<Arc>> annotations = getAnnotations(cas,
-                    aDocumentRequest.getProjectId(), getValidLayers(aDocumentRequest.getProjectId(),
-                            aDocumentRequest.getViewport().getDisabledLayers()));
+                    aDocumentRequest.getProjectId(),
+                    getValidLayers(aDocumentRequest.getProjectId(), validLayers));
 
-            List<Span> spans = filterSpans(annotations.getKey(), aDocumentRequest.getViewport());
+            List<Span> spans = filterSpans(annotations.getKey(), viewport);
 
-            List<Arc> relations = filterArcs(annotations.getValue(), cas,
-                    aDocumentRequest.getViewport());
+            List<Arc> relations = filterArcs(annotations.getValue(), cas, viewport);
 
-            DocumentResponse message = new DocumentResponse(
-                    toIntExact(documentService.getSourceDocument(aDocumentRequest.getProjectId(),
-                            aDocumentRequest.getDocumentId()).getId()),
-                    getViewportText(cas, aDocumentRequest.getViewport()), spans, relations);
+            DocumentResponse message = new DocumentResponse(viewport, spans, relations);
             annotationProcessAPI.sendDocumentResponse(message, aDocumentRequest.getClientName());
         }
         catch (Exception e) {
@@ -156,39 +159,10 @@ public class AnnotationSystemAPIImpl
     }
 
     @Override
-    public void handleViewportRequest(ViewportRequest aViewportRequest) throws IOException
-    {
-        try {
-            CAS cas = getCasForDocument(aViewportRequest.getUserName(),
-                    aViewportRequest.getProjectId(), aViewportRequest.getDocumentId());
-
-            Pair<List<Span>, List<Arc>> annotations = getAnnotations(cas,
-                    aViewportRequest.getProjectId(), getValidLayers(aViewportRequest.getProjectId(),
-                            aViewportRequest.getViewport().getDisabledLayers()));
-
-            List<Span> spans = filterSpans(annotations.getKey(), aViewportRequest.getViewport());
-
-            List<Arc> relations = filterArcs(annotations.getValue(), cas,
-                    aViewportRequest.getViewport());
-
-            ViewportResponse message = new ViewportResponse(
-                    getViewportText(cas, aViewportRequest.getViewport()), spans, relations);
-
-            annotationProcessAPI.sendViewportResponse(message, aViewportRequest.getClientName());
-
-        }
-        catch (Exception e) {
-            LOG.error("Exception has been thrown during handleNewViewport()", e);
-            createErrorMessage(e.getMessage(), aViewportRequest.getClientName());
-        }
-
-    }
-
-    @Override
     public void handleSelectSpan(SelectSpanRequest aSelectSpanRequest) throws IOException
     {
         try {
-            CAS cas = getCasForDocument(aSelectSpanRequest.getUserName(),
+            CAS cas = getCasForDocument(aSelectSpanRequest.getClientName(),
                     aSelectSpanRequest.getProjectId(), aSelectSpanRequest.getDocumentId());
             AnnotationFS span = selectAnnotationByAddr(cas, aSelectSpanRequest.getSpanId().getId());
 
@@ -204,7 +178,6 @@ public class AnnotationSystemAPIImpl
 
             annotationProcessAPI.sendSelectSpanResponse(message,
                     aSelectSpanRequest.getClientName());
-
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during handleSelectSpan()", e);
@@ -220,7 +193,7 @@ public class AnnotationSystemAPIImpl
             SourceDocument sourceDocument = documentService.getSourceDocument(
                     aUpdateSpanRequest.getProjectId(), aUpdateSpanRequest.getDocumentId());
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aUpdateSpanRequest.getUserName());
+                    aUpdateSpanRequest.getClientName());
 
             AnnotationFS annotation = selectAnnotationByAddr(cas,
                     aUpdateSpanRequest.getSpanId().getId());
@@ -241,8 +214,7 @@ public class AnnotationSystemAPIImpl
                     aUpdateSpanRequest.getNewFeature());
             this.annotationProcessAPI.sendUpdateSpan(response,
                     String.valueOf(aUpdateSpanRequest.getProjectId()),
-                    String.valueOf(aUpdateSpanRequest.getDocumentId()),
-                    String.valueOf(annotation.getBegin()));
+                    String.valueOf(aUpdateSpanRequest.getDocumentId()));
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during handleUpdateSpan()", e);
@@ -260,7 +232,7 @@ public class AnnotationSystemAPIImpl
                     aCreateSpanRequest.getProjectId(), aCreateSpanRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aCreateSpanRequest.getUserName());
+                    aCreateSpanRequest.getClientName());
 
             TypeAdapter adapter = annotationService.getAdapter(
                     getLayer(aCreateSpanRequest.getProjectId(), aCreateSpanRequest.getLayer()));
@@ -268,7 +240,7 @@ public class AnnotationSystemAPIImpl
             ((SpanAdapter) adapter).add(
                     documentService.getSourceDocument(aCreateSpanRequest.getProjectId(),
                             aCreateSpanRequest.getDocumentId()),
-                    aCreateSpanRequest.getUserName(), cas, aCreateSpanRequest.getBegin(),
+                    aCreateSpanRequest.getClientName(), cas, aCreateSpanRequest.getBegin(),
                     aCreateSpanRequest.getEnd());
         }
         catch (Exception e) {
@@ -286,7 +258,7 @@ public class AnnotationSystemAPIImpl
                     aDeleteSpanRequest.getProjectId(), aDeleteSpanRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aDeleteSpanRequest.getUserName());
+                    aDeleteSpanRequest.getClientName());
 
             TypeAdapter adapter = annotationService.getAdapter(
                     getLayer(aDeleteSpanRequest.getProjectId(), aDeleteSpanRequest.getLayer()));
@@ -294,7 +266,7 @@ public class AnnotationSystemAPIImpl
             adapter.delete(
                     documentService.getSourceDocument(aDeleteSpanRequest.getProjectId(),
                             aDeleteSpanRequest.getDocumentId()),
-                    aDeleteSpanRequest.getUserName(), cas, aDeleteSpanRequest.getSpanId());
+                    aDeleteSpanRequest.getClientName(), cas, aDeleteSpanRequest.getSpanId());
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during handleDeleteSpan()", e);
@@ -311,7 +283,7 @@ public class AnnotationSystemAPIImpl
                     aSelectArcRequest.getProjectId(), aSelectArcRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aSelectArcRequest.getUserName());
+                    aSelectArcRequest.getClientName());
 
             FeatureStructure arc = selectFsByAddr(cas, aSelectArcRequest.getArcId().getId());
 
@@ -359,7 +331,7 @@ public class AnnotationSystemAPIImpl
             SourceDocument sourceDocument = documentService.getSourceDocument(
                     aUpdateArcRequest.getProjectId(), aUpdateArcRequest.getDocumentId());
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aUpdateArcRequest.getUserName());
+                    aUpdateArcRequest.getClientName());
 
             AnnotationFS annotation = selectAnnotationByAddr(cas,
                     aUpdateArcRequest.getArcId().getId());
@@ -379,8 +351,7 @@ public class AnnotationSystemAPIImpl
 
             this.annotationProcessAPI.sendUpdateArc(response,
                     String.valueOf(aUpdateArcRequest.getProjectId()),
-                    String.valueOf(aUpdateArcRequest.getDocumentId()),
-                    String.valueOf(annotation.getBegin()));
+                    String.valueOf(aUpdateArcRequest.getDocumentId()));
 
         }
         catch (Exception e) {
@@ -398,7 +369,7 @@ public class AnnotationSystemAPIImpl
                     aCreateArcRequest.getProjectId(), aCreateArcRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aCreateArcRequest.getUserName());
+                    aCreateArcRequest.getClientName());
 
             AnnotationFS governor = selectAnnotationByAddr(cas,
                     aCreateArcRequest.getSourceId().getId());
@@ -411,7 +382,7 @@ public class AnnotationSystemAPIImpl
             ((RelationAdapter) adapter).add(
                     documentService.getSourceDocument(aCreateArcRequest.getProjectId(),
                             aCreateArcRequest.getDocumentId()),
-                    aCreateArcRequest.getUserName(), governor, dependent, cas);
+                    aCreateArcRequest.getClientName(), governor, dependent, cas);
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during handleCreateRelation()", e);
@@ -428,7 +399,7 @@ public class AnnotationSystemAPIImpl
                     aDeleteArcRequest.getProjectId(), aDeleteArcRequest.getDocumentId());
 
             CAS cas = documentService.readAnnotationCas(sourceDocument,
-                    aDeleteArcRequest.getUserName());
+                    aDeleteArcRequest.getClientName());
 
             TypeAdapter adapter = annotationService.getAdapter(
                     getLayer(aDeleteArcRequest.getProjectId(), aDeleteArcRequest.getLayer()));
@@ -436,7 +407,7 @@ public class AnnotationSystemAPIImpl
             adapter.delete(
                     documentService.getSourceDocument(aDeleteArcRequest.getProjectId(),
                             aDeleteArcRequest.getDocumentId()),
-                    aDeleteArcRequest.getUserName(), cas, aDeleteArcRequest.getArcId());
+                    aDeleteArcRequest.getClientName(), cas, aDeleteArcRequest.getArcId());
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during handleDeleteRelation()", e);
@@ -460,8 +431,7 @@ public class AnnotationSystemAPIImpl
                 aEvent.getAnnotation().getEnd(), aEvent.getAnnotation().getType().getName(),
                 getColorForAnnotation(aEvent.getAnnotation(), aEvent.getProject()), features);
         annotationProcessAPI.sendCreateSpan(response, String.valueOf(aEvent.getProject().getId()),
-                String.valueOf(aEvent.getDocument().getId()),
-                String.valueOf(aEvent.getAnnotation().getBegin()));
+                String.valueOf(aEvent.getDocument().getId()));
     }
 
     @Override
@@ -471,8 +441,7 @@ public class AnnotationSystemAPIImpl
         DeleteSpanMessage response = new DeleteSpanMessage(
                 new VID(aEvent.getAnnotation().getAddress()));
         annotationProcessAPI.sendDeleteSpan(response, String.valueOf(aEvent.getProject().getId()),
-                String.valueOf(aEvent.getDocument().getId()),
-                String.valueOf(aEvent.getAnnotation().getBegin()));
+                String.valueOf(aEvent.getDocument().getId()));
     }
 
     @Override
@@ -488,8 +457,8 @@ public class AnnotationSystemAPIImpl
             }
         }
         CreateArcMessage response = new CreateArcMessage(new VID(aEvent.getAnnotation()._id()),
-                aEvent.getUser(), aEvent.getUser(), aEvent.getProject().getId(),
-                aEvent.getDocument().getId(), new VID(aEvent.getSourceAnnotation()._id()),
+                aEvent.getUser(), aEvent.getProject().getId(), aEvent.getDocument().getId(),
+                new VID(aEvent.getSourceAnnotation()._id()),
                 new VID(aEvent.getTargetAnnotation()._id()),
                 getColorForAnnotation(aEvent.getAnnotation(), aEvent.getProject()),
                 aEvent.getSourceAnnotation().getCoveredText(),
@@ -497,8 +466,7 @@ public class AnnotationSystemAPIImpl
                 aEvent.getAnnotation().getType().getName(), features);
 
         annotationProcessAPI.sendCreateArc(response, String.valueOf(aEvent.getProject().getId()),
-                String.valueOf(aEvent.getDocument().getId()),
-                String.valueOf(aEvent.getAnnotation().getBegin()));
+                String.valueOf(aEvent.getDocument().getId()));
     }
 
     @Override
@@ -509,8 +477,7 @@ public class AnnotationSystemAPIImpl
                 new VID(aEvent.getAnnotation().getAddress()));
 
         annotationProcessAPI.sendDeleteArc(response, String.valueOf(aEvent.getProject().getId()),
-                String.valueOf(aEvent.getDocument().getId()),
-                String.valueOf(aEvent.getAnnotation().getBegin()));
+                String.valueOf(aEvent.getDocument().getId()));
     }
 
     @Override
@@ -545,11 +512,10 @@ public class AnnotationSystemAPIImpl
                     .listAnnotationLayer(projectService.getProject(aProjectId));
 
             for (AnnotationLayer layer : layers) {
-                if (aLayer.equals(layer.getName())) {
+                if (aLayer.equals(layer.getUiName())) {
                     return layer;
                 }
             }
-
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during getLayer()", e);
@@ -563,6 +529,9 @@ public class AnnotationSystemAPIImpl
 
     public List<AnnotationLayer> getValidLayers(long aProjectId, List<String> disabledLayers)
     {
+        if (disabledLayers.isEmpty()) {
+            return annotationService.listAnnotationLayer(projectService.getProject(aProjectId));
+        }
 
         List<AnnotationLayer> validLayers = new ArrayList<>();
         List<AnnotationLayer> layers = annotationService
@@ -573,24 +542,6 @@ public class AnnotationSystemAPIImpl
             }
         }
         return validLayers;
-    }
-
-    public List<String> getViewportText(CAS aCas, Viewport aViewport) throws Exception
-    {
-        try {
-            List<String> viewport = new ArrayList<>();
-            String text = aCas.getDocumentText();
-            for (int i = 0; i < aViewport.getViewport().size(); i++) {
-                String sentence = text.substring(aViewport.getViewport().get(i).get(0),
-                        aViewport.getViewport().get(i).get(1));
-                viewport.add(sentence);
-            }
-            return viewport;
-        }
-        catch (Exception e) {
-            LOG.error("Exception has been thrown during getViewportText()", e);
-            throw new Exception();
-        }
     }
 
     public List<Span> filterSpans(List<Span> aAnnotations, Viewport aViewport) throws Exception
@@ -619,27 +570,26 @@ public class AnnotationSystemAPIImpl
     public List<Arc> filterArcs(List<Arc> aRelations, CAS aCas, Viewport aViewport) throws Exception
     {
         try {
-            List<Arc> filteredRelations = new ArrayList<>();
+            List<Arc> filteredArcs = new ArrayList<>();
 
-            for (Arc relation : aRelations) {
-                AnnotationFS annotation = selectAnnotationByAddr(aCas,
-                        relation.getGovernorId().getId());
+            for (Arc arc : aRelations) {
+                AnnotationFS annotation = selectAnnotationByAddr(aCas, arc.getGovernorId().getId());
 
                 for (int i = 0; i < aViewport.getViewport().size(); i++) {
                     for (int j = aViewport.getViewport().get(i).get(0); j <= aViewport.getViewport()
                             .get(i).get(1); j++) {
                         if (annotation.getBegin() == j) {
-                            filteredRelations.add(relation);
+                            filteredArcs.add(arc);
                             break;
                         }
                     }
                 }
             }
-            return filteredRelations;
+            return filteredArcs;
 
         }
         catch (Exception e) {
-            LOG.error("Exception has been thrown during filterRelations()", e);
+            LOG.error("Exception has been thrown during filterArcs()", e);
             throw new Exception();
         }
     }

@@ -24,7 +24,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEve
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DocumentRequest;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.request.ViewportRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.CreateArcRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.DeleteArcRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.arc.SelectArcRequest;
@@ -37,8 +36,6 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.request.span.Updat
 public interface AnnotationSystemAPI
 {
     void handleDocumentRequest(DocumentRequest aDocumentRequest) throws IOException;
-
-    void handleViewportRequest(ViewportRequest aViewportRequest) throws IOException;
 
     void handleSelectSpan(SelectSpanRequest aSelectSpanRequest)
         throws IOException;

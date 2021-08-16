@@ -18,17 +18,15 @@
 export class CreateSpanRequest
 {
     clientName : string;
-    userName : string;
     projectId : number;
     documentId : number;
     begin : number;
     end : number;
     layer : string;
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: string)
+    constructor(aClientName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: string)
     {
         this.clientName = aClientName;
-        this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.begin = aBegin;

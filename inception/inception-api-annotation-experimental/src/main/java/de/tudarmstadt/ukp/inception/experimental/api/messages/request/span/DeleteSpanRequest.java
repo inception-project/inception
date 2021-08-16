@@ -22,7 +22,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public class DeleteSpanRequest
 {
     private String clientName;
-    private String userName;
     private long documentId;
     private long projectId;
     private VID spanId;
@@ -36,16 +35,6 @@ public class DeleteSpanRequest
     public void setClientName(String aClientName)
     {
         clientName = aClientName;
-    }
-
-    public String getUserName()
-    {
-        return userName;
-    }
-
-    public void setUserName(String aUserName)
-    {
-        userName = aUserName;
     }
 
     public long getProjectId()

@@ -20,16 +20,14 @@ import {FeatureX} from "../../../model/FeatureX";
 export class UpdateArcRequest
 {
     clientName : string;
-    userName : string;
     projectId : number;
     documentId : number;
     arcId : string;
     newFeatures : FeatureX[]
 
-    constructor(aClientName: string, aUserName: string, aProjectId: number, aDocumentId: number, aArcId: string, aNewFeatures: FeatureX[])
+    constructor(aClientName: string, aProjectId: number, aDocumentId: number, aArcId: string, aNewFeatures: FeatureX[])
     {
         this.clientName = aClientName;
-        this.userName = aUserName;
         this.projectId = aProjectId;
         this.documentId = aDocumentId;
         this.arcId = aArcId;

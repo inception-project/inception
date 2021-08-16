@@ -18,12 +18,12 @@
 package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
 import java.io.IOException;
+import java.io.IOException;
 
 import org.springframework.messaging.Message;
 
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DocumentResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ViewportResponse;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.CreateArcMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.DeleteArcMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.SelectArcResponse;
@@ -41,11 +41,6 @@ public interface AnnotationProcessAPI
     void sendDocumentResponse(DocumentResponse aDocumentResponse, String aUser)
         throws IOException;
 
-    void receiveViewportRequest(Message<String> aMessage) throws IOException;
-
-    void sendViewportResponse(ViewportResponse aViewportResponse, String aUser)
-        throws IOException;
-
     void receiveSelectSpanRequest(Message<String> aMessage) throws IOException;
 
     void receiveSelectArcRequest(Message<String> aMessage) throws IOException;
@@ -61,35 +56,35 @@ public interface AnnotationProcessAPI
     void receiveUpdateArcRequest(Message<String> aMessage) throws Exception;
 
     void sendUpdateSpan(UpdateSpanMessage aUpdateSpanMessage, String aProjectID,
-                                      String aDocumentID, String aViewport)
+                                      String aDocumentID)
         throws IOException;
 
     void sendUpdateArc(UpdateArcMessage aUpdateArcMessage,
-                                    String aProjectID, String aDocumentID, String aViewport)
+                                    String aProjectID, String aDocumentID)
         throws IOException;
 
     void receiveCreateSpanRequest(Message<String> aMessage) throws IOException;
 
     void sendCreateSpan(CreateSpanMessage aCreateSpanMessage, String aProjectID,
-                                      String aDocumentID, String aViewport)
+                                      String aDocumentID)
         throws IOException;
 
     void receiveCreateArcRequest(Message<String> aMessage) throws IOException;
 
     void sendCreateArc(CreateArcMessage aCreateArcMessage,
-                                    String aProjectID, String aDocumentID, String aViewport)
+                                    String aProjectID, String aDocumentID)
         throws IOException;
 
     void receiveDeleteSpanRequest(Message<String> aMessage) throws IOException;
 
     void sendDeleteSpan(DeleteSpanMessage aDeleteSpanMessage, String aProjectID,
-                                      String aDocumentID, String aViewport)
+                                      String aDocumentID)
         throws IOException;
 
     void receiveDeleteArcRequest(Message<String> aMessage) throws IOException;
 
     void sendDeleteArc(DeleteArcMessage aDeleteArcMessage,
-                                    String aProjectID, String aDocumentID, String aViewport)
+                                    String aProjectID, String aDocumentID)
         throws IOException;
 
     void sendErrorMessage(ErrorMessage aErrorMessage, String aUser) throws IOException;

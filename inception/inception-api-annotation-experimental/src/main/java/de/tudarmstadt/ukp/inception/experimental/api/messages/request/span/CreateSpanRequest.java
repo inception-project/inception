@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.request.span;
 public class CreateSpanRequest
 {
     private String clientName;
-    private String userName;
     private long projectId;
     private long documentId;
 
@@ -37,16 +36,6 @@ public class CreateSpanRequest
     public void setClientName(String aClientName)
     {
         clientName = aClientName;
-    }
-
-    public String getUserName()
-    {
-        return userName;
-    }
-
-    public void setUserName(String aUserName)
-    {
-        userName = aUserName;
     }
 
     public long getProjectId()
