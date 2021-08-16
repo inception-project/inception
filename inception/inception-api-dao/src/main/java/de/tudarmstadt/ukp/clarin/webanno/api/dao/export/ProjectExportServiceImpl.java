@@ -158,7 +158,7 @@ public class ProjectExportServiceImpl
     @Override
     @Transactional
     public File exportProject(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
-        throws ProjectExportException, IOException
+        throws ProjectExportException, IOException, InterruptedException
     {
         boolean success = false;
         File exportTempDir = null;
@@ -207,7 +207,7 @@ public class ProjectExportServiceImpl
 
     private ExportedProject exportProject(ProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, File aStage)
-        throws ProjectExportException, IOException
+        throws ProjectExportException, IOException, InterruptedException
     {
         Deque<ProjectExporter> deque = new LinkedList<>(exporters);
         Set<Class<? extends ProjectExporter>> initsSeen = new HashSet<>();
@@ -240,10 +240,16 @@ public class ProjectExportServiceImpl
                 }
             }
         }
-        catch (IOException e) {
+        catch (InterruptedException | IOException e) {
             // IOExceptions like java.nio.channels.ClosedByInterruptException should be thrown up
             // as-is. This allows us to handle export cancellation in the project export UI panel
             throw e;
+        }
+        catch (RuntimeException e) {
+            if (! (e.getCause() instanceof InterruptedException)) {
+                throw e;
+            }
+            throw new InterruptedException();
         }
         catch (Exception e) {
             throw new ProjectExportException("Project export failed", e);
@@ -427,9 +433,7 @@ public class ProjectExportServiceImpl
             return false;
         }
 
-        task.future.cancel(true);
-
-        return true;
+        return task.future.cancel(true);
     }
 
     private void cleanUp()

@@ -108,6 +108,11 @@ public class LoggedEventExporter
 
             // Stream data
             eventRepository.forEachLoggedEvent(project, event -> {
+                // check if the export has been cancelled
+                if (Thread.interrupted()) {
+                    throw new RuntimeException(new InterruptedException());
+                }
+                
                 String documentName = null;
                 // If the document ID is -1, then there is no document linked up to this event.
                 // In this case, we do not need to try resolving the IDs to a name.

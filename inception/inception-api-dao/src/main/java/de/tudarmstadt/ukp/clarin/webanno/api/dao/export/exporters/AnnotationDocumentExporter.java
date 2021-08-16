@@ -123,7 +123,7 @@ public class AnnotationDocumentExporter
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws UIMAException, ClassNotFoundException, IOException
+        throws UIMAException, ClassNotFoundException, IOException, InterruptedException
     {
         exportAnnotationDocuments(aMonitor, aRequest.getProject(), aExProject);
         exportAnnotationDocumentContents(aRequest, aMonitor, aExProject, aStage);
@@ -153,7 +153,7 @@ public class AnnotationDocumentExporter
 
     private void exportAnnotationDocumentContents(ProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
-        throws UIMAException, ClassNotFoundException, IOException
+        throws UIMAException, ClassNotFoundException, IOException, InterruptedException
     {
         Project project = aRequest.getProject();
 
@@ -177,6 +177,11 @@ public class AnnotationDocumentExporter
                 .build(key -> userRepository.get(key));
 
         for (SourceDocument srcDoc : documents) {
+            // check if the export has been cancelled
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+            
             try (CasStorageSession session = CasStorageSession.openNested()) {
                 //
                 // Export initial CASes
