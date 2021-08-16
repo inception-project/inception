@@ -92,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMar
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -688,6 +689,10 @@ public class SearchAnnotationSidebar
         for (FeatureState featureState : featureStates) {
             Object featureValue = featureState.value;
             AnnotationFeature feature = featureState.feature;
+            // Ignore slot features - cf. https://github.com/inception-project/inception/issues/2505
+            if (feature.getLinkMode() != LinkMode.NONE) {
+                continue;
+            }
             if (featureValue != null) {
                 aAdapter.setFeatureValue(aDocument, currentUser.getUsername(), aCas, addr, feature,
                         featureValue);
@@ -732,6 +737,10 @@ public class SearchAnnotationSidebar
         for (FeatureState state : getModelObject().getFeatureStates()) {
             Object featureValue = state.value;
             AnnotationFeature feature = state.feature;
+            // Ignore slot features - cf. https://github.com/inception-project/inception/issues/2505
+            if (feature.getLinkMode() != LinkMode.NONE) {
+                continue;
+            }
             Object valueAtFS = aAdapter.getFeatureValue(feature, aAnnotationFS);
             if (!Objects.equals(valueAtFS, featureValue)) {
                 return false;
