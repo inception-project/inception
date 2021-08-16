@@ -104,6 +104,7 @@ import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.StatisticRequest;
+import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -402,11 +403,12 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public Map<String, Map<String, Object>> getAnnotationStatistics(
-            StatisticRequest aStatisticRequest)
+    public StatisticsResult getAnnotationStatistics(StatisticRequest aStatisticRequest)
         throws IOException, ExecutionException
     {
-        Map<String, Map<String, Object>> allStats = new HashMap<String, Map<String, Object>>();
+        ArrayList<Integer> fullDocSet = getUniqueDocuments(aStatisticRequest);
+        Map<String, Map<String, Double>> allStats = new HashMap<String, Map<String, Double>>();
+        Map<String, Map<String, Double>> nonNullStats = new HashMap<String, Map<String, Double>>();
         List<AnnotationLayer> layers = schemaService
                 .listAnnotationLayer(aStatisticRequest.getProject());
         List<AnnotationFeature> features;
@@ -415,60 +417,101 @@ public class MtasDocumentIndex
             for (AnnotationFeature feature : features) {
                 String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
                         + feature.getUiName().replace(' ', '_') + "=\"\"/>";
-                Map<String, Object> results = getLayerStatistics(aStatisticRequest, searchString);
+                Map<String, Double> results = getLayerStatistics(aStatisticRequest, searchString,
+                        fullDocSet);
                 results.remove("stats");
                 results.remove("sourceNumber");
+                results.put("Number of Documents", results.get("n"));
                 results.remove("n");
-                if ((double) results.get("max") > 0.0) {
-                    allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
+                allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
+                if (results.get("max") > 0.0) {
+                    nonNullStats.put(layer.getUiName() + "." + feature.getUiName(), results);
                 }
             }
         }
-        Map<String, Object> results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>");
+        Map<String, Double> results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>",
+                fullDocSet);
         results.remove("stats");
         results.remove("sourceNumber");
+        results.put("Number of Documents", results.get("n"));
         results.remove("n");
         allStats.put("Token Count", results);
+        nonNullStats.put("Token Count", results);
 
-        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>");
+        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
         results.remove("stats");
         results.remove("sourceNumber");
+        results.put("Number of Documents", results.get("n"));
         results.remove("n");
         allStats.put("Sentence Count", results);
+        nonNullStats.put("Sentence Count", results);
 
-        return allStats;
+        return new StatisticsResult(aStatisticRequest, allStats, nonNullStats);
     }
 
     @Override
-    public Map<String, Object> getLayerStatistics(StatisticRequest aStatisticRequest,
-            String aFeatureQuery)
+    public ArrayList<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest)
+        throws IOException
+    {
+        IndexSearcher searcher = null;
+        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
+                aStatisticRequest.getProject(), aStatisticRequest.getUser());
+
+        ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
+
+        try {
+            searcher = getSearcherManager().acquire();
+            IndexReader reader = searcher.getIndexReader();
+
+            for (int i = 0; i < reader.maxDoc(); i++) {
+                String sourceID = reader.document(i).get(FIELD_SOURCE_DOCUMENT_ID);
+                String annotationID = reader.document(i).get(FIELD_ANNOTATION_DOCUMENT_ID);
+                if (!(Long.valueOf(annotationID) == -1L
+                        && annotatableDocuments.containsKey(Long.valueOf(sourceID)))) {
+                    System.out.println("idok");
+                    //if (reader.document(i).get(FIELD_USER)
+                         //   .equals(aStatisticRequest.getUser().getUsername())) {
+                        System.out.println("authorok");
+                        fullDocSet.add(i);
+                    //}
+                }
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            if (searcher != null) {
+                // Releasing and setting to null per recommendation in JavaDoc of
+                // release(searcher)
+                // method
+                // getSearcherManager().release(searcher);
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
+        return fullDocSet;
+    }
+
+    @Override
+    public Map<String, Double> getLayerStatistics(StatisticRequest aStatisticRequest,
+            String aFeatureQuery, ArrayList<Integer> fullDocSet)
         throws IOException, ExecutionException
     {
         IndexSearcher searcher = null;
         Map<String, Object> resultsMap = null;
+        Map<String, Double> resultsMapDouble = new HashMap<String, Double>();
+
+        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
+                aStatisticRequest.getProject(), aStatisticRequest.getUser());
+
         try {
+
             searcher = getSearcherManager().acquire();
             IndexReader reader = searcher.getIndexReader();
 
             CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
                     FIELD_CONTENT);
-
-            ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
-            Boolean isText = false;
-            if (aFeatureQuery.equals("<Token=\"\"/>") || aFeatureQuery.equals("<s=\"\"/>")) {
-                isText = true;
-            }
-            for (int i = 0; i < reader.maxDoc(); i++) {
-                // -1 indicates sourceDocument
-                // do we need to check for the correct user here? i.e. add to if
-                // && reader.document(i).getField(FIELD_USER) == aStatisticRequest.getUser()
-                if (reader.document(i).getField(FIELD_ID).stringValue().contains("-") == isText) {
-                    fullDocSet.add(i);
-                }
-            }
-
-            // fullDocSet.add(0);
-            // fullDocSet.add(2);
 
             final MtasSpanQuery mtasSpanQuery;
             try {
@@ -477,8 +520,10 @@ public class MtasDocumentIndex
                 try (Reader queryReader = new StringReader(modifiedQuery)) {
                     MtasCQLParser parser = new MtasCQLParser(queryReader);
                     mtasSpanQuery1 = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+
                 }
                 mtasSpanQuery = mtasSpanQuery1;
+
             }
             catch (ParseException | Error e) {
                 // The exceptions thrown by the MTAS CQL Parser are inheriting from
@@ -509,10 +554,13 @@ public class MtasDocumentIndex
                     .getData();
             resultsMap = results.rewrite(true);
             for (String str : resultsMap.keySet()) {
-                System.out.print(str + ": ");
-                System.out.println(resultsMap.get(str));
+                // System.out.print(str + ": ");
+                // System.out.println(resultsMap.get(str));
+                if ((resultsMap.get(str) instanceof Number)) {
+                    resultsMapDouble.put(str, Double.valueOf(resultsMap.get(str).toString()));
+                }
             }
-            return resultsMap;
+            return resultsMapDouble;
 
         }
         catch (Exception e) {
@@ -527,7 +575,7 @@ public class MtasDocumentIndex
                 searcher = null;
             }
         }
-        return resultsMap;
+        return resultsMapDouble;
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)

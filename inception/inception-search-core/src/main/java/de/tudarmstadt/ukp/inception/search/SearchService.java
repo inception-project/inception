@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -109,18 +108,14 @@ public interface SearchService
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
             AnnotationFeature aAnnotationFeature)
         throws ExecutionException, IOException;
-    /*
-    public HashMap<String, HashMap<String, Double>> getProjectTextStatistics(User aUser,
-            Project aProject, String aStatistic, SourceDocument aDocument,
-            AnnotationLayer aAnnotationLayer, AnnotationFeature aAnnotationFeature,
-            String[] aPunctuationMarks)
+
+    public StatisticsResult getProjectStatistics(User aUser, Project aProject, String aStatistic,
+            Double aLowerDocSize, Double aUpperDocSize)
         throws IOException, ExecutionException;
 
-     */
-
-    public Map<String, Map<String, Object>> getProjectStatistics(User aUser, Project aProject, String aStatistic,
-             Double aLowerDocSize, Double aUpperDocSize)
-        throws IOException, ExecutionException;
+    public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aStatistic,
+            String aQuery, Double aLowerDocSize, Double aUpperDocSize)
+        throws ExecutionException, IOException;
 
     void enqueueReindexTask(Project aProject, String aTrigger);
 }

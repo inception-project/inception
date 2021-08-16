@@ -37,7 +37,6 @@ public class StatisticRequest
     public StatisticRequest(Project aProject, User aUser, String aStatistic,
             Double aLowerDocumentSize, Double aUpperDocumentSize)
     {
-        super();
         project = aProject;
         user = aUser;
         statistic = aStatistic;

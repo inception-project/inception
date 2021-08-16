@@ -38,11 +38,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 import org.apache.commons.lang3.tuple.Pair;
@@ -74,7 +76,6 @@ import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.List;
-import java.util.Map;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -231,7 +232,7 @@ public class MtasDocumentIndexTest
     }
 
     public void annotateDocumentAdvanced(Project aProject, User aUser,
-                                         SourceDocument aSourceDocument)
+            SourceDocument aSourceDocument)
         throws Exception
     {
         log.info("Preparing annotated document....");
@@ -274,9 +275,12 @@ public class MtasDocumentIndexTest
         builder.add(" ");
         builder.add(".", Token.class);
 
+        Sentence sent = new Sentence(jCas, 0, builder.getPosition());
+        sent.addToIndexes();
+
         // Create annotation document
         AnnotationDocument annotationDocument = documentService
-            .createOrGetAnnotationDocument(aSourceDocument, aUser);
+                .createOrGetAnnotationDocument(aSourceDocument, aUser);
 
         // Write annotated CAS to annotated document
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
@@ -286,10 +290,10 @@ public class MtasDocumentIndexTest
 
         log.info("Writing for annotated document to be indexed");
         await("Waiting for indexing process to complete") //
-            .atMost(60, SECONDS) //
-            .pollInterval(5, SECONDS) //
-            .until(() -> searchService.isIndexValid(aProject)
-                && searchService.getIndexProgress(aProject).isEmpty());
+                .atMost(60, SECONDS) //
+                .pollInterval(5, SECONDS) //
+                .until(() -> searchService.isIndexValid(aProject)
+                        && searchService.getIndexProgress(aProject).isEmpty());
         log.info("Indexing complete!");
     }
 
@@ -498,7 +502,10 @@ public class MtasDocumentIndexTest
         uploadDocument(Pair.of(sourceDocument, fileContent));
         annotateDocument(project, user, sourceDocument);
 
-        String query = "<Named_entity.value=\"LOC\"/>";
+        // does not work with capital. the latter two work
+        String query = "capital";
+        query = "<Named_entity.value=\"LOC\"/>";
+        // query = "<Token=\"\"/>";
 
         List<SearchResult> results = searchService.query(user, project, query);
 
@@ -544,17 +551,23 @@ public class MtasDocumentIndexTest
         otherDocument.setProject(project);
         otherDocument.setFormat("text");
 
-        String otherContent = "Goodbye moon";
+        String otherContent = "Goodbye moon. Hello World.";
+        // otherContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(otherDocument, otherContent));
-        annotateDocument(project, user, otherDocument);
+        // annotateDocument(project, user, otherDocument);
 
         String statistic = "n,min,max,mean,median,standarddeviation";
         Double lowerDocSize = null;
         Double upperDocSize = null;
+        String searchString = "<Named_entity.value=\"LOC\"/>";
+        searchString = "moon";
 
-        Map<String, Map<String, Object>> statsResults = searchService.getProjectStatistics(user, project,
-                statistic, lowerDocSize, upperDocSize);
+        StatisticsResult statsResults = searchService.getProjectStatistics(user, project, statistic,
+                lowerDocSize, upperDocSize);
+
+        StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project,
+                statistic, searchString, lowerDocSize, upperDocSize);
 
         assertThat(0).isEqualTo(0);
     }

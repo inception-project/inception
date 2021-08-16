@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.search.index;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.StatisticRequest;
+import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 
 public interface PhysicalIndex
 {
@@ -54,23 +55,16 @@ public interface PhysicalIndex
 
     long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
-    /*
-    HashMap<String, Double> fetchTextStatistics(SourceDocument aSourceDocument,
-            String[] aPunctuationMarks)
+
+    public Map<String, Double> getLayerStatistics(StatisticRequest aStatisticRequest,
+            String aFeatureQuery, ArrayList<Integer> fullDocSet)
         throws IOException, ExecutionException;
 
-     */
+    public ArrayList<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest)
+        throws IOException;
 
-    //public Map<String, Object> getTokenStatistics(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
-    public Map<String, Object> getLayerStatistics(StatisticRequest aStatisticRequest, String aFeatureQuery) throws IOException, ExecutionException;
-    public Map<String, Map<String, Object>> getAnnotationStatistics(StatisticRequest aStatisticRequest) throws IOException, ExecutionException;
-
-    /*
-    public HashMap<Long, Long> getFeatureStatistics(
-        SearchQueryRequest aSearchQueryRequest)
+    public StatisticsResult getAnnotationStatistics(StatisticRequest aStatisticRequest)
         throws IOException, ExecutionException;
-
-     */
 
     void deindexDocument(SourceDocument aDocument) throws IOException;
 

@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
+import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
@@ -533,8 +534,8 @@ public class SearchServiceImpl
     }
 
     @Override
-    public Map<String, Map<String, Object>> getProjectStatistics(User aUser, Project aProject,
-            String aStatistic, Double aLowerDocSize, Double aUpperDocSize)
+    public StatisticsResult getProjectStatistics(User aUser, Project aProject, String aStatistic,
+            Double aLowerDocSize, Double aUpperDocSize)
         throws IOException, ExecutionException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
@@ -544,6 +545,36 @@ public class SearchServiceImpl
 
             return index.getPhysicalIndex().getAnnotationStatistics(new StatisticRequest(aProject,
                     aUser, aStatistic, aLowerDocSize, aUpperDocSize));
+
+        }
+    }
+
+    @Override
+    public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aStatistic,
+            String aQuery, Double aLowerDocSize, Double aUpperDocSize)
+        throws ExecutionException, IOException
+    {
+        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+            Index index = pooledIndex.get();
+
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            PhysicalIndex physicalIndex = index.getPhysicalIndex();
+
+            StatisticRequest statRequest = new StatisticRequest(aProject, aUser, aStatistic,
+                    aLowerDocSize, aUpperDocSize);
+
+            Map<String, Double> statistics = physicalIndex.getLayerStatistics(statRequest, aQuery,
+                    physicalIndex.getUniqueDocuments(statRequest));
+
+            Map<String, Map<String, Double>> statisticsMap = new HashMap<String, Map<String, Double>>();
+
+            statisticsMap.put(aQuery, statistics);
+
+            StatisticsResult results = new StatisticsResult(statRequest, statisticsMap,
+                    statisticsMap);
+
+            return results;
 
         }
     }
