@@ -57,6 +57,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -87,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
@@ -1389,6 +1391,35 @@ public abstract class AnnotationDetailEditorPanel
             refresh(aEvent.getRequestHandler());
             // aEvent.getRequestHandler().add(selectedAnnotationInfoPanel, featureEditorListPanel,
             // relationListPanel);
+        }
+    }
+
+    @OnEvent
+    public void onAnnotationDeletedEvent(BulkAnnotationEvent aEvent)
+    {
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+        if (selection.getAnnotation().isNotSet()) {
+            return;
+        }
+
+        if (!state.getUser().getUsername().equals(aEvent.getUser())) {
+            return;
+        }
+
+        try {
+            int id = selection.getAnnotation().getId();
+            boolean annotationStillExists = getEditorCas().select(Annotation.class) //
+                    .at(selection.getBegin(), selection.getEnd()) //
+                    .anyMatch(ann -> ann._id() == id);
+            if (!annotationStillExists) {
+                state.getSelection().clear();
+                refresh(aEvent.getRequestTarget());
+
+            }
+        }
+        catch (Exception e) {
+            handleException(this, aEvent.getRequestTarget(), e);
         }
     }
 
