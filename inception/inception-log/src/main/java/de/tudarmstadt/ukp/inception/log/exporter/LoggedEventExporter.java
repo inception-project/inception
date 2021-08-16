@@ -110,7 +110,7 @@ public class LoggedEventExporter
             eventRepository.forEachLoggedEvent(project, event -> {
                 // check if the export has been cancelled
                 if (Thread.interrupted()) {
-                    throw new RuntimeException(new InterruptedException());
+                    throw new InterruptedException();
                 }
                 
                 String documentName = null;

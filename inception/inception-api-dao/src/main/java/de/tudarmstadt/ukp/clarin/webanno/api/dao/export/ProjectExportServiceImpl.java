@@ -245,12 +245,6 @@ public class ProjectExportServiceImpl
             // as-is. This allows us to handle export cancellation in the project export UI panel
             throw e;
         }
-        catch (RuntimeException e) {
-            if (! (e.getCause() instanceof InterruptedException)) {
-                throw e;
-            }
-            throw new InterruptedException();
-        }
         catch (Exception e) {
             throw new ProjectExportException("Project export failed", e);
         }
