@@ -88,14 +88,14 @@
     <hibernate.version>5.4.30.Final</hibernate.version>
     <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
 
-    <wicket.version>9.3.0</wicket.version>
-    <wicketstuff.version>9.3.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.3.1</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>5.0.4</wicket-bootstrap.version>
+    <wicket.version>9.4.0</wicket.version>
+    <wicketstuff.version>9.4.0</wicketstuff.version>
+    <wicket-jquery-ui.version>9.3.2</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>6.0.0-M2</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.3</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
-    <bootstrap.version>4.6.0-1</bootstrap.version>
+    <bootstrap.version>5.1.0</bootstrap.version>
     <hover.version>2.0.2</hover.version>
 
     <!--
@@ -149,6 +149,9 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    -->
+    <!-- For Wicket Boostrap 6.0.0-SNAPSHOT -->
+    <!--
     <repository>
       <id>oss.sonatype.org-snapshot</id>
       <url>http://oss.sonatype.org/content/repositories/snapshots</url>
@@ -159,6 +162,9 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    -->
+    <!-- For Apache UIMA release candidates -->
+    <!--
     <repository>
       <id>ext-staging</id>
       <url>https://repository.apache.org/content/repositories/orgapacheuima-1261</url>
@@ -848,6 +854,10 @@
           <exclusion>
             <groupId>org.webjars</groupId>
             <artifactId>jquery</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>com.google.javascript</groupId>
+            <artifactId>closure-compiler-unshaded</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

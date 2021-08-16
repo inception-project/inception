@@ -40,7 +40,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
@@ -98,7 +97,7 @@ public class LappsGridRecommenderTraitsEditor
         urlField.setOutputMarkupId(true);
         form.add(urlField);
 
-        servicesDropDown = new BootstrapSelect<>(MID_SERVICES);
+        servicesDropDown = new DropDownChoice<>(MID_SERVICES);
         servicesDropDown.setModel(Model.of());
         servicesDropDown.setChoices(LoadableDetachableModel.of(this::getPredefinedServicesList));
         servicesDropDown.setChoiceRenderer(new ChoiceRenderer<>("description"));

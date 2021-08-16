@@ -24,7 +24,7 @@
     <ul class="list-group list-group-flush">
       <li v-if="!activities" class="list-group-item">Loading...</li>
       <li v-for="activity in activities" :key="activity.id" class="list-group-item" >
-        <span class="badge badge-secondary float-right">
+        <span class="badge badge-secondary float-end">
           {{ activity.type }}
         </span>
         <a :href="activity.link" :title="activity.documentName" style="display: block" class="text-truncate">{{ activity.documentName }}</a>
