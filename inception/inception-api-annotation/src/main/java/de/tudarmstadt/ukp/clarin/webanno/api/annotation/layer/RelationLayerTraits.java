@@ -19,15 +19,19 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RelationLayerTraits
     implements Serializable, ColoringRulesTrait
 {
     private static final long serialVersionUID = 3461537626173105320L;
 
     private ColoringRules coloringRules = new ColoringRules();
+    private boolean renderArcs = true;
 
     public RelationLayerTraits()
     {
@@ -44,5 +48,15 @@ public class RelationLayerTraits
     public void setColoringRules(ColoringRules aColoringRules)
     {
         coloringRules = aColoringRules;
+    }
+
+    public boolean isRenderArcs()
+    {
+        return renderArcs;
+    }
+
+    public void setRenderArcs(boolean aRenderArcs)
+    {
+        renderArcs = aRenderArcs;
     }
 }

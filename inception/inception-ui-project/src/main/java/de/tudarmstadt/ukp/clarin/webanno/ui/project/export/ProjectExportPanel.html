@@ -25,7 +25,7 @@
           <wicket:label key="format"/>
         </label>
         
-        <select wicket:id="format" class="input-group-btn form-control" data-container="body"></select>
+        <select wicket:id="format" class="input-group-btn form-select" data-container="body"></select>
         
         <button wicket:id="exportCurated" type="button" class="btn btn-primary text-nowrap">
           <i class="fas fa-download" aria-hidden="true"></i>&nbsp;
@@ -41,7 +41,9 @@
         <div class="flex-content flex-centered flex-h-container">
           <div class="flex-content flex-centered flex-v-container">
             <div class="well text-center">
-              <wicket:message key="warningMessage"/>
+              <div wicket:id="downloadWarning">
+                <wicket:message key="warningMessage"/>
+              </div>
               <div class="flex-h-container flex-centered flex-gutter">
                 <span wicket:id="progress" class="flex-content"></span>
                 <button wicket:id="cancel" class="btn btn-secondary">

@@ -62,7 +62,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -148,7 +147,7 @@ public class LayerDetailForm
 
         add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
 
-        add(layerTypeSelect = new BootstrapSelect<LayerType>("type")
+        add(layerTypeSelect = new DropDownChoice<LayerType>("type")
         {
             private static final long serialVersionUID = 9029205407108101183L;
 
@@ -189,7 +188,7 @@ public class LayerDetailForm
             }
         });
 
-        attachTypeSelect = new BootstrapSelect<AnnotationLayer>("attachType",
+        attachTypeSelect = new DropDownChoice<AnnotationLayer>("attachType",
                 LoadableDetachableModel.of(this::getAttachLayerChoices),
                 new ChoiceRenderer<>("uiName"));
         attachTypeSelect.setNullValid(true);
