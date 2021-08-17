@@ -58,6 +58,11 @@ public class AnnotatorColumn
         selectedUsers = aSelectedUsers;
     }
 
+    public User getUser()
+    {
+        return user;
+    }
+
     @Override
     public void populateItem(Item<ICellPopulator<DocumentMatrixRow>> aItem, String aComponentId,
             IModel<DocumentMatrixRow> aRowModel)
