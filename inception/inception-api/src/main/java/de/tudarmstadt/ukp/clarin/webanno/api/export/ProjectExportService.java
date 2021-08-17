@@ -29,7 +29,7 @@ public interface ProjectExportService
         throws ProjectExportException;
 
     File exportProject(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
-        throws ProjectExportException, IOException;
+        throws ProjectExportException, IOException, InterruptedException;
 
     ProjectExportTaskHandle startProjectExportTask(ProjectExportRequest aModel, String aUsername);
 
