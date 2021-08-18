@@ -838,7 +838,7 @@ public class RecommendationServiceImpl
             address = getAddr(adapter.add(aDocument, aUsername, aCas, aBegin, aEnd));
         }
         else {
-            // ... if yes and stacking is now allowed, then we update the feature on the existing
+            // ... if yes and stacking is not allowed, then we update the feature on the existing
             // annotation
             address = getAddr(annoFS);
         }
