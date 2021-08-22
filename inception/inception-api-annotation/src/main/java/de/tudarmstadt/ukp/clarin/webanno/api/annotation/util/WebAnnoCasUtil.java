@@ -30,6 +30,7 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -890,5 +891,12 @@ public class WebAnnoCasUtil
         catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    public static Set<FeatureStructure> findAllFeatureStructures(CAS aCas)
+    {
+        Set<FeatureStructure> allFSes = new LinkedHashSet<>();
+        ((CASImpl) aCas).walkReachablePlusFSsSorted(allFSes::add, null, null, null);
+        return allFSes;
     }
 }

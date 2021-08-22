@@ -61,7 +61,21 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectS
 
 @SpringBootApplication(exclude = { SecurityAutoConfiguration.class,
         LiquibaseAutoConfiguration.class })
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+// @Import({ //
+// ProjectExportServiceAutoConfiguration.class, //
+// CurationDocumentServiceAutoConfiguration.class, //
+// TextFormatsAutoConfiguration.class, //
+// DocumentImportExportServiceAutoConfiguration.class, //
+// DocumentServiceAutoConfiguration.class, //
+// ProjectServiceAutoConfiguration.class, //
+// CasStorageServiceAutoConfiguration.class, //
+// RepositoryAutoConfiguration.class, //
+// AnnotationSchemaServiceAutoConfiguration.class, //
+// SecurityAutoConfiguration.class, //
+// RemoteApiAutoConfiguration.class })
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, //
+        properties = { //
+                "spring.main.banner-mode=off" })
 public class WebhookServiceTest
 {
     private @LocalServerPort int port;

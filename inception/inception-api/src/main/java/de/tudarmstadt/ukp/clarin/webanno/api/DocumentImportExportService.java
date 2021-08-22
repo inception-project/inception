@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -187,4 +188,20 @@ public interface DocumentImportExportService
             String fileName, Mode mode, boolean stripExtension,
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws UIMAException, IOException, ClassNotFoundException;
+
+    /**
+     * Returns a type system with all the types that should be present in an exported CAS. This
+     * means in particular that type internal to the application should <b>not</b> be included.
+     */
+    TypeSystemDescription getTypeSystemForExport(Project aProject)
+        throws ResourceInitializationException;
+
+    /**
+     * Performs a CAS upgrade and removes all internal feature structures from the CAS. The
+     * resulting CAS should be <b>only</b> used for export and never be persisted within the
+     * repository.
+     */
+    void prepareCasForExport(CAS aSourceCas, CAS aTargetCas, SourceDocument aSourceDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
+        throws ResourceInitializationException, UIMAException, IOException;
 }
