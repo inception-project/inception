@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 
 @EnableAutoConfiguration
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
@@ -70,8 +69,7 @@ import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfi
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         AnnotationSchemaServiceAutoConfiguration.class, //
-        SecurityAutoConfiguration.class, //
-        SchedulingServiceAutoConfiguration.class })
+        SecurityAutoConfiguration.class })
 public class EventRepositoryImplIntegrationTest
 {
     private static final String PROJECT_NAME = "Test project";
