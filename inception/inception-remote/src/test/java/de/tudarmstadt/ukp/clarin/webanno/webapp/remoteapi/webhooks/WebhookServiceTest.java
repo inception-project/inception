@@ -59,20 +59,9 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.Annotati
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
 
-@SpringBootApplication(exclude = { SecurityAutoConfiguration.class,
+@SpringBootApplication(exclude = { //
+        SecurityAutoConfiguration.class, //
         LiquibaseAutoConfiguration.class })
-// @Import({ //
-// ProjectExportServiceAutoConfiguration.class, //
-// CurationDocumentServiceAutoConfiguration.class, //
-// TextFormatsAutoConfiguration.class, //
-// DocumentImportExportServiceAutoConfiguration.class, //
-// DocumentServiceAutoConfiguration.class, //
-// ProjectServiceAutoConfiguration.class, //
-// CasStorageServiceAutoConfiguration.class, //
-// RepositoryAutoConfiguration.class, //
-// AnnotationSchemaServiceAutoConfiguration.class, //
-// SecurityAutoConfiguration.class, //
-// RemoteApiAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, //
         properties = { //
                 "spring.main.banner-mode=off" })

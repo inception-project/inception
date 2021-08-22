@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.export.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -33,10 +32,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 
 @Configuration
-@EnableConfigurationProperties({ DocumentImportExportServicePropertiesImpl.class })
+// @EnableConfigurationProperties({ DocumentImportExportServicePropertiesImpl.class })
 public class DocumentImportExportServiceAutoConfiguration
 {
-    @Bean(DocumentImportExportService.SERVICE_NAME)
+    @Bean
     public DocumentImportExportService documentImportExportService(
             RepositoryProperties aRepositoryProperties,
             @Lazy @Autowired(required = false) List<FormatSupport> aFormats,
@@ -45,5 +44,11 @@ public class DocumentImportExportServiceAutoConfiguration
     {
         return new DocumentImportExportServiceImpl(aRepositoryProperties, aFormats,
                 aCasStorageService, aAnnotationService, aServiceProperties);
+    }
+
+    @Bean
+    public DocumentImportExportServiceProperties documentImportExportServiceProperties()
+    {
+        return new DocumentImportExportServicePropertiesImpl();
     }
 }

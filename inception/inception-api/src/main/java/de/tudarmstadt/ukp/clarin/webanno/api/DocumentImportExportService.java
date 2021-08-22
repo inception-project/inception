@@ -39,8 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface DocumentImportExportService
 {
-    String SERVICE_NAME = "importExportService";
-
     // --------------------------------------------------------------------------------------------
     // Methods related to import/export data formats
     // --------------------------------------------------------------------------------------------
