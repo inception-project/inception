@@ -193,13 +193,4 @@ public interface DocumentImportExportService
      */
     TypeSystemDescription getTypeSystemForExport(Project aProject)
         throws ResourceInitializationException;
-
-    /**
-     * Performs a CAS upgrade and removes all internal feature structures from the CAS. The
-     * resulting CAS should be <b>only</b> used for export and never be persisted within the
-     * repository.
-     */
-    void prepareCasForExport(CAS aSourceCas, CAS aTargetCas, SourceDocument aSourceDocument,
-            TypeSystemDescription aFullProjectTypeSystem)
-        throws ResourceInitializationException, UIMAException, IOException;
 }

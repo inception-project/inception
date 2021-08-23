@@ -34,6 +34,7 @@ import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FileUtils.forceDelete;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
@@ -50,8 +51,10 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -64,6 +67,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -113,17 +117,15 @@ import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePro
 public class DocumentImportExportServiceImpl
     implements DocumentImportExportService
 {
-    private static final String FEATURE_BASE_NAME_UI_NAME = "uiName";
-
-    private static final String FEATURE_BASE_NAME_NAME = "name";
-
-    private static final String TYPE_NAME_FEATURE_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.FeatureDefinition";
-
-    private static final String TYPE_NAME_LAYER_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.LayerDefinition";
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    static final String FEATURE_BASE_NAME_UI_NAME = "uiName";
+    static final String FEATURE_BASE_NAME_NAME = "name";
+    static final String FEATURE_BASE_NAME_LAYER = "layer";
+    static final String TYPE_NAME_FEATURE_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.FeatureDefinition";
+    static final String TYPE_NAME_LAYER_DEFINITION = "de.tudarmstadt.ukp.clarin.webanno.api.type.LayerDefinition";
 
     private static final String EXPORT_CAS = "exportCas";
+
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final RepositoryProperties repositoryProperties;
     private final CasStorageService casStorageService;
@@ -468,17 +470,15 @@ public class DocumentImportExportServiceImpl
             Map<Pair<Project, String>, Object> aBulkOperationContext)
         throws IOException, UIMAException
     {
-        try (var logCtx = withProjectLogger(aDocument.getProject())) {
-            Project project = aDocument.getProject();
-
+        Project project = aDocument.getProject();
+        try (var logCtx = withProjectLogger(project)) {
             Map<Pair<Project, String>, Object> bulkOperationContext = aBulkOperationContext;
             if (bulkOperationContext == null) {
                 bulkOperationContext = new HashMap<>();
             }
 
             // Either fetch the type system from the bulk-context or fetch it from the DB and store
-            // it
-            // in the bulk-context to avoid further lookups in the same bulk operation
+            // it in the bulk-context to avoid further lookups in the same bulk operation
             Pair<Project, String> exportTypeSystemKey = Pair.of(project, "exportTypeSystem");
             TypeSystemDescription exportTypeSystem = (TypeSystemDescription) bulkOperationContext
                     .get(exportTypeSystemKey);
@@ -488,53 +488,28 @@ public class DocumentImportExportServiceImpl
             }
 
             try (CasStorageSession session = CasStorageSession.openNested()) {
-                // Update type system the CAS, compact it (remove all non-reachable feature
-                // structures) and remove all internal feature structures in the process
                 CAS exportCas = WebAnnoCasUtil.createCas();
                 session.add(EXPORT_CAS, EXCLUSIVE_WRITE_ACCESS, exportCas);
+
+                // Update type system the CAS, compact it (remove all non-reachable feature
+                // structures) and remove all internal feature structures in the process
                 prepareCasForExport(aCas, exportCas, aDocument, exportTypeSystem);
 
                 // Update the source file name in case it is changed for some reason. This is
-                // necessary
-                // for the writers to create the files under the correct names.
-                File currentDocumentUri = new File(repositoryProperties.getPath().getAbsolutePath()
-                        + "/" + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/"
-                        + aDocument.getId() + "/" + SOURCE_FOLDER);
-                DocumentMetaData documentMetadata = DocumentMetaData.get(exportCas.getJCas());
-                documentMetadata
-                        .setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
-                documentMetadata.setDocumentUri(
-                        new File(currentDocumentUri, aFileName).toURI().toURL().toExternalForm());
-                documentMetadata
-                        .setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
-                documentMetadata.setDocumentId(aFileName);
+                // necessary for the writers to create the files under the correct names.
+                addOrUpdateDocumentMetadata(exportCas, aDocument, aFileName);
 
-                // update with the correct tagset name
-                Pair<Project, String> annotationFeaturesKey = Pair.of(project,
-                        "annotationFeatures");
-                @SuppressWarnings("unchecked")
-                List<AnnotationFeature> features = (List<AnnotationFeature>) bulkOperationContext
-                        .get(annotationFeaturesKey);
-                if (features == null) {
-                    features = annotationService.listAnnotationFeature(project);
-                    bulkOperationContext.put(annotationFeaturesKey, features);
-                }
-                for (AnnotationFeature feature : features) {
-                    TagSet tagSet = feature.getTagset();
-                    if (tagSet == null || CHAIN_TYPE.equals(feature.getLayer().getType())) {
-                        continue;
-                    }
+                addLayerAndFeatureDefinitionAnnotations(exportCas, project, bulkOperationContext);
 
-                    updateCasWithTagSet(exportCas, feature.getLayer().getName(), tagSet.getName());
-                }
+                addTagsetDefinitionAnnotations(exportCas, project, bulkOperationContext);
 
                 File exportTempDir = createTempFile("webanno", "export");
                 try {
                     exportTempDir.delete();
                     exportTempDir.mkdirs();
 
-                    AnalysisEngineDescription writer = aFormat.getWriterDescription(
-                            aDocument.getProject(), exportTypeSystem, exportCas);
+                    AnalysisEngineDescription writer = aFormat.getWriterDescription(project,
+                            exportTypeSystem, exportCas);
                     addConfigurationParameters(writer,
                             JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
                             JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
@@ -582,46 +557,6 @@ public class DocumentImportExportServiceImpl
         }
     }
 
-    /**
-     * A Helper method to add {@link TagsetDescription} to {@link CAS}
-     *
-     * @param aCas
-     *            the CAA.
-     * @param aLayer
-     *            the layer.
-     * @param aTagSetName
-     *            the tagset.
-     */
-    private static void updateCasWithTagSet(CAS aCas, String aLayer, String aTagSetName)
-    {
-        Type tagsetType = getType(aCas, TagsetDescription.class);
-        Feature layerFeature = tagsetType.getFeatureByBaseName("layer");
-        Feature nameFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_NAME);
-
-        boolean tagSetModified = false;
-        // modify existing tagset Name
-        for (FeatureStructure fs : select(aCas, tagsetType)) {
-            String layer = fs.getStringValue(layerFeature);
-            String tagSetName = fs.getStringValue(nameFeature);
-            if (layer.equals(aLayer)) {
-                // only if the tagset name is changed
-                if (!aTagSetName.equals(tagSetName)) {
-                    fs.setStringValue(nameFeature, aTagSetName);
-                    aCas.addFsToIndexes(fs);
-                }
-                tagSetModified = true;
-                break;
-            }
-        }
-
-        if (!tagSetModified) {
-            FeatureStructure fs = aCas.createFS(tagsetType);
-            fs.setStringValue(layerFeature, aLayer);
-            fs.setStringValue(nameFeature, aTagSetName);
-            aCas.addFsToIndexes(fs);
-        }
-    }
-
     @Override
     public TypeSystemDescription getTypeSystemForExport(Project aProject)
         throws ResourceInitializationException
@@ -632,7 +567,11 @@ public class DocumentImportExportServiceImpl
         return mergeTypeSystems(tsds);
     }
 
-    @Override
+    /**
+     * Performs a CAS upgrade and removes all internal feature structures from the CAS. The
+     * resulting CAS should be <b>only</b> used for export and never be persisted within the
+     * repository.
+     */
     public void prepareCasForExport(CAS aSourceCas, CAS aTargetCas, SourceDocument aSourceDocument,
             TypeSystemDescription aFullProjectTypeSystem)
         throws ResourceInitializationException, UIMAException, IOException
@@ -645,28 +584,111 @@ public class DocumentImportExportServiceImpl
         annotationService.upgradeCas(aSourceCas, aTargetCas, tsd);
     }
 
-    private void addLayerAndFeatureDefinitionAnnotations(CAS aCas,
-            List<AnnotationFeature> aFeatures)
+    private List<AnnotationFeature> listSupportedFeatures(Project aProject,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
     {
+        Pair<Project, String> exportFeaturesKey = Pair.of(aProject, "exportFeatures");
+        @SuppressWarnings("unchecked")
+        List<AnnotationFeature> features = (List<AnnotationFeature>) aBulkOperationContext
+                .get(exportFeaturesKey);
+        if (features == null) {
+            features = annotationService.listSupportedFeatures(aProject).stream() //
+                    .filter(AnnotationFeature::isEnabled) //
+                    .collect(toList());
+            aBulkOperationContext.put(exportFeaturesKey, features);
+        }
+
+        return features;
+    }
+
+    private void addOrUpdateDocumentMetadata(CAS aCas, SourceDocument aDocument, String aFileName)
+        throws MalformedURLException, CASException
+    {
+        // Update the source file name in case it is changed for some reason. This is
+        // necessary for the writers to create the files under the correct names.
+        File currentDocumentUri = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER
+                + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
+        DocumentMetaData documentMetadata = DocumentMetaData.get(aCas.getJCas());
+        documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
+        documentMetadata.setDocumentUri(
+                new File(currentDocumentUri, aFileName).toURI().toURL().toExternalForm());
+        documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
+        documentMetadata.setDocumentId(aFileName);
+    }
+
+    private void addLayerAndFeatureDefinitionAnnotations(CAS aCas, Project aProject,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
+    {
+        List<AnnotationFeature> allFeatures = listSupportedFeatures(aProject,
+                aBulkOperationContext);
+
         Type layerDefType = aCas.getTypeSystem().getType(TYPE_NAME_LAYER_DEFINITION);
         Type featureDefType = aCas.getTypeSystem().getType(TYPE_NAME_FEATURE_DEFINITION);
 
-        Map<AnnotationLayer, List<AnnotationFeature>> layers = aFeatures.stream() //
+        Map<AnnotationLayer, List<AnnotationFeature>> featuresGroupedByLayer = allFeatures.stream() //
                 .collect(groupingBy(AnnotationFeature::getLayer));
 
-        for (var e : layers.entrySet()) {
-            final var layer = e.getKey();
+        List<AnnotationLayer> layers = featuresGroupedByLayer.keySet().stream()
+                .sorted(Comparator.comparing(AnnotationLayer::getName)).collect(toList());
 
+        for (var layer : layers) {
             final var layerDefFs = aCas.createFS(layerDefType);
             setFeature(layerDefFs, FEATURE_BASE_NAME_NAME, layer.getName());
             setFeature(layerDefFs, FEATURE_BASE_NAME_UI_NAME, layer.getUiName());
             aCas.addFsToIndexes(layerDefFs);
 
-            for (var feature : e.getValue()) {
+            List<AnnotationFeature> features = featuresGroupedByLayer.get(layer).stream()
+                    .sorted(Comparator.comparing(AnnotationFeature::getName)).collect(toList());
+
+            for (var feature : features) {
                 final var featureDefFs = aCas.createFS(featureDefType);
+                setFeature(featureDefFs, FEATURE_BASE_NAME_LAYER, layerDefFs);
                 setFeature(featureDefFs, FEATURE_BASE_NAME_NAME, feature.getName());
                 setFeature(featureDefFs, FEATURE_BASE_NAME_UI_NAME, feature.getUiName());
                 aCas.addFsToIndexes(featureDefFs);
+            }
+        }
+    }
+
+    private void addTagsetDefinitionAnnotations(CAS aCas, Project aProject,
+            Map<Pair<Project, String>, Object> aBulkOperationContext)
+    {
+        List<AnnotationFeature> features = listSupportedFeatures(aProject, aBulkOperationContext);
+
+        for (AnnotationFeature feature : features) {
+            TagSet tagSet = feature.getTagset();
+            if (tagSet == null || CHAIN_TYPE == feature.getLayer().getType()) {
+                continue;
+            }
+            String aLayer = feature.getLayer().getName();
+            String aTagSetName = tagSet.getName();
+
+            Type tagsetType = getType(aCas, TagsetDescription.class);
+            Feature layerFeature = tagsetType.getFeatureByBaseName("layer");
+            Feature nameFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_NAME);
+
+            boolean tagSetModified = false;
+            // modify existing tagset Name
+            for (FeatureStructure fs : select(aCas, tagsetType)) {
+                String layer = fs.getStringValue(layerFeature);
+                String tagSetName = fs.getStringValue(nameFeature);
+                if (layer.equals(aLayer)) {
+                    // only if the tagset name is changed
+                    if (!aTagSetName.equals(tagSetName)) {
+                        fs.setStringValue(nameFeature, aTagSetName);
+                        aCas.addFsToIndexes(fs);
+                    }
+                    tagSetModified = true;
+                    break;
+                }
+            }
+
+            if (!tagSetModified) {
+                FeatureStructure fs = aCas.createFS(tagsetType);
+                fs.setStringValue(layerFeature, aLayer);
+                fs.setStringValue(nameFeature, aTagSetName);
+                aCas.addFsToIndexes(fs);
             }
         }
     }

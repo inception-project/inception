@@ -26,6 +26,10 @@
       <supertypeName>uima.cas.TOP</supertypeName>
       <features>
         <featureDescription>
+          <name>layer</name>
+          <rangeTypeName>de.tudarmstadt.ukp.clarin.webanno.api.type.LayerDefinition</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
           <name>name</name>
           <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
