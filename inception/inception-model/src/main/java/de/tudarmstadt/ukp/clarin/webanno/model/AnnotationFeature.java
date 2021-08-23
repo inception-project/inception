@@ -125,6 +125,8 @@ public class AnnotationFeature
     @Column(length = 64000)
     private String traits;
 
+    private boolean curatable;
+
     public AnnotationFeature()
     {
         // Nothing to do
@@ -505,6 +507,16 @@ public class AnnotationFeature
     public void setTraits(String aTraits)
     {
         traits = aTraits;
+    }
+
+    public boolean isCuratable()
+    {
+        return curatable;
+    }
+
+    public void setCuratable(boolean aCuratable)
+    {
+        curatable = aCuratable;
     }
 
     @Override
