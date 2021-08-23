@@ -438,6 +438,10 @@ public class CasMerge
         List<AnnotationFeature> features = featureCache.computeIfAbsent(aAdapter.getLayer(),
                 key -> schemaService.listSupportedFeatures(key));
         for (AnnotationFeature feature : features) {
+            if (!feature.isCuratable()) {
+                continue;
+            }
+
             Type sourceFsType = aAdapter.getAnnotationType(aSourceFs.getCAS());
             Feature sourceFeature = sourceFsType.getFeatureByBaseName(feature.getName());
 

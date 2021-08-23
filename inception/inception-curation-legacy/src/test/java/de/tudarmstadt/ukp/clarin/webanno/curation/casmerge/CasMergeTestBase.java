@@ -145,6 +145,7 @@ public class CasMergeTestBase
         tokenPosFeature.setLayer(tokenLayer);
         tokenPosFeature.setProject(project);
         tokenPosFeature.setVisible(true);
+        tokenPosFeature.setCuratable(true);
 
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
                 SINGLE_TOKEN, NO_OVERLAP);
@@ -159,6 +160,7 @@ public class CasMergeTestBase
         posFeature.setLayer(posLayer);
         posFeature.setProject(project);
         posFeature.setVisible(true);
+        posFeature.setCuratable(true);
 
         posCoarseFeature = new AnnotationFeature();
         posCoarseFeature.setName("coarseValue");
@@ -168,6 +170,7 @@ public class CasMergeTestBase
         posCoarseFeature.setLayer(posLayer);
         posCoarseFeature.setProject(project);
         posCoarseFeature.setVisible(true);
+        posCoarseFeature.setCuratable(true);
 
         neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity", SPAN_TYPE,
                 project, true, TOKENS, OVERLAP_ONLY);
@@ -180,6 +183,7 @@ public class CasMergeTestBase
         neFeature.setLayer(neLayer);
         neFeature.setProject(project);
         neFeature.setVisible(true);
+        neFeature.setCuratable(true);
 
         neIdentifierFeature = new AnnotationFeature();
         neIdentifierFeature.setName("identifier");
@@ -189,6 +193,7 @@ public class CasMergeTestBase
         neIdentifierFeature.setLayer(neLayer);
         neIdentifierFeature.setProject(project);
         neIdentifierFeature.setVisible(true);
+        neIdentifierFeature.setCuratable(true);
 
         depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE,
                 project, true, SINGLE_TOKEN, OVERLAP_ONLY);
@@ -203,6 +208,7 @@ public class CasMergeTestBase
         depFeature.setLayer(depLayer);
         depFeature.setProject(project);
         depFeature.setVisible(true);
+        depFeature.setCuratable(true);
 
         depFlavorFeature = new AnnotationFeature();
         depFlavorFeature.setName("flavor");
@@ -212,6 +218,7 @@ public class CasMergeTestBase
         depFlavorFeature.setLayer(depLayer);
         depFlavorFeature.setProject(project);
         depFlavorFeature.setVisible(true);
+        depFlavorFeature.setCuratable(true);
 
         slotLayer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SPAN_TYPE, project, false,
                 SINGLE_TOKEN, NO_OVERLAP);
@@ -229,6 +236,7 @@ public class CasMergeTestBase
         slotFeature.setLayer(slotLayer);
         slotFeature.setProject(project);
         slotFeature.setVisible(true);
+        slotFeature.setCuratable(true);
 
         stringFeature = new AnnotationFeature();
         stringFeature.setName("f1");
@@ -238,6 +246,7 @@ public class CasMergeTestBase
         stringFeature.setLayer(slotLayer);
         stringFeature.setProject(project);
         stringFeature.setVisible(true);
+        stringFeature.setCuratable(true);
 
         multiValSpan = new AnnotationLayer("webanno.custom.Multivalspan", "Multivalspan", SPAN_TYPE,
                 project, true, TOKENS, OVERLAP_ONLY);
@@ -250,6 +259,7 @@ public class CasMergeTestBase
         multiValSpanF1.setLayer(multiValSpan);
         multiValSpanF1.setProject(project);
         multiValSpanF1.setVisible(true);
+        multiValSpanF1.setCuratable(true);
 
         multiValSpanF2 = new AnnotationFeature();
         multiValSpanF2.setName("f2");
@@ -259,6 +269,7 @@ public class CasMergeTestBase
         multiValSpanF2.setLayer(multiValSpan);
         multiValSpanF2.setProject(project);
         multiValSpanF2.setVisible(true);
+        multiValSpanF2.setCuratable(true);
 
         multiValRel = new AnnotationLayer("webanno.custom.Multivalrel", "Multivalrel",
                 RELATION_TYPE, project, true, SINGLE_TOKEN, OVERLAP_ONLY);
@@ -272,6 +283,7 @@ public class CasMergeTestBase
         multiValRelRel1.setLayer(multiValSpan);
         multiValRelRel1.setProject(project);
         multiValRelRel1.setVisible(true);
+        multiValRelRel1.setCuratable(true);
 
         multiValRelRel2 = new AnnotationFeature();
         multiValRelRel2.setName("rel2");
@@ -281,6 +293,7 @@ public class CasMergeTestBase
         multiValRelRel2.setLayer(multiValSpan);
         multiValRelRel2.setProject(project);
         multiValRelRel2.setVisible(true);
+        multiValRelRel2.setCuratable(true);
 
         when(schemaService.findLayer(any(Project.class), any(String.class))).thenAnswer(call -> {
             String type = call.getArgument(1, String.class);

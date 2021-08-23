@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static java.util.Arrays.asList;
@@ -36,7 +39,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -173,6 +175,7 @@ public class LayerExporter
         exFeature.setLinkTypeRoleFeatureName(feature.getLinkTypeRoleFeatureName());
         exFeature.setLinkTypeTargetFeatureName(feature.getLinkTypeTargetFeatureName());
         exFeature.setTraits(feature.getTraits());
+        exFeature.setCuratable(feature.isCuratable());
 
         if (feature.getTagset() != null) {
             TagSet tagSet = feature.getTagset();
@@ -294,9 +297,9 @@ public class LayerExporter
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
         aFeature.setLayer(aFeature.getLayer());
-        boolean isItChainedLayer = aFeature.getLayer().getType().equals(WebAnnoConst.CHAIN_TYPE);
-        if (isItChainedLayer && (aExFeature.getName().equals(WebAnnoConst.COREFERENCE_TYPE_FEATURE)
-                || aExFeature.getName().equals(WebAnnoConst.COREFERENCE_RELATION_FEATURE))) {
+        boolean isItChainedLayer = CHAIN_TYPE.equals(aFeature.getLayer().getType());
+        if (isItChainedLayer && (COREFERENCE_TYPE_FEATURE.equals(aExFeature.getName())
+                || COREFERENCE_RELATION_FEATURE.equals(aExFeature.getName()))) {
             aFeature.setType(CAS.TYPE_NAME_STRING);
         }
         else {
@@ -312,6 +315,7 @@ public class LayerExporter
         aFeature.setLinkTypeRoleFeatureName(aExFeature.getLinkTypeRoleFeatureName());
         aFeature.setLinkTypeTargetFeatureName(aExFeature.getLinkTypeTargetFeatureName());
         aFeature.setTraits(aExFeature.getTraits());
+        aFeature.setCuratable(aExFeature.isCuratable());
 
         if (aExFeature.getTagSet() != null) {
             TagSet tagset = annotationService.getTagSet(aExFeature.getTagSet().getName(), aProject);
