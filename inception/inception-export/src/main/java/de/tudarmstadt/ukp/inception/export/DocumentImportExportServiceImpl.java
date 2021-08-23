@@ -658,14 +658,14 @@ public class DocumentImportExportServiceImpl
 
         for (AnnotationFeature feature : features) {
             TagSet tagSet = feature.getTagset();
-            if (tagSet == null || CHAIN_TYPE == feature.getLayer().getType()) {
+            if (tagSet == null || CHAIN_TYPE.equals(feature.getLayer().getType())) {
                 continue;
             }
             String aLayer = feature.getLayer().getName();
             String aTagSetName = tagSet.getName();
 
             Type tagsetType = getType(aCas, TagsetDescription.class);
-            Feature layerFeature = tagsetType.getFeatureByBaseName("layer");
+            Feature layerFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_LAYER);
             Feature nameFeature = tagsetType.getFeatureByBaseName(FEATURE_BASE_NAME_NAME);
 
             boolean tagSetModified = false;
