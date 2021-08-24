@@ -169,7 +169,7 @@ public class DashboardMenu
             aItem.setVisible(projectMenuItem.applies(currentPage.getProject()));
 
             var pageParameters = new PageParameters();
-            ProjectPageBase.addProjectPageParameter(pageParameters, project);
+            ProjectPageBase.setProjectPageParameter(pageParameters, project);
             menulink = new BookmarkablePageLink<>("item", pageClass, pageParameters);
         }
         else {

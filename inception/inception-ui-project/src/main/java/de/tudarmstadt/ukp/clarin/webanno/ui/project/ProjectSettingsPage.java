@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectContext;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.detail.ProjectDetailPanel;
@@ -84,7 +85,7 @@ public class ProjectSettingsPage
 {
     private static final Logger LOG = LoggerFactory.getLogger(ProjectSettingsPage.class);
 
-    public static final String NEW_PROJECT_ID = "NEW";
+    public static final String NEW_PROJECT_ID = "__NEW__";
 
     private static final long serialVersionUID = -2102136855109258306L;
 
@@ -323,8 +324,9 @@ public class ProjectSettingsPage
         Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
                 "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
 
-        setResponsePage(projectDashboard,
-                new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
+        PageParameters pageParameters = new PageParameters();
+        ProjectPageBase.setProjectPageParameter(pageParameters, getProject());
+        setResponsePage(projectDashboard, pageParameters);
     }
 
     private void actionDelete(AjaxRequestTarget aTarget)

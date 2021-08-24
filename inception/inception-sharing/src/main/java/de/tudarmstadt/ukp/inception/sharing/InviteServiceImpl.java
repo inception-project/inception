@@ -340,10 +340,11 @@ public class InviteServiceImpl
         // If we are in a Wicket context, we can use Wicket to render the URL for us
         RequestCycle cycle = RequestCycle.get();
         if (cycle != null) {
-            CharSequence url = cycle.urlFor(AcceptInvitePage.class,
-                    new PageParameters()
-                            .set(AcceptInvitePage.PAGE_PARAM_PROJECT, aInvite.getProject().getId())
-                            .set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, aInvite.getInviteId()));
+            PageParameters pageParameters = new PageParameters();
+            AcceptInvitePage.setProjectPageParameter(pageParameters, aInvite.getProject());
+            pageParameters.set(AcceptInvitePage.PAGE_PARAM_INVITE_ID, aInvite.getInviteId());
+
+            CharSequence url = cycle.urlFor(AcceptInvitePage.class, pageParameters);
 
             return RequestCycle.get().getUrlRenderer().renderFullUrl(Url.parse(url));
         }

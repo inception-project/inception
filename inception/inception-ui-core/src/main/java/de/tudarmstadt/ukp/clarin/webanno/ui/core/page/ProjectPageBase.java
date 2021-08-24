@@ -94,8 +94,9 @@ public abstract class ProjectPageBase
         Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
                 "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
 
-        throw new RestartResponseException(projectDashboard,
-                new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
+        PageParameters pageParameters = new PageParameters();
+        setProjectPageParameter(pageParameters, getProject());
+        throw new RestartResponseException(projectDashboard, pageParameters);
     }
 
     protected void setProjectModel(IModel<Project> aModel)
@@ -142,13 +143,13 @@ public abstract class ProjectPageBase
         }
     }
 
-    public static void addProjectPageParameter(PageParameters aParameters, Project aProject)
+    public static void setProjectPageParameter(PageParameters aParameters, Project aProject)
     {
         if (aProject.getSlug() != null) {
-            aParameters.add(PAGE_PARAM_PROJECT, aProject.getSlug());
+            aParameters.set(PAGE_PARAM_PROJECT, aProject.getSlug());
         }
         else {
-            aParameters.add(PAGE_PARAM_PROJECT, aProject.getId());
+            aParameters.set(PAGE_PARAM_PROJECT, aProject.getId());
         }
     }
 }

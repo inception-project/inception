@@ -205,7 +205,7 @@ public class ProjectsOverviewPage
         if (projects.size() == 1) {
             Project soleAccessibleProject = projects.get(0).getProject();
             PageParameters pageParameters = new PageParameters();
-            ProjectPageBase.addProjectPageParameter(pageParameters, soleAccessibleProject);
+            ProjectPageBase.setProjectPageParameter(pageParameters, soleAccessibleProject);
             throw new RestartResponseException(ProjectDashboardPage.class, pageParameters);
         }
     }
@@ -285,7 +285,7 @@ public class ProjectsOverviewPage
                 Project project = aItem.getModelObject().getProject();
 
                 PageParameters pageParameters = new PageParameters();
-                ProjectPageBase.addProjectPageParameter(pageParameters, project);
+                ProjectPageBase.setProjectPageParameter(pageParameters, project);
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
@@ -461,8 +461,8 @@ public class ProjectsOverviewPage
 
             projectService.initializeProject(project, asList(aInitializer));
 
-            PageParameters pageParameters = new PageParameters()
-                    .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId());
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, project);
             setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
         catch (IOException e) {
@@ -508,8 +508,9 @@ public class ProjectsOverviewPage
         if (!projects.isEmpty()) {
             Project project = projects.get(0);
             getSession().success("Project [" + project.getName() + "] successfully imported");
-            setResponsePage(ProjectDashboardPage.class, new PageParameters()
-                    .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId()));
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, project);
+            setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
     }
 
