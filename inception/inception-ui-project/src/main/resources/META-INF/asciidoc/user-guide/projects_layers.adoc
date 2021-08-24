@@ -110,8 +110,6 @@ have have been included in the files are ignored on import.
 [[sect_projects_layers_properties]]
 == Properties 
 
-image::layer1.jpg[align="center"]
-
 .Properites
 [cols="1,2", options="header"]
 |====
