@@ -461,15 +461,6 @@ public interface AnnotationSchemaService
         throws IOException;
 
     /**
-     * Returns a type system with all the types that should be present in an exported CAS. This
-     * means in particular that type internal to the application should <b>not</b> be included.
-     * 
-     * @see #getFullProjectTypeSystem(Project, boolean)
-     */
-    TypeSystemDescription getTypeSystemForExport(Project aProject)
-        throws ResourceInitializationException;
-
-    /**
      * Returns the custom types define in the project excluding built-in types.
      * 
      * @see #getAllProjectTypes(Project)
@@ -568,15 +559,6 @@ public interface AnnotationSchemaService
     TypeAdapter getAdapter(AnnotationLayer aLayer);
 
     TypeAdapter findAdapter(Project aProject, FeatureStructure aFS);
-
-    /**
-     * Performs a CAS upgrade and removes all internal feature structures from the CAS. The
-     * resulting CAS should be <b>only</b> used for export and never be persisted within the
-     * repository.
-     */
-    void prepareCasForExport(CAS aSourceCas, CAS aTargetCas, SourceDocument aSourceDocument,
-            TypeSystemDescription aFullProjectTypeSystem)
-        throws ResourceInitializationException, UIMAException, IOException;
 
     void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
         throws ResourceInitializationException;

@@ -70,7 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerType;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -89,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.Fe
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.layers.ProjectLayersPanel.LayerExportMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.export.ImportUtil;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 public class LayerDetailForm

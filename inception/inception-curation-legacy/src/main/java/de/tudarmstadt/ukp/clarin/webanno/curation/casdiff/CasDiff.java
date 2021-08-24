@@ -1150,7 +1150,7 @@ public class CasDiff
 
             Set<String> labelFeatures = new LinkedHashSet<>();
             nextFeature: for (AnnotationFeature f : schemaService.listSupportedFeatures(layer)) {
-                if (!f.isEnabled()) {
+                if (!f.isEnabled() || !f.isCuratable()) {
                     continue nextFeature;
                 }
 
