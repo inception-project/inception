@@ -48,6 +48,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.SortedMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -466,14 +467,17 @@ public class MtasDocumentIndex
             for (int i = 0; i < reader.maxDoc(); i++) {
                 String sourceID = reader.document(i).get(FIELD_SOURCE_DOCUMENT_ID);
                 String annotationID = reader.document(i).get(FIELD_ANNOTATION_DOCUMENT_ID);
-                if (!(Long.valueOf(annotationID) == -1L
-                        && annotatableDocuments.containsKey(Long.valueOf(sourceID)))) {
-                    System.out.println("idok");
-                    //if (reader.document(i).get(FIELD_USER)
-                         //   .equals(aStatisticRequest.getUser().getUsername())) {
-                        System.out.println("authorok");
+                // no annotation document?
+                if (Long.valueOf(annotationID) != -1L) {
+                    // check for correct user
+                    if (reader.document(i).get(FIELD_USER)
+                            .equals(aStatisticRequest.getUser().getUsername())) {
                         fullDocSet.add(i);
-                    //}
+                    }
+                }
+                // source document without annotation layer? then user is not relevant
+                else if (!annotatableDocuments.containsKey(Long.valueOf(sourceID))) {
+                    fullDocSet.add(i);
                 }
             }
         }
@@ -491,6 +495,31 @@ public class MtasDocumentIndex
             }
         }
         return fullDocSet;
+    }
+
+    public MtasSpanQuery parseQuery(String query) throws ExecutionException, Exception
+    {
+        final MtasSpanQuery mtasSpanQuery;
+        try {
+            String modifiedQuery = preprocessQuery(query);
+            MtasSpanQuery mtasSpanQuery1;
+            try (Reader queryReader = new StringReader(modifiedQuery)) {
+                MtasCQLParser parser = new MtasCQLParser(queryReader);
+                mtasSpanQuery1 = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+
+            }
+            mtasSpanQuery = mtasSpanQuery1;
+
+        }
+        catch (ParseException | Error e) {
+            // The exceptions thrown by the MTAS CQL Parser are inheriting from
+            // java.lang.Error...
+            throw new ExecutionException("Unable to parse query [" + query + "]", e);
+        }
+        catch (Exception e) {
+            throw e;
+        }
+        return mtasSpanQuery;
     }
 
     @Override
@@ -513,45 +542,60 @@ public class MtasDocumentIndex
             CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
                     FIELD_CONTENT);
 
-            final MtasSpanQuery mtasSpanQuery;
-            try {
-                String modifiedQuery = preprocessQuery(aFeatureQuery);
-                MtasSpanQuery mtasSpanQuery1;
-                try (Reader queryReader = new StringReader(modifiedQuery)) {
-                    MtasCQLParser parser = new MtasCQLParser(queryReader);
-                    mtasSpanQuery1 = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+            /*
+             * final MtasSpanQuery mtasSpanQuery; try { String modifiedQuery =
+             * preprocessQuery(aFeatureQuery); MtasSpanQuery mtasSpanQuery1; try (Reader queryReader
+             * = new StringReader(modifiedQuery)) { MtasCQLParser parser = new
+             * MtasCQLParser(queryReader); mtasSpanQuery1 = parser.parse(FIELD_CONTENT,
+             * DEFAULT_PREFIX, null, null, null);
+             * 
+             * } mtasSpanQuery = mtasSpanQuery1;
+             * 
+             * } catch (ParseException | Error e) { // The exceptions thrown by the MTAS CQL Parser
+             * are inheriting from // java.lang.Error... throw new
+             * ExecutionException("Unable to parse query [" + aFeatureQuery + "]", e); } catch
+             * (Exception e) { throw e; }
+             * 
+             */
+            MtasSpanQuery[] spanQuerys = new MtasSpanQuery[2];
 
-                }
-                mtasSpanQuery = mtasSpanQuery1;
-
-            }
-            catch (ParseException | Error e) {
-                // The exceptions thrown by the MTAS CQL Parser are inheriting from
-                // java.lang.Error...
-                throw new ExecutionException("Unable to parse query [" + aFeatureQuery + "]", e);
-            }
-            catch (Exception e) {
-                throw e;
+            MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery);
+            fieldStats.spanQueryList.add(parsedQuery);
+            /*
+            if (aFeatureQuery.equals("<s=\"\"/>")) {
+                spanQuerys = new MtasSpanQuery[1];
+                spanQuerys[0] = parsedQuery;
             }
 
-            MtasSpanQuery[] spanQuerys = new MtasSpanQuery[1];
-            spanQuerys[0] = mtasSpanQuery;
+             */
+            //else {
+                //spanQuerys = new MtasSpanQuery[2];
+                spanQuerys[0] = parsedQuery;
+                MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>");
+                fieldStats.spanQueryList.add(parsedSentQuery);
+                spanQuerys[1] = parsedSentQuery;
+            //}
 
             // what does this parameter do?
             ArrayList<Integer> fullDocList = new ArrayList<Integer>();
-
-            fieldStats.spanQueryList.add(mtasSpanQuery);
+            String[] functionKeys = new String[1];
+            String[] functions = new String[1];
+            String[] functionTypes = new String[1];
+            functionKeys[0] = "perSentence";
+            functions[0] = "$q0/$q1";
+            functionTypes[0] = "n";
 
             fieldStats.statsSpanList.add(new CodecComponent.ComponentSpan(spanQuerys, "ax2",
                     aStatisticRequest.getLowerDocumentSize(),
                     aStatisticRequest.getUpperDocumentSize(), aStatisticRequest.getStatistic(),
-                    null, null, null));
+                    functionKeys, functions, functionTypes));
 
             CodecUtil.collectField(FIELD_CONTENT, searcher, reader, fullDocList, fullDocSet,
                     fieldStats, new Status());
             // getList();
             MtasDataItem<?, ?> results = fieldStats.statsSpanList.get(0).dataCollector.getResult()
                     .getData();
+            SortedMap<String, ? extends MtasDataItem<?, ?>> bubu = fieldStats.statsSpanList.get(0).dataCollector.getResult().getList();
             resultsMap = results.rewrite(true);
             for (String str : resultsMap.keySet()) {
                 // System.out.print(str + ": ");

@@ -537,6 +537,7 @@ public class MtasDocumentIndexTest
         User user = userRepository.get("admin");
 
         SourceDocument sourceDocument = new SourceDocument();
+
         sourceDocument.setName("Annotation document");
         sourceDocument.setProject(project);
         sourceDocument.setFormat("text");
@@ -544,7 +545,7 @@ public class MtasDocumentIndexTest
         String sourceContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(sourceDocument, sourceContent));
-        annotateDocumentAdvanced(project, user, sourceDocument);
+        //annotateDocumentAdvanced(project, user, sourceDocument);
 
         SourceDocument otherDocument = new SourceDocument();
         otherDocument.setName("Other document");
@@ -555,7 +556,7 @@ public class MtasDocumentIndexTest
         // otherContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(otherDocument, otherContent));
-        // annotateDocument(project, user, otherDocument);
+        //annotateDocument(project, user, otherDocument);
 
         String statistic = "n,min,max,mean,median,standarddeviation";
         Double lowerDocSize = null;
@@ -566,8 +567,8 @@ public class MtasDocumentIndexTest
         StatisticsResult statsResults = searchService.getProjectStatistics(user, project, statistic,
                 lowerDocSize, upperDocSize);
 
-        StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project,
-                statistic, searchString, lowerDocSize, upperDocSize);
+        //StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project,
+        //        statistic, searchString, lowerDocSize, upperDocSize);
 
         assertThat(0).isEqualTo(0);
     }
