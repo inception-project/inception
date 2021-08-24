@@ -20,27 +20,23 @@
 <body>
   <wicket:panel>
     <form wicket:id="form" class="action-bar-group">
-      <div class="input-group">
-        <div class="input-group-prepend">
-          <button wicket:id="showFirst" class="btn btn-light" type="button" wicket:message="title:firstPage">
-            <i class="fas fa-fast-backward" aria-hidden="true"></i>
-          </button>
-          <button wicket:id="showPrevious" class="btn btn-light" type="button" wicket:message="title:previousPage">
-            <i class="fas fa-step-backward"></i>
-          </button>
-        </div>
-        <input type="number" wicket:id="gotoPageText" class="text-center border-top-0 border-bottom-0 border-left border-right" style="z-index: 10; max-width: 6rem;"/>
-        <div class="input-group-prepend">
-          <button wicket:id="gotoPageLink" class="btn btn-light" type="button" wicket:message="title:focusRow">
-            <i class="fas fa-eye" aria-hidden="true"></i>
-          </button>
-          <button wicket:id="showNext" class="btn btn-light" type="button" wicket:message="title:nextPage">
-            <i class="fas fa-step-forward" aria-hidden="true"></i>
-          </button>
-          <button wicket:id="showLast" class="btn btn-light" type="button" wicket:message="title:lastPage">
-            <i class="fas fa-fast-forward" aria-hidden="true"></i>
-          </button>
-        </div>
+      <div class="input-group flex-nowrap">
+        <button wicket:id="showFirst" class="btn btn-light" type="button" wicket:message="title:firstPage">
+          <i class="fas fa-fast-backward" aria-hidden="true"></i>
+        </button>
+        <button wicket:id="showPrevious" class="btn btn-light" type="button" wicket:message="title:previousPage">
+          <i class="fas fa-step-backward"></i>
+        </button>
+        <input type="number" wicket:id="gotoPageText" class="text-center border-top-0 border-bottom-0 border-start border-end" style="z-index: 10; max-width: 6rem;"/>
+        <button wicket:id="gotoPageLink" class="btn btn-light" type="button" wicket:message="title:focusRow">
+          <i class="fas fa-eye" aria-hidden="true"></i>
+        </button>
+        <button wicket:id="showNext" class="btn btn-light" type="button" wicket:message="title:nextPage">
+          <i class="fas fa-step-forward" aria-hidden="true"></i>
+        </button>
+        <button wicket:id="showLast" class="btn btn-light" type="button" wicket:message="title:lastPage">
+          <i class="fas fa-fast-forward" aria-hidden="true"></i>
+        </button>
       </div>
     </form>
   </wicket:panel>

@@ -110,7 +110,7 @@ public class SpanRenderer
 
         // List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (AnnotationFS fs : annotations) {
-            for (VObject vobj : render(fs, aFeatures, aWindowBegin, aWindowEnd)) {
+            for (VObject vobj : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
                 aResponse.add(vobj);
 
                 if (vobj instanceof VSpan) {
@@ -128,8 +128,8 @@ public class SpanRenderer
     }
 
     @Override
-    public List<VObject> render(AnnotationFS aFS, List<AnnotationFeature> aFeatures,
-            int aWindowBegin, int aWindowEnd)
+    public List<VObject> render(VDocument aVDocument, AnnotationFS aFS,
+            List<AnnotationFeature> aFeatures, int aWindowBegin, int aWindowEnd)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
             return null;

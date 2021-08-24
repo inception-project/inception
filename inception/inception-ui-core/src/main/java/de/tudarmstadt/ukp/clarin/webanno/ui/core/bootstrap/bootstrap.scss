@@ -34,6 +34,7 @@
 
 @import "package!shim-bootstrap3";
 @import "package!shim-kendo";
+@import "package!shim-wicket";
 @import "package!shim-wicketstuff";
 @import "package!shim-bootstrapselect";
 @import "package!shim-jquery";
@@ -44,4 +45,12 @@
 
 .w-min-440px {
   min-width: 440px;
+}
+
+.form-row {
+  @extend .mb-2;
+}
+
+.above-modal {
+  z-index: 30000;
 }

@@ -23,13 +23,15 @@
       <div>No annotation selected</div>
     </div>
     <div wicket:id="annotationInfo">
-      <div class="form-group form-row d-flex" wicket:enclosure="selectedAnnotationType">
-        <div class="flex-fill form-control scrolling" style="height: unset; max-height: 4.5rem; word-wrap: break-word;" readonly>
-          <div class="small" wicket:id="selectedAnnotationType"/>
+      <div class="row form-row d-flex" wicket:enclosure="selectedAnnotationType">
+        <div>
+          <div class="flex-fill form-control scrolling" style="height: unset; max-height: 4.5rem; word-wrap: break-word;" readonly>
+            <div class="small" wicket:id="selectedAnnotationType"/>
+          </div>
         </div>
       </div>
       <div class="feature-editors-sidebar">
-        <div class="form-group form-row" wicket:enclosure="selectedAnnotationLayer">
+        <div class="row form-row" wicket:enclosure="selectedAnnotationLayer">
           <label class="feature-editor-label col-form-label">Layer</label>
           <div class="feature-editor-value">
             <span class="form-control" readonly><wicket:container wicket:id="selectedAnnotationLayer"/></span>

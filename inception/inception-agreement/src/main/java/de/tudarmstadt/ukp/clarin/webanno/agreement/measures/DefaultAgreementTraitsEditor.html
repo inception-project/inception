@@ -23,7 +23,7 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <form wicket:id="form" class="col-sm-12">
-    <div class="form-group form-row" wicket:enclosure="limitToFinishedDocuments">
+    <div class="row form-row" wicket:enclosure="limitToFinishedDocuments">
       <div class="offset-sm-4 col-sm-8">
         <div class="form-check">
           <input wicket:id="limitToFinishedDocuments" class="form-check-input" type="checkbox"/>
@@ -33,11 +33,11 @@
         </div>
       </div>
     </div>
-    <div class="form-group form-row" wicket:enclosure="linkCompareBehavior">
+    <div class="row form-row" wicket:enclosure="linkCompareBehavior">
       <label wicket:for="linkCompareBehavior" class="col-sm-4 col-form-label">
         <wicket:label key="linkCompareBehavior"/></label>
       <div class="col-sm-8">
-        <select wicket:id="linkCompareBehavior" class="form-control" data-container="body"></select>
+        <select wicket:id="linkCompareBehavior" class="form-select" data-container="body"/>
       </div>
     </div>
     <wicket:child/>

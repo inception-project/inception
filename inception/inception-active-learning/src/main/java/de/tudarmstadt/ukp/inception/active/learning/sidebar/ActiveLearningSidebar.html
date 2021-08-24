@@ -28,7 +28,7 @@
       
         <form wicket:id="sessionControlForm">
           <div class="input-group">
-            <select class="form-control flex-content" wicket:id="selectLayer" data-container="body"></select>
+            <select class="form-select flex-content" wicket:id="selectLayer" data-container="body"/>
             <span class="input-group-append">
               <a wicket:id="startSession" class="btn btn-primary">
                 <i class="fa fa-play" aria-hidden="true"></i>
@@ -51,7 +51,7 @@
   
           <form class="card" wicket:id="learnFromSkippedRecommendationForm">
             <span class="col-sm-12" wicket:id="onlySkippedRecommendationLabel">learnSkippedOnes</span>
-            <div class="card-footer text-right">
+            <div class="card-footer text-end">
               <input type="submit" class="btn btn-success" wicket:id="learnSkippedOnes" value="Yes"/>
             </div>
           </form>
@@ -61,7 +61,7 @@
               <wicket:message key="recommendation"/>
             </div>
             <div class="card-body  pb-1">
-              <div class="form-group form-row">
+              <div class="row form-row">
                 <div class="col-sm-12 p-0" style="position: relative; height: 5em;">
                   <div class="form-control"
                     style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 0px; right: 0px;"
@@ -75,7 +75,7 @@
                 </div>
               </div>
               <div class="feature-editors-sidebar">
-                <div class="form-group form-row">
+                <div class="row form-row">
                   <label class="feature-editor-label col-form-label">
                     <wicket:message key="suggestion"/>
                   </label>
@@ -83,14 +83,14 @@
                     <span class="form-control" wicket:id="recommendedPredition"></span>
                   </div>
                 </div>
-                <div class="form-group form-row">
+                <div class="row form-row">
                   <label class="feature-editor-label col-form-label">
                     <wicket:message key="score"/>
                   </label>
                   <div class="feature-editor-value">
                     <span class="form-control"> 
                       <wicket:container wicket:id="recommendedScore"/>
-                      <span class="float-right small text-muted">
+                      <span class="float-end small text-muted">
                       (<wicket:message key="delta"/>
                       <wicket:container wicket:id="recommendedDifference"/>)
                       </span>
@@ -122,13 +122,13 @@
               <div class="list-group-flush">
                 <div wicket:id="historyListview" class="list-group-item px-2 py-1">
                   <div class="clearfix">
-                    <a wicket:id="removeRecord" class="float-right" style="white-space:nowrap;">
+                    <a wicket:id="removeRecord" class="float-end" style="white-space:nowrap;">
                       <i class="fas fa-times"/>
                     </a>
                     <a wicket:id="jumpToAnnotation"></a>
                   </div>
                   <div class="small">
-                    <span wicket:id="userAction" class="badge badge-secondary float-right"></span>
+                    <span wicket:id="userAction" class="badge bg-secondary float-end"></span>
                     <span wicket:id="recommendedAnnotation"></span>
                   </div>
                 </div>

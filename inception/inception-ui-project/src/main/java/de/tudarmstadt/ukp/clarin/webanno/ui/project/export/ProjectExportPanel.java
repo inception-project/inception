@@ -36,6 +36,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -52,7 +53,6 @@ import org.wicketstuff.progressbar.ProgressBar;
 import org.wicketstuff.progressbar.Progression;
 import org.wicketstuff.progressbar.ProgressionModel;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -114,7 +114,7 @@ public class ProjectExportPanel
             super(id, new CompoundPropertyModel<>(
                     new ProjectExportRequest(ProjectExportRequest.FORMAT_AUTO, true)));
 
-            DropDownChoice<String> format = new BootstrapSelect<>("format");
+            DropDownChoice<String> format = new DropDownChoice<>("format");
             format.setChoiceRenderer(new ChoiceRenderer<String>()
             {
                 private static final long serialVersionUID = -6139450455463062998L;
@@ -234,11 +234,13 @@ public class ProjectExportPanel
                     default:
                         error("Invalid project export state after export: " + monitor.getState());
                     }
+                    setVisible(false);
                 }
             };
 
-            fileGenerationProgress.add(exportProject);
+            add(exportProject);
             add(fileGenerationProgress);
+            fileGenerationProgress.setVisible(false);
 
             add(exportProjectLink = new AjaxLink<Void>("exportProject")
             {
@@ -288,7 +290,12 @@ public class ProjectExportPanel
 
             cancelLink = new LambdaAjaxLink("cancel", this::actionCancel);
             cancelLink.add(enabledWhen(() -> exportInProgress));
+            cancelLink.add(visibleWhen(() -> exportInProgress));
             add(cancelLink);
+            
+            WebMarkupContainer warningContainer = new WebMarkupContainer("downloadWarning");
+            warningContainer.add(visibleWhen(() -> exportInProgress));
+            add(warningContainer);
         }
 
         private void actionCancel(AjaxRequestTarget aTarget)

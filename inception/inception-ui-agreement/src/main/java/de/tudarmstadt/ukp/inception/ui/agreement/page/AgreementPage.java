@@ -59,7 +59,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
@@ -151,7 +150,7 @@ public class AgreementPage
 
             add(new Label("name", getProject().getName()));
 
-            add(featureList = new BootstrapSelect<AnnotationFeature>("feature"));
+            add(featureList = new DropDownChoice<>("feature"));
             featureList.setOutputMarkupId(true);
             featureList.setChoices(LoadableDetachableModel.of(this::getEligibleFeatures));
             featureList.setChoiceRenderer(new LambdaChoiceRenderer<AnnotationFeature>(
@@ -163,7 +162,7 @@ public class AgreementPage
             runCalculationsButton.triggerAfterSubmit();
             add(runCalculationsButton);
 
-            add(measureDropDown = new BootstrapSelect<Pair<String, String>>("measure",
+            add(measureDropDown = new DropDownChoice<Pair<String, String>>("measure",
                     this::listMeasures)
             {
                 private static final long serialVersionUID = -2666048788050249581L;

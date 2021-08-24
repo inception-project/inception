@@ -49,7 +49,7 @@ html, body {
   text-align: center; 
   font-size: $font-size-sm; 
   padding-left: ceil(($grid-gutter-width / 2));
-  padding-right: floor(($grid-gutter-width / 2));
+  padding-right: ceil(($grid-gutter-width / 2));
   color: $card-color;
   background-color: $card-bg;
   border-color: $card-border-color;
@@ -57,7 +57,7 @@ html, body {
   z-index: 30000; // Display above modal dialogs
 
   a, a:hover, a:focus {
-  	color: black;
+    color: black;
   }
 }
 
@@ -134,7 +134,7 @@ span.form-control {
 .flex-h-container.flex-gutter > * { margin-left: ceil($grid-gutter-width / 2) }
 .flex-h-container.flex-no-gutter > .panel { margin-bottom: 0px; }
 .flex-h-container.flex-gutter > .panel { margin-bottom: 0px; }
-.flex-h-container.flex-gutter > *:last-child { margin-right: floor($grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > *:last-child { margin-right: ceil($grid-gutter-width / 2) }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:first-child { margin-left: 0px; }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:last-child { margin-right: 0px; }
 .flex-h-container.flex-no-initial-gutter > *:first-child { margin-left: 0px; }
@@ -145,7 +145,7 @@ span.form-control {
 .flex-v-container.flex-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
 .flex-v-container { display: flex; flex-direction: column; }
 .flex-v-container.flex-gutter > * { margin-top: ($grid-gutter-width / 2) }
-.flex-v-container.flex-gutter > *:last-child { margin-bottom: floor($grid-gutter-width / 2) }
+.flex-v-container.flex-gutter > *:last-child { margin-bottom: ceil($grid-gutter-width / 2) }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:first-child { margin-top: 0px; }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:last-child { margin-bottom: 0px; }
 .flex-v-container.flex-only-internal-gutter > *:first-child { margin-top: 0px; }
@@ -177,19 +177,19 @@ span.form-control {
 
 /* style for the warning popover in the page footer */
 .dev-warnings {
-	.alert {
-	  padding: 0px 5px 0px 5px;
-	  border: none;
-	  color: yellow;
-	  background-color: red;
-	}
-	
+  .alert {
+    padding: 0px 5px 0px 5px;
+    border: none;
+    color: yellow;
+    background-color: red;
+  }
+  
  .popover-content ul {
     padding-left: 18px;
   }
   
   a, a:hover, a:focus {
-	  color: yellow;
+    color: yellow;
   }
 }
 
@@ -206,49 +206,52 @@ a.disabled {
 
 
 .no-data-notice {
-	@extend .text-muted;
-	background-color: $card-cap-bg;
+  @extend .text-muted;
+  background-color: $card-cap-bg;
   display: flex;
   justify-content: center; 
   align-items: center;
-	min-height: 5rem;
-	text-align: center;
+  min-height: 5rem;
+  text-align: center;
 }
 
 .card-body {
-	.no-data-notice {
-		margin: -$card-spacer-x;
-		padding: $card-spacer-x;
-	}
+  .no-data-notice {
+    margin-left: -$card-spacer-x !important;
+    margin-right: -$card-spacer-x !important;
+    margin-top: -$card-spacer-y !important;
+    margin-bottom: -$card-spacer-y !important;
+    padding: $card-spacer-x !important;
+  }
 }
 
 
 // Make the JQuery context menu fit in nicely with the rest of the theme instead of showing up in
 // bright orange
 .ui-menu {
-	text-align: left;
-	
-	.ui-menu-item {
-		.ui-menu-item-wrapper.ui-state-active {
-			color: $component-active-color;
-			background-color: $component-active-bg;
-			background-image: none;
-		}
-	}
+  text-align: left;
+  
+  .ui-menu-item {
+    .ui-menu-item-wrapper.ui-state-active {
+      color: $component-active-color;
+      background-color: $component-active-bg;
+      background-image: none;
+    }
+  }
 }
 
 .context-menu {
-	z-index: 999;
+  z-index: 999;
 }
 
 // A class for something that needs to be there in order to get events but should not actually be
 // visible to the user (i.e. use no space)
 .there-but-not-visible {
-	width: 1px; 
-	height: 1px; 
-	overflow: hidden; 
-	opacity: 0; 
-	margin-top: -1px;
+  width: 1px; 
+  height: 1px; 
+  overflow: hidden; 
+  opacity: 0; 
+  margin-top: -1px;
 }
 
 /* -------------------------------------------------------------------------------------------------
@@ -342,7 +345,6 @@ tr.even:hover{
 .headers a:visited{
     background-color:#B90F22;
     color:white;
-    vertical-align:bottom;
 }
 
 tr.headers th.wicket_orderDown a::after {
@@ -350,7 +352,6 @@ tr.headers th.wicket_orderDown a::after {
     content: "\f0dd";
     display: inline-block;
     padding-left: 3px;
-    vertical-align: middle;
     font-weight: 900;
 }
 
@@ -359,7 +360,6 @@ tr.headers th.wicket_orderUp a::after {
     content: "\f0de";
     display: inline-block;
     padding-left: 3px;
-    vertical-align: middle;
     font-weight: 900;
 }
 
@@ -379,11 +379,11 @@ div.left-tabpanel {
 }
 
 div.left-tabpanel div.tab-row {
-	flex: none;
+  flex: none;
   width: 39px;
-	background-color: #f5f5f5;
-	border: 1px solid #ddd;  
-	
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;  
+  
   display: flex;
   flex-direction: column;
 }
