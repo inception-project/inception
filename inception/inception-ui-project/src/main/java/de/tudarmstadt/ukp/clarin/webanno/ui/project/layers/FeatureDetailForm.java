@@ -108,6 +108,7 @@ public class FeatureDetailForm
         add(new TextArea<String>("description"));
         add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
+        add(new CheckBox("curatable").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("hideUnconstraintFeature").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("remember").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("includeInHover").setOutputMarkupPlaceholderTag(true)

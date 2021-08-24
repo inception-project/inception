@@ -45,8 +45,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
@@ -93,11 +96,13 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorCo
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.CuratorColumnCellOpenContextMenuEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.DocumentRowSelectionChangedEvent;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.event.FilterStateChangedEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.AnnotatorColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.CuratorColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixDataProvider;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixRow;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.DocumentMatrixSortKey;
+import de.tudarmstadt.ukp.inception.workload.matrix.management.support.Filter;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentNameColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentSelectColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentStateColumn;
@@ -130,6 +135,7 @@ public class MatrixWorkloadManagementPage
 
     private boolean bulkChangeMode = false;
     private IModel<Set<String>> selectedUsers = new SetModel<>(new HashSet<>());
+    private IModel<Filter> filter;
 
     public MatrixWorkloadManagementPage(final PageParameters aPageParameters)
     {
@@ -156,13 +162,16 @@ public class MatrixWorkloadManagementPage
 
         add(new DocLink("documentStatusHelpLink", "_annotation_state_management"));
 
+        filter = Model.of(new Filter());
+        add(new MatrixWorkloadFilterPanel("filterPanel", filter));
+
         add(documentMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode));
+
+        add(new LambdaAjaxLink("refresh", this::actionRefresh));
 
         actionContainer = new WebMarkupContainer("actionContainer");
         actionContainer.setOutputMarkupPlaceholderTag(true);
         add(actionContainer);
-
-        actionContainer.add(new LambdaAjaxLink("refresh", this::actionRefresh));
 
         bulkActionDropdown = new WebMarkupContainer("bulkActionDropdown");
         bulkActionDropdown.add(LambdaBehavior.visibleWhen(() -> bulkChangeMode));
@@ -195,10 +204,13 @@ public class MatrixWorkloadManagementPage
     {
         DocumentMatrixDataProvider dataProvider = new DocumentMatrixDataProvider(getMatrixData());
 
+        // Copy sorting state from previous matrix
         if (documentMatrix != null) {
-            dataProvider.setSort(
-                    ((DocumentMatrixDataProvider) documentMatrix.getDataProvider()).getSort());
+            DocumentMatrixDataProvider oldDataProvider = ((DocumentMatrixDataProvider) documentMatrix
+                    .getDataProvider());
+            dataProvider.setSort(oldDataProvider.getSort());
         }
+        dataProvider.setFilterState(filter.getObject());
 
         List<IColumn<DocumentMatrixRow, DocumentMatrixSortKey>> columns = new ArrayList<>();
         SourceDocumentSelectColumn sourceDocumentSelectColumn = new SourceDocumentSelectColumn();
@@ -210,6 +222,19 @@ public class MatrixWorkloadManagementPage
 
         List<User> annotators = projectService.listProjectUsersWithPermissions(getProject(),
                 ANNOTATOR);
+
+        if (StringUtils.isNotBlank(filter.getObject().getUserName())) {
+            if (filter.getObject().isMatchUserNameAsRegex()) {
+                Predicate<String> p = Pattern
+                        .compile(".*(" + filter.getObject().getUserName() + ").*")
+                        .asMatchPredicate().negate();
+                annotators.removeIf(u -> p.test(u.getUiName()));
+            }
+            else {
+                annotators.removeIf(u -> !u.getUiName().contains(filter.getObject().getUserName()));
+            }
+        }
+
         for (User annotator : annotators) {
             columns.add(new AnnotatorColumn(annotator, selectedUsers));
         }
@@ -425,15 +450,22 @@ public class MatrixWorkloadManagementPage
 
     private Collection<AnnotationDocument> selectedAnnotationDocuments()
     {
-        List<User> annotators = projectService.listProjectUsersWithPermissions(getProject(),
-                ANNOTATOR);
+        List<User> annotators = documentMatrix.getColumns().stream() //
+                .filter(col -> col instanceof AnnotatorColumn) //
+                .map(col -> (AnnotatorColumn) col) //
+                .map(AnnotatorColumn::getUser) //
+                .collect(toList());
 
         Map<String, User> annotatorIndex = new HashMap<>();
         annotators.forEach(annotator -> annotatorIndex.put(annotator.getUiName(), annotator));
 
         Set<User> selectedUserObjects = new HashSet<>();
-        selectedUsers.getObject()
-                .forEach(username -> selectedUserObjects.add(annotatorIndex.get(username)));
+        selectedUsers.getObject().forEach(username -> {
+            User u = annotatorIndex.get(username);
+            if (u != null) {
+                selectedUserObjects.add(u);
+            }
+        });
 
         Map<Pair<SourceDocument, String>, AnnotationDocument> annotationDocumentsToChange = new HashMap<>();
 
@@ -480,6 +512,13 @@ public class MatrixWorkloadManagementPage
     public void onDocumentRowSelectionChangedEvent(DocumentRowSelectionChangedEvent aEvent)
     {
         aEvent.getTarget().add(documentMatrix);
+    }
+
+    @OnEvent
+    public void onFilterStateChangedEvent(FilterStateChangedEvent aEvent)
+    {
+        reloadMatrixData();
+        actionRefresh(aEvent.getTarget());
     }
 
     @OnEvent

@@ -38,19 +38,19 @@
   }
 </style>
 <script>
-$( document ).ready(function() { 
-  // Prevent the dropdowns from closing if an item Kendo dropdown is selected
-  $('.sticky-dropdown').on('hide.bs.dropdown', function(e) {
-    if ($(event.target).parents('.k-popup').length) {
-      e.preventDefault();
-    }
+  $( document ).ready(function() { 
+    // Prevent the dropdowns from closing if an item Kendo dropdown is selected
+    $('.sticky-dropdown').on('hide.bs.dropdown', function(e) {
+      if ($(e.clickEvent.target).parents('.k-popup, .cbx-icon').length) {
+        e.preventDefault();
+      }
+    });
   });
-});
 </script>
 </wicket:head>
 <body>
   <wicket:extend>
-    <div class="flex-content flex-h-container flex-gutter">
+    <div class="flex-content flex-h-container flex-gutter overflow-hidden">
       <div class="flex-content flex-v-container flex-gutter">
         <div class="card">
           <div class="card-header border-bottom-0" style="position: relative">
@@ -68,7 +68,7 @@ $( document ).ready(function() {
                 type="button" data-bs-toggle="dropdown">
                 <i class="fas fa-filter"></i>
                 <span class="d-none d-lg-inline">
-                  &nbsp;<wicket:message key="Filter" />
+                  &nbsp;<wicket:message key="filter" />
                 </span>
               </button> 
               <div class="dropdown-menu shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
@@ -283,19 +283,15 @@ $( document ).ready(function() {
           </div>
           <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
             <div wicket:id="stateFilters" class="input-group justify-content-end">
-              <div class="input-group-prepend">
-                <div class="input-group-text">
-                  <i class="fas fa-filter"></i>
-                </div>
+              <div class="input-group-text">
+                <i class="fas fa-filter"></i>
               </div>
-              <div class="input-group-append" role="group">
-                <wicket:container wicket:id="stateFilter">
-                  <button type="button" class="btn btn-outline-secondary"
-                    wicket:id="stateFilterLink">
-                    <wicket:container wicket:id="label" />
-                  </button>
-                </wicket:container>
-              </div>
+              <wicket:container wicket:id="stateFilter">
+                <button type="button" class="btn btn-outline-secondary"
+                  wicket:id="stateFilterLink">
+                  <wicket:container wicket:id="label" />
+                </button>
+              </wicket:container>
             </div>
             <span class="dropdown" aria-haspopup="true" aria-expanded="false">
               <span class="btn-group" role="group">
@@ -331,10 +327,14 @@ $( document ).ready(function() {
           </div>
         </div>
 
-        <div class="flex-content scrolling card p-0">
-          <table class="table table-sm table-hover table-striped document-table" cellspacing="0"
-            wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">
-          </table>
+        <div class="card-body p-0 flex-v-container">
+          <div class="flex-content scrolling">
+            <div class="fit-child-snug">
+              <table class="table table-sm table-hover table-striped document-table" cellspacing="0"
+                wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">
+              </table>
+            </div>
+          </div>
         </div>
         
         <div wicket:id="resetDocumentDialog"/>
