@@ -121,7 +121,12 @@ public abstract class ProjectPageBase
 
     public Project getProjectFromParameters()
     {
-        StringValue projectParameter = getPageParameters().get(PAGE_PARAM_PROJECT);
+        return getProjectFromParameters(this, projectService);
+    }
+
+    public static Project getProjectFromParameters(Page aPage, ProjectService projectService)
+    {
+        StringValue projectParameter = aPage.getPageParameters().get(PAGE_PARAM_PROJECT);
 
         if (projectParameter.isEmpty()) {
             return null;
@@ -138,8 +143,8 @@ public abstract class ProjectPageBase
             return projectService.getProjectBySlug(projectParameter.toString());
         }
         catch (NoResultException e) {
-            getSession().error("Project [" + projectParameter + "] does not exist");
-            throw new RestartResponseException(getApplication().getHomePage());
+            aPage.getSession().error("Project [" + projectParameter + "] does not exist");
+            throw new RestartResponseException(aPage.getApplication().getHomePage());
         }
     }
 

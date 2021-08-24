@@ -24,9 +24,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-
-import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Page;
@@ -130,19 +127,19 @@ public class ProjectSettingsPage
         }
         // Check if we are asked to open an existing project
         else {
-            Optional<Project> project = getProjectFromParameters(projectParameter);
-            if (project.isPresent()) {
+            Project project = ProjectPageBase.getProjectFromParameters(this, projectService);
+
+            if (project != null) {
                 User user = userRepository.getCurrentUser();
 
                 // Check access to project
                 if (!userRepository.isAdministrator(user)
-                        && !projectService.isManager(project.get(), user)) {
-                    error("You have no permission to access project [" + project.get().getId()
-                            + "]");
+                        && !projectService.isManager(project, user)) {
+                    error("You have no permission to access project [" + project.getId() + "]");
                     setResponsePage(getApplication().getHomePage());
                 }
 
-                selectedProject.setObject(project.get());
+                selectedProject.setObject(project);
             }
             else {
                 error("Project [" + projectParameter + "] does not exist");
@@ -288,20 +285,6 @@ public class ProjectSettingsPage
             tabs.add(tab);
         }
         return tabs;
-    }
-
-    private Optional<Project> getProjectFromParameters(StringValue projectParam)
-    {
-        if (projectParam == null || projectParam.isEmpty()) {
-            return Optional.empty();
-        }
-
-        try {
-            return Optional.of(projectService.getProject(projectParam.toLong()));
-        }
-        catch (NoResultException e) {
-            return Optional.empty();
-        }
     }
 
     private void actionCancel(AjaxRequestTarget aTarget)
