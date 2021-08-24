@@ -21,10 +21,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.MAX_PROJECT_SLUG_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
@@ -32,6 +36,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -154,5 +159,38 @@ public class ProjectServiceImplTest
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
 
         assertThat(foundUsers).containsExactly(beate, kevin);
+    }
+
+    @Test
+    public void thatDerivingSlugFromProjectNameWorks()
+    {
+        assertThat(sut.deriveSlugFromName("This is a test")).isEqualTo("this-is-a-test");
+        assertThat(sut.deriveSlugFromName(" This is a test")).isEqualTo("this-is-a-test");
+        assertThat(sut.deriveSlugFromName("This is a test ")).isEqualTo("this-is-a-test");
+        assertThat(sut.deriveSlugFromName("Nö, mog I net")).isEqualTo("n_-mog-i-net");
+        assertThat(sut.deriveSlugFromName("hey 😎 name")).isEqualTo("hey-_-name");
+        assertThat(sut.deriveSlugFromName("")).isEqualTo("");
+        assertThat(sut.deriveSlugFromName(null)).isEqualTo(null);
+        assertThat(sut.deriveSlugFromName("x")).isEqualTo("x__");
+        assertThat(sut.deriveSlugFromName("1")).isEqualTo("x1_");
+    }
+
+    @Test
+    public void thatGenerationOfUniqueSlugWorks()
+    {
+        ProjectService projectSerivce = Mockito.spy(sut);
+        when(projectSerivce.deriveUniqueSlug(any())).thenCallRealMethod();
+
+        when(projectSerivce.existsProjectWithSlug(any())).then(answer -> {
+            String slug = answer.getArgument(0, String.class);
+            char lastChar = slug.charAt(slug.length() - 1);
+            return lastChar < '9' || lastChar >= 'A';
+        });
+
+        assertThat(projectSerivce.deriveUniqueSlug("this-is-a-test")).isEqualTo("this-is-a-test-9");
+
+        assertThat(projectSerivce.deriveUniqueSlug(repeat('x', MAX_PROJECT_SLUG_LENGTH * 2)))
+                .isEqualTo(repeat('x', MAX_PROJECT_SLUG_LENGTH - 2) + "-9")
+                .hasSize(MAX_PROJECT_SLUG_LENGTH);
     }
 }

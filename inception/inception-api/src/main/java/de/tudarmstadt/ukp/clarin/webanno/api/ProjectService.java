@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static org.apache.commons.lang3.StringUtils.containsNone;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,6 +49,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.MDCContext;
 public interface ProjectService
 {
     String SERVICE_NAME = "projectService";
+
+    String PROJECT_NAME_ILLEGAL_CHARACTERS = "^/\\&*?+$![]";
+    int MIN_PROJECT_SLUG_LENGTH = 3;
+    int MAX_PROJECT_SLUG_LENGTH = 40;
 
     String PROJECT_FOLDER = "project";
     String DOCUMENT_FOLDER = "document";
@@ -193,35 +198,22 @@ public interface ProjectService
     void setProjectState(Project aProject, ProjectState aState);
 
     /**
-     * A method that check is a project exists with the same name already. getSingleResult() fails
-     * if the project is not created, hence existProject returns false.
+     * Check if a project with the given name already exists.
      *
      * @param name
      *            the project name.
      * @return if the project exists.
      */
-    boolean existsProject(String name);
+    boolean existsProjectWithName(String name);
 
     /**
-     * Check if there exists an project timestamp for this user and {@link Project}.
+     * Check if a project with the given URL slug already exists.
      *
-     * @param project
-     *            the project.
-     * @param username
-     *            the username.
-     * @return if a timestamp exists.
+     * @param aSlug
+     *            the project slug.
+     * @return if the project exists.
      */
-    boolean existsProjectTimeStamp(Project project, String username);
-
-    /**
-     * check if there exists a timestamp for at least one source document in aproject (add when a
-     * curator start curating)
-     *
-     * @param project
-     *            the project.
-     * @return if a timestamp exists.
-     */
-    boolean existsProjectTimeStamp(Project project);
+    boolean existsProjectWithSlug(String aSlug);
 
     /**
      * Get a timestamp of for this {@link Project} of this username
@@ -251,7 +243,7 @@ public interface ProjectService
      * @return {@link Project} object from the database or an error if the project is not found.
      *         Exception is handled from the calling method.
      */
-    Project getProject(String name);
+    Project getProjectBySlug(String name);
 
     /**
      * Get a project by its id.
@@ -483,5 +475,57 @@ public interface ProjectService
         Validate.notNull(MDC.get(KEY_REPOSITORY_PATH), "Repository path must be set in MDC");
 
         return MDCContext.open().with(KEY_PROJECT_ID, String.valueOf(aProject.getId()));
+    }
+
+    String deriveSlugFromName(String aName);
+
+    String deriveUniqueSlug(String aSlug);
+
+    /**
+     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
+     * will conflict with file naming system
+     * 
+     * @param aName
+     *            a name.
+     * @return if the name is valid.
+     */
+    static boolean isValidProjectName(String aName)
+    {
+        return aName != null && containsNone(aName, PROJECT_NAME_ILLEGAL_CHARACTERS);
+    }
+
+    static boolean isValidProjectSlug(String aSlug)
+    {
+        if (aSlug == null || aSlug.isEmpty()) {
+            return false;
+        }
+
+        if (aSlug.length() < MIN_PROJECT_SLUG_LENGTH || aSlug.length() > MAX_PROJECT_SLUG_LENGTH) {
+            return false;
+        }
+
+        // Must start with a letter character
+        if (!isValidProjectSlugInitialCharacter(aSlug.charAt(0))) {
+            return false;
+        }
+
+        // Must consist only of valid characters
+        for (int i = 0; i < aSlug.length(); i++) {
+            if (!isValidProjectSlugCharacter(aSlug.charAt(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    static boolean isValidProjectSlugInitialCharacter(char c)
+    {
+        return ('a' <= c && c <= 'z');
+    }
+
+    static boolean isValidProjectSlugCharacter(char c)
+    {
+        return ('0' <= c && c <= '9') || ('a' <= c && c <= 'z') || c == '-' || c == '_';
     }
 }

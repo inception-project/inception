@@ -302,7 +302,7 @@ public class AeroRemoteApiController
                         || (aCreator.isPresent() && aCreator.get().equals(user.getUsername())));
 
         // Existing project
-        if (projectService.existsProject(aName)) {
+        if (projectService.existsProjectWithName(aName)) {
             throw new ObjectExistsException("A project with name [" + aName + "] already exists");
         }
 

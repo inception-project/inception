@@ -131,14 +131,24 @@ public abstract class ProjectPageBase
                 return projectService.getProject(projectParameter.toLong());
             }
             catch (StringValueConversionException e) {
-                // Ignore lookup by ID and try lookup by name instead.
+                // Ignore lookup by ID and try lookup by slug instead.
             }
 
-            return projectService.getProject(projectParameter.toString());
+            return projectService.getProjectBySlug(projectParameter.toString());
         }
         catch (NoResultException e) {
             getSession().error("Project [" + projectParameter + "] does not exist");
             throw new RestartResponseException(getApplication().getHomePage());
+        }
+    }
+
+    public static void addProjectPageParameter(PageParameters aParameters, Project aProject)
+    {
+        if (aProject.getSlug() != null) {
+            aParameters.add(PAGE_PARAM_PROJECT, aProject.getSlug());
+        }
+        else {
+            aParameters.add(PAGE_PARAM_PROJECT, aProject.getId());
         }
     }
 }

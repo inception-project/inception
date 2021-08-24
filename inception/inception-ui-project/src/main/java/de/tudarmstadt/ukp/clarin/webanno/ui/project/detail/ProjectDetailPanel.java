@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.isValidProjectName;
+import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.isValidProjectSlug;
+import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -53,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 
 public class ProjectDetailPanel
     extends Panel
@@ -76,13 +78,41 @@ public class ProjectDetailPanel
 
         projectModel = aModel;
 
+        // Ok, so by just opening a project in the detail panel, a slug will be generated and since
+        // this typically happens in the request where the project was loaded from the DB, changing
+        // a field in the project will propagate back to the DB via Hibernate magic. It may actually
+        // not be a bad thing because it means that the slugs get populate over time just as part
+        // of regular usage.
+        if (projectModel.isPresent().getObject() && isBlank(projectModel.getObject().getSlug())) {
+            Project project = projectModel.getObject();
+            String slug = projectService.deriveSlugFromName(project.getName());
+            slug = projectService.deriveUniqueSlug(slug);
+            // Just a safe-guard in case we would generate an invalid slug which we would not want
+            // to get written back to the database
+            if (ProjectService.isValidProjectSlug(slug)) {
+                project.setSlug(slug);
+            }
+            else {
+                LOG.warn(
+                        "Tried to derive a project slug from the project name [{}], but the "
+                                + "derived slug [{}] is not valid - leaving the slug empty.",
+                        project.getName(), slug);
+            }
+        }
+
         Form<Project> form = new Form<>("form", CompoundPropertyModel.of(aModel));
         add(form);
 
+        TextField<String> projectSlugTextField = new TextField<>("slug");
+        projectSlugTextField.setRequired(true);
+        projectSlugTextField.add(new ProjectWithSlugAlreadyExistsValidator());
+        projectSlugTextField.add(new ProjectSlugIsValidValidator());
+        form.add(projectSlugTextField);
+
         TextField<String> projectNameTextField = new TextField<>("name");
         projectNameTextField.setRequired(true);
-        projectNameTextField.add(new ProjectExistsValidator());
-        projectNameTextField.add(new ProjectNameValidator());
+        projectNameTextField.add(new ProjectWithNameAlreadyExistsValidator());
+        projectNameTextField.add(new ProjectNameIsValidValidator());
         form.add(projectNameTextField);
 
         // If we run in development mode, then also show the ID of the project
@@ -94,7 +124,7 @@ public class ProjectDetailPanel
 
         DropDownChoice<ScriptDirection> scriptDirection = new DropDownChoice<>("scriptDirection");
         scriptDirection.setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        scriptDirection.setChoices(Arrays.asList(ScriptDirection.values()));
+        scriptDirection.setChoices(asList(ScriptDirection.values()));
         form.add(scriptDirection);
 
         form.add(new CheckBox("disableExport").setOutputMarkupPlaceholderTag(true));
@@ -137,7 +167,24 @@ public class ProjectDetailPanel
         }
     }
 
-    private class ProjectNameValidator
+    private class ProjectSlugIsValidValidator
+        implements IValidator<String>
+    {
+        private static final long serialVersionUID = 2143631682062991287L;
+
+        @Override
+        public void validate(IValidatable<String> aValidatable)
+        {
+            String newSlug = aValidatable.getValue();
+            if (isNotBlank(newSlug) && !isValidProjectSlug(newSlug)) {
+                aValidatable.error(new ValidationError(
+                        "Project URL slug can consist only of lower-case letters [a-z], "
+                                + "numbers [0-9], [-] or [_]. It must start with a letter."));
+            }
+        }
+    }
+
+    private class ProjectNameIsValidValidator
         implements IValidator<String>
     {
         private static final long serialVersionUID = -2198422133042040370L;
@@ -146,14 +193,32 @@ public class ProjectDetailPanel
         public void validate(IValidatable<String> aValidatable)
         {
             String newName = aValidatable.getValue();
-            if (isNotBlank(newName) && !NameUtil.isNameValid(newName)) {
+            if (isNotBlank(newName) && !isValidProjectName(newName)) {
                 aValidatable.error(new ValidationError(
                         "Project name shouldn't contain characters such as /\\*?&!$+[^]"));
             }
         }
     }
 
-    private class ProjectExistsValidator
+    private class ProjectWithSlugAlreadyExistsValidator
+        implements IValidator<String>
+    {
+        private static final long serialVersionUID = 4424913151386159625L;
+
+        @Override
+        public void validate(IValidatable<String> aValidatable)
+        {
+            String newSlug = aValidatable.getValue();
+            String oldSlug = aValidatable.getModel().getObject();
+            if (!StringUtils.equals(newSlug, oldSlug) && isNotBlank(newSlug)
+                    && projectService.existsProjectWithSlug(newSlug)) {
+                aValidatable.error(new ValidationError(
+                        "Another project with this URL slug exists. Please try a different one."));
+            }
+        }
+    }
+
+    private class ProjectWithNameAlreadyExistsValidator
         implements IValidator<String>
     {
         private static final long serialVersionUID = -267638869839503827L;
@@ -164,7 +229,7 @@ public class ProjectDetailPanel
             String newName = aValidatable.getValue();
             String oldName = aValidatable.getModel().getObject();
             if (!StringUtils.equals(newName, oldName) && isNotBlank(newName)
-                    && projectService.existsProject(newName)) {
+                    && projectService.existsProjectWithName(newName)) {
                 aValidatable.error(new ValidationError(
                         "Another project with the same name exists. Please try a different name"));
             }

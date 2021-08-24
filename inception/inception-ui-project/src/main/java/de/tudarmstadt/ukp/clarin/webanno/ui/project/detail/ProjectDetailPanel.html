@@ -30,6 +30,14 @@
             <span class="form-control" readonly><wicket:container wicket:id="id" /></span>
           </div>
         </div>
+        <div class="row form-row" wicket:enclosure="slug">
+          <label wicket:for="slug" class="col-sm-2 col-form-label">
+            <wicket:label key="slug"/>
+          </label>
+          <div class="col-sm-10">
+            <input wicket:id="slug" class="form-control"/>
+          </div>
+        </div>
         <div class="row form-row" wicket:enclosure="name">
           <label wicket:for="name" class="col-sm-2 col-form-label">
             <wicket:label key="name"/>

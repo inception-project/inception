@@ -52,6 +52,9 @@ public class Project
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = true)
+    private String slug;
+
     @Lob
     @Column(length = 64000)
     private String description;
@@ -114,6 +117,16 @@ public class Project
     public void setName(String aName)
     {
         name = aName;
+    }
+
+    public void setSlug(String aSlug)
+    {
+        slug = aSlug;
+    }
+
+    public String getSlug()
+    {
+        return slug;
     }
 
     public String getDescription()
