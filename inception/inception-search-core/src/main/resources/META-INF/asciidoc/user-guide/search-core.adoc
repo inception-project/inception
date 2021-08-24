@@ -2,9 +2,9 @@
 == Search
 
 The search module allows to search for words, passages and annotations made in the 
-documents of a given project. Currently, the default search is provided by *Mtas*
-(Multi Tier Annotation Search), a Lucene/Solr based search and indexing mechanism developed by
-Meertens Institut (https://meertensinstituut.github.io/mtas).
+documents of a given project. Currently, the default search is provided by *MTAS*
+(Multi Tier Annotation Search), a Lucene/Solr based search and indexing mechanism 
+(https://github.com/textexploration/mtas).
 
 To perform a search, access the search sidebar located at the left of the screen, write a query and
 press the *Search* button. The results are shown below the query in a KWIC (keyword in context)
@@ -30,11 +30,12 @@ Clicking on the search settings button (cog wheel) shows additional options:
   feature. By default the search results will be grouped by document title if no layer and no
   feature is selected.
 * **Low level paging** will apply paging of search results directly at query
-    level. This means only the next _n_ results are fetched every time a user switches to a new page
-    of results (where _n_ is the page size). Thus the total number of results for a result group is unknown. This option should
-    be activated if a query is expected to yield a very large number of results so that fetching all
-    results at once would slow down the application too much. +
-    This option can only be activated if results are being grouped by document.
+  level. This means only the next _n_ results are fetched every time a user switches to a new page
+  of results (where _n_ is the page size). Thus the total number of results for a result group is 
+  unknown. This option should be activated if a query is expected to yield a very large number of
+  results so that fetching all results at once would slow down the application too much.
+  +
+  This option can only be activated if results are being grouped by document.
 
 
 === Creating/Deleting Annotations for Search Results
@@ -52,6 +53,9 @@ The currently selected annotation in the annotation editor serves as template fo
 that are to be created/deleted. Note that selecting an annotation first is necessary for
 creating/deleting annotations in this way.
 
+NOTE: The slots and slot fillers of slot features are not copied from the template to newly created
+      annotations.
+
 Clicking on the create settings button (cog wheel) shows additional options:
 
 * **Override existing** will override an existing annotation of the same layer at a target location.
@@ -63,4 +67,6 @@ Clicking on the delete settings button (cog wheel) shows additional options:
 * **Delete only matching feature values** will only delete annotations at search results that
     exactly match the currently selected annotation including all feature values. If this option is
     disabled all annotations with the same layer as the currently selected annotation will be
-    deleted regardless of their feature values.
+    deleted regardless of their feature values. Note that slot features are not taken into account
+    when matching the selected annotation against candidates to be deleted.
+

@@ -1116,8 +1116,10 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier)
     {
         try (StopWatch watch = new StopWatch(log, "readHandle(%s)", aIdentifier)) {
-            SPARQLQuery query = SPARQLQueryBuilder.forItems(aKB).withIdentifier(aIdentifier)
-                    .retrieveLabel();
+            SPARQLQuery query = SPARQLQueryBuilder.forItems(aKB) //
+                    .withIdentifier(aIdentifier) //
+                    .retrieveLabel() //
+                    .retrieveDescription();
 
             Optional<KBHandle> result;
             if (aKB.isReadOnly()) {

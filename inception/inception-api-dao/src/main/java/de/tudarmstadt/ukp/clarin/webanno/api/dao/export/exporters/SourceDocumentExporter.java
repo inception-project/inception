@@ -74,7 +74,7 @@ public class SourceDocumentExporter
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
-        throws IOException, ProjectExportException
+        throws IOException, ProjectExportException, InterruptedException
     {
         exportSourceDocuments(aRequest.getProject(), aExProject);
         exportSourceDocumentContents(aRequest, aMonitor, aExProject, aStage);
@@ -103,7 +103,7 @@ public class SourceDocumentExporter
 
     private void exportSourceDocumentContents(ProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
-        throws IOException, ProjectExportException
+        throws IOException, ProjectExportException, InterruptedException
     {
         Project project = aRequest.getProject();
         File sourceDocumentDir = new File(aStage, SOURCE_FOLDER);
@@ -112,6 +112,11 @@ public class SourceDocumentExporter
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
         int i = 1;
         for (SourceDocument sourceDocument : documents) {
+            // check if the export has been cancelled
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+            
             try {
                 FileUtils.copyFileToDirectory(documentService.getSourceDocumentFile(sourceDocument),
                         sourceDocumentDir);

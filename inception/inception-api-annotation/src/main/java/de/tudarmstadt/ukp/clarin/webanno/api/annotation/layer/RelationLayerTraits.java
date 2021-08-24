@@ -19,9 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RelationLayerTraits
     implements Serializable, ColoringRulesTrait
 {

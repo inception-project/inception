@@ -41,7 +41,7 @@ public class ProjectExportFullProjectTask
 
     @Override
     public File export(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
-        throws ProjectExportException, IOException
+        throws ProjectExportException, IOException, InterruptedException
     {
         return exportService.exportProject(aRequest, aMonitor);
     }

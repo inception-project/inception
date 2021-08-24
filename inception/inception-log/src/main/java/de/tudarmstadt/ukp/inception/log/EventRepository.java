@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.log;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Consumer;
+
+import org.apache.commons.lang3.function.FailableConsumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
@@ -37,7 +38,7 @@ public interface EventRepository
     List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
             String aEventType, int aMaxSize, long aRecommenderId);
 
-    void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer);
+    <E extends Throwable> void forEachLoggedEvent(Project aProject, FailableConsumer<LoggedEvent, E> aConsumer);
 
     /**
      * Get the aMaxSize amount of logged events of the given types, user name and project for every
