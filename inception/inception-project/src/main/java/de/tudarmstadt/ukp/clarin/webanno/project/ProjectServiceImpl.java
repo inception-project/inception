@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -776,9 +777,11 @@ public class ProjectServiceImpl
     }
 
     @EventListener
+    @Transactional
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
+        addMissingProjectSlugs();
     }
 
     /* package private */ void init()
@@ -806,6 +809,34 @@ public class ProjectServiceImpl
         log.info("Found [{}] project initializers", inits.size());
 
         initializers = unmodifiableList(inits);
+    }
+
+    private void addMissingProjectSlugs()
+    {
+        String query = "SELECT p FROM Project p WHERE slug IS NULL";
+        List<Project> projects = entityManager.createQuery(query, Project.class).getResultList();
+        for (Project project : projects) {
+            String slug = deriveSlugFromName(project.getName());
+            if (!ProjectService.isValidProjectSlug(slug)) {
+                log.warn("Attempt to derive slug from project name [{}] resulted in invalid slug "
+                        + "[{}], generating random slug...", project.getName(), slug);
+                slug = generateRandomSlug();
+            }
+            slug = deriveUniqueSlug(slug);
+            project.setSlug(slug);
+            log.info("Auto-generated slug [{}] for project {}", slug, project);
+        }
+    }
+
+    private String generateRandomSlug()
+    {
+        String validChars = "abcdefghijklmnopqrstuvwxyz";
+        Random rnd = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 32; i++) {
+            sb.append(validChars.charAt(rnd.nextInt(validChars.length())));
+        }
+        return sb.toString();
     }
 
     @Override

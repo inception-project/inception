@@ -1319,5 +1319,11 @@
       tableName="project" 
       constraintName="UK_project_slug"
       columnNames="slug" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210827-1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="project"
+      constraintName="UK3k75vvu7mevyvvb5may5lj8k7" />
   </changeSet>  
 </databaseChangeLog>

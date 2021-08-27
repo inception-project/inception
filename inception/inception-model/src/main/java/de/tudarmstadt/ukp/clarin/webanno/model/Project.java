@@ -249,7 +249,7 @@ public class Project
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((slug == null) ? 0 : slug.hashCode());
         return result;
     }
 
@@ -266,12 +266,12 @@ public class Project
             return false;
         }
         Project other = (Project) obj;
-        if (name == null) {
-            if (other.name != null) {
+        if (slug == null) {
+            if (other.slug != null) {
                 return false;
             }
         }
-        else if (!name.equals(other.name)) {
+        else if (!slug.equals(other.slug)) {
             return false;
         }
         return true;

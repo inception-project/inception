@@ -269,7 +269,7 @@ public class ProjectExportServiceImpl
         try {
             ExportedProject exProject = loadExportedProject(aZip);
 
-            project.setName(deriveUniqueProjectName(exProject.getName()));
+            project.setName(exProject.getName());
 
             // Old projects do not have a slug, so we derive one from the project name
             String slug = exProject.getSlug();
@@ -315,28 +315,6 @@ public class ProjectExportServiceImpl
                 formatDurationWords(currentTimeMillis() - start, true, true));
 
         return project;
-    }
-
-    /**
-     * Get a project name to be used when importing. Use the prefix, copy_of_...+ i to avoid
-     * conflicts
-     * 
-     * @deprecated The project name will no longer be unique soon - only the URL slug will be
-     *             unique.
-     */
-    @Deprecated
-    private String deriveUniqueProjectName(String aProjectName)
-    {
-        String projectName = aProjectName;
-        int i = 0;
-        while (true) {
-            if (!projectService.existsProjectWithName(projectName)) {
-                return projectName;
-            }
-
-            i++;
-            projectName = "copy_of_" + aProjectName + "(" + i + ")";
-        }
     }
 
     public static ExportedProject loadExportedProject(ZipFile aZip) throws IOException
