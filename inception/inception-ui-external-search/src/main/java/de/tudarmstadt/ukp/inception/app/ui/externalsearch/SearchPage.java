@@ -230,11 +230,13 @@ public class SearchPage
             }
             add(new Label("highlight", highlight).setEscapeModelStrings(false));
 
+            PageParameters titleLinkPageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(titleLinkPageParameters, getProject());
+            titleLinkPageParameters.set(PAGE_PARAM_REPOSITORY_ID, result.getRepository().getId());
+            titleLinkPageParameters.set(PAGE_PARAM_COLLECTION_ID, result.getCollectionId());
+            titleLinkPageParameters.set(PAGE_PARAM_DOCUMENT_ID, result.getDocumentId());
             Link<Void> link = new BookmarkablePageLink<>("titleLink", DocumentDetailsPage.class,
-                    new PageParameters().add(PAGE_PARAM_PROJECT, getProject().getId())
-                            .add(PAGE_PARAM_REPOSITORY_ID, result.getRepository().getId())
-                            .add(PAGE_PARAM_COLLECTION_ID, result.getCollectionId())
-                            .add(PAGE_PARAM_DOCUMENT_ID, result.getDocumentId()));
+                    titleLinkPageParameters);
             link.add(new Label("title",
                     defaultIfBlank(result.getDocumentTitle(), defaultIfBlank(result.getDocumentId(),
                             defaultIfBlank(result.getOriginalUri(), "<no title>")))));
@@ -249,9 +251,11 @@ public class SearchPage
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
                     .add(visibleWhen(() -> !existsSourceDocument)));
 
+            PageParameters openLinkPageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(openLinkPageParameters, getProject());
+            openLinkPageParameters.set(AnnotationPage.PAGE_PARAM_DOCUMENT, result.getDocumentId());
             Link<Void> openLink = new BookmarkablePageLink<>("openLink", AnnotationPage.class,
-                    new PageParameters().add(PAGE_PARAM_PROJECT, getProject().getId())
-                            .add(AnnotationPage.PAGE_PARAM_DOCUMENT, result.getDocumentId()));
+                    openLinkPageParameters);
             openLink.add(visibleWhen(() -> existsSourceDocument));
             add(openLink);
 

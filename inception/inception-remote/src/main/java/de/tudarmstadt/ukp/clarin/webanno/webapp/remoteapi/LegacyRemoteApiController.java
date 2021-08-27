@@ -144,7 +144,7 @@ public class LegacyRemoteApiController
         }
 
         // Existing project
-        if (projectRepository.existsProject(aName)) {
+        if (projectRepository.existsProjectWithName(aName)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("A project with name [" + aName + "] already exists");
         }
@@ -160,7 +160,7 @@ public class LegacyRemoteApiController
         LOG.info("Creating project [" + aName + "]");
         Project project = new Project();
         project.setName(aName);
-        projectRepository.createProject(project);
+        project = projectRepository.createProject(project);
         projectRepository.initializeProject(project);
 
         // Create permission for the project creator
@@ -213,8 +213,7 @@ public class LegacyRemoteApiController
         LOG.info("Successfully created project [" + aName + "] for user [" + username + "]");
 
         JSONObject projectJSON = new JSONObject();
-        long pId = projectRepository.getProject(aName).getId();
-        projectJSON.append(aName, pId);
+        projectJSON.append(aName, project.getId());
         return ResponseEntity.ok(projectJSON.toString());
     }
 

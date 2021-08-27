@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static org.apache.commons.lang3.StringUtils.containsNone;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +51,10 @@ public interface ProjectService
 {
     String SERVICE_NAME = "projectService";
 
+    String PROJECT_NAME_ILLEGAL_CHARACTERS = "^/\\&*?+$![]";
+    int MIN_PROJECT_SLUG_LENGTH = 3;
+    int MAX_PROJECT_SLUG_LENGTH = 40;
+
     String PROJECT_FOLDER = "project";
     String DOCUMENT_FOLDER = "document";
     String SOURCE_FOLDER = "source";
@@ -61,63 +67,63 @@ public interface ProjectService
     /**
      * creates a project permission, adding permission level for the user in the given project
      *
-     * @param permission
+     * @param aPermission
      *            the permission
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
-    void createProjectPermission(ProjectPermission permission);
+    void createProjectPermission(ProjectPermission aPermission);
 
-    void removeProjectPermission(ProjectPermission projectPermission);
+    void removeProjectPermission(ProjectPermission aPermission);
 
     /**
      * Check if a user have at least one {@link PermissionLevel } for this {@link Project}
      *
-     * @param user
+     * @param aUser
      *            the user.
-     * @param project
+     * @param aProject
      *            the project.
      *
      * @return if the project permission exists.
      */
-    boolean existsProjectPermission(User user, Project project);
+    boolean existsProjectPermission(User aUser, Project aProject);
 
     /**
      * Check if there is already a {@link PermissionLevel} on a given {@link Project} for a given
      * {@link User}
      *
-     * @param user
+     * @param aUser
      *            the user.
-     * @param project
+     * @param aProject
      *            the project.
-     * @param level
+     * @param aLevel
      *            the permission level.
      *
      * @return if the permission exists.
      */
-    boolean existsProjectPermissionLevel(User user, Project project, PermissionLevel level);
+    boolean existsProjectPermissionLevel(User aUser, Project aProject, PermissionLevel aLevel);
 
     /**
      * Get a {@link ProjectPermission }objects where a project is member of. We need to get them,
      * for example if the associated {@link Project} is deleted, the {@link ProjectPermission }
      * objects too.
      *
-     * @param project
+     * @param aProject
      *            The project contained in a projectPermision
      * @return the {@link ProjectPermission } list to be analysed.
      */
-    List<ProjectPermission> getProjectPermissions(Project project);
+    List<ProjectPermission> getProjectPermissions(Project aProject);
 
     /**
      * Get list of permissions a user have in a given project
      *
-     * @param user
+     * @param aUser
      *            the user.
-     * @param project
+     * @param aProject
      *            the project.
      *
      * @return the permissions.
      */
-    List<ProjectPermission> listProjectPermissionLevel(User user, Project project);
+    List<ProjectPermission> listProjectPermissionLevel(User aUser, Project aProject);
 
     List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
 
@@ -129,22 +135,22 @@ public interface ProjectService
     /**
      * List Users those with some {@link PermissionLevel}s in the project
      *
-     * @param project
+     * @param aProject
      *            the project.
      * @return the users.
      */
-    List<User> listProjectUsersWithPermissions(Project project);
+    List<User> listProjectUsersWithPermissions(Project aProject);
 
     /**
      * List of users with the a given {@link PermissionLevel}
      *
-     * @param project
+     * @param aProject
      *            The {@link Project}
-     * @param permissionLevel
+     * @param aPermissionLevel
      *            The {@link PermissionLevel}
      * @return the users.
      */
-    List<User> listProjectUsersWithPermissions(Project project, PermissionLevel permissionLevel);
+    List<User> listProjectUsersWithPermissions(Project aProject, PermissionLevel aPermissionLevel);
 
     /**
      * Removes all permissions for the given user to the given proejct.
@@ -165,21 +171,21 @@ public interface ProjectService
      * time the project is created, an associated project path will be created on the file system as
      * {@code webanno.home/project/Project.id }
      *
-     * @param project
+     * @param aProject
      *            The {@link Project} object to be created.
      * @throws IOException
      *             If the specified webanno.home directory is not available no write permission
      * @return the project;
      */
-    Project createProject(Project project) throws IOException;
+    Project createProject(Project aProject) throws IOException;
 
     /**
      * Update a project. This is only necessary when dealing with a detached project entity.
      * 
-     * @param project
+     * @param aProject
      *            The {@link Project} object to be updated.
      */
-    void updateProject(Project project);
+    void updateProject(Project aProject);
 
     /**
      * Update the project state and issue a {@link ProjectStateChangedEvent} if necessary. Make sure
@@ -193,74 +199,61 @@ public interface ProjectService
     void setProjectState(Project aProject, ProjectState aState);
 
     /**
-     * A method that check is a project exists with the same name already. getSingleResult() fails
-     * if the project is not created, hence existProject returns false.
+     * Check if a project with the given name already exists.
      *
-     * @param name
+     * @param aName
      *            the project name.
      * @return if the project exists.
      */
-    boolean existsProject(String name);
+    boolean existsProjectWithName(String aName);
 
     /**
-     * Check if there exists an project timestamp for this user and {@link Project}.
+     * Check if a project with the given URL slug already exists.
      *
-     * @param project
-     *            the project.
-     * @param username
-     *            the username.
-     * @return if a timestamp exists.
+     * @param aSlug
+     *            the project slug.
+     * @return if the project exists.
      */
-    boolean existsProjectTimeStamp(Project project, String username);
-
-    /**
-     * check if there exists a timestamp for at least one source document in aproject (add when a
-     * curator start curating)
-     *
-     * @param project
-     *            the project.
-     * @return if a timestamp exists.
-     */
-    boolean existsProjectTimeStamp(Project project);
+    boolean existsProjectWithSlug(String aSlug);
 
     /**
      * Get a timestamp of for this {@link Project} of this username
      *
-     * @param project
+     * @param aProject
      *            the project.
-     * @param username
+     * @param aUsername
      *            the username.
      * @return the timestamp.
      */
-    Date getProjectTimeStamp(Project project, String username);
+    Date getProjectTimeStamp(Project aProject, String aUsername);
 
     /**
      * get the timestamp, of the curator, if exist
      *
-     * @param project
+     * @param aProject
      *            the project.
      * @return the timestamp.
      */
-    Date getProjectTimeStamp(Project project);
+    Date getProjectTimeStamp(Project aProject);
 
     /**
      * Get a {@link Project} from the database the name of the Project
      *
-     * @param name
-     *            name of the project
+     * @param aSlug
+     *            URL slug of the project
      * @return {@link Project} object from the database or an error if the project is not found.
      *         Exception is handled from the calling method.
      */
-    Project getProject(String name);
+    Project getProjectBySlug(String aSlug);
 
     /**
      * Get a project by its id.
      *
-     * @param id
+     * @param aId
      *            the ID.
      * @return the project.
      */
-    Project getProject(long id);
+    Project getProject(long aId);
 
     /**
      * List all Projects. If the user logged have a ROLE_ADMIN, he can see all the projects.
@@ -274,13 +267,13 @@ public interface ProjectService
      * Remove a project. A ROLE_ADMIN or project admin can remove a project. removing a project will
      * remove associated source documents and annotation documents.
      *
-     * @param project
+     * @param aProject
      *            the project to be deleted
      * @throws IOException
      *             if the project to be deleted is not available in the file system
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void removeProject(Project project) throws IOException;
+    void removeProject(Project aProject) throws IOException;
 
     /**
      * List projects accessible by current user
@@ -320,27 +313,28 @@ public interface ProjectService
     /**
      * Export the associated project log for this {@link Project} while copying a project
      *
-     * @param project
+     * @param aProject
      *            the project.
      * @return the log file.
      */
-    File getProjectLogFile(Project project);
+    File getProjectLogFile(Project aProject);
 
-    File getMetaInfFolder(Project project);
+    File getMetaInfFolder(Project aProject);
 
     /**
      * Save some properties file associated to a project, such as meta-data.properties
      *
-     * @param project
+     * @param aProject
      *            The project for which the user save some properties file.
-     * @param is
+     * @param aInputStream
      *            the properties file.
-     * @param fileName
+     * @param aFileName
      *            the file name.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void savePropertiesFile(Project project, InputStream is, String fileName) throws IOException;
+    void savePropertiesFile(Project aProject, InputStream aInputStream, String aFileName)
+        throws IOException;
 
     // --------------------------------------------------------------------------------------------
     // Methods related to guidelines
@@ -349,68 +343,69 @@ public interface ProjectService
     /**
      * Write this {@code content} of the guideline file in the project;
      *
-     * @param project
+     * @param aProject
      *            the project.
-     * @param content
+     * @param aContent
      *            the guidelines.
-     * @param fileName
+     * @param aFileName
      *            the filename.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void createGuideline(Project project, File content, String fileName) throws IOException;
+    void createGuideline(Project aProject, File aContent, String aFileName) throws IOException;
 
-    void createGuideline(Project project, InputStream content, String fileName) throws IOException;
+    void createGuideline(Project aProject, InputStream aContent, String aFileName)
+        throws IOException;
 
     /**
      * get the annotation guideline document from the file system
      *
-     * @param project
+     * @param aProject
      *            the project.
-     * @param fileName
+     * @param aFileName
      *            the filename.
      * @return the file.
      */
-    File getGuideline(Project project, String fileName);
+    File getGuideline(Project aProject, String aFileName);
 
     /**
      * Export the associated project guideline for this {@link Project} while copying a project
      *
-     * @param project
+     * @param aProject
      *            the project.
      * @return the file.
      */
-    File getGuidelinesFolder(Project project);
+    File getGuidelinesFolder(Project aProject);
 
     /**
      * List annotation guideline document already uploaded
      *
-     * @param project
+     * @param aProject
      *            the project.
      * @return the filenames.
      */
-    List<String> listGuidelines(Project project);
+    List<String> listGuidelines(Project aProject);
 
     /**
      * Checks if the given project defines any guidelines.
      *
-     * @param project
+     * @param aProject
      *            the project.
      * @return the filenames.
      */
-    boolean hasGuidelines(Project project);
+    boolean hasGuidelines(Project aProject);
 
     /**
      * Remove an annotation guideline document from the file system
      *
-     * @param project
+     * @param aProject
      *            the project.
-     * @param fileName
+     * @param aFileName
      *            the filename.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void removeGuideline(Project project, String fileName) throws IOException;
+    void removeGuideline(Project aProject, String aFileName) throws IOException;
 
     // --------------------------------------------------------------------------------------------
     // Methods related to permissions
@@ -419,7 +414,7 @@ public interface ProjectService
     /**
      * Can the given user access the project setting of <b>some</b> project.
      */
-    public boolean managesAnyProject(User user);
+    public boolean managesAnyProject(User aUser);
 
     /**
      * Determine if the user is allowed to update a project.
@@ -483,5 +478,58 @@ public interface ProjectService
         Validate.notNull(MDC.get(KEY_REPOSITORY_PATH), "Repository path must be set in MDC");
 
         return MDCContext.open().with(KEY_PROJECT_ID, String.valueOf(aProject.getId()));
+    }
+
+    String deriveSlugFromName(String aName);
+
+    String deriveUniqueSlug(String aSlug);
+
+    /**
+     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
+     * will conflict with file naming system
+     * 
+     * @param aName
+     *            a name.
+     * @return if the name is valid.
+     */
+    static boolean isValidProjectName(String aName)
+    {
+        return aName != null && containsNone(aName, PROJECT_NAME_ILLEGAL_CHARACTERS);
+    }
+
+    static boolean isValidProjectSlug(String aSlug)
+    {
+        if (isEmpty(aSlug)) {
+            return false;
+        }
+
+        if (aSlug.length() < MIN_PROJECT_SLUG_LENGTH || aSlug.length() > MAX_PROJECT_SLUG_LENGTH) {
+            return false;
+        }
+
+        // Must start with a letter character
+        if (!isValidProjectSlugInitialCharacter(aSlug.charAt(0))) {
+            return false;
+        }
+
+        // Must consist only of valid characters
+        for (int i = 0; i < aSlug.length(); i++) {
+            if (!isValidProjectSlugCharacter(aSlug.charAt(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    static boolean isValidProjectSlugInitialCharacter(char aChar)
+    {
+        return ('a' <= aChar && aChar <= 'z');
+    }
+
+    static boolean isValidProjectSlugCharacter(char aChar)
+    {
+        return ('0' <= aChar && aChar <= '9') || ('a' <= aChar && aChar <= 'z') || aChar == '-'
+                || aChar == '_';
     }
 }

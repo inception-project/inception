@@ -79,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.AjaxProjectImportedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
@@ -202,9 +203,10 @@ public class ProjectsOverviewPage
 
         List<ProjectEntry> projects = allAccessibleProjects.getObject();
         if (projects.size() == 1) {
-            Project onlyAccessibleProject = projects.get(0).getProject();
-            throw new RestartResponseException(ProjectDashboardPage.class, new PageParameters()
-                    .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, onlyAccessibleProject.getId()));
+            Project soleAccessibleProject = projects.get(0).getProject();
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, soleAccessibleProject);
+            throw new RestartResponseException(ProjectDashboardPage.class, pageParameters);
         }
     }
 
@@ -282,8 +284,8 @@ public class ProjectsOverviewPage
             {
                 Project project = aItem.getModelObject().getProject();
 
-                PageParameters pageParameters = new PageParameters()
-                        .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId());
+                PageParameters pageParameters = new PageParameters();
+                ProjectPageBase.setProjectPageParameter(pageParameters, project);
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
@@ -459,8 +461,8 @@ public class ProjectsOverviewPage
 
             projectService.initializeProject(project, asList(aInitializer));
 
-            PageParameters pageParameters = new PageParameters()
-                    .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId());
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, project);
             setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
         catch (IOException e) {
@@ -478,7 +480,7 @@ public class ProjectsOverviewPage
         String projectName = aProjectName;
         int i = 1;
         while (true) {
-            if (projectService.existsProject(projectName)) {
+            if (projectService.existsProjectWithName(projectName)) {
                 projectName = aProjectName + " (" + i + ")";
                 i++;
             }
@@ -506,8 +508,9 @@ public class ProjectsOverviewPage
         if (!projects.isEmpty()) {
             Project project = projects.get(0);
             getSession().success("Project [" + project.getName() + "] successfully imported");
-            setResponsePage(ProjectDashboardPage.class, new PageParameters()
-                    .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId()));
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, project);
+            setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
     }
 
