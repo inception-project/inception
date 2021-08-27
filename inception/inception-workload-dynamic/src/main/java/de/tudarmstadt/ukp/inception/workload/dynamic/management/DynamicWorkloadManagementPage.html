@@ -38,19 +38,19 @@
   }
 </style>
 <script>
-$( document ).ready(function() { 
-  // Prevent the dropdowns from closing if an item Kendo dropdown is selected
-  $('.sticky-dropdown').on('hide.bs.dropdown', function(e) {
-    if ($(event.target).parents('.k-popup').length) {
-      e.preventDefault();
-    }
+  $( document ).ready(function() { 
+    // Prevent the dropdowns from closing if an item Kendo dropdown is selected
+    $('.sticky-dropdown').on('hide.bs.dropdown', function(e) {
+      if ($(e.clickEvent.target).parents('.k-popup, .cbx-icon').length) {
+        e.preventDefault();
+      }
+    });
   });
-});
 </script>
 </wicket:head>
 <body>
   <wicket:extend>
-    <div class="flex-content flex-h-container flex-gutter">
+    <div class="flex-content flex-h-container flex-gutter overflow-hidden">
       <div class="flex-content flex-v-container flex-gutter">
         <div class="card">
           <div class="card-header border-bottom-0" style="position: relative">
@@ -65,10 +65,10 @@ $( document ).ready(function() {
             <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
               <button
                 class="btn btn-action btn-secondary dropdown-toggle flex-content"
-                type="button" data-toggle="dropdown">
+                type="button" data-bs-toggle="dropdown">
                 <i class="fas fa-filter"></i>
                 <span class="d-none d-lg-inline">
-                  &nbsp;<wicket:message key="Filter" />
+                  &nbsp;<wicket:message key="filter" />
                 </span>
               </button> 
               <div class="dropdown-menu shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
@@ -78,7 +78,7 @@ $( document ).ready(function() {
                     <wicket:message key="filterHeader" />
                   </div>
                   <div class="card-body">
-                    <div class="form-group form-row">
+                    <div class="row form-row">
                       <label class="col-form-label col-sm-3"> <wicket:message
                           key="userFilterText" />
                       </label>
@@ -86,7 +86,7 @@ $( document ).ready(function() {
                         <input wicket:id="userFilter" type="text" class="form-control" />
                       </div>
                     </div>
-                    <div class="form-group form-row">
+                    <div class="row form-row">
                       <label class="col-form-label col-sm-3"> <wicket:message
                           key="documentFilterText" />
                       </label>
@@ -94,7 +94,7 @@ $( document ).ready(function() {
                         <input wicket:id="documentFilter" type="text" class="form-control" />
                       </div>
                     </div>
-                    <div class="form-group form-row">
+                    <div class="row form-row">
                       <label class="col-form-label col-sm-3"> <wicket:message
                           key="dateFilterText" />
                       </label>
@@ -102,14 +102,14 @@ $( document ).ready(function() {
                         <span wicket:id="date"></span>
                       </div>
                     </div>
-                    <div class="form-group form-row">
+                    <div class="row form-row">
                       <div class="offset-sm-3 col-sm-9">
                         <input class="bootstrap-datetimepicker-widget" wicket:id="from"
                           type="date" /> <input class="bootstrap-datetimepicker-widget"
                           wicket:id="to" type="date" />
                       </div>
                     </div>
-                    <div class="form-group form-row">
+                    <div class="row form-row">
                       <div class="offset-sm-3 col-sm-9">
                         <div class="form-check">
                           <input wicket:id="unused" class="form-check-input" type="checkbox">
@@ -134,7 +134,7 @@ $( document ).ready(function() {
             <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
               <button
                 class="btn btn-action btn-secondary dropdown-toggle flex-content dd-annotator"
-                type="button" data-toggle="dropdown">
+                type="button" data-bs-toggle="dropdown">
                 <i class="fas fa-user"></i>
                 <span class="d-none d-lg-inline">
                   &nbsp;<wicket:message key="Annotators" />
@@ -161,7 +161,7 @@ $( document ).ready(function() {
                           <wicket:message key="assignDocument" />
                         </div>
                         <div class="card-body flex-content" style="height: 200px">
-                          <div class="form-group">
+                          <div class="">
                             <select wicket:id="documentsToAdd" class="form-control"
                               data-container="body" style="display: inline-block"></select>
                           </div>
@@ -179,12 +179,11 @@ $( document ).ready(function() {
                           <wicket:message key="resetDocument" />
                         </div>
                         <div class="card-body flex-content">
-                          <div class="form-group">
-                          <select wicket:id="resetDocument" class="w-100" data-container="body"/>
+                          <div class="">
+                            <select wicket:id="resetDocument" class="w-100" data-container="body"/>
                           </div>
-                          <div class="form-group">
-                          <select
-                              wicket:id="documentState" class="w-100" data-container="body"/>
+                          <div class="">
+                            <select wicket:id="documentState" class="w-100" data-container="body"/>
                           </div>
                         </div>
                         <div class="card-footer">
@@ -200,7 +199,7 @@ $( document ).ready(function() {
             </span>
             <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
               <button class="btn btn-action btn-secondary dropdown-toggle flex-content"
-                type="button" data-toggle="dropdown">
+                type="button" data-bs-toggle="dropdown">
                 <i class="fas fa-cog"></i>
                 <span class="d-none d-lg-inline">
                   &nbsp;<wicket:message key="settings" />
@@ -213,7 +212,7 @@ $( document ).ready(function() {
                     <wicket:message key="settings" />
                   </div>
                   <div class="card-body">
-                    <div class="form-group form-row">
+                    <div class="row form-row">
                       <label class="col-form-label col-sm-7"> <wicket:message
                           key="defaultDocumentsLabel" />
                       </label>
@@ -222,7 +221,7 @@ $( document ).ready(function() {
                           class="form-control" />
                       </div>
                     </div>
-                    <div class="form-group form-row">
+                    <div class="row form-row">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="workflow" />
                         <a wicket:id="workflowHelpLink"/>
@@ -231,7 +230,7 @@ $( document ).ready(function() {
                         <select wicket:id="workflowType" data-container="body" class="w-100"/>
                       </div>
                     </div>
-                    <div class="form-group form-row">
+                    <div class="row form-row">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="abandonationToggle" />
                       </label>
@@ -241,13 +240,13 @@ $( document ).ready(function() {
                         </div>
                       </div>
                     </div>
-                    <div class="form-group form-row" wicket:enclosure="abandonationTimeout">
+                    <div class="row form-row" wicket:enclosure="abandonationTimeout">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="abandonationTimeout" />
                       </label>
                       <div class="col-sm-5">
                         <div class="input-group">
-                          <input wicket:id="abandonationTimeout" type="number" class="form-control text-right"/>
+                          <input wicket:id="abandonationTimeout" type="number" class="form-control text-end"/>
                           <div class="input-group-append">
                             <span class="input-group-text">minutes</span>
                           </div>
@@ -258,7 +257,7 @@ $( document ).ready(function() {
                         </div>
                       </div>
                     </div>
-                    <div class="form-group form-row" wicket:enclosure="abandonationState">
+                    <div class="row form-row" wicket:enclosure="abandonationState">
                       <label class="col-form-label col-sm-7">
                         <wicket:message key="abandonationState" />
                       </label>
@@ -284,26 +283,22 @@ $( document ).ready(function() {
           </div>
           <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter">
             <div wicket:id="stateFilters" class="input-group justify-content-end">
-              <div class="input-group-prepend">
-                <div class="input-group-text">
-                  <i class="fas fa-filter"></i>
-                </div>
+              <div class="input-group-text">
+                <i class="fas fa-filter"></i>
               </div>
-              <div class="input-group-append" role="group">
-                <wicket:container wicket:id="stateFilter">
-                  <button type="button" class="btn btn-outline-secondary"
-                    wicket:id="stateFilterLink">
-                    <wicket:container wicket:id="label" />
-                  </button>
-                </wicket:container>
-              </div>
+              <wicket:container wicket:id="stateFilter">
+                <button type="button" class="btn btn-outline-secondary"
+                  wicket:id="stateFilterLink">
+                  <wicket:container wicket:id="label" />
+                </button>
+              </wicket:container>
             </div>
             <span class="dropdown" aria-haspopup="true" aria-expanded="false">
               <span class="btn-group" role="group">
                 <button class="btn btn-secondary btn-action" type="button">
                   Legend
                 </button>
-                <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
+                <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
                 <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em; font-size: small;">
                   <li class="dropdown-header">Document states</li>
                   <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
@@ -332,10 +327,14 @@ $( document ).ready(function() {
           </div>
         </div>
 
-        <div class="flex-content scrolling card p-0">
-          <table class="table table-sm table-hover table-striped document-table" cellspacing="0"
-            wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">
-          </table>
+        <div class="card-body p-0 flex-v-container">
+          <div class="flex-content scrolling">
+            <div class="fit-child-snug">
+              <table class="table table-sm table-hover table-striped document-table" cellspacing="0"
+                wicket:id="dataTable" align="center" style="text-align: center; overflow-x: auto;">
+              </table>
+            </div>
+          </div>
         </div>
         
         <div wicket:id="resetDocumentDialog"/>

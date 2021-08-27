@@ -18,7 +18,7 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <head>
-  <wicket:head>
+<wicket:head>
   <style type="text/css">
     .page-content { overflow: auto; }
     .document-matrix tr td, .document-matrix tr th { text-align: center; }
@@ -27,11 +27,21 @@
     .document-matrix col.s, .document-matrix tr.s , .document-matrix td.s { background-color: var(--primary); }
     .document-matrix .state-toggle { white-space: nowrap; cursor: pointer; }
   </style>
+  <script>
+  $( document ).ready(function() { 
+    // Prevent the dropdowns from closing if an item Kendo dropdown is selected
+    $('.sticky-dropdown').on('hide.bs.dropdown', function(e) {
+      if ($(e.clickEvent.target).closest('.k-popup, .cbx-icon, .cbx-label').length) {
+        e.preventDefault();
+      }
+    });
+  });
+  </script>
 </wicket:head>
 </head>
 <body>
   <wicket:extend>
-    <div class="flex-content flex-h-container flex-gutter">
+    <div class="flex-content flex-h-container flex-gutter overflow-hidden">
       <div class="flex-content flex-v-container flex-gutter">
         <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
           <div class="page-header">
@@ -39,52 +49,74 @@
           </div>
           <div wicket:id="resetDocumentDialog"/>
           <div wicket:id="contextMenu" style="width: 250px;"></div>
+          
+          <div class="flex-h-container flex-gutter flex-only-internal-gutter">
+            <div class="flex-h-container flex-gutter flex-only-internal-gutter">
+              <span class="dropdown sticky-dropdown" aria-haspopup="true" aria-expanded="false">
+                <button
+                  class="btn btn-action btn-secondary dropdown-toggle flex-content"
+                  type="button" data-bs-toggle="dropdown">
+                  <i class="fas fa-filter"></i>
+                  <span class="d-none d-lg-inline">
+                    &nbsp;<wicket:message key="filter" />
+                  </span>
+                </button> 
+                <div class="dropdown-menu shadow-lg pt-0 pb-0 ddFilterForm" role="menu"
+                  style="min-width: 600px;">
+                  <div wicket:id="filterPanel"/>
+                </div>
+              </span> 
+              <button wicket:id="refresh" class="btn btn-action btn-secondary">
+                <i class="fas fa-redo"></i>
+                <span class="d-none d-lg-inline">
+                  &nbsp;<wicket:message key="refresh" />
+                </span>
+              </button>
+            </div>
+            <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter justify-content-end">
+              <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="btn-group" role="group">
+                  <button class="btn btn-secondary btn-action" type="button">
+                    Legend
+                  </button>
+                  <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
+                  <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
+                    <li class="dropdown-header">Document states</li>
+                    <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
+                    <li class="dropdown-item-text"><i class="far fa-play-circle"/> Annotation in progress</li>
+                    <li class="dropdown-item-text"><i class="far fa-check-circle"/> Annotation finished</li>
+                    <li class="dropdown-item-text"><i class="fas fa-clipboard"/> Curation in progress</li>
+                    <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Curation finished</li>
+                    <li class="dropdown-header">Curation states</li>
+                    <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
+                    <li class="dropdown-item-text"><i class="fas fa-clipboard"/> In progress</li>
+                    <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Finished</li>
+                    <li class="dropdown-header">Annotation states</li>
+                    <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
+                    <li class="dropdown-item-text"><i class="far fa-play-circle"/> In progress</li>
+                    <li class="dropdown-item-text"><i class="far fa-check-circle"/> Finished</li>
+                    <li class="dropdown-item-text"><i class="fas fa-lock"/> Locked / cannot be accessed</li>
+                  </ul>
+                </span>
+              </span>
+            </div>
+          </div>
+                    
           <div class="flex-content card" style="min-height: 220px;">
             <div class="card-header">
               <wicket:message key="document_status" />
               <a wicket:id="documentStatusHelpLink"/>
               <div wicket:id="actionContainer" class="actions">
-                <button wicket:id="refresh" class="btn btn-action btn-secondary">
-                  <i class="fas fa-redo"></i>
-                  <span class="d-none d-lg-inline">
-                    &nbsp;<wicket:message key="refresh" />
-                  </span>
-                </button>
-                <span class="dropdown" aria-haspopup="true" aria-expanded="false">
-                  <span class="btn-group" role="group">
-                    <button class="btn btn-secondary btn-action" type="button">
-                      Legend
-                    </button>
-                    <button class="btn btn-secondary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
-                    <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
-                      <li class="dropdown-header">Document states</li>
-                      <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
-                      <li class="dropdown-item-text"><i class="far fa-play-circle"/> Annotation in progress</li>
-                      <li class="dropdown-item-text"><i class="far fa-check-circle"/> Annotation finished</li>
-                      <li class="dropdown-item-text"><i class="fas fa-clipboard"/> Curation in progress</li>
-                      <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Curation finished</li>
-                      <li class="dropdown-header">Curation states</li>
-                      <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
-                      <li class="dropdown-item-text"><i class="fas fa-clipboard"/> In progress</li>
-                      <li class="dropdown-item-text"><i class="fas fa-clipboard-check"/> Finished</li>
-                      <li class="dropdown-header">Annotation states</li>
-                      <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
-                      <li class="dropdown-item-text"><i class="far fa-play-circle"/> In progress</li>
-                      <li class="dropdown-item-text"><i class="far fa-check-circle"/> Finished</li>
-                      <li class="dropdown-item-text"><i class="fas fa-lock"/> Locked / cannot be accessed</li>
-                    </ul>
-                  </span>
-                </span>
                 <span class="dropdown" aria-haspopup="true" aria-expanded="false">
                   <span class="btn-group" role="group">
                     <button wicket:id="toggleBulkChange" class="btn btn-action" type="button">
                       Bulk change
                     </button>
-                    <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-left" type="button" data-toggle="dropdown"></button>
+                    <button wicket:id="bulkActionDropdownButton" class="btn btn-primary btn-action dropdown-toggle flex-content border-start" type="button" data-bs-toggle="dropdown"></button>
                     <div wicket:id="bulkActionDropdown" class="dropdown-menu shadow-lg" role="menu" style="min-width: 20em;">
                       <a wicket:id="bulkClose" class="dropdown-item">
                         Close selected
-                        <span class="float-right text-muted">
+                        <span class="float-end text-muted">
                           <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
                           &nbsp;&nbsp;
                           <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
@@ -92,7 +124,7 @@
                       </a>
                       <a wicket:id="bulkOpen" class="dropdown-item">
                         Open selected
-                        <span class="float-right text-muted">
+                        <span class="float-end text-muted">
                           <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                           &nbsp;&nbsp;
                           <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
@@ -101,33 +133,33 @@
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkLock" class="dropdown-item">
                         Lock selected 
-                        <span class="float-right text-muted">
+                        <span class="float-end text-muted">
                           <i class="far fa-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="fas fa-lock"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkUnlock" class="dropdown-item">
                         Unlock selected
-                        <span class="float-right text-muted">
+                        <span class="float-end text-muted">
                           <i class="fas fa-lock"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-circle"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkFinish" class="dropdown-item">
                         Finish selected
-                        <span class="float-right text-muted">
+                        <span class="float-end text-muted">
                           <i class="far fa-play-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-check-circle"></i>
                         </span>
                       </a>
                       <a wicket:id="bulkResume" class="dropdown-item">
                         Resume selected
-                        <span class="float-right text-muted">
+                        <span class="float-end text-muted">
                           <i class="far fa-check-circle"></i>&nbsp;<i class="fas fa-long-arrow-alt-right"></i>&nbsp;<i class="far fa-play-circle"></i>
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
                       <a wicket:id="bulkReset" class="dropdown-item danger">
                         Reset selected
-                        <span class="float-right badge badge-pill badge-danger">
+                        <span class="float-end badge badge-pill bg-danger">
                           <i class="fas fa-trash"></i>
                         </span>
                       </a>

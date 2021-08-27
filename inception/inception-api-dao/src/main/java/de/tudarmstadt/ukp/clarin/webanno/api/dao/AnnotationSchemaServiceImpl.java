@@ -129,6 +129,11 @@ public class AnnotationSchemaServiceImpl
     private final LoadingCache<TagSet, List<ImmutableTag>> immutableTagsCache;
     private final TypeSystemDescription builtInTypes;
 
+    public AnnotationSchemaServiceImpl()
+    {
+        this(null, null, null, null);
+    }
+
     @Autowired
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
@@ -138,24 +143,6 @@ public class AnnotationSchemaServiceImpl
         featureSupportRegistry = aFeatureSupportRegistry;
         applicationEventPublisher = aApplicationEventPublisher;
         entityManager = aEntityManager;
-
-        immutableTagsCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024).build(this::loadImmutableTags);
-
-        try {
-            builtInTypes = createTypeSystemDescription();
-        }
-        catch (ResourceInitializationException e) {
-            throw new IllegalStateException("Unable to initialize built-in type system", e);
-        }
-    }
-
-    public AnnotationSchemaServiceImpl()
-    {
-        layerSupportRegistry = null;
-        featureSupportRegistry = null;
-        applicationEventPublisher = null;
-        entityManager = null;
 
         immutableTagsCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
                 .maximumSize(10 * 1024).build(this::loadImmutableTags);
@@ -1218,26 +1205,6 @@ public class AnnotationSchemaServiceImpl
         }
 
         return upgradePerformed;
-    }
-
-    @Override
-    public TypeSystemDescription getTypeSystemForExport(Project aProject)
-        throws ResourceInitializationException
-    {
-        return getFullProjectTypeSystem(aProject, false);
-    }
-
-    @Override
-    public void prepareCasForExport(CAS aSourceCas, CAS aTargetCas, SourceDocument aSourceDocument,
-            TypeSystemDescription aFullProjectTypeSystem)
-        throws ResourceInitializationException, UIMAException, IOException
-    {
-        TypeSystemDescription tsd = aFullProjectTypeSystem;
-        if (tsd == null) {
-            tsd = getTypeSystemForExport(aSourceDocument.getProject());
-        }
-
-        upgradeCas(aSourceCas, aTargetCas, tsd);
     }
 
     @Override

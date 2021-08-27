@@ -19,7 +19,11 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types;
 
 import static java.lang.Thread.sleep;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.time.Duration;
@@ -28,24 +32,28 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
 
+import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.util.FileSystemUtils;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -77,7 +85,6 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
         "de.tudarmstadt.ukp.clarin.webanno" })
 @Import({ //
         TextFormatsAutoConfiguration.class, //
-        DocumentImportExportServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
@@ -222,5 +229,21 @@ public class DynamicWorkloadExtensionImplTest
         AnnotationDocument ann = new AnnotationDocument(annotator.getUsername(), doc);
         ann.setState(aState);
         return documentService.createAnnotationDocument(ann);
+    }
+
+    @SpringBootConfiguration
+    public static class TestContext
+    {
+        @Bean
+        DocumentImportExportService documentImportExportService(
+                AnnotationSchemaService aSchemaService)
+            throws Exception
+        {
+            var tsd = createTypeSystemDescription();
+            var importService = mock(DocumentImportExportService.class);
+            when(importService.importCasFromFile(any(), any(), any(), any()))
+                    .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));
+            return importService;
+        }
     }
 }

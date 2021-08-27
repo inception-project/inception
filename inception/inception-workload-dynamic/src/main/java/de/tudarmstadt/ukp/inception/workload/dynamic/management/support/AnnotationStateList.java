@@ -77,10 +77,10 @@ public class AnnotationStateList
                         && idleTime.compareTo(aAbandonationTimeout) > 0) {
                     labelModel = labelModel
                             .map(_label -> "<i class=\"fas fa-user-clock\"></i> " + _label);
-                    aItem.add(new AttributeAppender("class", "badge-warning", " "));
+                    aItem.add(new AttributeAppender("class", "bg-warning", " "));
                 }
                 else {
-                    aItem.add(new AttributeAppender("class", "badge-secondary", " "));
+                    aItem.add(new AttributeAppender("class", "bg-secondary", " "));
                     aItem.add(AjaxEventBehavior.onEvent("click", _target -> stateLabel.send(
                             stateLabel, BUBBLE,
                             new AnnotatorColumnCellClickEvent(_target, row.getDocument(), user))));

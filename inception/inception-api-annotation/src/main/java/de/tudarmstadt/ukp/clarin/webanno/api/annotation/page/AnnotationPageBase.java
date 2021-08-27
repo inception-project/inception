@@ -34,14 +34,14 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.pages.RedirectPage;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Url;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -98,13 +98,13 @@ public abstract class AnnotationPageBase
         // happily switch between documents using AJAX without having to worry about links with
         // a document ID potentially sending us back to a specific document.
         if (!documentParameter.isEmpty()) {
-            Url clientUrl = getRequestCycle().getRequest().getClientUrl();
+            RequestCycle requestCycle = getRequestCycle();
+            Url clientUrl = requestCycle.getRequest().getClientUrl();
             clientUrl.resolveRelative(Url.parse("./"));
             clientUrl.setFragment(
-                    String.format("!%s=%d", PAGE_PARAM_DOCUMENT, documentParameter.toInt()));
-            String url = getRequestCycle().getUrlRenderer()
-                    .renderContextRelativeUrl(clientUrl.toString());
-            throw new RestartResponseException(new RedirectPage(url.toString()));
+                    String.format("!%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
+            String url = requestCycle.getUrlRenderer().renderRelativeUrl(clientUrl);
+            throw new RedirectToUrlException(url.toString());
         }
     }
 
