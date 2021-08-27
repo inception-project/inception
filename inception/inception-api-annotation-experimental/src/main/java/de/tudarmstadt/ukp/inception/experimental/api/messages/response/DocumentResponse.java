@@ -26,13 +26,15 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 public class DocumentResponse
 {
     private Viewport viewport;
+    private long documentId;
     private List<Span> spans;
     private List<Arc> arcs;
 
-    public DocumentResponse(Viewport aViewport, List<Span> aSpans,
+    public DocumentResponse(Viewport aViewport, long aDocumentId, List<Span> aSpans,
                             List<Arc> aRelations)
     {
         viewport = aViewport;
+        documentId = aDocumentId;
         spans = aSpans;
         arcs = aRelations;
     }
@@ -45,6 +47,16 @@ public class DocumentResponse
     public void setViewport(Viewport aViewport)
     {
         viewport = aViewport;
+    }
+
+    public long getDocumentId()
+    {
+        return documentId;
+    }
+
+    public void setDocumentId(long aDocumentId)
+    {
+        documentId = aDocumentId;
     }
 
     public List<Span> getSpans()

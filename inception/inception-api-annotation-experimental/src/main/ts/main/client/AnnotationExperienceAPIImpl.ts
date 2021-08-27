@@ -151,7 +151,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
         this.stompClient.subscribe("/topic/arc_create/" +
             this.projectID + "/" +
-            this.documentID + "/", function (msg) {
+            this.documentID, function (msg) {
             that.onArcCreate(Object.assign(new CreateArcMessage(), JSON.parse(msg.body)));
         }, {id: "relation_create"});
 
@@ -177,6 +177,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     {
         this.viewport = aMessage.viewport;
         this.viewport.documentText = this.viewport.documentText.split("\n").join("");
+        this.documentID = aMessage.documentId;
         this.spans = aMessage.spans;
         this.arcs = aMessage.arcs;
     }
@@ -249,6 +250,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     requestCreateSpan(aClientName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: string)
     {
+        console.log("SENDING: " + aBegin + " _ " + aEnd)
         this.stompClient.publish({
             destination: "/app/span_create",
             body: JSON.stringify(new CreateSpanRequest(aClientName, aProjectId, aDocumentId, aBegin, aEnd, aLayer))
@@ -273,8 +275,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     requestDocument(aClientName: string, aProjectId: number, aDocumentId: number)
     {
-        const that = this;
-        that.stompClient.publish({
+        this.stompClient.publish({
             destination: "/app/document_request", body: JSON.stringify(
                 new DocumentRequest(aClientName, aProjectId, aDocumentId, this.viewport))
         });

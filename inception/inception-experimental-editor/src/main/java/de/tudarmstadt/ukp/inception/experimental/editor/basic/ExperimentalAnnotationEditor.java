@@ -56,6 +56,8 @@ public class ExperimentalAnnotationEditor
         aResponse.render(JavaScriptHeaderItem
                 .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
         aResponse.render(forReference(ExperimentalAPIBasicEditorReference.get()));
+        aResponse.render(JavaScriptHeaderItem
+            .forScript("const editor = new AnnotationExperienceAPIBasicEditor();","1"));
     }
 
     private String constructEndpointUrl()

@@ -17,7 +17,7 @@
  */
 
 import {AnnotationExperienceAPIBasicEditorVisualization} from "./visualization/AnnotationExperienceAPIBasicEditorVisualization";
-import {AnnotationExperienceAPIImpl} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPIImpl";
+import {AnnotationExperienceAPIImpl} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPIImpl";
 import {AnnotationExperienceAPIBasicEditorActionHandler} from "./action/AnnotationExperienceAPIBasicEditorActionHandler";
 
 export class AnnotationExperienceAPIBasicEditor
@@ -29,7 +29,7 @@ export class AnnotationExperienceAPIBasicEditor
     constructor()
     {
         this.annotationExperienceAPI = new AnnotationExperienceAPIImpl();
-        this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIBasicEditorVisualization(this.annotationExperienceAPI);
-        this.annotationExperienceAPIActionHandler = new AnnotationExperienceAPIBasicEditorActionHandler(this.annotationExperienceAPI);
+        this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIBasicEditorVisualization(this);
+        this.annotationExperienceAPIActionHandler = new AnnotationExperienceAPIBasicEditorActionHandler(this);
     }
 }

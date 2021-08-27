@@ -7,6 +7,7 @@ import javax.servlet.ServletContext;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -18,6 +19,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIWordAlignmentEditorReference;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
+
 /*
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
@@ -40,11 +42,10 @@ public class ExperimentalWordAlignmentEditor
 {
     private static final long serialVersionUID = -3812646280364767142L;
 
-    private @SpringBean
-    ServletContext servletContext;
+    private @SpringBean ServletContext servletContext;
 
     public ExperimentalWordAlignmentEditor(String aId, IModel<AnnotatorState> aModel,
-                                        final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
+            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
     }
@@ -54,14 +55,17 @@ public class ExperimentalWordAlignmentEditor
     {
         super.renderHead(aResponse);
         aResponse.render(JavaScriptHeaderItem
-            .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
+                .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
         aResponse.render(forReference(ExperimentalAPIWordAlignmentEditorReference.get()));
+        aResponse.render(JavaScriptHeaderItem
+            .forScript("const editor = new AnnotationExperienceAPIWordAlignmentEditor();","1"));
+
     }
 
     private String constructEndpointUrl()
     {
         Url endPointUrl = Url.parse(String.format("%s%s", servletContext.getContextPath(),
-            WebsocketConfig.WS_ENDPOINT));
+                WebsocketConfig.WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
         return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
     }
@@ -69,6 +73,6 @@ public class ExperimentalWordAlignmentEditor
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        //Rendering should be handled by the scripting language files
+        // Rendering should be handled by the scripting language files
     }
 }

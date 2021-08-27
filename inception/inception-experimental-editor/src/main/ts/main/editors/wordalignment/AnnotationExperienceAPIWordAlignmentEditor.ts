@@ -15,22 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {AnnotationExperienceAPIImpl} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPIImpl";
+import {AnnotationExperienceAPIImpl} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPIImpl";
 import {AnnotationExperienceAPIWordAlignmentEditorVisualization} from "./visualization/AnnotationExperienceAPIWordAlignmentEditorVisualization";
 import {AnnotationExperienceAPIWordAlignmentEditorActionHandler} from "./action/AnnotationExperienceAPIWordAlignmentEditorActionHandler";
 
 export class AnnotationExperienceAPIWordAlignmentEditor {
+
     annotationExperienceAPI: AnnotationExperienceAPIImpl;
     annotationExperienceAPIVisualization: AnnotationExperienceAPIWordAlignmentEditorVisualization;
     annotationExperienceAPIWordAlignmentEditorActionHandler: AnnotationExperienceAPIWordAlignmentEditorActionHandler
 
-    currentSentence : number = 0;
     oddSentence: string;
     oddSentenceOffset: number = 0;
     evenSentence: string;
-    evenSentenceOffset: number = 0;
+    evenSentenceOffset: number = 1;
     spanType : string;
-    relationType : string;
+
+    //TODO OBSERVER CLASS?
 
     constructor()
     {
@@ -44,10 +45,14 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
         let pairs = []
         const that = this;
 
+        /*
         if (!this.inputsValid) {
             alert("Word alignment is not 1:1.")
             return;
         }
+         */
+
+        this.spanType = document.getElementsByClassName("filter-option-inner-inner")[0].innerText;
 
         let oddUnitContainerSize =  document.getElementById("odd_unit_container").children.length - 2;
         let evenUnitContainerSize = document.getElementById("even_unit_container").children.length - 2;
@@ -56,9 +61,9 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
             for (let j = 0; j < evenUnitContainerSize; j++) {
 
                 let oddUnitContainerElementInputValue = document.getElementById("odd_unit_container").children[i + 2].children[0].value;
-                let evenUnitContainerElementInpupValue = document.getElementById("even_unit_container").children[j + 2].children[1].value;
+                let evenUnitContainerElementInputValue = document.getElementById("even_unit_container").children[j + 2].children[1].value;
 
-                if (oddUnitContainerElementInputValue === evenUnitContainerElementInpupValue) {
+                if (oddUnitContainerElementInputValue === evenUnitContainerElementInputValue) {
 
                     let oddUnitContainerElementText = document.getElementById("odd_unit_container").children[i + 2].children[1];
                     let evenUnitContainerElementText = document.getElementById("even_unit_container").children[j + 2].children[0];
@@ -66,19 +71,13 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                     let oddUnitContainerElementTextId = oddUnitContainerElementText.id.split("_");
                     let evenUnitContainerElementTextId = evenUnitContainerElementText.id.split("_");
 
-                    let selectedSpanLayer =  document.getElementsByClassName("filter-option-inner-inner")[0].innerText;
-
                     pairs.push([
-                        oddUnitContainerElementTextId[2],
-                        oddUnitContainerElementText.innerText,
-                        evenUnitContainerElementTextId[2],
-                        evenUnitContainerElementText.innerText]
+                        oddUnitContainerElementTextId[1],
+                        evenUnitContainerElementTextId[1]]
                     );
 
-                    this.createSpanRequest(oddUnitContainerElementTextId[2], oddUnitContainerElementTextId[3], selectedSpanLayer);
-                    this.createSpanRequest(evenUnitContainerElementTextId[2], evenUnitContainerElementTextId[3], selectedSpanLayer);
-
-                    document.getElementById("even_unit_container").children[j + 2].children[1].setAttribute("disabled", "true");
+                    this.createSpanRequest(oddUnitContainerElementTextId[1], oddUnitContainerElementTextId[2], this.spanType);
+                    this.createSpanRequest(evenUnitContainerElementTextId[1], evenUnitContainerElementTextId[2], this.spanType);
                 }
             }
         }
@@ -87,12 +86,11 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
             let source, target;
             for (let i = 0; i < pairs.length; i++) {
                 for (let j = 0; j < that.annotationExperienceAPI.spans.length; j++) {
-                    if (pairs[i][0] == that.annotationExperienceAPI.spans[j].begin &&
-                        pairs[i][1] == that.annotationExperienceAPI.spans[j].coveredText) {
+
+                    if (pairs[i][0] == that.annotationExperienceAPI.spans[j].begin) {
                         source = that.annotationExperienceAPI.spans[j];
                     }
-                    if (pairs[i][2] == that.annotationExperienceAPI.spans[j].begin &&
-                        pairs[i][3] == that.annotationExperienceAPI.spans[j].coveredText) {
+                    if (pairs[i][1] == that.annotationExperienceAPI.spans[j].begin) {
                         target = that.annotationExperienceAPI.spans[j];
                     }
                 }
@@ -102,9 +100,9 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                     that.annotationExperienceAPI.documentID,
                     source.id,
                     target.id,
-                    that.relationType)
+                    that.spanType)
             }
-        }, 5000)
+        }, 1500)
 
         document.getElementById("save_alignment").disabled = true
 

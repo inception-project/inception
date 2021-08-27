@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-import {AnnotationExperienceAPI} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPI";
-import {Span} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Span";
+import {AnnotationExperienceAPI} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPI";
+import {Span} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Span";
 import {AnnotationExperienceAPIWordAlignmentEditor} from "../AnnotationExperienceAPIWordAlignmentEditor";
 
 export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
@@ -33,12 +33,10 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
         this.annotationExperienceAPIWordAlignmentEditor = aAnnotationExperienceAPIWordAlignmentEditor;
     }
 
-    showText(aElementId: string) {
-        let words;
+        showText(aElementId: string) {
+        let words, initalOffset;
 
         let container = document.getElementById(aElementId.toString())
-
-        let arcs = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.arcs;
 
         //Reset previous text
         container.innerHTML = '';
@@ -48,10 +46,12 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
         if (aElementId === "odd_unit_container") {
             language.innerText = this.oddLanguage;
             words = this.annotationExperienceAPIWordAlignmentEditor.oddSentence.split(" ");
+            initalOffset = this.calculateInitialOffset(this.annotationExperienceAPIWordAlignmentEditor.oddSentenceOffset);
 
         } else {
             language.innerText = this.evenLanguage;
             words = this.annotationExperienceAPIWordAlignmentEditor.evenSentence.split(" ");
+            initalOffset = this.calculateInitialOffset(this.annotationExperienceAPIWordAlignmentEditor.evenSentenceOffset);
         }
 
         container.setAttribute("style", "float:left; width: 200px");
@@ -70,14 +70,23 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
         }
 
 
+        let begin, end;
         for (let i = 0; i < words.length; i++) {
             let wordDIV = document.createElement("div");
             wordDIV.className = "form-group";
             wordDIV.style.height = "40px";
 
+            if (i === 0) {
+                begin = initalOffset;
+            } else {
+                begin = end + 1;
+            }
+
+            end = begin + words[i].length;
+
             let wordLABEL = document.createElement("label");
             wordLABEL.setAttribute("style", "text-align: right")
-            wordLABEL.id = "word_" + i;
+            wordLABEL.id = "offset_" + begin + "_" + end;
             wordLABEL.innerText = words[i];
 
             let wordINPUT = document.createElement("input");
@@ -111,6 +120,7 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
         let that = this;
 
         let svg = document.getElementById("svg");
+        svg.innerHTML = '';
         let arcs = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.arcs;
         let spans = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.spans;
 
@@ -122,7 +132,7 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
             for (let j = 0; j < spans.length; j++) {
                 if (spans[j].id == arcs[i].sourceId) {
                     for (let k = 0; k < document.getElementById("odd_unit_container").children.length - 2; k++) {
-                        if (document.getElementById("odd_unit_container").children[k + 2].children[1].id.split("_")[2]
+                        if (document.getElementById("odd_unit_container").children[k + 2].children[1].id.split("_")[1]
                             == spans[j].begin) {
                             yGovernor = this.headerOffset + k * 48;
                             govID = spans[j].id
@@ -131,11 +141,10 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
                 }
                 if (spans[j].id == arcs[i].targetId) {
                     for (let k = 0; k < document.getElementById("even_unit_container").children.length - 2; k++) {
-                        if (document.getElementById("even_unit_container").children[k + 2].children[0].id.split("_")[2]
+                        if (document.getElementById("even_unit_container").children[k + 2].children[0].id.split("_")[1]
                             == spans[j].begin) {
                             yDependent = this.headerOffset + k * 48;
                             depID = spans[j].id
-                            continue;
                         }
                     }
                 }
@@ -180,6 +189,20 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
                 }
             }
         }
+    }
+
+    calculateInitialOffset(aSentenceNumber: Number)
+    {
+        let offset: number = 0;
+        let sentences = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.documentText.split(".");
+        for (let i = 0; i < aSentenceNumber; i++) {
+            let words = sentences[i].split(" ");
+            for (let j = 0; j < words.length; j++) {
+                offset += words[j].length + 1;
+            }
+            offset++;
+        }
+        return offset;
     }
 
     showDependencies() {

@@ -22,6 +22,7 @@ import {Viewport} from "../../model/Viewport";
 export class DocumentResponse
 {
     viewport : Viewport;
+    documentId : number;
     spans : Span[];
     arcs : Arc[];
 }

@@ -16,12 +16,13 @@
  * limitations under the License.
  */
 
-import {AnnotationExperienceAPI} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPI";
-import {Span} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Span";
+import {AnnotationExperienceAPI} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPI";
+import {Span} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Span";
+import {AnnotationExperienceAPIBasicEditor} from "../AnnotationExperienceAPIBasicEditor";
 
 export class AnnotationExperienceAPIBasicEditorVisualization {
 
-    annotationExperienceAPI : AnnotationExperienceAPI;
+    annotationExperienceAPIBasicEditor : AnnotationExperienceAPIBasicEditor;
 
     SENTENCE_OFFSET_WIDTH = 45;
     CHARACTER_WIDTH = 9;
@@ -31,16 +32,17 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
     lineColorSecond: string = "#CCCCCC";
 
     //Viewport
-    sentenceCount: number;
+    sentenceBegin: number = 0;
+    sentenceCount: number = 5;
 
     //Additional drawing
     showHighlighting: boolean = true;
     showSentenceNumbers: boolean = true;
     showBackground: boolean = true;
 
-    constructor(aAnnotationExperience : AnnotationExperienceAPI)
+    constructor(aAnnotationExperienceAPIBasicEditor : AnnotationExperienceAPIBasicEditor)
     {
-        this.annotationExperienceAPI = aAnnotationExperience;
+        this.annotationExperienceAPIBasicEditor = aAnnotationExperienceAPIBasicEditor;
     }
 
     showText(aElementId: string) {
@@ -49,8 +51,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         textArea.innerHTML = '';
 
         //Sentences
-        let sentences = this.annotationExperienceAPI.viewport.documentText;
-        this.sentenceCount = sentences.length - 1;
+        let sentences = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText.split(".");
 
         //SVG element
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -63,6 +64,12 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         textElement.style.display = "block";
 
         let xBegin : number = 0;
+
+        this.sentenceBegin = Number(document.getElementsByTagName("input")[2].value) - 1
+
+        if (this.sentenceBegin + this.sentenceCount > sentences.length) {
+            this.sentenceCount = sentences.length - this.sentenceBegin;
+        }
 
         if (this.showBackground) {
             svg.appendChild(this.drawBackground());
@@ -78,18 +85,20 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
 
         let xPrev: number = xBegin;
 
-        for (let i = 0; i < sentences.length; i++) {
+
+        for (let i = 0; i < this.sentenceCount; i++) {
+            let sentenceOffset = this.calculateInitialOffset(this.sentenceBegin + i)
 
             let sentence = document.createElementNS("http://www.w3.org/2000/svg", "g");
             sentence.setAttribute("class", "text-row");
-            sentence.setAttribute("sentence-id", (i + 1).toString());
+            sentence.setAttribute("sentence-id", (this.sentenceBegin + i).toString());
 
-            for (let j = 0; j < sentences[i].length; j++, k++) {
+            for (let j = 0; j < sentences[this.sentenceBegin + i].length; j++, k++) {
                 let char = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                char.textContent = sentences[i][j];
+                char.textContent = sentences[this.sentenceBegin + i][j];
                 char.setAttribute("x", xPrev.toString());
                 char.setAttribute("y", ((i + 1) * 20 - 5).toString());
-                char.setAttribute("char_pos", ((this.annotationExperienceAPI.viewport.viewport[i][0]) + j).toString());
+                char.setAttribute("char_pos", (sentenceOffset + j).toString());
                 xPrev += this.CHARACTER_WIDTH;
                 sentence.appendChild(char);
             }
@@ -105,7 +114,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
 
         //Highlighting
         if (this.showHighlighting) {
-            svg.appendChild(this.drawAnnotation(this.annotationExperienceAPI.spans, aElementId));
+            svg.appendChild(this.drawAnnotation(this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.spans, aElementId));
         }
     }
 
@@ -131,6 +140,20 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         return background;
     }
 
+    calculateInitialOffset(aSentenceNumber: Number)
+    {
+        let offset: number = 0;
+        let sentences = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText.split(".");
+        for (let i = 0; i < aSentenceNumber; i++) {
+            let words = sentences[i].split(" ");
+            for (let j = 0; j < words.length; j++) {
+                offset += words[j].length + 1;
+            }
+            offset++;
+        }
+        return offset;
+    }
+
     drawSentenceNumbers() {
         //Sentencenumbers
         let sentenceNumbers = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -140,7 +163,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
 
         for (let i = 0; i < this.sentenceCount; i++) {
             let number = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            number.textContent = (this.sentenceCount + i + 1).toString() + "."
+            number.textContent = (this.sentenceBegin + i + 1).toString() + "."
             number.setAttribute("x", "10");
             number.setAttribute("y", ((i + 1) * 20 - 5).toString());
             sentenceNumbers.appendChild(number);
@@ -156,7 +179,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         highlighting.innerHTML = "";
 
         if (aAnnotations.length > 0) {
-            let sentences = this.annotationExperienceAPI.viewport.documentText;
+            let sentences = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText;
             this.sentenceCount = sentences.length - 1;
             let i = 0;
 

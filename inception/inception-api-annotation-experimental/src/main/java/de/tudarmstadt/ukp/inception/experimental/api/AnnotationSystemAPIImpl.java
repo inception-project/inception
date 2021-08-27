@@ -148,7 +148,8 @@ public class AnnotationSystemAPIImpl
 
             List<Arc> relations = filterArcs(annotations.getValue(), cas, viewport);
 
-            DocumentResponse message = new DocumentResponse(viewport, spans, relations);
+            DocumentResponse message = new DocumentResponse(viewport,
+                    aDocumentRequest.getDocumentId(), spans, relations);
             annotationProcessAPI.sendDocumentResponse(message, aDocumentRequest.getClientName());
         }
         catch (Exception e) {
@@ -371,18 +372,24 @@ public class AnnotationSystemAPIImpl
             CAS cas = documentService.readAnnotationCas(sourceDocument,
                     aCreateArcRequest.getClientName());
 
-            AnnotationFS governor = selectAnnotationByAddr(cas,
+            AnnotationFS source = selectAnnotationByAddr(cas,
                     aCreateArcRequest.getSourceId().getId());
-            AnnotationFS dependent = selectAnnotationByAddr(cas,
+            AnnotationFS target = selectAnnotationByAddr(cas,
                     aCreateArcRequest.getTargetId().getId());
 
-            TypeAdapter adapter = annotationService.getAdapter(
-                    getLayer(aCreateArcRequest.getProjectId(), aCreateArcRequest.getLayer()));
+            TypeAdapter adapter = annotationService
+                    .getAdapter(
+                            annotationService
+                                    .getLayer(annotationService
+                                            .listAttachedRelationLayers(
+                                                    getLayer(aCreateArcRequest.getProjectId(),
+                                                            aCreateArcRequest.getLayer()))
+                                            .get(0).getId()));
 
             ((RelationAdapter) adapter).add(
                     documentService.getSourceDocument(aCreateArcRequest.getProjectId(),
                             aCreateArcRequest.getDocumentId()),
-                    aCreateArcRequest.getClientName(), governor, dependent, cas);
+                    aCreateArcRequest.getClientName(), source, target, cas);
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during handleCreateRelation()", e);
@@ -425,6 +432,7 @@ public class AnnotationSystemAPIImpl
                 features.add(aEvent.getAnnotation().getFeatureValueAsString(feature));
             }
         }
+
         CreateSpanMessage response = new CreateSpanMessage(
                 new VID(aEvent.getAnnotation().getAddress()),
                 aEvent.getAnnotation().getCoveredText(), aEvent.getAnnotation().getBegin(),
@@ -512,7 +520,7 @@ public class AnnotationSystemAPIImpl
                     .listAnnotationLayer(projectService.getProject(aProjectId));
 
             for (AnnotationLayer layer : layers) {
-                if (aLayer.equals(layer.getUiName())) {
+                if (aLayer.equals(layer.getUiName()) || aLayer.equals(layer.getName())) {
                     return layer;
                 }
             }
@@ -612,7 +620,7 @@ public class AnnotationSystemAPIImpl
     }
 
     public Pair<List<Span>, List<Arc>> getAnnotations(CAS aCas, long aProjectId,
-            List<AnnotationLayer> validLayers)
+            List<AnnotationLayer> aValidLayers)
     {
         List<Span> spans = new ArrayList<>();
         List<Arc> relations = new ArrayList<>();
@@ -621,7 +629,7 @@ public class AnnotationSystemAPIImpl
             if (fs.getType().getShortName().equals("Token")) {
                 continue;
             }
-            for (AnnotationLayer layer : validLayers) {
+            for (AnnotationLayer layer : aValidLayers) {
                 if (fs.getType().getName().equals(layer.getName())) {
                     AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
                             WebAnnoCasUtil.getAddr(fs));
