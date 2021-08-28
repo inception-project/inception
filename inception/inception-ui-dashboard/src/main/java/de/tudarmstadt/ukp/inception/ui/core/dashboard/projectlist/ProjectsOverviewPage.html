@@ -60,7 +60,7 @@
             <wicket:container wicket:id="roleFilter">
               <button type="button" class="btn btn-outline-secondary" wicket:id="roleFilterLink">
                 <wicket:container wicket:id="label"/>
-                </button>
+              </button>
             </wicket:container>
           </div>
         </div>
@@ -72,19 +72,22 @@
           <div wicket:id="project" class="list-group-item">
             <div class="d-flex">
               <div class="flex-grow-1 d-flex flex-column">
-                <div class="flex-grow-1">
-                  <div class="float-end">
-                    <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
-                  </div>
-                  <a wicket:id="projectLink">
+                <div>
+                  <a wicket:id="projectLink" class="text-decoration-none">
                     <wicket:container wicket:id="name"/>
                   </a>
                 </div>
-                <div class="list-group-item-text">
-                  <div class="text-end">
-                    <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
-                    <small class="text-muted" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
-                  </div>
+                <div class="list-group-item-text text-muted">
+                  <wicket:container wicket:id="description"/>
+                </div>
+              </div>
+              <div class="d-flex flex-column text-end">
+                <div class="d-flex flex-nowrap">
+                  <span wicket:id="role" class="badge bg-secondary ms-1"><wicket:container wicket:id="label"/></span>
+                </div>
+                <div class="text-nowrap mt-auto">
+                  <small class="text-muted" wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></small>
+                  <small class="text-muted" wicket:enclosure="id">ID: <wicket:container wicket:id="id"/></small>
                 </div>
               </div>
               <div wicket:id="actionDropdown" class="d-flex">

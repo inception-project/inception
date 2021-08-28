@@ -62,7 +62,7 @@ public class InviteServiceImplTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
         testProject.setState(ANNOTATION_IN_PROGRESS);
         testEntityManager.persist(testProject);
 

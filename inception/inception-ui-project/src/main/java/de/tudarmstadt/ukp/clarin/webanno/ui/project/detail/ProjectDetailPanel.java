@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.isValidProjectName;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.isValidProjectSlug;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectName;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -116,7 +116,6 @@ public class ProjectDetailPanel
         TextField<String> projectNameTextField = new TextField<>("name");
         projectNameTextField.setOutputMarkupId(true);
         projectNameTextField.setRequired(true);
-        projectNameTextField.add(new ProjectWithNameAlreadyExistsValidator());
         projectNameTextField.add(new ProjectNameIsValidValidator());
         projectNameTextField.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
             deriveSlugFromName(projectModel.getObject()).ifPresent(slugSuggestionModel::setObject);
@@ -149,7 +148,7 @@ public class ProjectDetailPanel
         slug = projectService.deriveUniqueSlug(slug);
         // Just a safe-guard in case we would generate an invalid slug which we would not want
         // to get written back to the database
-        if (ProjectService.isValidProjectSlug(slug)) {
+        if (isValidProjectSlug(slug)) {
             return Optional.of(slug);
         }
 
@@ -255,24 +254,6 @@ public class ProjectDetailPanel
                     && projectService.existsProjectWithSlug(newSlug)) {
                 aValidatable.error(new ValidationError(
                         "Another project with this URL slug exists. Please try a different one."));
-            }
-        }
-    }
-
-    private class ProjectWithNameAlreadyExistsValidator
-        implements IValidator<String>
-    {
-        private static final long serialVersionUID = -267638869839503827L;
-
-        @Override
-        public void validate(IValidatable<String> aValidatable)
-        {
-            String newName = aValidatable.getValue();
-            String oldName = aValidatable.getModel().getObject();
-            if (!StringUtils.equals(newName, oldName) && isNotBlank(newName)
-                    && projectService.existsProjectWithName(newName)) {
-                aValidatable.error(new ValidationError(
-                        "Another project with the same name exists. Please try a different name"));
             }
         }
     }

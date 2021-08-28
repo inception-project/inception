@@ -23,17 +23,20 @@ public class RProject
 {
     public long id;
     public String name;
+    public String title;
 
     public RProject(Project aProject)
     {
         id = aProject.getId();
-        name = aProject.getName();
+        name = aProject.getSlug();
+        title = aProject.getName();
     }
 
-    public RProject(long aId, String aName)
+    public RProject(long aId, String aTitle, String aSlug)
     {
         super();
         id = aId;
-        name = aName;
+        name = aSlug;
+        title = aTitle;
     }
 }
