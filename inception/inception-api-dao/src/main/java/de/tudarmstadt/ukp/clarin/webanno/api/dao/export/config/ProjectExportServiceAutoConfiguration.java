@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 
 @Configuration
+@ConditionalOnBean(ProjectService.class)
 public class ProjectExportServiceAutoConfiguration
 {
     @Bean

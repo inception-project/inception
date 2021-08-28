@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
-import static org.apache.commons.lang3.StringUtils.containsNone;
-import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,10 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.MDCContext;
 public interface ProjectService
 {
     String SERVICE_NAME = "projectService";
-
-    String PROJECT_NAME_ILLEGAL_CHARACTERS = "^/\\&*?+$![]";
-    int MIN_PROJECT_SLUG_LENGTH = 3;
-    int MAX_PROJECT_SLUG_LENGTH = 40;
 
     String PROJECT_FOLDER = "project";
     String DOCUMENT_FOLDER = "document";
@@ -483,53 +477,4 @@ public interface ProjectService
     String deriveSlugFromName(String aName);
 
     String deriveUniqueSlug(String aSlug);
-
-    /**
-     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
-     * will conflict with file naming system
-     * 
-     * @param aName
-     *            a name.
-     * @return if the name is valid.
-     */
-    static boolean isValidProjectName(String aName)
-    {
-        return aName != null && containsNone(aName, PROJECT_NAME_ILLEGAL_CHARACTERS);
-    }
-
-    static boolean isValidProjectSlug(String aSlug)
-    {
-        if (isEmpty(aSlug)) {
-            return false;
-        }
-
-        if (aSlug.length() < MIN_PROJECT_SLUG_LENGTH || aSlug.length() > MAX_PROJECT_SLUG_LENGTH) {
-            return false;
-        }
-
-        // Must start with a letter character
-        if (!isValidProjectSlugInitialCharacter(aSlug.charAt(0))) {
-            return false;
-        }
-
-        // Must consist only of valid characters
-        for (int i = 0; i < aSlug.length(); i++) {
-            if (!isValidProjectSlugCharacter(aSlug.charAt(i))) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    static boolean isValidProjectSlugInitialCharacter(char aChar)
-    {
-        return ('a' <= aChar && aChar <= 'z');
-    }
-
-    static boolean isValidProjectSlugCharacter(char aChar)
-    {
-        return ('0' <= aChar && aChar <= '9') || ('a' <= aChar && aChar <= 'z') || aChar == '-'
-                || aChar == '_';
-    }
 }

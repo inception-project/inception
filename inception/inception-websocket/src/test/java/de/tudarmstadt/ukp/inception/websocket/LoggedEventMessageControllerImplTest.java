@@ -70,7 +70,7 @@ public class LoggedEventMessageControllerImplTest
         outboundChannel = new TestChannel();
         adapterRegistry = new EventLoggingAdapterRegistryImpl(asList(new SpanEventAdapter()));
         adapterRegistry.onContextRefreshedEvent(null);
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
         testProject.setId(1L);
         testDoc = new SourceDocument("testDoc", testProject, "text");
         testDoc.setId(2L);

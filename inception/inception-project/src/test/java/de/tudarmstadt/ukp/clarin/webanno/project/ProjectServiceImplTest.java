@@ -21,10 +21,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.MAX_PROJECT_SLUG_LENGTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MAX_PROJECT_SLUG_LENGTH;
 import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -82,14 +82,14 @@ public class ProjectServiceImplTest
         testEntityManager.persist(kevin);
 
         // create project and projectPermissions for users
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
         testEntityManager.persist(testProject);
         testEntityManager.persist(new ProjectPermission(testProject, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "kevin", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "beate", CURATOR));
 
         // create additional project and projectPermissions for users
-        testProject2 = new Project("testProject2");
+        testProject2 = new Project("test-project2");
         testEntityManager.persist(testProject2);
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", CURATOR));

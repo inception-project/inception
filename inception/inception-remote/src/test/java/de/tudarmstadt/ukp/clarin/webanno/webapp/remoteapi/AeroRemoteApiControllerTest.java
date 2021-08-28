@@ -79,15 +79,15 @@ import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAut
                 "repository.path=" + AeroRemoteApiControllerTest.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @Import({ //
+        ProjectServiceAutoConfiguration.class, //
         ProjectExportServiceAutoConfiguration.class, //
+        AnnotationSchemaServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
         CurationDocumentServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
-        ProjectServiceAutoConfiguration.class, //
-        CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
-        AnnotationSchemaServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         RemoteApiAutoConfiguration.class })
 @EntityScan({ //

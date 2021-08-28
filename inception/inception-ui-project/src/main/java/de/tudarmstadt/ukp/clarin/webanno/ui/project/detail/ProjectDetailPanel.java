@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.isValidProjectName;
-import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.isValidProjectSlug;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectName;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -148,7 +148,7 @@ public class ProjectDetailPanel
         slug = projectService.deriveUniqueSlug(slug);
         // Just a safe-guard in case we would generate an invalid slug which we would not want
         // to get written back to the database
-        if (ProjectService.isValidProjectSlug(slug)) {
+        if (isValidProjectSlug(slug)) {
             return Optional.of(slug);
         }
 

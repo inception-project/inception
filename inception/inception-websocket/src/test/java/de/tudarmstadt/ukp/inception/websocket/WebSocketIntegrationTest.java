@@ -137,7 +137,7 @@ public class WebSocketIntegrationTest
         repositoryProperties.setPath(repositoryDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
         testDoc = new SourceDocument("testDoc", testProject, "text");
         projectService.createProject(testProject);
         docService.createSourceDocument(testDoc);

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.storage.config;
 
 import javax.persistence.EntityManager;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -29,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServic
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
 
 @Configuration
+@ConditionalOnBean({ CasStorageService.class, AnnotationSchemaService.class, ProjectService.class })
 public class CurationDocumentServiceAutoConfiguration
 {
     @Bean(CurationDocumentService.SERVICE_NAME)
