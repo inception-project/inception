@@ -29,6 +29,7 @@ import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 
@@ -39,6 +40,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.wicket.ClassAttributeModifier;
@@ -66,6 +68,8 @@ import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import com.github.rjeschke.txtmark.Processor;
+
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
@@ -91,6 +95,7 @@ public class ProjectsOverviewPage
 {
     private static final String MID_CREATED = "created";
     private static final String MID_NAME = "name";
+    private static final String MID_DESCRIPTION = "description";
     private static final String MID_PROJECT_LINK = "projectLink";
     private static final String MID_LABEL = "label";
     private static final String MID_ROLE = "role";
@@ -289,6 +294,8 @@ public class ProjectsOverviewPage
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
+                aItem.add(new Label(MID_DESCRIPTION, aItem.getModelObject().getShortDescription())
+                        .setEscapeModelStrings(false));
                 DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
                         () -> project.getCreated(), "yyyy-MM-dd");
                 addActionsDropdown(aItem);
@@ -540,6 +547,24 @@ public class ProjectsOverviewPage
         public String getName()
         {
             return project.getName();
+        }
+
+        public String getSlug()
+        {
+            return project.getSlug();
+        }
+
+        public String getShortDescription()
+        {
+            if (StringUtils.isBlank(project.getDescription())) {
+                return null;
+            }
+
+            var shortDescription = substringBefore(project.getDescription(), "\n");
+            var shortDescriptionHtml = Processor.process(shortDescription, true);
+            shortDescriptionHtml = StringUtils.removeStart(shortDescriptionHtml, "<p>");
+            shortDescriptionHtml = StringUtils.removeEnd(shortDescriptionHtml, "</p>");
+            return shortDescriptionHtml;
         }
 
         public Project getProject()
