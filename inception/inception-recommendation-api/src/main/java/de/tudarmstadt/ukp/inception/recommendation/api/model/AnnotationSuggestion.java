@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -25,7 +26,10 @@ import javax.annotation.Nullable;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public abstract class AnnotationSuggestion
+    implements Serializable
 {
+    private static final long serialVersionUID = -7137765759688480950L;
+
     public static final String EXTENSION_ID = "rec";
 
     /**
