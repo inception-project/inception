@@ -49,7 +49,7 @@ class FeedbackPanelExtension {
     // create item with new info content
     let msgItem = document.createElement('li');
     msgItem.classList.add('alert', 'alert-dismissable', msgClass);
-
+    
     // add closable link
     let msgCloseLink = this.createCloseLink();
     msgItem.appendChild(msgCloseLink);
@@ -72,11 +72,9 @@ class FeedbackPanelExtension {
   }
   
   createCloseLink() {
-    var closeLink = document.createElement('a');
-    var closeLinkText = document.createTextNode("×");
-    closeLink.appendChild(closeLinkText);
-    closeLink.classList.add('close');
-    closeLink.setAttribute('data-dismiss', 'alert');
+    var closeLink = document.createElement('button');
+    closeLink.classList.add('btn-close');
+    closeLink.setAttribute('data-bs-dismiss', 'alert');
     closeLink.setAttribute('aria-label', 'close');
     closeLink.href = "#";
     return closeLink;
