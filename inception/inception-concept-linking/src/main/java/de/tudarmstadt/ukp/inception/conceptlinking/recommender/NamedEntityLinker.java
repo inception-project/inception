@@ -83,6 +83,7 @@ public class NamedEntityLinker
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasList)
     {
+        // Training not supported
     }
 
     @Override

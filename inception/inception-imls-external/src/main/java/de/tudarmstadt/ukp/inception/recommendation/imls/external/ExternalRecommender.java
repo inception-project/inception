@@ -142,6 +142,7 @@ public class ExternalRecommender
         if (response.statusCode() == HTTP_TOO_MANY_REQUESTS) {
             LOG.info("External recommender is already training");
         }
+
         // If the response indicates that the request was not successful,
         // then it does not make sense to go on and try to decode the XMI
         else if (response.statusCode() >= HTTP_BAD_REQUEST) {

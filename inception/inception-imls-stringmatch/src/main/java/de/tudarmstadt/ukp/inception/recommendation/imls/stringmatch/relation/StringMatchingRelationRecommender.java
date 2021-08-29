@@ -87,6 +87,7 @@ public class StringMatchingRelationRecommender
             Pair<String, String> key = Pair.of(t.governor, t.dependent);
             model.put(key, t.label);
         }
+
         return model;
     }
 
