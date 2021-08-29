@@ -371,6 +371,7 @@ public class StatementEditor
             }
 
             valueType = new DropDownChoice<>("valueType", valueTypes);
+            valueType.setNullValid(false);
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(
                     valueTypeRegistry.getValueType(aStatement.getObject(), property.getObject())));
@@ -381,6 +382,7 @@ public class StatementEditor
                         .createEditor("value", model, property, kbModel);
                 editor.setOutputMarkupId(true);
                 editor = (ValueEditor) editor.replaceWith(newEditor);
+                t.add(valueType);
                 t.add(editor);
             }));
             form.add(valueType);

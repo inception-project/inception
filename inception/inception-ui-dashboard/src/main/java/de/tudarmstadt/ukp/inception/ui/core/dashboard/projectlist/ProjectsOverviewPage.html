@@ -78,7 +78,7 @@
                   </a>
                 </div>
                 <div class="list-group-item-text text-muted">
-                  <wicket:container wicket:id="description"/>
+                  <small><wicket:container wicket:id="description"/></small>
                 </div>
               </div>
               <div class="d-flex flex-column text-end">
@@ -96,7 +96,11 @@
                     <i class="fas fa-ellipsis-v"></i>
                   </button>
                   <ul class="dropdown-menu float-end" role="menu">
-                    <li role="presentation"><a role="menuitem" tabindex="-1" wicket:id="leaveProject"><wicket:message key="leaveDialog.title"/></a></li>
+                    <li>
+                      <button class="dropdown-item" tabindex="-1" wicket:id="leaveProject" type="button">
+                        <wicket:message key="leaveDialog.title"/>
+                      </button>
+                    </li>
                   </ul>
                 </div>
               </div>
