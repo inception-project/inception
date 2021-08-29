@@ -44,7 +44,7 @@ import org.hibernate.annotations.Type;
  * A persistence object for a Project.
  */
 @Entity
-@Table(name = "project", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
+@Table(name = "project", uniqueConstraints = { @UniqueConstraint(columnNames = { "slug" }) })
 public class Project
     implements Serializable
 {
