@@ -219,8 +219,9 @@ public class AcceptInvitePage
             return;
         }
 
-        setResponsePage(ProjectDashboardPage.class, new PageParameters()
-                .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, getProject().getId()));
+        PageParameters pageParameters = new PageParameters();
+        setProjectPageParameter(pageParameters, getProject());
+        setResponsePage(ProjectDashboardPage.class, pageParameters);
     }
 
     private Authentication asAuthentication(User aUser)

@@ -96,6 +96,7 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
 // waits forever for the indexing to complete...
 @Transactional(propagation = Propagation.NEVER)
 @Import({ //
+        AnnotationSchemaServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         ConllFormatsAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
@@ -104,7 +105,6 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
         ProjectInitializersAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
-        AnnotationSchemaServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         SearchServiceAutoConfiguration.class, //
         SchedulingServiceAutoConfiguration.class, //

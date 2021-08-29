@@ -26,6 +26,7 @@ import java.net.URLConnection;
 import java.text.SimpleDateFormat;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -94,6 +95,7 @@ public class LegacyRemoteApiController
     private static final String PARAM_FILE = "file";
     private static final String PARAM_FILETYPE = "filetype";
     private static final String PARAM_NAME = "name";
+    private static final String PARAM_TITLE = "title";
     private static final String PARAM_FORMAT = "format";
 
     private final Logger LOG = LoggerFactory.getLogger(getClass());
@@ -111,7 +113,7 @@ public class LegacyRemoteApiController
      * curl -v -F 'file=@test.zip' -F 'name=Test' -F 'filetype=tcf'
      * 'http://USERNAME:PASSWORD@localhost:8080/webanno-webapp/api/projects'
      *
-     * @param aName
+     * @param aSlug
      *            the name of the project to create.
      * @param aFileType
      *            the type of the files contained in the ZIP.
@@ -124,8 +126,11 @@ public class LegacyRemoteApiController
     @PostMapping(//
             value = ("/" + PROJECTS), //
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> projectCreate(@RequestParam(PARAM_FILE) MultipartFile aFile,
-            @RequestParam(PARAM_NAME) String aName, @RequestParam(PARAM_FILETYPE) String aFileType)
+    public ResponseEntity<String> projectCreate( //
+            @RequestParam(PARAM_FILE) MultipartFile aFile, //
+            @RequestParam(PARAM_NAME) String aSlug, //
+            @RequestParam(PARAM_TITLE) Optional<String> aName, //
+            @RequestParam(PARAM_FILETYPE) String aFileType)
         throws Exception
     {
         // Get current user
@@ -144,9 +149,9 @@ public class LegacyRemoteApiController
         }
 
         // Existing project
-        if (projectRepository.existsProject(aName)) {
+        if (projectRepository.existsProjectWithSlug(aSlug)) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body("A project with name [" + aName + "] already exists");
+                    .body("A project with URL slug [" + aSlug + "] already exists");
         }
 
         // Check archive
@@ -157,10 +162,11 @@ public class LegacyRemoteApiController
         }
 
         // Create the project and initialize tags
-        LOG.info("Creating project [" + aName + "]");
+        LOG.info("Creating project [" + aSlug + "]");
         Project project = new Project();
-        project.setName(aName);
-        projectRepository.createProject(project);
+        project.setSlug(aSlug);
+        project.setName(aName.orElse(aSlug));
+        project = projectRepository.createProject(project);
         projectRepository.initializeProject(project);
 
         // Create permission for the project creator
@@ -210,11 +216,10 @@ public class LegacyRemoteApiController
             }
         }
 
-        LOG.info("Successfully created project [" + aName + "] for user [" + username + "]");
+        LOG.info("Successfully created project [" + aSlug + "] for user [" + username + "]");
 
         JSONObject projectJSON = new JSONObject();
-        long pId = projectRepository.getProject(aName).getId();
-        projectJSON.append(aName, pId);
+        projectJSON.append(aSlug, project.getId());
         return ResponseEntity.ok(projectJSON.toString());
     }
 
@@ -256,7 +261,7 @@ public class LegacyRemoteApiController
             for (ProjectPermission p : projectPermissions) {
                 permissionArr.put(p.getLevel().getName());
             }
-            projectJSON.put(project.getName(), permissionArr);
+            projectJSON.put(project.getSlug(), permissionArr);
             returnJSONObj.put(projectId, projectJSON);
         }
         return ResponseEntity.ok(returnJSONObj.toString());

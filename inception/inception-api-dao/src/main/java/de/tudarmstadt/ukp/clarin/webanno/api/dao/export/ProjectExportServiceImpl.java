@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskStat
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.File;
@@ -268,12 +269,16 @@ public class ProjectExportServiceImpl
         try {
             ExportedProject exProject = loadExportedProject(aZip);
 
-            // If the name of the project is already taken, generate a new name
-            String projectName = exProject.getName();
-            if (projectService.existsProject(projectName)) {
-                projectName = copyProjectName(projectName);
+            project.setName(exProject.getName());
+
+            // Old projects do not have a slug, so we derive one from the project name
+            String slug = exProject.getSlug();
+            if (isBlank(slug)) {
+                slug = projectService.deriveSlugFromName(exProject.getName());
             }
-            project.setName(projectName);
+
+            // If the slug is already taken, generate a unique one
+            project.setSlug(projectService.deriveUniqueSlug(slug));
 
             // Initial saving of the project
             projectService.createProject(project);
@@ -310,25 +315,6 @@ public class ProjectExportServiceImpl
                 formatDurationWords(currentTimeMillis() - start, true, true));
 
         return project;
-    }
-
-    /**
-     * Get a project name to be used when importing. Use the prefix, copy_of_...+ i to avoid
-     * conflicts
-     */
-    private String copyProjectName(String aProjectName)
-    {
-        String projectName = "copy_of_" + aProjectName;
-        int i = 1;
-        while (true) {
-            if (projectService.existsProject(projectName)) {
-                projectName = "copy_of_" + aProjectName + "(" + i + ")";
-                i++;
-            }
-            else {
-                return projectName;
-            }
-        }
     }
 
     public static ExportedProject loadExportedProject(ZipFile aZip) throws IOException
