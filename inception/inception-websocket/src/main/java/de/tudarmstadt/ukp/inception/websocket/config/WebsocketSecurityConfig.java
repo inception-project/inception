@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.config;
 
-import static org.springframework.messaging.simp.SimpMessageType.*;
+import static org.springframework.messaging.simp.SimpMessageType.DISCONNECT;
+import static org.springframework.messaging.simp.SimpMessageType.MESSAGE;
+import static org.springframework.messaging.simp.SimpMessageType.SUBSCRIBE;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
