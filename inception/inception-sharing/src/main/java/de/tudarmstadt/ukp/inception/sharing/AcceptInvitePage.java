@@ -236,10 +236,12 @@ public class AcceptInvitePage
     {
         Optional<User> existingUser = inviteService.getProjectUser(getProject(),
                 aFormData.username);
-        String storedEMail = existingUser.map(User::getEmail).orElse(null);
-        if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {
-            error("Provided eMail address does not match stored eMail address");
-            return null;
+        if (invite.getObject().getAskForEMail() != NOT_ALLOWED) {
+            String storedEMail = existingUser.map(User::getEmail).orElse(null);
+            if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {
+                error("Provided eMail address does not match stored eMail address");
+                return null;
+            }
         }
 
         User user = inviteService.getOrCreateProjectUser(getProject(), aFormData.username);
