@@ -39,9 +39,9 @@
 </style>
 <script>
   $( document ).ready(function() { 
-    // Prevent the dropdowns from closing if an item Kendo dropdown is selected
+    // Prevent the stick dropdowns from closing on every click inside the dropdown
     $('.sticky-dropdown').on('hide.bs.dropdown', function(e) {
-      if ($(e.clickEvent.target).parents('.k-popup, .cbx-icon').length) {
+      if (e.clickEvent && $(e.clickEvent.target).closest('.sticky-dropdown').length) {
         e.preventDefault();
       }
     });
@@ -247,9 +247,7 @@
                       <div class="col-sm-5">
                         <div class="input-group">
                           <input wicket:id="abandonationTimeout" type="number" class="form-control text-end"/>
-                          <div class="input-group-append">
-                            <span class="input-group-text">minutes</span>
-                          </div>
+                          <span class="input-group-text">minutes</span>
                         </div>
                         <div class="mt-2">
                           <button wicket:id="abandonationOneDay" class="btn btn-sm btn-secondary"><wicket:message key="one-day" /></button>
