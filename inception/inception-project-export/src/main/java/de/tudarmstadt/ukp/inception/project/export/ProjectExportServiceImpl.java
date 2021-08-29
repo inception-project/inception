@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
+package de.tudarmstadt.ukp.inception.project.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState.NOT_STARTED;
@@ -65,7 +65,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
@@ -78,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 
 /**
  * <p>
