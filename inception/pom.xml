@@ -69,10 +69,10 @@
     <uima.version>3.2.0</uima.version>
     <uimafit.version>3.2.0</uimafit.version>
 
-    <spring.version>5.3.8</spring.version>
-    <spring.boot.version>2.4.8</spring.boot.version>
-    <spring.security.version>5.4.7</spring.security.version>
-    <springdoc.version>1.5.8</springdoc.version>
+    <spring.version>5.3.9</spring.version>
+    <spring.boot.version>2.5.4</spring.boot.version>
+    <spring.security.version>5.5.2</spring.security.version>
+    <springdoc.version>1.5.10</springdoc.version>
     <swagger.version>2.1.10</swagger.version>
 
     <slf4j.version>1.7.32</slf4j.version>
