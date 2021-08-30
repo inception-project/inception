@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.config;
+package de.tudarmstadt.ukp.inception.project.export.config;
 
 import java.util.List;
 
@@ -28,9 +28,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportServiceImpl;
 
 @Configuration
 @AutoConfigureAfter(name = {

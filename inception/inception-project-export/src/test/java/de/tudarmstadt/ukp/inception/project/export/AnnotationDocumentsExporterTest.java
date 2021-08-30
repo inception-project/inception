@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.export.exporters;
+package de.tudarmstadt.ukp.inception.project.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.util.Arrays.asList;
@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImp
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
@@ -54,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
+import de.tudarmstadt.ukp.inception.export.exporters.AnnotationDocumentExporter;
 
 public class AnnotationDocumentsExporterTest
 {
