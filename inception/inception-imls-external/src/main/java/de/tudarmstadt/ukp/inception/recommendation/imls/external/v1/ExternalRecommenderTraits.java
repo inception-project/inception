@@ -15,13 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external.config;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
-import java.time.Duration;
+import java.io.Serializable;
 
-public interface ExternalRecommenderProperties
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ExternalRecommenderTraits
+    implements Serializable
 {
-    Duration getConnectTimeout();
+    private static final long serialVersionUID = -3109239605741337123L;
 
-    Duration getReadTimeout();
+    private String remoteUrl;
+    private boolean trainable;
+
+    public String getRemoteUrl()
+    {
+        return remoteUrl;
+    }
+
+    public void setRemoteUrl(String aRemoteUrl)
+    {
+        remoteUrl = aRemoteUrl;
+    }
+
+    public boolean isTrainable()
+    {
+        return trainable;
+    }
+
+    public void setTrainable(boolean aTrainable)
+    {
+        trainable = aTrainable;
+    }
 }

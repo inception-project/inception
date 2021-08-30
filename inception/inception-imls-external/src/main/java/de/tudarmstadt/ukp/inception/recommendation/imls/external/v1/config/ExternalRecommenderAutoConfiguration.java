@@ -15,14 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external.config;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalRecommenderFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.ExternalRecommenderFactory;
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.external", name = "enabled", havingValue = "true", matchIfMissing = true)

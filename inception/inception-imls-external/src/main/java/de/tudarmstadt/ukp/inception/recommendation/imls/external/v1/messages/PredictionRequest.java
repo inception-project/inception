@@ -15,12 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external.messages;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Document;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Metadata;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Metadata;
 
 public class PredictionRequest
 {
