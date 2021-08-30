@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao.export;
+package de.tudarmstadt.ukp.inception.project.export;
 
 import java.io.File;
 import java.io.IOException;
