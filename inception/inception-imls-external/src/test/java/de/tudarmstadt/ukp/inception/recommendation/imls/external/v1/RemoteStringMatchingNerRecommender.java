@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -50,10 +50,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.PredictionResponse;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.messages.TrainingRequest;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.model.Document;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.TrainingRequest;
+import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.model.Document;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderTraits;
 
