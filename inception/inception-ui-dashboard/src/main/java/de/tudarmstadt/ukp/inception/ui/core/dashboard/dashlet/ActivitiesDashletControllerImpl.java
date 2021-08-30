@@ -155,14 +155,12 @@ public class ActivitiesDashletControllerImpl
                     if (CURATION_USER.equals(event.getAnnotator())) {
                         return new Activity(event,
                                 annotatableSourceDocuments.get(event.getDocument()),
-                                curationPageMenuItem.getUrl(event.getProject(),
-                                        event.getDocument()));
+                                curationPageMenuItem.getUrl(project, event.getDocument()));
                     }
                     else {
                         return new Activity(event,
                                 annotatableSourceDocuments.get(event.getDocument()),
-                                annotationPageMenuItem.getUrl(event.getProject(),
-                                        event.getDocument()));
+                                annotationPageMenuItem.getUrl(project, event.getDocument()));
                     }
                 })//
                 .collect(toList());

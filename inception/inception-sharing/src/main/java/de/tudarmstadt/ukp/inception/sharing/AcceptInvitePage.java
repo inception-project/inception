@@ -219,8 +219,9 @@ public class AcceptInvitePage
             return;
         }
 
-        setResponsePage(ProjectDashboardPage.class, new PageParameters()
-                .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, getProject().getId()));
+        PageParameters pageParameters = new PageParameters();
+        setProjectPageParameter(pageParameters, getProject());
+        setResponsePage(ProjectDashboardPage.class, pageParameters);
     }
 
     private Authentication asAuthentication(User aUser)
@@ -236,10 +237,12 @@ public class AcceptInvitePage
     {
         Optional<User> existingUser = inviteService.getProjectUser(getProject(),
                 aFormData.username);
-        String storedEMail = existingUser.map(User::getEmail).orElse(null);
-        if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {
-            error("Provided eMail address does not match stored eMail address");
-            return null;
+        if (invite.getObject().getAskForEMail() != NOT_ALLOWED) {
+            String storedEMail = existingUser.map(User::getEmail).orElse(null);
+            if (storedEMail != null && !storedEMail.equals(aFormData.eMail)) {
+                error("Provided eMail address does not match stored eMail address");
+                return null;
+            }
         }
 
         User user = inviteService.getOrCreateProjectUser(getProject(), aFormData.username);

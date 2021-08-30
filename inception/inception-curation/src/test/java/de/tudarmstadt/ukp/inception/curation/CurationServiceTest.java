@@ -79,7 +79,7 @@ public class CurationServiceTest
         testEntityManager.persist(kevin);
 
         // create project
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
         testEntityManager.persist(testProject);
         testEntityManager.persist(new ProjectPermission(testProject, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "kevin", ANNOTATOR));

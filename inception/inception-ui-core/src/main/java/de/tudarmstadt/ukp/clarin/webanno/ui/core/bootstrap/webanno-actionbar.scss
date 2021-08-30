@@ -22,6 +22,7 @@
   background-color: $card-cap-bg;
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   
   @include media-breakpoint-down(xl) {

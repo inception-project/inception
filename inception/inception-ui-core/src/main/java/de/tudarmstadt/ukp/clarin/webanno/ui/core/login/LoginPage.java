@@ -229,8 +229,8 @@ public class LoginPage
             super(id);
             setModel(new CompoundPropertyModel<>(this));
 
-            add(new RequiredTextField<String>("username"));
-            add(new PasswordTextField("password"));
+            add(new RequiredTextField<String>("username").setOutputMarkupId(true));
+            add(new PasswordTextField("password").setOutputMarkupId(true));
             add(new HiddenField<>("urlfragment"));
             add(new Button("signInBtn").add(enabledWhen(() -> !isTooManyUsers())));
             add(new Label("loginMessage", loginProperties.getMessage()).setEscapeModelStrings(false)

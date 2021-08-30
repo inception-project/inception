@@ -84,6 +84,9 @@ public class ExportedAnnotationFeature
     @JsonProperty("traits")
     private String traits;
 
+    @JsonProperty("curatable")
+    private boolean curatable = true;
+
     public String getName()
     {
         return name;
@@ -262,6 +265,16 @@ public class ExportedAnnotationFeature
     public void setTraits(String aTraits)
     {
         traits = aTraits;
+    }
+
+    public boolean isCuratable()
+    {
+        return curatable;
+    }
+
+    public void setCuratable(boolean aCuratable)
+    {
+        curatable = aCuratable;
     }
 
     @Override

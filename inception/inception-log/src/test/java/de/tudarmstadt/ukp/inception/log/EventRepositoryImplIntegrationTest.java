@@ -17,7 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -26,23 +30,46 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
-@ContextConfiguration(classes = SpringConfig.class)
-@Transactional
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
+@EnableAutoConfiguration
+@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+        properties = { //
+                "spring.main.banner-mode=off" })
+@EntityScan({ //
+        "de.tudarmstadt.ukp.inception", //
+        "de.tudarmstadt.ukp.clarin.webanno" })
+@Import({ //
+        ProjectServiceAutoConfiguration.class, //
+        DocumentServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, //
+        AnnotationSchemaServiceAutoConfiguration.class, //
+        SecurityAutoConfiguration.class })
 public class EventRepositoryImplIntegrationTest
 {
     private static final String PROJECT_NAME = "Test project";
@@ -53,8 +80,7 @@ public class EventRepositoryImplIntegrationTest
     private static final String EVENT_TYPE_AFTER_ANNO_EVENT = "AfterAnnotationUpdateEvent";
     private static final String SPAN_CREATED_EVENT = "SpanCreatedEvent";
 
-    @Autowired
-    private TestEntityManager testEntityManager;
+    private @Autowired TestEntityManager testEntityManager;
 
     private EventRepositoryImpl sut;
     private Project project;
@@ -288,5 +314,21 @@ public class EventRepositoryImplIntegrationTest
         User user = new User();
         user.setUsername(aUsername);
         return testEntityManager.persist(user);
+    }
+
+    @SpringBootConfiguration
+    public static class TestContext
+    {
+        @Bean
+        DocumentImportExportService documentImportExportService(
+                AnnotationSchemaService aSchemaService)
+            throws Exception
+        {
+            var tsd = createTypeSystemDescription();
+            var importService = mock(DocumentImportExportService.class);
+            when(importService.importCasFromFile(any(), any(), any(), any()))
+                    .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));
+            return importService;
+        }
     }
 }

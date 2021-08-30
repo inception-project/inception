@@ -120,10 +120,11 @@ public class ProjectExportCuratedDocumentsTask
      * 
      * @param aCopyDir
      *            The folder where curated documents are copied to be exported as Zip File
+     * @throws InterruptedException 
      */
     private void exportCuratedDocuments(ProjectExportRequest aModel, File aCopyDir,
             boolean aIncludeInProgress, ProjectExportTaskMonitor aMonitor)
-        throws ProjectExportException, IOException
+        throws ProjectExportException, IOException, InterruptedException
     {
         Project project = aModel.getProject();
 
@@ -148,6 +149,11 @@ public class ProjectExportCuratedDocumentsTask
         int initProgress = aMonitor.getProgress() - 1;
         int i = 1;
         for (de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument sourceDocument : documents) {
+            // check if the export has been cancelled
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             try (CasStorageSession session = CasStorageSession.openNested()) {
                 File curationCasDir = new File(
                         aCopyDir + CURATION_AS_SERIALISED_CAS + sourceDocument.getName());

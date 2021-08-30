@@ -47,7 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -371,7 +370,8 @@ public class StatementEditor
                 valueTypes = valueTypeRegistry.getAllTypes();
             }
 
-            valueType = new BootstrapSelect<>("valueType", valueTypes);
+            valueType = new DropDownChoice<>("valueType", valueTypes);
+            valueType.setNullValid(false);
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(
                     valueTypeRegistry.getValueType(aStatement.getObject(), property.getObject())));
@@ -382,6 +382,7 @@ public class StatementEditor
                         .createEditor("value", model, property, kbModel);
                 editor.setOutputMarkupId(true);
                 editor = (ValueEditor) editor.replaceWith(newEditor);
+                t.add(valueType);
                 t.add(editor);
             }));
             form.add(valueType);

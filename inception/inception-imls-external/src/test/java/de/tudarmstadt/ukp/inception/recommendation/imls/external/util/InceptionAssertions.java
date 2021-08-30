@@ -24,8 +24,9 @@ public class InceptionAssertions
     extends Assertions
 {
 
-    public static CasAssert assertThat(CAS actual)
+    public static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.CasAssert assertThat(
+            CAS actual)
     {
-        return new CasAssert(actual);
+        return new de.tudarmstadt.ukp.inception.recommendation.imls.external.util.CasAssert(actual);
     }
 }

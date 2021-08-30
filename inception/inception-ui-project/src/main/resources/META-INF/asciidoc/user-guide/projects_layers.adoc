@@ -110,8 +110,6 @@ have have been included in the files are ignored on import.
 [[sect_projects_layers_properties]]
 == Properties 
 
-image::layer1.jpg[align="center"]
-
 .Properites
 [cols="1,2", options="header"]
 |====
@@ -281,6 +279,13 @@ _(Span layers)_
 | Whether the annotation detail editor should carry values of this feature
 over when creating a new annotation of the same type. This can be useful when creating many annotations
 of the same type in a row.
+
+| Curatable
+| Whether the feature is considered when comparing whether annotations are equal and can be
+pre-merged during curation. This flag is enabled by default. When it is disabled, two annotations
+will be treated as the same for the purpose of curation, even if the feature value is different.
+The feature value will also not be copied to a pre-merged or manually merged annotation. Disabling
+this flag on all features of a layer will cause annotations to be only compared by their positions.
 |====
 
 

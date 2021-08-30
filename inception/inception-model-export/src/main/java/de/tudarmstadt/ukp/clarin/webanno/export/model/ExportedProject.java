@@ -41,12 +41,15 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 /**
  * All required contents of a project to be exported.
  */
-@JsonPropertyOrder(value = { "name", "description", "mode", "version" })
+@JsonPropertyOrder(value = { "name", "slug", "description", "mode", "version" })
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExportedProject
 {
     @JsonProperty(value = "name", required = true)
     private String name;
+
+    @JsonProperty("slug")
+    private String slug;
 
     @JsonProperty("description")
     private String description;
@@ -99,6 +102,16 @@ public class ExportedProject
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    public String getSlug()
+    {
+        return slug;
+    }
+
+    public void setSlug(String aSlug)
+    {
+        slug = aSlug;
     }
 
     public String getDescription()

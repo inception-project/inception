@@ -25,13 +25,12 @@
       <div class="card-body flex-v-container">
         <form wicket:id="searchForm">
           <div class="flex-v-container" wicket:enclosure="queryInput">
-            <div class="form-group from-row">
+            <div class="d-flex mb-2">
               <textarea wicket:id="queryInput" class="form-control"
                 style="resize: vertical; word-break: break-all;"
                 rows="5"></textarea>
             </div>
-            <div
-              class="form-group from-row flex-h-container flex-gutter flex-only-internal-gutter">
+            <div class="d-flex mb-2">
               <div class="btn-group flex-content flex-h-container"
                 role="group">
                 <button wicket:id="search" type="submit"
@@ -43,7 +42,7 @@
                 </button>
                 <button wicket:id="toggleOptionsVisibility"
                   type="button"
-                  class="btn btn-secondary border-left flex-static-item">
+                  class="btn btn-secondary border-start flex-static-item">
                   <i class="fas fa-cog" aria-hidden="true"></i>
                 </button>
               </div>
@@ -62,7 +61,7 @@
               </div>
             </div>
             <div class="card-body small">
-              <div class="form-group form-row"
+              <div class="row form-row"
                 wicket:enclosure="limitedToCurrentDocument">
                 <div class="form-check">
                   <input wicket:id="limitedToCurrentDocument"
@@ -73,7 +72,7 @@
                   </label>
                 </div>
               </div>
-              <div class="form-group form-row"
+              <div class="row form-row"
                 wicket:enclosure="lowLevelPaging">
                 <div class="form-check">
                   <input wicket:id="lowLevelPaging"
@@ -87,34 +86,31 @@
                 <strong> <wicket:message key="groupingHeader" />
                 </strong>
               </div>
-              <div class="form-group form-row">
+              <div class="row form-row">
                 <label wicket:for="groupingLayer"
                   class="col-form-label col-sm-4"> <wicket:message
                     key="groupingLayer" />
                 </label>
                 <div class="col-sm-8">
-                  <select wicket:id="groupingLayer"
-                    class="form-control-sm" data-container="body"></select>
+                  <select wicket:id="groupingLayer" class="form-select-sm" data-container="body"/>
                 </div>
               </div>
-              <div class="form-group form-row">
+              <div class="row form-row">
                 <label wicket:for="groupingFeature"
                   class="col-form-label col-sm-4"> <wicket:message
                     key="groupingFeature" />
                 </label>
                 <div class="col-sm-8">
-                  <select wicket:id="groupingFeature"
-                    class="form-control-sm" data-container="body"></select>
+                  <select wicket:id="groupingFeature" class="form-select-sm" data-container="body"/>
                 </div>
               </div>
-              <div class="form-group form-row">
+              <div class="row form-row">
                 <label wicket:for="itemsPerPage"
                   class="col-form-label col-sm-4"> <wicket:message
                     key="itemsPerPage" />
                 </label>
                 <div class="col-sm-8">
-                  <select wicket:id="itemsPerPage"
-                    class="form-control-sm" data-container="body"></select>
+                  <select wicket:id="itemsPerPage" class="form-select-sm" data-container="body"/>
                 </div>
               </div>
             </div>
@@ -122,7 +118,7 @@
         </form>
 
         <div>
-          <span wicket:id="numberOfResults" class="float-right" /> <span
+          <span wicket:id="numberOfResults" class="float-end" /> <span
             wicket:id="pagingNavigator" />
         </div>
         <div class="scrolling flex-content">
@@ -143,9 +139,9 @@
             </wicket:container>
           </table>
         </div>
+        
         <form wicket:id="annotateForm" style="margin-top: 5px">
-          <div
-            class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="mb-2 d-flex">
             <div class="btn-group flex-content flex-h-container"
               role="group">
               <button wicket:id="annotateAllButton" type="submit"
@@ -157,17 +153,17 @@
               </button>
               <button wicket:id="toggleCreateOptionsVisibility"
                 type="button"
-                class="btn btn-secondary border-left flex-static-item">
+                class="btn btn-secondary border-start flex-static-item">
                 <i class="fas fa-cog" aria-hidden="true"></i>
               </button>
             </div>
           </div>
-          <form wicket:id="createOptions" class="card">
+          <form wicket:id="createOptions" class="card mb-2">
             <div class="card-header small">
               <wicket:message key="options" />
             </div>
             <div class="card-body small">
-              <div class="form-group form-row"
+              <div class="form-row"
                 wicket:enclosure="overrideExistingAnnotations">
                 <div class="form-check">
                   <input wicket:id="overrideExistingAnnotations"
@@ -181,8 +177,7 @@
             </div>
           </form>
 
-          <div
-            class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="mb-2 d-flex">
             <div class="btn-group flex-content flex-h-container"
               role="group">
               <button wicket:id="deleteButton" type="submit"
@@ -194,17 +189,17 @@
               </button>
               <button wicket:id="toggleDeleteOptionsVisibility"
                 type="button"
-                class="btn btn-secondary border-left flex-static-item">
+                class="btn btn-secondary border-start flex-static-item">
                 <i class="fas fa-cog" aria-hidden="true"></i>
               </button>
             </div>
           </div>
-          <form wicket:id="deleteOptions" class="card">
+          <form wicket:id="deleteOptions" class="card mb-2">
             <div class="card-header small">
               <wicket:message key="options" />
             </div>
             <div class="card-body small">
-              <div class="form-group form-row"
+              <div class="form-row"
                 wicket:enclosure="deleteOnlyMatchingFeatureValues">
                 <div class="form-check">
                   <input wicket:id="deleteOnlyMatchingFeatureValues"
@@ -218,8 +213,7 @@
             </div>
           </form>
 
-          <div
-            class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
+          <div class="mb-2 d-flex">
             <button wicket:id="clearButton"
               class="btn btn-secondary flex-content"
               wicket:message="title:clear">
@@ -229,8 +223,7 @@
             </button>
           </div>
 
-          <div
-            class="form-group flex-h-container flex-gutter flex-only-internal-gutter mb-0">
+          <div class="d-flex">
             <button wicket:id="export"
               class="btn btn-primary flex-content">
               <i class="fas fa-download" aria-hidden="true"></i>
