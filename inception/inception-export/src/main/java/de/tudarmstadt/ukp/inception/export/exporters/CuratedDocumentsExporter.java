@@ -189,15 +189,20 @@ public class CuratedDocumentsExporter
         for (Enumeration<? extends ZipEntry> zipEnumerate = aZip.entries(); zipEnumerate
                 .hasMoreElements();) {
             ZipEntry entry = zipEnumerate.nextElement();
-
-            log.trace("Considering ZIP entry [{}]", entry.getName());
+            if (entry.isDirectory()) {
+                log.trace("Skipping ZIP entry that is a directory: [{}]", entry.getName());
+                continue;
+            }
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             String entryName = ProjectExporter.normalizeEntryName(entry);
 
             if (!entryName.startsWith(CURATION_AS_SERIALISED_CAS + "/")) {
+                log.trace("Skipping ZIP entry that is not a curation CAS: [{}]", entry.getName());
                 continue;
             }
+
+            log.trace("Importing curation CAS from: [{}]", entry.getName());
 
             String fileName = entryName.replace(CURATION_AS_SERIALISED_CAS + "/", "");
             // the user annotated the document is file name minus extension

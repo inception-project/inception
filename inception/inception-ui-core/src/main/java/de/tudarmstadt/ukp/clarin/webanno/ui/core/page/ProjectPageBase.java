@@ -94,8 +94,9 @@ public abstract class ProjectPageBase
         Class<? extends Page> projectDashboard = WicketObjects.resolveClass(
                 "de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage");
 
-        throw new RestartResponseException(projectDashboard,
-                new PageParameters().set(PAGE_PARAM_PROJECT, getProject().getId()));
+        PageParameters pageParameters = new PageParameters();
+        setProjectPageParameter(pageParameters, getProject());
+        throw new RestartResponseException(projectDashboard, pageParameters);
     }
 
     protected void setProjectModel(IModel<Project> aModel)
@@ -120,7 +121,12 @@ public abstract class ProjectPageBase
 
     public Project getProjectFromParameters()
     {
-        StringValue projectParameter = getPageParameters().get(PAGE_PARAM_PROJECT);
+        return getProjectFromParameters(this, projectService);
+    }
+
+    public static Project getProjectFromParameters(Page aPage, ProjectService aProjectService)
+    {
+        StringValue projectParameter = aPage.getPageParameters().get(PAGE_PARAM_PROJECT);
 
         if (projectParameter.isEmpty()) {
             return null;
@@ -128,17 +134,27 @@ public abstract class ProjectPageBase
 
         try {
             try {
-                return projectService.getProject(projectParameter.toLong());
+                return aProjectService.getProject(projectParameter.toLong());
             }
             catch (StringValueConversionException e) {
-                // Ignore lookup by ID and try lookup by name instead.
+                // Ignore lookup by ID and try lookup by slug instead.
             }
 
-            return projectService.getProject(projectParameter.toString());
+            return aProjectService.getProjectBySlug(projectParameter.toString());
         }
         catch (NoResultException e) {
-            getSession().error("Project [" + projectParameter + "] does not exist");
-            throw new RestartResponseException(getApplication().getHomePage());
+            aPage.getSession().error("Project [" + projectParameter + "] does not exist");
+            throw new RestartResponseException(aPage.getApplication().getHomePage());
+        }
+    }
+
+    public static void setProjectPageParameter(PageParameters aParameters, Project aProject)
+    {
+        if (aProject.getSlug() != null) {
+            aParameters.set(PAGE_PARAM_PROJECT, aProject.getSlug());
+        }
+        else {
+            aParameters.set(PAGE_PARAM_PROJECT, aProject.getId());
         }
     }
 }

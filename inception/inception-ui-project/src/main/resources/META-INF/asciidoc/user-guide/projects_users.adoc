@@ -2,7 +2,7 @@
 
 After clicking on the *Users* tab, you are displayed with a new pane in which you can add new users by clicking on the *Add users* text field. You get a dropdown list of enabled users in the system which can be added to the project. Any users which are already part of the project are not offered. As you type the dropdown list with the users is filtered to match your input. By clicking on a username or by pressing enter you can select the corresponding user. You can keep typing to add more users to the project. When you press the *Add* button the selected users are added to your project.
 
-image::new_userSelection.jpg[align="center"]
+image::new_userSelection.png[align="center"]
 
 NOTE: For privacy reasons, the administrator may choose to restrict the users shown in the dropdown. 
       If this is the case, you have to enter the full name of a user before it appears in the dropdown and
@@ -11,7 +11,7 @@ NOTE: For privacy reasons, the administrator may choose to restrict the users sh
 By default, the users are added to the project as annotators. If you want to assign additional roles,
 you can do so by clicking on the user and then on *Permissions* pane select the appropriate permissions.
 
-image::new_userPermissions.jpg[align="center"]
+image::new_userPermissions.png[align="center"]
 
 After ticking the wished permissions, click on *Save*.
 To remove a user, remove all the permissions and then click on *Save*.

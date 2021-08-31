@@ -24,7 +24,11 @@ package de.tudarmstadt.ukp.clarin.webanno.project;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MAX_PROJECT_SLUG_LENGTH;
+import static org.apache.commons.lang3.StringUtils.repeat;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 
@@ -32,6 +36,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -77,14 +82,14 @@ public class ProjectServiceImplTest
         testEntityManager.persist(kevin);
 
         // create project and projectPermissions for users
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
         testEntityManager.persist(testProject);
         testEntityManager.persist(new ProjectPermission(testProject, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "kevin", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject, "beate", CURATOR));
 
         // create additional project and projectPermissions for users
-        testProject2 = new Project("testProject2");
+        testProject2 = new Project("test-project2");
         testEntityManager.persist(testProject2);
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", CURATOR));
@@ -154,5 +159,38 @@ public class ProjectServiceImplTest
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject, ANNOTATOR);
 
         assertThat(foundUsers).containsExactly(beate, kevin);
+    }
+
+    @Test
+    public void thatDerivingSlugFromProjectNameWorks()
+    {
+        assertThat(sut.deriveSlugFromName("This is a test")).isEqualTo("this-is-a-test");
+        assertThat(sut.deriveSlugFromName(" This is a test")).isEqualTo("this-is-a-test");
+        assertThat(sut.deriveSlugFromName("This is a test ")).isEqualTo("this-is-a-test");
+        assertThat(sut.deriveSlugFromName("Nö, mog I net")).isEqualTo("n_-mog-i-net");
+        assertThat(sut.deriveSlugFromName("hey 😎 name")).isEqualTo("hey-_-name");
+        assertThat(sut.deriveSlugFromName("")).isEqualTo("");
+        assertThat(sut.deriveSlugFromName(null)).isEqualTo(null);
+        assertThat(sut.deriveSlugFromName("x")).isEqualTo("x__");
+        assertThat(sut.deriveSlugFromName("1")).isEqualTo("x1_");
+    }
+
+    @Test
+    public void thatGenerationOfUniqueSlugWorks()
+    {
+        ProjectService projectSerivce = Mockito.spy(sut);
+        when(projectSerivce.deriveUniqueSlug(any())).thenCallRealMethod();
+
+        when(projectSerivce.existsProjectWithSlug(any())).then(answer -> {
+            String slug = answer.getArgument(0, String.class);
+            char lastChar = slug.charAt(slug.length() - 1);
+            return lastChar < '9' || lastChar >= 'A';
+        });
+
+        assertThat(projectSerivce.deriveUniqueSlug("this-is-a-test")).isEqualTo("this-is-a-test-9");
+
+        assertThat(projectSerivce.deriveUniqueSlug(repeat('x', MAX_PROJECT_SLUG_LENGTH * 2)))
+                .isEqualTo(repeat('x', MAX_PROJECT_SLUG_LENGTH - 2) + "-9")
+                .hasSize(MAX_PROJECT_SLUG_LENGTH);
     }
 }

@@ -81,14 +81,16 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
         "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @Import({ //
+        AnnotationSchemaServiceAutoConfiguration.class, //
+        ProjectServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
         CurationDocumentServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         UimaFormatsAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
-        ProjectServiceAutoConfiguration.class, //
-        VersioningServiceAutoConfiguration.class, CasStorageServiceAutoConfiguration.class, //
-        RepositoryAutoConfiguration.class, AnnotationSchemaServiceAutoConfiguration.class, //
+        VersioningServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class })
 public class VersioningServiceImplTest
 {
@@ -111,7 +113,7 @@ public class VersioningServiceImplTest
     @BeforeEach
     public void setUp()
     {
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
     }
 
     @AfterEach

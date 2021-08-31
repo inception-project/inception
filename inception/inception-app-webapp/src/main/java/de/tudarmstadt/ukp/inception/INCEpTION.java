@@ -103,12 +103,6 @@ public class INCEpTION
         // Disable default error controller so that Wicket can take over
         return new ErrorController()
         {
-            @Deprecated
-            @Override
-            public String getErrorPath()
-            {
-                return null;
-            }
         };
     }
 
