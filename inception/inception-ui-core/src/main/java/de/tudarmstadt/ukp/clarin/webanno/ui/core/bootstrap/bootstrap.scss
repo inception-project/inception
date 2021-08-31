@@ -47,6 +47,16 @@
   min-width: 440px;
 }
 
+.h-max-400px {
+  max-height: 440px;
+}
+
+@for $i from 1 through 10 {
+  @media only screen and (min-height: #{$i * 200}px) {
+    .dropdown-menu { max-height: #{$i * 100}px; overflow-y: auto; }
+  }   
+}
+
 .form-row {
   @extend .mb-2;
 }

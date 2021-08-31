@@ -93,7 +93,7 @@ public class MenuBar
 
         helpLink = new DocLink(CID_HELP_LINK, USER_GUIDE, new ResourceModel("page.help.link", ""));
         helpLink.setBody(Model.of("<i class=\"fas fa-question-circle\"></i>"
-                + " <span class=\"nav-link active p-0 d-none d-md-inline\">Help</span>"));
+                + " <span class=\"nav-link active p-0 d-none d-lg-inline\">Help</span>"));
         helpLink.add(visibleWhen(this::isPageHelpAvailable));
         add(helpLink);
 
