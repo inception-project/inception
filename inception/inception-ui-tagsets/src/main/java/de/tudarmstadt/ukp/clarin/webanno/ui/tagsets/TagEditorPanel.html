@@ -34,16 +34,16 @@
           <button class="btn btn-action dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
             <i class="fas fa-ellipsis-v"></i>
           </button>
-          <div class="dropdown-menu" role="menu" style="min-width: 220px;">
-            <div class="container">
-              <div class="row form-row">
-                <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
-                  <i class="fas fa-trash"></i>&nbsp;
-                  <wicket:message key="delete"/>
-                </button>
-              </div>
-            </div>
-          </div>
+          <ul class="dropdown-menu shadow-lg" role="menu" style="min-width: 220px;">
+            <li>
+              <button wicket:id="delete" class="dropdown-item" type="button">
+                <wicket:message key="delete"/>
+                <span class="float-end badge badge-pill bg-danger">
+                  <i class="fas fa-trash"></i>
+                </span>
+              </button>
+            </li>
+          </ul>
         </div>
       </div>
     </div>

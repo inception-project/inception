@@ -51,18 +51,6 @@ public class ExtensibleClasspathEnabledWarLayoutFactory
             return "de.tudarmstadt.ukp.inception.bootloader.ExtensibleClasspathEnabledWarLauncher";
         }
 
-        @Deprecated
-        @Override
-        public String getLibraryDestination(String aLibraryName, LibraryScope aScope)
-        {
-            if (aLibraryName.startsWith("inception-boot-loader-")) {
-                // Boot loader classes go to the root of the JAR
-                return "";
-            }
-
-            return super.getLibraryDestination(aLibraryName, aScope);
-        }
-
         @Override
         public String getLibraryLocation(String aLibraryName, LibraryScope aScope)
         {

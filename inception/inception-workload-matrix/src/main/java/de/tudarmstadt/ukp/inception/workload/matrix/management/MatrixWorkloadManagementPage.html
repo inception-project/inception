@@ -29,9 +29,9 @@
   </style>
   <script>
   $( document ).ready(function() { 
-    // Prevent the dropdowns from closing if an item Kendo dropdown is selected
+    // Prevent the stick dropdowns from closing on every click inside the dropdown
     $('.sticky-dropdown').on('hide.bs.dropdown', function(e) {
-      if ($(e.clickEvent.target).closest('.k-popup, .cbx-icon, .cbx-label').length) {
+      if (e.clickEvent && $(e.clickEvent.target).closest('.sticky-dropdown').length) {
         e.preventDefault();
       }
     });
@@ -157,7 +157,7 @@
                         </span>
                       </a>
                       <hr class="dropdown-divider"/>
-                      <a wicket:id="bulkReset" class="dropdown-item danger">
+                      <a wicket:id="bulkReset" class="dropdown-item">
                         Reset selected
                         <span class="float-end badge badge-pill bg-danger">
                           <i class="fas fa-trash"></i>
