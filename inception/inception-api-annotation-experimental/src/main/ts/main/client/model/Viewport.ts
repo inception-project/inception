@@ -17,14 +17,16 @@
  */
 export class Viewport
 {
-    viewport: [number, number][]
-    disabledLayers: string[]
     documentText: string;
+    begin: number;
+    end: number;
+    layers: string[]
 
-    constructor(aViewports: [number, number][], aDisabledLayers: string[], aDocumentText: string)
+    constructor(aDocumentText: string, aBegin: number, aEnd: number, aLayers: string[])
     {
-        this.viewport = aViewports;
-        this.disabledLayers = aDisabledLayers;
         this.documentText = aDocumentText;
+        this.begin = aBegin;
+        this.end = aEnd;
+        this.layers = aLayers;
     }
 }

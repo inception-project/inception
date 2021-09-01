@@ -89,10 +89,6 @@
             <artifactId>spring-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.uima</groupId>
-            <artifactId>uimafit-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-api-dao</artifactId>
         </dependency>

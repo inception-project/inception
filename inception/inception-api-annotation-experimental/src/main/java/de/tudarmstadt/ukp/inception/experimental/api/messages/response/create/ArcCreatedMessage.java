@@ -15,46 +15,58 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.model;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.create;
 
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 
-public class Arc
+public class ArcCreatedMessage
 {
-    private VID id;
+    private VID arcId;
+    private long projectId;
     private VID sourceId;
     private VID targetId;
-    private String sourceCoveredText;
-    private String targetCoveredText;
     private String color;
     private String type;
-    private List<String> features;
+    private List<FeatureX> features;
 
-    public Arc(VID aId, VID aSourceId, VID aTargetId, String aColor,
-               String aSourceCoveredText, String aTargetCoveredText, String aType, List<String> aFeatures)
+    public ArcCreatedMessage(VID aArcId, long aProjectId, VID aSourceId, VID aTargetId, String aColor,
+                             String aType,
+                             List<FeatureX> aFeatures)
     {
-        id = aId;
+        arcId = aArcId;
+        projectId = aProjectId;
         sourceId = aSourceId;
         targetId = aTargetId;
         color = aColor;
-        sourceCoveredText = aSourceCoveredText;
-        targetCoveredText = aTargetCoveredText;
+        type = aType;
         features = aFeatures;
     }
 
-    public VID getId()
+    public VID getArcId()
     {
-        return id;
+        return arcId;
     }
 
-    public void setId(VID aId)
+    public void setArcId(VID aArcId)
     {
-        id = aId;
+        arcId = aArcId;
     }
 
-    public VID getSourceId() {
+    public long getProjectId()
+    {
+        return projectId;
+    }
+
+    public void setProjectId(long aProjectId)
+    {
+        projectId = aProjectId;
+    }
+
+    public VID getSourceId()
+    {
         return sourceId;
     }
 
@@ -71,26 +83,6 @@ public class Arc
     public void setTargetId(VID aTargetId)
     {
         targetId = aTargetId;
-    }
-
-    public String getSourceCoveredText()
-    {
-        return sourceCoveredText;
-    }
-
-    public void setSourceCoveredText(String aSourceCoveredText)
-    {
-        sourceCoveredText = aSourceCoveredText;
-    }
-
-    public String getTargetCoveredText()
-    {
-        return targetCoveredText;
-    }
-
-    public void setTargetCoveredText(String aTargetCoveredText)
-    {
-        targetCoveredText = aTargetCoveredText;
     }
 
     public String getColor()
@@ -113,12 +105,12 @@ public class Arc
         type = aType;
     }
 
-    public List<String> getFeatures()
+    public List<FeatureX> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(List<String> aFeatures)
+    public void setFeatures(List<FeatureX> aFeatures)
     {
         features = aFeatures;
     }

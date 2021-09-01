@@ -15,20 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Viewport} from "../../model/Viewport";
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
 
-export class DocumentRequest
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+
+public class DeleteAnnotationMessage
 {
-    annotatorName: string;
-    projectId: number;
-    sourceDocumentId: number;
-    viewport: Viewport;
+    private VID annotationId;
 
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aViewport: Viewport)
+    public DeleteAnnotationMessage(VID aAnnotationId)
     {
-        this.annotatorName = aAnnotatorName;
-        this.projectId = aProjectId;
-        this.sourceDocumentId = aSourceDocumentId;
-        this.viewport = aViewport;
+        this.annotationId = aAnnotationId;
+    }
+
+    public VID getAnnotationId()
+    {
+        return annotationId;
+    }
+
+    public void setAnnotationId(VID aAnnotationId)
+    {
+        annotationId = aAnnotationId;
     }
 }

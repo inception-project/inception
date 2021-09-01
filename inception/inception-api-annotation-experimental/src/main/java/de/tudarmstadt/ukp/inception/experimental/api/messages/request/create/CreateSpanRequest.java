@@ -15,16 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.request.create;
 
-import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
-
-public class DocumentRequest
+public class CreateSpanRequest
 {
     private String annotatorName;
     private long projectId;
     private long sourceDocumentId;
-    private Viewport viewport;
+    private int begin;
+    private int end;
+    private String layer;
 
     public String getAnnotatorName()
     {
@@ -56,14 +56,33 @@ public class DocumentRequest
         sourceDocumentId = aSourceDocumentId;
     }
 
-    public Viewport getViewport()
+    public int getBegin()
     {
-        return viewport;
+        return begin;
     }
 
-    public void setViewport(Viewport aViewport)
+    public void setBegin(int aBegin)
     {
-        viewport = aViewport;
+        begin = aBegin;
     }
 
+    public int getEnd()
+    {
+        return end;
+    }
+
+    public void setEnd(int aEnd)
+    {
+        end = aEnd;
+    }
+
+    public String getLayer()
+    {
+        return layer;
+    }
+
+    public void setLayer(String aLayer)
+    {
+        layer = aLayer;
+    }
 }

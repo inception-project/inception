@@ -15,20 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Span} from "../../model/Span";
+import {Arc} from "../../model/Arc";
 import {Viewport} from "../../model/Viewport";
 
-export class DocumentRequest
+export class DocumentMessage
 {
-    annotatorName: string;
-    projectId: number;
-    sourceDocumentId: number;
-    viewport: Viewport;
-
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aViewport: Viewport)
-    {
-        this.annotatorName = aAnnotatorName;
-        this.projectId = aProjectId;
-        this.sourceDocumentId = aSourceDocumentId;
-        this.viewport = aViewport;
-    }
+    viewport : Viewport;
+    sourceDocumentId : number;
+    spans : Span[];
+    arcs : Arc[];
 }

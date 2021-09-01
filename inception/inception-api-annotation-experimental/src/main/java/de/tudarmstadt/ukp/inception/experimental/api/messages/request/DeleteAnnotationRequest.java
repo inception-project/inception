@@ -17,14 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
 
-import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class DocumentRequest
+public class DeleteAnnotationRequest
 {
     private String annotatorName;
     private long projectId;
     private long sourceDocumentId;
-    private Viewport viewport;
+    private VID annotationId;
+    private String layer;
 
     public String getAnnotatorName()
     {
@@ -56,14 +57,23 @@ public class DocumentRequest
         sourceDocumentId = aSourceDocumentId;
     }
 
-    public Viewport getViewport()
+    public VID getAnnotationId()
     {
-        return viewport;
+        return annotationId;
     }
 
-    public void setViewport(Viewport aViewport)
+    public void setAnnotationId(VID aAnnotationId)
     {
-        viewport = aViewport;
+        annotationId = aAnnotationId;
     }
 
+    public String getLayer()
+    {
+        return layer;
+    }
+
+    public void setLayer(String aLayer)
+    {
+        layer = aLayer;
+    }
 }

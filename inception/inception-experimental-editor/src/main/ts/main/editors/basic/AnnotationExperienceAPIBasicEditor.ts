@@ -28,7 +28,6 @@ export class AnnotationExperienceAPIBasicEditor
 
     constructor()
     {
-        this.annotationExperienceAPI = new AnnotationExperienceAPIImpl();
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIBasicEditorVisualization(this);
         this.annotationExperienceAPIActionHandler = new AnnotationExperienceAPIBasicEditorActionHandler(this);
     }

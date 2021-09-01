@@ -18,58 +18,35 @@
 import {Client, Stomp} from '@stomp/stompjs';
 import {AnnotationExperienceAPI} from "./AnnotationExperienceAPI"
 import {Span} from "./model/Span";
-import {ErrorMessage} from "./messages/response/ErrorMessage";
-import {SelectSpanRequest} from "./messages/request/span/SelectSpanRequest";
-import {UpdateSpanRequest} from "./messages/request/span/UpdateSpanRequest";
-import {CreateSpanRequest} from "./messages/request/span/CreateSpanRequest";
-import {DeleteSpanRequest} from "./messages/request/span/DeleteSpanRequest";
-import {SelectSpanResponse} from "./messages/response/span/SelectSpanResponse";
-import {Viewport} from "./model/Viewport";
-import {SelectArcResponse} from "./messages/response/arc/SelectArcResponse";
-import {SelectArcRequest} from "./messages/request/arc/SelectArcRequest";
-import {UpdateArcRequest} from "./messages/request/arc/UpdateArcRequest";
-import {CreateArcRequest} from "./messages/request/arc/CreateArcRequest";
+import {AdviceMessage} from "./messages/response/AdviceMessage";
 import {FeatureX} from "./model/FeatureX";
 import {Arc} from "./model/Arc";
-import {DocumentResponse} from "./messages/response/DocumentResponse";
-import {UpdateSpanMessage} from "./messages/response/span/UpdateSpanMessage";
-import {CreateSpanMessage} from "./messages/response/span/CreateSpanMessage";
-import {DeleteSpanMessage} from "./messages/response/span/DeleteSpanMessage";
-import {UpdateArcMessage} from "./messages/response/arc/UpdateArcMessage";
-import {CreateArcMessage} from "./messages/response/arc/CreateArcMessage";
-import {DeleteArcMessage} from "./messages/response/arc/DeleteArcMessage";
+import {DocumentMessage} from "./messages/response/DocumentMessage";
 import {DocumentRequest} from "./messages/request/DocumentRequest";
-import {DeleteArcRequest} from "./messages/request/arc/DeleteArcRequest";
+import {UpdateFeaturesMessage} from "./messages/response/UpdateFeaturesMessage";
+import {SpanCreatedMessage} from "./messages/response/create/SpanCreatedMessage";
+import {DeleteAnnotationMessage} from "./messages/response/DeleteAnnotationMessage";
+import {ArcCreatedMessage} from "./messages/response/create/ArcCreatedMessage";
+import {CreateArcRequest} from "./messages/request/create/CreateArcRequest";
+import {CreateSpanRequest} from "./messages/request/create/CreateSpanRequest";
+import {Viewport} from "./model/Viewport";
+import {DeleteAnnotationRequest} from "./messages/request/DeleteAnnotationRequest";
+import {UpdateFeaturesRequest} from "./messages/request/UpdateFeaturesRequest";
 
 export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     //Websocket and stomp broker
     private stompClient: Client;
 
-    //States to remember by client
-    clientName: string;
-    projectID: number;
-    documentID: number;
-
-    //Text and annotations
-    spans: Span[];
-    selectedSpan: Span;
-
-    arcs: Arc[];
-    selectedArc: Arc;
-
-    //Viewport
-    viewport: Viewport;
-
-    constructor() {
-        this.connect();
+    constructor(aClientName: string, aProjectId: number, aDocumentId: number)
+    {
+        this.connect(aClientName, aProjectId, aDocumentId)
     }
 
 
     //CREATE WEBSOCKET CONNECTION
-    connect() {
-
-        //TODO find better solution
+    connect(aClientName: string, aProjectId: number, aDocumentId: number)
+    {
         this.stompClient = Stomp.over(function () {
             return new WebSocket(localStorage.getItem("url"));
         });
@@ -77,7 +54,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         const that = this;
 
         this.stompClient.onConnect = function (frame) {
-            that.onConnect(frame)
+            that.onConnect(aClientName, aProjectId, aDocumentId)
         }
 
 
@@ -91,76 +68,42 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this.stompClient.activate();
     }
 
-    onConnect(frame) {
+    onConnect(aClientName: string, aProjectId: number, aDocumentId: number) {
         let that = this;
-        //Receive username from inital message exchange header
-        const header = frame.headers;
-        let data: keyof typeof header;
-        for (data in header) {
-            that.clientName = header[data];
-            break;
-        }
-
-        //Receive project and document from URL
-        this.projectID = Number(document.location.href.split("/")[5]);
-        this.documentID = Number(document.location.href.split("=")[1].split("&")[0]);
-
-        this.viewport = new Viewport(null, null, null);
 
         // ------ DEFINE STANDARD SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
 
-        this.stompClient.subscribe("/queue/document/" + that.clientName, function (msg) {
-            that.onDocument(Object.assign(new DocumentResponse(), JSON.parse(msg.body)));
+        this.stompClient.subscribe("/queue/document/" + aClientName, function (msg) {
+            that.onDocument(Object.assign(new DocumentMessage(), JSON.parse(msg.body)));
         }, {id: "document_request"});
 
-        this.stompClient.subscribe("/queue/select_span/" + that.clientName, function (msg) {
-            that.onSpanSelect(Object.assign(new SelectSpanResponse(), JSON.parse(msg.body)));
-        }, {id: "selected_span"});
-
-        this.stompClient.subscribe("/queue/select_arc/" + that.clientName, function (msg) {
-            that.onArcSelect(Object.assign(new SelectArcResponse(), JSON.parse(msg.body)));
-        }, {id: "selected_arc"});
-
-        this.stompClient.subscribe("/queue/error_message/" + that.clientName, function (msg) {
-            that.onError(Object.assign(new ErrorMessage(), JSON.parse(msg.body)));
+        this.stompClient.subscribe("/queue/error_message/" + aClientName, function (msg) {
+            that.onError(Object.assign(new AdviceMessage(), JSON.parse(msg.body)));
         }, {id: "error_message"});
 
-        this.stompClient.subscribe("/topic/span_update/" +
-            this.projectID + "/" +
-            this.documentID, function (msg) {
-            that.onSpanUpdate(Object.assign(new UpdateSpanMessage(), JSON.parse(msg.body)));
+        this.stompClient.subscribe("/topic/features_update/" +
+            aProjectId + "/" +
+            aDocumentId, function (msg) {
+            that.onFeaturesUpdate(Object.assign(new UpdateFeaturesMessage(), JSON.parse(msg.body)));
         }, {id: "span_update"});
 
         this.stompClient.subscribe("/topic/span_create/" +
-            this.projectID + "/" +
-            this.documentID, function (msg) {
-            that.onSpanCreate(Object.assign(new CreateSpanMessage(), JSON.parse(msg.body)));
+            aProjectId + "/" +
+            aDocumentId, function (msg) {
+            that.onSpanCreate(Object.assign(new SpanCreatedMessage(), JSON.parse(msg.body)));
         }, {id: "span_create"});
 
-        this.stompClient.subscribe("/topic/span_delete/" +
-            this.projectID + "/" +
-            this.documentID , function (msg) {
-            that.onSpanDelete(Object.assign(new DeleteSpanMessage(), JSON.parse(msg.body)));
-        }, {id: "span_delete"});
-
-        this.stompClient.subscribe("/topic/arc_update/" +
-            this.projectID + "/" +
-            this.documentID, function (msg) {
-            that.onArcUpdate(Object.assign(new UpdateArcMessage(), JSON.parse(msg.body)));
-        }, {id: "relation_update"});
-
         this.stompClient.subscribe("/topic/arc_create/" +
-            this.projectID + "/" +
-            this.documentID, function (msg) {
-            that.onArcCreate(Object.assign(new CreateArcMessage(), JSON.parse(msg.body)));
+            aProjectId + "/" +
+            aDocumentId, function (msg) {
+            that.onArcCreate(Object.assign(new ArcCreatedMessage(), JSON.parse(msg.body)));
         }, {id: "relation_create"});
 
-        this.stompClient.subscribe("/topic/arc_delete/" +
-            this.projectID + "/" +
-            this.documentID, function (msg) {
-            that.onArcDelete(Object.assign(new DeleteArcMessage(), JSON.parse(msg.body)));
-        }, {id: "relation_delete"});
-
+        this.stompClient.subscribe("/topic/annotation_delete/" +
+            aProjectId + "/" +
+            aDocumentId, function (msg) {
+            that.onAnnotationDelete(Object.assign(new DeleteAnnotationMessage(), JSON.parse(msg.body)));
+        }, {id: "span_delete"});
     }
 
     unsubscribe(aChannel: string)
@@ -182,29 +125,10 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this.arcs = aMessage.arcs;
     }
 
-    onSpanDelete(aMessage)
-    {
-        this.spans.forEach((item, index) => {
-            if (item.id.toString() === aMessage.spanId.toString()) {
-                this.spans.splice(index, 1);
-            }
-        });
-    }
-
     onSpanCreate(aMessage)
     {
         let span = new Span(aMessage.spanId, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.features, aMessage.color)
         this.spans.push(span)
-    }
-
-    onSpanSelect(aMessage)
-    {
-        this.selectedSpan = new Span(aMessage.spanId, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.feature, aMessage.color)
-    }
-
-    onSpanUpdate(aMessage)
-    {
-        this.spans[this.spans.findIndex(s => s.id == aMessage.id)].features = aMessage.feature;
     }
 
     onError(aMessage)
@@ -218,98 +142,71 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this.arcs.push(relation)
     }
 
-    onArcDelete(aMessage)
+    onAnnotationDelete(aMessage: DeleteAnnotationMessage)
     {
+        this.spans.forEach((item, index) => {
+            if (item.id === aMessage.annotationId) {
+                this.spans.splice(index, 1);
+            }
+        });
         this.arcs.forEach((item, index) => {
-            if (item.id === aMessage.arcId) {
+            if (item.id === aMessage.annotationId) {
                 this.arcs.splice(index, 1);
             }
         });
     }
 
-    onArcSelect(aMessage)
-    {
-        this.selectedArc = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.sourceCoveredText, aMessage.targetCoveredText, aMessage.color, aMessage.type, aMessage.features)
+    onFeaturesUpdate(aMessage: UpdateFeaturesMessage) {
+        console.log('RECEIVED UPDATE ANNOTATION');
+        let arc = this.arcs.findIndex(r => r.id == aMessage.annotationId);
+        if (arc != null) {
+            this.arcs[arc].features = aMessage.features;
+            return;
+        } else {
+            let span = this.spans.findIndex(r => r.id == aMessage.annotationId);
+            this.arcs[arc].features = aMessage.features;
+        }
     }
 
-    onArcUpdate(aMessage)
-    {
-        console.log('RECEIVED UPDATE ARC');
-        let arc = this.arcs.findIndex(r => r.id == aMessage.arcId);
-
-        this.arcs[arc].features = aMessage.newFeatures;
-    }
-
-    requestCreateArc(aClientName: string, aProjectId: number, aDocumentId: number, aSourceId: string, aTargetId: string, aLayer: string)
+    requestCreateArc(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aSourceId: string, aTargetId: string, aLayer: string)
     {
         this.stompClient.publish({
             destination: "/app/arc_create",
-            body: JSON.stringify(new CreateArcRequest(aClientName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer))
+            body: JSON.stringify(new CreateArcRequest(aAnnotatorName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer))
         });
     }
 
-    requestCreateSpan(aClientName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: string)
+    requestCreateSpan(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: string)
     {
         console.log("SENDING: " + aBegin + " _ " + aEnd)
         this.stompClient.publish({
             destination: "/app/span_create",
-            body: JSON.stringify(new CreateSpanRequest(aClientName, aProjectId, aDocumentId, aBegin, aEnd, aLayer))
+            body: JSON.stringify(new CreateSpanRequest(aAnnotatorName, aProjectId, aDocumentId, aBegin, aEnd, aLayer))
         });
     }
 
-    requestDeleteArc(aClientName: string, aProjectId: number, aDocumentId: number, aArcId: string, aLayer: string)
-    {
-        this.stompClient.publish({
-        destination: "/app/arc_delete",
-        body: JSON.stringify(new DeleteArcRequest(aClientName, aProjectId, aDocumentId, aArcId, aLayer))
-        });
-    }
 
-    requestDeleteSpan(aClientName: string, aProjectId: number, aDocumentId: number, aSpanId: string, aLayer: string)
-    {
-        this.stompClient.publish({
-            destination: "/app/span_delete",
-            body: JSON.stringify(new DeleteSpanRequest(aClientName, aProjectId, aDocumentId, aSpanId, aLayer))
-        });
-    }
-
-    requestDocument(aClientName: string, aProjectId: number, aDocumentId: number)
+    requestDocument(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aViewport: Viewport)
     {
         this.stompClient.publish({
             destination: "/app/document_request", body: JSON.stringify(
-                new DocumentRequest(aClientName, aProjectId, aDocumentId, this.viewport))
+                new DocumentRequest(aAnnotatorName, aProjectId, aDocumentId, aViewport))
         });
     }
 
-    requestSelectArc(aClientName: string, aProjectId: number, aDocumentId: number, aArcId: string)
+    requestDeleteAnnotation(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aAnnotationId: number, aLayer: string)
     {
         this.stompClient.publish({
-            destination: "/app/select_arc",
-            body: JSON.stringify(new SelectArcRequest(aClientName, aProjectId, aDocumentId, aArcId))
+            destination: "/app/annotation_delete", body: JSON.stringify(
+                new DeleteAnnotationRequest(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aLayer))
         });
     }
 
-    requestSelectSpan(aClientName: string, aProjectId: number, aDocumentId: number, aSpanId: string)
+    requestUpdateFeatures(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aAnnotationId: number, aNewFeature: FeatureX[])
     {
         this.stompClient.publish({
-            destination: "/app/select_span",
-            body: JSON.stringify(new SelectSpanRequest(aClientName, aProjectId, aDocumentId, aSpanId))
-        });
-    }
-
-    requestUpdateArc(aClientName: string, aProjectId: number, aDocumentId: number, aArcId: string, aNewFeature: FeatureX[])
-    {
-        this.stompClient.publish({
-            destination: "/app/update_arc",
-            body: JSON.stringify(new UpdateArcRequest(aClientName, aProjectId, aDocumentId, aArcId, aNewFeature))
-        });
-    }
-
-    requestUpdateSpan(aClientName: string, aProjectId: number, aDocumentId: number, aSpanId: string, aNewFeature: FeatureX[])
-    {
-        this.stompClient.publish({
-            destination: "/app/update_span",
-            body: JSON.stringify(new UpdateSpanRequest(aClientName, aProjectId, aDocumentId, aSpanId, aNewFeature))
+            destination: "/app/features_update", body: JSON.stringify(
+                new UpdateFeaturesRequest(aAnnotatorName, aProjectId, aDocumentId,aAnnotationId, aNewFeature))
         });
     }
 }

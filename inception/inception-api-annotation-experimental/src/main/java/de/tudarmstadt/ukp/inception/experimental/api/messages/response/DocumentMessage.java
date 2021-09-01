@@ -15,45 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
 
+import java.util.List;
+
+import de.tudarmstadt.ukp.inception.experimental.api.model.Arc;
+import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 
-public class DocumentRequest
+public class DocumentMessage
 {
-    private String annotatorName;
-    private long projectId;
-    private long sourceDocumentId;
     private Viewport viewport;
+    private long sourceDocumentId;
+    private List<Span> spans;
+    private List<Arc> arcs;
 
-    public String getAnnotatorName()
+    public DocumentMessage(Viewport aViewport, long aSourceDocumentId, List<Span> aSpans,
+                           List<Arc> aRelations)
     {
-        return annotatorName;
-    }
-
-    public void setAnnotatorName(String aAnnotatorName)
-    {
-        annotatorName = aAnnotatorName;
-    }
-
-    public long getProjectId()
-    {
-        return projectId;
-    }
-
-    public void setProjectId(long aProjectId)
-    {
-        projectId = aProjectId;
-    }
-
-    public long getSourceDocumentId()
-    {
-        return sourceDocumentId;
-    }
-
-    public void setSourceDocumentId(long aSourceDocumentId)
-    {
+        viewport = aViewport;
         sourceDocumentId = aSourceDocumentId;
+        spans = aSpans;
+        arcs = aRelations;
     }
 
     public Viewport getViewport()
@@ -66,4 +49,33 @@ public class DocumentRequest
         viewport = aViewport;
     }
 
+    public long getSourceDocumentId()
+    {
+        return sourceDocumentId;
+    }
+
+    public void setSourceDocumentId(long aSourceDocumentId)
+    {
+        sourceDocumentId = aSourceDocumentId;
+    }
+
+    public List<Span> getSpans()
+    {
+        return spans;
+    }
+
+    public void setSpans(List<Span> aSpans)
+    {
+        spans = aSpans;
+    }
+
+    public List<Arc> getArcs()
+    {
+        return arcs;
+    }
+
+    public void setArcs(List<Arc> aArcs)
+    {
+        arcs = aArcs;
+    }
 }

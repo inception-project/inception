@@ -17,14 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
 
-import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
+import java.util.List;
 
-public class DocumentRequest
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
+
+public class UpdateFeaturesRequest
 {
     private String annotatorName;
     private long projectId;
     private long sourceDocumentId;
-    private Viewport viewport;
+    private VID annotationId;
+    private List<FeatureX> newFeatures;
 
     public String getAnnotatorName()
     {
@@ -56,14 +60,23 @@ public class DocumentRequest
         sourceDocumentId = aSourceDocumentId;
     }
 
-    public Viewport getViewport()
+    public VID getAnnotationId()
     {
-        return viewport;
+        return annotationId;
     }
 
-    public void setViewport(Viewport aViewport)
+    public void setAnnotationId(VID annotationId)
     {
-        viewport = aViewport;
+        this.annotationId = annotationId;
     }
 
+    public List<FeatureX> getNewFeatures()
+    {
+        return newFeatures;
+    }
+
+    public void setNewFeatures(List<FeatureX> newFeatures)
+    {
+        this.newFeatures = newFeatures;
+    }
 }

@@ -15,20 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Viewport} from "../../model/Viewport";
-
-export class DocumentRequest
+export class DeleteAnnotationMessage
 {
-    annotatorName: string;
-    projectId: number;
-    sourceDocumentId: number;
-    viewport: Viewport;
-
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aViewport: Viewport)
-    {
-        this.annotatorName = aAnnotatorName;
-        this.projectId = aProjectId;
-        this.sourceDocumentId = aSourceDocumentId;
-        this.viewport = aViewport;
-    }
+    annotationId: number;
 }

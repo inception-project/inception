@@ -16,13 +16,12 @@
  * limitations under the License.
  */
 
-import {AnnotationExperienceAPI} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPI";
 import {Span} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Span";
 import {AnnotationExperienceAPIBasicEditor} from "../AnnotationExperienceAPIBasicEditor";
 
 export class AnnotationExperienceAPIBasicEditorVisualization {
 
-    annotationExperienceAPIBasicEditor : AnnotationExperienceAPIBasicEditor;
+    annotationExperienceAPIBasicEditor: AnnotationExperienceAPIBasicEditor;
 
     SENTENCE_OFFSET_WIDTH = 45;
     CHARACTER_WIDTH = 9;
@@ -32,16 +31,15 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
     lineColorSecond: string = "#CCCCCC";
 
     //Viewport
-    sentenceBegin: number = 0;
-    sentenceCount: number = 5;
+    unitBegin: number = 0;
+    unitCount: number = 5;
 
     //Additional drawing
     showHighlighting: boolean = true;
-    showSentenceNumbers: boolean = true;
+    showUnitNumbers: boolean = true;
     showBackground: boolean = true;
 
-    constructor(aAnnotationExperienceAPIBasicEditor : AnnotationExperienceAPIBasicEditor)
-    {
+    constructor(aAnnotationExperienceAPIBasicEditor: AnnotationExperienceAPIBasicEditor) {
         this.annotationExperienceAPIBasicEditor = aAnnotationExperienceAPIBasicEditor;
     }
 
@@ -51,32 +49,32 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         textArea.innerHTML = '';
 
         //Sentences
-        let sentences = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText.split(".");
+        let units = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText.split(".");
 
         //SVG element
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
         svg.setAttribute("version", "1.2");
-        svg.setAttribute("viewBox", "0 0 " + textArea.offsetWidth + " " + this.sentenceCount * 20);
-        svg.setAttribute("style","font-size: 100%; width: " + textArea.offsetWidth+ "px; height: " + this.sentenceCount * 20 + "px");
+        svg.setAttribute("viewBox", "0 0 " + textArea.offsetWidth + " " + this.unitCount * 20);
+        svg.setAttribute("style", "font-size: 100%; width: " + textArea.offsetWidth + "px; height: " + this.unitCount * 20 + "px");
 
         let textElement = document.createElementNS("http://www.w3.org/2000/svg", "g");
         textElement.setAttribute("class", "sentences");
         textElement.style.display = "block";
 
-        let xBegin : number = 0;
+        let xBegin: number = 0;
 
-        this.sentenceBegin = Number(document.getElementsByTagName("input")[2].value) - 1
+        this.unitBegin = Number(document.getElementsByTagName("input")[2].value) - 1
 
-        if (this.sentenceBegin + this.sentenceCount > sentences.length) {
-            this.sentenceCount = sentences.length - this.sentenceBegin;
+        if (this.unitBegin + this.unitCount > units.length) {
+            this.unitCount = units.length - this.unitBegin;
         }
 
         if (this.showBackground) {
             svg.appendChild(this.drawBackground());
         }
 
-        if (this.showSentenceNumbers) {
-            svg.appendChild(this.drawSentenceNumbers())
+        if (this.showUnitNumbers) {
+            svg.appendChild(this.drawUnitNumbers())
             textElement.style.width = (svg.width - this.SENTENCE_OFFSET_WIDTH).toString();
             xBegin = this.SENTENCE_OFFSET_WIDTH;
         }
@@ -86,16 +84,16 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         let xPrev: number = xBegin;
 
 
-        for (let i = 0; i < this.sentenceCount; i++) {
-            let sentenceOffset = this.calculateInitialOffset(this.sentenceBegin + i)
+        for (let i = 0; i < this.unitCount; i++) {
+            let sentenceOffset = this.calculateInitialOffset(this.unitBegin + i)
 
             let sentence = document.createElementNS("http://www.w3.org/2000/svg", "g");
             sentence.setAttribute("class", "text-row");
-            sentence.setAttribute("sentence-id", (this.sentenceBegin + i).toString());
+            sentence.setAttribute("sentence-id", (this.unitBegin + i).toString());
 
-            for (let j = 0; j < sentences[this.sentenceBegin + i].length; j++, k++) {
+            for (let j = 0; j < units[this.unitBegin + i].length; j++, k++) {
                 let char = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                char.textContent = sentences[this.sentenceBegin + i][j];
+                char.textContent = units[this.unitBegin + i][j];
                 char.setAttribute("x", xPrev.toString());
                 char.setAttribute("y", ((i + 1) * 20 - 5).toString());
                 char.setAttribute("char_pos", (sentenceOffset + j).toString());
@@ -121,10 +119,10 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
     drawBackground() {
         //Background
         let background = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        background.setAttribute("class","background")
+        background.setAttribute("class", "background")
         background.innerHTML = "";
 
-        for (let i = 0; i < this.sentenceCount; i++) {
+        for (let i = 0; i < this.unitCount; i++) {
             let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
             rect.setAttribute("x", "0");
             rect.setAttribute("y", (i * 20).toString());
@@ -140,12 +138,11 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         return background;
     }
 
-    calculateInitialOffset(aSentenceNumber: Number)
-    {
+    calculateInitialOffset(aUnitNumber: Number) {
         let offset: number = 0;
-        let sentences = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText.split(".");
-        for (let i = 0; i < aSentenceNumber; i++) {
-            let words = sentences[i].split(" ");
+        let units = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText.split(".");
+        for (let i = 0; i < aUnitNumber; i++) {
+            let words = units[i].split(" ");
             for (let j = 0; j < words.length; j++) {
                 offset += words[j].length + 1;
             }
@@ -154,33 +151,33 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         return offset;
     }
 
-    drawSentenceNumbers() {
-        //Sentencenumbers
-        let sentenceNumbers = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        sentenceNumbers.setAttribute("class","sentence_numbers");
-        sentenceNumbers.style.display = "block";
-        sentenceNumbers.innerHTML = "";
+    drawUnitNumbers() {
+        //Unitnumbers
+        let unitNumbers = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        unitNumbers.setAttribute("class", "sentence_numbers");
+        unitNumbers.display = "block";
+        unitNumbers.innerHTML = "";
 
-        for (let i = 0; i < this.sentenceCount; i++) {
+        for (let i = 0; i < this.unitCount; i++) {
             let number = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            number.textContent = (this.sentenceBegin + i + 1).toString() + "."
+            number.textContent = (this.unitBegin + i + 1).toString() + "."
             number.setAttribute("x", "10");
             number.setAttribute("y", ((i + 1) * 20 - 5).toString());
-            sentenceNumbers.appendChild(number);
+            unitNumbers.appendChild(number);
         }
-        return sentenceNumbers;
+        return unitNumbers;
 
     }
 
     drawAnnotation(aAnnotations: Span[], aEditor: string) {
         let highlighting = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        highlighting.setAttribute("class","annotations")
+        highlighting.setAttribute("class", "annotations")
         highlighting.style.display = "block";
         highlighting.innerHTML = "";
 
         if (aAnnotations.length > 0) {
-            let sentences = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText;
-            this.sentenceCount = sentences.length - 1;
+            let units = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText;
+            this.unitCount = units.length - 1;
             let i = 0;
 
             let childElement = 0;
@@ -188,7 +185,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
             if (this.showBackground) {
                 childElement++;
             }
-            if (this.showSentenceNumbers) {
+            if (this.showUnitNumbers) {
                 childElement++;
             }
 
@@ -200,9 +197,9 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
 
                     let begin: string;
                     let end: string;
-                    let check : boolean = false;
+                    let check: boolean = false;
 
-                    let word : String = "";
+                    let word: String = "";
 
 
                     for (let char of child.children) {
@@ -275,7 +272,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
     }
 
     setShowSentenceNumbers(aShowSentenceNumbers: boolean, aEditor: string) {
-        this.showSentenceNumbers = aShowSentenceNumbers;
+        this.showUnitNumbers = aShowSentenceNumbers;
         this.refreshEditor(aEditor);
     }
 

@@ -158,27 +158,6 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
                     line.setAttribute("y2", (yDependent).toString());
                     line.setAttribute("gov_id", (govID).toString());
                     line.setAttribute("dep_id", (depID).toString());
-                    line.addEventListener('mouseover', function(e) {
-
-                        for (let i = 0; i < arcs.length; i++) {
-                            if ((arcs[i].sourceId == (Number(line.getAttribute("gov_id")))) &&
-                                (arcs[i].targetId == (Number(line.getAttribute("dep_id"))))) {
-                                    that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestSelectArc(
-                                        that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName,
-                                        that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.projectID,
-                                        that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.documentID,
-                                        arcs[i].id)
-                                }
-                            setTimeout(function () {
-                                let relation = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.selectedArc;
-                                alert("RelationID: " + relation.id + ", \n" +
-                                    "SourceID: " + relation.sourceId + ", \n" +
-                                    "SourceText: " + relation.targetCoveredText + ", \n" +
-                                    "TargetID: " + relation.targetId + ", \n" +
-                                    "TargetText: " + relation.targetCoveredText);
-                            }, 2000)
-                        }
-                    });
                     //TODO color
                     if (arcs.length > 0) {
                         line.style.stroke = "#9a001b";
@@ -191,12 +170,12 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
         }
     }
 
-    calculateInitialOffset(aSentenceNumber: Number)
+    calculateInitialOffset(aUnitNumber: Number)
     {
         let offset: number = 0;
-        let sentences = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.documentText.split(".");
-        for (let i = 0; i < aSentenceNumber; i++) {
-            let words = sentences[i].split(" ");
+        let units = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.documentText.split(".");
+        for (let i = 0; i < aUnitNumber; i++) {
+            let words = units[i].split(" ");
             for (let j = 0; j < words.length; j++) {
                 offset += words[j].length + 1;
             }

@@ -15,37 +15,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.model;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.response.create;
 
 import java.util.List;
 
-public class Viewport
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+
+public class SpanCreatedMessage
 {
-    private String documentText;
+    private VID spanId;
     private int begin;
     private int end;
-    private List<String> layers;
+    private String color;
+    private String type;
+    private List<String> features;
 
-    public Viewport()
+    public SpanCreatedMessage(VID aSpanId, int aBegin, int aEnd,
+                              String aType, String aColor, List<String> aFeatures)
     {
-    }
-
-    public Viewport(String aDocumentText, int aBegin, int aEnd, List<String> aLayers)
-    {
-        documentText = aDocumentText;
+        spanId = aSpanId;
         begin = aBegin;
         end = aEnd;
-        layers = aLayers;
+        type = aType;
+        color = aColor;
+        features = aFeatures;
     }
 
-    public String getDocumentText()
+    public VID getSpanId()
     {
-        return documentText;
+        return spanId;
     }
 
-    public void setDocumentText(String aDocumentText)
+    public void setSpanId(VID aSpanId)
     {
-        documentText = aDocumentText;
+        spanId = aSpanId;
     }
 
     public int getBegin()
@@ -68,13 +71,33 @@ public class Viewport
         end = aEnd;
     }
 
-    public List<String> getLayers()
+    public String getColor()
     {
-        return layers;
+        return color;
     }
 
-    public void setLayers(List<String> aLayers)
+    public void setColor(String aColor)
     {
-        layers = aLayers;
+        color = aColor;
+    }
+
+    public String getType()
+    {
+        return type;
+    }
+
+    public void setType(String aType)
+    {
+        type = aType;
+    }
+
+    public List<String> getFeatures()
+    {
+        return features;
+    }
+
+    public void setFeatures(List<String> aFeatures)
+    {
+        features = aFeatures;
     }
 }

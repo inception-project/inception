@@ -17,79 +17,43 @@
  */
 import {Viewport} from "./model/Viewport";
 import {FeatureX} from "./model/FeatureX";
-import {Span} from "./model/Span";
-import {Arc} from "./model/Arc";
-import {DocumentResponse} from "./messages/response/DocumentResponse";
-import {SelectSpanResponse} from "./messages/response/span/SelectSpanResponse";
-import {UpdateSpanMessage} from "./messages/response/span/UpdateSpanMessage";
-import {CreateSpanMessage} from "./messages/response/span/CreateSpanMessage";
-import {DeleteSpanMessage} from "./messages/response/span/DeleteSpanMessage";
-import {SelectArcResponse} from "./messages/response/arc/SelectArcResponse";
-import {ErrorMessage} from "./messages/response/ErrorMessage";
-import {UpdateArcMessage} from "./messages/response/arc/UpdateArcMessage";
-import {DeleteArcMessage} from "./messages/response/arc/DeleteArcMessage";
-import {CreateArcMessage} from "./messages/response/arc/CreateArcMessage";
+import {AdviceMessage, Message} from "./messages/response/AdviceMessage";
+import {DocumentMessage} from "./messages/response/DocumentMessage";
+import {UpdateFeaturesMessage} from "./messages/response/UpdateFeaturesMessage";
+import {DeleteAnnotationMessage} from "./messages/response/DeleteAnnotationMessage";
+import {SpanCreatedMessage} from "./messages/response/create/SpanCreatedMessage";
+import {ArcCreatedMessage} from "./messages/response/create/ArcCreatedMessage";
 
 export interface AnnotationExperienceAPI
 {
-    //Text and annotations
-    spans: Span[];
-    selectedSpan: Span;
-
-    arcs: Arc[];
-    selectedArc: Arc;
-
-    //Viewport
-    viewport: Viewport;
-
     unsubscribe(aChannel: string);
 
     disconnect();
 
 
-    requestDocument(aClientName: string, aProjectId: number,
+    requestDocument(aAnnotatorName: string, aProjectId: number,
                                  aDocumentId: number, aViewport: Viewport);
 
-    requestSelectSpan(aClientName: string, aProjectId: number,
-                                aDocumentId: number, aSpanId: string);
+    requestUpdateFeatures(aAnnotatorName: string, aProjectId: number,
+                                aDocumentId: number, aAnnotationId: number, aNewFeature: FeatureX[])
 
-    requestUpdateSpan(aClientName: string, aProjectId: number,
-                                aDocumentId: number, aSpanId: string, aNewFeature: FeatureX[])
-
-    requestCreateSpan(aClientName: string, aProjectId: number,
+    requestCreateSpan(aAnnotatorName: string, aProjectId: number,
                                 aDocumentId: number, aBegin: number, aEnd: number, aLayer: string);
 
-    requestDeleteSpan(aClientName: string,  aProjectId: number,
-                                aDocumentId: number, aSpanId: string, aLayer: string);
+    requestDeleteAnnotation(aAnnotatorName: string,  aProjectId: number,
+                                aDocumentId: number, aAnnotationId: number, aLayer: string);
 
-    requestSelectArc(aClientName: string, aProjectId: number,
-                                    aDocumentId: number, aArcId: string);
+    requestCreateArc(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aSourceId : string, aTargetId : string, aLayer: string)
 
-    requestUpdateArc(aClientName: string, aProjectId: number,
-                                    aDocumentId: number, aArcId: string, aNewFeature: FeatureX[])
+    onDocument(aMessage: DocumentMessage);
 
-    requestCreateArc(aClientName: string, aProjectId: number, aDocumentId: number, aSourceId : string, aTargetId : string, aLayer: string)
+    onSpanCreate(aMessage: SpanCreatedMessage);
 
-    requestDeleteArc(aClientName: string, aProjectId: number,
-                                    aDocumentId: number, aArcId: string, aLayer: string);
+    onArcCreate(aMessage: ArcCreatedMessage);
 
-    onDocument(aMessage: DocumentResponse);
+    onFeaturesUpdate(aMessage: UpdateFeaturesMessage);
 
-    onSpanSelect(aMessage: SelectSpanResponse);
+    onAnnotationDelete(aMessage: DeleteAnnotationMessage);
 
-    onSpanUpdate(aMessage: UpdateSpanMessage);
-
-    onSpanCreate(aMessage: CreateSpanMessage);
-
-    onSpanDelete(aMessage: DeleteSpanMessage);
-
-    onArcSelect(aMessage: SelectArcResponse);
-
-    onArcDelete(aMessage: DeleteArcMessage);
-
-    onArcUpdate(aMessage: UpdateArcMessage);
-
-    onArcCreate(aMessage: CreateArcMessage);
-
-    onError(aMessage: ErrorMessage);
+    onError(aMessage: AdviceMessage);
 }

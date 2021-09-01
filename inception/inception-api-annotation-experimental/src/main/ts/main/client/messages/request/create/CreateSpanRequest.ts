@@ -15,20 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Viewport} from "../../model/Viewport";
-
-export class DocumentRequest
+export class CreateSpanRequest
 {
-    annotatorName: string;
-    projectId: number;
-    sourceDocumentId: number;
-    viewport: Viewport;
+    annotatorName : string;
+    projectId : number;
+    sourceDocumentId : number;
+    begin : number;
+    end : number;
+    layer : string;
 
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aViewport: Viewport)
+    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aBegin: number, aEnd: number, aLayer: string)
     {
         this.annotatorName = aAnnotatorName;
         this.projectId = aProjectId;
         this.sourceDocumentId = aSourceDocumentId;
-        this.viewport = aViewport;
+        this.begin = aBegin;
+        this.end = aEnd;
+        this.layer = aLayer;
     }
 }

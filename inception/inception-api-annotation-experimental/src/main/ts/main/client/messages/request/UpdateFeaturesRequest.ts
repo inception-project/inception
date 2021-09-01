@@ -15,20 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {Viewport} from "../../model/Viewport";
+import {FeatureX} from "../../model/FeatureX";
 
-export class DocumentRequest
+export class UpdateFeaturesRequest
 {
     annotatorName: string;
     projectId: number;
     sourceDocumentId: number;
-    viewport: Viewport;
+    annotationId: number;
+    newFeatures: FeatureX[];
 
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aViewport: Viewport)
+    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aAnnotationId: number, aNewFeatures: FeatureX[])
     {
         this.annotatorName = aAnnotatorName;
         this.projectId = aProjectId;
         this.sourceDocumentId = aSourceDocumentId;
-        this.viewport = aViewport;
+        this.annotationId = aAnnotationId;
+        this.newFeatures = aNewFeatures;
     }
+
 }

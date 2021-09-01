@@ -15,16 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
+package de.tudarmstadt.ukp.inception.experimental.api.messages.request.create;
 
-import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
-public class DocumentRequest
+public class CreateArcRequest
 {
     private String annotatorName;
     private long projectId;
     private long sourceDocumentId;
-    private Viewport viewport;
+    private VID sourceId;
+    private VID targetId;
+    private String layer;
 
     public String getAnnotatorName()
     {
@@ -56,14 +58,33 @@ public class DocumentRequest
         sourceDocumentId = aSourceDocumentId;
     }
 
-    public Viewport getViewport()
+    public VID getSourceId()
     {
-        return viewport;
+        return sourceId;
     }
 
-    public void setViewport(Viewport aViewport)
+    public void setSourceId(VID aSourceId)
     {
-        viewport = aViewport;
+        sourceId = aSourceId;
     }
 
+    public VID getTargetId()
+    {
+        return targetId;
+    }
+
+    public void setTargetId(VID aTargetId)
+    {
+        targetId = aTargetId;
+    }
+
+    public String getLayer()
+    {
+        return layer;
+    }
+
+    public void setLayer(String aLayer)
+    {
+        layer = aLayer;
+    }
 }

@@ -17,18 +17,6 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<style>
-    .card {
-        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
-        transition: 0.3s;
-    }
-    .card:hover {
-        box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
-    }
-    .container {
-        padding: 2px 16px;
-    }
-</style>
 <body>
 <wicket:panel>
     <div class="scrolling flex-content fit-child-loose text-center" style="min-height: unset;">
@@ -39,11 +27,11 @@
                         <div style="float:left; width: 100px">
                             &nbsp;
                         </div>
-                        <div id="odd_unit_container" class="container card" style="float:left; width: 250px;"></div>
+                        <div id="odd_unit_container" class="container card"></div>
                         <div style="width: 100px; float: left">
                             <svg id="svg" width="100"/>
                         </div>
-                        <div id="even_unit_container" class="container card" style="float:left; width: 250px"></div>
+                        <div id="even_unit_container" class="container card"></div>
                     </div>
                 </div>
                 <div>

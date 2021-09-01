@@ -48,28 +48,19 @@
         </dependency>
         <dependency>
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-websocket</artifactId>
+            <artifactId>inception-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-model</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.wicket</groupId>
             <artifactId>wicket-spring</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.apache.wicket</groupId>
-            <artifactId>wicket-request</artifactId>
-        </dependency>
-        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-api-annotation-experimental</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-api-annotation-experimental</artifactId>
-        </dependency>
     </dependencies>
-
 </project>

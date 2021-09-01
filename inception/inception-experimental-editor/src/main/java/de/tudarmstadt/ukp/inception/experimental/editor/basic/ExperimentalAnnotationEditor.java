@@ -25,8 +25,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.Url;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -34,7 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIBasicEditorReference;
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 
 public class ExperimentalAnnotationEditor
     extends AnnotationEditorBase
@@ -53,24 +50,21 @@ public class ExperimentalAnnotationEditor
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        aResponse.render(JavaScriptHeaderItem
-                .forScript("; localStorage.setItem('url','" + constructEndpointUrl() + "')", "0"));
         aResponse.render(forReference(ExperimentalAPIBasicEditorReference.get()));
-        aResponse.render(JavaScriptHeaderItem
-            .forScript("const editor = new AnnotationExperienceAPIBasicEditor();","1"));
+        aResponse.render(JavaScriptHeaderItem.forScript(setupExperienceAPI(), "1"));
     }
 
-    private String constructEndpointUrl()
+    public String setupExperienceAPI()
     {
-        Url endPointUrl = Url.parse(String.format("%s%s", servletContext.getContextPath(),
-                WebsocketConfig.WS_ENDPOINT));
-        endPointUrl.setProtocol("ws");
-        return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
+        AnnotatorState state = getModelObject();
+        return "const editor = new AnnotationExperienceAPIBasicEditor(" + state.getProject().getId()
+                + "," + state.getDocument().getId() + "," + state.getUser().getUsername() + ");";
     }
+
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        //Rendering should be handled by the scripting language files
+        // Rendering should be handled by the scripting language files
     }
 }

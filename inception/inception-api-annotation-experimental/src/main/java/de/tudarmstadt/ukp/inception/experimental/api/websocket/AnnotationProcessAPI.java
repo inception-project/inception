@@ -18,75 +18,49 @@
 package de.tudarmstadt.ukp.inception.experimental.api.websocket;
 
 import java.io.IOException;
-import java.io.IOException;
 
 import org.springframework.messaging.Message;
 
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DocumentResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.ErrorMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.CreateArcMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.DeleteArcMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.SelectArcResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.arc.UpdateArcMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.CreateSpanMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.DeleteSpanMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.SelectSpanResponse;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.span.UpdateSpanMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.AdviceMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DeleteAnnotationMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DocumentMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateFeaturesMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.ArcCreatedMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.SpanCreatedMessage;
 
 
 public interface AnnotationProcessAPI
 {
     void receiveDocumentRequest(Message<String> aMessage) throws IOException;
 
-    void sendDocumentResponse(DocumentResponse aDocumentResponse, String aUser)
+    void sendDocumentResponse(DocumentMessage aDocumentResponse, String aUser)
         throws IOException;
 
-    void receiveSelectSpanRequest(Message<String> aMessage) throws IOException;
+    void receiveUpdateFeaturesRequest(Message<String> aMessage) throws Exception;
 
-    void receiveSelectArcRequest(Message<String> aMessage) throws IOException;
-
-    void sendSelectSpanResponse(SelectSpanResponse aSelectSpanResponse, String aUser)
-        throws IOException;
-
-    void sendSelectArcResponse(SelectArcResponse aSelectArcResponse, String aUser)
-        throws IOException;
-
-    void receiveUpdateSpanRequest(Message<String> aMessage) throws Exception;
-
-    void receiveUpdateArcRequest(Message<String> aMessage) throws Exception;
-
-    void sendUpdateSpan(UpdateSpanMessage aUpdateSpanMessage, String aProjectID,
-                                      String aDocumentID)
-        throws IOException;
-
-    void sendUpdateArc(UpdateArcMessage aUpdateArcMessage,
-                                    String aProjectID, String aDocumentID)
+    void sendUpdateFeatures(UpdateFeaturesMessage aUpdateFeaturesMessage, String aProjectID,
+                            String aDocumentID)
         throws IOException;
 
     void receiveCreateSpanRequest(Message<String> aMessage) throws IOException;
 
-    void sendCreateSpan(CreateSpanMessage aCreateSpanMessage, String aProjectID,
-                                      String aDocumentID)
+    void sendCreateSpan(SpanCreatedMessage aCreateSpanMessage, String aProjectID,
+                        String aDocumentID)
         throws IOException;
 
     void receiveCreateArcRequest(Message<String> aMessage) throws IOException;
 
-    void sendCreateArc(CreateArcMessage aCreateArcMessage,
-                                    String aProjectID, String aDocumentID)
+    void sendCreateArc(ArcCreatedMessage aCreateArcMessage,
+                       String aProjectID, String aDocumentID)
         throws IOException;
 
-    void receiveDeleteSpanRequest(Message<String> aMessage) throws IOException;
+    void receiveDeleteAnnotationRequest(Message<String> aMessage) throws IOException;
 
-    void sendDeleteSpan(DeleteSpanMessage aDeleteSpanMessage, String aProjectID,
-                                      String aDocumentID)
+    void sendDeleteAnnotation(DeleteAnnotationMessage aDeleteAnnotationMessage, String aProjectID,
+                              String aDocumentID)
         throws IOException;
 
-    void receiveDeleteArcRequest(Message<String> aMessage) throws IOException;
 
-    void sendDeleteArc(DeleteArcMessage aDeleteArcMessage,
-                                    String aProjectID, String aDocumentID)
-        throws IOException;
-
-    void sendErrorMessage(ErrorMessage aErrorMessage, String aUser) throws IOException;
+    void sendAdviceMessage(AdviceMessage aAdviceMessage, String aUser) throws IOException;
 
 }
