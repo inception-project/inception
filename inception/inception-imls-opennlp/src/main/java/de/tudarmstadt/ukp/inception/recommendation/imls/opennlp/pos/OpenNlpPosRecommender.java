@@ -92,7 +92,7 @@ public class OpenNlpPosRecommender
         List<POSSample> posSamples = extractPosSamples(aCasses);
 
         if (posSamples.size() < 2) {
-            LOG.info("Not enough training data: [{}] items", posSamples.size());
+            aContext.warn("Not enough training data: [%d] items", posSamples.size());
             return;
         }
 

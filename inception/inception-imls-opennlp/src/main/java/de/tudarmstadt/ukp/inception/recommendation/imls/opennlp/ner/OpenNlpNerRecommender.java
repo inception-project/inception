@@ -92,7 +92,7 @@ public class OpenNlpNerRecommender
         List<NameSample> nameSamples = extractNameSamples(aCasses);
 
         if (nameSamples.size() < 2) {
-            LOG.info("Not enough training data: [{}] sentences", nameSamples.size());
+            aContext.warn("Not enough training data: [%d] items", nameSamples.size());
             return;
         }
 
