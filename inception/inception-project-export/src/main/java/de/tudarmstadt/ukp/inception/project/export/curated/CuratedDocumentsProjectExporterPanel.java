@@ -23,9 +23,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportCuratedDocumentsTask;
+import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportService;
 
 public class CuratedDocumentsProjectExporterPanel extends Panel
 {

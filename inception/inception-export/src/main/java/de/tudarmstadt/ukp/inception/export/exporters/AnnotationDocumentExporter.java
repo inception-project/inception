@@ -183,7 +183,7 @@ public class AnnotationDocumentExporter
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            
+
             try (CasStorageSession session = CasStorageSession.openNested()) {
                 //
                 // Export initial CASes

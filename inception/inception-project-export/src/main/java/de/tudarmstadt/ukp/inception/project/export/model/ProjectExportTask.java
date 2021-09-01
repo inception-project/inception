@@ -15,7 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.export;
+package de.tudarmstadt.ukp.inception.project.export.model;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 
 public interface ProjectExportTask<R extends ProjectExportRequest_ImplBase>
     extends Runnable

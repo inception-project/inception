@@ -125,9 +125,9 @@ public class GazeteerExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project
-        FullProjectExportRequest exportRequest = new FullProjectExportRequest();
+        FullProjectExportRequest exportRequest = new FullProjectExportRequest(sourceProject, null,
+                false);
         ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
         sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
 

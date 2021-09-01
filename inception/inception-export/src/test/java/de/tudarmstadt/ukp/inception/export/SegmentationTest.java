@@ -28,7 +28,6 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 
 public class SegmentationTest
 {

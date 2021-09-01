@@ -116,7 +116,7 @@ public class SourceDocumentExporter
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            
+
             try {
                 FileUtils.copyFileToDirectory(documentService.getSourceDocumentFile(sourceDocument),
                         sourceDocumentDir);

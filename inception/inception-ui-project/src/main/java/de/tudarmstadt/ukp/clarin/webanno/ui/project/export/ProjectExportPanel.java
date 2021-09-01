@@ -59,8 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -71,6 +69,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
+import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTaskHandle;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}

@@ -15,12 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.export;
+package de.tudarmstadt.ukp.inception.project.export.model;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.zip.ZipFile;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface ProjectExportService

@@ -24,8 +24,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
+import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportService;
 
 public class ProjectExportFullProjectTask
     extends ProjectExportTask_ImplBase<FullProjectExportRequest>

@@ -25,10 +25,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportFullProjectTask;
+import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportService;
 
 public class BackupProjectExporterPanel
     extends Panel
