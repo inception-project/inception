@@ -175,10 +175,10 @@ public class StringMatchingRecommender
             }
         }
 
-        aContext.put(KEY_MODEL, dict);
-
-        log.debug("Learned dictionary model with {} entries on {} documents", dict.size(),
+        aContext.info("Learned dictionary model with %d entries on %d documents", dict.size(),
                 aCasses.size());
+
+        aContext.put(KEY_MODEL, dict);
     }
 
     @Override
