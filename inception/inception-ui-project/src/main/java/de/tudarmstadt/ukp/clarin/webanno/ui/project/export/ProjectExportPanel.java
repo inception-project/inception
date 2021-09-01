@@ -57,7 +57,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -103,7 +104,7 @@ public class ProjectExportPanel
     }
 
     public class ProjectExportForm
-        extends Form<ProjectExportRequest>
+        extends Form<FullProjectExportRequest>
     {
         private static final long serialVersionUID = 9151007311548196811L;
 
@@ -112,7 +113,7 @@ public class ProjectExportPanel
         public ProjectExportForm(String id, IModel<Project> aProject)
         {
             super(id, new CompoundPropertyModel<>(
-                    new ProjectExportRequest(ProjectExportRequest.FORMAT_AUTO, true)));
+                    new FullProjectExportRequest(FullProjectExportRequest.FORMAT_AUTO, true)));
 
             DropDownChoice<String> format = new DropDownChoice<>("format");
             format.setChoiceRenderer(new ChoiceRenderer<String>()
@@ -122,8 +123,8 @@ public class ProjectExportPanel
                 @Override
                 public Object getDisplayValue(String aObject)
                 {
-                    if (ProjectExportRequest.FORMAT_AUTO.equals(aObject)) {
-                        return ProjectExportRequest.FORMAT_AUTO;
+                    if (FullProjectExportRequest.FORMAT_AUTO.equals(aObject)) {
+                        return FullProjectExportRequest.FORMAT_AUTO;
                     }
 
                     return importExportService.getFormatById(aObject).get().getName();
@@ -134,7 +135,7 @@ public class ProjectExportPanel
                         .sorted(Comparator.comparing(FormatSupport::getName)) //
                         .map(FormatSupport::getId) //
                         .collect(toCollection(ArrayList::new));
-                formats.add(0, ProjectExportRequest.FORMAT_AUTO);
+                formats.add(0, FullProjectExportRequest.FORMAT_AUTO);
                 return formats;
             }));
             // Needed to update the model with the selection because the DownloadLink does
@@ -149,7 +150,8 @@ public class ProjectExportPanel
                 @Override
                 protected String getFileName()
                 {
-                    ProjectExportRequest request = exportService.getExportRequest(exportTask);
+                    ProjectExportRequest_ImplBase request = exportService
+                            .getExportRequest(exportTask);
                     String name;
                     SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
                     try {
@@ -252,7 +254,7 @@ public class ProjectExportPanel
                     target.add(ProjectExportPanel.this.getPage());
                     Authentication authentication = SecurityContextHolder.getContext()
                             .getAuthentication();
-                    ProjectExportRequest request = ProjectExportForm.this.getModelObject();
+                    FullProjectExportRequest request = ProjectExportForm.this.getModelObject();
                     request.setProject(ProjectExportPanel.this.getModelObject());
                     request.setFilenameTag("_project");
                     exportInProgress = true;
@@ -273,7 +275,7 @@ public class ProjectExportPanel
                     target.add(ProjectExportPanel.this.getPage());
                     Authentication authentication = SecurityContextHolder.getContext()
                             .getAuthentication();
-                    ProjectExportRequest request = ProjectExportForm.this.getModelObject();
+                    FullProjectExportRequest request = ProjectExportForm.this.getModelObject();
                     request.setProject(ProjectExportPanel.this.getModelObject());
                     request.setFilenameTag("_curated_documents");
                     exportInProgress = true;
@@ -292,7 +294,7 @@ public class ProjectExportPanel
             cancelLink.add(enabledWhen(() -> exportInProgress));
             cancelLink.add(visibleWhen(() -> exportInProgress));
             add(cancelLink);
-            
+
             WebMarkupContainer warningContainer = new WebMarkupContainer("downloadWarning");
             warningContainer.add(visibleWhen(() -> exportInProgress));
             add(warningContainer);

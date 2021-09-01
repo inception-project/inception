@@ -35,13 +35,15 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTask;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
-public abstract class ProjectExportTask_ImplBase
-    implements Runnable
+public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_ImplBase>
+    implements ProjectExportTask<R>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -50,17 +52,19 @@ public abstract class ProjectExportTask_ImplBase
     private final ProjectExportTaskHandle handle;
     private final String username;
     private final ProjectExportTaskMonitor monitor;
-    private final ProjectExportRequest request;
+    private final Project project;
+    private final R request;
 
     private @Autowired DocumentService documentService;
 
-    public ProjectExportTask_ImplBase(ProjectExportTaskHandle aHandle,
-            ProjectExportTaskMonitor aMonitor, ProjectExportRequest aRequest, String aUsername)
+    public ProjectExportTask_ImplBase(Project aProject, R aRequest, String aUsername)
     {
-        handle = aHandle;
+        project = aProject;
         request = aRequest;
         username = aUsername;
-        monitor = aMonitor;
+        
+        handle = new ProjectExportTaskHandle();
+        monitor = new ProjectExportTaskMonitor();
 
         monitor.setCreateTime(System.currentTimeMillis());
     }
@@ -71,7 +75,7 @@ public abstract class ProjectExportTask_ImplBase
         try {
             // We are in a new thread. Set up thread-specific MDC
             MDC.put(KEY_USERNAME, username);
-            MDC.put(KEY_PROJECT_ID, String.valueOf(request.getProject().getId()));
+            MDC.put(KEY_PROJECT_ID, String.valueOf(project.getId()));
             MDC.put(KEY_REPOSITORY_PATH, documentService.getDir().toString());
 
             monitor.setState(RUNNING);
@@ -94,19 +98,22 @@ public abstract class ProjectExportTask_ImplBase
         }
     }
 
-    public abstract File export(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
+    public abstract File export(R aRequest, ProjectExportTaskMonitor aMonitor)
         throws Exception;
 
-    public ProjectExportRequest getRequest()
+    @Override
+    public R getRequest()
     {
         return request;
     }
 
+    @Override
     public ProjectExportTaskMonitor getMonitor()
     {
         return monitor;
     }
 
+    @Override
     public ProjectExportTaskHandle getHandle()
     {
         return handle;

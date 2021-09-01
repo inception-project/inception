@@ -80,6 +80,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-xmi</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-scheduling</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

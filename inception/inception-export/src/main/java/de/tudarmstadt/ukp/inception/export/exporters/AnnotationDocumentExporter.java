@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FO
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
 import static java.lang.Math.ceil;
@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -123,7 +123,7 @@ public class AnnotationDocumentExporter
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+    public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
         throws UIMAException, ClassNotFoundException, IOException, InterruptedException
     {
@@ -153,7 +153,7 @@ public class AnnotationDocumentExporter
         aExProject.setAnnotationDocuments(annotationDocuments);
     }
 
-    private void exportAnnotationDocumentContents(ProjectExportRequest aRequest,
+    private void exportAnnotationDocumentContents(FullProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
         throws UIMAException, ClassNotFoundException, IOException, InterruptedException
     {

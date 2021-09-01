@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.export.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
@@ -50,8 +50,8 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -96,7 +96,7 @@ public class CuratedDocumentsExporter
      *            The folder where curated documents are copied to be exported as Zip File
      */
     @Override
-    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+    public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
         throws Exception
     {

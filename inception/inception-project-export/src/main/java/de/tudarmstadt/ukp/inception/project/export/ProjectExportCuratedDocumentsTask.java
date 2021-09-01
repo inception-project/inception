@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.project.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -34,9 +34,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -45,25 +42,24 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
+import de.tudarmstadt.ukp.inception.project.export.curated.CuratedDocumentsProjectExportRequest;
 
 public class ProjectExportCuratedDocumentsTask
-    extends ProjectExportTask_ImplBase
+    extends ProjectExportTask_ImplBase<CuratedDocumentsProjectExportRequest>
 {
     private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
     private static final String CURATION_FOLDER = "/curation/";
 
-    private @Autowired ProjectExportService exportService;
     private @Autowired DocumentService documentService;
     private @Autowired DocumentImportExportService importExportService;
 
-    public ProjectExportCuratedDocumentsTask(ProjectExportTaskHandle aHandle,
-            ProjectExportTaskMonitor aMonitor, ProjectExportRequest aRequest, String aUsername)
+    public ProjectExportCuratedDocumentsTask(CuratedDocumentsProjectExportRequest aRequest, String aUsername)
     {
-        super(aHandle, aMonitor, aRequest, aUsername);
+        super(aRequest.getProject(), aRequest, aUsername);
     }
 
     @Override
-    public File export(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
+    public File export(CuratedDocumentsProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException
     {
         Project project = aRequest.getProject();
@@ -81,9 +77,7 @@ public class ProjectExportCuratedDocumentsTask
                         "No curation document created yet for this document");
             }
 
-            ProjectExportRequest request = aRequest;
-            request.setProject(project);
-            exportCuratedDocuments(request, exportTempDir, false, aMonitor);
+            exportCuratedDocuments(aRequest, exportTempDir, false, aMonitor);
 
             exportFile = new File(exportTempDir.getAbsolutePath() + "_curated_documents.zip");
             ZipUtils.zipFolder(exportTempDir, exportFile);
@@ -122,7 +116,7 @@ public class ProjectExportCuratedDocumentsTask
      *            The folder where curated documents are copied to be exported as Zip File
      * @throws InterruptedException 
      */
-    private void exportCuratedDocuments(ProjectExportRequest aModel, File aCopyDir,
+    private void exportCuratedDocuments(CuratedDocumentsProjectExportRequest aModel, File aCopyDir,
             boolean aIncludeInProgress, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException
     {

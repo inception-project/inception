@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -99,7 +99,7 @@ public class KnowledgeBaseExporter
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+    public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aFile)
         throws Exception
     {

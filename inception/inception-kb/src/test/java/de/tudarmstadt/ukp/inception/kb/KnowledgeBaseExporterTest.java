@@ -49,7 +49,7 @@ import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -104,9 +104,9 @@ public class KnowledgeBaseExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project
-        ProjectExportRequest exportRequest = new ProjectExportRequest();
+        FullProjectExportRequest exportRequest = new FullProjectExportRequest(sourceProject, null,
+                false);
         ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
         sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
 
@@ -136,9 +136,9 @@ public class KnowledgeBaseExporterTest
     public void thatRemappingConceptFeaturesOnImportWorks() throws Exception
     {
         // Export the project
-        ProjectExportRequest exportRequest = new ProjectExportRequest();
+        FullProjectExportRequest exportRequest = new FullProjectExportRequest(sourceProject, null,
+                false);
         ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();
         sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
 

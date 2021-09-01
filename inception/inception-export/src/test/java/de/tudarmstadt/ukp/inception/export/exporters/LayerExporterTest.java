@@ -43,14 +43,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
-import de.tudarmstadt.ukp.inception.export.exporters.LayerExporter;
 
 public class LayerExporterTest
 {
@@ -109,9 +108,8 @@ public class LayerExporterTest
     private ArgumentCaptor<AnnotationLayer> runExportImportAndFetchLayers() throws Exception
     {
         // Export the project
-        ProjectExportRequest exportRequest = new ProjectExportRequest();
+        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
         ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        exportRequest.setProject(project);
         ExportedProject exportedProject = new ExportedProject();
 
         sut.exportData(exportRequest, monitor, exportedProject, workFolder);

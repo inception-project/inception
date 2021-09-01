@@ -65,9 +65,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTask;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -78,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.export.curated.CuratedDocumentsProjectExportRequest;
 
 /**
  * <p>
@@ -158,7 +161,7 @@ public class ProjectExportServiceImpl
 
     @Override
     @Transactional
-    public File exportProject(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
+    public File exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException
     {
         boolean success = false;
@@ -206,38 +209,38 @@ public class ProjectExportServiceImpl
         }
     }
 
-    private ExportedProject exportProject(ProjectExportRequest aRequest,
+    private ExportedProject exportProject(FullProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, File aStage)
         throws ProjectExportException, IOException, InterruptedException
     {
         Deque<ProjectExporter> deque = new LinkedList<>(exporters);
-        Set<Class<? extends ProjectExporter>> initsSeen = new HashSet<>();
-        Set<ProjectExporter> initsDeferred = SetUtils.newIdentityHashSet();
+        Set<Class<? extends ProjectExporter>> exportersSeen = new HashSet<>();
+        Set<ProjectExporter> exportersDeferred = SetUtils.newIdentityHashSet();
 
         ExportedProject exProject = new ExportedProject();
         exProject.setName(aRequest.getProject().getName());
 
         try {
             while (!deque.isEmpty()) {
-                ProjectExporter initializer = deque.pop();
+                ProjectExporter exporter = deque.pop();
 
-                if (initsDeferred.contains(initializer)) {
-                    throw new IllegalStateException("Circular initializer dependencies in "
-                            + initsDeferred + " via " + initializer);
+                if (exportersDeferred.contains(exporter)) {
+                    throw new IllegalStateException("Circular exporter dependencies in "
+                            + exportersDeferred + " via " + exporter);
                 }
 
-                if (initsSeen.containsAll(initializer.getExportDependencies())) {
-                    log.debug("Applying project exporter: {}", initializer);
-                    initializer.exportData(aRequest, aMonitor, exProject, aStage);
-                    initsSeen.add(initializer.getClass());
-                    initsDeferred.clear();
+                if (exportersSeen.containsAll(exporter.getExportDependencies())) {
+                    log.debug("Applying project exporter: {}", exporter);
+                    exporter.exportData(aRequest, aMonitor, exProject, aStage);
+                    exportersSeen.add(exporter.getClass());
+                    exportersDeferred.clear();
                 }
                 else {
                     log.debug(
                             "Deferring project exporter as dependencies are not yet fulfilled: [{}]",
-                            initializer);
-                    deque.add(initializer);
-                    initsDeferred.add(initializer);
+                            exporter);
+                    deque.add(exporter);
+                    exportersDeferred.add(exporter);
                 }
             }
         }
@@ -343,30 +346,31 @@ public class ProjectExportServiceImpl
     }
 
     @Override
-    public ProjectExportTaskHandle startProjectExportTask(ProjectExportRequest aRequest,
+    public ProjectExportTaskHandle startProjectExportTask(FullProjectExportRequest aRequest,
             String aUsername)
     {
-        ProjectExportTaskHandle handle = new ProjectExportTaskHandle();
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        ProjectExportFullProjectTask task = new ProjectExportFullProjectTask(handle, monitor,
-                aRequest, aUsername);
+        ProjectExportFullProjectTask task = new ProjectExportFullProjectTask(aRequest, aUsername);
 
         return startTask(task);
     }
 
     @Override
     public ProjectExportTaskHandle startProjectExportCuratedDocumentsTask(
-            ProjectExportRequest aRequest, String aUsername)
+            FullProjectExportRequest aRequest, String aUsername)
     {
-        ProjectExportTaskHandle handle = new ProjectExportTaskHandle();
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        ProjectExportCuratedDocumentsTask task = new ProjectExportCuratedDocumentsTask(handle,
-                monitor, aRequest, aUsername);
+        var request = new CuratedDocumentsProjectExportRequest(aRequest.getProject());
+        request.setFilenameTag(aRequest.getFilenameTag());
+        request.setFormat(aRequest.getFormat());
+        request.setIncludeInProgress(aRequest.isIncludeInProgress());
+        
+        ProjectExportCuratedDocumentsTask task = new ProjectExportCuratedDocumentsTask(
+                request, aUsername);
 
         return startTask(task);
     }
 
-    private ProjectExportTaskHandle startTask(ProjectExportTask_ImplBase aTask)
+    @Override
+    public ProjectExportTaskHandle startTask(ProjectExportTask aTask)
     {
         ProjectExportTaskHandle handle = aTask.getHandle();
 
@@ -381,7 +385,7 @@ public class ProjectExportServiceImpl
     }
 
     @Override
-    public ProjectExportRequest getExportRequest(ProjectExportTaskHandle aHandle)
+    public ProjectExportRequest_ImplBase getExportRequest(ProjectExportTaskHandle aHandle)
     {
         TaskInfo task = tasks.get(aHandle);
 
@@ -448,9 +452,9 @@ public class ProjectExportServiceImpl
     private static class TaskInfo
     {
         private final Future<?> future;
-        private final ProjectExportTask_ImplBase task;
+        private final ProjectExportTask task;
 
-        public TaskInfo(Future<?> aFuture, ProjectExportTask_ImplBase aTask)
+        public TaskInfo(Future<?> aFuture, ProjectExportTask aTask)
         {
             future = aFuture;
             task = aTask;

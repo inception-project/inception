@@ -28,17 +28,20 @@ public interface ProjectExportService
     Project importProject(ProjectImportRequest aRequest, ZipFile aZip)
         throws ProjectExportException;
 
-    File exportProject(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
+    File exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException;
 
-    ProjectExportTaskHandle startProjectExportTask(ProjectExportRequest aModel, String aUsername);
+    ProjectExportTaskHandle startProjectExportTask(FullProjectExportRequest aModel,
+            String aUsername);
 
-    ProjectExportRequest getExportRequest(ProjectExportTaskHandle aHandle);
+    ProjectExportRequest_ImplBase getExportRequest(ProjectExportTaskHandle aHandle);
 
     boolean cancelTask(ProjectExportTaskHandle aHandle);
 
     ProjectExportTaskMonitor getTaskMonitor(ProjectExportTaskHandle aHandle);
 
-    ProjectExportTaskHandle startProjectExportCuratedDocumentsTask(ProjectExportRequest aRequest,
-            String aUsername);
+    ProjectExportTaskHandle startProjectExportCuratedDocumentsTask(
+            FullProjectExportRequest aRequest, String aUsername);
+
+    ProjectExportTaskHandle startTask(ProjectExportTask aTask);
 }

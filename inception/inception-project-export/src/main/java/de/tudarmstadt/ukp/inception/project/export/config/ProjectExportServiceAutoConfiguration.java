@@ -30,7 +30,12 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtension;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtensionPoint;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportServiceImpl;
+import de.tudarmstadt.ukp.inception.project.export.backup.BackupProjectExportExtension;
+import de.tudarmstadt.ukp.inception.project.export.curated.CuratedDocumentsProjectExportExtension;
 
 @Configuration
 @AutoConfigureAfter(name = {
@@ -44,5 +49,23 @@ public class ProjectExportServiceAutoConfiguration
             ProjectService aProjectService)
     {
         return new ProjectExportServiceImpl(aApplicationContext, aExporters, aProjectService);
+    }
+
+    @Bean
+    public ProjectExportExtensionPoint projectExportExtensionPoint(
+            @Lazy @Autowired(required = false) List<ProjectExportExtension> aExtensions)
+    {
+        return new ProjectExportExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public BackupProjectExportExtension backupProjectExportExtension()
+    {
+        return new BackupProjectExportExtension();
+    }
+    
+    @Bean
+    public CuratedDocumentsProjectExportExtension curatedDocumentsProjectExportExtension() {
+        return new CuratedDocumentsProjectExportExtension();
     }
 }

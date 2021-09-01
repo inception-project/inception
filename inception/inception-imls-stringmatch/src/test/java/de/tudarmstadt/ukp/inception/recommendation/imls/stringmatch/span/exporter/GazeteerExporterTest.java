@@ -43,7 +43,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -125,7 +125,7 @@ public class GazeteerExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project
-        ProjectExportRequest exportRequest = new ProjectExportRequest();
+        FullProjectExportRequest exportRequest = new FullProjectExportRequest();
         ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         exportRequest.setProject(sourceProject);
         ExportedProject exportedProject = new ExportedProject();

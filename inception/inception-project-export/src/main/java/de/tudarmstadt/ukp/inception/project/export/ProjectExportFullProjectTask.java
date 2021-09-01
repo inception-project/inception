@@ -22,25 +22,23 @@ import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 
 public class ProjectExportFullProjectTask
-    extends ProjectExportTask_ImplBase
+    extends ProjectExportTask_ImplBase<FullProjectExportRequest>
 {
     private @Autowired ProjectExportService exportService;
 
-    public ProjectExportFullProjectTask(ProjectExportTaskHandle aHandle,
-            ProjectExportTaskMonitor aMonitor, ProjectExportRequest aRequest, String aUsername)
+    public ProjectExportFullProjectTask(FullProjectExportRequest aRequest, String aUsername)
     {
-        super(aHandle, aMonitor, aRequest, aUsername);
+        super(aRequest.getProject(), aRequest, aUsername);
     }
 
     @Override
-    public File export(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
+    public File export(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException
     {
         return exportService.exportProject(aRequest, aMonitor);

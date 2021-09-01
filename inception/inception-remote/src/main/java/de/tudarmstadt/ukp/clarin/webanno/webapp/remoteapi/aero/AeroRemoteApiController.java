@@ -85,7 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -426,7 +426,7 @@ public class AeroRemoteApiController
                                     .toString()));
         }
 
-        ProjectExportRequest request = new ProjectExportRequest(project,
+        FullProjectExportRequest request = new FullProjectExportRequest(project,
                 aFormat.orElse(WebAnnoTsv3FormatSupport.ID), true);
         ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
         File exportedFile = exportService.exportProject(request, monitor);

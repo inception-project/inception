@@ -17,54 +17,36 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
-import java.io.Serializable;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public class ProjectExportRequest
-    implements Serializable
+public class FullProjectExportRequest
+    extends ProjectExportRequest_ImplBase
 {
-    private static final long serialVersionUID = -4486934192675904995L;
+    private static final long serialVersionUID = -7010995651575991241L;
 
     public static final String FORMAT_AUTO = "AUTO";
 
-    private Project project;
     private String format;
     private boolean includeInProgress;
     private String filenameTag;
-
-    public ProjectExportRequest()
-    {
-        // Nothing to do;
-    }
 
     /**
      * Create a new project export request. Use this constructor if the project is not known yet or
      * may change. Make sure to set the project via the setter before starting the export.
      */
-    public ProjectExportRequest(String aFormat, boolean aIncludeInProgress)
+    public FullProjectExportRequest(String aFormat, boolean aIncludeInProgress)
     {
+        super(null);
         format = aFormat;
-        project = null;
         includeInProgress = aIncludeInProgress;
     }
 
-    public ProjectExportRequest(Project aProject, String aFormat, boolean aIncludeInProgress)
+    public FullProjectExportRequest(Project aProject, String aFormat, boolean aIncludeInProgress)
     {
+        super(aProject);
         format = aFormat;
-        project = aProject;
         includeInProgress = aIncludeInProgress;
-    }
-
-    public void setProject(Project aProject)
-    {
-        project = aProject;
-    }
-
-    public Project getProject()
-    {
-        return project;
     }
 
     /**
