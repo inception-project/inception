@@ -20,28 +20,25 @@ package de.tudarmstadt.ukp.inception.experimental.api.model;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class Arc
 {
     private VID id;
     private VID sourceId;
     private VID targetId;
-    private String sourceCoveredText;
-    private String targetCoveredText;
+    private long layerId;
+    private List<AnnotationFeature> features;
     private String color;
-    private String type;
-    private List<String> features;
 
-    public Arc(VID aId, VID aSourceId, VID aTargetId, String aColor,
-               String aSourceCoveredText, String aTargetCoveredText, String aType, List<String> aFeatures)
+    public Arc(VID aId, VID aSourceId, VID aTargetId, String aColor, long aLayerId, List<AnnotationFeature> aFeatures)
     {
         id = aId;
         sourceId = aSourceId;
         targetId = aTargetId;
-        color = aColor;
-        sourceCoveredText = aSourceCoveredText;
-        targetCoveredText = aTargetCoveredText;
+        layerId = aLayerId;
         features = aFeatures;
+        color = aColor;
     }
 
     public VID getId()
@@ -73,26 +70,6 @@ public class Arc
         targetId = aTargetId;
     }
 
-    public String getSourceCoveredText()
-    {
-        return sourceCoveredText;
-    }
-
-    public void setSourceCoveredText(String aSourceCoveredText)
-    {
-        sourceCoveredText = aSourceCoveredText;
-    }
-
-    public String getTargetCoveredText()
-    {
-        return targetCoveredText;
-    }
-
-    public void setTargetCoveredText(String aTargetCoveredText)
-    {
-        targetCoveredText = aTargetCoveredText;
-    }
-
     public String getColor()
     {
         return color;
@@ -103,22 +80,22 @@ public class Arc
         color = aColor;
     }
 
-    public String getType()
+    public long getLayerId()
     {
-        return type;
+        return layerId;
     }
 
-    public void setType(String aType)
+    public void setLayerId(long aLayerId)
     {
-        type = aType;
+        layerId = aLayerId;
     }
 
-    public List<String> getFeatures()
+    public List<AnnotationFeature> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(List<String> aFeatures)
+    public void setFeatures(List<AnnotationFeature> aFeatures)
     {
         features = aFeatures;
     }

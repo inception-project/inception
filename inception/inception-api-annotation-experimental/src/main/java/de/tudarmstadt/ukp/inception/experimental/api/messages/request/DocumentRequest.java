@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
 
+import java.util.List;
+
 import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 
 public class DocumentRequest
@@ -24,7 +26,7 @@ public class DocumentRequest
     private String annotatorName;
     private long projectId;
     private long sourceDocumentId;
-    private Viewport viewport;
+    private List<Viewport> viewport;
 
     public String getAnnotatorName()
     {
@@ -56,12 +58,12 @@ public class DocumentRequest
         sourceDocumentId = aSourceDocumentId;
     }
 
-    public Viewport getViewport()
+    public List<Viewport> getViewport()
     {
         return viewport;
     }
 
-    public void setViewport(Viewport aViewport)
+    public void setViewport(List<Viewport> aViewport)
     {
         viewport = aViewport;
     }

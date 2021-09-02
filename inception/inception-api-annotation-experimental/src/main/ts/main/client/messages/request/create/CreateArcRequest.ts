@@ -22,15 +22,15 @@ export class CreateArcRequest
     sourceDocumentId : number;
     sourceId : string;
     targetId : string;
-    layer : string;
+    layerId : number;
 
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aSourceId: string, aTargetId: string, aLayer: string)
+    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aSourceId: string, aTargetId: string, aLayerId: number)
     {
         this.annotatorName = aAnnotatorName;
         this.projectId = aProjectId;
         this.sourceDocumentId = aSourceDocumentId;
         this.sourceId = aSourceId;
         this.targetId = aTargetId;
-        this.layer = aLayer;
+        this.layerId = aLayerId;
     }
 }

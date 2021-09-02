@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.experimental.api.model;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class Span
 {
@@ -27,16 +28,17 @@ public class Span
     private String coveredText;
     private int begin;
     private int end;
-    private String type;
-    private List<String> features;
+    private long layerId;
+    private List<AnnotationFeature> features;
     private String color;
 
-    public Span(VID aId, int aBegin, int aEnd, String aType, String aColor, String aCoveredText, List<String> aFeatures)
+    public Span(VID aId, int aBegin, int aEnd, long aLayerId, String aColor, String aCoveredText,
+            List<AnnotationFeature> aFeatures)
     {
         id = aId;
         begin = aBegin;
         end = aEnd;
-        type = aType;
+        layerId = aLayerId;
         color = aColor;
         coveredText = aCoveredText;
         features = aFeatures;
@@ -72,14 +74,14 @@ public class Span
         end = aEnd;
     }
 
-    public String getType()
+    public long getLayerId()
     {
-        return type;
+        return layerId;
     }
 
-    public void setType(String aType)
+    public void setLayerId(long aLayerId)
     {
-        type = aType;
+        layerId = aLayerId;
     }
 
     public String getCoveredText()
@@ -102,14 +104,13 @@ public class Span
         color = aColor;
     }
 
-    public List<String> getFeatures()
+    public List<AnnotationFeature> getFeatures()
     {
         return features;
     }
 
-    public void setFeature(List<String> aFeatures)
+    public void setFeature(List<AnnotationFeature> aFeatures)
     {
         features = aFeatures;
     }
 }
-

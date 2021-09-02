@@ -20,9 +20,9 @@ export class Viewport
     documentText: string;
     begin: number;
     end: number;
-    layers: string[]
+    layers: number[]
 
-    constructor(aDocumentText: string, aBegin: number, aEnd: number, aLayers: string[])
+    constructor(aDocumentText: string, aBegin: number, aEnd: number, aLayers: number[])
     {
         this.documentText = aDocumentText;
         this.begin = aBegin;

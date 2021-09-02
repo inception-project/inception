@@ -36,16 +36,20 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
             if (elem.className === 'far fa-caret-square-right' || 'far fa-caret-square-left') {
                 setTimeout(function() {
                     that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestDocument(
-                        that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName,
-                        that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.projectID,
-                        Number(document.location.href.split("=")[1].split("&")[0]));
+                        that.annotationExperienceAPIWordAlignmentEditor.annotatorName,
+                        that.annotationExperienceAPIWordAlignmentEditor.projectId,
+                        that.annotationExperienceAPIWordAlignmentEditor.documentId,
+                        that.annotationExperienceAPIWordAlignmentEditor.viewport);
                     setTimeout(function () {
-                        that.sentences = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.documentText.split(".");
+                        /*
+                        that.sentences = that.annotationExperienceAPIWordAlignmentEditor.viewport.documentText.split(".");
                         that.annotationExperienceAPIWordAlignmentEditor.oddSentence = that.sentences[0];
                         that.annotationExperienceAPIWordAlignmentEditor.evenSentence = that.sentences[1];
 
                         that.annotationExperienceAPIWordAlignmentEditor.oddSentenceOffset = 0;
                         that.annotationExperienceAPIWordAlignmentEditor.evenSentenceOffset = 1;
+
+                         */
 
                         that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPIVisualization.refreshEditor();
                     }, 2000)

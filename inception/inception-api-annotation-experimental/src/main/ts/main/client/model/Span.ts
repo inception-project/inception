@@ -19,21 +19,21 @@ import {FeatureX} from "./FeatureX";
 
 export class Span
 {
-    id: string;
+    id: number;
     coveredText: string;
     color: string;
     begin: number;
     end: number;
-    type: string;
-    features: string[];
+    layerId: number;
+    features: FeatureX[];
 
-    constructor(aId: string, aCoveredText: string, aBegin: number, aEnd: number, aType: string, aFeatures: FeatureX[], aColor: string)
+    constructor(aId: number, aCoveredText: string, aBegin: number, aEnd: number, aLayerId: number, aFeatures: FeatureX[], aColor: string)
     {
         this.id = aId;
         this.coveredText = aCoveredText;
         this.begin = aBegin;
         this.end = aEnd;
-        this.type = aType;
+        this.layerId = aLayerId;
         this.features = aFeatures;
         this.color = aColor;
     }

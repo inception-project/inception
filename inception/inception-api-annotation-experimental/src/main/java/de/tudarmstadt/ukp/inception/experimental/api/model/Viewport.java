@@ -24,13 +24,13 @@ public class Viewport
     private String documentText;
     private int begin;
     private int end;
-    private List<String> layers;
+    private List<Long> layers;
 
     public Viewport()
     {
     }
 
-    public Viewport(String aDocumentText, int aBegin, int aEnd, List<String> aLayers)
+    public Viewport(String aDocumentText, int aBegin, int aEnd, List<Long> aLayers)
     {
         documentText = aDocumentText;
         begin = aBegin;
@@ -68,12 +68,12 @@ public class Viewport
         end = aEnd;
     }
 
-    public List<String> getLayers()
+    public List<Long> getLayers()
     {
         return layers;
     }
 
-    public void setLayers(List<String> aLayers)
+    public void setLayers(List<Long> aLayers)
     {
         layers = aLayers;
     }

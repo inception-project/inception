@@ -20,7 +20,6 @@ import {AnnotationExperienceAPI} from "./AnnotationExperienceAPI"
 import {Span} from "./model/Span";
 import {AdviceMessage} from "./messages/response/AdviceMessage";
 import {FeatureX} from "./model/FeatureX";
-import {Arc} from "./model/Arc";
 import {DocumentMessage} from "./messages/response/DocumentMessage";
 import {DocumentRequest} from "./messages/request/DocumentRequest";
 import {UpdateFeaturesMessage} from "./messages/response/UpdateFeaturesMessage";
@@ -38,23 +37,25 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     //Websocket and stomp broker
     private stompClient: Client;
 
-    constructor(aClientName: string, aProjectId: number, aDocumentId: number)
+    constructor(aProjectId: number, aDocumentId: number, aClientName: string, aUrl: string)
     {
-        this.connect(aClientName, aProjectId, aDocumentId)
+        alert("CREATED")
+        this.connect(aProjectId, aDocumentId, aClientName, aUrl)
     }
 
 
     //CREATE WEBSOCKET CONNECTION
-    connect(aClientName: string, aProjectId: number, aDocumentId: number)
+    connect(aProjectId: number, aDocumentId: number, aClientName: string, aUrl: string)
     {
+        alert("OPENING NOW WEBSOCKET VIA " + aUrl)
         this.stompClient = Stomp.over(function () {
-            return new WebSocket(localStorage.getItem("url"));
+            return new WebSocket(aUrl);
         });
 
         const that = this;
 
         this.stompClient.onConnect = function (frame) {
-            that.onConnect(aClientName, aProjectId, aDocumentId)
+            that.onConnect(frame, aClientName, aProjectId, aDocumentId)
         }
 
 
@@ -64,12 +65,11 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             console.log('Broker reported error: ' + frame.headers['message']);
             console.log('Additional details: ' + frame.body);
         };
-
-        this.stompClient.activate();
     }
 
-    onConnect(aClientName: string, aProjectId: number, aDocumentId: number) {
+    onConnect(frame, aClientName: string, aProjectId: number, aDocumentId: number) {
         let that = this;
+        alert("onCON")
 
         // ------ DEFINE STANDARD SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
 
@@ -104,6 +104,10 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             aDocumentId, function (msg) {
             that.onAnnotationDelete(Object.assign(new DeleteAnnotationMessage(), JSON.parse(msg.body)));
         }, {id: "span_delete"});
+
+
+        this.stompClient.activate();
+        alert("ACTIVATE")
     }
 
     unsubscribe(aChannel: string)
@@ -116,59 +120,15 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this.stompClient.deactivate();
     }
 
-    onDocument(aMessage)
+    requestDocument(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aViewport: Viewport[])
     {
-        this.viewport = aMessage.viewport;
-        this.viewport.documentText = this.viewport.documentText.split("\n").join("");
-        this.documentID = aMessage.documentId;
-        this.spans = aMessage.spans;
-        this.arcs = aMessage.arcs;
-    }
-
-    onSpanCreate(aMessage)
-    {
-        let span = new Span(aMessage.spanId, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.features, aMessage.color)
-        this.spans.push(span)
-    }
-
-    onError(aMessage)
-    {
-        console.log(aMessage);
-    }
-
-    onArcCreate(aMessage)
-    {
-        let relation = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.sourceCoveredText, aMessage.targetCoveredText, aMessage.color, aMessage.type, aMessage.features)
-        this.arcs.push(relation)
-    }
-
-    onAnnotationDelete(aMessage: DeleteAnnotationMessage)
-    {
-        this.spans.forEach((item, index) => {
-            if (item.id === aMessage.annotationId) {
-                this.spans.splice(index, 1);
-            }
-        });
-        this.arcs.forEach((item, index) => {
-            if (item.id === aMessage.annotationId) {
-                this.arcs.splice(index, 1);
-            }
+        this.stompClient.publish({
+            destination: "/app/document_request", body: JSON.stringify(
+                new DocumentRequest(aAnnotatorName, aProjectId, aDocumentId, aViewport))
         });
     }
 
-    onFeaturesUpdate(aMessage: UpdateFeaturesMessage) {
-        console.log('RECEIVED UPDATE ANNOTATION');
-        let arc = this.arcs.findIndex(r => r.id == aMessage.annotationId);
-        if (arc != null) {
-            this.arcs[arc].features = aMessage.features;
-            return;
-        } else {
-            let span = this.spans.findIndex(r => r.id == aMessage.annotationId);
-            this.arcs[arc].features = aMessage.features;
-        }
-    }
-
-    requestCreateArc(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aSourceId: string, aTargetId: string, aLayer: string)
+    requestCreateArc(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aSourceId: string, aTargetId: string, aLayer: number)
     {
         this.stompClient.publish({
             destination: "/app/arc_create",
@@ -176,7 +136,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         });
     }
 
-    requestCreateSpan(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: string)
+    requestCreateSpan(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: number)
     {
         console.log("SENDING: " + aBegin + " _ " + aEnd)
         this.stompClient.publish({
@@ -185,16 +145,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         });
     }
 
-
-    requestDocument(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aViewport: Viewport)
-    {
-        this.stompClient.publish({
-            destination: "/app/document_request", body: JSON.stringify(
-                new DocumentRequest(aAnnotatorName, aProjectId, aDocumentId, aViewport))
-        });
-    }
-
-    requestDeleteAnnotation(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aAnnotationId: number, aLayer: string)
+    requestDeleteAnnotation(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aAnnotationId: number, aLayer: number)
     {
         this.stompClient.publish({
             destination: "/app/annotation_delete", body: JSON.stringify(
@@ -208,6 +159,73 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             destination: "/app/features_update", body: JSON.stringify(
                 new UpdateFeaturesRequest(aAnnotatorName, aProjectId, aDocumentId,aAnnotationId, aNewFeature))
         });
+    }
+
+
+    onDocument(aMessage)
+    {
+
+        console.log('RECEIVED DOCUMENT' + aMessage);
+        /*
+        this.viewport = aMessage.viewport;
+        this.viewport.documentText = this.viewport.documentText.split("\n").join("");
+        this.documentID = aMessage.documentId;
+        this.spans = aMessage.spans;
+        this.arcs = aMessage.arcs;
+
+         */
+    }
+
+    onSpanCreate(aMessage)
+    {
+
+        console.log('RECEIVED SPAN CREATE' + aMessage);
+        let span = new Span(aMessage.spanId, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.features, aMessage.color)
+        //this.spans.push(span)
+    }
+
+    onError(aMessage)
+    {
+        console.log(aMessage);
+    }
+
+    onArcCreate(aMessage)
+    {
+        console.log('RECEIVED ARC CREATE' + aMessage);
+        //let arc = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.sourceCoveredText, aMessage.targetCoveredText, aMessage.color, aMessage.type, aMessage.features)
+        //this.arcs.push(arc)
+    }
+
+    onAnnotationDelete(aMessage: DeleteAnnotationMessage)
+    {
+        console.log('RECEIVED DELETE ANNOTATION' + aMessage);
+        /*
+        this.spans.forEach((item, index) => {
+            if (item.id === aMessage.annotationId) {
+                this.spans.splice(index, 1);
+            }
+        });
+        this.arcs.forEach((item, index) => {
+            if (item.id === aMessage.annotationId) {
+                this.arcs.splice(index, 1);
+            }
+        });
+         */
+    }
+
+    onFeaturesUpdate(aMessage: UpdateFeaturesMessage) {
+        console.log('RECEIVED UPDATE ANNOTATION' + aMessage);
+        /*
+        let arc = this.arcs.findIndex(r => r.id == aMessage.annotationId);
+        if (arc != null) {
+            this.arcs[arc].features = aMessage.features;
+            return;
+        } else {
+            let span = this.spans.findIndex(r => r.id == aMessage.annotationId);
+            this.arcs[arc].features = aMessage.features;
+        }
+
+         */
     }
 }
 

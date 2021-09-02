@@ -22,9 +22,9 @@ export class DocumentRequest
     annotatorName: string;
     projectId: number;
     sourceDocumentId: number;
-    viewport: Viewport;
+    viewport: Viewport[];
 
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aViewport: Viewport)
+    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aViewport: Viewport[])
     {
         this.annotatorName = aAnnotatorName;
         this.projectId = aProjectId;

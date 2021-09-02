@@ -22,13 +22,19 @@ var __export = (target, all) => {
     __defProp(target, name, {get: all[name], enumerable: true});
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/byte.js
+// main/editors/wordalignment/AnnotationExperienceAPIWordAlignmentEditor.ts
+__markAsModule(exports);
+__export(exports, {
+  AnnotationExperienceAPIWordAlignmentEditor: () => AnnotationExperienceAPIWordAlignmentEditor
+});
+
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/byte.js
 var BYTE = {
   LF: "\n",
   NULL: "\0"
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/frame-impl.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/frame-impl.js
 var FrameImpl = class {
   constructor(params) {
     const {command, headers, body, binaryBody, escapeHeaderValues, skipContentLengthHeader} = params;
@@ -135,7 +141,7 @@ var FrameImpl = class {
   }
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/parser.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/parser.js
 var NULL = 0;
 var LF = 10;
 var CR = 13;
@@ -279,7 +285,7 @@ var Parser = class {
   }
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/types.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/types.js
 var StompSocketState;
 (function(StompSocketState2) {
   StompSocketState2[StompSocketState2["CONNECTING"] = 0] = "CONNECTING";
@@ -294,7 +300,7 @@ var ActivationState;
   ActivationState2[ActivationState2["INACTIVE"] = 2] = "INACTIVE";
 })(ActivationState || (ActivationState = {}));
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/versions.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/versions.js
 var Versions = class {
   constructor(versions) {
     this.versions = versions;
@@ -315,7 +321,7 @@ Versions.default = new Versions([
   Versions.V1_2
 ]);
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/augment-websocket.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/augment-websocket.js
 function augmentWebsocket(webSocket, debug) {
   webSocket.terminate = function() {
     const noOp = () => {
@@ -338,7 +344,7 @@ function augmentWebsocket(webSocket, debug) {
   };
 }
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/stomp-handler.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/stomp-handler.js
 var StompHandler = class {
   constructor(_client, _webSocket, config = {}) {
     this._client = _client;
@@ -650,7 +656,7 @@ var StompHandler = class {
   }
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/client.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/client.js
 var __awaiter = function(thisArg, _arguments, P, generator) {
   function adopt(value) {
     return value instanceof P ? value : new P(function(resolve) {
@@ -760,7 +766,13 @@ var Client = class {
         return;
       }
       if (this.connectionTimeout > 0) {
+        if (this._connectionWatcher) {
+          clearTimeout(this._connectionWatcher);
+        }
         this._connectionWatcher = setTimeout(() => {
+          if (this.connected) {
+            return;
+          }
           this.debug(`Connection not established in ${this.connectionTimeout}ms, closing socket`);
           this.forceDisconnect();
         }, this.connectionTimeout);
@@ -907,7 +919,7 @@ var Client = class {
   }
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/compatibility/heartbeat-info.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/compatibility/heartbeat-info.js
 var HeartbeatInfo = class {
   constructor(client) {
     this.client = client;
@@ -926,7 +938,7 @@ var HeartbeatInfo = class {
   }
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/compatibility/compat-client.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/compatibility/compat-client.js
 var CompatClient = class extends Client {
   constructor(webSocketFactory) {
     super();
@@ -1038,7 +1050,7 @@ var CompatClient = class extends Client {
   }
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/node_modules/@stomp/stompjs/esm6/compatibility/stomp.js
+// ../../../../inception-api-annotation-experimental/src/main/ts/node_modules/@stomp/stompjs/esm6/compatibility/stomp.js
 var Stomp = class {
   static client(url, protocols) {
     if (protocols == null) {
@@ -1065,238 +1077,140 @@ Stomp.WebSocketClass = null;
 
 // ../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Span.ts
 var Span = class {
-  constructor(aId, aCoveredText, aBegin, aEnd, aType, aFeatures, aColor) {
+  constructor(aId, aCoveredText, aBegin, aEnd, aLayerId, aFeatures, aColor) {
     this.id = aId;
     this.coveredText = aCoveredText;
     this.begin = aBegin;
     this.end = aEnd;
-    this.type = aType;
+    this.layerId = aLayerId;
     this.features = aFeatures;
     this.color = aColor;
   }
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/ErrorMessage.ts
-var ErrorMessage = class {
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/AdviceMessage.ts
+var AdviceMessage = class {
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/span/SelectSpanRequest.ts
-var SelectSpanRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aSpanId) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.spanId = aSpanId;
-  }
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/span/UpdateSpanRequest.ts
-var UpdateSpanRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aSpanId, aNewFeature) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.spanId = aSpanId;
-    this.newFeature = aNewFeature;
-  }
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/span/CreateSpanRequest.ts
-var CreateSpanRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aBegin, aEnd, aLayer) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.begin = aBegin;
-    this.end = aEnd;
-    this.layer = aLayer;
-  }
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/span/DeleteSpanRequest.ts
-var DeleteSpanRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aSpanId, aLayer) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.spanId = aSpanId;
-    this.layer = aLayer;
-  }
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/span/SelectSpanResponse.ts
-var SelectSpanResponse = class {
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Viewport.ts
-var Viewport = class {
-  constructor(aViewports, aDisabledLayers, aDocumentText) {
-    this.viewport = aViewports;
-    this.disabledLayers = aDisabledLayers;
-    this.documentText = aDocumentText;
-  }
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/arc/SelectArcResponse.ts
-var SelectArcResponse = class {
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/arc/SelectArcRequest.ts
-var SelectArcRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aArcId) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.arcId = aArcId;
-  }
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/arc/UpdateArcRequest.ts
-var UpdateArcRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aArcId, aNewFeatures) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.arcId = aArcId;
-    this.newFeatures = aNewFeatures;
-  }
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/arc/CreateArcRequest.ts
-var CreateArcRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.sourceId = aSourceId;
-    this.targetId = aTargetId;
-    this.layer = aLayer;
-  }
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Arc.ts
-var Arc = class {
-  constructor(aId, aSourceId, aTargetId, aSourceCoveredText, aTargetCoveredText, aColor, aType, aFeatures) {
-    this.id = aId;
-    this.sourceId = aSourceId;
-    this.targetId = aTargetId;
-    this.sourceCoveredText = aSourceCoveredText;
-    this.targetCoveredText = aTargetCoveredText;
-    this.color = aColor;
-    this.type = aType;
-    this.features = aFeatures;
-  }
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/DocumentResponse.ts
-var DocumentResponse = class {
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/span/UpdateSpanMessage.ts
-var UpdateSpanMessage = class {
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/span/CreateSpanMessage.ts
-var CreateSpanMessage = class {
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/span/DeleteSpanMessage.ts
-var DeleteSpanMessage = class {
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/arc/UpdateArcMessage.ts
-var UpdateArcMessage = class {
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/arc/CreateArcMessage.ts
-var CreateArcMessage = class {
-};
-
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/arc/DeleteArcMessage.ts
-var DeleteArcMessage = class {
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/DocumentMessage.ts
+var DocumentMessage = class {
 };
 
 // ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/DocumentRequest.ts
 var DocumentRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aViewport) {
-    this.clientName = aClientName;
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aViewport) {
+    this.annotatorName = aAnnotatorName;
     this.projectId = aProjectId;
-    this.documentId = aDocumentId;
+    this.sourceDocumentId = aSourceDocumentId;
     this.viewport = aViewport;
   }
 };
 
-// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/arc/DeleteArcRequest.ts
-var DeleteArcRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aArcId, aLayer) {
-    this.clientName = aClientName;
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/UpdateFeaturesMessage.ts
+var UpdateFeaturesMessage = class {
+};
+
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/create/SpanCreatedMessage.ts
+var SpanCreatedMessage = class {
+};
+
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/DeleteAnnotationMessage.ts
+var DeleteAnnotationMessage = class {
+};
+
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/response/create/ArcCreatedMessage.ts
+var ArcCreatedMessage = class {
+};
+
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/create/CreateArcRequest.ts
+var CreateArcRequest = class {
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aSourceId, aTargetId, aLayerId) {
+    this.annotatorName = aAnnotatorName;
     this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.arcId = aArcId;
-    this.layer = aLayer;
+    this.sourceDocumentId = aSourceDocumentId;
+    this.sourceId = aSourceId;
+    this.targetId = aTargetId;
+    this.layerId = aLayerId;
+  }
+};
+
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/create/CreateSpanRequest.ts
+var CreateSpanRequest = class {
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aBegin, aEnd, aLayerId) {
+    this.annotatorName = aAnnotatorName;
+    this.projectId = aProjectId;
+    this.sourceDocumentId = aSourceDocumentId;
+    this.begin = aBegin;
+    this.end = aEnd;
+    this.layerId = aLayerId;
+  }
+};
+
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/DeleteAnnotationRequest.ts
+var DeleteAnnotationRequest = class {
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aAnnotationId, aLayerId) {
+    this.annotatorName = aAnnotatorName;
+    this.projectId = aProjectId;
+    this.sourceDocumentId = aSourceDocumentId;
+    this.annotationId = aAnnotationId;
+    this.layerId = aLayerId;
+  }
+};
+
+// ../../../../inception-api-annotation-experimental/src/main/ts/main/client/messages/request/UpdateFeaturesRequest.ts
+var UpdateFeaturesRequest = class {
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aAnnotationId, aNewFeatures) {
+    this.annotatorName = aAnnotatorName;
+    this.projectId = aProjectId;
+    this.sourceDocumentId = aSourceDocumentId;
+    this.annotationId = aAnnotationId;
+    this.newFeatures = aNewFeatures;
   }
 };
 
 // ../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPIImpl.ts
 var AnnotationExperienceAPIImpl = class {
-  constructor() {
-    this.connect();
+  constructor(aProjectId, aDocumentId, aClientName, aUrl) {
+    alert("CREATED");
+    this.connect(aProjectId, aDocumentId, aClientName, aUrl);
   }
-  connect() {
+  connect(aProjectId, aDocumentId, aClientName, aUrl) {
+    alert("OPENING NOW WEBSOCKET VIA " + aUrl);
     this.stompClient = Stomp.over(function() {
-      return new WebSocket(localStorage.getItem("url"));
+      return new WebSocket(aUrl);
     });
     const that = this;
     this.stompClient.onConnect = function(frame) {
-      that.onConnect(frame);
+      that.onConnect(frame, aClientName, aProjectId, aDocumentId);
     };
     this.stompClient.onStompError = function(frame) {
       console.log("Broker reported error: " + frame.headers["message"]);
       console.log("Additional details: " + frame.body);
     };
-    this.stompClient.activate();
   }
-  onConnect(frame) {
+  onConnect(frame, aClientName, aProjectId, aDocumentId) {
     let that = this;
-    const header = frame.headers;
-    let data;
-    for (data in header) {
-      that.clientName = header[data];
-      break;
-    }
-    this.projectID = Number(document.location.href.split("/")[5]);
-    this.documentID = Number(document.location.href.split("=")[1].split("&")[0]);
-    this.viewport = new Viewport(null, null, null);
-    this.stompClient.subscribe("/queue/document/" + that.clientName, function(msg) {
-      that.onDocument(Object.assign(new DocumentResponse(), JSON.parse(msg.body)));
+    alert("onCON");
+    this.stompClient.subscribe("/queue/document/" + aClientName, function(msg) {
+      that.onDocument(Object.assign(new DocumentMessage(), JSON.parse(msg.body)));
     }, {id: "document_request"});
-    this.stompClient.subscribe("/queue/select_span/" + that.clientName, function(msg) {
-      that.onSpanSelect(Object.assign(new SelectSpanResponse(), JSON.parse(msg.body)));
-    }, {id: "selected_span"});
-    this.stompClient.subscribe("/queue/select_arc/" + that.clientName, function(msg) {
-      that.onArcSelect(Object.assign(new SelectArcResponse(), JSON.parse(msg.body)));
-    }, {id: "selected_arc"});
-    this.stompClient.subscribe("/queue/error_message/" + that.clientName, function(msg) {
-      that.onError(Object.assign(new ErrorMessage(), JSON.parse(msg.body)));
+    this.stompClient.subscribe("/queue/error_message/" + aClientName, function(msg) {
+      that.onError(Object.assign(new AdviceMessage(), JSON.parse(msg.body)));
     }, {id: "error_message"});
-    this.stompClient.subscribe("/topic/span_update/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onSpanUpdate(Object.assign(new UpdateSpanMessage(), JSON.parse(msg.body)));
+    this.stompClient.subscribe("/topic/features_update/" + aProjectId + "/" + aDocumentId, function(msg) {
+      that.onFeaturesUpdate(Object.assign(new UpdateFeaturesMessage(), JSON.parse(msg.body)));
     }, {id: "span_update"});
-    this.stompClient.subscribe("/topic/span_create/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onSpanCreate(Object.assign(new CreateSpanMessage(), JSON.parse(msg.body)));
+    this.stompClient.subscribe("/topic/span_create/" + aProjectId + "/" + aDocumentId, function(msg) {
+      that.onSpanCreate(Object.assign(new SpanCreatedMessage(), JSON.parse(msg.body)));
     }, {id: "span_create"});
-    this.stompClient.subscribe("/topic/span_delete/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onSpanDelete(Object.assign(new DeleteSpanMessage(), JSON.parse(msg.body)));
-    }, {id: "span_delete"});
-    this.stompClient.subscribe("/topic/arc_update/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onArcUpdate(Object.assign(new UpdateArcMessage(), JSON.parse(msg.body)));
-    }, {id: "relation_update"});
-    this.stompClient.subscribe("/topic/arc_create/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onArcCreate(Object.assign(new CreateArcMessage(), JSON.parse(msg.body)));
+    this.stompClient.subscribe("/topic/arc_create/" + aProjectId + "/" + aDocumentId, function(msg) {
+      that.onArcCreate(Object.assign(new ArcCreatedMessage(), JSON.parse(msg.body)));
     }, {id: "relation_create"});
-    this.stompClient.subscribe("/topic/arc_delete/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onArcDelete(Object.assign(new DeleteArcMessage(), JSON.parse(msg.body)));
-    }, {id: "relation_delete"});
+    this.stompClient.subscribe("/topic/annotation_delete/" + aProjectId + "/" + aDocumentId, function(msg) {
+      that.onAnnotationDelete(Object.assign(new DeleteAnnotationMessage(), JSON.parse(msg.body)));
+    }, {id: "span_delete"});
+    this.stompClient.activate();
+    alert("ACTIVATE");
   }
   unsubscribe(aChannel) {
     this.stompClient.unsubscribe(aChannel);
@@ -1304,105 +1218,55 @@ var AnnotationExperienceAPIImpl = class {
   disconnect() {
     this.stompClient.deactivate();
   }
-  onDocument(aMessage) {
-    this.viewport = aMessage.viewport;
-    this.viewport.documentText = this.viewport.documentText.split("\n").join("");
-    this.spans = aMessage.spans;
-    this.arcs = aMessage.arcs;
-  }
-  onSpanDelete(aMessage) {
-    this.spans.forEach((item, index) => {
-      if (item.id.toString() === aMessage.spanId.toString()) {
-        this.spans.splice(index, 1);
-      }
+  requestDocument(aAnnotatorName, aProjectId, aDocumentId, aViewport) {
+    this.stompClient.publish({
+      destination: "/app/document_request",
+      body: JSON.stringify(new DocumentRequest(aAnnotatorName, aProjectId, aDocumentId, aViewport))
     });
   }
+  requestCreateArc(aAnnotatorName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer) {
+    this.stompClient.publish({
+      destination: "/app/arc_create",
+      body: JSON.stringify(new CreateArcRequest(aAnnotatorName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer))
+    });
+  }
+  requestCreateSpan(aAnnotatorName, aProjectId, aDocumentId, aBegin, aEnd, aLayer) {
+    console.log("SENDING: " + aBegin + " _ " + aEnd);
+    this.stompClient.publish({
+      destination: "/app/span_create",
+      body: JSON.stringify(new CreateSpanRequest(aAnnotatorName, aProjectId, aDocumentId, aBegin, aEnd, aLayer))
+    });
+  }
+  requestDeleteAnnotation(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aLayer) {
+    this.stompClient.publish({
+      destination: "/app/annotation_delete",
+      body: JSON.stringify(new DeleteAnnotationRequest(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aLayer))
+    });
+  }
+  requestUpdateFeatures(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aNewFeature) {
+    this.stompClient.publish({
+      destination: "/app/features_update",
+      body: JSON.stringify(new UpdateFeaturesRequest(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aNewFeature))
+    });
+  }
+  onDocument(aMessage) {
+    console.log("RECEIVED DOCUMENT" + aMessage);
+  }
   onSpanCreate(aMessage) {
+    console.log("RECEIVED SPAN CREATE" + aMessage);
     let span = new Span(aMessage.spanId, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.features, aMessage.color);
-    this.spans.push(span);
-  }
-  onSpanSelect(aMessage) {
-    this.selectedSpan = new Span(aMessage.spanId, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.feature, aMessage.color);
-  }
-  onSpanUpdate(aMessage) {
-    this.spans[this.spans.findIndex((s) => s.id == aMessage.id)].features = aMessage.feature;
   }
   onError(aMessage) {
     console.log(aMessage);
   }
   onArcCreate(aMessage) {
-    let relation = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.sourceCoveredText, aMessage.targetCoveredText, aMessage.color, aMessage.type, aMessage.features);
-    this.arcs.push(relation);
+    console.log("RECEIVED ARC CREATE" + aMessage);
   }
-  onArcDelete(aMessage) {
-    this.arcs.forEach((item, index) => {
-      if (item.id === aMessage.arcId) {
-        this.arcs.splice(index, 1);
-      }
-    });
+  onAnnotationDelete(aMessage) {
+    console.log("RECEIVED DELETE ANNOTATION" + aMessage);
   }
-  onArcSelect(aMessage) {
-    this.selectedArc = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.sourceCoveredText, aMessage.targetCoveredText, aMessage.color, aMessage.type, aMessage.features);
-  }
-  onArcUpdate(aMessage) {
-    console.log("RECEIVED UPDATE ARC");
-    let arc = this.arcs.findIndex((r) => r.id == aMessage.arcId);
-    this.arcs[arc].features = aMessage.newFeatures;
-  }
-  requestCreateArc(aClientName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer) {
-    this.stompClient.publish({
-      destination: "/app/arc_create",
-      body: JSON.stringify(new CreateArcRequest(aClientName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer))
-    });
-  }
-  requestCreateSpan(aClientName, aProjectId, aDocumentId, aBegin, aEnd, aLayer) {
-    console.log("SENDING: " + aBegin + " _ " + aEnd);
-    this.stompClient.publish({
-      destination: "/app/span_create",
-      body: JSON.stringify(new CreateSpanRequest(aClientName, aProjectId, aDocumentId, aBegin, aEnd, aLayer))
-    });
-  }
-  requestDeleteArc(aClientName, aProjectId, aDocumentId, aArcId, aLayer) {
-    this.stompClient.publish({
-      destination: "/app/arc_delete",
-      body: JSON.stringify(new DeleteArcRequest(aClientName, aProjectId, aDocumentId, aArcId, aLayer))
-    });
-  }
-  requestDeleteSpan(aClientName, aProjectId, aDocumentId, aSpanId, aLayer) {
-    this.stompClient.publish({
-      destination: "/app/span_delete",
-      body: JSON.stringify(new DeleteSpanRequest(aClientName, aProjectId, aDocumentId, aSpanId, aLayer))
-    });
-  }
-  requestDocument(aClientName, aProjectId, aDocumentId) {
-    this.stompClient.publish({
-      destination: "/app/document_request",
-      body: JSON.stringify(new DocumentRequest(aClientName, aProjectId, aDocumentId, this.viewport))
-    });
-  }
-  requestSelectArc(aClientName, aProjectId, aDocumentId, aArcId) {
-    this.stompClient.publish({
-      destination: "/app/select_arc",
-      body: JSON.stringify(new SelectArcRequest(aClientName, aProjectId, aDocumentId, aArcId))
-    });
-  }
-  requestSelectSpan(aClientName, aProjectId, aDocumentId, aSpanId) {
-    this.stompClient.publish({
-      destination: "/app/select_span",
-      body: JSON.stringify(new SelectSpanRequest(aClientName, aProjectId, aDocumentId, aSpanId))
-    });
-  }
-  requestUpdateArc(aClientName, aProjectId, aDocumentId, aArcId, aNewFeature) {
-    this.stompClient.publish({
-      destination: "/app/update_arc",
-      body: JSON.stringify(new UpdateArcRequest(aClientName, aProjectId, aDocumentId, aArcId, aNewFeature))
-    });
-  }
-  requestUpdateSpan(aClientName, aProjectId, aDocumentId, aSpanId, aNewFeature) {
-    this.stompClient.publish({
-      destination: "/app/update_span",
-      body: JSON.stringify(new UpdateSpanRequest(aClientName, aProjectId, aDocumentId, aSpanId, aNewFeature))
-    });
+  onFeaturesUpdate(aMessage) {
+    console.log("RECEIVED UPDATE ANNOTATION" + aMessage);
   }
 };
 
@@ -1510,17 +1374,6 @@ var AnnotationExperienceAPIWordAlignmentEditorVisualization = class {
           line.setAttribute("y2", yDependent.toString());
           line.setAttribute("gov_id", govID.toString());
           line.setAttribute("dep_id", depID.toString());
-          line.addEventListener("mouseover", function(e) {
-            for (let i2 = 0; i2 < arcs.length; i2++) {
-              if (arcs[i2].sourceId == Number(line.getAttribute("gov_id")) && arcs[i2].targetId == Number(line.getAttribute("dep_id"))) {
-                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestSelectArc(that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName, that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.projectID, that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.documentID, arcs[i2].id);
-              }
-              setTimeout(function() {
-                let relation = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.selectedArc;
-                alert("RelationID: " + relation.id + ", \nSourceID: " + relation.sourceId + ", \nSourceText: " + relation.targetCoveredText + ", \nTargetID: " + relation.targetId + ", \nTargetText: " + relation.targetCoveredText);
-              }, 2e3);
-            }
-          });
           if (arcs.length > 0) {
             line.style.stroke = "#9a001b";
           }
@@ -1531,11 +1384,11 @@ var AnnotationExperienceAPIWordAlignmentEditorVisualization = class {
       }
     }
   }
-  calculateInitialOffset(aSentenceNumber) {
+  calculateInitialOffset(aUnitNumber) {
     let offset = 0;
-    let sentences = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.documentText.split(".");
-    for (let i = 0; i < aSentenceNumber; i++) {
-      let words = sentences[i].split(" ");
+    let units = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.documentText.split(".");
+    for (let i = 0; i < aUnitNumber; i++) {
+      let words = units[i].split(" ");
       for (let j = 0; j < words.length; j++) {
         offset += words[j].length + 1;
       }
@@ -1581,15 +1434,10 @@ var AnnotationExperienceAPIWordAlignmentEditorActionHandler = class {
       let elem = aEvent.target;
       if (elem.className === "far fa-caret-square-right" || "far fa-caret-square-left") {
         setTimeout(function() {
-          that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestDocument(that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.clientName, that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.projectID, Number(document.location.href.split("=")[1].split("&")[0]));
+          that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestDocument(that.annotationExperienceAPIWordAlignmentEditor.annotatorName, that.annotationExperienceAPIWordAlignmentEditor.projectId, that.annotationExperienceAPIWordAlignmentEditor.documentId, that.annotationExperienceAPIWordAlignmentEditor.viewport);
           setTimeout(function() {
-            that.sentences = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.documentText.split(".");
-            that.annotationExperienceAPIWordAlignmentEditor.oddSentence = that.sentences[0];
-            that.annotationExperienceAPIWordAlignmentEditor.evenSentence = that.sentences[1];
-            that.annotationExperienceAPIWordAlignmentEditor.oddSentenceOffset = 0;
-            that.annotationExperienceAPIWordAlignmentEditor.evenSentenceOffset = 1;
             that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPIVisualization.refreshEditor();
-          }, 1e3);
+          }, 2e3);
         }, 200);
         document.getElementById("save_alignment").disabled = false;
       }
@@ -1619,16 +1467,24 @@ var AnnotationExperienceAPIWordAlignmentEditorActionHandler = class {
 
 // main/editors/wordalignment/AnnotationExperienceAPIWordAlignmentEditor.ts
 var AnnotationExperienceAPIWordAlignmentEditor = class {
-  constructor() {
+  constructor(aProjectId, aDocumentId, aAnnotatorName, aUrl) {
     this.oddSentenceOffset = 0;
     this.evenSentenceOffset = 1;
-    this.annotationExperienceAPI = new AnnotationExperienceAPIImpl();
+    alert("RUNNING");
+    this.projectId = aProjectId;
+    this.documentId = aDocumentId;
+    this.annotatorName = aAnnotatorName;
+    this.annotationExperienceAPI = new AnnotationExperienceAPIImpl(aProjectId, aDocumentId, aAnnotatorName, aUrl);
     this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIWordAlignmentEditorVisualization(this);
     this.annotationExperienceAPIWordAlignmentEditorActionHandler = new AnnotationExperienceAPIWordAlignmentEditorActionHandler(this);
   }
   saveAlignments() {
     let pairs = [];
     const that = this;
+    if (!this.inputsValid) {
+      alert("Word alignment is not 1:1.");
+      return;
+    }
     this.spanType = document.getElementsByClassName("filter-option-inner-inner")[0].innerText;
     let oddUnitContainerSize = document.getElementById("odd_unit_container").children.length - 2;
     let evenUnitContainerSize = document.getElementById("even_unit_container").children.length - 2;
@@ -1645,23 +1501,23 @@ var AnnotationExperienceAPIWordAlignmentEditor = class {
             oddUnitContainerElementTextId[1],
             evenUnitContainerElementTextId[1]
           ]);
-          this.createSpanRequest(oddUnitContainerElementTextId[1], oddUnitContainerElementTextId[2], this.spanType);
-          this.createSpanRequest(evenUnitContainerElementTextId[1], evenUnitContainerElementTextId[2], this.spanType);
+          this.createSpanRequest(oddUnitContainerElementTextId[1], oddUnitContainerElementTextId[2], null);
+          this.createSpanRequest(evenUnitContainerElementTextId[1], evenUnitContainerElementTextId[2], null);
         }
       }
     }
     setTimeout(function() {
       let source, target;
       for (let i = 0; i < pairs.length; i++) {
-        for (let j = 0; j < that.annotationExperienceAPI.spans.length; j++) {
-          if (pairs[i][0] == that.annotationExperienceAPI.spans[j].begin) {
-            source = that.annotationExperienceAPI.spans[j];
+        for (let j = 0; j < that.spans.length; j++) {
+          if (pairs[i][0] == that.spans[j].begin) {
+            source = that.spans[j];
           }
-          if (pairs[i][1] == that.annotationExperienceAPI.spans[j].begin) {
-            target = that.annotationExperienceAPI.spans[j];
+          if (pairs[i][1] == that.spans[j].begin) {
+            target = that.spans[j];
           }
         }
-        that.annotationExperienceAPI.requestCreateArc(that.annotationExperienceAPI.clientName, that.annotationExperienceAPI.projectID, that.annotationExperienceAPI.documentID, source.id, target.id, that.spanType);
+        that.annotationExperienceAPI.requestCreateArc(that.annotatorName, that.projectId, that.documentId, source.id, target.id, null);
       }
     }, 1500);
     document.getElementById("save_alignment").disabled = true;
@@ -1680,15 +1536,15 @@ var AnnotationExperienceAPIWordAlignmentEditor = class {
   }
   createSpanRequest(aBegin, aEnd, aLayer) {
     let that = this;
-    this.annotationExperienceAPI.requestCreateSpan(that.annotationExperienceAPI.clientName, that.annotationExperienceAPI.projectID, that.annotationExperienceAPI.documentID, Number(aBegin), Number(aEnd), aLayer);
+    this.annotationExperienceAPI.requestCreateSpan(that.annotatorName, that.projectId, that.documentId, Number(aBegin), Number(aEnd), aLayer);
   }
   resetAlignments() {
     let that = this;
-    for (let i = 0; i < this.annotationExperienceAPI.arcs.length; i++) {
-      this.annotationExperienceAPI.requestDeleteArc(that.annotationExperienceAPI.clientName, that.annotationExperienceAPI.projectID, that.annotationExperienceAPI.documentID, that.annotationExperienceAPI.arcs[i].id, that.annotationExperienceAPI.arcs[i].type);
+    for (let i = 0; i < that.arcs.length; i++) {
+      this.annotationExperienceAPI.requestDeleteAnnotation(that.annotatorName, that.projectId, that.documentId, that.arcs[i].id, that.arcs[i].layerId);
     }
-    for (let i = 0; i < this.annotationExperienceAPI.spans.length; i++) {
-      this.annotationExperienceAPI.requestDeleteSpan(that.annotationExperienceAPI.clientName, that.annotationExperienceAPI.projectID, that.annotationExperienceAPI.documentID, that.annotationExperienceAPI.spans[i].id, that.annotationExperienceAPI.spans[i].type);
+    for (let i = 0; i < this.spans.length; i++) {
+      that.annotationExperienceAPI.requestDeleteAnnotation(that.annotatorName, that.projectId, that.documentId, that.spans[i].id, that.spans[i].layerId);
     }
     document.getElementById("save_alignment").disabled = false;
   }

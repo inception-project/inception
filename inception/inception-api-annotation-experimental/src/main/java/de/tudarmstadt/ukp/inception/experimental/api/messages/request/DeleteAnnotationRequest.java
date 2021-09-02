@@ -25,7 +25,7 @@ public class DeleteAnnotationRequest
     private long projectId;
     private long sourceDocumentId;
     private VID annotationId;
-    private String layer;
+    private long layerId;
 
     public String getAnnotatorName()
     {
@@ -67,13 +67,13 @@ public class DeleteAnnotationRequest
         annotationId = aAnnotationId;
     }
 
-    public String getLayer()
+    public long getLayerId()
     {
-        return layer;
+        return layerId;
     }
 
-    public void setLayer(String aLayer)
+    public void setLayerId(long aLayerId)
     {
-        layer = aLayer;
+        layerId = aLayerId;
     }
 }

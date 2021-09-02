@@ -17,10 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
 
-import java.util.List;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class UpdateFeaturesRequest
 {
@@ -28,7 +26,9 @@ public class UpdateFeaturesRequest
     private long projectId;
     private long sourceDocumentId;
     private VID annotationId;
-    private List<FeatureX> newFeatures;
+    private long layerId;
+    private AnnotationFeature feature;
+    private Object value;
 
     public String getAnnotatorName()
     {
@@ -70,13 +70,33 @@ public class UpdateFeaturesRequest
         this.annotationId = annotationId;
     }
 
-    public List<FeatureX> getNewFeatures()
+    public long getLayerId()
     {
-        return newFeatures;
+        return layerId;
     }
 
-    public void setNewFeatures(List<FeatureX> newFeatures)
+    public void setLayerId(long aLayerId)
     {
-        this.newFeatures = newFeatures;
+        layerId = aLayerId;
+    }
+
+    public AnnotationFeature getFeature()
+    {
+        return feature;
+    }
+
+    public void setFeature(AnnotationFeature aFeature)
+    {
+        feature = aFeature;
+    }
+
+    public Object getValue()
+    {
+        return value;
+    }
+
+    public void setValue(Object aValue)
+    {
+        value = aValue;
     }
 }

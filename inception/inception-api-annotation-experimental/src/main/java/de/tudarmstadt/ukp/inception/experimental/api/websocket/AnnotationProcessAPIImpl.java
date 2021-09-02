@@ -33,9 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.experimental.api.AnnotationSystemAPIImpl;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DeleteAnnotationRequest;
@@ -87,16 +85,15 @@ public class AnnotationProcessAPIImpl
     private static final String SERVER_SEND_CLIENT_ERROR_MESSAGE = "/queue/error_message/";
 
     public AnnotationProcessAPIImpl(ProjectService aProjectService,
-            DocumentService aDocumentService, UserDao aUserDao,
+            DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties,
             SimpMessagingTemplate aSimpMessagingTemplate,
-            AnnotationSchemaService aAnnotationSchemaService, ColoringService aColoringService,
-            UserPreferencesService aUserPreferencesService)
+            AnnotationSchemaService aAnnotationSchemaService, ColoringService aColoringService)
     {
         this.simpMessagingTemplate = aSimpMessagingTemplate;
         this.annotationSystemAPIImpl = new AnnotationSystemAPIImpl(aProjectService,
-                aDocumentService, aUserDao, aRepositoryProperties, this, aAnnotationSchemaService,
-                aColoringService, aUserPreferencesService);
+                aDocumentService, aRepositoryProperties, this, aAnnotationSchemaService,
+                aColoringService);
     }
 
     /**

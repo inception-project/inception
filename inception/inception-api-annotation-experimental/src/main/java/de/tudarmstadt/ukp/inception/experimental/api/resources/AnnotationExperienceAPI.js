@@ -22,14 +22,13 @@ var __export = (target, all) => {
     __defProp(target, name, {get: all[name], enumerable: true});
 };
 
-
-// main/node_modules/@stomp/stompjs/esm6/byte.js
+// node_modules/@stomp/stompjs/esm6/byte.js
 var BYTE = {
   LF: "\n",
   NULL: "\0"
 };
 
-// main/node_modules/@stomp/stompjs/esm6/frame-impl.js
+// node_modules/@stomp/stompjs/esm6/frame-impl.js
 var FrameImpl = class {
   constructor(params) {
     const {command, headers, body, binaryBody, escapeHeaderValues, skipContentLengthHeader} = params;
@@ -136,7 +135,7 @@ var FrameImpl = class {
   }
 };
 
-// main/node_modules/@stomp/stompjs/esm6/parser.js
+// node_modules/@stomp/stompjs/esm6/parser.js
 var NULL = 0;
 var LF = 10;
 var CR = 13;
@@ -280,7 +279,7 @@ var Parser = class {
   }
 };
 
-// main/node_modules/@stomp/stompjs/esm6/types.js
+// node_modules/@stomp/stompjs/esm6/types.js
 var StompSocketState;
 (function(StompSocketState2) {
   StompSocketState2[StompSocketState2["CONNECTING"] = 0] = "CONNECTING";
@@ -295,7 +294,7 @@ var ActivationState;
   ActivationState2[ActivationState2["INACTIVE"] = 2] = "INACTIVE";
 })(ActivationState || (ActivationState = {}));
 
-// main/node_modules/@stomp/stompjs/esm6/versions.js
+// node_modules/@stomp/stompjs/esm6/versions.js
 var Versions = class {
   constructor(versions) {
     this.versions = versions;
@@ -316,7 +315,7 @@ Versions.default = new Versions([
   Versions.V1_2
 ]);
 
-// main/node_modules/@stomp/stompjs/esm6/augment-websocket.js
+// node_modules/@stomp/stompjs/esm6/augment-websocket.js
 function augmentWebsocket(webSocket, debug) {
   webSocket.terminate = function() {
     const noOp = () => {
@@ -339,7 +338,7 @@ function augmentWebsocket(webSocket, debug) {
   };
 }
 
-// main/node_modules/@stomp/stompjs/esm6/stomp-handler.js
+// node_modules/@stomp/stompjs/esm6/stomp-handler.js
 var StompHandler = class {
   constructor(_client, _webSocket, config = {}) {
     this._client = _client;
@@ -651,7 +650,7 @@ var StompHandler = class {
   }
 };
 
-// main/node_modules/@stomp/stompjs/esm6/client.js
+// node_modules/@stomp/stompjs/esm6/client.js
 var __awaiter = function(thisArg, _arguments, P, generator) {
   function adopt(value) {
     return value instanceof P ? value : new P(function(resolve) {
@@ -761,7 +760,13 @@ var Client = class {
         return;
       }
       if (this.connectionTimeout > 0) {
+        if (this._connectionWatcher) {
+          clearTimeout(this._connectionWatcher);
+        }
         this._connectionWatcher = setTimeout(() => {
+          if (this.connected) {
+            return;
+          }
           this.debug(`Connection not established in ${this.connectionTimeout}ms, closing socket`);
           this.forceDisconnect();
         }, this.connectionTimeout);
@@ -908,7 +913,7 @@ var Client = class {
   }
 };
 
-// main/node_modules/@stomp/stompjs/esm6/compatibility/heartbeat-info.js
+// node_modules/@stomp/stompjs/esm6/compatibility/heartbeat-info.js
 var HeartbeatInfo = class {
   constructor(client) {
     this.client = client;
@@ -927,7 +932,7 @@ var HeartbeatInfo = class {
   }
 };
 
-// main/node_modules/@stomp/stompjs/esm6/compatibility/compat-client.js
+// node_modules/@stomp/stompjs/esm6/compatibility/compat-client.js
 var CompatClient = class extends Client {
   constructor(webSocketFactory) {
     super();
@@ -1039,7 +1044,7 @@ var CompatClient = class extends Client {
   }
 };
 
-// main/node_modules/@stomp/stompjs/esm6/compatibility/stomp.js
+// node_modules/@stomp/stompjs/esm6/compatibility/stomp.js
 var Stomp = class {
   static client(url, protocols) {
     if (protocols == null) {
@@ -1066,238 +1071,140 @@ Stomp.WebSocketClass = null;
 
 // main/client/model/Span.ts
 var Span = class {
-  constructor(aId, aCoveredText, aBegin, aEnd, aType, aFeatures, aColor) {
+  constructor(aId, aCoveredText, aBegin, aEnd, aLayerId, aFeatures, aColor) {
     this.id = aId;
     this.coveredText = aCoveredText;
     this.begin = aBegin;
     this.end = aEnd;
-    this.type = aType;
+    this.layerId = aLayerId;
     this.features = aFeatures;
     this.color = aColor;
   }
 };
 
-// main/client/messages/response/ErrorMessage.ts
-var ErrorMessage = class {
+// main/client/messages/response/AdviceMessage.ts
+var AdviceMessage = class {
 };
 
-// main/client/messages/request/span/SelectSpanRequest.ts
-var SelectSpanRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aSpanId) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.spanId = aSpanId;
-  }
-};
-
-// main/client/messages/request/span/UpdateSpanRequest.ts
-var UpdateSpanRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aSpanId, aNewFeature) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.spanId = aSpanId;
-    this.newFeature = aNewFeature;
-  }
-};
-
-// main/client/messages/request/span/CreateSpanRequest.ts
-var CreateSpanRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aBegin, aEnd, aLayer) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.begin = aBegin;
-    this.end = aEnd;
-    this.layer = aLayer;
-  }
-};
-
-// main/client/messages/request/span/DeleteSpanRequest.ts
-var DeleteSpanRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aSpanId, aLayer) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.spanId = aSpanId;
-    this.layer = aLayer;
-  }
-};
-
-// main/client/messages/response/span/SelectSpanResponse.ts
-var SelectSpanResponse = class {
-};
-
-// main/client/model/Viewport.ts
-var Viewport = class {
-  constructor(aViewports, aDisabledLayers, aDocumentText) {
-    this.viewport = aViewports;
-    this.disabledLayers = aDisabledLayers;
-    this.documentText = aDocumentText;
-  }
-};
-
-// main/client/messages/response/arc/SelectArcResponse.ts
-var SelectArcResponse = class {
-};
-
-// main/client/messages/request/arc/SelectArcRequest.ts
-var SelectArcRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aArcId) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.arcId = aArcId;
-  }
-};
-
-// main/client/messages/request/arc/UpdateArcRequest.ts
-var UpdateArcRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aArcId, aNewFeatures) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.arcId = aArcId;
-    this.newFeatures = aNewFeatures;
-  }
-};
-
-// main/client/messages/request/arc/CreateArcRequest.ts
-var CreateArcRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer) {
-    this.clientName = aClientName;
-    this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.sourceId = aSourceId;
-    this.targetId = aTargetId;
-    this.layer = aLayer;
-  }
-};
-
-// main/client/model/Arc.ts
-var Arc = class {
-  constructor(aId, aSourceId, aTargetId, aSourceCoveredText, aTargetCoveredText, aColor, aType, aFeatures) {
-    this.id = aId;
-    this.sourceId = aSourceId;
-    this.targetId = aTargetId;
-    this.sourceCoveredText = aSourceCoveredText;
-    this.targetCoveredText = aTargetCoveredText;
-    this.color = aColor;
-    this.type = aType;
-    this.features = aFeatures;
-  }
-};
-
-// main/client/messages/response/DocumentResponse.ts
-var DocumentResponse = class {
-};
-
-// main/client/messages/response/span/UpdateSpanMessage.ts
-var UpdateSpanMessage = class {
-};
-
-// main/client/messages/response/span/CreateSpanMessage.ts
-var CreateSpanMessage = class {
-};
-
-// main/client/messages/response/span/DeleteSpanMessage.ts
-var DeleteSpanMessage = class {
-};
-
-// main/client/messages/response/arc/UpdateArcMessage.ts
-var UpdateArcMessage = class {
-};
-
-// main/client/messages/response/arc/CreateArcMessage.ts
-var CreateArcMessage = class {
-};
-
-// main/client/messages/response/arc/DeleteArcMessage.ts
-var DeleteArcMessage = class {
+// main/client/messages/response/DocumentMessage.ts
+var DocumentMessage = class {
 };
 
 // main/client/messages/request/DocumentRequest.ts
 var DocumentRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aViewport) {
-    this.clientName = aClientName;
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aViewport) {
+    this.annotatorName = aAnnotatorName;
     this.projectId = aProjectId;
-    this.documentId = aDocumentId;
+    this.sourceDocumentId = aSourceDocumentId;
     this.viewport = aViewport;
   }
 };
 
-// main/client/messages/request/arc/DeleteArcRequest.ts
-var DeleteArcRequest = class {
-  constructor(aClientName, aProjectId, aDocumentId, aArcId, aLayer) {
-    this.clientName = aClientName;
+// main/client/messages/response/UpdateFeaturesMessage.ts
+var UpdateFeaturesMessage = class {
+};
+
+// main/client/messages/response/create/SpanCreatedMessage.ts
+var SpanCreatedMessage = class {
+};
+
+// main/client/messages/response/DeleteAnnotationMessage.ts
+var DeleteAnnotationMessage = class {
+};
+
+// main/client/messages/response/create/ArcCreatedMessage.ts
+var ArcCreatedMessage = class {
+};
+
+// main/client/messages/request/create/CreateArcRequest.ts
+var CreateArcRequest = class {
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aSourceId, aTargetId, aLayerId) {
+    this.annotatorName = aAnnotatorName;
     this.projectId = aProjectId;
-    this.documentId = aDocumentId;
-    this.arcId = aArcId;
-    this.layer = aLayer;
+    this.sourceDocumentId = aSourceDocumentId;
+    this.sourceId = aSourceId;
+    this.targetId = aTargetId;
+    this.layerId = aLayerId;
+  }
+};
+
+// main/client/messages/request/create/CreateSpanRequest.ts
+var CreateSpanRequest = class {
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aBegin, aEnd, aLayerId) {
+    this.annotatorName = aAnnotatorName;
+    this.projectId = aProjectId;
+    this.sourceDocumentId = aSourceDocumentId;
+    this.begin = aBegin;
+    this.end = aEnd;
+    this.layerId = aLayerId;
+  }
+};
+
+// main/client/messages/request/DeleteAnnotationRequest.ts
+var DeleteAnnotationRequest = class {
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aAnnotationId, aLayerId) {
+    this.annotatorName = aAnnotatorName;
+    this.projectId = aProjectId;
+    this.sourceDocumentId = aSourceDocumentId;
+    this.annotationId = aAnnotationId;
+    this.layerId = aLayerId;
+  }
+};
+
+// main/client/messages/request/UpdateFeaturesRequest.ts
+var UpdateFeaturesRequest = class {
+  constructor(aAnnotatorName, aProjectId, aSourceDocumentId, aAnnotationId, aNewFeatures) {
+    this.annotatorName = aAnnotatorName;
+    this.projectId = aProjectId;
+    this.sourceDocumentId = aSourceDocumentId;
+    this.annotationId = aAnnotationId;
+    this.newFeatures = aNewFeatures;
   }
 };
 
 // main/client/AnnotationExperienceAPIImpl.ts
 var AnnotationExperienceAPIImpl = class {
-  constructor() {
-    this.connect();
+  constructor(aProjectId, aDocumentId, aClientName, aUrl) {
+    alert("CREATED");
+    this.connect(aProjectId, aDocumentId, aClientName, aUrl);
   }
-  connect() {
+  connect(aProjectId, aDocumentId, aClientName, aUrl) {
+    alert("OPENING NOW WEBSOCKET VIA " + aUrl);
     this.stompClient = Stomp.over(function() {
-      return new WebSocket(localStorage.getItem("url"));
+      return new WebSocket(aUrl);
     });
     const that = this;
     this.stompClient.onConnect = function(frame) {
-      that.onConnect(frame);
+      that.onConnect(frame, aClientName, aProjectId, aDocumentId);
     };
     this.stompClient.onStompError = function(frame) {
       console.log("Broker reported error: " + frame.headers["message"]);
       console.log("Additional details: " + frame.body);
     };
-    this.stompClient.activate();
   }
-  onConnect(frame) {
+  onConnect(frame, aClientName, aProjectId, aDocumentId) {
     let that = this;
-    const header = frame.headers;
-    let data;
-    for (data in header) {
-      that.clientName = header[data];
-      break;
-    }
-    this.projectID = Number(document.location.href.split("/")[5]);
-    this.documentID = Number(document.location.href.split("=")[1].split("&")[0]);
-    this.viewport = new Viewport(null, null, null);
-    this.stompClient.subscribe("/queue/document/" + that.clientName, function(msg) {
-      that.onDocument(Object.assign(new DocumentResponse(), JSON.parse(msg.body)));
+    alert("onCON");
+    this.stompClient.subscribe("/queue/document/" + aClientName, function(msg) {
+      that.onDocument(Object.assign(new DocumentMessage(), JSON.parse(msg.body)));
     }, {id: "document_request"});
-    this.stompClient.subscribe("/queue/select_span/" + that.clientName, function(msg) {
-      that.onSpanSelect(Object.assign(new SelectSpanResponse(), JSON.parse(msg.body)));
-    }, {id: "selected_span"});
-    this.stompClient.subscribe("/queue/select_arc/" + that.clientName, function(msg) {
-      that.onArcSelect(Object.assign(new SelectArcResponse(), JSON.parse(msg.body)));
-    }, {id: "selected_arc"});
-    this.stompClient.subscribe("/queue/error_message/" + that.clientName, function(msg) {
-      that.onError(Object.assign(new ErrorMessage(), JSON.parse(msg.body)));
+    this.stompClient.subscribe("/queue/error_message/" + aClientName, function(msg) {
+      that.onError(Object.assign(new AdviceMessage(), JSON.parse(msg.body)));
     }, {id: "error_message"});
-    this.stompClient.subscribe("/topic/span_update/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onSpanUpdate(Object.assign(new UpdateSpanMessage(), JSON.parse(msg.body)));
+    this.stompClient.subscribe("/topic/features_update/" + aProjectId + "/" + aDocumentId, function(msg) {
+      that.onFeaturesUpdate(Object.assign(new UpdateFeaturesMessage(), JSON.parse(msg.body)));
     }, {id: "span_update"});
-    this.stompClient.subscribe("/topic/span_create/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onSpanCreate(Object.assign(new CreateSpanMessage(), JSON.parse(msg.body)));
+    this.stompClient.subscribe("/topic/span_create/" + aProjectId + "/" + aDocumentId, function(msg) {
+      that.onSpanCreate(Object.assign(new SpanCreatedMessage(), JSON.parse(msg.body)));
     }, {id: "span_create"});
-    this.stompClient.subscribe("/topic/span_delete/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onSpanDelete(Object.assign(new DeleteSpanMessage(), JSON.parse(msg.body)));
-    }, {id: "span_delete"});
-    this.stompClient.subscribe("/topic/arc_update/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onArcUpdate(Object.assign(new UpdateArcMessage(), JSON.parse(msg.body)));
-    }, {id: "relation_update"});
-    this.stompClient.subscribe("/topic/arc_create/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onArcCreate(Object.assign(new CreateArcMessage(), JSON.parse(msg.body)));
+    this.stompClient.subscribe("/topic/arc_create/" + aProjectId + "/" + aDocumentId, function(msg) {
+      that.onArcCreate(Object.assign(new ArcCreatedMessage(), JSON.parse(msg.body)));
     }, {id: "relation_create"});
-    this.stompClient.subscribe("/topic/arc_delete/" + this.projectID + "/" + this.documentID, function(msg) {
-      that.onArcDelete(Object.assign(new DeleteArcMessage(), JSON.parse(msg.body)));
-    }, {id: "relation_delete"});
+    this.stompClient.subscribe("/topic/annotation_delete/" + aProjectId + "/" + aDocumentId, function(msg) {
+      that.onAnnotationDelete(Object.assign(new DeleteAnnotationMessage(), JSON.parse(msg.body)));
+    }, {id: "span_delete"});
+    this.stompClient.activate();
+    alert("ACTIVATE");
   }
   unsubscribe(aChannel) {
     this.stompClient.unsubscribe(aChannel);
@@ -1305,104 +1212,54 @@ var AnnotationExperienceAPIImpl = class {
   disconnect() {
     this.stompClient.deactivate();
   }
-  onDocument(aMessage) {
-    this.viewport = aMessage.viewport;
-    this.viewport.documentText = this.viewport.documentText.split("\n").join("");
-    this.spans = aMessage.spans;
-    this.arcs = aMessage.arcs;
-  }
-  onSpanDelete(aMessage) {
-    this.spans.forEach((item, index) => {
-      if (item.id.toString() === aMessage.spanId.toString()) {
-        this.spans.splice(index, 1);
-      }
+  requestDocument(aAnnotatorName, aProjectId, aDocumentId, aViewport) {
+    this.stompClient.publish({
+      destination: "/app/document_request",
+      body: JSON.stringify(new DocumentRequest(aAnnotatorName, aProjectId, aDocumentId, aViewport))
     });
   }
+  requestCreateArc(aAnnotatorName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer) {
+    this.stompClient.publish({
+      destination: "/app/arc_create",
+      body: JSON.stringify(new CreateArcRequest(aAnnotatorName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer))
+    });
+  }
+  requestCreateSpan(aAnnotatorName, aProjectId, aDocumentId, aBegin, aEnd, aLayer) {
+    console.log("SENDING: " + aBegin + " _ " + aEnd);
+    this.stompClient.publish({
+      destination: "/app/span_create",
+      body: JSON.stringify(new CreateSpanRequest(aAnnotatorName, aProjectId, aDocumentId, aBegin, aEnd, aLayer))
+    });
+  }
+  requestDeleteAnnotation(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aLayer) {
+    this.stompClient.publish({
+      destination: "/app/annotation_delete",
+      body: JSON.stringify(new DeleteAnnotationRequest(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aLayer))
+    });
+  }
+  requestUpdateFeatures(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aNewFeature) {
+    this.stompClient.publish({
+      destination: "/app/features_update",
+      body: JSON.stringify(new UpdateFeaturesRequest(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aNewFeature))
+    });
+  }
+  onDocument(aMessage) {
+    console.log("RECEIVED DOCUMENT" + aMessage);
+  }
   onSpanCreate(aMessage) {
+    console.log("RECEIVED SPAN CREATE" + aMessage);
     let span = new Span(aMessage.spanId, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.features, aMessage.color);
-    this.spans.push(span);
-  }
-  onSpanSelect(aMessage) {
-    this.selectedSpan = new Span(aMessage.spanId, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.feature, aMessage.color);
-  }
-  onSpanUpdate(aMessage) {
-    this.spans[this.spans.findIndex((s) => s.id == aMessage.id)].features = aMessage.feature;
   }
   onError(aMessage) {
     console.log(aMessage);
   }
   onArcCreate(aMessage) {
-    let relation = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.sourceCoveredText, aMessage.targetCoveredText, aMessage.color, aMessage.type, aMessage.features);
-    this.arcs.push(relation);
+    console.log("RECEIVED ARC CREATE" + aMessage);
   }
-  onArcDelete(aMessage) {
-    this.arcs.forEach((item, index) => {
-      if (item.id === aMessage.arcId) {
-        this.arcs.splice(index, 1);
-      }
-    });
+  onAnnotationDelete(aMessage) {
+    console.log("RECEIVED DELETE ANNOTATION" + aMessage);
   }
-  onArcSelect(aMessage) {
-    this.selectedArc = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.sourceCoveredText, aMessage.targetCoveredText, aMessage.color, aMessage.type, aMessage.features);
-  }
-  onArcUpdate(aMessage) {
-    console.log("RECEIVED UPDATE ARC");
-    let arc = this.arcs.findIndex((r) => r.id == aMessage.arcId);
-    this.arcs[arc].features = aMessage.newFeatures;
-  }
-  requestCreateArc(aClientName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer) {
-    this.stompClient.publish({
-      destination: "/app/arc_create",
-      body: JSON.stringify(new CreateArcRequest(aClientName, aProjectId, aDocumentId, aSourceId, aTargetId, aLayer))
-    });
-  }
-  requestCreateSpan(aClientName, aProjectId, aDocumentId, aBegin, aEnd, aLayer) {
-    console.log("SENDING: " + aBegin + " _ " + aEnd);
-    this.stompClient.publish({
-      destination: "/app/span_create",
-      body: JSON.stringify(new CreateSpanRequest(aClientName, aProjectId, aDocumentId, aBegin, aEnd, aLayer))
-    });
-  }
-  requestDeleteArc(aClientName, aProjectId, aDocumentId, aArcId, aLayer) {
-    this.stompClient.publish({
-      destination: "/app/arc_delete",
-      body: JSON.stringify(new DeleteArcRequest(aClientName, aProjectId, aDocumentId, aArcId, aLayer))
-    });
-  }
-  requestDeleteSpan(aClientName, aProjectId, aDocumentId, aSpanId, aLayer) {
-    this.stompClient.publish({
-      destination: "/app/span_delete",
-      body: JSON.stringify(new DeleteSpanRequest(aClientName, aProjectId, aDocumentId, aSpanId, aLayer))
-    });
-  }
-  requestDocument(aClientName, aProjectId, aDocumentId) {
-    this.stompClient.publish({
-      destination: "/app/document_request",
-      body: JSON.stringify(new DocumentRequest(aClientName, aProjectId, aDocumentId, this.viewport))
-    });
-  }
-  requestSelectArc(aClientName, aProjectId, aDocumentId, aArcId) {
-    this.stompClient.publish({
-      destination: "/app/select_arc",
-      body: JSON.stringify(new SelectArcRequest(aClientName, aProjectId, aDocumentId, aArcId))
-    });
-  }
-  requestSelectSpan(aClientName, aProjectId, aDocumentId, aSpanId) {
-    this.stompClient.publish({
-      destination: "/app/select_span",
-      body: JSON.stringify(new SelectSpanRequest(aClientName, aProjectId, aDocumentId, aSpanId))
-    });
-  }
-  requestUpdateArc(aClientName, aProjectId, aDocumentId, aArcId, aNewFeature) {
-    this.stompClient.publish({
-      destination: "/app/update_arc",
-      body: JSON.stringify(new UpdateArcRequest(aClientName, aProjectId, aDocumentId, aArcId, aNewFeature))
-    });
-  }
-  requestUpdateSpan(aClientName, aProjectId, aDocumentId, aSpanId, aNewFeature) {
-    this.stompClient.publish({
-      destination: "/app/update_span",
-      body: JSON.stringify(new UpdateSpanRequest(aClientName, aProjectId, aDocumentId, aSpanId, aNewFeature))
-    });
+  onFeaturesUpdate(aMessage) {
+    console.log("RECEIVED UPDATE ANNOTATION" + aMessage);
   }
 };

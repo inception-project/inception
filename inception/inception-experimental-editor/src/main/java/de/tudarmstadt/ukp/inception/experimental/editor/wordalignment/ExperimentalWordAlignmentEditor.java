@@ -23,15 +23,18 @@ import javax.servlet.ServletContext;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIBasicEditorReference;
+import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIWordAlignmentEditorReference;
+import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 
 public class ExperimentalWordAlignmentEditor
     extends AnnotationEditorBase
@@ -50,15 +53,29 @@ public class ExperimentalWordAlignmentEditor
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        aResponse.render(forReference(ExperimentalAPIBasicEditorReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forScript(setupExperienceAPI(), "1"));
+        aResponse.render(forReference(ExperimentalAPIWordAlignmentEditorReference.get()));
+        aResponse.render(OnDomReadyHeaderItem.forScript(setupExperienceAPI()));
     }
 
     public String setupExperienceAPI()
     {
         AnnotatorState state = getModelObject();
-        return "const editor = new AnnotationExperienceAPIBasicEditor(" + state.getProject().getId()
-            + "," + state.getDocument().getId() + "," + state.getUser().getUsername() + ");";
+        Url endPointUrl = Url.parse(String.format("%s%s", servletContext.getContextPath(),
+                WebsocketConfig.WS_ENDPOINT));
+        endPointUrl.setProtocol("ws");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("const editor = new AnnotationExperienceAPIWordAlignmentEditor("
+                + state.getProject().getId() + "," + state.getDocument().getId() + ",\""
+                + state.getUser().getUsername() + "\",\""
+                + RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl) + "\");");
+
+        /*
+         * TODO for (AnnotationLayer layer : state.getAnnotationLayers()) {
+         * sb.append("editor.layers.push([" + layer.getId() + "," + layer.getUiName() + "]);"); }
+         */
+
+        return sb.toString();
     }
 
     @Override

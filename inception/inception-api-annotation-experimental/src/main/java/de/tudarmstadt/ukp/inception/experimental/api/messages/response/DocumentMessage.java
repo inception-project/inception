@@ -25,12 +25,12 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 
 public class DocumentMessage
 {
-    private Viewport viewport;
+    private List<Viewport> viewport;
     private long sourceDocumentId;
     private List<Span> spans;
     private List<Arc> arcs;
 
-    public DocumentMessage(Viewport aViewport, long aSourceDocumentId, List<Span> aSpans,
+    public DocumentMessage(List<Viewport> aViewport, long aSourceDocumentId, List<Span> aSpans,
                            List<Arc> aRelations)
     {
         viewport = aViewport;
@@ -39,12 +39,12 @@ public class DocumentMessage
         arcs = aRelations;
     }
 
-    public Viewport getViewport()
+    public List<Viewport> getViewport()
     {
         return viewport;
     }
 
-    public void setViewport(Viewport aViewport)
+    public void setViewport(List<Viewport> aViewport)
     {
         viewport = aViewport;
     }

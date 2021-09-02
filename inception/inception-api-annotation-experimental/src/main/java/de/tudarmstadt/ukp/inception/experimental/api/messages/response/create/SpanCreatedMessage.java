@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response.create;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class SpanCreatedMessage
 {
@@ -27,16 +28,16 @@ public class SpanCreatedMessage
     private int begin;
     private int end;
     private String color;
-    private String type;
-    private List<String> features;
+    private long layerId;
+    private List<AnnotationFeature> features;
 
     public SpanCreatedMessage(VID aSpanId, int aBegin, int aEnd,
-                              String aType, String aColor, List<String> aFeatures)
+                              long aLayerId, String aColor, List<AnnotationFeature> aFeatures)
     {
         spanId = aSpanId;
         begin = aBegin;
         end = aEnd;
-        type = aType;
+        layerId = aLayerId;
         color = aColor;
         features = aFeatures;
     }
@@ -81,22 +82,22 @@ public class SpanCreatedMessage
         color = aColor;
     }
 
-    public String getType()
+    public long getLayerId()
     {
-        return type;
+        return layerId;
     }
 
-    public void setType(String aType)
+    public void setLayerId(long aLayerId)
     {
-        type = aType;
+        layerId = aLayerId;
     }
 
-    public List<String> getFeatures()
+    public List<AnnotationFeature> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(List<String> aFeatures)
+    public void setFeatures(List<AnnotationFeature> aFeatures)
     {
         features = aFeatures;
     }

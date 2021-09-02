@@ -23,6 +23,6 @@ export class ArcCreatedMessage
     sourceId : string;
     targetId : string;
     color: string;
-    type: string;
+    layerId: number;
     features : FeatureX[];
 }

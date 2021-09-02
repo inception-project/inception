@@ -38,6 +38,7 @@
     "@stomp/stompjs": "^6.1.0",
     "@types/sockjs-client": "^1.5.0",
     "@types/stompjs": "^2.3.4",
+    "bootstrap": "^5.1.0",
     "esbuild": "^0.11.16"
   }
 }

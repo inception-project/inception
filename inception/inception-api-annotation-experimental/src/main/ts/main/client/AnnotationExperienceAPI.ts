@@ -17,7 +17,7 @@
  */
 import {Viewport} from "./model/Viewport";
 import {FeatureX} from "./model/FeatureX";
-import {AdviceMessage, Message} from "./messages/response/AdviceMessage";
+import {AdviceMessage} from "./messages/response/AdviceMessage";
 import {DocumentMessage} from "./messages/response/DocumentMessage";
 import {UpdateFeaturesMessage} from "./messages/response/UpdateFeaturesMessage";
 import {DeleteAnnotationMessage} from "./messages/response/DeleteAnnotationMessage";
@@ -30,20 +30,19 @@ export interface AnnotationExperienceAPI
 
     disconnect();
 
-
     requestDocument(aAnnotatorName: string, aProjectId: number,
-                                 aDocumentId: number, aViewport: Viewport);
+                                 aDocumentId: number, aViewport: Viewport[]);
 
     requestUpdateFeatures(aAnnotatorName: string, aProjectId: number,
                                 aDocumentId: number, aAnnotationId: number, aNewFeature: FeatureX[])
 
     requestCreateSpan(aAnnotatorName: string, aProjectId: number,
-                                aDocumentId: number, aBegin: number, aEnd: number, aLayer: string);
+                                aDocumentId: number, aBegin: number, aEnd: number, aLayer: number);
 
     requestDeleteAnnotation(aAnnotatorName: string,  aProjectId: number,
-                                aDocumentId: number, aAnnotationId: number, aLayer: string);
+                                aDocumentId: number, aAnnotationId: number, aLayer: number);
 
-    requestCreateArc(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aSourceId : string, aTargetId : string, aLayer: string)
+    requestCreateArc(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aSourceId : string, aTargetId : string, aLayer: number)
 
     onDocument(aMessage: DocumentMessage);
 

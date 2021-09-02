@@ -22,15 +22,15 @@ export class CreateSpanRequest
     sourceDocumentId : number;
     begin : number;
     end : number;
-    layer : string;
+    layerId : number;
 
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aBegin: number, aEnd: number, aLayer: string)
+    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aBegin: number, aEnd: number, aLayerId: number)
     {
         this.annotatorName = aAnnotatorName;
         this.projectId = aProjectId;
         this.sourceDocumentId = aSourceDocumentId;
         this.begin = aBegin;
         this.end = aEnd;
-        this.layer = aLayer;
+        this.layerId = aLayerId;
     }
 }

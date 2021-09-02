@@ -23,6 +23,6 @@ export class SpanCreatedMessage
     begin : number;
     end : number;
     color: string;
-    type: string;
+    layerId: number;
     features : FeatureX[];
 }

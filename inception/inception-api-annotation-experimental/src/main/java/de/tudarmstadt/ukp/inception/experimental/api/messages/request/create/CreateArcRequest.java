@@ -26,7 +26,7 @@ public class CreateArcRequest
     private long sourceDocumentId;
     private VID sourceId;
     private VID targetId;
-    private String layer;
+    private long layerId;
 
     public String getAnnotatorName()
     {
@@ -78,13 +78,13 @@ public class CreateArcRequest
         targetId = aTargetId;
     }
 
-    public String getLayer()
+    public long getLayerId()
     {
-        return layer;
+        return layerId;
     }
 
-    public void setLayer(String aLayer)
+    public void setLayerId(long aLayerId)
     {
-        layer = aLayer;
+        layerId = aLayerId;
     }
 }

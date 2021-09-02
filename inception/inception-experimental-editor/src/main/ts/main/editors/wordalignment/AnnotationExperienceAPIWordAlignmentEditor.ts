@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 import {AnnotationExperienceAPIImpl} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPIImpl";
+import {Viewport} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Viewport";
+import {Arc} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Arc";
+import {Span} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Span";
 import {AnnotationExperienceAPIWordAlignmentEditorVisualization} from "./visualization/AnnotationExperienceAPIWordAlignmentEditorVisualization";
 import {AnnotationExperienceAPIWordAlignmentEditorActionHandler} from "./action/AnnotationExperienceAPIWordAlignmentEditorActionHandler";
 
@@ -25,6 +28,18 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
     annotationExperienceAPIVisualization: AnnotationExperienceAPIWordAlignmentEditorVisualization;
     annotationExperienceAPIWordAlignmentEditorActionHandler: AnnotationExperienceAPIWordAlignmentEditorActionHandler
 
+    //States
+    projectId: number;
+    documentId: number;
+    annotatorName: string;
+
+    layers: [number,string][] ;
+
+    viewport : Viewport[];
+    spans: Span[];
+    arcs: Arc[];
+    sentences : string[];
+
     oddSentence: string;
     oddSentenceOffset: number = 0;
     evenSentence: string;
@@ -33,11 +48,18 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
 
     //TODO OBSERVER CLASS?
 
-    constructor()
+
+    constructor(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string)
     {
-        this.annotationExperienceAPI = new AnnotationExperienceAPIImpl();
+        alert("RUNNING")
+        this.projectId = aProjectId;
+        this.documentId = aDocumentId;
+        this.annotatorName = aAnnotatorName;
+
+        this.annotationExperienceAPI = new AnnotationExperienceAPIImpl(aProjectId, aDocumentId, aAnnotatorName, aUrl);
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIWordAlignmentEditorVisualization(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler = new AnnotationExperienceAPIWordAlignmentEditorActionHandler(this);
+
     }
 
     saveAlignments()
@@ -45,12 +67,10 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
         let pairs = []
         const that = this;
 
-        /*
         if (!this.inputsValid) {
             alert("Word alignment is not 1:1.")
             return;
         }
-         */
 
         this.spanType = document.getElementsByClassName("filter-option-inner-inner")[0].innerText;
 
@@ -76,8 +96,8 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                         evenUnitContainerElementTextId[1]]
                     );
 
-                    this.createSpanRequest(oddUnitContainerElementTextId[1], oddUnitContainerElementTextId[2], this.spanType);
-                    this.createSpanRequest(evenUnitContainerElementTextId[1], evenUnitContainerElementTextId[2], this.spanType);
+                    this.createSpanRequest(oddUnitContainerElementTextId[1], oddUnitContainerElementTextId[2], null);
+                    this.createSpanRequest(evenUnitContainerElementTextId[1], evenUnitContainerElementTextId[2], null);
                 }
             }
         }
@@ -85,22 +105,22 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
         setTimeout(function () {
             let source, target;
             for (let i = 0; i < pairs.length; i++) {
-                for (let j = 0; j < that.annotationExperienceAPI.spans.length; j++) {
+                for (let j = 0; j < that.spans.length; j++) {
 
-                    if (pairs[i][0] == that.annotationExperienceAPI.spans[j].begin) {
-                        source = that.annotationExperienceAPI.spans[j];
+                    if (pairs[i][0] == that.spans[j].begin) {
+                        source = that.spans[j];
                     }
-                    if (pairs[i][1] == that.annotationExperienceAPI.spans[j].begin) {
-                        target = that.annotationExperienceAPI.spans[j];
+                    if (pairs[i][1] == that.spans[j].begin) {
+                        target = that.spans[j];
                     }
                 }
                 that.annotationExperienceAPI.requestCreateArc(
-                    that.annotationExperienceAPI.clientName,
-                    that.annotationExperienceAPI.projectID,
-                    that.annotationExperienceAPI.documentID,
+                    that.annotatorName,
+                    that.projectId,
+                    that.documentId,
                     source.id,
                     target.id,
-                    that.spanType)
+                    null) //TODO
             }
         }, 1500)
 
@@ -122,14 +142,14 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
         return true;
     }
 
-    createSpanRequest(aBegin: string, aEnd : string, aLayer: string)
+    createSpanRequest(aBegin: string, aEnd : string, aLayer: number)
     {
         let that = this;
 
         this.annotationExperienceAPI.requestCreateSpan(
-            that.annotationExperienceAPI.clientName,
-            that.annotationExperienceAPI.projectID,
-            that.annotationExperienceAPI.documentID,
+            that.annotatorName,
+            that.projectId,
+            that.documentId,
             Number(aBegin),
             Number(aEnd),
             aLayer);
@@ -137,26 +157,22 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
 
     resetAlignments()
     {
-
         let that = this;
 
-        for (let i = 0; i < this.annotationExperienceAPI.arcs.length; i++) {
-            this.annotationExperienceAPI.requestDeleteArc(
-                that.annotationExperienceAPI.clientName,
-                that.annotationExperienceAPI.projectID,
-                that.annotationExperienceAPI.documentID,
-                that.annotationExperienceAPI.arcs[i].id,
-                that.annotationExperienceAPI.arcs[i].type
+        for (let i = 0; i < that.arcs.length; i++) {
+            this.annotationExperienceAPI.requestDeleteAnnotation(
+                that.annotatorName,
+                that.projectId,that.documentId, that.arcs[i].id, that.arcs[i].layerId
             )
         }
 
-        for (let i = 0; i < this.annotationExperienceAPI.spans.length; i++) {
-            this.annotationExperienceAPI.requestDeleteSpan(
-                that.annotationExperienceAPI.clientName,
-                that.annotationExperienceAPI.projectID,
-                that.annotationExperienceAPI.documentID,
-                that.annotationExperienceAPI.spans[i].id,
-                that.annotationExperienceAPI.spans[i].type
+        for (let i = 0; i < this.spans.length; i++) {
+            that.annotationExperienceAPI.requestDeleteAnnotation(
+                that.annotatorName,
+                that.projectId,
+                that.documentId,
+                that.spans[i].id,
+                that.spans[i].layerId
             )
         }
         document.getElementById("save_alignment").disabled = false;

@@ -19,25 +19,20 @@ import {FeatureX} from "./FeatureX";
 
 export class Arc
 {
-    id : string;
+    id : number;
     sourceId : string;
     targetId : string;
-    sourceCoveredText : string;
-    targetCoveredText : string
     color : string;
-    type: string;
+    layerId: number;
     features: FeatureX[];
 
-    constructor(aId: string, aSourceId: string, aTargetId: string, aSourceCoveredText: string, aTargetCoveredText: string, aColor: string, aType: string, aFeatures: FeatureX[])
+    constructor(aId: number, aSourceId: string, aTargetId: string, aLayerId: number, aFeatures: FeatureX[], aColor: string)
     {
         this.id = aId;
         this.sourceId = aSourceId;
         this.targetId = aTargetId;
-        this.sourceCoveredText = aSourceCoveredText;
-        this.targetCoveredText = aTargetCoveredText;
-        this.color = aColor;
-        this.type = aType;
+        this.layerId = aLayerId;
         this.features = aFeatures;
+        this.color = aColor;
     }
-
 }

@@ -24,7 +24,7 @@ public class CreateSpanRequest
     private long sourceDocumentId;
     private int begin;
     private int end;
-    private String layer;
+    private long layerId;
 
     public String getAnnotatorName()
     {
@@ -76,13 +76,13 @@ public class CreateSpanRequest
         end = aEnd;
     }
 
-    public String getLayer()
+    public long getLayerId()
     {
-        return layer;
+        return layerId;
     }
 
-    public void setLayer(String aLayer)
+    public void setLayerId(long aLayerId)
     {
-        layer = aLayer;
+        layerId = aLayerId;
     }
 }

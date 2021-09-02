@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response.create;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class ArcCreatedMessage
 {
@@ -29,19 +29,19 @@ public class ArcCreatedMessage
     private VID sourceId;
     private VID targetId;
     private String color;
-    private String type;
-    private List<FeatureX> features;
+    private long layerId;
+    private List<AnnotationFeature> features;
 
     public ArcCreatedMessage(VID aArcId, long aProjectId, VID aSourceId, VID aTargetId, String aColor,
-                             String aType,
-                             List<FeatureX> aFeatures)
+                             long aLayerId,
+                             List<AnnotationFeature> aFeatures)
     {
         arcId = aArcId;
         projectId = aProjectId;
         sourceId = aSourceId;
         targetId = aTargetId;
         color = aColor;
-        type = aType;
+        layerId = aLayerId;
         features = aFeatures;
     }
 
@@ -95,22 +95,22 @@ public class ArcCreatedMessage
         color = aColor;
     }
 
-    public String getType()
+    public long getLayerId()
     {
-        return type;
+        return layerId;
     }
 
-    public void setType(String aType)
+    public void setLayerId(long aLayerId)
     {
-        type = aType;
+        layerId = aLayerId;
     }
 
-    public List<FeatureX> getFeatures()
+    public List<AnnotationFeature> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(List<FeatureX> aFeatures)
+    public void setFeatures(List<AnnotationFeature> aFeatures)
     {
         features = aFeatures;
     }

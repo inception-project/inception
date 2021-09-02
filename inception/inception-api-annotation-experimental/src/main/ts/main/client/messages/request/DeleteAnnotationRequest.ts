@@ -22,14 +22,14 @@ export class DeleteAnnotationRequest
     projectId: number;
     sourceDocumentId: number;
     annotationId: number;
-    layer: string;
+    layerId: number;
 
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aAnnotationId: number, aLayer: string)
+    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aAnnotationId: number, aLayerId: number)
     {
         this.annotatorName = aAnnotatorName;
         this.projectId = aProjectId;
         this.sourceDocumentId = aSourceDocumentId;
         this.annotationId = aAnnotationId;
-        this.layer = aLayer;
+        this.layerId = aLayerId;
     }
 }

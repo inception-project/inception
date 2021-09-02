@@ -23,8 +23,6 @@ import {AnnotationExperienceAPIBasicEditor} from "../AnnotationExperienceAPIBasi
 export class AnnotationExperienceAPIBasicEditorActionHandler {
     annotationExperienceAPIBasicEditor: AnnotationExperienceAPIBasicEditor;
 
-    sentences : string[];
-
     constructor(annotationExperienceAPIBasicEditor: AnnotationExperienceAPIBasicEditor) {
         this.annotationExperienceAPIBasicEditor = annotationExperienceAPIBasicEditor;
         this.registerDefaultActionHandler();
