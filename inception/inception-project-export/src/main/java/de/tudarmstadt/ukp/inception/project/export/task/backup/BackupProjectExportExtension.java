@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.curated;
+package de.tudarmstadt.ukp.inception.project.export.task.backup;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtension;
@@ -31,7 +30,7 @@ import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAu
  * {@link ProjectExportServiceAutoConfiguration#backupProjectExportExtension()}.
  * </p>
  */
-public class CuratedDocumentsProjectExportExtension implements ProjectExportExtension
+public class BackupProjectExportExtension implements ProjectExportExtension
 {
     public static final String ID = "backup";
 
@@ -50,8 +49,6 @@ public class CuratedDocumentsProjectExportExtension implements ProjectExportExte
     @Override
     public Panel createExporterPanel(String aId, IModel<Project> aProject)
     {
-        var request = new CuratedDocumentsProjectExportRequest(aProject.getObject());
-        
-        return new CuratedDocumentsProjectExporterPanel(aId, Model.of(request));
+        return new BackupProjectExporterPanel(aId, aProject);
     }
 }

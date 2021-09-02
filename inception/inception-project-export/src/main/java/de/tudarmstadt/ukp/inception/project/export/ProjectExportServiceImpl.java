@@ -77,10 +77,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.project.export.curated.CuratedDocumentsProjectExportRequest;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTaskHandle;
+import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportTask;
+import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportRequest;
+import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportTask;
 
 /**
  * <p>
@@ -349,7 +350,7 @@ public class ProjectExportServiceImpl
     public ProjectExportTaskHandle startProjectExportTask(FullProjectExportRequest aRequest,
             String aUsername)
     {
-        ProjectExportFullProjectTask task = new ProjectExportFullProjectTask(aRequest, aUsername);
+        BackupProjectExportTask task = new BackupProjectExportTask(aRequest, aUsername);
 
         return startTask(task);
     }
@@ -363,7 +364,7 @@ public class ProjectExportServiceImpl
         request.setFormat(aRequest.getFormat());
         request.setIncludeInProgress(aRequest.isIncludeInProgress());
         
-        ProjectExportCuratedDocumentsTask task = new ProjectExportCuratedDocumentsTask(
+        CuratedDocumentsProjectExportTask task = new CuratedDocumentsProjectExportTask(
                 request, aUsername);
 
         return startTask(task);

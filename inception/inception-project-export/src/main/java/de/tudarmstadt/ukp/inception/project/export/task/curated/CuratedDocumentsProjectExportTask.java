@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export;
+package de.tudarmstadt.ukp.inception.project.export.task.curated;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
@@ -42,9 +42,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
-import de.tudarmstadt.ukp.inception.project.export.curated.CuratedDocumentsProjectExportRequest;
+import de.tudarmstadt.ukp.inception.project.export.task.ProjectExportTask_ImplBase;
 
-public class ProjectExportCuratedDocumentsTask
+public class CuratedDocumentsProjectExportTask
     extends ProjectExportTask_ImplBase<CuratedDocumentsProjectExportRequest>
 {
     private static final String CURATION_AS_SERIALISED_CAS = "/curation_ser/";
@@ -53,7 +53,7 @@ public class ProjectExportCuratedDocumentsTask
     private @Autowired DocumentService documentService;
     private @Autowired DocumentImportExportService importExportService;
 
-    public ProjectExportCuratedDocumentsTask(CuratedDocumentsProjectExportRequest aRequest, String aUsername)
+    public CuratedDocumentsProjectExportTask(CuratedDocumentsProjectExportRequest aRequest, String aUsername)
     {
         super(aRequest.getProject(), aRequest, aUsername);
     }

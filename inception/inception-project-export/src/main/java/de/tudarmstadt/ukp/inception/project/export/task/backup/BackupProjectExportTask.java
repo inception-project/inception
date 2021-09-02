@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export;
+package de.tudarmstadt.ukp.inception.project.export.task.backup;
 
 import java.io.File;
 import java.io.IOException;
@@ -25,14 +25,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.task.ProjectExportTask_ImplBase;
 
-public class ProjectExportFullProjectTask
+public class BackupProjectExportTask
     extends ProjectExportTask_ImplBase<FullProjectExportRequest>
 {
     private @Autowired ProjectExportService exportService;
 
-    public ProjectExportFullProjectTask(FullProjectExportRequest aRequest, String aUsername)
+    public BackupProjectExportTask(FullProjectExportRequest aRequest, String aUsername)
     {
         super(aRequest.getProject(), aRequest, aUsername);
     }

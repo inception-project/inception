@@ -32,10 +32,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtension;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtensionPoint;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportServiceImpl;
-import de.tudarmstadt.ukp.inception.project.export.backup.BackupProjectExportExtension;
-import de.tudarmstadt.ukp.inception.project.export.curated.CuratedDocumentsProjectExportExtension;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportExtension;
+import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportExtension;
 
 @Configuration
 @AutoConfigureAfter(name = {

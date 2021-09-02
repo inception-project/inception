@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.model;
+package de.tudarmstadt.ukp.inception.project.export;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,6 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBas
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
+import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTaskHandle;
 
 public interface ProjectExportService
 {

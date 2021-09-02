@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.curated;
+package de.tudarmstadt.ukp.inception.project.export.task.curated;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -24,8 +24,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.project.export.ProjectExportCuratedDocumentsTask;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 
 public class CuratedDocumentsProjectExporterPanel extends Panel
 {
@@ -54,7 +53,7 @@ public class CuratedDocumentsProjectExporterPanel extends Panel
         var request = getModelObject();
         request.setFilenameTag("_project");
         
-        ProjectExportCuratedDocumentsTask task = new ProjectExportCuratedDocumentsTask(request,
+        CuratedDocumentsProjectExportTask task = new CuratedDocumentsProjectExportTask(request,
                 SecurityContextHolder.getContext()
                 .getAuthentication().getName());
 

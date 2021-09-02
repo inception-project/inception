@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.backup;
+package de.tudarmstadt.ukp.inception.project.export.task.backup;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -27,8 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.project.export.ProjectExportFullProjectTask;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 
 public class BackupProjectExporterPanel
     extends Panel
@@ -62,7 +61,7 @@ public class BackupProjectExporterPanel
         var request = getModelObject();
         request.setFilenameTag("_project");
 
-        ProjectExportFullProjectTask task = new ProjectExportFullProjectTask(request,
+        BackupProjectExportTask task = new BackupProjectExportTask(request,
                 authentication.getName());
 
         projectExportService.startTask(null);
