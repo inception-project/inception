@@ -92,7 +92,7 @@ public class OpenNlpDoccatRecommender
         List<DocumentSample> docSamples = extractSamples(aCasses);
 
         if (docSamples.size() < 2) {
-            LOG.info("Not enough training data: [{}] items", docSamples.size());
+            aContext.warn("Not enough training data: [%d] items", docSamples.size());
             return;
         }
 

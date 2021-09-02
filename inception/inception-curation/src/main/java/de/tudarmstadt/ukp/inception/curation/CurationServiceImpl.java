@@ -378,7 +378,15 @@ public class CurationServiceImpl
             return;
         }
 
-        User user = userRegistry.get((String) info.getPrincipal());
+        User user = null;
+        if (info.getPrincipal() instanceof String) {
+            user = userRegistry.get((String) info.getPrincipal());
+        }
+
+        if (info.getPrincipal() instanceof User) {
+            user = (User) info.getPrincipal();
+        }
+
         if (user == null) {
             // This happens e.g. when a session for "anonymousUser" is destroyed or if (for some
             // reason), the user owning the session no longer exists in the system.

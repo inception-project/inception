@@ -28,6 +28,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.info;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.warn;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -232,34 +233,35 @@ public class TrainingTask
                                 layer.getUiName(), cassesForTraining.size(), casses.get().size()));
 
                         recommendationEngine.train(ctx, cassesForTraining);
+                        logMessages.addAll(ctx.getMessages());
 
                         long duration = System.currentTimeMillis() - startTime;
 
-                        if (recommendationEngine.isReadyForPrediction(ctx)) {
-                            log.debug(
-                                    "[{}][{}][{}]: Training successful on [{}] out of [{}] documents ({} ms)",
-                                    getId(), user.getUsername(), recommender.getName(),
-                                    cassesForTraining.size(), casses.get().size(), duration);
-                            logMessages.add(info(this,
-                                    "Training successful on [%d] out of [%d] documents (%d ms)",
-                                    cassesForTraining.size(), casses.get().size(), duration));
-                            seenSuccessfulTraining = true;
-                        }
-                        else {
+                        if (!recommendationEngine.isReadyForPrediction(ctx)) {
                             int docNum = casses.get().size();
                             int trainDocNum = cassesForTraining.size();
                             log.debug(
-                                    "[{}][{}][{}]: Training on [{}] out of [{}] documents failed ({} ms)",
+                                    "[{}][{}][{}]: Training on [{}] out of [{}] documents not successful ({} ms)",
                                     getId(), user.getUsername(), recommender.getName(), trainDocNum,
                                     docNum, duration);
-                            logMessages.add(error(this, "Training failed (%d ms).", duration));
+                            logMessages
+                                    .add(info(this, "Training not successful (%d ms).", duration));
                             appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
                                     user.getUsername(),
-                                    String.format(
-                                            "Training on %d out of %d documents failed (%d ms)",
+                                    format("Training on %d out of %d documents not successful (%d ms)",
                                             trainDocNum, docNum, duration),
                                     recommender));
+                            continue;
                         }
+
+                        log.debug(
+                                "[{}][{}][{}]: Training successful on [{}] out of [{}] documents ({} ms)",
+                                getId(), user.getUsername(), recommender.getName(),
+                                cassesForTraining.size(), casses.get().size(), duration);
+                        logMessages.add(info(this,
+                                "Training successful on [%d] out of [%d] documents (%d ms)",
+                                cassesForTraining.size(), casses.get().size(), duration));
+                        seenSuccessfulTraining = true;
 
                         ctx.close();
                         recommendationService.putContext(user, recommender, ctx);
