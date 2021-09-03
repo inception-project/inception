@@ -15,7 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * AdviceMessage: Message received by a client that contains a Message that shall be displayed and
+ * a Message TYPE (ERROR, HINT, VALIDATION, INFO)
+ *
+ * Attributes:
+ * @adviceMessage: String representation of the content that shall be displayed
+ * @adviceMessageType: String representation for the TYPE of the message.
+ *
+ * @NOTE: Whenever an AdviceMessage is received please show it to the user accordingly
+ **/
+
 export class AdviceMessage
 {
     adviceMessage : string;
+    adviceMessageTyoe: string;
 }

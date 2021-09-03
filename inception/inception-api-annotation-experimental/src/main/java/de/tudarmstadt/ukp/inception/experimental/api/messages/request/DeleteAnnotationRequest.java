@@ -19,6 +19,18 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * DeleteAnnotationRequest: Request from Client to delete a certain annotation
+ *
+ * Attributes:
+ * @annotatorName: String representation of the name of the annotator the annotation will belong to
+ * @projectId: The ID of the project the annotation will belong to
+ * @sourceDocumentId: The ID of the sourcedocument the annotation belongs to
+ * @annotationId: The ID of the annotation to delete
+ * @layerId: The ID of the layer the annotation belongs to
+ **/
 public class DeleteAnnotationRequest
 {
     private String annotatorName;

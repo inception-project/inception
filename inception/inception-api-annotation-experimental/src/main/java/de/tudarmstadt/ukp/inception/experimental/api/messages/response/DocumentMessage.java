@@ -23,6 +23,17 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Arc;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * DocumentMessage: Message published to a specific client containing the data for the requested document
+ *
+ * Attributes:
+ * @viewport: List of Viewports and their contents requested by the client
+ * @sourceDocumentId: The ID of the requested sourcedocument
+ * @spans: List of Spans contained in the requested viewport for a certain document
+ * @arcs: List of Arcs contained in the requested viewport for a certain document
+ **/
 public class DocumentMessage
 {
     private List<Viewport> viewport;

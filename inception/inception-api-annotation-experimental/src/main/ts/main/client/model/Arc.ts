@@ -17,16 +17,27 @@
  */
 import {FeatureX} from "./FeatureX";
 
+/**
+ * Support Class representing an Arc annotation
+ *
+ * Attributes:
+ * @id: The ID of the Arc
+ * @sourceId: The ID of the source span annotation for the Arc
+ * @targetId: The ID of the target span annotation for the Arc
+ * @layerId: The ID of the layer the Arc belongs to
+ * @features: List of annotation features (FeatureX) of the Arc
+ * @color: Color of the Arc
+ **/
 export class Arc
 {
     id : number;
-    sourceId : string;
-    targetId : string;
-    color : string;
+    sourceId : number;
+    targetId : number;
     layerId: number;
     features: FeatureX[];
+    color : string;
 
-    constructor(aId: number, aSourceId: string, aTargetId: string, aLayerId: number, aFeatures: FeatureX[], aColor: string)
+    constructor(aId: number, aSourceId: number, aTargetId: number, aLayerId: number, aFeatures: FeatureX[], aColor: string)
     {
         this.id = aId;
         this.sourceId = aSourceId;

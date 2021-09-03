@@ -17,20 +17,30 @@
  */
 import {FeatureX} from "./FeatureX";
 
+
+/**
+ * Support Class representing an Span annotation
+ *
+ * Attributes:
+ * @id: The ID of the span
+ * @begin: The character offset begin of the Span
+ * @end: The character offset end of the Span
+ * @layerId: The ID of the layer the Span belongs to
+ * @features: List of annotation features (FeatureX) of the Span
+ * @color: Color of the Span
+ **/
 export class Span
 {
     id: number;
-    coveredText: string;
-    color: string;
     begin: number;
     end: number;
     layerId: number;
     features: FeatureX[];
+    color: string;
 
-    constructor(aId: number, aCoveredText: string, aBegin: number, aEnd: number, aLayerId: number, aFeatures: FeatureX[], aColor: string)
+    constructor(aId: number, aBegin: number, aEnd: number, aLayerId: number, aFeatures: FeatureX[], aColor: string)
     {
         this.id = aId;
-        this.coveredText = aCoveredText;
         this.begin = aBegin;
         this.end = aEnd;
         this.layerId = aLayerId;

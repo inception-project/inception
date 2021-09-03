@@ -15,12 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * Support Class representing Features for an annotation
+ *
+ * Each feature has a name and a @value. The @value can be of various types (any)
+ *
+ * Attributes:
+ * @name: String representation of the features names
+ * @value: Value of the feature. Can be of various types (any)
+ **/
 export class FeatureX
 {
     name : string;
-    value : string;
+    value : any;
 
-    constructor(aName : string, aValue : string)
+    constructor(aName : string, aValue : any)
     {
         this.name = aName;
         this.value = aValue;

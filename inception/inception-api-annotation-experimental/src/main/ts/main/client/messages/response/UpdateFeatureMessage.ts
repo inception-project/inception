@@ -17,21 +17,21 @@
  */
 import {FeatureX} from "../../model/FeatureX";
 
-export class UpdateFeaturesRequest
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * UpdateFeatureMessage: Message from server that a feature value of a feature has been changed for
+ * a specific annotation
+ *
+ * Attributes:
+ * @annotationId: The ID of the annotation for which a feature value has been changed
+ * @feature: The feature which has an updated @value
+ * @value: The new value for a @feature
+ **/
+export class UpdateFeatureMessage
 {
-    annotatorName: string;
-    projectId: number;
-    sourceDocumentId: number;
-    annotationId: number;
-    newFeatures: FeatureX[];
-
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aAnnotationId: number, aNewFeatures: FeatureX[])
-    {
-        this.annotatorName = aAnnotatorName;
-        this.projectId = aProjectId;
-        this.sourceDocumentId = aSourceDocumentId;
-        this.annotationId = aAnnotationId;
-        this.newFeatures = aNewFeatures;
-    }
+    annotationId : number;
+    feature : FeatureX[];
+    value: any;
 
 }

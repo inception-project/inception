@@ -17,11 +17,26 @@
  */
 import {FeatureX} from "../../../model/FeatureX";
 
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * ArcCreatedMessage: Message received by clients because an Arc annotation has been created
+ *
+ * Attributes:
+ * @arcId: The ID of the new arc
+ * @projectId: The ID of the project to which the new Arc belongs
+ * @sourceId: The ID of the source annotation of the Arc
+ * @targetId: The ID of the target annotation of the Arc
+ * @color: The color of the Arc
+ * @layerId: The ID of the layer the Arc belongs to
+ * @features: List of AnnotationFeatures (FeatureX) that the Arc has
+ **/
 export class ArcCreatedMessage
 {
-    arcId : string;
-    sourceId : string;
-    targetId : string;
+    arcId : number;
+    projectId: number;
+    sourceId : number;
+    targetId : number;
     color: string;
     layerId: number;
     features : FeatureX[];

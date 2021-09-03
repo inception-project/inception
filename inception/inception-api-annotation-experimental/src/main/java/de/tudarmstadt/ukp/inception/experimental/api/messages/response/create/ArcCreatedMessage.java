@@ -22,6 +22,20 @@ import java.util.List;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * ArcCreatedMessage: Message published to clients that an Arc annotation has been created
+ *
+ * Attributes:
+ * @arcId: The ID of the new arc
+ * @projectId: The ID of the project to which the new Arc belongs
+ * @sourceId: The ID of the source annotation of the Arc
+ * @targetId: The ID of the target annotation of the Arc
+ * @color: The color of the Arc
+ * @layerId: The ID of the layer the Arc belongs to
+ * @features: List of AnnotationFeatures that the Arc has
+ **/
 public class ArcCreatedMessage
 {
     private VID arcId;

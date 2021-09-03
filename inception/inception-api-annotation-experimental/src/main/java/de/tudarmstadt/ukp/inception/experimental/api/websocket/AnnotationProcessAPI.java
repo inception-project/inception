@@ -24,11 +24,36 @@ import org.springframework.messaging.Message;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.AdviceMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DeleteAnnotationMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DocumentMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateFeaturesMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateFeatureMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.ArcCreatedMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.SpanCreatedMessage;
 
 
+/**
+ * Interface-class for the Process API
+ *
+ * The Process API represents the communication end-point between client (editor) and server (back-end).
+ * All data sent by any of the clients via websocket will be retrieved here.
+ *
+ * Therefore, each receive() method have a '@MessageMapping' annotation for a certain topic.
+ * The topics can be found
+ * @see AnnotationProcessAPIImpl
+ *
+ * Every send() method ends with 'simpMessagingTemplate.convertAndSend()'.
+ * This sends the message to a certain topic with a payload which contains
+ * always a 'JSONUtil.toJsonString()' representation of a message
+ * @see package ../messages
+ *
+ * LOG.debug() has been added for all of the methods in order to better track incoming
+ * and outgoing data.
+ *
+ * @NOTE: Not every sending of a message must precede an incoming message. The server can
+ * send a message to ANY client without the client requesting something.
+ * Event Types created on the server-side in
+ * @see inception-api-annotation/src/main/java/../../event/*
+ *
+ * @NOTE: For further information please look into the README file
+ **/
 public interface AnnotationProcessAPI
 {
     void receiveDocumentRequest(Message<String> aMessage) throws IOException;
@@ -38,7 +63,7 @@ public interface AnnotationProcessAPI
 
     void receiveUpdateFeaturesRequest(Message<String> aMessage) throws Exception;
 
-    void sendUpdateFeatures(UpdateFeaturesMessage aUpdateFeaturesMessage, String aProjectID,
+    void sendUpdateFeatures(UpdateFeatureMessage aUpdateFeaturesMessage, String aProjectID,
                             String aDocumentID)
         throws IOException;
 

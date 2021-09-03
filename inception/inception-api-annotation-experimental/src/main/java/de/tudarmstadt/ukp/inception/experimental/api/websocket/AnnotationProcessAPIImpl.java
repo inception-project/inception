@@ -44,10 +44,19 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.request.create.Cre
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.AdviceMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DeleteAnnotationMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.DocumentMessage;
-import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateFeaturesMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateFeatureMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.ArcCreatedMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.SpanCreatedMessage;
 
+/**
+ * Implementation of the Interface AnnotationProcessAPI within that package.
+ *
+ * In order to activate this class, add 'websocket.enabled = true' in the
+ * application.yml file, @see 'inception-app-webapp/src/main/resources/application.yml'.
+ *
+ * For further details @see interface class (AnnotationProcessAPI.class).
+ *
+ **/
 @Controller
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
 public class AnnotationProcessAPIImpl
@@ -60,7 +69,13 @@ public class AnnotationProcessAPIImpl
     private final AnnotationSystemAPIImpl annotationSystemAPIImpl;
 
     /**
-     * ----------------- PUB / SUB CHANNELS ---------------
+     * -------------------- PUBLISH / SUBSCRIBE CHANNELS ---------------------------
+     *
+     * Easy Extensible: Simply follow the currently used approach to add a new
+     * send / receive topic.
+     *
+     * For further details @see README file to see the streamlined process for extensions.
+     *
      **/
     // NEXT DOCUMENT
     private static final String SERVER_RECEIVE_DOCUMENT_REQUEST = "/document_request";
@@ -84,6 +99,10 @@ public class AnnotationProcessAPIImpl
     // ERROR
     private static final String SERVER_SEND_CLIENT_ERROR_MESSAGE = "/queue/error_message/";
 
+    /**
+     * -------------------------------------------------------------------------------
+     */
+
     public AnnotationProcessAPIImpl(ProjectService aProjectService,
             DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties,
@@ -97,7 +116,10 @@ public class AnnotationProcessAPIImpl
     }
 
     /**
-     * ------------- PUB / SUB HANDLING -------------
+     * -------------------- PUBLISH / SUBSCRIBE HANDLER METHODS ------------------------
+     *
+     * For further details see Interface class @see AnnotationProcessAPI.class
+     *
      **/
 
     @Override
@@ -171,8 +193,8 @@ public class AnnotationProcessAPIImpl
     }
 
     @Override
-    public void sendUpdateFeatures(UpdateFeaturesMessage aUpdateFeaturesMessage, String aProjectID,
-            String aDocumentID)
+    public void sendUpdateFeatures(UpdateFeatureMessage aUpdateFeaturesMessage, String aProjectID,
+                                   String aDocumentID)
         throws IOException
     {
         LOG.debug("SENDING NOW FEATURES UPDATE TO CLIENTS listening to: {}",

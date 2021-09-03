@@ -17,9 +17,22 @@
  */
 import {FeatureX} from "../../../model/FeatureX";
 
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * SpanCreatedMessage: Message received by clients because a Span annotation has been created
+ *
+ * Attributes:
+ * @spanId: The ID of the new Span
+ * @begin: The character offset begin of the span
+ * @end: The character offset end of the span
+ * @color: The color of the Arc
+ * @layerId: The ID of the layer the Arc belongs to
+ * @features: List of AnnotationFeatures (FeatureX) that the Span has
+ **/
 export class SpanCreatedMessage
 {
-    spanId : string;
+    spanId : number;
     begin : number;
     end : number;
     color: string;

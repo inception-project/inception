@@ -22,17 +22,27 @@ import java.util.List;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
+/**
+ * Support Class representing an Span annotation
+ *
+ * Attributes:
+ * @id: The ID of the span
+ * @begin: The character offset begin of the Span
+ * @end: The character offset end of the Span
+ * @layerId: The ID of the layer the Span belongs to
+ * @features: List of annotation features of the Span
+ * @color: Color of the Span
+ **/
 public class Span
 {
     private VID id;
-    private String coveredText;
     private int begin;
     private int end;
     private long layerId;
     private List<AnnotationFeature> features;
     private String color;
 
-    public Span(VID aId, int aBegin, int aEnd, long aLayerId, String aColor, String aCoveredText,
+    public Span(VID aId, int aBegin, int aEnd, long aLayerId, String aColor,
             List<AnnotationFeature> aFeatures)
     {
         id = aId;
@@ -40,7 +50,6 @@ public class Span
         end = aEnd;
         layerId = aLayerId;
         color = aColor;
-        coveredText = aCoveredText;
         features = aFeatures;
     }
 
@@ -82,16 +91,6 @@ public class Span
     public void setLayerId(long aLayerId)
     {
         layerId = aLayerId;
-    }
-
-    public String getCoveredText()
-    {
-        return coveredText;
-    }
-
-    public void setCoveredText(String aCoveredText)
-    {
-        coveredText = aCoveredText;
     }
 
     public String getColor()

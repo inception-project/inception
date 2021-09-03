@@ -15,6 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * DeleteAnnotationMessage: Message from server that an annotation has been delete
+ *
+ * Attributes:
+ * @annotationId: ID of the annotation that was deleted
+ **/
 export class DeleteAnnotationMessage
 {
     annotationId: number;

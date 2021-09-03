@@ -22,7 +22,7 @@ import {AdviceMessage} from "./messages/response/AdviceMessage";
 import {FeatureX} from "./model/FeatureX";
 import {DocumentMessage} from "./messages/response/DocumentMessage";
 import {DocumentRequest} from "./messages/request/DocumentRequest";
-import {UpdateFeaturesMessage} from "./messages/response/UpdateFeaturesMessage";
+import {UpdateFeatureMessage} from "./messages/response/UpdateFeatureMessage";
 import {SpanCreatedMessage} from "./messages/response/create/SpanCreatedMessage";
 import {DeleteAnnotationMessage} from "./messages/response/DeleteAnnotationMessage";
 import {ArcCreatedMessage} from "./messages/response/create/ArcCreatedMessage";
@@ -30,61 +30,83 @@ import {CreateArcRequest} from "./messages/request/create/CreateArcRequest";
 import {CreateSpanRequest} from "./messages/request/create/CreateSpanRequest";
 import {Viewport} from "./model/Viewport";
 import {DeleteAnnotationRequest} from "./messages/request/DeleteAnnotationRequest";
-import {UpdateFeaturesRequest} from "./messages/request/UpdateFeaturesRequest";
+import {UpdateFeatureRequest} from "./messages/request/UpdateFeatureRequest";
+import {Arc} from "./model/Arc";
 
+/**
+ * Implementation of the Interface AnnotationExperienceAPI within that package.
+ *
+ * For further details @see interface class (AnnotationExperienceAPI.ts).
+ *
+ **/
 export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     //Websocket and stomp broker
     private stompClient: Client;
 
-    constructor(aProjectId: number, aDocumentId: number, aClientName: string, aUrl: string)
+    /**
+     * Constructor: creates the Annotation Experience API.
+     * @param aProjectId: ID of the project, required in order to subscribe to the correct channels.
+     * @param aDocumentId: ID of the document, required in order to subscribe to the correct channels.
+     * @param aAnnotatorName: String representation of the annotatorName, required in order to subscribe to the correct channels.
+     * @param aUrl: The URL required by Websocket and the stomp broker in order to establish a connection
+     *
+     * @NOTE: the connect() method will automatically be performed, there is no need to create a Websocket connection
+     * manually.
+     */
+    constructor(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string)
     {
-        alert("CREATED")
-        this.connect(aProjectId, aDocumentId, aClientName, aUrl)
+        this.connect(aProjectId, aDocumentId, aAnnotatorName, aUrl)
     }
 
 
-    //CREATE WEBSOCKET CONNECTION
-    connect(aProjectId: number, aDocumentId: number, aClientName: string, aUrl: string)
+    /**
+     * Creates the Websocket connection with the stomp broker.
+     * @NOTE: When a connection is established, onConnect() will be called automatically so
+     * there is no need to call it. Also, all subscriptions will be handled automatically.
+     */
+    connect(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string)
     {
-        alert("OPENING NOW WEBSOCKET VIA " + aUrl)
         this.stompClient = Stomp.over(function () {
             return new WebSocket(aUrl);
         });
 
         const that = this;
 
-        this.stompClient.onConnect = function (frame) {
-            that.onConnect(frame, aClientName, aProjectId, aDocumentId)
+        // ------ STOMP CONNECTION ESTABLISHED ----//
+        this.stompClient.onConnect = function () {
+            that.onConnect(aAnnotatorName, aProjectId, aDocumentId)
         }
 
-
-        // ------ STOMP ERROR HANDLING ------ //
-
+        // --------- STOMP ERROR HANDLING -------- //
         this.stompClient.onStompError = function (frame) {
             console.log('Broker reported error: ' + frame.headers['message']);
             console.log('Additional details: ' + frame.body);
         };
     }
 
-    onConnect(frame, aClientName: string, aProjectId: number, aDocumentId: number) {
+    /**
+     * Method called automatically after a websocket connection has been established.
+     * @param aAnnotatorName: String representation of the annotatorName, required in order to subscribe to the correct channels.
+     * @param aProjectId: ID of the project, required in order to subscribe to the correct channels.
+     * @param aDocumentId: ID of the document, required in order to subscribe to the correct channels.
+     */
+    onConnect(aAnnotatorName: string, aProjectId: number, aDocumentId: number) {
         let that = this;
-        alert("onCON")
 
         // ------ DEFINE STANDARD SUBSCRIPTION CHANNELS WITH ACTIONS ------ //
-
-        this.stompClient.subscribe("/queue/document/" + aClientName, function (msg) {
+        this.stompClient.subscribe("/queue/document/" + aAnnotatorName, function (msg) {
             that.onDocument(Object.assign(new DocumentMessage(), JSON.parse(msg.body)));
         }, {id: "document_request"});
 
-        this.stompClient.subscribe("/queue/error_message/" + aClientName, function (msg) {
+        this.stompClient.subscribe("/queue/error_message/" + aAnnotatorName, function (msg) {
             that.onError(Object.assign(new AdviceMessage(), JSON.parse(msg.body)));
         }, {id: "error_message"});
 
         this.stompClient.subscribe("/topic/features_update/" +
             aProjectId + "/" +
             aDocumentId, function (msg) {
-            that.onFeaturesUpdate(Object.assign(new UpdateFeaturesMessage(), JSON.parse(msg.body)));
+            that.onFeaturesUpdate(Object.assign(new UpdateFeatureMessage(), JSON.parse(msg.body)));
         }, {id: "span_update"});
 
         this.stompClient.subscribe("/topic/span_create/" +
@@ -105,12 +127,10 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             that.onAnnotationDelete(Object.assign(new DeleteAnnotationMessage(), JSON.parse(msg.body)));
         }, {id: "span_delete"});
 
-
         this.stompClient.activate();
-        alert("ACTIVATE")
     }
 
-    unsubscribe(aChannel: string)
+    unsubscribe(aViewport: Viewport)
     {
         this.stompClient.unsubscribe(aChannel);
     }
@@ -138,7 +158,6 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     requestCreateSpan(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aBegin: number, aEnd: number, aLayer: number)
     {
-        console.log("SENDING: " + aBegin + " _ " + aEnd)
         this.stompClient.publish({
             destination: "/app/span_create",
             body: JSON.stringify(new CreateSpanRequest(aAnnotatorName, aProjectId, aDocumentId, aBegin, aEnd, aLayer))
@@ -153,16 +172,16 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         });
     }
 
-    requestUpdateFeatures(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aAnnotationId: number, aNewFeature: FeatureX[])
+    requestUpdateFeature(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aAnnotationId: number, aLayerId: number, aFeature: FeatureX, aValue: any)
     {
         this.stompClient.publish({
             destination: "/app/features_update", body: JSON.stringify(
-                new UpdateFeaturesRequest(aAnnotatorName, aProjectId, aDocumentId,aAnnotationId, aNewFeature))
+                new UpdateFeatureRequest(aAnnotatorName, aProjectId, aDocumentId, aAnnotationId, aLayerId, aFeature, aValue))
         });
     }
 
 
-    onDocument(aMessage)
+    onDocument(aMessage: DocumentMessage)
     {
 
         console.log('RECEIVED DOCUMENT' + aMessage);
@@ -176,24 +195,18 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
          */
     }
 
-    onSpanCreate(aMessage)
+    onSpanCreate(aMessage: SpanCreatedMessage)
     {
 
         console.log('RECEIVED SPAN CREATE' + aMessage);
-        let span = new Span(aMessage.spanId, aMessage.coveredText, aMessage.begin, aMessage.end, aMessage.type, aMessage.features, aMessage.color)
-        //this.spans.push(span)
+        let span = new Span(aMessage.spanId, aMessage.begin, aMessage.end, aMessage.layerId, aMessage.features, aMessage.color)
+
     }
 
-    onError(aMessage)
-    {
-        console.log(aMessage);
-    }
-
-    onArcCreate(aMessage)
+    onArcCreate(aMessage: ArcCreatedMessage)
     {
         console.log('RECEIVED ARC CREATE' + aMessage);
-        //let arc = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.sourceCoveredText, aMessage.targetCoveredText, aMessage.color, aMessage.type, aMessage.features)
-        //this.arcs.push(arc)
+        let arc = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.layerId, aMessage.features, aMessage.color)
     }
 
     onAnnotationDelete(aMessage: DeleteAnnotationMessage)
@@ -213,7 +226,7 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
          */
     }
 
-    onFeaturesUpdate(aMessage: UpdateFeaturesMessage) {
+    onFeaturesUpdate(aMessage: UpdateFeatureMessage) {
         console.log('RECEIVED UPDATE ANNOTATION' + aMessage);
         /*
         let arc = this.arcs.findIndex(r => r.id == aMessage.annotationId);
@@ -226,6 +239,11 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         }
 
          */
+    }
+
+    onError(aMessage: AdviceMessage)
+    {
+        console.log(aMessage);
     }
 }
 

@@ -19,6 +19,17 @@ import {Span} from "../../model/Span";
 import {Arc} from "../../model/Arc";
 import {Viewport} from "../../model/Viewport";
 
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * DocumentMessage: Message from server containing the data for the requested document
+ *
+ * Attributes:
+ * @viewport: List of requested Viewports and their contents
+ * @sourceDocumentId: The ID of the requested sourcedocument
+ * @spans: List of Spans contained in the requested viewport for a certain document
+ * @arcs: List of Arcs contained in the requested viewport for a certain document
+ **/
 export class DocumentMessage
 {
     viewport : Viewport[];

@@ -22,6 +22,17 @@ import java.util.List;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
+/**
+ * Support Class representing an Arc annotation
+ *
+ * Attributes:
+ * @id: The ID of the Arc
+ * @sourceId: The ID of the source span annotation for the Arc
+ * @targetId: The ID of the target span annotation for the Arc
+ * @layerId: The ID of the layer the Arc belongs to
+ * @features: List of annotation features of the Arc
+ * @color: Color of the Arc
+ **/
 public class Arc
 {
     private VID id;

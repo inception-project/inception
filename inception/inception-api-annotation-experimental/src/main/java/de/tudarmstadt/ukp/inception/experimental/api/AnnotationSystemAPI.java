@@ -29,9 +29,52 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DocumentRe
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.UpdateFeaturesRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.create.CreateArcRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.create.CreateSpanRequest;
+import de.tudarmstadt.ukp.inception.experimental.api.messages.response.AdviceMessage;
+import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcessAPI;
 
+/**
+ * Interface-class for the System API
+ *
+ * The System API handles all back-end computations and listens to all Events regarding
+ * the annotation workflow (events in
+ * @see inception-api-annotation/src/main/java/../../event/*
+ *
+ * There are two different types of methods in this class:
+ *      handle() methods:
+ *          All handle() methods retrieve a class object as argument that has been generated from the
+ *          clients message JSON string payload in the ProcessAPI. All handle() methods simply
+ *          use the retrieved data to perform the requested operation, like deleting a span-annotation
+ *          or updating a feature value of an annotation.
+ *          @NOTE: All handle() methods contain a try-catch block to handle errors. Whenever an error
+ *          occurs, informative data is send back to the client that has sent the request. This is done in
+ *          the catch-block via 'createAdviceMessage()'.
+ *      onEventHandler() methods:
+ *          As already explained, these methods listen to specific events created on the server.
+ *          This 'listening' is performed via an '@EventListener' annotation before the method definition
+ *          retrieving the corresponding event as method-parameter. The onEventHandler() message always
+ *          retrieve the data from the Event and create a suitable class-object as response.
+ *          Finally, they always invoke the suitable method in the
+ *          @see AnnotationProcessAPI to forward the data from the event to the clients.
+ *          @NOTE: Events can be triggered in the back-end at any time.
+ *
+ * @NOTE: The System API also contains many private support methods. These can only be
+ * found in the
+ * @see AnnotationSystemAPI implementation. All support methods are commented in detail.
+ *
+ * @NOTE: For further information please look into the README file
+ *
+ **/
 public interface AnnotationSystemAPI
 {
+    /**
+     * handle() methods as explained in Interface-definition.
+     * @param: Classes parsed from the messages JSON string payload.
+     * Their implementation details vary a lot, however their purpose is
+     * always the same:
+     *      1. Retrieve the CAS for a given sourcedocument
+     *      2. Retrieve the corresponding TypeAdapter
+     *      3. Handle the request
+     */
     void handleDocumentRequest(DocumentRequest aDocumentRequest) throws IOException;
 
     void handleCreateSpan(CreateSpanRequest aCreateSpanRequest)
@@ -44,7 +87,14 @@ public interface AnnotationSystemAPI
 
     void handleDeleteAnnotation(DeleteAnnotationRequest aDeleteAnnotationRequest) throws IOException;
 
-    void createAdviceMessage(String aMessage, String aUser) throws IOException;
+    void createAdviceMessage(String aMessage, String aUser, AdviceMessage.TYPE aType) throws IOException;
+
+    /**
+     * onEventHandler() classes as explained in Interface-definition.
+     * @param: The event through which they got triggered. They always
+     * create a suitable class from the event and forwards the data to the
+     * Process API where the data is forwarded to the clients.
+     */
 
     void onSpanCreatedEventHandler(SpanCreatedEvent aEvent) throws IOException;
 

@@ -15,16 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * CreateArcRequest: Request forwarded to the Server to create an Arc Annotation
+ *
+ * Attributes:
+ * @annotatorName: String representation of the name of the annotator the annotation will belong to
+ * @projectId: The ID of the project the annotation will belong to
+ * @sourceDocumentId: The ID of the sourcedocument the annotation will belong to
+ * @sourceId: The ID of the source span annotation for the Arc
+ * @targetId: The ID of the target span annotation for the Arc
+ * @layerId: The ID of the layer the annotation shall belong to
+ **/
 export class CreateArcRequest
 {
     annotatorName : string;
     projectId : number;
     sourceDocumentId : number;
-    sourceId : string;
-    targetId : string;
+    sourceId : number;
+    targetId : number;
     layerId : number;
 
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aSourceId: string, aTargetId: string, aLayerId: number)
+    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aSourceId: number, aTargetId: number, aLayerId: number)
     {
         this.annotatorName = aAnnotatorName;
         this.projectId = aProjectId;

@@ -16,6 +16,18 @@
  * limitations under the License.
  */
 
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * DeleteAnnotationRequest: Request forwarded to the Server to delete a certain annotation
+ *
+ * Attributes:
+ * @annotatorName: String representation of the name of the annotator the annotation will belong to
+ * @projectId: The ID of the project the annotation will belong to
+ * @sourceDocumentId: The ID of the sourcedocument the annotation belongs to
+ * @annotationId: The ID of the annotation to delete
+ * @layerId: The ID of the layer the annotation belongs to
+ **/
 export class DeleteAnnotationRequest
 {
     annotatorName: string;

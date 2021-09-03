@@ -20,13 +20,24 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public class UpdateFeaturesMessage
+/**
+ * Class required for Messaging between Server and Client.
+ * Basis for JSON
+ * UpdateFeatureMessage: Message published to clients that a feature value of a feature has been changed for
+ * a specific annotation
+ *
+ * Attributes:
+ * @annotationId: The ID of the annotation for which a feature value has been changed
+ * @feature: The feature which has an updated @value
+ * @value: The new value for a @feature
+ **/
+public class UpdateFeatureMessage
 {
     private VID annotationId;
     private AnnotationFeature feature;
     private Object value;
 
-    public UpdateFeaturesMessage(VID aAnnotationId, AnnotationFeature aFeature, Object aValue)
+    public UpdateFeatureMessage(VID aAnnotationId, AnnotationFeature aFeature, Object aValue)
     {
         annotationId = aAnnotationId;
         feature = aFeature;
