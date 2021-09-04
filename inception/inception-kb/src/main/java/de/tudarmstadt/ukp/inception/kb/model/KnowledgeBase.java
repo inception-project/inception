@@ -181,6 +181,8 @@ public class KnowledgeBase
     @Column(name = "name")
     private List<String> rootConcepts = new ArrayList<>();
 
+    private transient List<String> additionalMatchingProperties = new ArrayList<>();
+
     /**
      * The default language for labels and descriptions of KB elements
      */
@@ -464,6 +466,16 @@ public class KnowledgeBase
     public boolean isSkipSslValidation()
     {
         return skipSslValidation;
+    }
+
+    public void setAdditionalMatchingProperties(List<String> aProperties)
+    {
+        additionalMatchingProperties = new ArrayList<>(aProperties);
+    }
+
+    public List<String> getAdditionalMatchingProperties()
+    {
+        return additionalMatchingProperties;
     }
 
     @Override
