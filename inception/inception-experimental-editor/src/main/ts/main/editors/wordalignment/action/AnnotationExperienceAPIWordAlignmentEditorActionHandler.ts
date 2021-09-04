@@ -38,18 +38,15 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
                     that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestDocument(
                         that.annotationExperienceAPIWordAlignmentEditor.annotatorName,
                         that.annotationExperienceAPIWordAlignmentEditor.projectId,
-                        that.annotationExperienceAPIWordAlignmentEditor.documentId,
                         that.annotationExperienceAPIWordAlignmentEditor.viewport);
                     setTimeout(function () {
-                        /*
-                        that.sentences = that.annotationExperienceAPIWordAlignmentEditor.viewport.documentText.split(".");
+                        console.log(that.annotationExperienceAPIWordAlignmentEditor.viewport[0].documentText)
+                        that.sentences = that.annotationExperienceAPIWordAlignmentEditor.viewport[0].documentText.split(".");
                         that.annotationExperienceAPIWordAlignmentEditor.oddSentence = that.sentences[0];
                         that.annotationExperienceAPIWordAlignmentEditor.evenSentence = that.sentences[1];
 
                         that.annotationExperienceAPIWordAlignmentEditor.oddSentenceOffset = 0;
                         that.annotationExperienceAPIWordAlignmentEditor.evenSentenceOffset = 1;
-
-                         */
 
                         that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPIVisualization.refreshEditor();
                     }, 2000)

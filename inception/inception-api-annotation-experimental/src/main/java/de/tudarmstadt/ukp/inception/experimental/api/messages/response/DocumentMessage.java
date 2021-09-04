@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
 
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.experimental.api.model.Arc;
-import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 
 /**
@@ -30,24 +28,14 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
  *
  * Attributes:
  * @viewport: List of Viewports and their contents requested by the client
- * @sourceDocumentId: The ID of the requested sourcedocument
- * @spans: List of Spans contained in the requested viewport for a certain document
- * @arcs: List of Arcs contained in the requested viewport for a certain document
  **/
 public class DocumentMessage
 {
     private List<Viewport> viewport;
-    private long sourceDocumentId;
-    private List<Span> spans;
-    private List<Arc> arcs;
 
-    public DocumentMessage(List<Viewport> aViewport, long aSourceDocumentId, List<Span> aSpans,
-                           List<Arc> aRelations)
+    public DocumentMessage(List<Viewport> aViewport)
     {
         viewport = aViewport;
-        sourceDocumentId = aSourceDocumentId;
-        spans = aSpans;
-        arcs = aRelations;
     }
 
     public List<Viewport> getViewport()
@@ -58,35 +46,5 @@ public class DocumentMessage
     public void setViewport(List<Viewport> aViewport)
     {
         viewport = aViewport;
-    }
-
-    public long getSourceDocumentId()
-    {
-        return sourceDocumentId;
-    }
-
-    public void setSourceDocumentId(long aSourceDocumentId)
-    {
-        sourceDocumentId = aSourceDocumentId;
-    }
-
-    public List<Span> getSpans()
-    {
-        return spans;
-    }
-
-    public void setSpans(List<Span> aSpans)
-    {
-        spans = aSpans;
-    }
-
-    public List<Arc> getArcs()
-    {
-        return arcs;
-    }
-
-    public void setArcs(List<Arc> aArcs)
-    {
-        arcs = aArcs;
     }
 }

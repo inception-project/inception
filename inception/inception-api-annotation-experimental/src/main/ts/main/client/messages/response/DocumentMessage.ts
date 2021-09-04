@@ -33,7 +33,4 @@ import {Viewport} from "../../model/Viewport";
 export class DocumentMessage
 {
     viewport : Viewport[];
-    sourceDocumentId : number;
-    spans : Span[];
-    arcs : Arc[];
 }

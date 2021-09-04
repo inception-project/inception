@@ -29,14 +29,12 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
  * Attributes:
  * @annotatorName: String representation of the name of the annotator the annotation will belong to
  * @projectId: The ID of the project the annotation will belong to
- * @sourceDocumentId: The ID of the sourcedocument requested by the client
  * @viewport: List of Viewports that the client want to obtain (including the viewports text, begin, end and layers
  **/
 public class DocumentRequest
 {
     private String annotatorName;
     private long projectId;
-    private long sourceDocumentId;
     private List<Viewport> viewport;
 
     public String getAnnotatorName()
@@ -57,16 +55,6 @@ public class DocumentRequest
     public void setProjectId(long aProjectId)
     {
         projectId = aProjectId;
-    }
-
-    public long getSourceDocumentId()
-    {
-        return sourceDocumentId;
-    }
-
-    public void setSourceDocumentId(long aSourceDocumentId)
-    {
-        sourceDocumentId = aSourceDocumentId;
     }
 
     public List<Viewport> getViewport()

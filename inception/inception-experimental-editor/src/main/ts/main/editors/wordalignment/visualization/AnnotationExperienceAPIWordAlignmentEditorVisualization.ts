@@ -111,8 +111,6 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
 
             container.appendChild(wordDIV);
         }
-
-        this.drawLines();
     }
 
     drawLines() {
@@ -121,8 +119,8 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
 
         let svg = document.getElementById("svg");
         svg.innerHTML = '';
-        let arcs = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.arcs;
-        let spans = that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.spans;
+        let arcs = that.annotationExperienceAPIWordAlignmentEditor.viewport[0].arcs;
+        let spans = that.annotationExperienceAPIWordAlignmentEditor.viewport[0].spans;
 
         for (let i = 0; i < arcs.length; i++) {
             let yGovernor = null;
@@ -173,7 +171,7 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
     calculateInitialOffset(aUnitNumber: Number)
     {
         let offset: number = 0;
-        let units = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.viewport.documentText.split(".");
+        let units = this.annotationExperienceAPIWordAlignmentEditor.viewport[0].documentText.split(".");
         for (let i = 0; i < aUnitNumber; i++) {
             let words = units[i].split(" ");
             for (let j = 0; j < words.length; j++) {
@@ -185,7 +183,7 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
     }
 
     showDependencies() {
-        let spans = this.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.spans;
+        let spans = this.annotationExperienceAPIWordAlignmentEditor.viewport[0].spans;
 
         for (let i = 0; i < document.getElementById("odd_unit_container").children.length - 2; i++) {
             for (let j = 0; j < spans.length; j++) {

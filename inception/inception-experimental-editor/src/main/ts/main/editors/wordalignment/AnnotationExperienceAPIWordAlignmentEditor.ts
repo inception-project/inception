@@ -30,14 +30,11 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
 
     //States
     projectId: number;
-    documentId: number;
     annotatorName: string;
 
-    layers: [number,string][] ;
+    layers: [number,string][];
 
-    viewport : Viewport[];
-    spans: Span[];
-    arcs: Arc[];
+    viewport : Viewport[] = [];
     sentences : string[];
 
     oddSentence: string;
@@ -46,17 +43,24 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
     evenSentenceOffset: number = 1;
     spanType : string;
 
-    //TODO OBSERVER CLASS?
-
-
     constructor(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string)
     {
-        alert("RUNNING")
         this.projectId = aProjectId;
-        this.documentId = aDocumentId;
         this.annotatorName = aAnnotatorName;
 
-        this.annotationExperienceAPI = new AnnotationExperienceAPIImpl(aProjectId, aDocumentId, aAnnotatorName, aUrl);
+        let allLayers = [246, 242, 251, 241, 247,
+            250,
+            249,
+            245,
+            243,
+            244,
+            248,
+            279,
+            278]
+
+        this.viewport.push(new Viewport(aDocumentId,"",0, 75, allLayers, null, null));
+
+        this.annotationExperienceAPI = new AnnotationExperienceAPIImpl(aProjectId, this.viewport[0].sourceDocumentId, aAnnotatorName, aUrl, this);
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIWordAlignmentEditorVisualization(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler = new AnnotationExperienceAPIWordAlignmentEditorActionHandler(this);
 
@@ -105,19 +109,19 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
         setTimeout(function () {
             let source, target;
             for (let i = 0; i < pairs.length; i++) {
-                for (let j = 0; j < that.spans.length; j++) {
+                for (let j = 0; j < that.viewport[0].spans[i].length; j++) {
 
-                    if (pairs[i][0] == that.spans[j].begin) {
-                        source = that.spans[j];
+                    if (pairs[i][0] == that.viewport[0].spans[j].begin) {
+                        source = that.viewport[0].spans[j];
                     }
-                    if (pairs[i][1] == that.spans[j].begin) {
-                        target = that.spans[j];
+                    if (pairs[i][1] == that.viewport[0].spans[j].begin) {
+                        target = that.viewport[0].spans[j];
                     }
                 }
                 that.annotationExperienceAPI.requestCreateArc(
                     that.annotatorName,
                     that.projectId,
-                    that.documentId,
+                    that.viewport[0].sourceDocumentId,
                     source.id,
                     target.id,
                     null) //TODO
@@ -149,7 +153,7 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
         this.annotationExperienceAPI.requestCreateSpan(
             that.annotatorName,
             that.projectId,
-            that.documentId,
+            that.viewport[0].sourceDocumentId,
             Number(aBegin),
             Number(aEnd),
             aLayer);
@@ -159,20 +163,20 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
     {
         let that = this;
 
-        for (let i = 0; i < that.arcs.length; i++) {
+        for (let i = 0; i < that.viewport[0].arcs.length; i++) {
             this.annotationExperienceAPI.requestDeleteAnnotation(
                 that.annotatorName,
-                that.projectId,that.documentId, that.arcs[i].id, that.arcs[i].layerId
+                that.projectId,that.viewport[0].sourceDocumentId, that.viewport[0].arcs[i].id, that.viewport[0].arcs[i].layerId
             )
         }
 
-        for (let i = 0; i < this.spans.length; i++) {
+        for (let i = 0; i < that.viewport[0].spans.length; i++) {
             that.annotationExperienceAPI.requestDeleteAnnotation(
                 that.annotatorName,
                 that.projectId,
-                that.documentId,
-                that.spans[i].id,
-                that.spans[i].layerId
+                that.viewport[0].sourceDocumentId,
+                that.viewport[0].spans[i].id,
+                that.viewport[0].spans[i].layerId
             )
         }
         document.getElementById("save_alignment").disabled = false;

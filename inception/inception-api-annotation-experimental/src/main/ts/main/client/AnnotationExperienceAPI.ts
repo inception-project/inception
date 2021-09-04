@@ -88,8 +88,7 @@ export interface AnnotationExperienceAPI
      * @params: Everything required by the server to handle the request.
      */
 
-    requestDocument(aAnnotatorName: string, aProjectId: number,
-                                aDocumentId: number, aViewport: Viewport[]);
+    requestDocument(aAnnotatorName: string, aProjectId: number, aViewport: Viewport[]);
 
     requestUpdateFeature(aAnnotatorName: string, aProjectId: number, aDocumentId: number,
                                 aAnnotationId: number, aLayerId: number, aFeature: FeatureX, aValue: any)
@@ -101,7 +100,7 @@ export interface AnnotationExperienceAPI
                                 aDocumentId: number, aAnnotationId: number, aLayer: number);
 
     requestCreateArc(aAnnotatorName: string, aProjectId: number, aDocumentId: number,
-                                aSourceId : string, aTargetId : string, aLayer: number)
+                                aSourceId : number, aTargetId : number, aLayer: number)
 
 
     /**

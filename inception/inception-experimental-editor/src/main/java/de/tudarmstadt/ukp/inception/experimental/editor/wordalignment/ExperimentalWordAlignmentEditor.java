@@ -17,12 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.editor.wordalignment;
 
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
-
 import javax.servlet.ServletContext;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
@@ -33,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIWordAlignmentEditorReference;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 
@@ -53,7 +53,7 @@ public class ExperimentalWordAlignmentEditor
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        aResponse.render(forReference(ExperimentalAPIWordAlignmentEditorReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference((ExperimentalAPIWordAlignmentEditorReference.get())));
         aResponse.render(OnDomReadyHeaderItem.forScript(setupExperienceAPI()));
     }
 
@@ -64,16 +64,19 @@ public class ExperimentalWordAlignmentEditor
                 WebsocketConfig.WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
 
+
         StringBuilder sb = new StringBuilder();
         sb.append("const editor = new AnnotationExperienceAPIWordAlignmentEditor("
                 + state.getProject().getId() + "," + state.getDocument().getId() + ",\""
                 + state.getUser().getUsername() + "\",\""
                 + RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl) + "\");");
 
-        /*
-         * TODO for (AnnotationLayer layer : state.getAnnotationLayers()) {
-         * sb.append("editor.layers.push([" + layer.getId() + "," + layer.getUiName() + "]);"); }
-         */
+         for (AnnotationLayer layer : state.getAnnotationLayers()) {
+             System.out.println(layer.getId());
+            //sb.append("editor.layers.push([" + layer.getId() + "," + layer.getUiName() + "]);");
+         }
+
+         System.out.println(sb.toString());
 
         return sb.toString();
     }

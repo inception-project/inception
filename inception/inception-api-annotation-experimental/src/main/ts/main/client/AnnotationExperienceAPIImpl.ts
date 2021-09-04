@@ -42,7 +42,9 @@ import {Arc} from "./model/Arc";
 export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     //Websocket and stomp broker
-    private stompClient: Client;
+    stompClient: Client;
+
+    annotationEditor: any;
 
     /**
      * Constructor: creates the Annotation Experience API.
@@ -50,12 +52,12 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
      * @param aDocumentId: ID of the document, required in order to subscribe to the correct channels.
      * @param aAnnotatorName: String representation of the annotatorName, required in order to subscribe to the correct channels.
      * @param aUrl: The URL required by Websocket and the stomp broker in order to establish a connection
-     *
      * @NOTE: the connect() method will automatically be performed, there is no need to create a Websocket connection
-     * manually.
-     */
-    constructor(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string)
+    * manually.
+*/
+    constructor(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string, aAnnotationEditor: any)
     {
+        this.annotationEditor = aAnnotationEditor;
         this.connect(aProjectId, aDocumentId, aAnnotatorName, aUrl)
     }
 
@@ -67,9 +69,12 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
      */
     connect(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string)
     {
+        console.log(aUrl)
         this.stompClient = Stomp.over(function () {
             return new WebSocket(aUrl);
         });
+
+        console.log(this.stompClient)
 
         const that = this;
 
@@ -83,6 +88,8 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             console.log('Broker reported error: ' + frame.headers['message']);
             console.log('Additional details: ' + frame.body);
         };
+
+        this.stompClient.activate();
     }
 
     /**
@@ -126,13 +133,11 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             aDocumentId, function (msg) {
             that.onAnnotationDelete(Object.assign(new DeleteAnnotationMessage(), JSON.parse(msg.body)));
         }, {id: "span_delete"});
-
-        this.stompClient.activate();
     }
 
     unsubscribe(aViewport: Viewport)
     {
-        this.stompClient.unsubscribe(aChannel);
+       // this.stompClient.unsubscribe(aChannel);
     }
 
     disconnect()
@@ -140,15 +145,15 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         this.stompClient.deactivate();
     }
 
-    requestDocument(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aViewport: Viewport[])
+    requestDocument(aAnnotatorName: string, aProjectId: number, aViewport: Viewport[])
     {
         this.stompClient.publish({
             destination: "/app/document_request", body: JSON.stringify(
-                new DocumentRequest(aAnnotatorName, aProjectId, aDocumentId, aViewport))
+                new DocumentRequest(aAnnotatorName, aProjectId, aViewport))
         });
     }
 
-    requestCreateArc(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aSourceId: string, aTargetId: string, aLayer: number)
+    requestCreateArc(aAnnotatorName: string, aProjectId: number, aDocumentId: number, aSourceId: number, aTargetId: number, aLayer: number)
     {
         this.stompClient.publish({
             destination: "/app/arc_create",
@@ -183,8 +188,17 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     onDocument(aMessage: DocumentMessage)
     {
+        let that = this;
 
         console.log('RECEIVED DOCUMENT' + aMessage);
+
+        console.log(aMessage.viewport[0].sourceDocumentId)
+        console.log(aMessage.viewport[0].documentText)
+        console.log(aMessage.viewport[0].spans)
+        console.log(aMessage.viewport[0].arcs)
+
+        that.annotationEditor.viewport = aMessage.viewport;
+
         /*
         this.viewport = aMessage.viewport;
         this.viewport.documentText = this.viewport.documentText.split("\n").join("");

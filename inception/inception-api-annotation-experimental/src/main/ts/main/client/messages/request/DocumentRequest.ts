@@ -33,14 +33,12 @@ export class DocumentRequest
 {
     annotatorName: string;
     projectId: number;
-    sourceDocumentId: number;
     viewport: Viewport[];
 
-    constructor(aAnnotatorName: string, aProjectId: number, aSourceDocumentId: number, aViewport: Viewport[])
+    constructor(aAnnotatorName: string, aProjectId: number, aViewport: Viewport[])
     {
         this.annotatorName = aAnnotatorName;
         this.projectId = aProjectId;
-        this.sourceDocumentId = aSourceDocumentId;
         this.viewport = aViewport;
     }
 }

@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+import {Span} from "./Span";
+import {Arc} from "./Arc";
+
 /**
  * Support Class representing an Viewport.
  * Multiple viewports are possible and are represented as arrays.
@@ -30,16 +33,22 @@
  **/
 export class Viewport
 {
+    sourceDocumentId: number
     documentText: string;
     begin: number;
     end: number;
-    layers: number[]
+    layers: number[] = [];
+    spans: Span[] = [];
+    arcs: Arc[] = [];
 
-    constructor(aDocumentText: string, aBegin: number, aEnd: number, aLayers: number[])
+    constructor(aSourceDocumentId: number, aDocumentText: string, aBegin: number, aEnd: number, aLayers: number[], aSpans: Span[], aArcs: Arc[])
     {
+        this.sourceDocumentId = aSourceDocumentId;
         this.documentText = aDocumentText;
         this.begin = aBegin;
         this.end = aEnd;
         this.layers = aLayers;
+        this.spans = aSpans;
+        this.arcs = aArcs;
     }
 }
