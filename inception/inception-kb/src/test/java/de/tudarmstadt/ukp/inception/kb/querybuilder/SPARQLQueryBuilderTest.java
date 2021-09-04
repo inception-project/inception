@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
@@ -70,6 +71,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -259,6 +261,16 @@ public class SPARQLQueryBuilderTest
         zbwStw = buildSparqlRepository("http://zbw.eu/beta/sparql/stw/query");
         // Web: http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/gnd/query
         zbwGnd = buildSparqlRepository("http://zbw.eu/beta/sparql/gnd/query");
+    }
+
+    @BeforeEach
+    public void testWatcher(TestInfo aTestInfo)
+    {
+        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        System.out.printf("\n=== %s === %s =====================\n", methodName,
+                aTestInfo.getDisplayName());
+
+        suspendSslVerification();
     }
 
     @AfterEach

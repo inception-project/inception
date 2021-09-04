@@ -40,13 +40,22 @@ public class SPARQLQueryBuilderAsserts
 
         assertThat(results).isNotEmpty();
 
-        assertThat(results).allMatch(_child -> {
-            try (RepositoryConnection conn = aRepository.getConnection()) {
-                return SPARQLQueryBuilder.forClasses(aKB).parentsOf(_child.getIdentifier())
-                        .asHandles(conn, true).stream().map(KBHandle::getIdentifier)
-                        .anyMatch(iri -> iri.equals(aRootClass));
-            }
-        });
+        System.out.print("Validating: ");
+        try {
+            assertThat(results).allMatch(_child -> {
+                System.out.print(".");
+                try (RepositoryConnection conn = aRepository.getConnection()) {
+                    return SPARQLQueryBuilder.forClasses(aKB) //
+                            .parentsOf(_child.getIdentifier()) //
+                            .asHandles(conn, true).stream() //
+                            .map(KBHandle::getIdentifier) //
+                            .anyMatch(iri -> iri.equals(aRootClass));
+                }
+            });
+        }
+        finally {
+            System.out.println();
+        }
     }
 
     public static List<KBHandle> asHandles(Repository aRepo, SPARQLQuery aBuilder)

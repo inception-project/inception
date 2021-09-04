@@ -1745,12 +1745,13 @@ public class SPARQLQueryBuilder
 
         List<KBHandle> results;
         if (returnEmptyResult) {
-            results = emptyList();
-
             LOG.debug("[{}] Query was skipped because it would not return any results anyway",
                     queryId);
+
+            return emptyList();
         }
-        else {
+
+        try {
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
             tupleQuery.setIncludeInferred(includeInferred);
             results = evaluateListQuery(tupleQuery, aAll);
@@ -1758,9 +1759,12 @@ public class SPARQLQueryBuilder
 
             LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
                     currentTimeMillis() - startTime);
+            return results;
         }
-
-        return results;
+        catch (QueryEvaluationException e) {
+            throw new QueryEvaluationException(
+                    e.getMessage() + " while running query:\n" + queryString, e);
+        }
     }
 
     /**
@@ -1793,7 +1797,8 @@ public class SPARQLQueryBuilder
 
             return false;
         }
-        else {
+
+        try {
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
             boolean result = !evaluateListQuery(tupleQuery, aAll).isEmpty();
 
@@ -1801,6 +1806,10 @@ public class SPARQLQueryBuilder
                     currentTimeMillis() - startTime);
 
             return result;
+        }
+        catch (QueryEvaluationException e) {
+            throw new QueryEvaluationException(
+                    e.getMessage() + " while running query:\n" + queryString, e);
         }
     }
 
@@ -1817,21 +1826,24 @@ public class SPARQLQueryBuilder
 
         Optional<KBHandle> result;
         if (returnEmptyResult) {
-            result = Optional.empty();
-
             LOG.debug("[{}] Query was skipped because it would not return any results anyway",
                     queryId);
+            return Optional.empty();
         }
-        else {
+
+        try {
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
             tupleQuery.setIncludeInferred(includeInferred);
             result = evaluateListQuery(tupleQuery, aAll).stream().findFirst();
 
             LOG.debug("[{}] Query returned a result in {}ms", queryId,
                     currentTimeMillis() - startTime);
+            return result;
         }
-
-        return result;
+        catch (QueryEvaluationException e) {
+            throw new QueryEvaluationException(
+                    e.getMessage() + " while running query:\n" + queryString, e);
+        }
     }
 
     /**
@@ -1912,7 +1924,7 @@ public class SPARQLQueryBuilder
         Binding prefLabel = aSourceBindings.getBinding(VAR_PREF_LABEL_NAME);
         Binding matchTerm = aSourceBindings.getBinding(VAR_MATCH_TERM_NAME);
 
-        // Obtain name either from the pref-label or from the candidate label if available
+        // Obtain name either from the pref-label or from the match term if available
         if (prefLabel != null) {
             aTargetHandle.setName(prefLabel.getValue().stringValue());
             extractLanguage(prefLabel).ifPresent(aTargetHandle::setLanguage);

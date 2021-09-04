@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
-import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.assumeEndpointIsAvailable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -89,10 +88,8 @@ public class KnowledgeBaseServiceRemoteTest
     public void testWatcher(TestInfo aTestInfo)
     {
         String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
-        System.out.printf("\n=== %s === %s=====================\n", methodName,
+        System.out.printf("\n=== %s === %s =====================\n", methodName,
                 aTestInfo.getDisplayName());
-
-        suspendSslVerification();
     }
 
     public void setUp(TestConfiguration aSutConfig) throws Exception
