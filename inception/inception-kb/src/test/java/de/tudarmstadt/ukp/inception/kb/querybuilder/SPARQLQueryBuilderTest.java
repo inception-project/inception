@@ -247,6 +247,16 @@ public class SPARQLQueryBuilderTest
         zbwGnd = buildSparqlRepository("http://zbw.eu/beta/sparql/gnd/query");
     }
 
+    @BeforeEach
+    public void testWatcher(TestInfo aTestInfo)
+    {
+        String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
+        System.out.printf("\n=== %s === %s =====================\n", methodName,
+                aTestInfo.getDisplayName());
+
+        suspendSslVerification();
+    }
+
     @AfterEach
     public void tearDown()
     {
