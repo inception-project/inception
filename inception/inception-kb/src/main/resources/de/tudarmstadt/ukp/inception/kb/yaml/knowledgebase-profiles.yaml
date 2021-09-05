@@ -130,11 +130,12 @@ yago:
   # Disabled, see #1708 for more info
   #disabled: true
   type: REMOTE
-  default-language: en
+  default-language: de
   reification: NONE
   access:
     access-url: https://yago-knowledge.org/sparql/query
-    full-text-search: bif:contains
+    # YAGO runs BlazeGraph these days and they seem not to have set up a full text index
+    # full-text-search: bif:contains
   mapping:
     class: http://www.w3.org/2002/07/owl#Class
     subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -205,7 +206,7 @@ zbw-gnd:
     author-name: German National Library (DNB), ZBW - Leibniz Information Centre for Economics
     website-url: http://zbw.eu/stw/version/9.02/mapping/gnd/about.en.html
   root-concepts:
-    - http://d-nb.info/standards/elementset/gnd#AuthorityResource
+    - https://d-nb.info/standards/elementset/gnd#AuthorityResource
 
 # ##################################################################################################
 #
