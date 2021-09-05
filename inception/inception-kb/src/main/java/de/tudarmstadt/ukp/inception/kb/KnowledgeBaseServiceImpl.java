@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClien
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
@@ -31,12 +30,9 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -100,9 +96,6 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
@@ -140,8 +133,6 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
 {
-    private static final String KNOWLEDGEBASE_PROFILES_YAML = "knowledgebase-profiles.yaml";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
@@ -1065,13 +1056,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
-        try (Reader r = new InputStreamReader(
-                getClass().getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML), UTF_8)) {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
-            {
-            });
-        }
+        return KnowledgeBaseProfile.readKnowledgeBaseProfiles();
     }
 
     /**
@@ -1095,7 +1080,7 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBObject> readItem(KnowledgeBase aKb, String aIdentifier)
     {
         try (StopWatch watch = new StopWatch(log, "readItem(%s)", aIdentifier)) {
-            Optional<KBConcept> kbConcept = readConcept(aKb, aIdentifier, false);
+            Optional<KBConcept> kbConcept = readProperty(aKb, aIdentifier, false);
             if (kbConcept.isPresent()) {
                 return kbConcept.flatMap((c) -> Optional.of(c));
             }

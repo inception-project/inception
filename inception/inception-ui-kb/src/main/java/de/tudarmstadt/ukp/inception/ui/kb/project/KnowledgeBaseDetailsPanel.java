@@ -293,6 +293,10 @@ public class KnowledgeBaseDetailsPanel
 
             Component rootConcepts = new RootConceptsPanel("rootConcepts", kbwModel);
             add(rootConcepts);
+
+            Component additionalMatchingProperties = new AdditionalMatchingPropertiesPanel(
+                    "additionalMatchingProperties", kbwModel);
+            add(additionalMatchingProperties);
         }
     }
 }

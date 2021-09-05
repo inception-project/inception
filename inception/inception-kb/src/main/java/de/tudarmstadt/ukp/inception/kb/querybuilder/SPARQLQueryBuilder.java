@@ -442,7 +442,7 @@ public class SPARQLQueryBuilder
             case CLASS: {
                 List<GraphPattern> rootPatterns = new ArrayList<>();
 
-                List<String> rootConcepts = aKb.getRootConcepts();
+                Set<String> rootConcepts = aKb.getRootConcepts();
                 if (rootConcepts != null && !rootConcepts.isEmpty()) {
                     rootPatterns.add(new ValuesPattern(VAR_SUBJECT, rootConcepts.stream()
                             .map(iri -> iri(iri)).collect(Collectors.toList())));

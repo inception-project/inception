@@ -214,6 +214,8 @@ public class AccessSpecificSettingsPanel
                     // sets root concepts list - if null then an empty list otherwise change the
                     // values to IRI and populate the list
                     kbModel.getObject().getKb().applyRootConcepts(item.getModelObject());
+                    kbModel.getObject().getKb()
+                            .applyAdditionalMatchingProperties(item.getModelObject());
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
                     kbInfoModel.setObject(item.getModelObject().getInfo());
                     kbModel.getObject().getKb().setFullTextSearchIri(
