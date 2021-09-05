@@ -17,10 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static java.lang.System.currentTimeMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ParseException;
@@ -33,24 +36,46 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class SPARQLQueryBuilderAsserts
 {
     public static void assertThatChildrenOfExplicitRootCanBeRetrieved(KnowledgeBase aKB,
-            Repository aRepository, String aRootClass)
+            Repository aRepository, String aRootClass, int aLimit)
     {
         List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB)
                 .childrenOf(aRootClass).retrieveLabel().retrieveDescription());
 
         assertThat(results).isNotEmpty();
 
-        System.out.print("Validating: ");
+        if (aLimit > 0) {
+            Random r = new Random();
+            List<KBHandle> pool = results;
+            int total = pool.size();
+            results = new ArrayList<>();
+            for (int i = 0; i < aLimit; i++) {
+                results.add(pool.remove(r.nextInt(pool.size())));
+            }
+            System.out.printf("Validating %d of %d results randomly selected:%n", results.size(),
+                    total);
+        }
+        else {
+            System.out.printf("Validating all %d results:%n", results.size());
+        }
+
         try {
             assertThat(results).allMatch(_child -> {
-                System.out.print(".");
+                System.out.printf("   %-70s ...", _child.getIdentifier());
+                boolean result;
+                long start = currentTimeMillis();
                 try (RepositoryConnection conn = aRepository.getConnection()) {
-                    return SPARQLQueryBuilder.forClasses(aKB) //
+                    result = SPARQLQueryBuilder.forClasses(aKB) //
                             .parentsOf(_child.getIdentifier()) //
                             .asHandles(conn, true).stream() //
                             .map(KBHandle::getIdentifier) //
                             .anyMatch(iri -> iri.equals(aRootClass));
+                    System.out.printf(" OK   (%6d ms)%n", currentTimeMillis() - start);
                 }
+                catch (Exception e) {
+                    System.out.printf(" FAIL (%6d ms)%n", currentTimeMillis() - start);
+                    throw e;
+                }
+                return result;
             });
         }
         finally {

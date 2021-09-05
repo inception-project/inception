@@ -1625,7 +1625,7 @@ public class SPARQLQueryBuilderTest
         kb.setType(REMOTE);
 
         assertThatChildrenOfExplicitRootCanBeRetrieved(kb, dbpedia,
-                "http://www.w3.org/2002/07/owl#Thing");
+                "http://www.w3.org/2002/07/owl#Thing", 0);
     }
 
     @Tag("slow")
@@ -1636,7 +1636,10 @@ public class SPARQLQueryBuilderTest
 
         kb.setType(REMOTE);
 
-        assertThatChildrenOfExplicitRootCanBeRetrieved(kb, yago, "http://schema.org/Thing");
+        // YAGO has the habit of timing out on some requests. Unfortunately, there is no clear
+        // pattern when this happens - might be due to server load on the YAGO side. Thus, to
+        // keep the load lower, we only validate 5 children.
+        assertThatChildrenOfExplicitRootCanBeRetrieved(kb, yago, "http://schema.org/Thing", 5);
     }
 
     @Tag("slow")
