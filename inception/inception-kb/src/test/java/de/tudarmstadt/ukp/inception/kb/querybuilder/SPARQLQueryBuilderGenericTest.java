@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @Tag("slow")
 public class SPARQLQueryBuilderGenericTest
 {
-    private static final List<String> SKIPPED_PROFILES = asList("babel_net", "zbw-gnd");
+    private static final List<String> SKIPPED_PROFILES = asList("babel_net");
 
     public static List<KnowledgeBaseProfile> data() throws Exception
     {
