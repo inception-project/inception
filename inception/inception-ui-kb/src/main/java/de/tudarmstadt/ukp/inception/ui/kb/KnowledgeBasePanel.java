@@ -315,11 +315,11 @@ public class KnowledgeBasePanel
         else {
             // TODO: Fix this Optional get() to actual checking
             try {
-                Optional<KBConcept> concept = kbService.readProperty(kbModel.getObject(),
+                Optional<KBConcept> concept = kbService.readConcept(kbModel.getObject(),
                         selectedConceptHandle.getObject().getIdentifier(), true);
                 KBConcept selectedConcept;
                 if (concept.isPresent()) {
-                    selectedConcept = kbService.readProperty(kbModel.getObject(),
+                    selectedConcept = kbService.readConcept(kbModel.getObject(),
                             selectedConceptHandle.getObject().getIdentifier(), true).get();
                 }
                 else {

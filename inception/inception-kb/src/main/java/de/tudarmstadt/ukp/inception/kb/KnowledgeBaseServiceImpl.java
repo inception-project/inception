@@ -1080,7 +1080,7 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBObject> readItem(KnowledgeBase aKb, String aIdentifier)
     {
         try (StopWatch watch = new StopWatch(log, "readItem(%s)", aIdentifier)) {
-            Optional<KBConcept> kbConcept = readProperty(aKb, aIdentifier, false);
+            Optional<KBConcept> kbConcept = readConcept(aKb, aIdentifier, false);
             if (kbConcept.isPresent()) {
                 return kbConcept.flatMap((c) -> Optional.of(c));
             }

@@ -132,7 +132,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
     {
         setUp(reification);
 
-        Optional<KBConcept> savedConcept = sut.readProperty(kb,
+        Optional<KBConcept> savedConcept = sut.readConcept(kb,
                 "https://nonexistent.identifier.test", true);
         assertThat(savedConcept.isPresent()).as("Check that no concept was read").isFalse();
     }
@@ -144,7 +144,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
     {
         setUp(reification);
 
-        Optional<KBConcept> concept = sut.readProperty(kb, "http://www.wikidata.org/entity/Q171644",
+        Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644",
                 true);
         assertThat(concept.get().getName()).as("Check that concept has the same UI label")
                 .isIn("12 Hours of Reims");

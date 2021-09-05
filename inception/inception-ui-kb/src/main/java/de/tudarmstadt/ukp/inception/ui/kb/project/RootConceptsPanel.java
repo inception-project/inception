@@ -120,7 +120,7 @@ public class RootConceptsPanel
     public boolean isConceptValid(KnowledgeBase kb, String conceptIRI, boolean aAll)
         throws QueryEvaluationException
     {
-        return !concepts.getObject().contains(conceptIRI) && kbService
-                .readProperty(kbModel.getObject().getKb(), conceptIRI, true).isPresent();
+        return !concepts.getObject().contains(conceptIRI)
+                && kbService.readConcept(kbModel.getObject().getKb(), conceptIRI, true).isPresent();
     }
 }

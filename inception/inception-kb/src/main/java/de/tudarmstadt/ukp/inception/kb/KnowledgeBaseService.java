@@ -579,7 +579,7 @@ public interface KnowledgeBaseService
      *            True if entities with implicit namespaces (e.g. defined by RDF)
      * @return the concept.
      */
-    Optional<KBConcept> readProperty(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
 
     /**

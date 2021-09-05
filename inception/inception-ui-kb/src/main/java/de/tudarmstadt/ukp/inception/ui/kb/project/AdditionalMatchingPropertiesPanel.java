@@ -128,6 +128,6 @@ public class AdditionalMatchingPropertiesPanel
         return !properties.getObject().contains(aPropertyIri);
         // KBs tend to not declare all their properties, so we do not try to check if it actually
         // exist...
-        // && kbService.readProperty(kbModel.getObject().getKb(), aPropertyIri, true).isPresent();
+        // && kbService.readProperty(kbModel.getObject().getKb(), aPropertyIri).isPresent();
     }
 }
