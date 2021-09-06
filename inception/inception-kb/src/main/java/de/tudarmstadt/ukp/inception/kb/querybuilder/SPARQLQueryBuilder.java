@@ -131,12 +131,14 @@ public class SPARQLQueryBuilder
     public static final String VAR_PREF_LABEL_PROPERTY_NAME = "pPrefLabel";
     public static final String VAR_PREF_LABEL_NAME = "l";
     public static final String VAR_MATCH_TERM_NAME = "m";
+    public static final String VAR_SCORE_NAME = "sc";
     public static final String VAR_DESCRIPTION_NAME = "d";
     public static final String VAR_DESCRIPTION_CANDIDATE_NAME = "dc";
     public static final String VAR_RANGE_NAME = "range";
     public static final String VAR_DOMAIN_NAME = "domain";
 
     public static final Variable VAR_SUBJECT = var(VAR_SUBJECT_NAME);
+    public static final Variable VAR_SCORE = var(VAR_SCORE_NAME);
     public static final Variable VAR_PREDICATE = var(VAR_PREDICATE_NAME);
     public static final Variable VAR_OBJECT = var(VAR_OBJECT_NAME);
     public static final Variable VAR_RANGE = var(VAR_RANGE_NAME);
@@ -831,11 +833,10 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns
-                    .add(VAR_SUBJECT
+                    .add(((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
                             .has(FUSEKI_QUERY,
                                     collectionOf(VAR_MATCH_TERM_PROPERTY,
                                             literalOf(sanitizedValue)))
-                            .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                             .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
         }
 
@@ -997,9 +998,9 @@ public class SPARQLQueryBuilder
                 sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
             }
 
-            valuePatterns.add(VAR_SUBJECT
-                    .has(FUSEKI_QUERY, collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(fuzzyQuery)))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM));
+            valuePatterns.add(((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
+                    .has(FUSEKI_QUERY,
+                            collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(fuzzyQuery))));
         }
 
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
@@ -1135,11 +1136,10 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns
-                    .add(VAR_SUBJECT
+                    .add(((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
                             .has(FUSEKI_QUERY,
                                     collectionOf(VAR_MATCH_TERM_PROPERTY,
                                             literalOf(sanitizedValue)))
-                            .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                             .filter(containsPattern(VAR_MATCH_TERM, value)));
         }
 
@@ -1372,11 +1372,10 @@ public class SPARQLQueryBuilder
         // filter them by those which actually start with the prefix.
         return GraphPatterns
                 .and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                        VAR_SUBJECT
+                        ((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
                                 .has(FUSEKI_QUERY,
                                         collectionOf(VAR_MATCH_TERM_PROPERTY,
                                                 literalOf(queryString)))
-                                .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                                 .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
     }
 
