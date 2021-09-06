@@ -116,6 +116,20 @@ public class SPARQLQueryBuilderTest
             "<#red-goblin>", //
             "    rdfs:label 'Red Goblin' .");
 
+    private static final String DATA_MULTIPLE_LABELS = String.join("\n", //
+            "<#example>", //
+            "    rdfs:label 'specimen' ;", //
+            "    rdfs:label 'sample' ;", //
+            "    rdfs:label 'instance' ;", //
+            "    rdfs:label 'case'  .");
+
+    private static final String DATA_ADDITIONAL_SEARCH_PROPERTIES = String.join("\n", //
+            "<#example>", //
+            "    rdfs:prefLabel 'specimen' ;", //
+            "    rdfs:label 'sample' ;", //
+            "    rdfs:label 'instance' ;", //
+            "    rdfs:label 'case'  .");
+
     private static final String LABEL_SUBPROPERTY = String.join("\n", //
             "<#sublabel>", //
             "    rdfs:subPropertyOf rdfs:label .", //
@@ -279,6 +293,9 @@ public class SPARQLQueryBuilderTest
      * Checks that {@code SPARQLQueryBuilder#exists(RepositoryConnection, boolean)} can return
      * {@code true} by querying for a list of all classes in {@link #DATA_CLASS_RDFS_HIERARCHY}
      * which contains a number of classes.
+     * 
+     * @throws Exception
+     *             -
      */
     @Test
     public void thatExistsReturnsTrueWhenDataQueriedForExists() throws Exception
@@ -293,6 +310,9 @@ public class SPARQLQueryBuilderTest
     /**
      * If the KB has no default language set, then only labels and descriptions with no language at
      * all should be returned.
+     * 
+     * @throws Exception
+     *             -
      */
     @Test
     public void thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved() throws Exception
@@ -310,7 +330,8 @@ public class SPARQLQueryBuilderTest
 
         assertThat(results).isNotEmpty();
         assertThat(results)
-                .usingElementComparatorOnFields("identifier", "name", "description", "language")
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "description", "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
                         "Green Goblin", "Little green monster"));
     }
@@ -320,6 +341,9 @@ public class SPARQLQueryBuilderTest
      * preferred it is permitted to fall back to labels/descriptions without any language. The
      * dataset contains only labels for French but no descriptions, so it should fall back to
      * returning the description without any language.
+     * 
+     * @throws Exception
+     *             -
      */
     @Test
     public void thatLabelsAndDescriptionsWithLanguageArePreferred() throws Exception
@@ -338,15 +362,58 @@ public class SPARQLQueryBuilderTest
 
         assertThat(results).isNotEmpty();
         assertThat(results)
-                .usingElementComparatorOnFields("identifier", "name", "description", "language")
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "description", "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
                         "Goblin vert", "Little green monster", "fr"));
+    }
+
+    @Test
+    public void thatSearchOverMultipleLabelsWorks() throws Exception
+    {
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_MULTIPLE_LABELS);
+
+        for (String term : asList("specimen", "sample", "instance", "case")) {
+            List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
+                    .forItems(kb) //
+                    .withLabelMatchingAnyOf(term) //
+                    .retrieveLabel());
+
+            assertThat(results)
+                    .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name")
+                    .containsExactlyInAnyOrder(new KBHandle("http://example.org/#example", term));
+        }
+    }
+
+    @Test
+    public void thatMatchingAgainstAdditionalSearchPropertiesWorks() throws Exception
+    {
+        kb.setLabelIri("http://www.w3.org/2000/01/rdf-schema#prefLabel");
+        kb.setAdditionalMatchingProperties(asList("http://www.w3.org/2000/01/rdf-schema#label"));
+
+        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+                DATA_ADDITIONAL_SEARCH_PROPERTIES);
+
+        for (String term : asList("specimen", "sample", "instance", "case")) {
+            List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
+                    .forItems(kb) //
+                    .withLabelMatchingAnyOf(term) //
+                    .retrieveLabel());
+
+            assertThat(results)
+                    .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name")
+                    .containsExactlyInAnyOrder(
+                            new KBHandle("http://example.org/#example", "specimen"));
+        }
     }
 
     /**
      * Checks that {@code SPARQLQueryBuilder#exists(RepositoryConnection, boolean)} can return
      * {@code false} by querying for the parent of a root class in
      * {@link #DATA_CLASS_RDFS_HIERARCHY} which does not exist.
+     * 
+     * @throws Exception
+     *             -
      */
     @Test
     public void thatExistsReturnsFalseWhenDataQueriedForDoesNotExist() throws Exception
@@ -361,6 +428,9 @@ public class SPARQLQueryBuilderTest
 
     /**
      * Checks that an explicitly defined class can be retrieved using its identifier.
+     * 
+     * @throws Exception
+     *             -
      */
     @Test
     public void thatExplicitClassCanBeRetrievedByItsIdentifier() throws Exception
@@ -375,6 +445,9 @@ public class SPARQLQueryBuilderTest
 
     /**
      * Checks that an implicitly defined class can be retrieved using its identifier.
+     * 
+     * @throws Exception
+     *             -
      */
     @Test
     public void thatImplicitClassCanBeRetrievedByItsIdentifier() throws Exception
@@ -390,6 +463,9 @@ public class SPARQLQueryBuilderTest
     /**
      * Checks that a either explicitly nor implicitly defined class can be retrieved using its
      * identifier.
+     * 
+     * @throws Exception
+     *             -
      */
     @Test
     public void thatNonClassCannotBeRetrievedByItsIdentifier() throws Exception
@@ -404,6 +480,9 @@ public class SPARQLQueryBuilderTest
 
     /**
      * Checks that item information can be obtained for a given subject.
+     * 
+     * @throws Exception
+     *             -
      */
     @Test
     public void thatCanRetrieveItemInfoForIdentifier() throws Exception
@@ -419,7 +498,8 @@ public class SPARQLQueryBuilderTest
 
         assertThat(results).isNotEmpty();
         assertThat(results)
-                .usingElementComparatorOnFields("identifier", "name", "description", "language")
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "description", "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://example.org/#red-goblin",
                         "Red Goblin", "Little red monster"));
     }
@@ -437,8 +517,8 @@ public class SPARQLQueryBuilderTest
 
         assertThat(results).isNotEmpty();
         assertThat(results)
-                .usingElementComparatorOnFields("identifier", "name", "description", "range",
-                        "domain")
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "description", "range", "domain")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#property-1", "Property 1", "Property One",
                                 null, "http://example.org/#explicitRoot",
@@ -666,6 +746,9 @@ public class SPARQLQueryBuilderTest
      * FTS is not disabled, then no result would be returned because there are so many Amandas in
      * Wikidata that the popular ones returned by the FTS do not include any from the Star Trek
      * universe.
+     * 
+     * @throws Exception
+     *             -
      */
     @Tag("slow")
     @Test
@@ -837,8 +920,8 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.contains("Goblin"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).usingElementComparatorOnFields("identifier", "name", "language")
-                .containsExactlyInAnyOrder(
+        assertThat(results).usingRecursiveFieldByFieldElementComparatorOnFields("identifier",
+                "name", "language").containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#red-goblin", "Red Goblin"), new KBHandle(
                                 "http://example.org/#green-goblin", "Green Goblin", null, "en"));
     }
@@ -879,8 +962,8 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.contains("Goblin"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).usingElementComparatorOnFields("identifier", "name", "language")
-                .containsExactlyInAnyOrder(
+        assertThat(results).usingRecursiveFieldByFieldElementComparatorOnFields("identifier",
+                "name", "language").containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#red-goblin", "Red Goblin"), new KBHandle(
                                 "http://example.org/#green-goblin", "Green Goblin", null, "en"));
     }
@@ -994,7 +1077,9 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.equals("Green Goblin"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).usingElementComparatorOnFields("identifier", "name", "language")
+        assertThat(results)
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
                         "Green Goblin", null, "en"));
     }
@@ -1043,8 +1128,8 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.equals("Green Goblin"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).usingElementComparatorOnFields("identifier", "name", "language")
-                .containsExactlyInAnyOrder(
+        assertThat(results).usingRecursiveFieldByFieldElementComparatorOnFields("identifier",
+                "name", "language").containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin"));
     }
 
@@ -1083,8 +1168,8 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.startsWith("Green"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).usingElementComparatorOnFields("identifier", "name", "language")
-                .containsExactlyInAnyOrder(
+        assertThat(results).usingRecursiveFieldByFieldElementComparatorOnFields("identifier",
+                "name", "language").containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin"));
     }
 
@@ -1103,7 +1188,9 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.startsWith("Green"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).usingElementComparatorOnFields("identifier", "name", "language")
+        assertThat(results)
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
                         "Green Goblin", null, "en"));
     }
@@ -1125,7 +1212,9 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.startsWith("Green"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).usingElementComparatorOnFields("identifier", "name", "language")
+        assertThat(results)
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
                         "Green Goblin", null, "en"));
     }
@@ -1148,7 +1237,8 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Green Go"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results)
-                .usingElementComparatorOnFields("identifier", "name", "description", "language")
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "description", "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
                         "Green Goblin", null, "en"));
     }
@@ -1535,7 +1625,7 @@ public class SPARQLQueryBuilderTest
         kb.setType(REMOTE);
 
         assertThatChildrenOfExplicitRootCanBeRetrieved(kb, dbpedia,
-                "http://www.w3.org/2002/07/owl#Thing");
+                "http://www.w3.org/2002/07/owl#Thing", 0);
     }
 
     @Tag("slow")
@@ -1546,7 +1636,10 @@ public class SPARQLQueryBuilderTest
 
         kb.setType(REMOTE);
 
-        assertThatChildrenOfExplicitRootCanBeRetrieved(kb, yago, "http://schema.org/Thing");
+        // YAGO has the habit of timing out on some requests. Unfortunately, there is no clear
+        // pattern when this happens - might be due to server load on the YAGO side. Thus, to
+        // keep the load lower, we only validate 5 children.
+        assertThatChildrenOfExplicitRootCanBeRetrieved(kb, yago, "http://schema.org/Thing", 5);
     }
 
     @Tag("slow")
@@ -1620,7 +1713,8 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.contains("Socke"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).usingElementComparatorOnFields("identifier", "name", "language")
+        assertThat(results).usingRecursiveFieldByFieldElementComparatorOnFields("identifier",
+                "name", "language")
                 .containsExactlyInAnyOrder(new KBHandle("http://mbugert.de/pets#socke", "Socke"));
     }
 
