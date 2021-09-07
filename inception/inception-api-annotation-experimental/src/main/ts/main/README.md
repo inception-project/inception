@@ -15,8 +15,6 @@ editor. Furthermore, reading this README file carefully will also help to unders
 The following editor was one of the first to be implemented with the API concept:
 PICTURE.
 
-
-
 ### API endpoints
 This section divides between the API endpoints available to the front-end (for any custom annotation editor) 
 and the backend. The most important one is obviously the front-end 'Experience API' and should be called
@@ -80,8 +78,7 @@ primarily consists of two different methods:
 ##### System API
 The 'System API' handles all requests made by any client or forwards data after specific events
  happening in INCEpTIONs back-end. The 'System API' has two different kind of methods 
- - handle(): All handle() methods process the desired request by any client. Their complexity 
- varies a lot and so their Lines of Code (LoC) range from only 15 up to more than 40. 
+ - handle(): All handle() methods process the desired request by any client.
  - onEventHandler(): This kind of methods always have a '@EventListener' above their header. 
  This indicates, that whenever a specific event happens on the server side (which is declared in 
  the methods arguments) the corresponding method will fire. The event itself carries the 
@@ -101,22 +98,104 @@ The 'System API' handles all requests made by any client or forwards data after 
   - getColorForAnnotation(): This method explains its purpose already in its methods name. 
   INCEpTION has coloring strategies which can be customized by project administrators. 
   Therefore, this method shall simply retrieve the correct color for an annotation.
-####Streamlined-process
 
 ### WebSocket protocol
+Any communication done between you custom annotation editor and the back-end of INCEpTION is handled by 
+WebSocket. The connection will be created automatically when your annotation editor invokes the 'Experience-API'.
+WebSocket is like an open channel between client and server, through which data can be forwarded to each other
+at any time. In addition to WebSocket, the API-concept also uses a Stomp Broker. This works like a typical
+publish/subscribe mechanism where anyone who is connected can sent data to specific topics / destinations which
+then can be retrieved by other client(s) or the server.
+
 
 ### Implementation of the API for a custom editor
+Now comes the most important and interesting part of this README. We guide you to create your custom annotation editor
+implementation. We will put this into several steps that should be followed precisely. In the end, you will be able to
+open your custom editor from the annotation pages 'settings'. Thereafter, feel free to play with the endpoints which the 
+'Experience API' offers to your for your custom annotation editor.
+
+Of course, how your editor works and looks like is completly up to you!
+
+1. Create a new module that contains your editor files. For the sake of example, we'll create a word_alignment editor. Therefore,
+the name of the module will be 'inception-word-alignment-editor'.
+2. Create the following package structure as seen in the picture
+PICTURE
+HINT: Simply look into 
+    -       'inception-experimental-editor/src/main/java/.../editor'
+     for the configuration- (in '/config') and resource files (in '/resources')
+3. Create a 'spring.factories' class in the 'META-INF' folder. The file should contain the following line:
+    -       org.springframework.boot.autoconfigure.EnableAutoConfiguration=\de.tudarmstadt.ukp.inception.wordalignment.editor.config.WordAlignmentEditorAutoConfiguration
+4. Create a 'WordAlignmentEditorFactory' class in '/config' 
+5. Create the 'WordAlignmentEditorAutoConfiguration' class in '/config' and create a '@Bean' to create your
+factory. Be advised, if you add a constraint to this '@Configuration' file do not forget to activate it 
+in the 'application.yml' file in 
+    -       inception-app-webapp/src/main/resources/application.yml
+6. Create a 'WordAlignmentEditorReference' in the '/resources' folder. The referenced JavaScript file path must point
+to your JavaScript file. It is recommended to update your package structure with a '/js' package structure as shown
+in the following PICTURE 
+7. Create your 'WordAlignmentEditor' class which must extend 'AnnotationEditorBase'
+8. Add to the 'renderHead()' method in your 'WordAlignmentEditor' the following lines
+    -      aResponse.render(forReference(WordAlignmentEditorReference.get()));
+    -      aResponse.render(OnDomReadyHeaderItem.forScript(setupExperienceAPI()));
+    The setupExperienceAPI() call can be copied from
+    -      inception-experimental-editor/src/main/java/../../editor/advanced/ExperimentalAdvancedEditor
+9. Create a 'WordAlignmentEditor.html' containing at least the following code
+    -       <html xmlns="http://www.w3.org/1999/xhtml"
+             xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+            <body>
+                <wicket:panel>
+                    <div class="scrolling flex-content fit-child-loose text-center" style="min-height: unset;">
+                        <form class="editor">
+                    </div>
+                </wicket:panel>
+            </body>    
+10. Congratulation you have just created your own editor!
+When you now navigate to the annotation page of INCEpTION, simply open the 'settings' by clicking on the cogwheel and
+enable your custom editor!
+
+From now on, you can add everything you need in the JavaScript- and the HTML file whatever you want and need. HINT: You can 
+add multiple resource references and therewith use multiple JavaScript files if you like.     
+
 
 ### Extension of the API
+If there shall really be the point where the API has be extended, it is highly recommended to ask
+the INCEpTION team for support in advance. Furthermore, we really want to encourage, that 
+extending the API shall be done following the Streamlined-process in the next section.
+####Streamlined-process
+The streamlined-process consists of nine simple steps and should be followed precisely in order to ensure
+proper working of the new functionality.
+1. Add the new required topic / channel to the 'Experience-APIs' 'onConnect()' methods in the same
+way, the other channels are subscribed to.
+2. Create a new 'on()' methods within the 'Experience-API' that is used for the callback. You can later 
+add its functionality, but it is recommended to initially only add a 'console.log("Message Retrieved")'.
+3. Create TWO new classes that reflect the payload of your new request. The request must end with 
+'..Request.ts', the response must end with ’..Message.ts' respectively.
+4. Create now the 'request' method in the 'Experience API' and stick to the implementation detail of the
+others. The topic, to which the data is published must be the same as defined in the 'Process API'
+later on.
+REMARK: Whenever the CAS needs to be retrieved in the backend, always add the
+'annotatorName', 'projectId' and the 'documentId' in the request. Otherwise, the back-end cannot 
+retrieve the correct CAS. 
+5. Add the new topics to the 'Process API' in the 'final static string' section in the very top. 
+It is highly advised to stick to the naming strategy.
+6. Add a 'receive...Request()' and 'send...Response()' method. Their implementation detail
+should again be the same as for all the others. Do NOT forget the '@MessageMapping()' above the
+methods header. Otherwise, the data won't be received by the 'Process API'.
+7. Add TWO new classes that reflect the payload of the new request with the same names as it was done 
+for the 'Experience API' in the '/request' and '/response' folders respectively.
+8. Add the coressponding handle..() method in the 'Process API'. This method handles everything 
+that should be done in INCEpTIONs backend. REMARK: When the new operation type does NOT exist
+in INCEpTION yet, there will not be created an event on the server side that can be listened to. 
+Step (9) can be omitted. Still, in order to send data back, add the implementation detail 
+for any of the on..EventHandler() methods at the end of your new handle..() method.
+9. Add an on..EventHandler() method to the 'System API'. Stick to their overall implementation detail.
+Do NOT forget to add the @EventListener() notation above the method.
 
+NOTE: All APIs are implementations of their respective interfaces. Therefore, please extend the interfaces.
 
+Overall, this streamlined process can also be seen in the following figure.
+If you encounter any issues, please contact the INCEpTION team.
 
-
-### Additional information
-When the API is invoked, a websocket connection between the client (browser) and server will
-also be created automatically. You can configure the URL that is used
-in the "config.json" file. 
-    
 ## License
  Licensed to the Technische Universität Darmstadt under one
  or more contributor license agreements.  See the NOTICE file
