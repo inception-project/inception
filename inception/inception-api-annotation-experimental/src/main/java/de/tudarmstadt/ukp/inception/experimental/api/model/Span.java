@@ -26,12 +26,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  * Support Class representing an Span annotation
  *
  * Attributes:
- * @id: The ID of the span
- * @begin: The character offset begin of the Span
- * @end: The character offset end of the Span
- * @layerId: The ID of the layer the Span belongs to
- * @features: List of annotation features of the Span
- * @color: Color of the Span
+ * id: The ID of the span
+ * begin: The character offset begin of the Span
+ * end: The character offset end of the Span
+ * layerId: The ID of the layer the Span belongs to
+ * features: List of annotation features of the Span
+ * color: Color of the Span
  **/
 public class Span
 {

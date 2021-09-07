@@ -86,7 +86,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcess
  *
  * For further details @see interface class (AnnotationSystemAPI.class).
  *
- * @NOTE: This class also contains private support methods that are NOT contained in
+ * NOTE: This class also contains private support methods that are NOT contained in
  * the Interface
  * @see AnnotationSystemAPI
  * These can be found on the bottom end of this class.
@@ -122,12 +122,12 @@ public class AnnotationSystemAPIImpl
     /**
      *  --------------------------------- handle() methods ------------------------------
      *
-     * @params aRequest: handle() methods always get a class representation containing
+     * Parameter - aRequest: handle() methods always get a class representation containing
      *                all the data required to perform their specific task. The classes
      *                have been generated from the JSON string within a clients message
      *                payload.
      *
-     * @NOTE: All handle() methods have a try-catch-block. Each catch-block logs
+     * NOTE: All handle() methods have a try-catch-block. Each catch-block logs
      * the error and sends a detailed message back to the client via createAdviceMessage()
      *
      * For further details see Interface class
@@ -416,7 +416,7 @@ public class AnnotationSystemAPIImpl
      * The following methods are private support methods and NOT contained in the Interface
      * @see AnnotationSystemAPI
      *
-     * @NOTE: All support methods should have a try-catch block surrounding them.
+     * NOTE: All support methods should have a try-catch block surrounding them.
      * The catch block shall always log the exception for error-analysis and debugging
      * purposes.
      *

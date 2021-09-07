@@ -27,9 +27,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  * a specific annotation
  *
  * Attributes:
- * @annotationId: The ID of the annotation for which a feature value has been changed
- * @feature: The feature which has an updated @value
- * @value: The new value for a @feature
+ * annotationId: The ID of the annotation for which a feature value has been changed
+ * feature: The feature which has an updated @value
+ * value: The new value for a @feature
  **/
 public class UpdateFeatureMessage
 {

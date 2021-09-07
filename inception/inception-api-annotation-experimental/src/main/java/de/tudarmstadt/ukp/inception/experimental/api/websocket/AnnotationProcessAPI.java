@@ -47,12 +47,12 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.Sp
  * LOG.debug() has been added for all of the methods in order to better track incoming
  * and outgoing data.
  *
- * @NOTE: Not every sending of a message must precede an incoming message. The server can
+ * NOTE: Not every sending of a message must precede an incoming message. The server can
  * send a message to ANY client without the client requesting something.
  * Event Types created on the server-side in
  * @see inception-api-annotation/src/main/java/../../event/*
  *
- * @NOTE: For further information please look into the README file
+ * NOTE: For further information please look into the README file
  **/
 public interface AnnotationProcessAPI
 {

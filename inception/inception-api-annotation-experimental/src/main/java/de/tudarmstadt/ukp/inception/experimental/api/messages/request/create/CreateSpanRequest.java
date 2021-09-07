@@ -24,12 +24,12 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.request.create;
  * Following parameters are required for retrieving the CAS: @annotatorName, @projectId, @sourceDocumentId
  *
  * Attributes:
- * @annotatorName: String representation of the name of the annotator the annotation will belong to
- * @projectId: The ID of the project the annotation will belong to
- * @sourceDocumentId: The ID of the sourcedocument the annotation will belong to
- * @begin: The character offset begin of the Span
- * @end: The character offset end of the Span
- * @layerId: The ID of the layer the annotation shall belong to
+ * annotatorName: String representation of the name of the annotator the annotation will belong to
+ * projectId: The ID of the project the annotation will belong to
+ * sourceDocumentId: The ID of the sourcedocument the annotation will belong to
+ * begin: The character offset begin of the Span
+ * end: The character offset end of the Span
+ * layerId: The ID of the layer the annotation shall belong to
  **/
 public class CreateSpanRequest
 {

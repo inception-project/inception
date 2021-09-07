@@ -29,10 +29,10 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
  * DocumentMessage: Message published to a specific client containing the data for the requested document
  *
  * Attributes:
- * @viewport: List of Viewports and their contents requested by the client
- * @sourceDocumentId: The ID of the requested sourcedocument
- * @spans: List of Spans contained in the requested viewport for a certain document
- * @arcs: List of Arcs contained in the requested viewport for a certain document
+ * viewport: List of Viewports and their contents requested by the client
+ * sourceDocumentId: The ID of the requested sourcedocument
+ * spans: List of Spans contained in the requested viewport for a certain document
+ * arcs: List of Arcs contained in the requested viewport for a certain document
  **/
 public class DocumentMessage
 {

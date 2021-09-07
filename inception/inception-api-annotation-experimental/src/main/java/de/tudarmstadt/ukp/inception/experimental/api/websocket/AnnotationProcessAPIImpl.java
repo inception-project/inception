@@ -54,7 +54,8 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.Sp
  * In order to activate this class, add 'websocket.enabled = true' in the
  * application.yml file, @see 'inception-app-webapp/src/main/resources/application.yml'.
  *
- * For further details @see interface class (AnnotationProcessAPI.class).
+ * For further details
+ * @see AnnotationProcessAPI interface class .
  *
  **/
 @Controller
@@ -74,7 +75,9 @@ public class AnnotationProcessAPIImpl
      * Easy Extensible: Simply follow the currently used approach to add a new
      * send / receive topic.
      *
-     * For further details @see README file to see the streamlined process for extensions.
+     * For further details
+     * @see src/main/ts/main/README.md
+     * README file to see the streamlined process for extensions.
      *
      **/
     // NEXT DOCUMENT

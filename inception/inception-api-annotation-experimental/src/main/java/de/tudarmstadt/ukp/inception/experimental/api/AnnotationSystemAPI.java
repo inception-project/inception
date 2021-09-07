@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcess
  *          clients message JSON string payload in the ProcessAPI. All handle() methods simply
  *          use the retrieved data to perform the requested operation, like deleting a span-annotation
  *          or updating a feature value of an annotation.
- *          @NOTE: All handle() methods contain a try-catch block to handle errors. Whenever an error
+ *          NOTE: All handle() methods contain a try-catch block to handle errors. Whenever an error
  *          occurs, informative data is send back to the client that has sent the request. This is done in
  *          the catch-block via 'createAdviceMessage()'.
  *      onEventHandler() methods:
@@ -55,20 +55,20 @@ import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcess
  *          retrieve the data from the Event and create a suitable class-object as response.
  *          Finally, they always invoke the suitable method in the
  *          @see AnnotationProcessAPI to forward the data from the event to the clients.
- *          @NOTE: Events can be triggered in the back-end at any time.
+ *          NOTE: Events can be triggered in the back-end at any time.
  *
- * @NOTE: The System API also contains many private support methods. These can only be
+ * NOTE: The System API also contains many private support methods. These can only be
  * found in the
  * @see AnnotationSystemAPI implementation. All support methods are commented in detail.
  *
- * @NOTE: For further information please look into the README file
+ * NOTE: For further information please look into the README file
  *
  **/
 public interface AnnotationSystemAPI
 {
     /**
      * handle() methods as explained in Interface-definition.
-     * @param: Classes parsed from the messages JSON string payload.
+     * param: Classes parsed from the messages JSON string payload.
      * Their implementation details vary a lot, however their purpose is
      * always the same:
      *      1. Retrieve the CAS for a given sourcedocument
@@ -91,7 +91,7 @@ public interface AnnotationSystemAPI
 
     /**
      * onEventHandler() classes as explained in Interface-definition.
-     * @param: The event through which they got triggered. They always
+     * param: The event through which they got triggered. They always
      * create a suitable class from the event and forwards the data to the
      * Process API where the data is forwarded to the clients.
      */
