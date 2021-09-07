@@ -540,7 +540,6 @@ public class SearchServiceImpl
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
             Index index = pooledIndex.get();
-
             ensureIndexIsCreatedAndValid(aProject, index);
 
             return index.getPhysicalIndex().getAnnotationStatistics(new StatisticRequest(aProject,
@@ -556,21 +555,18 @@ public class SearchServiceImpl
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
             Index index = pooledIndex.get();
-
             ensureIndexIsCreatedAndValid(aProject, index);
-
             PhysicalIndex physicalIndex = index.getPhysicalIndex();
 
             StatisticRequest statRequest = new StatisticRequest(aProject, aUser, aStatistic,
                     aLowerDocSize, aUpperDocSize);
-
             Map<String, Double> statistics = physicalIndex.getLayerStatistics(statRequest, aQuery,
-                    physicalIndex.getUniqueDocuments(statRequest));
-
+                    physicalIndex.getUniqueDocuments(statRequest), false);
             Map<String, Map<String, Double>> statisticsMap = new HashMap<String, Map<String, Double>>();
-
             statisticsMap.put(aQuery, statistics);
-
+            statistics = physicalIndex.getLayerStatistics(statRequest, aQuery,
+                    physicalIndex.getUniqueDocuments(statRequest), true);
+            statisticsMap.put("per Sentence: " + aQuery, statistics);
             StatisticsResult results = new StatisticsResult(statRequest, statisticsMap,
                     statisticsMap);
 

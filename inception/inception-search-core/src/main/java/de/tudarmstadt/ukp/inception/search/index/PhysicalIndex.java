@@ -57,7 +57,7 @@ public interface PhysicalIndex
         throws IOException, ExecutionException;
 
     public Map<String, Double> getLayerStatistics(StatisticRequest aStatisticRequest,
-            String aFeatureQuery, ArrayList<Integer> fullDocSet)
+            String aFeatureQuery, ArrayList<Integer> fullDocSet, boolean perSentence)
         throws IOException, ExecutionException;
 
     public ArrayList<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest)

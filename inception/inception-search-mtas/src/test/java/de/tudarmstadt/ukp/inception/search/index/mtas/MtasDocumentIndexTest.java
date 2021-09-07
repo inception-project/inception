@@ -545,7 +545,7 @@ public class MtasDocumentIndexTest
         String sourceContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(sourceDocument, sourceContent));
-        //annotateDocumentAdvanced(project, user, sourceDocument);
+        annotateDocumentAdvanced(project, user, sourceDocument);
 
         SourceDocument otherDocument = new SourceDocument();
         otherDocument.setName("Other document");
@@ -553,22 +553,20 @@ public class MtasDocumentIndexTest
         otherDocument.setFormat("text");
 
         String otherContent = "Goodbye moon. Hello World.";
-        // otherContent = "The capital of Galicia is Santiago de Compostela.";
 
         uploadDocument(Pair.of(otherDocument, otherContent));
-        //annotateDocument(project, user, otherDocument);
 
         String statistic = "n,min,max,mean,median,standarddeviation";
         Double lowerDocSize = null;
         Double upperDocSize = null;
-        String searchString = "<Named_entity.value=\"LOC\"/>";
-        searchString = "moon";
+
+        String query = "moon";
 
         StatisticsResult statsResults = searchService.getProjectStatistics(user, project, statistic,
                 lowerDocSize, upperDocSize);
 
-        //StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project,
-        //        statistic, searchString, lowerDocSize, upperDocSize);
+        StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project,
+                statistic, query, lowerDocSize, upperDocSize);
 
         assertThat(0).isEqualTo(0);
     }

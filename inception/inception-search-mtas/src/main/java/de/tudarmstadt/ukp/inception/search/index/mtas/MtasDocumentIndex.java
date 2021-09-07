@@ -48,7 +48,6 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.SortedMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -418,8 +417,9 @@ public class MtasDocumentIndex
             for (AnnotationFeature feature : features) {
                 String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
                         + feature.getUiName().replace(' ', '_') + "=\"\"/>";
+
                 Map<String, Double> results = getLayerStatistics(aStatisticRequest, searchString,
-                        fullDocSet);
+                        fullDocSet, false);
                 results.remove("stats");
                 results.remove("sourceNumber");
                 results.put("Number of Documents", results.get("n"));
@@ -428,10 +428,23 @@ public class MtasDocumentIndex
                 if (results.get("max") > 0.0) {
                     nonNullStats.put(layer.getUiName() + "." + feature.getUiName(), results);
                 }
+
+                results = getLayerStatistics(aStatisticRequest, searchString, fullDocSet, true);
+                results.remove("stats");
+                results.remove("sourceNumber");
+                results.put("Number of Documents", results.get("n"));
+                results.remove("n");
+                allStats.put("per Sentence: " + layer.getUiName() + "." + feature.getUiName(),
+                        results);
+                if (results.get("max") > 0.0) {
+                    nonNullStats.put(
+                            "per Sentence: " + layer.getUiName() + "." + feature.getUiName(),
+                            results);
+                }
             }
         }
         Map<String, Double> results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>",
-                fullDocSet);
+                fullDocSet, false);
         results.remove("stats");
         results.remove("sourceNumber");
         results.put("Number of Documents", results.get("n"));
@@ -439,7 +452,15 @@ public class MtasDocumentIndex
         allStats.put("Token Count", results);
         nonNullStats.put("Token Count", results);
 
-        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
+        results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>", fullDocSet, true);
+        results.remove("stats");
+        results.remove("sourceNumber");
+        results.put("Number of Documents", results.get("n"));
+        results.remove("n");
+        allStats.put("per Sentence: Token Count", results);
+        nonNullStats.put("per Sentence: Token Count", results);
+
+        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet, false);
         results.remove("stats");
         results.remove("sourceNumber");
         results.put("Number of Documents", results.get("n"));
@@ -467,9 +488,7 @@ public class MtasDocumentIndex
             for (int i = 0; i < reader.maxDoc(); i++) {
                 String sourceID = reader.document(i).get(FIELD_SOURCE_DOCUMENT_ID);
                 String annotationID = reader.document(i).get(FIELD_ANNOTATION_DOCUMENT_ID);
-                // no annotation document?
                 if (Long.valueOf(annotationID) != -1L) {
-                    // check for correct user
                     if (reader.document(i).get(FIELD_USER)
                             .equals(aStatisticRequest.getUser().getUsername())) {
                         fullDocSet.add(i);
@@ -506,84 +525,63 @@ public class MtasDocumentIndex
             try (Reader queryReader = new StringReader(modifiedQuery)) {
                 MtasCQLParser parser = new MtasCQLParser(queryReader);
                 mtasSpanQuery1 = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
-
             }
             mtasSpanQuery = mtasSpanQuery1;
-
         }
         catch (ParseException | Error e) {
             // The exceptions thrown by the MTAS CQL Parser are inheriting from
             // java.lang.Error...
             throw new ExecutionException("Unable to parse query [" + query + "]", e);
         }
-        catch (Exception e) {
-            throw e;
-        }
         return mtasSpanQuery;
     }
 
     @Override
     public Map<String, Double> getLayerStatistics(StatisticRequest aStatisticRequest,
-            String aFeatureQuery, ArrayList<Integer> fullDocSet)
+            String aFeatureQuery, ArrayList<Integer> fullDocSet, boolean perSentence)
         throws IOException, ExecutionException
     {
         IndexSearcher searcher = null;
         Map<String, Object> resultsMap = null;
         Map<String, Double> resultsMapDouble = new HashMap<String, Double>();
-
         Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
                 aStatisticRequest.getProject(), aStatisticRequest.getUser());
-
         try {
-
             searcher = getSearcherManager().acquire();
             IndexReader reader = searcher.getIndexReader();
 
-            CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
-                    FIELD_CONTENT);
-
-            /*
-             * final MtasSpanQuery mtasSpanQuery; try { String modifiedQuery =
-             * preprocessQuery(aFeatureQuery); MtasSpanQuery mtasSpanQuery1; try (Reader queryReader
-             * = new StringReader(modifiedQuery)) { MtasCQLParser parser = new
-             * MtasCQLParser(queryReader); mtasSpanQuery1 = parser.parse(FIELD_CONTENT,
-             * DEFAULT_PREFIX, null, null, null);
-             * 
-             * } mtasSpanQuery = mtasSpanQuery1;
-             * 
-             * } catch (ParseException | Error e) { // The exceptions thrown by the MTAS CQL Parser
-             * are inheriting from // java.lang.Error... throw new
-             * ExecutionException("Unable to parse query [" + aFeatureQuery + "]", e); } catch
-             * (Exception e) { throw e; }
-             * 
-             */
-            MtasSpanQuery[] spanQuerys = new MtasSpanQuery[2];
-
-            MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery);
-            fieldStats.spanQueryList.add(parsedQuery);
-            /*
-            if (aFeatureQuery.equals("<s=\"\"/>")) {
-                spanQuerys = new MtasSpanQuery[1];
-                spanQuerys[0] = parsedQuery;
-            }
-
-             */
-            //else {
-                //spanQuerys = new MtasSpanQuery[2];
-                spanQuerys[0] = parsedQuery;
-                MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>");
-                fieldStats.spanQueryList.add(parsedSentQuery);
-                spanQuerys[1] = parsedSentQuery;
-            //}
-
             // what does this parameter do?
             ArrayList<Integer> fullDocList = new ArrayList<Integer>();
+            CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
+                    FIELD_CONTENT);
+            MtasSpanQuery[] spanQuerys = new MtasSpanQuery[1];
+
             String[] functionKeys = new String[1];
             String[] functions = new String[1];
             String[] functionTypes = new String[1];
-            functionKeys[0] = "perSentence";
-            functions[0] = "$q0/$q1";
-            functionTypes[0] = "n";
+
+            MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery);
+            fieldStats.spanQueryList.add(parsedQuery);
+
+            if (perSentence == false) {
+                // maybe using a function for this simple case is too slow...
+                spanQuerys[0] = parsedQuery;
+                functionKeys[0] = "currentLayer";
+                functions[0] = "$q0";
+                functionTypes[0] = aStatisticRequest.getStatistic();
+            }
+            else {
+                spanQuerys = new MtasSpanQuery[2];
+                spanQuerys[0] = parsedQuery;
+
+                MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>");
+                fieldStats.spanQueryList.add(parsedSentQuery);
+
+                spanQuerys[1] = parsedSentQuery;
+                functionKeys[0] = "perSentence";
+                functions[0] = "$q0/$q1";
+                functionTypes[0] = aStatisticRequest.getStatistic();
+            }
 
             fieldStats.statsSpanList.add(new CodecComponent.ComponentSpan(spanQuerys, "ax2",
                     aStatisticRequest.getLowerDocumentSize(),
@@ -592,20 +590,17 @@ public class MtasDocumentIndex
 
             CodecUtil.collectField(FIELD_CONTENT, searcher, reader, fullDocList, fullDocSet,
                     fieldStats, new Status());
-            // getList();
-            MtasDataItem<?, ?> results = fieldStats.statsSpanList.get(0).dataCollector.getResult()
-                    .getData();
-            SortedMap<String, ? extends MtasDataItem<?, ?>> bubu = fieldStats.statsSpanList.get(0).dataCollector.getResult().getList();
+
+            MtasDataItem<?, ?> results = fieldStats.statsSpanList.get(0).functions
+                    .get(0).dataCollector.getResult().getData();
+
             resultsMap = results.rewrite(true);
             for (String str : resultsMap.keySet()) {
-                // System.out.print(str + ": ");
-                // System.out.println(resultsMap.get(str));
                 if ((resultsMap.get(str) instanceof Number)) {
                     resultsMapDouble.put(str, Double.valueOf(resultsMap.get(str).toString()));
                 }
             }
             return resultsMapDouble;
-
         }
         catch (Exception e) {
             e.printStackTrace();
