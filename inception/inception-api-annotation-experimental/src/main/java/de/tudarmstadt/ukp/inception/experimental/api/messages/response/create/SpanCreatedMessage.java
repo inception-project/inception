@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response.create;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 
 /**
  * Class required for Messaging between Server and Client.
@@ -42,10 +42,10 @@ public class SpanCreatedMessage
     private int end;
     private String color;
     private long layerId;
-    private List<AnnotationFeature> features;
+    private List<FeatureX> features;
 
     public SpanCreatedMessage(VID aSpanId, int aBegin, int aEnd,
-                              long aLayerId, String aColor, List<AnnotationFeature> aFeatures)
+                              long aLayerId, String aColor, List<FeatureX> aFeatures)
     {
         spanId = aSpanId;
         begin = aBegin;
@@ -105,12 +105,12 @@ public class SpanCreatedMessage
         layerId = aLayerId;
     }
 
-    public List<AnnotationFeature> getFeatures()
+    public List<FeatureX> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(List<AnnotationFeature> aFeatures)
+    public void setFeatures(List<FeatureX> aFeatures)
     {
         features = aFeatures;
     }

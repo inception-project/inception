@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response.create;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 
 /**
  * Class required for Messaging between Server and Client.
@@ -44,11 +44,11 @@ public class ArcCreatedMessage
     private VID targetId;
     private String color;
     private long layerId;
-    private List<AnnotationFeature> features;
+    private List<FeatureX> features;
 
     public ArcCreatedMessage(VID aArcId, long aProjectId, VID aSourceId, VID aTargetId, String aColor,
                              long aLayerId,
-                             List<AnnotationFeature> aFeatures)
+                             List<FeatureX> aFeatures)
     {
         arcId = aArcId;
         projectId = aProjectId;
@@ -119,12 +119,12 @@ public class ArcCreatedMessage
         layerId = aLayerId;
     }
 
-    public List<AnnotationFeature> getFeatures()
+    public List<FeatureX> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(List<AnnotationFeature> aFeatures)
+    public void setFeatures(List<FeatureX> aFeatures)
     {
         features = aFeatures;
     }

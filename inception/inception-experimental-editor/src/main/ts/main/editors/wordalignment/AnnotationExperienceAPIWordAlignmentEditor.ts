@@ -43,22 +43,19 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
     evenSentenceOffset: number = 1;
     spanType : string;
 
-    constructor(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string)
+    constructor(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string, aLayers: [number,string][])
     {
         this.projectId = aProjectId;
         this.annotatorName = aAnnotatorName;
+        this.layers = aLayers;
 
-        let allLayers = [246, 242, 251, 241, 247,
-            250,
-            249,
-            245,
-            243,
-            244,
-            248,
-            279,
-            278]
+        let layersToAdd : number[] = [];
 
-        this.viewport.push(new Viewport(aDocumentId,"",0, 75, allLayers, null, null));
+        for(let i = 0; i < aLayers.length; i++) {
+            layersToAdd.push(aLayers[i][0]);
+        }
+
+        this.viewport.push(new Viewport(aDocumentId,"",0, 75, layersToAdd, null, null));
 
         this.annotationExperienceAPI = new AnnotationExperienceAPIImpl(aProjectId, this.viewport[0].sourceDocumentId, aAnnotatorName, aUrl, this);
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIWordAlignmentEditorVisualization(this);

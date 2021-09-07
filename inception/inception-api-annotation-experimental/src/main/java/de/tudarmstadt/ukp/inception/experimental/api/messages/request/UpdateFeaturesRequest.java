@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.experimental.api.messages.request;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
  * Class required for Messaging between Server and Client.
@@ -42,7 +41,7 @@ public class UpdateFeaturesRequest
     private long sourceDocumentId;
     private VID annotationId;
     private long layerId;
-    private AnnotationFeature feature;
+    private String feature;
     private Object value;
 
     public String getAnnotatorName()
@@ -95,12 +94,12 @@ public class UpdateFeaturesRequest
         layerId = aLayerId;
     }
 
-    public AnnotationFeature getFeature()
+    public String getFeature()
     {
         return feature;
     }
 
-    public void setFeature(AnnotationFeature aFeature)
+    public void setFeature(String aFeature)
     {
         feature = aFeature;
     }

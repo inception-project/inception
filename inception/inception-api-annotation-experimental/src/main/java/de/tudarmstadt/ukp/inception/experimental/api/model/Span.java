@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.experimental.api.model;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
  * Support Class representing an Span annotation
@@ -39,7 +38,7 @@ public class Span
     private int begin;
     private int end;
     private long layerId;
-    private List<AnnotationFeature> features;
+    private List<FeatureX> features;
     private String color;
 
     public Span()
@@ -48,7 +47,7 @@ public class Span
     }
 
     public Span(VID aId, int aBegin, int aEnd, long aLayerId, String aColor,
-            List<AnnotationFeature> aFeatures)
+            List<FeatureX> aFeatures)
     {
         id = aId;
         begin = aBegin;
@@ -108,12 +107,12 @@ public class Span
         color = aColor;
     }
 
-    public List<AnnotationFeature> getFeatures()
+    public List<FeatureX> getFeatures()
     {
         return features;
     }
 
-    public void setFeature(List<AnnotationFeature> aFeatures)
+    public void setFeature(List<FeatureX> aFeatures)
     {
         features = aFeatures;
     }

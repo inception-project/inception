@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 
 /**
  * Class required for Messaging between Server and Client.
@@ -34,10 +34,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 public class UpdateFeatureMessage
 {
     private VID annotationId;
-    private AnnotationFeature feature;
+    private FeatureX feature;
     private Object value;
 
-    public UpdateFeatureMessage(VID aAnnotationId, AnnotationFeature aFeature, Object aValue)
+    public UpdateFeatureMessage(VID aAnnotationId, FeatureX aFeature, Object aValue)
     {
         annotationId = aAnnotationId;
         feature = aFeature;
@@ -54,12 +54,12 @@ public class UpdateFeatureMessage
         annotationId = aAnnotationId;
     }
 
-    public AnnotationFeature getFeature()
+    public FeatureX getFeature()
     {
         return feature;
     }
 
-    public void setFeature(AnnotationFeature aFeature)
+    public void setFeature(FeatureX aFeature)
     {
         feature = aFeature;
     }

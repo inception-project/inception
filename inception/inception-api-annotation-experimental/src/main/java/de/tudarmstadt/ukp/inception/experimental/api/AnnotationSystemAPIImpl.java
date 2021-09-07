@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.experimental.api;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL_FILTERED;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -33,6 +34,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationPredicates;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -73,6 +75,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.response.UpdateFea
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.ArcCreatedMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.SpanCreatedMessage;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Arc;
+import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Span;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcessAPI;
@@ -97,6 +100,8 @@ public class AnnotationSystemAPIImpl
     implements AnnotationSystemAPI
 {
     private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
+
+    private @SpringBean AnnotationFeature annotationFeature;
 
     private final AnnotationSchemaService annotationService;
     private final ProjectService projectService;
@@ -157,7 +162,7 @@ public class AnnotationSystemAPIImpl
 
                 // Retrieve the CAS
                 CAS cas = getCasForDocument(aDocumentRequest.getAnnotatorName(),
-                    aDocumentRequest.getProjectId(), viewport.getSourceDocumentId());
+                        aDocumentRequest.getProjectId(), viewport.getSourceDocumentId());
 
                 // getAnnotations retrieve a two lists, one with Spans and the other with Arcs
                 // Therefore, a Pair element has been chosen
@@ -171,7 +176,8 @@ public class AnnotationSystemAPIImpl
                     viewport.setArcs(retrievedAnnotations.getRight());
                 }
 
-                viewport.setDocumentText(cas.getDocumentText().substring(viewport.getBegin(), viewport.getEnd()));
+                viewport.setDocumentText(
+                        cas.getDocumentText().substring(viewport.getBegin(), viewport.getEnd()));
             }
 
             // Create the corresponding class and forward the data to the AnnotationProcessAPI
@@ -311,10 +317,16 @@ public class AnnotationSystemAPIImpl
             TypeAdapter adapter = annotationService
                     .getAdapter(annotationService.getLayer(aUpdateFeaturesRequest.getLayerId()));
 
+            AnnotationFeature annotationFeature = annotationService.getFeature(
+                    aUpdateFeaturesRequest.getFeature(),
+                    annotationService.getLayer(aUpdateFeaturesRequest.getLayerId()));
+            AnnotationFS annotation = WebAnnoCasUtil.selectAnnotationByAddr(cas,
+                    aUpdateFeaturesRequest.getAnnotationId().getId());
+
             // Set the new feature value
             adapter.setFeatureValue(sourceDocument, aUpdateFeaturesRequest.getAnnotatorName(), cas,
-                    aUpdateFeaturesRequest.getAnnotationId().getId(),
-                    aUpdateFeaturesRequest.getFeature(), aUpdateFeaturesRequest.getValue());
+                    aUpdateFeaturesRequest.getAnnotationId().getId(), annotationFeature,
+                    aUpdateFeaturesRequest.getValue());
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during handleUpdateSpan()", e);
@@ -337,20 +349,12 @@ public class AnnotationSystemAPIImpl
     @EventListener
     public void onSpanCreatedEventHandler(SpanCreatedEvent aEvent) throws IOException
     {
-        List<AnnotationFeature> features = new ArrayList<>();
-        AnnotationFS annotation = aEvent.getAnnotation();
-
-        // Fetches all features of the span
-        for (Feature f : annotation.getType().getFeatures()) {
-            features.add(annotationService.getAdapter(aEvent.getLayer()).getFeatureValue(
-                    (AnnotationFeature) annotation, annotation.getFeatureValue(f)));
-        }
-
         // Create response from event
         SpanCreatedMessage response = new SpanCreatedMessage(
                 new VID(aEvent.getAnnotation().getAddress()), aEvent.getAnnotation().getBegin(),
                 aEvent.getAnnotation().getEnd(), aEvent.getLayer().getId(),
-                getColorForAnnotation(aEvent.getAnnotation(), aEvent.getProject()), features);
+                getColorForAnnotation(aEvent.getAnnotation(), aEvent.getProject()), getFeatures(
+                        aEvent.getAnnotation().getType().getFeatures(), aEvent.getAnnotation()));
 
         // Forward data to the Process API
         annotationProcessAPI.sendCreateSpan(response, String.valueOf(aEvent.getProject().getId()),
@@ -375,19 +379,13 @@ public class AnnotationSystemAPIImpl
     @EventListener
     public void onArcCreatedEventHandler(RelationCreatedEvent aEvent) throws IOException
     {
-        List<AnnotationFeature> features = new ArrayList<>();
-
-        // Fetch all features of the Relation
-        for (Feature f : aEvent.getAnnotation().getType().getFeatures()) {
-            System.out.println(aEvent.getAnnotation().getFeatureValue(f));
-        }
-
         // Create response from event
         ArcCreatedMessage response = new ArcCreatedMessage(new VID(aEvent.getAnnotation()._id()),
                 aEvent.getProject().getId(), new VID(aEvent.getSourceAnnotation()._id()),
                 new VID(aEvent.getTargetAnnotation()._id()),
                 getColorForAnnotation(aEvent.getAnnotation(), aEvent.getProject()),
-                aEvent.getLayer().getId(), features);
+                aEvent.getLayer().getId(), getFeatures(
+                        aEvent.getAnnotation().getType().getFeatures(), aEvent.getAnnotation()));
 
         // Forward data to the Process API
         annotationProcessAPI.sendCreateArc(response, String.valueOf(aEvent.getProject().getId()),
@@ -413,8 +411,13 @@ public class AnnotationSystemAPIImpl
     public void onFeatureUpdatedEventHandler(FeatureValueUpdatedEvent aEvent) throws IOException
     {
         // Create response from event
+        String oldValue = null;
+        if (aEvent.getOldValue() != null) {
+            oldValue = aEvent.getOldValue().toString();
+        }
         UpdateFeatureMessage response = new UpdateFeatureMessage(
-                new VID(((AnnotationFS) aEvent.getSource())._id()), aEvent.getFeature(),
+                new VID(getAddr(aEvent.getFS())),
+                new FeatureX(aEvent.getFeature().getName(), oldValue),
                 aEvent.getNewValue());
 
         // Forward data to the Process API
@@ -528,26 +531,18 @@ public class AnnotationSystemAPIImpl
 
                 // Check the type of the TypeAdapter (either SpanAdapter or RelationAdapter)
                 if (adapter instanceof SpanAdapter) {
-
-                    // Get features for the span
-                    List<AnnotationFeature> features = new ArrayList<>();
-                    for (Feature f : annotation.getType().getFeatures()) {
-                        features.add(adapter.getFeatureValue((AnnotationFeature) annotation,
-                                annotation.getFeatureValue(f)));
-                    }
                     // Add the span to the list
                     spans.add(new Span(new VID(annotation._id()), annotation.getBegin(),
-                            annotation.getEnd(), adapter.getTypeId(), getColorForAnnotation(
-                                    annotation, projectService.getProject(aProjectId)),
-                            features));
+                            annotation.getEnd(), adapter.getTypeId(),
+                            getColorForAnnotation(annotation,
+                                    projectService.getProject(aProjectId)),
+                            getFeatures(annotation.getType().getFeatures(), annotation)));
                 }
 
                 if (adapter instanceof RelationAdapter) {
-
                     // Both the source and target annotation of the Relation are required
                     AnnotationFS source = null;
                     AnnotationFS target = null;
-                    List<AnnotationFeature> features = new ArrayList<>();
 
                     // Iterate through the annotations features to retrieve the addresses
                     // of the source and target annotations
@@ -560,8 +555,6 @@ public class AnnotationSystemAPIImpl
                             target = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
                                     annotation.getAddress());
                         }
-                        features.add(adapter.getFeatureValue((AnnotationFeature) annotation,
-                                annotation.getFeatureValue(f)));
                     }
 
                     // Add the relation
@@ -569,13 +562,50 @@ public class AnnotationSystemAPIImpl
                             new VID(target._id()),
                             getColorForAnnotation(annotation,
                                     projectService.getProject(aProjectId)),
-                            adapter.getLayer().getId(), features));
+                            adapter.getLayer().getId(),
+                            getFeatures(annotation.getType().getFeatures(), annotation)));
                 }
             }
         }
 
         // Return the Pair of lists
         return new ImmutablePair<>(spans, arcs);
+    }
+
+    /**
+     * Retrieve all feature values of an annotation
+     * 
+     * @param aFeatures
+     *            List of features through which will be iterated
+     * @param aAnnotation
+     *            Annotation to which the Features belong
+     * @return List of Features as FeatureX values which can be handled by the front-end
+     */
+    private List<FeatureX> getFeatures(List<Feature> aFeatures, AnnotationFS aAnnotation)
+    {
+        List<FeatureX> features = new ArrayList<>();
+
+        List<Feature> allFeatures = aAnnotation.getType().getFeatures();
+        for (int i = 3; i < allFeatures.size(); i++) {
+            switch (allFeatures.get(i).getRange().getName()) {
+            case "uima.cas.Integer":
+                features.add(new FeatureX(allFeatures.get(i).getShortName(),
+                        String.valueOf(aAnnotation.getIntValue(allFeatures.get(i)))));
+                break;
+            case "uima.cas.String":
+                features.add(new FeatureX(allFeatures.get(i).getShortName(),
+                        aAnnotation.getStringValue(allFeatures.get(i))));
+                break;
+            case "uima.cas.Boolean":
+                features.add(new FeatureX(allFeatures.get(i).getShortName(),
+                        String.valueOf(aAnnotation.getBooleanValue(allFeatures.get(i)))));
+                break;
+            default:
+                features.add(new FeatureX(allFeatures.get(i).getShortName(),
+                        String.valueOf(aAnnotation.getFeatureValue(allFeatures.get(i)))));
+            }
+        }
+        return features;
     }
 
     /**

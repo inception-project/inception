@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.experimental.api.model;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 /**
  * Support Class representing an Arc annotation
@@ -39,7 +38,7 @@ public class Arc
     private VID sourceId;
     private VID targetId;
     private long layerId;
-    private List<AnnotationFeature> features;
+    private List<FeatureX> features;
     private String color;
 
     public Arc()
@@ -47,7 +46,7 @@ public class Arc
         //Default required
     }
 
-    public Arc(VID aId, VID aSourceId, VID aTargetId, String aColor, long aLayerId, List<AnnotationFeature> aFeatures)
+    public Arc(VID aId, VID aSourceId, VID aTargetId, String aColor, long aLayerId, List<FeatureX> aFeatures)
     {
         id = aId;
         sourceId = aSourceId;
@@ -106,12 +105,12 @@ public class Arc
         layerId = aLayerId;
     }
 
-    public List<AnnotationFeature> getFeatures()
+    public List<FeatureX> getFeatures()
     {
         return features;
     }
 
-    public void setFeatures(List<AnnotationFeature> aFeatures)
+    public void setFeatures(List<FeatureX> aFeatures)
     {
         features = aFeatures;
     }

@@ -64,20 +64,16 @@ public class ExperimentalWordAlignmentEditor
                 WebsocketConfig.WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
 
-
         StringBuilder sb = new StringBuilder();
+        sb.append("(function() { let layers = [];");
+        for (AnnotationLayer layer : getModelObject().getAnnotationLayers()) {
+            sb.append("layers.push([" + layer.getId() + ",'" + layer.getUiName() + "']);");
+        }
         sb.append("const editor = new AnnotationExperienceAPIWordAlignmentEditor("
-                + state.getProject().getId() + "," + state.getDocument().getId() + ",\""
-                + state.getUser().getUsername() + "\",\""
-                + RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl) + "\");");
-
-         for (AnnotationLayer layer : state.getAnnotationLayers()) {
-             System.out.println(layer.getId());
-            //sb.append("editor.layers.push([" + layer.getId() + "," + layer.getUiName() + "]);");
-         }
-
-         System.out.println(sb.toString());
-
+        + state.getProject().getId() + "," + state.getDocument().getId() + ",\""
+        + state.getUser().getUsername() + "\",\""
+        + RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl) + "\", layers);");
+        sb.append("}())");
         return sb.toString();
     }
 
