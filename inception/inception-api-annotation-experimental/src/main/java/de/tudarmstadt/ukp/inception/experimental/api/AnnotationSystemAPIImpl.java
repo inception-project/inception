@@ -79,16 +79,17 @@ import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcess
 
 /**
  * Implementation of the Interface AnnotationSystemAPI within that package.
+ * <p>
+ * In order to activate this class, add 'websocket.enabled = true' in the application.yml file in
+ * 'inception-app-webapp/src/main/resources/application.yml'
+ * <p>
+ * For further details @see interface class (AnnotationSystemAPI.class).
+ * <p>
+ * NOTE: This class also contains private support methods that are NOT contained in the Interface
  *
- * In order to activate this class, add 'websocket.enabled = true' in the application.yml file
- * 
- * @see inception-app-webapp/src/main/resources/application.yml
- *
- *      For further details @see interface class (AnnotationSystemAPI.class).
- *
- * @NOTE: This class also contains private support methods that are NOT contained in the Interface
- * @see AnnotationSystemAPI These can be found on the bottom end of this class.
- *
+ * @see AnnotationSystemAPI
+ *      <p>
+ *      The private support methods can be found on the bottom end of this class.
  **/
 @Component
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
@@ -104,6 +105,21 @@ public class AnnotationSystemAPIImpl
     private final AnnotationProcessAPI annotationProcessAPI;
     private final ColoringService coloringService;
 
+    /**
+     * Default Constructor
+     *
+     * @param aProjectService
+     *            The Projectservice obtains projects
+     * @param aDocumentService
+     *            The Documentservice obtains SourceDocuments for the CAS
+     * @param aRepositoryProperties
+     *            The RepositoryPropterties are required for the CAS
+     * @param aAnnotationSchemaService
+     *            The AnnotationSchemaService contains methods which are related to TagSet, Tag and
+     *            Type for the annotation Project
+     * @param aColoringService
+     *            The Coloringservice retrieves the correct color for specific annotations
+     */
     public AnnotationSystemAPIImpl(ProjectService aProjectService, DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties, AnnotationProcessAPI aAnnotationProcessAPI,
             AnnotationSchemaService aAnnotationSchemaService, ColoringService aColoringService)
@@ -118,17 +134,17 @@ public class AnnotationSystemAPIImpl
 
     /**
      * --------------------------------- handle() methods ------------------------------
+     * <p>
+     * Parameter - aRequest: handle() methods always get a class representation containing all the
+     * data required to perform their specific task. The classes have been generated from the JSON
+     * string within a clients message payload.
+     * <p>
+     * NOTE: All handle() methods have a try-catch-block. Each catch-block logs the error and sends
+     * a detailed message back to the client via createAdviceMessage()
+     * <p>
+     * For further details see Interface class
      *
-     * @params aRequest: handle() methods always get a class representation containing all the data
-     *         required to perform their specific task. The classes have been generated from the
-     *         JSON string within a clients message payload.
-     *
-     * @NOTE: All handle() methods have a try-catch-block. Each catch-block logs the error and sends
-     *        a detailed message back to the client via createAdviceMessage()
-     *
-     *        For further details see Interface class
      * @see AnnotationSystemAPI
-     *
      **/
     @Override
     public void handleDocumentRequest(DocumentRequest aDocumentRequest) throws IOException
@@ -313,9 +329,8 @@ public class AnnotationSystemAPIImpl
      * @param aEvent:
      *            Always contains the event that has been triggered on the server. The event
      *            listening is realized via the @EventListener annotation.
-     *
+     *            <p>
      *            For further details see Interface class @see AnnotationSystemAPI.class
-     *
      **/
 
     @Override
@@ -423,8 +438,8 @@ public class AnnotationSystemAPIImpl
      * 
      * @see AnnotationSystemAPI
      *
-     * @NOTE: All support methods should have a try-catch block surrounding them. The catch block
-     *        shall always log the exception for error-analysis and debugging purposes.
+     *      NOTE: All support methods should have a try-catch block surrounding them. The catch
+     *      block shall always log the exception for error-analysis and debugging purposes.
      *
      **/
 

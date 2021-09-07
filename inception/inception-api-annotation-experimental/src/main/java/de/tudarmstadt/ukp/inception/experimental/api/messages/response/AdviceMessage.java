@@ -28,8 +28,8 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
  *  * INFO: Info message, e.g. for performing something successfully
  *
  * Attributes:
- * @adviceMessage: String representation of the content that shall be displayed at the client-side
- * @adviceMessageType: @TYPE for the message.
+ * adviceMessage: String representation of the content that shall be displayed at the client-side
+ * adviceMessageType: @TYPE for the message.
  **/
 public class AdviceMessage
 {

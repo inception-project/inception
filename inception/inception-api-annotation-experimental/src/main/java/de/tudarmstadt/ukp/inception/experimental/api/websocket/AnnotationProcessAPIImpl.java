@@ -50,12 +50,13 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.Sp
 
 /**
  * Implementation of the Interface AnnotationProcessAPI within that package.
+ * <p>
+ * In order to activate this class, add 'websocket.enabled = true' in the application.yml file, @see
+ * 'inception-app-webapp/src/main/resources/application.yml'.
+ * <p>
+ * For further details
  *
- * In order to activate this class, add 'websocket.enabled = true' in the
- * application.yml file, @see 'inception-app-webapp/src/main/resources/application.yml'.
- *
- * For further details @see interface class (AnnotationProcessAPI.class).
- *
+ * @see AnnotationProcessAPI interface class .
  **/
 @Controller
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
@@ -70,12 +71,11 @@ public class AnnotationProcessAPIImpl
 
     /**
      * -------------------- PUBLISH / SUBSCRIBE CHANNELS ---------------------------
-     *
-     * Easy Extensible: Simply follow the currently used approach to add a new
-     * send / receive topic.
-     *
-     * For further details @see README file to see the streamlined process for extensions.
-     *
+     * <p>
+     * Easy Extensible: Simply follow the currently used approach to add a new send / receive topic.
+     * <p>
+     * For further details look into the README file for the annotation API in
+     * 'src/main/ts/main/README.md' README file to see the streamlined process for extensions.
      **/
     // NEXT DOCUMENT
     private static final String SERVER_RECEIVE_DOCUMENT_REQUEST = "/document_request";
@@ -100,12 +100,24 @@ public class AnnotationProcessAPIImpl
     private static final String SERVER_SEND_CLIENT_ERROR_MESSAGE = "/queue/error_message/";
 
     /**
-     * -------------------------------------------------------------------------------
+     * Default Constructor
+     *
+     * @param aProjectService
+     *            The Projectservice obtains projects
+     * @param aDocumentService
+     *            The Documentservice obtains SourceDocuments for the CAS
+     * @param aRepositoryProperties
+     *            The RepositoryPropterties are required for the CAS
+     * @param aSimpMessagingTemplate
+     *            The Messaging Template publish data to specific topics
+     * @param aAnnotationSchemaService
+     *            The AnnotationSchemaService contains methods which are related to TagSet, Tag and
+     *            Type for the annotation Project
+     * @param aColoringService
+     *            The Coloringservice retrieves the correct color for specific annotations
      */
-
     public AnnotationProcessAPIImpl(ProjectService aProjectService,
-            DocumentService aDocumentService,
-            RepositoryProperties aRepositoryProperties,
+            DocumentService aDocumentService, RepositoryProperties aRepositoryProperties,
             SimpMessagingTemplate aSimpMessagingTemplate,
             AnnotationSchemaService aAnnotationSchemaService, ColoringService aColoringService)
     {
@@ -117,9 +129,8 @@ public class AnnotationProcessAPIImpl
 
     /**
      * -------------------- PUBLISH / SUBSCRIBE HANDLER METHODS ------------------------
-     *
+     * <p>
      * For further details see Interface class @see AnnotationProcessAPI.class
-     *
      **/
 
     @Override
@@ -194,7 +205,7 @@ public class AnnotationProcessAPIImpl
 
     @Override
     public void sendUpdateFeatures(UpdateFeatureMessage aUpdateFeaturesMessage, String aProjectID,
-                                   String aDocumentID)
+            String aDocumentID)
         throws IOException
     {
         LOG.debug("SENDING NOW FEATURES UPDATE TO CLIENTS listening to: {}",

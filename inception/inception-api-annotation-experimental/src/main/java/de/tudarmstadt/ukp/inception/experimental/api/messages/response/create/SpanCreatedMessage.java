@@ -28,12 +28,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  * SpanCreatedMessage: Message published to clients that a Span annotation has been created
  *
  * Attributes:
- * @spanId: The ID of the new Span
- * @begin: The character offset begin of the span
- * @end: The character offset end of the span
- * @color: The color of the Arc
- * @layerId: The ID of the layer the Arc belongs to
- * @features: List of AnnotationFeatures that the Span has
+ * spanId: The ID of the new Span
+ * begin: The character offset begin of the span
+ * end: The character offset end of the span
+ * color: The color of the Arc
+ * layerId: The ID of the layer the Arc belongs to
+ * features: List of AnnotationFeatures that the Span has
  **/
 public class SpanCreatedMessage
 {

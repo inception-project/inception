@@ -27,13 +27,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  * Following parameters are required for retrieving the CAS: @annotatorName, @projectId, @sourceDocumentId
  *
  * Attributes:
- * @annotatorName: String representation of the name of the annotator the annotation will belong to
- * @projectId: The ID of the project the annotation will belong to
- * @sourceDocumentId: The ID of the Sourcedocument the annotation belongs to
- * @annotationId: The ID of the annotation for which a feature value shall be changed
- * @layerId: The ID of the layer the annotation belongs to
- * @feature: The feature for which a @value shall be assigned
- * @value: The new value for the @feature
+ * annotatorName: String representation of the name of the annotator the annotation will belong to
+ * projectId: The ID of the project the annotation will belong to
+ * sourceDocumentId: The ID of the Sourcedocument the annotation belongs to
+ * annotationId: The ID of the annotation for which a feature value shall be changed
+ * layerId: The ID of the layer the annotation belongs to
+ * feature: The feature for which a @value shall be assigned
+ * value: The new value for the @feature
  **/
 public class UpdateFeaturesRequest
 {

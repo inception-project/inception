@@ -27,7 +27,8 @@ import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
  * DocumentMessage: Message published to a specific client containing the data for the requested document
  *
  * Attributes:
- * @viewport: List of Viewports and their contents requested by the client
+
+ * viewport: List of Viewports and their contents requested by the client
  **/
 public class DocumentMessage
 {

@@ -25,7 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
  * DeleteAnnotationMessage: Message published to clients that an annotation has been delete
  *
  * Attributes:
- * @annotationId: ID of the annotation that was deleted
+ * annotationId: ID of the annotation that was deleted
  **/
 public class DeleteAnnotationMessage
 {
