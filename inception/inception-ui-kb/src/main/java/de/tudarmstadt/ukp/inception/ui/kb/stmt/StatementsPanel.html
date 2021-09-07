@@ -20,8 +20,8 @@
 <body>
   <wicket:panel>
     <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-      <form class="float-right form-horizontal" wicket:id="detailPreferenceForm">
-        <div class="form-group form-row">
+      <form class="float-end form-horizontal" wicket:id="detailPreferenceForm">
+        <div class="row form-row">
           <label class="col-form-label col-sm-3 statement-detail-preference-label">
             <wicket:message key="statement.detailpreference" />
           </label>
@@ -44,9 +44,9 @@
       </div>
       <div class="btn-group btn-group-justified" role="group">
         <div class="btn-group" role="group">
-          <button wicket:id="add" type="button" class="btn btn-primary">
-              <i class="fas fa-plus"></i>
-              <wicket:container wicket:id="label"></wicket:container>
+          <button wicket:id="add" type="button" class="btn btn-sm btn-primary">
+            <i class="fas fa-plus me-1"></i>
+            <wicket:container wicket:id="label"/>
           </button>
         </div>
       </div>

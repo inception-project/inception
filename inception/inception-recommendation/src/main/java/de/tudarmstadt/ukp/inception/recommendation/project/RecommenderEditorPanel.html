@@ -31,12 +31,12 @@
           <wicket:message key="cancel"/>
         </button>
         <div class="btn dropdown" aria-haspopup="true" aria-expanded="false">
-          <button class="btn btn-action dropdown-toggle" type="button" data-toggle="dropdown">
+          <button class="btn btn-action dropdown-toggle" type="button" data-bs-toggle="dropdown">
             <i class="fas fa-ellipsis-v"></i>
           </button>
           <div class="dropdown-menu" role="menu">
             <div class="container">
-              <div class="form-group form-row">
+              <div class="row form-row">
                 <button wicket:id="delete" class="btn btn-sm btn-danger col-sm-12">
                   <i class="fas fa-trash"></i>&nbsp;
                   <wicket:message key="delete"/>
@@ -48,23 +48,21 @@
       </div>
     </div>
     <div class="scrolling card-body">
-      <div class="form-group form-row" wicket:enclosure="name">
+      <div class="row form-row" wicket:enclosure="name">
         <label class="col-sm-3 col-form-label" wicket:for="name">
           <wicket:label key="name"/>
         </label>
         <div class="col-sm-9">
           <div class="input-group">
             <input wicket:id="name" class="form-control" type="text"/>
-            <span class="input-group-append">
-              <div class="input-group-text">
-                <input wicket:id="autoGenerateName" type="checkbox" class="mr-2"/>
-                <wicket:message key="autoGenerateName"/>
-              </div>
-            </span>
+            <div class="input-group-text">
+              <input wicket:id="autoGenerateName" type="checkbox" class="me-2"/>
+              <wicket:message key="autoGenerateName"/>
+            </div>
           </div>
         </div>
       </div>
-      <div class="form-group form-row" wicket:enclosure="enabled">
+      <div class="row form-row" wicket:enclosure="enabled">
         <div class="offset-sm-3 col-sm-9">
           <div class="form-check">
             <input wicket:id="enabled" class="form-check-input" type="checkbox"/>
@@ -74,36 +72,36 @@
           </div>
         </div>  
       </div>
-      <div class="form-group form-row" wicket:enclosure="layer">
+      <div class="row form-row" wicket:enclosure="layer">
         <label wicket:for="layer" class="col-sm-3 col-form-label">
           <wicket:label key="layer"/>
         </label>
         <div class="col-sm-9">
-          <select wicket:id="layer" class="form-control" data-container="body"></select>
+          <select wicket:id="layer" class="form-select" data-container="body"/>
         </div>
       </div>
-      <div class="form-group form-row" wicket:enclosure="feature">
+      <div class="row form-row" wicket:enclosure="feature">
         <label wicket:for="feature" class="col-sm-3 col-form-label">
           <wicket:label key="feature"/>
         </label>
         <div class="col-sm-9">
-          <select wicket:id="feature" class="form-control" data-container="body"></select>
+          <select wicket:id="feature" class="form-select" data-container="body"/>
         </div>
       </div>
-      <div class="form-group form-row" wicket:enclosure="tool">
+      <div class="row form-row" wicket:enclosure="tool">
         <label wicket:for="tool" class="col-sm-3 col-form-label">
           <wicket:label key="tool"/>
         </label>
         <div class="col-sm-9">
-          <select wicket:id="tool" class="form-control" data-container="body"></select>
+          <select wicket:id="tool" class="form-select" data-container="body"/>
         </div>
       </div>
-      <div class="form-group form-row" wicket:id="activationContainer">
+      <div class="row form-row" wicket:id="activationContainer">
         <label class="col-sm-3 col-form-label">
           <wicket:message key="activation"/>
         </label>
         <div class="col-sm-9">
-          <div class="form-group form-row" wicket:enclosure="threshold">
+          <div class="row form-row" wicket:enclosure="threshold">
             <label wicket:for="threshold" class="col-sm-3 col-form-label">
               <wicket:label key="threshold"/>
             </label>
@@ -111,7 +109,7 @@
               <input type="number" wicket:id="threshold" class="form-control"/>
             </div>
           </div>
-          <div class="form-group form-row" wicket:enclosure="alwaysSelected">
+          <div class="row form-row" wicket:enclosure="alwaysSelected">
             <div class="col-sm-offset-3 col-sm-9">
               <div class="form-check">
                 <input wicket:id="alwaysSelected" class="form-check-input" type="checkbox">
@@ -123,7 +121,7 @@
           </div>
         </div>
       </div>
-      <div class="form-group form-row" wicket:enclosure="maxRecommendations">
+      <div class="row form-row" wicket:enclosure="maxRecommendations">
         <label wicket:for="maxRecommendations" class="col-sm-3 col-form-label">
           <wicket:label key="maxRecommendations"/>
         </label>

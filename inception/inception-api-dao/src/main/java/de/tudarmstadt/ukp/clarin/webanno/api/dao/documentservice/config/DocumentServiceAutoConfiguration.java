@@ -36,7 +36,7 @@ public class DocumentServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
 
-    @Bean(DocumentService.SERVICE_NAME)
+    @Bean
     public DocumentService documentService(RepositoryProperties aRepositoryProperties,
             CasStorageService aCasStorageService, DocumentImportExportService aImportExportService,
             ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)

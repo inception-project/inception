@@ -26,13 +26,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import org.apache.commons.lang3.function.FailableConsumer;
+import org.apache.commons.lang3.stream.Streams;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,7 +200,7 @@ public class EventRepositoryImpl
 
     @Override
     @Transactional
-    public void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer)
+    public <E extends Throwable> void forEachLoggedEvent(Project aProject, FailableConsumer<LoggedEvent, E> aConsumer)
     {
         // Set up data source
         String query = String.join("\n", //
@@ -210,7 +211,7 @@ public class EventRepositoryImpl
                 .setParameter("project", aProject.getId());
 
         try (Stream<LoggedEvent> eventStream = typedQuery.getResultStream()) {
-            eventStream.forEach(aConsumer);
+            Streams.stream(eventStream).forEach(aConsumer);
         }
     }
 }

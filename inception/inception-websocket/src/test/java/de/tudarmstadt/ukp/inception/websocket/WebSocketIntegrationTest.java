@@ -46,6 +46,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
@@ -59,18 +60,25 @@ import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
         properties = { //
+                "spring.main.banner-mode=off", //
                 "websocket.enabled=true", //
                 "websocket.loggedevent.enabled=true", //
                 "event-logging.enabled=true" })
@@ -78,6 +86,17 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
         exclude = { //
                 LiquibaseAutoConfiguration.class, //
                 SecurityAutoConfiguration.class })
+@Import({ //
+        ProjectServiceAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class, //
+        DocumentServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, //
+        AnnotationSchemaServiceAutoConfiguration.class })
+@EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.model", //
+        "de.tudarmstadt.ukp.clarin.webanno.security.model", //
+        "de.tudarmstadt.ukp.inception.log.model" })
 public class WebSocketIntegrationTest
 {
     private WebSocketStompClient webSocketClient;
@@ -118,7 +137,7 @@ public class WebSocketIntegrationTest
         repositoryProperties.setPath(repositoryDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
         testDoc = new SourceDocument("testDoc", testProject, "text");
         projectService.createProject(testProject);
         docService.createSourceDocument(testDoc);
@@ -204,11 +223,7 @@ public class WebSocketIntegrationTest
     }
 
     @Configuration
-    @EntityScan({ //
-            "de.tudarmstadt.ukp.clarin.webanno.model", //
-            "de.tudarmstadt.ukp.clarin.webanno.security.model", //
-            "de.tudarmstadt.ukp.inception.log.model" })
-    public static class WebSocketTestConfig
+    public static class SpringConfig
     {
         @Bean
         public DocumentStateChangedEventAdapter documentStateChangedEventAdapter()

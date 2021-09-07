@@ -38,7 +38,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -47,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -106,6 +106,11 @@ public class KnowledgeBaseExporter
         Project project = aRequest.getProject();
         List<ExportedKnowledgeBase> exportedKnowledgeBases = new ArrayList<>();
         for (KnowledgeBase kb : kbService.getKnowledgeBases(project)) {
+            // check if the export has been cancelled
+            if (Thread.interrupted()) {
+                throw new InterruptedException();
+            }
+
             ExportedKnowledgeBase exportedKB = new ExportedKnowledgeBase();
             exportedKB.setId(kb.getRepositoryId());
             exportedKB.setName(kb.getName());
@@ -124,7 +129,9 @@ public class KnowledgeBaseExporter
             exportedKB.setReification(kb.getReification().toString());
             exportedKB.setSupportConceptLinking(kb.isSupportConceptLinking());
             exportedKB.setBasePrefix(kb.getBasePrefix());
-            exportedKB.setRootConcepts(kb.getRootConcepts());
+            exportedKB.setRootConcepts(new ArrayList<>(kb.getRootConcepts()));
+            exportedKB.setAdditionalMatchingProperties(
+                    new ArrayList<>(kb.getAdditionalMatchingProperties()));
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
             exportedKB.setDefaultDatasetIri(
                     kb.getDefaultDatasetIri() != null ? kb.getDefaultDatasetIri() : null);
@@ -226,6 +233,14 @@ public class KnowledgeBaseExporter
             else {
                 kb.setRootConcepts(new ArrayList<>());
             }
+
+            if (exportedKB.getAdditionalMatchingProperties() != null) {
+                kb.setAdditionalMatchingProperties(exportedKB.getAdditionalMatchingProperties());
+            }
+            else {
+                kb.setAdditionalMatchingProperties(new ArrayList<>());
+            }
+
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
             kb.setDefaultDatasetIri(
                     exportedKB.getDefaultDatasetIri() != null ? exportedKB.getDefaultDatasetIri() //

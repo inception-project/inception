@@ -29,9 +29,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.springframework.boot.SpringBootConfiguration;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.support.AbstractMessageChannel;
@@ -48,8 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistryImpl;
 import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
-import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageControllerImpl;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
@@ -75,7 +70,7 @@ public class LoggedEventMessageControllerImplTest
         outboundChannel = new TestChannel();
         adapterRegistry = new EventLoggingAdapterRegistryImpl(asList(new SpanEventAdapter()));
         adapterRegistry.onContextRefreshedEvent(null);
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
         testProject.setId(1L);
         testDoc = new SourceDocument("testDoc", testProject, "text");
         testDoc.setId(2L);
@@ -106,11 +101,6 @@ public class LoggedEventMessageControllerImplTest
     }
 
     @SpringBootConfiguration
-    @EnableAutoConfiguration(exclude = { //
-            WebsocketAutoConfiguration.class, //
-            EventLoggingAutoConfiguration.class, //
-            LiquibaseAutoConfiguration.class })
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.inception.websocket" })
     public static class SpringConfig
     {
     }

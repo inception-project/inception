@@ -20,28 +20,29 @@
 <body>
   <wicket:panel>
     <wicket:container wicket:id="warnings">
-      <div class="dev-warnings float-right">
+      <div class="dev-warnings ms-2 float-end">
         <a class="alert alert-warning"
            role="button"
-           data-toggle="popover"
-           data-placement="top"
-           data-trigger="focus"
            tabindex="0"
            title="Warnings"
-           data-html="true"
-           data-popover-content="#warning-popover">
+           data-bs-container="body"
+           data-bs-toggle="popover"
+           data-bs-placement="top"
+           data-bs-trigger="focus"
+           data-bs-html="true"
+           data-bs-popover-content="#warning-popover">
              <i class="fas fa-exclamation-triangle"></i> Warnings</a>
       </div>
     </wicket:container>
-    
+
     <div id="warning-popover" class="d-none">
-        <div class="popover-body">
-          <ul>
-            <li wicket:id="embeddedDbWarning"></li>
-            <li wicket:id="browserWarning"></li>
-          </ul>          
-        </div>
-    </div>   
+      <div class="popover-body">
+        <ul>
+          <li wicket:id="embeddedDbWarning"></li>
+          <li wicket:id="browserWarning"></li>
+        </ul>
+      </div>
+    </div>
   </wicket:panel>
 </body>
 </html>

@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard;
 
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-
 import java.util.List;
 
 import org.apache.wicket.AttributeModifier;
@@ -167,12 +165,12 @@ public class DashboardMenu
             }
 
             Project project = currentPage.getProject();
-            long projectId = project.getId();
 
             aItem.setVisible(projectMenuItem.applies(currentPage.getProject()));
 
-            menulink = new BookmarkablePageLink<>("item", pageClass,
-                    new PageParameters().set(PAGE_PARAM_PROJECT, projectId));
+            var pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, project);
+            menulink = new BookmarkablePageLink<>("item", pageClass, pageParameters);
         }
         else {
             menulink = new BookmarkablePageLink<>("item", pageClass);

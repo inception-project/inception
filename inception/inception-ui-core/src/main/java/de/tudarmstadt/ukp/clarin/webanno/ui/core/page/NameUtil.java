@@ -33,7 +33,7 @@ public class NameUtil
      *            a name.
      * @return if the name is valid.
      */
-    public static boolean isNameValid(String aName)
+    public static boolean isNameValidUserName(String aName)
     {
         return aName != null && containsNone(aName, WEBANNO_ILLEGAL_CHARACTERS);
     }

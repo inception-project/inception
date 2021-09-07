@@ -43,7 +43,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -97,7 +96,7 @@ public class ImportDocumentsPanel
         fileUpload.getConfig().showRemove(false);
         fileUpload.setRequired(true);
 
-        DropDownChoice<String> formats = new BootstrapSelect<>("format");
+        DropDownChoice<String> formats = new DropDownChoice<>("format");
         formats.setModel(format);
         formats.setChoices(LoadableDetachableModel.of(this::listReadableFormats));
         form.add(formats);

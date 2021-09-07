@@ -56,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.docimexport.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -68,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
 @DataJpaTest( //
@@ -81,14 +81,16 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
         "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 @Import({ //
+        AnnotationSchemaServiceAutoConfiguration.class, //
+        ProjectServiceAutoConfiguration.class, //
+        CasStorageServiceAutoConfiguration.class, //
         CurationDocumentServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         UimaFormatsAutoConfiguration.class, //
+        RepositoryAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
-        ProjectServiceAutoConfiguration.class, //
-        VersioningServiceAutoConfiguration.class, CasStorageServiceAutoConfiguration.class, //
-        RepositoryAutoConfiguration.class, AnnotationSchemaServiceAutoConfiguration.class, //
+        VersioningServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class })
 public class VersioningServiceImplTest
 {
@@ -111,7 +113,7 @@ public class VersioningServiceImplTest
     @BeforeEach
     public void setUp()
     {
-        testProject = new Project("testProject");
+        testProject = new Project("test-project");
     }
 
     @AfterEach

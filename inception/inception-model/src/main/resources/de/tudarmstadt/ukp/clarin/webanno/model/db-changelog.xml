@@ -1290,4 +1290,40 @@
       <column name="processed"/>
     </dropColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210823-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_feature" columnName="curatable"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_feature">
+      <column name="curatable" type="BOOLEAN" defaultValueBoolean="true">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210823-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="project" columnName="slug"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="project">
+      <column name="slug" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+    <addUniqueConstraint 
+      tableName="project" 
+      constraintName="UK_project_slug"
+      columnNames="slug" />
+  </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210827-1" failOnError="false">
+    <dropUniqueConstraint
+      tableName="project"
+      constraintName="UK3k75vvu7mevyvvb5may5lj8k7" />
+  </changeSet>  
 </databaseChangeLog>

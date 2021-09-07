@@ -29,6 +29,7 @@ import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy.authorize;
 
@@ -39,6 +40,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.wicket.ClassAttributeModifier;
@@ -66,6 +68,8 @@ import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import com.github.rjeschke.txtmark.Processor;
+
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
@@ -79,6 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.AjaxProjectImportedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
@@ -90,6 +95,7 @@ public class ProjectsOverviewPage
 {
     private static final String MID_CREATED = "created";
     private static final String MID_NAME = "name";
+    private static final String MID_DESCRIPTION = "description";
     private static final String MID_PROJECT_LINK = "projectLink";
     private static final String MID_LABEL = "label";
     private static final String MID_ROLE = "role";
@@ -202,9 +208,10 @@ public class ProjectsOverviewPage
 
         List<ProjectEntry> projects = allAccessibleProjects.getObject();
         if (projects.size() == 1) {
-            Project onlyAccessibleProject = projects.get(0).getProject();
-            throw new RestartResponseException(ProjectDashboardPage.class, new PageParameters()
-                    .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, onlyAccessibleProject.getId()));
+            Project soleAccessibleProject = projects.get(0).getProject();
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, soleAccessibleProject);
+            throw new RestartResponseException(ProjectDashboardPage.class, pageParameters);
         }
     }
 
@@ -282,11 +289,13 @@ public class ProjectsOverviewPage
             {
                 Project project = aItem.getModelObject().getProject();
 
-                PageParameters pageParameters = new PageParameters()
-                        .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId());
+                PageParameters pageParameters = new PageParameters();
+                ProjectPageBase.setProjectPageParameter(pageParameters, project);
                 BookmarkablePageLink<Void> projectLink = new BookmarkablePageLink<>(
                         MID_PROJECT_LINK, ProjectDashboardPage.class, pageParameters);
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
+                aItem.add(new Label(MID_DESCRIPTION, aItem.getModelObject().getShortDescription())
+                        .setEscapeModelStrings(false));
                 DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
                         () -> project.getCreated(), "yyyy-MM-dd");
                 addActionsDropdown(aItem);
@@ -444,10 +453,12 @@ public class ProjectsOverviewPage
     {
         String username = currentUser.getObject().getUsername();
         aTarget.addChildren(getPage(), IFeedback.class);
-        String projectName = makeValidProjectName(username + " - New project");
+        String projectSlug = projectService.deriveSlugFromName(username);
+        projectSlug = projectService.deriveUniqueSlug(projectSlug);
 
         try {
-            Project project = new Project(projectName);
+            Project project = new Project(projectSlug);
+            project.setName(username + " - New project");
             projectService.createProject(project);
 
             projectService
@@ -459,32 +470,13 @@ public class ProjectsOverviewPage
 
             projectService.initializeProject(project, asList(aInitializer));
 
-            PageParameters pageParameters = new PageParameters()
-                    .add(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId());
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, project);
             setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
         catch (IOException e) {
-            LOG.error("Unable to create project [{}]", projectName, e);
-            error("Unable to create project [" + projectName + "]");
-        }
-    }
-
-    /**
-     * Get a project name to be used when importing. Use the prefix, copy_of_...+ i to avoid
-     * conflicts
-     */
-    private String makeValidProjectName(String aProjectName)
-    {
-        String projectName = aProjectName;
-        int i = 1;
-        while (true) {
-            if (projectService.existsProject(projectName)) {
-                projectName = aProjectName + " (" + i + ")";
-                i++;
-            }
-            else {
-                return projectName;
-            }
+            LOG.error("Unable to create project [{}]", projectSlug, e);
+            error("Unable to create project [" + projectSlug + "]");
         }
     }
 
@@ -506,8 +498,9 @@ public class ProjectsOverviewPage
         if (!projects.isEmpty()) {
             Project project = projects.get(0);
             getSession().success("Project [" + project.getName() + "] successfully imported");
-            setResponsePage(ProjectDashboardPage.class, new PageParameters()
-                    .set(ProjectDashboardPage.PAGE_PARAM_PROJECT, project.getId()));
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, project);
+            setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
     }
 
@@ -537,6 +530,24 @@ public class ProjectsOverviewPage
         public String getName()
         {
             return project.getName();
+        }
+
+        public String getSlug()
+        {
+            return project.getSlug();
+        }
+
+        public String getShortDescription()
+        {
+            if (StringUtils.isBlank(project.getDescription())) {
+                return null;
+            }
+
+            var shortDescription = substringBefore(project.getDescription(), "\n");
+            var shortDescriptionHtml = Processor.process(shortDescription, true);
+            shortDescriptionHtml = StringUtils.removeStart(shortDescriptionHtml, "<p>");
+            shortDescriptionHtml = StringUtils.removeEnd(shortDescriptionHtml, "</p>");
+            return shortDescriptionHtml;
         }
 
         public Project getProject()

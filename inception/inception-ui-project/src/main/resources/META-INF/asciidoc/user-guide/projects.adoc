@@ -27,21 +27,17 @@ You can either select one of the existing projects for editing, or click *Create
 
 Click on *Create Project* to create a new project. 
 
-image::project1.jpg[align="center"]
+image::project_creation.png[align="center"]
 
-After doing so, a new pane is displayed, where you can name and describe your new project. It is also important to chose the kind of project you want to create. You have the choice between annotation, automation, and correction.
-Please do not forget to save.
+Here, you can specify the name of your project. 
 
-image::project2.jpg[align="center"]
+A suitable URL slug is automatically derived from the project name if you do not provide one yourself. The URL slug will be used in the browser URLs for the different pages belonging to the project. For example, if you project has the URL slug `my-project`, then it will be accessible under
+an URL ending in `/p/myproject`. The URL slug must be unique for all projects. Only lower-case characters (a-z), numbers (0-9), dashes (`-`) and underscores (`_`) are allowed for the slug. Also, it must be at least 3 characters and can be at most 40 characters long. The slug must start with a letter.
 
-After saving the details of the new project, it can be treated like any other already existing one.  Also, a new pane with many options to organize the project is displayed.
+Finally, you can provide a project description here which is displayed on the project dashboard.
 
-image::project10.jpg[align="center"]
+When you have not save the project yet, you can cancel the creation of the project via the *Close* button. To delete a project after you have saved (i.e. created) it, use the *Delete* button.
 
-To delete a project, click on it in the frame *Details*. The project details are displayed. Now, click on *Delete*.
+image::project_details.png[align="center"]
 
-The pane with the options to organize and edit a project, as described above, can also be reached by clicking on the desired project in the left frame.
-
-image::project3.jpg[align="center"]
-
-By clicking on the tabs, you can now set up the chosen project. 
+After saving the project, additional panes will appear where you can further configure the project.
