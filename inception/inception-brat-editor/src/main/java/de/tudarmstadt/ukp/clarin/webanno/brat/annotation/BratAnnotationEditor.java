@@ -19,11 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter.decodeTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.ACTION_CONTEXT_MENU;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_OFFSETS;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_ORIGIN_SPAN_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_TARGET_SPAN_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
@@ -34,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
@@ -79,9 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
@@ -97,7 +98,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.NormalizationQueryResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
@@ -131,18 +131,6 @@ public class BratAnnotationEditor
 
     private static final long serialVersionUID = -1537506294440056609L;
 
-    private static final String PARAM_ACTION = "action";
-    private static final String PARAM_ARC_ID = "arcId";
-    private static final String PARAM_ID = "id";
-    private static final String PARAM_OFFSETS = "offsets";
-    private static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
-    private static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
-    private static final String PARAM_TYPE = "type";
-    private static final String PARAM_LAZY_DETAIL_DATABASE = "database";
-    private static final String PARAM_LAZY_DETAIL_KEY = "key";
-
-    private static final String ACTION_CONTEXT_MENU = "contextMenu";
-
     private final ContextMenu contextMenu;
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -152,6 +140,7 @@ public class BratAnnotationEditor
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
+    private @SpringBean BratLazyDetailsLookupService lazyDetailsLookupService;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -190,32 +179,11 @@ public class BratAnnotationEditor
                 final IRequestParameters request = getRequest().getPostParameters();
 
                 // Get action from the request
-                String action = request.getParameterValue(PARAM_ACTION).toString();
+                String action = BratRequestUtils.getActionFromRequest(request);
                 LOG.trace("AJAX-RPC CALLED: [{}]", action);
 
                 // Parse annotation ID if present in request
-                final VID paramId;
-                if (!request.getParameterValue(PARAM_ID).isEmpty()
-                        && !request.getParameterValue(PARAM_ARC_ID).isEmpty()) {
-                    throw new IllegalStateException(
-                            "[id] and [arcId] cannot be both set at the same time!");
-                }
-                else if (!request.getParameterValue(PARAM_ID).isEmpty()) {
-                    paramId = VID.parseOptional(request.getParameterValue(PARAM_ID).toString());
-                }
-                else {
-                    VID arcId = VID
-                            .parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
-                    // HACK: If an arc was clicked that represents a link feature, then
-                    // open the associated span annotation instead.
-                    if (arcId.isSlotSet() && ArcAnnotationResponse.is(action)) {
-                        action = SpanAnnotationResponse.COMMAND;
-                        paramId = new VID(arcId.getId());
-                    }
-                    else {
-                        paramId = arcId;
-                    }
-                }
+                final VID paramId = BratRequestUtils.getVidFromRequest(request);
 
                 // Load the CAS if necessary
                 // Make sure we load the CAS only once here in case of an annotation action.
@@ -242,7 +210,9 @@ public class BratAnnotationEditor
                     // Whenever an action should be performed, do ONLY perform this action and
                     // nothing else, and only if the item actually is an action item
                     if (NormDataResponse.is(action)) {
-                        result = actionLookupNormData(aTarget, request, paramId);
+                        AnnotatorState state = getModelObject();
+                        result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
+                                getCasProvider(), state.getDocument(), state.getUser());
                     }
                     else if (DoActionResponse.is(action)) {
                         if (paramId.isSynthetic()) {
@@ -297,19 +267,12 @@ public class BratAnnotationEditor
                     LOG.trace("AJAX-RPC: Action [{}] produced no result!", action);
                 }
                 else {
-                    String json;
-                    if (result instanceof String) {
-                        json = (String) result;
+                    try {
+                        BratRequestUtils.attachResponse(aTarget, vis, result);
                     }
-                    else {
-                        json = toJson(result);
+                    catch (IOException e) {
+                        handleError("Unable to produce JSON response", e);
                     }
-
-                    // Since we cannot pass the JSON directly to Brat, we attach it to the HTML
-                    // element into which BRAT renders the SVG. In our modified ajax.js, we pick it
-                    // up from there and then pass it on to BRAT to do the rendering.
-                    aTarget.prependJavaScript(
-                            "Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
                 }
 
                 long duration = System.currentTimeMillis() - timerStart;
@@ -320,78 +283,6 @@ public class BratAnnotationEditor
         };
 
         add(requestHandler);
-    }
-
-    private Object actionLookupNormData(AjaxRequestTarget aTarget, IRequestParameters request,
-            VID paramId)
-        throws AnnotationException, IOException
-    {
-        NormDataResponse response = new NormDataResponse();
-
-        // We interpret the databaseParam as the feature which we need to look up the feature
-        // support
-        StringValue databaseParam = request.getParameterValue(PARAM_LAZY_DETAIL_DATABASE);
-
-        // We interpret the key as the feature value or as a kind of query to be handled by the
-        // feature support
-        StringValue keyParam = request.getParameterValue(PARAM_LAZY_DETAIL_KEY);
-
-        StringValue layerParam = request.getParameterValue(PARAM_TYPE);
-
-        if (layerParam.isEmpty() || databaseParam.isEmpty()) {
-            return response;
-        }
-
-        String database = databaseParam.toString();
-        long layerId = decodeTypeName(layerParam.toString());
-        AnnotatorState state = getModelObject();
-        AnnotationLayer layer = annotationService.getLayer(state.getProject(), layerId)
-                .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
-                        + "] does not exist in project [" + state.getProject().getName() + "]("
-                        + state.getProject().getId() + ")"));
-
-        // Check where the query needs to be routed: to an editor extension or to a feature support
-        if (paramId.isSynthetic()) {
-            if (keyParam.isEmpty()) {
-                return response;
-            }
-
-            AnnotationFeature feature = annotationService.getFeature(database, layer);
-
-            String extensionId = paramId.getExtensionId();
-            response.setResults(extensionRegistry.getExtension(extensionId)
-                    .renderLazyDetails(state.getDocument(), state.getUser(), paramId, feature,
-                            keyParam.toString())
-                    .stream().map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
-                    .collect(Collectors.toList()));
-            return response;
-        }
-
-        try {
-            List<VLazyDetailResult> details;
-
-            // Is it a layer-level lazy detail?
-            if (Renderer.QUERY_LAYER_LEVEL_DETAILS.equals(database)) {
-                details = layerSupportRegistry.getLayerSupport(layer)
-                        .createRenderer(layer, () -> annotationService.listAnnotationFeature(layer))
-                        .renderLazyDetails(getCasProvider().get(), paramId);
-            }
-            // Is it a feature-level lazy detail?
-            else {
-                AnnotationFeature feature = annotationService.getFeature(database, layer);
-                details = featureSupportRegistry.findExtension(feature).orElseThrow()
-                        .renderLazyDetails(feature, keyParam.toString());
-            }
-
-            response.setResults(details.stream()
-                    .map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
-                    .collect(toList()));
-        }
-        catch (Exception e) {
-            handleError("Unable to load data", e);
-        }
-
-        return response;
     }
 
     private void actionOpenContextMenu(AjaxRequestTarget aTarget, IRequestParameters request,
