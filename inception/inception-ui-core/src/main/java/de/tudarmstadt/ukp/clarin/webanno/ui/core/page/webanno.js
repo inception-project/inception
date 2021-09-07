@@ -40,12 +40,12 @@ $(document)
     });
     
 $( document ).ready(function() { 
-  // Prevent the stick dropdowns from closing on every click inside the dropdown
-  $('.sticky-dropdown').on('hide.bs.dropdown', function(e) {
+  // Prevent the sticky dropdowns from closing on every click inside the dropdown
+  $('.sticky-dropdown').each((i, e) => addEventListener('hide.bs.dropdown', function(e) {
     if (e.clickEvent && $(e.clickEvent.target).closest('.sticky-dropdown').length) {
       e.preventDefault();
     }
-  });
+  }));
 });
     
 
