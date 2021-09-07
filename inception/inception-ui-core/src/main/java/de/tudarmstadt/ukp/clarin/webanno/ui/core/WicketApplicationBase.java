@@ -50,7 +50,6 @@ import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
-import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
@@ -61,7 +60,6 @@ import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
-import de.tudarmstadt.ukp.clarin.webanno.ui.config.BootstrapAwareJQueryUIJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
@@ -217,12 +215,6 @@ public abstract class WicketApplicationBase
 
     protected void addJQueryUIResourcesToAllPages()
     {
-        JQueryUILibrarySettings jqueryUiCfg = JQueryUILibrarySettings.get();
-        // Here we ensure that bootstrap is loaded before JQuery UI such that the
-        // JQuery UI tooltip that we use e.g. on the annotation page takes precedence over
-        // the less powerful Bootstrap tooltip (both are JQuery plugins using the same name!)
-        jqueryUiCfg.setJavaScriptReference(BootstrapAwareJQueryUIJavaScriptResourceReference.get());
-
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
                 component.add(new JQueryUIResourceBehavior());

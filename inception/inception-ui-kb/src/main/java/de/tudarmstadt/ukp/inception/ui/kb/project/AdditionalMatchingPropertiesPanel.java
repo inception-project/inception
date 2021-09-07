@@ -38,49 +38,54 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-public class RootConceptsPanel
+public class AdditionalMatchingPropertiesPanel
     extends Panel
 {
     private static final long serialVersionUID = 1161350402387498209L;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
-    private final ListModel<String> concepts;
-    private final IModel<String> newConceptIRIString = Model.of();
+    private final ListModel<String> properties;
+    private final IModel<String> newPropertyIRIString = Model.of();
 
     private @SpringBean KnowledgeBaseService kbService;
 
-    public RootConceptsPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
+    public AdditionalMatchingPropertiesPanel(String id,
+            CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
     {
         super(id);
 
         kbModel = aModel;
-        concepts = new ListModel<>(new ArrayList<>(kbModel.getObject().getKb().getRootConcepts()));
+        properties = new ListModel<>(
+                new ArrayList<>(kbModel.getObject().getKb().getAdditionalMatchingProperties()));
         setOutputMarkupId(true);
 
-        ListView<String> conceptsListView = new ListView<String>("rootConcepts", concepts)
+        ListView<String> additionalMatchingPropertiesListView = new ListView<String>(
+                "additionalMatchingProperties", properties)
         {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected void populateItem(ListItem<String> item)
             {
-                Form<Void> conceptForm = new Form<Void>("conceptForm");
-                conceptForm.add(buildTextField("textField", item.getModel()));
-                conceptForm.add(new LambdaAjaxLink("removeConcept",
-                        t -> RootConceptsPanel.this.actionRemoveConcept(t, item.getModelObject())));
-                item.add(conceptForm);
+                Form<Void> propertyForm = new Form<Void>("propertyForm");
+                propertyForm.add(buildTextField("textField", item.getModel()));
+                propertyForm.add(new LambdaAjaxLink("removeProperty",
+                        t -> AdditionalMatchingPropertiesPanel.this.actionRemoveProperty(t,
+                                item.getModelObject())));
+                item.add(propertyForm);
             }
 
         };
-        conceptsListView.setOutputMarkupId(true);
-        add(conceptsListView);
+        additionalMatchingPropertiesListView.setOutputMarkupId(true);
+        add(additionalMatchingPropertiesListView);
 
-        TextField<String> newRootConcept = new TextField<>("newConceptField", newConceptIRIString);
-        newRootConcept.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-        add(newRootConcept);
+        TextField<String> newPropertyField = new TextField<>("newPropertyField",
+                newPropertyIRIString);
+        newPropertyField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        add(newPropertyField);
 
-        LambdaAjaxLink specifyConcept = new LambdaAjaxLink("newExplicitConcept",
-                RootConceptsPanel.this::actionNewRootConcept);
-        add(specifyConcept);
+        LambdaAjaxLink addPropertyButton = new LambdaAjaxLink("addProperty",
+                AdditionalMatchingPropertiesPanel.this::actionAddProperty);
+        add(addPropertyButton);
     }
 
     private TextField<String> buildTextField(String id, IModel<String> model)
@@ -94,33 +99,35 @@ public class RootConceptsPanel
         return iriTextfield;
     }
 
-    private void actionNewRootConcept(AjaxRequestTarget aTarget)
+    private void actionAddProperty(AjaxRequestTarget aTarget)
     {
-        String concept = newConceptIRIString.getObject();
-        if (isConceptValid(kbModel.getObject().getKb(), concept, true)) {
-            concepts.getObject().add(concept);
-            kbModel.getObject().getKb().setAdditionalMatchingProperties(concepts.getObject());
-            newConceptIRIString.setObject(null);
+        String concept = newPropertyIRIString.getObject();
+        if (isPropertyValid(kbModel.getObject().getKb(), concept, true)) {
+            properties.getObject().add(concept);
+            kbModel.getObject().getKb().setAdditionalMatchingProperties(properties.getObject());
+            newPropertyIRIString.setObject(null);
         }
         else {
-            error("Concept [" + newConceptIRIString.getObject()
+            error("Property [" + newPropertyIRIString.getObject()
                     + "] does not exist or has already been specified");
             aTarget.addChildren(getPage(), IFeedback.class);
         }
         aTarget.add(this);
     }
 
-    private void actionRemoveConcept(AjaxRequestTarget aTarget, String iri)
+    private void actionRemoveProperty(AjaxRequestTarget aTarget, String iri)
     {
-        concepts.getObject().remove(iri);
-        kbModel.getObject().getKb().setAdditionalMatchingProperties(concepts.getObject());
+        properties.getObject().remove(iri);
+        kbModel.getObject().getKb().setAdditionalMatchingProperties(properties.getObject());
         aTarget.add(this);
     }
 
-    public boolean isConceptValid(KnowledgeBase kb, String conceptIRI, boolean aAll)
+    public boolean isPropertyValid(KnowledgeBase aKb, String aPropertyIri, boolean aAll)
         throws QueryEvaluationException
     {
-        return !concepts.getObject().contains(conceptIRI)
-                && kbService.readConcept(kbModel.getObject().getKb(), conceptIRI, true).isPresent();
+        return !properties.getObject().contains(aPropertyIri);
+        // KBs tend to not declare all their properties, so we do not try to check if it actually
+        // exist...
+        // && kbService.readProperty(kbModel.getObject().getKb(), aPropertyIri).isPresent();
     }
 }
