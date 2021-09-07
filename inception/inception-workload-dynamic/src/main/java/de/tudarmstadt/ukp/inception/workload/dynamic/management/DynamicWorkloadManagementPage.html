@@ -37,16 +37,6 @@
    border: 1px solid rgba(0, 0, 0, 0.15);
   }
 </style>
-<script>
-  $( document ).ready(function() { 
-    // Prevent the stick dropdowns from closing on every click inside the dropdown
-    $('.sticky-dropdown').on('hide.bs.dropdown', function(e) {
-      if (e.clickEvent && $(e.clickEvent.target).closest('.sticky-dropdown').length) {
-        e.preventDefault();
-      }
-    });
-  });
-</script>
 </wicket:head>
 <body>
   <wicket:extend>
