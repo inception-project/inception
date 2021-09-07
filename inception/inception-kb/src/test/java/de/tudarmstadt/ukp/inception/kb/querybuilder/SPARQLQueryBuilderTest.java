@@ -1008,7 +1008,6 @@ public class SPARQLQueryBuilderTest
     }
 
     @Tag("slow")
-    @Disabled("#1522 - GND tests not running")
     @Test
     public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
     {
@@ -1368,7 +1367,6 @@ public class SPARQLQueryBuilderTest
     }
 
     @Tag("slow")
-    @Disabled("#1522 - GND tests not running")
     @Test
     public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
     {
@@ -1408,7 +1406,6 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
-    @Disabled("#1522 - GND tests not running")
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {
@@ -1842,7 +1839,10 @@ public class SPARQLQueryBuilderTest
         Directory dir = new RAMDirectory();
         EntityDefinition eDef = new EntityDefinition("iri", "text");
         eDef.setPrimaryPredicate(org.apache.jena.vocabulary.RDFS.label);
-        TextIndex tidx = new TextIndexLucene(dir, new TextIndexConfig(eDef));
+        TextIndexConfig tidxCfg = new TextIndexConfig(eDef);
+        tidxCfg.setValueStored(true);
+        tidxCfg.setMultilingualSupport(true);
+        TextIndex tidx = new TextIndexLucene(dir, tidxCfg);
         Dataset ds = TextDatasetFactory.create(ds1, tidx);
         return ds;
     }

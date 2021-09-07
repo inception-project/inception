@@ -224,7 +224,7 @@ NOTE: Not all remote SPARQL knowledge bases may support additional matching prop
 Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. Two full text search modes are supported:
 
 * `bif:contains`: use with remote link:https://virtuoso.openlinksw.com[Virtuoso SPARQL] endpoints.
-* `text:query`: use with remote link:https://jena.apache.org/documentation/fuseki2/[Apache Jena Fuseki] SPARQL endpoints.
+* `text:query`: use with remote link:https://jena.apache.org/documentation/fuseki2/[Apache Jena Fuseki] SPARQL endpoints. Note that on the side of the Fuseki server, the full text index must be configured with the options `text:storeValues` and `text:multilingualSupport` both set to `true` (cf. link:https://jena.apache.org/documentation/query/text-query.html[Text Dataset Assembler documentation]).
 * `\https://www.mediawiki.org/ontology#API/`: use with the link:https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries[official Wikidata SPARQL endpoint].
 * `lucenesail#matches`: use with local knowledge bases or possibly with remote knowledge bases using the link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene SAIL].
 * `FTS:NONE`: use if there is no full text search support in the triple store - this will be very slow in particular for large KBs.
