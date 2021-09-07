@@ -42,6 +42,11 @@ public class Span
     private List<AnnotationFeature> features;
     private String color;
 
+    public Span()
+    {
+        //Default required
+    }
+
     public Span(VID aId, int aBegin, int aEnd, long aLayerId, String aColor,
             List<AnnotationFeature> aFeatures)
     {

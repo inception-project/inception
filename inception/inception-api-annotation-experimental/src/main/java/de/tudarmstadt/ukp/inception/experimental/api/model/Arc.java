@@ -42,6 +42,11 @@ public class Arc
     private List<AnnotationFeature> features;
     private String color;
 
+    public Arc()
+    {
+        //Default required
+    }
+
     public Arc(VID aId, VID aSourceId, VID aTargetId, String aColor, long aLayerId, List<AnnotationFeature> aFeatures)
     {
         id = aId;

@@ -44,6 +44,7 @@ public class Viewport
 
     public Viewport()
     {
+        //Default required
     }
 
     public Viewport(long aSourceDocumentId, String aDocumentText, int aBegin, int aEnd,
