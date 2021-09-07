@@ -36,8 +36,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcess
  * Interface-class for the System API
  *
  * The System API handles all back-end computations and listens to all Events regarding
- * the annotation workflow (events in
- * @see inception-api-annotation/src/main/java/../../event/*
+ * the annotation workflow (events in 'inception-api-annotation/src/main/java/../../event/*')
  *
  * There are two different types of methods in this class:
  *      handle() methods:

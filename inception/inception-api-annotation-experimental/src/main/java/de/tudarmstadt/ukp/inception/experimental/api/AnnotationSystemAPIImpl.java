@@ -81,15 +81,15 @@ import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcess
  * Implementation of the Interface AnnotationSystemAPI within that package.
  *
  * In order to activate this class, add 'websocket.enabled = true' in the
- * application.yml file
- * @see inception-app-webapp/src/main/resources/application.yml
+ * application.yml file in 'inception-app-webapp/src/main/resources/application.yml'
  *
  * For further details @see interface class (AnnotationSystemAPI.class).
  *
  * NOTE: This class also contains private support methods that are NOT contained in
  * the Interface
  * @see AnnotationSystemAPI
- * These can be found on the bottom end of this class.
+ *
+ * The private support methods can be found on the bottom end of this class.
  *
  **/
 @Component
@@ -106,6 +106,14 @@ public class AnnotationSystemAPIImpl
     private final AnnotationProcessAPI annotationProcessAPI;
     private final ColoringService coloringService;
 
+    /**
+     * Default Constructor
+     * @param aProjectService The Projectservice obtains projects
+     * @param aDocumentService The Documentservice obtains SourceDocuments for the CAS
+     * @param aRepositoryProperties The RepositoryPropterties are required for the CAS
+     * @param aAnnotationSchemaService The AnnotationSchemaService contains methods which are related to TagSet, Tag and Type for the annotation Project
+     * @param aColoringService The Coloringservice retrieves the correct color for specific annotations
+     */
     public AnnotationSystemAPIImpl(ProjectService aProjectService, DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties, AnnotationProcessAPI aAnnotationProcessAPI,
             AnnotationSchemaService aAnnotationSchemaService, ColoringService aColoringService)

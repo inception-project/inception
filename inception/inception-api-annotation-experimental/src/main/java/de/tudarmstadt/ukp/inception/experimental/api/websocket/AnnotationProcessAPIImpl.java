@@ -75,8 +75,7 @@ public class AnnotationProcessAPIImpl
      * Easy Extensible: Simply follow the currently used approach to add a new
      * send / receive topic.
      *
-     * For further details
-     * @see src/main/ts/main/README.md
+     * For further details look into the README file for the annotation API in 'src/main/ts/main/README.md'
      * README file to see the streamlined process for extensions.
      *
      **/
@@ -102,10 +101,16 @@ public class AnnotationProcessAPIImpl
     // ERROR
     private static final String SERVER_SEND_CLIENT_ERROR_MESSAGE = "/queue/error_message/";
 
-    /**
-     * -------------------------------------------------------------------------------
-     */
 
+    /**
+     * Default Constructor
+     * @param aProjectService The Projectservice obtains projects
+     * @param aDocumentService The Documentservice obtains SourceDocuments for the CAS
+     * @param aRepositoryProperties The RepositoryPropterties are required for the CAS
+     * @param aSimpMessagingTemplate The Messaging Template publish data to specific topics
+     * @param aAnnotationSchemaService The AnnotationSchemaService contains methods which are related to TagSet, Tag and Type for the annotation Project
+     * @param aColoringService The Coloringservice retrieves the correct color for specific annotations
+     */
     public AnnotationProcessAPIImpl(ProjectService aProjectService,
             DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties,
