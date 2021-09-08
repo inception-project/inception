@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.search.index;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,11 +56,10 @@ public interface PhysicalIndex
         throws IOException, ExecutionException;
 
     public Map<String, Double> getLayerStatistics(StatisticRequest aStatisticRequest,
-            String aFeatureQuery, ArrayList<Integer> fullDocSet, boolean perSentence)
+            String aFeatureQuery, List<Integer> aFullDocSet, boolean aPerSentence)
         throws IOException, ExecutionException;
 
-    public ArrayList<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest)
-        throws IOException;
+    public List<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest) throws IOException;
 
     public StatisticsResult getAnnotationStatistics(StatisticRequest aStatisticRequest)
         throws IOException, ExecutionException;

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.search;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.OptionalInt;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -26,8 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public class StatisticsResult
 {
 
-    private Double upperDocSize;
-    private Double lowerDocSize;
+    private OptionalInt minTokenPerDoc;
+    private OptionalInt maxTokenPerDoc;
     private User user;
     private Project project;
 
@@ -38,8 +39,8 @@ public class StatisticsResult
             Map<String, Map<String, Double>> allResults,
             Map<String, Map<String, Double>> nonTrivialResults)
     {
-        upperDocSize = aStatisticRequest.getUpperDocumentSize();
-        lowerDocSize = aStatisticRequest.getLowerDocumentSize();
+        maxTokenPerDoc = aStatisticRequest.getMaxTokenPerDoc();
+        minTokenPerDoc = aStatisticRequest.getMinTokenPerDoc();
         user = aStatisticRequest.getUser();
         project = aStatisticRequest.getProject();
         this.allResults = allResults;
@@ -84,14 +85,14 @@ public class StatisticsResult
         return user;
     }
 
-    public Double getUpperDocSize()
+    public OptionalInt getMaxTokenPerDoc()
     {
-        return upperDocSize;
+        return maxTokenPerDoc;
     }
 
-    public Double getLowerDocSize()
+    public OptionalInt getMinTokenPerDoc()
     {
-        return lowerDocSize;
+        return minTokenPerDoc;
     }
 
 }

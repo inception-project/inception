@@ -75,12 +75,16 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.OptionalInt;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @EnableAutoConfiguration
 @EntityScan({ //
@@ -557,18 +561,97 @@ public class MtasDocumentIndexTest
         uploadDocument(Pair.of(otherDocument, otherContent));
 
         String statistic = "n,min,max,mean,median,standarddeviation";
-        Double lowerDocSize = null;
-        Double upperDocSize = null;
+        OptionalInt minTokenPerDoc = OptionalInt.empty();
+        OptionalInt maxTokenPerDoc = OptionalInt.empty();
 
         String query = "moon";
 
         StatisticsResult statsResults = searchService.getProjectStatistics(user, project, statistic,
-                lowerDocSize, upperDocSize);
+                minTokenPerDoc, maxTokenPerDoc);
+
+        assertThat(statsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
+        assertThat(statsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
+        assertThat(statsResults.getProject()).isEqualTo(project);
+        assertThat(statsResults.getUser()).isEqualTo(user);
+
+        Map<String, Map<String, Double>> expectedResults = new HashMap<String, Map<String, Double>>();
+
+        Map<String, Double> expectedNamedEntity = new HashMap<String, Double>();
+        expectedNamedEntity.put("min", 0.0);
+        expectedNamedEntity.put("median", 1.0);
+        expectedNamedEntity.put("max", 2.0);
+        expectedNamedEntity.put("mean", 1.0);
+        expectedNamedEntity.put("standarddeviation", Math.pow(2, 0.5));
+        expectedNamedEntity.put("Number of Documents", 2.0);
+        Map<String, Double> expectedToken = new HashMap<String, Double>();
+        expectedToken.put("min", 6.0);
+        expectedToken.put("median", 7.5);
+        expectedToken.put("max", 9.0);
+        expectedToken.put("mean", 7.5);
+        expectedToken.put("standarddeviation", Math.pow(4.5, 0.5));
+        expectedToken.put("Number of Documents", 2.0);
+        Map<String, Double> expectedSentence = new HashMap<String, Double>();
+        expectedSentence.put("min", 1.0);
+        expectedSentence.put("median", 1.5);
+        expectedSentence.put("max", 2.0);
+        expectedSentence.put("mean", 1.5);
+        expectedSentence.put("standarddeviation", Math.pow(0.5, 0.5));
+        expectedSentence.put("Number of Documents", 2.0);
+        Map<String, Double> expectedTokenPerSentence = new HashMap<String, Double>();
+        expectedTokenPerSentence.put("min", 3.0);
+        expectedTokenPerSentence.put("median", 6.0);
+        expectedTokenPerSentence.put("max", 9.0);
+        expectedTokenPerSentence.put("mean", 6.0);
+        expectedTokenPerSentence.put("standarddeviation", Math.pow(18, 0.5));
+        expectedTokenPerSentence.put("Number of Documents", 2.0);
+        Map<String, Double> expectedNamedEntityPerSentence = new HashMap<String, Double>();
+        expectedNamedEntityPerSentence.put("min", 0.0);
+        expectedNamedEntityPerSentence.put("median", 1.0);
+        expectedNamedEntityPerSentence.put("max", 2.0);
+        expectedNamedEntityPerSentence.put("mean", 1.0);
+        expectedNamedEntityPerSentence.put("standarddeviation", Math.pow(2, 0.5));
+        expectedNamedEntityPerSentence.put("Number of Documents", 2.0);
+
+        expectedResults.put("per Sentence: Token Count", expectedTokenPerSentence);
+        expectedResults.put("Named entity.value", expectedNamedEntity);
+        expectedResults.put("Token Count", expectedToken);
+        expectedResults.put("Sentence Count", expectedSentence);
+        expectedResults.put("per Sentence: Named entity.value", expectedNamedEntityPerSentence);
 
         StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project,
-                statistic, query, lowerDocSize, upperDocSize);
+                statistic, query, minTokenPerDoc, maxTokenPerDoc);
 
-        assertThat(0).isEqualTo(0);
+        assertThat(queryStatsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
+        assertThat(queryStatsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
+        assertThat(queryStatsResults.getUser()).isEqualTo(user);
+        assertThat(queryStatsResults.getProject()).isEqualTo(project);
+
+        Map<String, Map<String, Double>> expected = new HashMap<String, Map<String, Double>>();
+
+        Map<String, Double> expectedSearch = new HashMap<String, Double>();
+        expectedSearch.put("min", 0.0);
+        expectedSearch.put("median", 0.5);
+        expectedSearch.put("max", 1.0);
+        expectedSearch.put("mean", 0.5);
+        expectedSearch.put("standarddeviation", Math.pow(0.5, 0.5));
+        expectedSearch.put("Number of Documents", 2.0);
+        expectedSearch.put("Number of Hits", 1.0);
+
+        Map<String, Double> expectedSearchPerSentence = new HashMap<String, Double>();
+        expectedSearchPerSentence.put("min", 0.0);
+        expectedSearchPerSentence.put("median", 0.25);
+        expectedSearchPerSentence.put("max", 0.5);
+        expectedSearchPerSentence.put("mean", 0.25);
+        expectedSearchPerSentence.put("standarddeviation", Math.pow(0.125, 0.5));
+        expectedSearchPerSentence.put("Number of Documents", 2.0);
+        expectedSearchPerSentence.put("Number of Hits", 1.0);
+
+        expected.put("moon", expectedSearch);
+        expected.put("per Sentence: moon", expectedSearchPerSentence);
+
+        assertTrue(expectedResults.equals(statsResults.getNonNullResults()));
+        assertTrue(expected.equals(queryStatsResults.getNonNullResults()));
+
     }
 
     @SpringBootConfiguration

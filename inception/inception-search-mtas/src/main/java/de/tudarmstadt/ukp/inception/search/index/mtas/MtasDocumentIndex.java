@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -406,7 +407,7 @@ public class MtasDocumentIndex
     public StatisticsResult getAnnotationStatistics(StatisticRequest aStatisticRequest)
         throws IOException, ExecutionException
     {
-        ArrayList<Integer> fullDocSet = getUniqueDocuments(aStatisticRequest);
+        List<Integer> fullDocSet = getUniqueDocuments(aStatisticRequest);
         Map<String, Map<String, Double>> allStats = new HashMap<String, Map<String, Double>>();
         Map<String, Map<String, Double>> nonNullStats = new HashMap<String, Map<String, Double>>();
         List<AnnotationLayer> layers = schemaService
@@ -472,14 +473,13 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public ArrayList<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest)
-        throws IOException
+    public List<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest) throws IOException
     {
         IndexSearcher searcher = null;
         Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
                 aStatisticRequest.getProject(), aStatisticRequest.getUser());
 
-        ArrayList<Integer> fullDocSet = new ArrayList<Integer>();
+        List<Integer> fullDocSet = new ArrayList<Integer>();
 
         try {
             searcher = getSearcherManager().acquire();
@@ -500,15 +500,10 @@ public class MtasDocumentIndex
                 }
             }
         }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
         finally {
             if (searcher != null) {
                 // Releasing and setting to null per recommendation in JavaDoc of
-                // release(searcher)
-                // method
-                // getSearcherManager().release(searcher);
+                // release(searcher) method
                 getSearcherManager().release(searcher);
                 searcher = null;
             }
@@ -516,11 +511,11 @@ public class MtasDocumentIndex
         return fullDocSet;
     }
 
-    public MtasSpanQuery parseQuery(String query) throws ExecutionException, Exception
+    public MtasSpanQuery parseQuery(String aQuery) throws ExecutionException, IOException
     {
         final MtasSpanQuery mtasSpanQuery;
         try {
-            String modifiedQuery = preprocessQuery(query);
+            String modifiedQuery = preprocessQuery(aQuery);
             MtasSpanQuery mtasSpanQuery1;
             try (Reader queryReader = new StringReader(modifiedQuery)) {
                 MtasCQLParser parser = new MtasCQLParser(queryReader);
@@ -531,14 +526,14 @@ public class MtasDocumentIndex
         catch (ParseException | Error e) {
             // The exceptions thrown by the MTAS CQL Parser are inheriting from
             // java.lang.Error...
-            throw new ExecutionException("Unable to parse query [" + query + "]", e);
+            throw new ExecutionException("Unable to parse query [" + aQuery + "]", e);
         }
         return mtasSpanQuery;
     }
 
     @Override
     public Map<String, Double> getLayerStatistics(StatisticRequest aStatisticRequest,
-            String aFeatureQuery, ArrayList<Integer> fullDocSet, boolean perSentence)
+            String aFeatureQuery, List<Integer> aFullDocSet, boolean aPerSentence)
         throws IOException, ExecutionException
     {
         IndexSearcher searcher = null;
@@ -546,12 +541,18 @@ public class MtasDocumentIndex
         Map<String, Double> resultsMapDouble = new HashMap<String, Double>();
         Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
                 aStatisticRequest.getProject(), aStatisticRequest.getUser());
+        Double minToken = aStatisticRequest.getMinTokenPerDoc().isPresent()
+                ? (double) aStatisticRequest.getMinTokenPerDoc().getAsInt()
+                : null;
+        Double maxToken = aStatisticRequest.getMaxTokenPerDoc().isPresent()
+                ? (double) aStatisticRequest.getMaxTokenPerDoc().getAsInt()
+                : null;
         try {
             searcher = getSearcherManager().acquire();
             IndexReader reader = searcher.getIndexReader();
 
             // what does this parameter do?
-            ArrayList<Integer> fullDocList = new ArrayList<Integer>();
+            List<Integer> fullDocList = new ArrayList<Integer>();
             CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
                     FIELD_CONTENT);
             MtasSpanQuery[] spanQuerys = new MtasSpanQuery[1];
@@ -563,7 +564,7 @@ public class MtasDocumentIndex
             MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery);
             fieldStats.spanQueryList.add(parsedQuery);
 
-            if (perSentence == false) {
+            if (!aPerSentence) {
                 // maybe using a function for this simple case is too slow...
                 spanQuerys[0] = parsedQuery;
                 functionKeys[0] = "currentLayer";
@@ -584,12 +585,12 @@ public class MtasDocumentIndex
             }
 
             fieldStats.statsSpanList.add(new CodecComponent.ComponentSpan(spanQuerys, "ax2",
-                    aStatisticRequest.getLowerDocumentSize(),
-                    aStatisticRequest.getUpperDocumentSize(), aStatisticRequest.getStatistic(),
-                    functionKeys, functions, functionTypes));
+                    minToken, maxToken, aStatisticRequest.getStatistic(), functionKeys, functions,
+                    functionTypes));
 
-            CodecUtil.collectField(FIELD_CONTENT, searcher, reader, fullDocList, fullDocSet,
-                    fieldStats, new Status());
+            CodecUtil.collectField(FIELD_CONTENT, searcher, reader,
+                    (ArrayList<Integer>) fullDocList, (ArrayList<Integer>) aFullDocSet, fieldStats,
+                    new Status());
 
             MtasDataItem<?, ?> results = fieldStats.statsSpanList.get(0).functions
                     .get(0).dataCollector.getResult().getData();
@@ -602,8 +603,14 @@ public class MtasDocumentIndex
             }
             return resultsMapDouble;
         }
-        catch (Exception e) {
-            e.printStackTrace();
+        catch (mtas.parser.function.ParseException e) {
+            throw new ExecutionException("Search function could not be parsed!", e);
+        }
+        catch (IllegalAccessException e) {
+            throw new ExecutionException("Collector could not access data!", e);
+        }
+        catch (InvocationTargetException e) {
+            throw new ExecutionException("Problem with collecting the data!", e.getCause());
         }
         finally {
             if (searcher != null) {
@@ -614,7 +621,6 @@ public class MtasDocumentIndex
                 searcher = null;
             }
         }
-        return resultsMapDouble;
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)
@@ -1130,15 +1136,6 @@ public class MtasDocumentIndex
         doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
         doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
         doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
-        // FieldType fieldTypeForContent = new FieldType();
-        // fieldTypeForContent.setIndexed(true);
-        /*
-         * fieldTypeForContent.setIndexOptions(IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS
-         * ); fieldTypeForContent.setStored(false); fieldTypeForContent.setStoreTermVectors(true);
-         * fieldTypeForContent.setStoreTermVectorPositions(true);
-         * fieldTypeForContent.setTokenized(true); fieldTypeForContent.freeze();
-         * 
-         */
         doc.add(new TextField(FIELD_CONTENT, encodedCAS, Field.Store.NO));
 
         // Add document to the Lucene index

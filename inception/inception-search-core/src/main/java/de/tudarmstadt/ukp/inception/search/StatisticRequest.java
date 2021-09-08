@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import java.util.OptionalInt;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -26,8 +28,8 @@ public class StatisticRequest
     private final User user;
     private final String statistic;
 
-    private final Double lowerDocumentSize;
-    private final Double upperDocumentSize;
+    private final OptionalInt minTokenPerDoc;
+    private final OptionalInt maxTokenPerDoc;
 
     public StatisticRequest(Project aProject, User aUser, String aStatistic)
     {
@@ -35,14 +37,14 @@ public class StatisticRequest
     }
 
     public StatisticRequest(Project aProject, User aUser, String aStatistic,
-            Double aLowerDocumentSize, Double aUpperDocumentSize)
+            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc)
     {
         project = aProject;
         user = aUser;
         statistic = aStatistic;
 
-        lowerDocumentSize = aLowerDocumentSize;
-        upperDocumentSize = aUpperDocumentSize;
+        minTokenPerDoc = aMinTokenPerDoc;
+        maxTokenPerDoc = aMaxTokenPerDoc;
     }
 
     public Project getProject()
@@ -60,14 +62,14 @@ public class StatisticRequest
         return statistic;
     }
 
-    public Double getLowerDocumentSize()
+    public OptionalInt getMinTokenPerDoc()
     {
-        return lowerDocumentSize;
+        return minTokenPerDoc;
     }
 
-    public Double getUpperDocumentSize()
+    public OptionalInt getMaxTokenPerDoc()
     {
-        return upperDocumentSize;
+        return maxTokenPerDoc;
     }
 
 }

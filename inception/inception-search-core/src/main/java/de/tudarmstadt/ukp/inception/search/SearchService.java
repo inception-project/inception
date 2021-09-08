@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -110,11 +111,11 @@ public interface SearchService
         throws ExecutionException, IOException;
 
     public StatisticsResult getProjectStatistics(User aUser, Project aProject, String aStatistic,
-            Double aLowerDocSize, Double aUpperDocSize)
+            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc)
         throws IOException, ExecutionException;
 
     public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aStatistic,
-            String aQuery, Double aLowerDocSize, Double aUpperDocSize)
+            String aQuery, OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc)
         throws ExecutionException, IOException;
 
     void enqueueReindexTask(Project aProject, String aTrigger);
