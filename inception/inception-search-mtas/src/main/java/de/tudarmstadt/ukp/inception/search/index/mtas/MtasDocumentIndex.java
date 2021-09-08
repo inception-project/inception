@@ -412,9 +412,8 @@ public class MtasDocumentIndex
         Map<String, Map<String, Double>> nonNullStats = new HashMap<String, Map<String, Double>>();
         List<AnnotationLayer> layers = schemaService
                 .listAnnotationLayer(aStatisticRequest.getProject());
-        List<AnnotationFeature> features;
         for (AnnotationLayer layer : layers) {
-            features = schemaService.listAnnotationFeature(layer);
+            List<AnnotationFeature> features = schemaService.listAnnotationFeature(layer);
             for (AnnotationFeature feature : features) {
                 String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
                         + feature.getUiName().replace(' ', '_') + "=\"\"/>";
@@ -488,6 +487,7 @@ public class MtasDocumentIndex
             for (int i = 0; i < reader.maxDoc(); i++) {
                 String sourceID = reader.document(i).get(FIELD_SOURCE_DOCUMENT_ID);
                 String annotationID = reader.document(i).get(FIELD_ANNOTATION_DOCUMENT_ID);
+                // a -1 indicates source document
                 if (Long.valueOf(annotationID) != -1L) {
                     if (reader.document(i).get(FIELD_USER)
                             .equals(aStatisticRequest.getUser().getUsername())) {
@@ -553,14 +553,33 @@ public class MtasDocumentIndex
 
             // what does this parameter do?
             List<Integer> fullDocList = new ArrayList<Integer>();
+
+            // there is no real documentation for using mtas directly in Java. This can help:
+            // https://textexploration.github.io/mtas/installation_lucene.html
+            // This describes the functionality better but only for solr:
+            // https://textexploration.github.io/mtas/search_component_stats_spans.html
+
+            // The ComponentField is a big container which can contain many stuff. The only relevant
+            // things for us are statsSpanList, spanQueryList
+            // Source Code:
+            // https://github.com/textexploration/mtas/blob/96c7911e9c591c2bd4a419dbf0e2194813376776/src/main/java/mtas/codec/util/CodecComponent.java
             CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
                     FIELD_CONTENT);
+            // If we are not interested in per sentence statistics, we only have one query. This is either
+            // an actual query (if the method is called from getQueryStatistics in SearchService)
+            // or a mock query, e.g. "<Token=\"\"/>" (if the method is called from getAnnotationStatistics in
+            // MtasDocumentIndex)
             MtasSpanQuery[] spanQuerys = new MtasSpanQuery[1];
 
+            // we need exactly one function. Each function consists of 3 parts
+            // 1. The key. This is just a unique identifier
             String[] functionKeys = new String[1];
+            // 2. The actual instructions of the function
             String[] functions = new String[1];
+            // 3. Which values the function shall output
             String[] functionTypes = new String[1];
 
+            // add the preprocessed query to the spanQueryList
             MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery);
             fieldStats.spanQueryList.add(parsedQuery);
 
@@ -568,33 +587,54 @@ public class MtasDocumentIndex
                 // maybe using a function for this simple case is too slow...
                 spanQuerys[0] = parsedQuery;
                 functionKeys[0] = "currentLayer";
+                // This is a mock function (mathematically, the identity function).
+                // q0 indicates the result of the first parsed query
                 functions[0] = "$q0";
+                // The output should be all the requested statistics
                 functionTypes[0] = aStatisticRequest.getStatistic();
             }
             else {
+                // If we want per Sentence statistics we need two queries
                 spanQuerys = new MtasSpanQuery[2];
+                // the actual query
                 spanQuerys[0] = parsedQuery;
-
+                // A query which counts sentences
                 MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>");
                 fieldStats.spanQueryList.add(parsedSentQuery);
 
                 spanQuerys[1] = parsedSentQuery;
                 functionKeys[0] = "perSentence";
+                // q0 is the result of the actual query. q1 is the result of counting the sentences
+                // we divide them using /
                 functions[0] = "$q0/$q1";
+                // The output should be all the requested statistics
                 functionTypes[0] = aStatisticRequest.getStatistic();
             }
+            // now we are finished with the spanQueryList
 
+            // Next we look at the statsSpanList
+            // We add a ComponentSpan to the statsSpanList which is created using all the things
+            // we defined above
+            // the key is a unique but somewhat arbitrary identifier
+            // minToken and maxToken indicate that only documents with a number of tokens bigger
+            // than minToken and smaller than maxToken should be considered
             fieldStats.statsSpanList.add(new CodecComponent.ComponentSpan(spanQuerys, "ax2",
                     minToken, maxToken, aStatisticRequest.getStatistic(), functionKeys, functions,
                     functionTypes));
 
+            // Now we are done with the preparations
+            // Next we actually collect the data and do all the calculations
+            // Only documents in aFullDocSet are considered
+            // I do not know for what Status and fullDocList are needed...
             CodecUtil.collectField(FIELD_CONTENT, searcher, reader,
                     (ArrayList<Integer>) fullDocList, (ArrayList<Integer>) aFullDocSet, fieldStats,
                     new Status());
-
+            // All that is left now is extracting the statistics from fieldStats
+            // statsSpanList only has one entry and we also only have one function
             MtasDataItem<?, ?> results = fieldStats.statsSpanList.get(0).functions
                     .get(0).dataCollector.getResult().getData();
 
+            // everything is cast to Double
             resultsMap = results.rewrite(true);
             for (String str : resultsMap.keySet()) {
                 if ((resultsMap.get(str) instanceof Number)) {

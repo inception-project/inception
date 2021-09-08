@@ -110,10 +110,42 @@ public interface SearchService
             AnnotationFeature aAnnotationFeature)
         throws ExecutionException, IOException;
 
+    /**
+     *
+     * @param aUser the current user, not all users have access to all documents
+     * @param aProject the current project
+     * @param aStatistic contains the metrics, separated by commas
+     * @param aMinTokenPerDoc only documents which have more tokens than this are considered
+     *                        null means we don't have a lower bound
+     * @param aMaxTokenPerDoc only documents which have less tokens than this are considered
+     *                        null means we don't have an upper bound
+     * @return the method cycles through each layer and each feature from the DocumentService and
+     *         gets all the statistics from aStatistic
+     * @throws IOException
+     * @throws ExecutionException covers many exceptions which have to do with parsing aStatistic
+     *                            and the layers
+     */
+
     public StatisticsResult getProjectStatistics(User aUser, Project aProject, String aStatistic,
             OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc)
         throws IOException, ExecutionException;
 
+    /**
+     *
+     * @param aUser the current user, not all users have access to all documents
+     * @param aProject the current project
+     * @param aStatistic contains the metrics, separated by commas
+     * @param aQuery a normal query e.g. the name of a specific token
+     * @param aMinTokenPerDoc only documents which have more tokens than this are considered
+     *                        null means we don't have a lower bound
+     * @param aMaxTokenPerDoc only documents which have less tokens than this are considered
+     *                        null means we don't have an upper bound
+     * @return the statistics from aStatistic for aQuery, e.g. what is the maximal amount of
+     *         occurrences per document of aQuery across all documents
+     * @throws ExecutionException covers many exceptions which have to do with parsing aStatistic
+     *                            and aQuery
+     * @throws IOException
+     */
     public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aStatistic,
             String aQuery, OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc)
         throws ExecutionException, IOException;

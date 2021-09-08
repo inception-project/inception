@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 
@@ -31,6 +33,7 @@ public class StatisticsResult
     private OptionalInt maxTokenPerDoc;
     private User user;
     private Project project;
+    private List<String> metrics;
 
     private Map<String, Map<String, Double>> allResults;
     private Map<String, Map<String, Double>> nonTrivialResults;
@@ -45,6 +48,13 @@ public class StatisticsResult
         project = aStatisticRequest.getProject();
         this.allResults = allResults;
         this.nonTrivialResults = nonTrivialResults;
+        //metrics = Arrays.asList(aStatisticRequest.getStatistic().split(","));
+        for (String key: allResults.keySet()) {
+            for (String metric: allResults.get(key).keySet()) {
+                metrics.add(metric);
+            }
+            break;
+        }
     }
 
     public ArrayList<String> getAllLayers()
@@ -67,12 +77,13 @@ public class StatisticsResult
         return new ArrayList<String>(nonTrivialResults.keySet());
     }
 
-    public Map<String, Double> getLayerResult(String layerName) throws ExecutionException
+    public Map<String, Double> getLayerResult(String aLayerName, String aFeatureName) throws ExecutionException
     {
-        if (!allResults.keySet().contains(layerName)) {
-            throw new ExecutionException("The layer" + layerName + "does not exist!");
+        String fullName = aLayerName + "." + aFeatureName;
+        if (!allResults.keySet().contains(fullName)) {
+            throw new ExecutionException("The layer " + fullName + " does not exist!");
         }
-        return allResults.get(layerName);
+        return allResults.get(fullName);
     }
 
     public Project getProject()
@@ -93,6 +104,15 @@ public class StatisticsResult
     public OptionalInt getMinTokenPerDoc()
     {
         return minTokenPerDoc;
+    }
+
+    public List<String> getMetrics() {return metrics;}
+
+    public Double getStatistic(String aMetric, String aLayerName, String aFeatureName) throws ExecutionException {
+        if (!metrics.contains(aMetric)) {
+            throw new ExecutionException("The given metric is not valid: " + aMetric);
+        }
+        return getLayerResult(aLayerName, aFeatureName).get(aMetric);
     }
 
 }
