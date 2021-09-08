@@ -95,4 +95,19 @@ When applying a bulk action, only those cells which permit the requested transit
 
 To facilitate wrapping up annotations for a user or document, there is the combo action **Close all** which will lock any documents on which work has not started yet and mark and ongoing annotations as finished. 
 
+== Filtering
+
+It is possible to filter the table by document name and/or user name. If a filter has been set, then
+bulk actions are applied only to those rows and column which match the filter and which are selected
+for the bulk operation.
+
+The document name and user name filters can be set in two ways: 
+* "contains" match or
+* regular expression
+
+The regular expression mode can be enabled by activating the checkbox `(.*)` next to the
+filter text field. For example, with the checkbox enabled, you could search for `^chapter01.*` to match
+all documents whose name starts with `chapter01` or for `train|test` to match all documents containing
+`train` or `test` in their name.
+
  

@@ -54,7 +54,7 @@ public class FeatureValueUpdatedEventAdapterTest
         TypeDescription typeDesc = tsd.addType("customType", "desc", TYPE_NAME_ANNOTATION);
         FeatureDescription featDesc = typeDesc.addFeature("value", "desc", TYPE_NAME_STRING);
 
-        Project project = new Project("project name");
+        Project project = new Project("test-project");
         project.setId(1l);
         SourceDocument doc = new SourceDocument("document name", project, "format");
         doc.setId(2l);

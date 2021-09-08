@@ -91,7 +91,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -117,6 +116,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
+import de.tudarmstadt.ukp.inception.export.ImportUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -139,6 +139,7 @@ public class AeroRemoteApiController
     private static final String PARAM_FILE = "file";
     private static final String PARAM_CONTENT = "content";
     private static final String PARAM_NAME = "name";
+    private static final String PARAM_TITLE = "title";
     private static final String PARAM_FORMAT = "format";
     private static final String PARAM_STATE = "state";
     private static final String PARAM_CREATOR = "creator";
@@ -283,8 +284,11 @@ public class AeroRemoteApiController
             value = ("/" + PROJECTS), //
             consumes = { ALL_VALUE, MULTIPART_FORM_DATA_VALUE }, //
             produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<RProject>> projectCreate(@RequestParam(PARAM_NAME) String aName,
-            @RequestParam(PARAM_CREATOR) Optional<String> aCreator, UriComponentsBuilder aUcb)
+    public ResponseEntity<RResponse<RProject>> projectCreate( //
+            @RequestParam(PARAM_NAME) String aSlug, //
+            @RequestParam(PARAM_TITLE) Optional<String> aName, //
+            @RequestParam(PARAM_CREATOR) Optional<String> aCreator, //
+            UriComponentsBuilder aUcb)
         throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
@@ -302,14 +306,16 @@ public class AeroRemoteApiController
                         || (aCreator.isPresent() && aCreator.get().equals(user.getUsername())));
 
         // Existing project
-        if (projectService.existsProject(aName)) {
-            throw new ObjectExistsException("A project with name [" + aName + "] already exists");
+        if (projectService.existsProjectWithSlug(aSlug)) {
+            throw new ObjectExistsException(
+                    "A project with URL slug [" + aSlug + "] already exists");
         }
 
         // Create the project and initialize tags
-        LOG.info("Creating project [" + aName + "]");
+        LOG.info("Creating project [{}]", aSlug);
         Project project = new Project();
-        project.setName(aName);
+        project.setSlug(aSlug);
+        project.setName(aName.orElse(aSlug));
         project.setScriptDirection(ScriptDirection.LTR);
         project.setState(ProjectState.NEW);
         projectService.createProject(project);

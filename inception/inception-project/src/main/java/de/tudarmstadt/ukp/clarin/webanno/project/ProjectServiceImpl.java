@@ -21,6 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLo
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MAX_PROJECT_SLUG_LENGTH;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_LENGTH;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlugInitialCharacter;
+import static java.lang.Math.min;
 import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -50,8 +55,10 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -172,11 +179,28 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public boolean existsProject(String aName)
+    public boolean existsProjectWithName(String aName)
     {
-        String query = "FROM Project " + "WHERE name = :name";
+        String query = "FROM Project WHERE name = :name";
         try {
-            entityManager.createQuery(query, Project.class).setParameter("name", aName)
+            entityManager.createQuery(query, Project.class) //
+                    .setParameter("name", aName) //
+                    .getSingleResult();
+            return true;
+        }
+        catch (NoResultException ex) {
+            return false;
+        }
+    }
+
+    @Override
+    @Transactional
+    public boolean existsProjectWithSlug(String aSlug)
+    {
+        String query = "FROM Project WHERE slug = :slug";
+        try {
+            entityManager.createQuery(query, Project.class) //
+                    .setParameter("slug", aSlug) //
                     .getSingleResult();
             return true;
         }
@@ -214,35 +238,6 @@ public class ProjectServiceImpl
             entityManager.createQuery(query, ProjectPermission.class)
                     .setParameter("user", aUser.getUsername()).setParameter("project", aProject)
                     .setParameter("level", aLevel).getSingleResult();
-            return true;
-        }
-        catch (NoResultException ex) {
-            return false;
-        }
-    }
-
-    @Override
-    @Transactional
-    public boolean existsProjectTimeStamp(Project aProject, String aUsername)
-    {
-        try {
-            if (getProjectTimeStamp(aProject, aUsername) == null) {
-                return false;
-            }
-            return true;
-        }
-        catch (NoResultException ex) {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean existsProjectTimeStamp(Project aProject)
-    {
-        try {
-            if (getProjectTimeStamp(aProject) == null) {
-                return false;
-            }
             return true;
         }
         catch (NoResultException ex) {
@@ -451,10 +446,11 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public Project getProject(String aName)
+    public Project getProjectBySlug(String aSlug)
     {
-        String query = "FROM Project " + "WHERE name = :name";
-        return entityManager.createQuery(query, Project.class).setParameter("name", aName)
+        String query = "FROM Project WHERE slug = :slug";
+        return entityManager.createQuery(query, Project.class) //
+                .setParameter("slug", aSlug) //
                 .getSingleResult();
     }
 
@@ -462,7 +458,8 @@ public class ProjectServiceImpl
     public Project getProject(long aId)
     {
         String query = "FROM Project " + "WHERE id = :id";
-        return entityManager.createQuery(query, Project.class).setParameter("id", aId)
+        return entityManager.createQuery(query, Project.class) //
+                .setParameter("id", aId) //
                 .getSingleResult();
     }
 
@@ -784,9 +781,11 @@ public class ProjectServiceImpl
     }
 
     @EventListener
+    @Transactional
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
+        addMissingProjectSlugs();
     }
 
     /* package private */ void init()
@@ -814,6 +813,34 @@ public class ProjectServiceImpl
         log.info("Found [{}] project initializers", inits.size());
 
         initializers = unmodifiableList(inits);
+    }
+
+    private void addMissingProjectSlugs()
+    {
+        String query = "SELECT p FROM Project p WHERE slug IS NULL";
+        List<Project> projects = entityManager.createQuery(query, Project.class).getResultList();
+        for (Project project : projects) {
+            String slug = deriveSlugFromName(project.getName());
+            if (!isValidProjectSlug(slug)) {
+                log.warn("Attempt to derive slug from project name [{}] resulted in invalid slug "
+                        + "[{}], generating random slug...", project.getName(), slug);
+                slug = generateRandomSlug();
+            }
+            slug = deriveUniqueSlug(slug);
+            project.setSlug(slug);
+            log.info("Auto-generated slug [{}] for project {}", slug, project);
+        }
+    }
+
+    private String generateRandomSlug()
+    {
+        String validChars = "abcdefghijklmnopqrstuvwxyz";
+        Random rnd = new Random();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 32; i++) {
+            sb.append(validChars.charAt(rnd.nextInt(validChars.length())));
+        }
+        return sb.toString();
     }
 
     @Override
@@ -934,10 +961,11 @@ public class ProjectServiceImpl
                 + "WHERE pp.project = p.id "
                 + "AND pp.user = :username AND (pp.level = :curator OR pp.level = :manager)"
                 + "ORDER BY p.name ASC";
-        List<Project> projects = entityManager.createQuery(query, Project.class)
-                .setParameter("username", aUser.getUsername())
-                .setParameter("curator", PermissionLevel.CURATOR)
-                .setParameter("manager", PermissionLevel.MANAGER).getResultList();
+        List<Project> projects = entityManager.createQuery(query, Project.class) //
+                .setParameter("username", aUser.getUsername()) //
+                .setParameter("curator", PermissionLevel.CURATOR) //
+                .setParameter("manager", PermissionLevel.MANAGER) //
+                .getResultList();
         return projects;
     }
 
@@ -953,6 +981,77 @@ public class ProjectServiceImpl
         if (!Objects.equals(oldState, aProject.getState())) {
             applicationEventPublisher
                     .publishEvent(new ProjectStateChangedEvent(this, aProject, oldState));
+        }
+    }
+
+    @Override
+    public String deriveSlugFromName(String aName)
+    {
+        if (aName == null) {
+            return null;
+        }
+
+        String name = aName.trim().toLowerCase(Locale.ROOT);
+        if (name.isEmpty()) {
+            return "";
+        }
+
+        boolean lastCharMappedToUnderscore = true;
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < min(name.length(), MAX_PROJECT_SLUG_LENGTH); i++) {
+            char c = name.charAt(i);
+            if (Project.isValidProjectSlugCharacter(c)) {
+                lastCharMappedToUnderscore = c == '_';
+                buf.append(c);
+                continue;
+            }
+
+            if (c == ' ') {
+                buf.append('-');
+                continue;
+            }
+
+            if (lastCharMappedToUnderscore) {
+                continue;
+            }
+
+            buf.append("_");
+            lastCharMappedToUnderscore = true;
+        }
+
+        if (!isValidProjectSlugInitialCharacter(buf.charAt(0))) {
+            buf.insert(0, 'x');
+            if (buf.length() > MAX_PROJECT_SLUG_LENGTH) {
+                buf.setLength(MAX_PROJECT_SLUG_LENGTH);
+            }
+        }
+
+        while (buf.length() < MIN_PROJECT_SLUG_LENGTH) {
+            buf.append("_");
+        }
+
+        return buf.toString();
+    }
+
+    @Transactional
+    @Override
+    public String deriveUniqueSlug(String aSlug)
+    {
+        int i = 0;
+        String slug = aSlug;
+        while (true) {
+            if (!existsProjectWithSlug(slug)) {
+                return slug;
+            }
+
+            i++;
+            String suffix = "-" + i;
+            if (MAX_PROJECT_SLUG_LENGTH - aSlug.length() <= suffix.length()) {
+                slug = aSlug.substring(0, MAX_PROJECT_SLUG_LENGTH - suffix.length()) + suffix;
+            }
+            else {
+                slug = aSlug + suffix;
+            }
         }
     }
 }

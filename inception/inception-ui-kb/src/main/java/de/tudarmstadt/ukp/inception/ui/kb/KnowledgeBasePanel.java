@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePage.PAGE_PARAM_KB_NAME;
 
 import java.util.Arrays;
@@ -46,9 +45,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -118,18 +117,17 @@ public class KnowledgeBasePanel
         kbModel = aKbModel;
 
         // add the selector for the knowledge bases
-        DropDownChoice<KnowledgeBase> ddc = new BootstrapSelect<KnowledgeBase>("knowledgebases",
+        DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
                 LoadableDetachableModel
                         .of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())));
 
         ddc.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            long projectId = aProjectModel.getObject().getId();
             String kbName = aKbModel.getObject().getName();
 
-            PageParameters params = new PageParameters().set(PAGE_PARAM_PROJECT, projectId)
-                    .set(PAGE_PARAM_KB_NAME, kbName);
-
-            setResponsePage(KnowledgeBasePage.class, params);
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, aProjectModel.getObject());
+            pageParameters.set(PAGE_PARAM_KB_NAME, kbName);
+            setResponsePage(KnowledgeBasePage.class, pageParameters);
         }));
 
         ddc.setModel(aKbModel);

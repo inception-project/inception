@@ -17,20 +17,19 @@
 -->
 
 <template>
-  <div class="float-left">
-    <div class="btn-group dropup">
-      <a role="button" class="ml-1 mr-1" data-boundary="viewport" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  <div class="float-start">
+    <div class="mx-2">
+      <a role="button" class="log-toggle ml-1 mr-1" data-bs-toggle="popover" aria-haspopup="true" aria-expanded="false">
         <i class="fas fa-scroll"></i>
       </a>
-      <div class="dropdown-menu shadow-lg p-0 m-0" style="z-index: 9999;">
-        <div class="card-header small">
-          Recent logged events
-        </div>
-        <div class="scrolling card-body small p-0">
-        <ul class="list-group list-group-flush">
-          <li v-show="!events.length" class="list-group-item p-1">No recent events</li>
-          <li v-for="event in events" class="list-group-item p-1">{{formatTime(event.timestamp)}}: {{event.eventType}}</li>
-        </ul>
+      <div class="d-none">
+        <div class="log-popup">
+          <div class="scrolling card-body small p-0">
+            <ul class="list-group list-group-flush">
+              <li v-show="!events.length" class="list-group-item p-1">No recent events</li>
+              <li v-for="event in events" class="list-group-item p-1">{{formatTime(event.timestamp)}}: {{event.eventType}}</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -95,6 +94,17 @@ module.exports = {
   },
   mounted(){
     this.connect();
+    new bootstrap.Popover(this.$el.querySelector('.log-toggle'), { 
+      title: 'Recently logged events',
+      container: 'body',
+      offset: [0, 12],
+      html: true,
+      placement: 'top',
+      fallbackPlacements: ['top'],
+      customClass: 'shadow-lg above-modal w-auto mw-100',
+      content: this.$el.querySelector('.log-popup'),
+      template: '<div class="popover" role="tooltip"><div class="popover-arrow"></div><h3 class="popover-header"></h3><div class="popover-body p-0"></div></div>'
+    })
   },
   beforeUnmount(){
     this.disconnect();

@@ -24,16 +24,14 @@
   
   <wicket:fragment wicket:id="newStatementGroup">
     <form wicket:id="form" class="statement-group flex-h-container">
-      <div class="flex-25 flex-h-container">
-        <select wicket:id="property" class="form-control flex-content" data-container="body"></select>
-        <div class="statement-editor-button-row">
-          <ul>
-            <li><a wicket:id="create" wicket:message="title:statement.save" class="btn-link"><i class="fas fa-check"></i></a>
-            </li>
-            <li><a wicket:id="cancel" wicket:message="title:cancel" class="btn-link"><i class="fas fa-times"></i></a>
-            </li>
-          </ul>
-        </div>
+      <div class="input-group">
+        <select wicket:id="property" class="form-select flex-content" data-container="body"/>
+        <a wicket:id="create" wicket:message="title:statement.save" class="btn btn-primary">
+          <i class="fas fa-check"></i>
+        </a>
+        <a wicket:id="cancel" wicket:message="title:cancel" class="btn btn-secondary">
+          <i class="fas fa-times"></i>
+        </a>
       </div>
       <div class="flex-content statement-group-footer">
       </div>
@@ -55,7 +53,10 @@
           </div>
         </div>
         <div wicket:id="statementGroupFooter" class="rounded statement-group-footer">
-          <button wicket:id="add" type="button" class="btn btn-link float-right"><i class="fas fa-plus"></i> <wicket:container wicket:id="label"></wicket:container></button>
+          <button wicket:id="add" type="button" class="btn btn-sm btn-primary float-end">
+            <i class="fas fa-plus me-1"></i>
+            <wicket:container wicket:id="label"/>
+          </button>
         </div>
       </div>
     </form>

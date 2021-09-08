@@ -31,10 +31,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.Date;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.commons.lang3.function.FailableConsumer;
+import org.apache.commons.lang3.stream.Streams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -89,8 +90,8 @@ public class LoggedEventExporterTest
     public void thatExportingWorks() throws Exception
     {
         doAnswer((Answer<Void>) invocation -> {
-            Consumer<LoggedEvent> consumer = invocation.getArgument(1);
-            events().forEach(consumer);
+            FailableConsumer<LoggedEvent, Exception> consumer = invocation.getArgument(1);
+            Streams.stream(events()).forEach(consumer);
             return null;
         }).when(eventRepository).forEachLoggedEvent(any(), any());
 

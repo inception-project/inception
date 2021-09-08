@@ -51,10 +51,13 @@ public class WarningsFooterPanel
 
     private Label embeddedDbWarning;
     private Label browserWarning;
+    private WebMarkupContainer warningsContainer;
 
     public WarningsFooterPanel(String aId)
     {
         super(aId);
+
+        setOutputMarkupId(true);
 
         Properties settings = SettingsUtil.getSettings();
 
@@ -69,7 +72,7 @@ public class WarningsFooterPanel
         browserWarning.setVisible(isBrowserWarningVisible);
         add(browserWarning);
 
-        WebMarkupContainer warningsContainer = new WebMarkupContainer("warnings");
+        warningsContainer = new WebMarkupContainer("warnings");
         warningsContainer.setVisible(isBrowserWarningVisible || isDatabaseWarningVisible);
         add(warningsContainer);
     }
@@ -79,18 +82,18 @@ public class WarningsFooterPanel
     {
         super.renderHead(aResponse);
 
-        aResponse.render(JavaScriptHeaderItem.forReference(
-                getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
         // @formatter:off
         String script = String.join("\n",
                 "$(function () {",
-                "  $('[data-toggle=\"popover\"]').popover({",
-                "    html : true,",
-                "    content: function() {",
-                "      var content = $(this).attr('data-popover-content');",
-                "      return $(content).children('.popover-body').html();",
-                "    }",
-                "  });",
+                "  let panel = document.getElementById('" + getMarkupId() + "');",
+                "  let popoverTriggerList = [].slice.call(panel.querySelectorAll('[data-bs-toggle=\"popover\"]'))",
+                "  let popoverList = popoverTriggerList.map(function (popoverTriggerEl) {",
+                "    return new bootstrap.Popover(popoverTriggerEl, {",
+                "      content: function() {",
+                "        var content = $(this).attr('data-bs-popover-content');",
+                "        return $(content).children('.popover-body').html();",
+                "      }});",
+                "    });",
                 "});");
         // @formatter:on
         aResponse.render(JavaScriptHeaderItem.forScript(script, "popover"));

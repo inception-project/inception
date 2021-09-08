@@ -21,26 +21,28 @@
   <wicket:extend>
     <div class="scrolling flex-content flex-h-container flex-centered">
       <div class="flex-content flex-v-container flex-centered">
-        <form wicket:id="loginForm" class="card hvr-shadow-radial login-form">
+        <form wicket:id="loginForm" class="card hvr-shadow-radial login-form w-min-440px">
           <div class="card-body container-sm">
             <h5 class="card-title mb-3 text-center">
               Welcome!
             </h5>
             <input type="hidden" id="urlfragment" wicket:id="urlfragment" />
-            <div class="form-group form-row mb-3">
+            <div class="row mb-3 form-floating">
               <input wicket:id="username" type="text" class="form-control" placeholder="User ID"/>
+              <label wicket:for="username">User ID</label>
             </div>
-            <div class="form-group form-row mb-3">
+            <div class="row mb-3 form-floating">
               <input wicket:id="password" type="password" class="form-control" placeholder="Password"/>
+              <label wicket:for="password">Password</label>
             </div>
-            <div class="form-group form-row justify-content-md-center">
+            <div class="row justify-content-md-center">
               <input wicket:id="signInBtn" type="submit" class="btn btn-login btn-primary w-100" wicket:message="value:signIn"/>
             </div>
-            <div class="form-group form-row mt-3" wicket:enclosure="loginMessage">
+            <div class="row mt-3" wicket:enclosure="loginMessage">
               <span wicket:id="loginMessage"></span>
             </div>
             <wicket:enclosure>
-              <div class="form-group form-row mt-3" wicket:id="usersLabel" style="color:red">
+              <div class="row mt-3" wicket:id="usersLabel" style="color:red">
                 <wicket:message key="tooManyUsers"/>
               </div>
             </wicket:enclosure>

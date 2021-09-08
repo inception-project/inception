@@ -53,7 +53,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -109,6 +108,7 @@ public class FeatureDetailForm
         add(new TextArea<String>("description"));
         add(new CheckBox("enabled").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("visible").setOutputMarkupPlaceholderTag(true));
+        add(new CheckBox("curatable").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("hideUnconstraintFeature").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("remember").setOutputMarkupPlaceholderTag(true));
         add(new CheckBox("includeInHover").setOutputMarkupPlaceholderTag(true)
@@ -130,7 +130,7 @@ public class FeatureDetailForm
         }));
         add(required);
 
-        add(featureType = new BootstrapSelect<FeatureType>("type")
+        add(featureType = new DropDownChoice<FeatureType>("type")
         {
             private static final long serialVersionUID = 9029205407108101183L;
 

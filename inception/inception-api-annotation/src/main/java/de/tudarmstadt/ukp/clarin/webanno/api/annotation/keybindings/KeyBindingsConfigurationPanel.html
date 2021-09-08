@@ -21,12 +21,16 @@
 <wicket:panel>
   <form wicket:id="keyBindingForm">
     <div wicket:id="keyBindingsContainer">
-      <div class="flex-h-container flex-gutter flex-only-internal-gutter flex-centered">
-        <div wicket:id="value" class="flex-content"/>
-        <input wicket:id="keyCombo" class="flex-content form-control" placeholder="Key combo..."/>
-        <button wicket:id="addKeyBinding" class="btn btn-sm btn-primary pull-right">
-          <i class="fas fa-plus" aria-hidden="true"></i>
-        </button>
+      <div class="d-flex flex-wrap">
+        <div wicket:id="value" class="flex-fill"/>
+        <div class="form-row ms-2">
+          <div class="input-group">
+            <input wicket:id="keyCombo" class="form-control" placeholder="Key combo..."/>
+            <button wicket:id="addKeyBinding" class="btn btn-sm btn-primary pull-right">
+              <i class="fas fa-plus" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
       </div>
       <div class="flex-v-container flex-gutter">
         <div wicket:id="keyBindings" class="flex-h-container flex-gutter flex-only-internal-gutter">

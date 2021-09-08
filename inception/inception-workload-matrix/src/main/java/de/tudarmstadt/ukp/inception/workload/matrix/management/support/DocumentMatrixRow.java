@@ -65,6 +65,11 @@ public class DocumentMatrixRow
         return annotationDocuments.get(aUsername);
     }
 
+    public Set<String> getAnnotators()
+    {
+        return annotators;
+    }
+
     public void setSelected(boolean aSelected)
     {
         selected = aSelected;

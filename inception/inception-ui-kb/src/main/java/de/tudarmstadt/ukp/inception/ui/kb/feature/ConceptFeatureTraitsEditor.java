@@ -27,13 +27,13 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
@@ -103,11 +103,11 @@ public class ConceptFeatureTraitsEditor
         form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
                 _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
 
-        form.add(new BootstrapSelect<>(MID_KNOWLEDGE_BASE, LambdaModel.of(this::listKnowledgeBases),
+        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE, LambdaModel.of(this::listKnowledgeBases),
                 new LambdaChoiceRenderer<>(KnowledgeBase::getName)).setNullValid(true)
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
-        form.add(new BootstrapSelect<>(MID_ALLOWED_VALUE_TYPE,
-                LambdaModel.of(this::listAllowedTypes))
+        form.add(
+                new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes))
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
 
         form.add(new DisabledKBWarning("disabledKBWarning", feature));

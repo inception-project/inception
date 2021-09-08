@@ -22,17 +22,17 @@
     <div class="scrolling flex-content flex-h-container">
       <form wicket:id="form" class="flex-content flex-v-container">
         <div class="card-body">
-          <div class="form-group form-row">
+          <div class="row form-row">
             <label class="col-sm-4 col-form-label">
               <wicket:message key="workloadType" />
               <a wicket:id="workloadHelpLink"/>
             </label>
             <div class="col-sm-8">
-              <select wicket:id="workloadStrategy" class="form-control" data-container="body"/>
+              <select wicket:id="workloadStrategy" class="form-select" data-container="body"/>
             </div>
           </div>
         </div>
-        <div class="card-footer text-right">
+        <div class="card-footer text-end">
           <button class="btn btn-primary" wicket:id="save">
             <i class="fas fa-save"></i>&nbsp;
             <wicket:message key="save" />

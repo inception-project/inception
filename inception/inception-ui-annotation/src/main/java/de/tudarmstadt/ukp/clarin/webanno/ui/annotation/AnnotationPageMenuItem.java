@@ -49,10 +49,12 @@ public class AnnotationPageMenuItem
         return "/annotate";
     }
 
-    public String getUrl(long aProjectId, long aDocumentId)
+    public String getUrl(Project aProject, long aDocumentId)
     {
-        return format("%s/p/%d%s/%d", servletContext.getContextPath(), aProjectId, getPath(),
-                aDocumentId);
+        String p = aProject.getSlug() != null ? aProject.getSlug()
+                : String.valueOf(aProject.getId());
+
+        return format("%s/p/%s%s/%d", servletContext.getContextPath(), p, getPath(), aDocumentId);
     }
 
     @Override
