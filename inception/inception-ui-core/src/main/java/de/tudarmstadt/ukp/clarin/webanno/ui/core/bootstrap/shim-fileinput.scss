@@ -16,20 +16,7 @@
  * limitations under the License.
  */
 
-/*
-.bs3.bootstrap-select .dropdown-toggle .filter-option, .k-autocomplete .k-input {
-	padding-top: 0px;
-	padding-bottom: 0px;
-}
-*/
-
-// Add a border around the select inputs to make them easier on the eyes
-.bootstrap-select {
-  .btn {
-    border-color: $input-border-color;
-  }
-}
-
-.bootstrap-select.bs-container .dropdown-menu {
-  z-index: 21060 !important;
+// Fix that kv-hidden can be overwritten by display property of BT5 btn class
+.kv-hidden {
+	@extend .d-none;
 }

@@ -15,21 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-/*
-.bs3.bootstrap-select .dropdown-toggle .filter-option, .k-autocomplete .k-input {
-	padding-top: 0px;
-	padding-bottom: 0px;
-}
-*/
+public interface BratProtocolNames
+{
+    String PARAM_ACTION = "action";
+    String PARAM_ARC_ID = "arcId";
+    String PARAM_ID = "id";
+    String PARAM_OFFSETS = "offsets";
+    String PARAM_TARGET_SPAN_ID = "targetSpanId";
+    String PARAM_ORIGIN_SPAN_ID = "originSpanId";
+    String PARAM_TYPE = "type";
+    String PARAM_LAZY_DETAIL_DATABASE = "database";
+    String PARAM_LAZY_DETAIL_KEY = "key";
 
-// Add a border around the select inputs to make them easier on the eyes
-.bootstrap-select {
-  .btn {
-    border-color: $input-border-color;
-  }
-}
+    String ACTION_CONTEXT_MENU = "contextMenu";
 
-.bootstrap-select.bs-container .dropdown-menu {
-  z-index: 21060 !important;
 }

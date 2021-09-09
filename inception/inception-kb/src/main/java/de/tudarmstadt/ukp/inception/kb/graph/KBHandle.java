@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -35,6 +36,7 @@ public class KBHandle
     private static final long serialVersionUID = -4284462837460396185L;
     private String identifier;
     private String name;
+    private List<Pair<String, String>> matchTerms;
     private String description;
     private KnowledgeBase kb;
     private String language;
@@ -150,6 +152,20 @@ public class KBHandle
     public void setName(String aName)
     {
         name = aName;
+    }
+
+    public void addMatchTerm(String aLabel, String aLanguage)
+    {
+        if (matchTerms == null) {
+            matchTerms = new ArrayList<>();
+        }
+
+        matchTerms.add(Pair.of(aLabel, aLanguage));
+    }
+
+    public List<Pair<String, String>> getMatchTerms()
+    {
+        return matchTerms;
     }
 
     @Override
@@ -285,6 +301,9 @@ public class KBHandle
         ToStringBuilder builder = new ToStringBuilder(this, SHORT_PREFIX_STYLE);
         builder.append("identifier", identifier);
         builder.append("name", name);
+        if (matchTerms != null && !matchTerms.isEmpty()) {
+            builder.append("matchTerms", matchTerms);
+        }
         if (description != null) {
             builder.append("description", description);
         }

@@ -17,7 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -27,12 +32,23 @@ import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLazyDetailsLookupService;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
@@ -55,10 +71,14 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 public abstract class BratSuggestionVisualizer
     extends BratVisualizer
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     private static final long serialVersionUID = 6653508018500736430L;
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
+    private @SpringBean BratLazyDetailsLookupService lazyDetailsLookupService;
+    private @SpringBean DocumentService documentService;
 
     private AbstractDefaultAjaxBehavior controller;
     private final int position;
@@ -79,7 +99,30 @@ public abstract class BratSuggestionVisualizer
             protected void respond(AjaxRequestTarget aTarget)
             {
                 try {
-                    onClientEvent(aTarget);
+                    final IRequestParameters request = getRequest().getPostParameters();
+                    String action = BratRequestUtils.getActionFromRequest(request);
+                    final VID paramId = BratRequestUtils.getVidFromRequest(request);
+
+                    if (NormDataResponse.is(action)) {
+                        AnnotatorSegment segment = getModelObject();
+                        CasProvider casProvider = () -> documentService.readAnnotationCas(
+                                segment.getAnnotatorState().getDocument(),
+                                segment.getUser().getUsername(), AUTO_CAS_UPGRADE,
+                                SHARED_READ_ONLY_ACCESS);
+                        var result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
+                                casProvider, segment.getAnnotatorState().getDocument(),
+                                segment.getUser());
+
+                        try {
+                            BratRequestUtils.attachResponse(aTarget, vis, result);
+                        }
+                        catch (IOException e) {
+                            handleError("Unable to produce JSON response", e);
+                        }
+                    }
+                    else {
+                        onClientEvent(aTarget);
+                    }
                 }
                 catch (Exception e) {
                     aTarget.addChildren(getPage(), IFeedback.class);
@@ -184,6 +227,27 @@ public abstract class BratSuggestionVisualizer
     protected String getCollectionData()
     {
         return getModelObject().getCollectionData();
+    }
+
+    private void handleError(String aMessage, Exception e)
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        requestCycle.find(AjaxRequestTarget.class)
+                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+
+        if (e instanceof AnnotationException) {
+            // These are common exceptions happening as part of the user interaction. We do
+            // not really need to log their stack trace to the log.
+            error(aMessage + ": " + e.getMessage());
+            // If debug is enabled, we'll also write the error to the log just in case.
+            if (LOG.isDebugEnabled()) {
+                LOG.error("{}: {}", aMessage, e.getMessage(), e);
+            }
+            return;
+        }
+
+        LOG.error("{}", aMessage, e);
+        error(aMessage);
     }
 
     protected abstract void onClientEvent(AjaxRequestTarget aTarget) throws Exception;

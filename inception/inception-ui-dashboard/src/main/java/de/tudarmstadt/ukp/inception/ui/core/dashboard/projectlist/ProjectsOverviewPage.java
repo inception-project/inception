@@ -453,10 +453,12 @@ public class ProjectsOverviewPage
     {
         String username = currentUser.getObject().getUsername();
         aTarget.addChildren(getPage(), IFeedback.class);
-        String projectName = makeValidProjectName(username + " - New project");
+        String projectSlug = projectService.deriveSlugFromName(username);
+        projectSlug = projectService.deriveUniqueSlug(projectSlug);
 
         try {
-            Project project = new Project(projectName);
+            Project project = new Project(projectSlug);
+            project.setName(username + " - New project");
             projectService.createProject(project);
 
             projectService
@@ -473,27 +475,8 @@ public class ProjectsOverviewPage
             setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
         catch (IOException e) {
-            LOG.error("Unable to create project [{}]", projectName, e);
-            error("Unable to create project [" + projectName + "]");
-        }
-    }
-
-    /**
-     * Get a project name to be used when importing. Use the prefix, copy_of_...+ i to avoid
-     * conflicts
-     */
-    private String makeValidProjectName(String aProjectName)
-    {
-        String projectName = aProjectName;
-        int i = 1;
-        while (true) {
-            if (projectService.existsProjectWithName(projectName)) {
-                projectName = aProjectName + " (" + i + ")";
-                i++;
-            }
-            else {
-                return projectName;
-            }
+            LOG.error("Unable to create project [{}]", projectSlug, e);
+            error("Unable to create project [" + projectSlug + "]");
         }
     }
 
