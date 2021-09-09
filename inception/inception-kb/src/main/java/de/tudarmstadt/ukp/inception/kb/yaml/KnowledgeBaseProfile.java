@@ -61,7 +61,7 @@ public class KnowledgeBaseProfile
     @JsonProperty("root-concepts")
     private List<String> rootConcepts;
 
-    @JsonProperty("additional-search-properties")
+    @JsonProperty("additional-matching-properties")
     private List<String> additionalMatchingProperties;
 
     @JsonProperty("info")
