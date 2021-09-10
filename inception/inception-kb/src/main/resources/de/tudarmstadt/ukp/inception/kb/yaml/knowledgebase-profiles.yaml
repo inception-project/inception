@@ -44,30 +44,32 @@ babel_net:
     host-institution-name: Linguistic Computing Laboratory at Sapienza University of Rome
     author-name: Linguistic Computing Laboratory at Sapienza University of Rome
     website-url: https://babelnet.org/
-    
-british_museum:
-  name: British Museum
-  type: REMOTE
-  default-language: en
-  reification: NONE
-  access:
-    access-url: http://collection.britishmuseum.org/sparql
-    full-text-search: text:query
-  mapping:
-    class: http://www.w3.org/2000/01/rdf-schema#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
-  info:
-    description: Collection of the British Museum in Semantic Web format
-    host-institution-name: British Museum
-    author-name: British Museum
-    website-url: https://www.britishmuseum.org/about_us/news_and_press/press_releases/2011/semantic_web_endpoint.aspx
+
+# 2021-09-07: Looks like this service was discontinued
+# british_museum:
+#   disabled: true
+#   name: British Museum
+#   type: REMOTE
+#   default-language: en
+#   reification: NONE
+#   access:
+#     access-url: http://collection.britishmuseum.org/sparql
+#     full-text-search: text:query
+#   mapping:
+#     class: http://www.w3.org/2000/01/rdf-schema#Class
+#     subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+#     instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+#     label: http://www.w3.org/2000/01/rdf-schema#label
+#     property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+#     description: http://www.w3.org/2000/01/rdf-schema#comment
+#     property-label: http://www.w3.org/2000/01/rdf-schema#label
+#     property-description: http://www.w3.org/2000/01/rdf-schema#comment
+#     subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+#   info:
+#     description: Collection of the British Museum in Semantic Web format
+#     host-institution-name: British Museum
+#     author-name: British Museum
+#     website-url: https://www.britishmuseum.org/about_us/news_and_press/press_releases/2011/semantic_web_endpoint.aspx
 
 db_pedia:
   name: DBpedia (German)
@@ -127,8 +129,6 @@ wikidata:
 
 yago:
   name: YAGO v4
-  # Disabled, see #1708 for more info
-  #disabled: true
   type: REMOTE
   default-language: de
   reification: NONE
@@ -207,6 +207,50 @@ zbw-gnd:
     website-url: http://zbw.eu/stw/version/9.02/mapping/gnd/about.en.html
   root-concepts:
     - https://d-nb.info/standards/elementset/gnd#AuthorityResource
+
+agrovoc:
+  name: AGROVOC Thesaurus
+  type: REMOTE
+  default-language: en
+  reification: NONE
+  access:
+    access-url: https://agrovoc.fao.org/sparql
+    full-text-search: text:query
+  mapping:
+    class: http://www.w3.org/2004/02/skos/core#Concept
+    subclass-of: http://www.w3.org/2004/02/skos/core#broader
+    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+    label: http://www.w3.org/2004/02/skos/core#prefLabel
+    description: http://www.w3.org/2000/01/rdf-schema#comment
+    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+    property-label: http://www.w3.org/2004/02/skos/core#prefLabel
+    property-description: http://www.w3.org/2000/01/rdf-schema#comment
+  additional-matching-properties:
+    - http://www.w3.org/2004/02/skos/core#altLabel
+  info:
+    description: |
+      AGROVOC is a multilingual and controlled vocabulary designed to cover concepts and 
+      terminology under FAO's areas of interest. It is the largest Linked Open Data set 
+      about agriculture available for public use and its greatest impact is through providing 
+      the access and visibility of data across domains and languages.
+
+      It offers a structured collection of agricultural concepts, terms, definitions and 
+      relationships which are used to unambiguously identify resources, allowing standardized 
+      indexing processes and making searches more efficient. The thesaurus is hierarchically 
+      organized under 25 top concepts.
+
+      AGROVOC uses semantic web technologies, linking to other multilingual knowledge 
+      organization systems and building bridges between datasets. AGROVOC is edited using 
+      VocBench 3, a web-based vocabulary management tool.
+
+      For more information, please consult <http://www.fao.org/agrovoc/>.
+      
+      Source: <https://agrovoc.fao.org/browse/en/about>
+    host-institution-name: Food and Agriculture Organization (FAO) of the United Nations
+    author-name: Food and Agriculture Organization (FAO) of the United Nations
+    website-url: http://www.fao.org/agrovoc/
+
 
 # ##################################################################################################
 #
