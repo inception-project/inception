@@ -49,6 +49,7 @@ public class StatisticsResult
         this.allResults = allResults;
         this.nonTrivialResults = nonTrivialResults;
         //metrics = Arrays.asList(aStatisticRequest.getStatistic().split(","));
+        metrics = new ArrayList<String>();
         for (String key: allResults.keySet()) {
             for (String metric: allResults.get(key).keySet()) {
                 metrics.add(metric);

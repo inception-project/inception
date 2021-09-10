@@ -48,9 +48,11 @@ import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.util.CasIOUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
@@ -73,8 +75,10 @@ import org.springframework.util.FileSystemUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -653,6 +657,90 @@ public class MtasDocumentIndexTest
         assertTrue(expected.equals(queryStatsResults.getNonNullResults()));
 
     }
+
+    private static CAS loadCas(String aPathToXmi) throws Exception
+    {
+        try (FileInputStream fis = new FileInputStream(getResource(aPathToXmi))) {
+            JCas jcas = JCasFactory.createJCas();
+            CasIOUtils.load(fis, jcas.getCas());
+            return jcas.getCas();
+        }
+    }
+
+    public static File getResource(String aResourceName)
+    {
+        //return Paths.get("src", "test", "resources", aResourceName).toFile();
+        return Paths.get(aResourceName).toFile();
+    }
+
+    @Test
+    public void testStatisticsWithRealProject() throws Exception{
+
+        long startTime = System.nanoTime();
+
+        String xmiPath = "D:\\Falko\\Documents\\UKP\\Statistics\\Testdaten\\admin.xmi";
+
+        CAS cas = loadCas(xmiPath);
+        //System.out.println(cas.getDocumentText());
+
+        Project project = new Project();
+        project.setName("TestStatistics");
+
+        createProject(project);
+
+        User user = userRepository.get("admin");
+
+        SourceDocument sourceDocument = new SourceDocument();
+
+
+        sourceDocument.setName("doc1");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        String sourceContent = cas.getDocumentText();
+
+        uploadDocument(Pair.of(sourceDocument, sourceContent));
+
+        // Create annotation document
+        AnnotationDocument annotationDocument = documentService
+            .createOrGetAnnotationDocument(sourceDocument, user);
+
+        // Write annotated CAS to annotated document
+        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+            log.info("Writing annotated document using documentService.writeAnnotationCas");
+            documentService.writeAnnotationCas(cas, annotationDocument, false);
+        }
+
+        log.info("Writing for annotated document to be indexed");
+        await("Waiting for indexing process to complete") //
+            .atMost(60, SECONDS) //
+            .pollInterval(5, SECONDS) //
+            .until(() -> searchService.isIndexValid(project)
+                && searchService.getIndexProgress(project).isEmpty());
+        log.info("Indexing complete!");
+
+        String statistic = "n,min,max,mean,median,standarddeviation";
+        OptionalInt minTokenPerDoc = OptionalInt.empty();
+        OptionalInt maxTokenPerDoc = OptionalInt.empty();
+
+        String query = "Kahmi";
+        long afterBuild = System.nanoTime();
+        StatisticsResult statsResults = searchService.getProjectStatistics(user, project, statistic,
+            minTokenPerDoc, maxTokenPerDoc);
+        long afterStats = System.nanoTime();
+        StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project,
+            statistic, query, minTokenPerDoc, maxTokenPerDoc);
+        long endTime = System.nanoTime();
+
+        double durationBuild = (afterBuild - startTime)/1000000.0;  //divide by 1000000 to get milliseconds.
+        double durationStats = (afterStats - afterBuild)/1000000.0;
+        double durationSearch = (endTime - afterStats)/1000000.0;
+        System.out.println(durationBuild);
+        System.out.println(durationStats);
+        System.out.println(durationSearch);
+
+        assertTrue(0 == 0);
+}
 
     @SpringBootConfiguration
     public static class TestContext
