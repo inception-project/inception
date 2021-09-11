@@ -127,33 +127,6 @@ public class AnnotationPage
     private AnnotationDetailEditorPanel detailEditor;
     private SidebarPanel leftSidebar;
 
-    // public AnnotationPage()
-    // {
-    // super();
-    // LOG.debug("Setting up annotation page without parameters");
-    //
-    // setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
-    // // Ensure that a user is set
-    // getModelObject().setUser(userRepository.getCurrentUser());
-    //
-    // Map<String, StringValue> fragmentParameters = Session.get()
-    // .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
-    // StringValue focus = StringValue.valueOf(0);
-    // if (fragmentParameters != null) {
-    // // Clear the URL fragment parameters - we only use them once!
-    // Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-    //
-    // StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
-    // StringValue projectName = fragmentParameters.get(PAGE_PARAM_PROJECT_NAME);
-    // StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-    // StringValue name = fragmentParameters.get(PAGE_PARAM_DOCUMENT_NAME);
-    // focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-    //
-    // handleParameters(project, projectName, document, name, focus, false);
-    // }
-    // commonInit(focus);
-    // }
-
     public AnnotationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
@@ -166,15 +139,16 @@ public class AnnotationPage
 
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
+        StringValue user = aPageParameters.get(PAGE_PARAM_USER);
         if (focus == null) {
             focus = StringValue.valueOf(0);
         }
 
-        handleParameters(document, focus, true);
+        handleParameters(document, focus, user, true);
 
         createChildComponents();
 
-        updateDocumentView(null, null, focus);
+        updateDocumentView(null, null, null, focus);
     }
 
     private void createChildComponents()
@@ -471,7 +445,7 @@ public class AnnotationPage
 
             // Initialize the visible content - this has to happen after the annotation editor
             // component has been created because only then the paging strategy is known
-            state.moveToUnit(editorCas, aFocus + 1, TOP);
+            state.moveToUnit(editorCas, aFocus, TOP);
 
             // Update document state
             if (isEditable()) {
@@ -545,12 +519,36 @@ public class AnnotationPage
 
     @Override
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
-            boolean aLockIfPreset)
+            StringValue aUserParameter, boolean aLockIfPreset)
     {
-        AnnotatorState state = getModelObject();
-        Project project = getProject();
         User user = userRepository.getCurrentUser();
         requireProjectRole(user);
+
+        AnnotatorState state = getModelObject();
+        Project project = getProject();
+        SourceDocument document = getDocumentFromParameters(project, aDocumentParameter);
+
+        // If there is no change in the current document, then there is nothing to do. Mind
+        // that document IDs are globally unique and a change in project does not happen unless
+        // there is also a document change.
+        if (document != null && //
+                document.equals(state.getDocument()) && //
+                aFocusParameter != null && //
+                aFocusParameter.toInt(0) == state.getFocusUnitIndex() && //
+                aUserParameter != null && //
+                state.getUser().getUsername().equals(aUserParameter.toString()) //
+        ) {
+            return;
+        }
+
+        if (!aUserParameter.isEmpty()) {
+            User requestedUser = userRepository.get(aUserParameter.toString());
+            if (requestedUser == null) {
+                error("User not found [" + aUserParameter + "]");
+                return;
+            }
+            state.setUser(requestedUser);
+        }
 
         if (!user.equals(state.getUser())) {
             if (CURATION_USER.equals(state.getUser().getUsername())) {
@@ -561,16 +559,6 @@ public class AnnotationPage
                 // Only managers are allowed to open documents as another user
                 requireProjectRole(user, MANAGER);
             }
-        }
-
-        SourceDocument document = getDocumentFromParameters(project, aDocumentParameter);
-
-        // If there is no change in the current document, then there is nothing to do. Mind
-        // that document IDs are globally unique and a change in project does not happen unless
-        // there is also a document change.
-        if (document != null && document.equals(state.getDocument()) && aFocusParameter != null
-                && aFocusParameter.toInt(0) == state.getFocusUnitIndex()) {
-            return;
         }
 
         // Check if document is locked for the user
@@ -603,7 +591,7 @@ public class AnnotationPage
 
     @Override
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
-            StringValue aFocusParameter)
+            User aPreviousUser, StringValue aFocusParameter)
     {
         // url is from external link, not just paging through documents,
         // tabs may have changed depending on user rights
@@ -616,6 +604,11 @@ public class AnnotationPage
             return;
         }
 
+        User currentUser = getModelObject().getUser();
+        if (currentUser == null) {
+            return;
+        }
+
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)
 
@@ -624,30 +617,34 @@ public class AnnotationPage
         if (aFocusParameter != null) {
             focus = aFocusParameter.toInt(0);
         }
+
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
-        if (aPreviousDocument != null && aPreviousDocument.equals(currentDocument)
-                && focus == getModelObject().getFocusUnitIndex()) {
+        if (aPreviousDocument != null && aPreviousDocument.equals(currentDocument) && //
+                aPreviousUser != null && aPreviousUser.equals(currentUser) && //
+                focus == getModelObject().getFocusUnitIndex() //
+        ) {
             return;
         }
 
         // never had set a document or is a new one
-        if (aPreviousDocument == null || !aPreviousDocument.equals(currentDocument)) {
+        if (aPreviousDocument == null || !aPreviousDocument.equals(currentDocument)
+                || aPreviousUser == null || !aPreviousUser.equals(currentUser)) {
             actionLoadDocument(aTarget, focus);
+            return;
         }
-        else {
-            try {
-                getModelObject().moveToUnit(getEditorCas(), focus, TOP);
-                actionRefreshDocument(aTarget);
+
+        try {
+            getModelObject().moveToUnit(getEditorCas(), focus, TOP);
+            actionRefreshDocument(aTarget);
+        }
+        catch (Exception e) {
+            if (aTarget != null) {
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
-            catch (Exception e) {
-                if (aTarget != null) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                }
-                LOG.info("Error reading CAS " + e.getMessage());
-                error("Error reading CAS " + e.getMessage());
-            }
+            LOG.info("Error reading CAS " + e.getMessage());
+            error("Error reading CAS " + e.getMessage());
         }
     }
 
