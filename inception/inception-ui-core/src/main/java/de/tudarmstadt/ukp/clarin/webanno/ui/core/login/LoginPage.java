@@ -52,8 +52,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.parameter.UrlRequestParametersAdapter;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.session.SessionRegistry;
@@ -81,8 +79,6 @@ public class LoginPage
     private static final String PROP_RESTORE_DEFAULT_ADMIN_ACCOUNT = "restoreDefaultAdminAccount";
 
     private static final long serialVersionUID = -333578034707672294L;
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @SpringBean UserDao userRepository;
     private @SpringBean LoginProperties loginProperties;
@@ -131,7 +127,7 @@ public class LoginPage
                         + "reasons. Please restart the application without the password "
                         + "resetting parameter.";
                 warn(msg);
-                log.info(msg);
+                LOG.info(msg);
             }
             else {
                 userRepository.create(admin);
@@ -140,7 +136,7 @@ public class LoginPage
                         + "been disabled for security reasons. Please restart the application "
                         + "without the password resetting parameter.";
                 warn(msg);
-                log.info(msg);
+                LOG.info(msg);
             }
         }
         // Create admin user if there is no user yet
@@ -202,16 +198,16 @@ public class LoginPage
         // application would redirect the user to the login page after a successful login
         if (!(SecurityContextHolder.getContext()
                 .getAuthentication() instanceof AnonymousAuthenticationToken)) {
-            log.debug("Already logged in, forwarding to home page");
+            LOG.debug("Already logged in, forwarding to home page");
             throw new RestartResponseException(getApplication().getHomePage());
         }
 
         String redirectUrl = getRedirectUrl();
         if (redirectUrl == null) {
-            log.debug("Authentication required");
+            LOG.debug("Authentication required");
         }
         else {
-            log.debug("Authentication required (original URL: [{}])", redirectUrl);
+            LOG.debug("Authentication required (original URL: [{}])", redirectUrl);
         }
     }
 
@@ -257,7 +253,7 @@ public class LoginPage
                 return;
             }
 
-            log.debug("Login successful");
+            LOG.debug("Login successful");
             setDefaultResponsePageIfNecessary(redirectUrl);
         }
 
@@ -268,11 +264,11 @@ public class LoginPage
 
             if (aRedirectUrl == null || aRedirectUrl.contains(".IBehaviorListener.")
                     || aRedirectUrl.contains("-logoutPanel-")) {
-                log.debug("Redirecting to welcome page");
+                LOG.debug("Redirecting to welcome page");
                 setResponsePage(getApplication().getHomePage());
             }
             else {
-                log.debug("Redirecting to saved URL: [{}]", aRedirectUrl);
+                LOG.debug("Redirecting to saved URL: [{}]", aRedirectUrl);
                 if (isNotBlank(form.urlfragment) && form.urlfragment.startsWith("!")) {
                     Url url = Url.parse("http://dummy?" + form.urlfragment.substring(1));
                     UrlRequestParametersAdapter adapter = new UrlRequestParametersAdapter(url);

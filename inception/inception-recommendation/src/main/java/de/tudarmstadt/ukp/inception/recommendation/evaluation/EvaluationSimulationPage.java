@@ -45,13 +45,14 @@ public class EvaluationSimulationPage
 {
     private static final long serialVersionUID = 3042218455285633439L;
 
-    private IModel<Recommender> selectedRecommenderModel;
-    private @SpringBean ProjectService projectService;
-    private @SpringBean UserDao userRepository;
-
     private static final String MID_EVALUATION_SIMULATION_CONTAINER = "evaluation-simulation-container";
     private static final String MID_RECOMMENDER_LIST = "recommenderList";
     private static final String MID_RECOMMENDER_VIEW = "recommenderView";
+
+    private @SpringBean ProjectService projectService;
+    private @SpringBean UserDao userRepository;
+
+    private IModel<Recommender> selectedRecommenderModel;
 
     public EvaluationSimulationPage(final PageParameters aPageParameters)
     {

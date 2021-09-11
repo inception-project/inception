@@ -74,8 +74,6 @@ import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -136,11 +134,9 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 public class CurationPage
     extends AnnotationPageBase
 {
-    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
-
-    private final static Logger LOG = LoggerFactory.getLogger(CurationPage.class);
-
     private static final long serialVersionUID = 1378872465851908515L;
+
+    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
@@ -185,11 +181,11 @@ public class CurationPage
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
 
-        handleParameters(document, focus, true);
+        handleParameters(document, focus, null, true);
 
         commonInit();
 
-        updateDocumentView(null, null, focus);
+        updateDocumentView(null, null, null, focus);
     }
 
     private void commonInit()
@@ -607,7 +603,7 @@ public class CurationPage
 
     @Override
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
-            boolean aLockIfPreset)
+            StringValue aUser, boolean aLockIfPreset)
     {
         Project project = getProject();
 
@@ -655,7 +651,7 @@ public class CurationPage
 
     @Override
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
-            StringValue aFocusParameter)
+            User aPreviousUser, StringValue aFocusParameter)
     {
         SourceDocument currentDocument = getModelObject().getDocument();
         if (currentDocument == null) {

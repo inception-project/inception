@@ -53,8 +53,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -102,11 +100,9 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 public class AnnotationPage
     extends AnnotationPageBase
 {
-    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
-
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationPage.class);
-
     private static final long serialVersionUID = 1378872465851908515L;
+
+    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;

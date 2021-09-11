@@ -31,8 +31,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -57,7 +55,7 @@ public class KnowledgeBasePage
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -745797540252091140L;
-    private static final Logger LOG = LoggerFactory.getLogger(KnowledgeBasePage.class);
+
     public static final String PAGE_PARAM_KB_NAME = "kb";
 
     private @SpringBean UserDao userRepository;

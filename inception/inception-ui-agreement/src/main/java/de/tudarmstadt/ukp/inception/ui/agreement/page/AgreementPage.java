@@ -55,8 +55,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
@@ -86,8 +84,6 @@ public class AgreementPage
     extends ProjectPageBase
 {
     private static final long serialVersionUID = 5333662917247971912L;
-
-    private static final Logger LOG = LoggerFactory.getLogger(AgreementPage.class);
 
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
     private static final String MID_TRAITS = "traits";

@@ -55,8 +55,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -80,8 +78,6 @@ public class SearchPage
     extends ProjectPageBase
 {
     private static final long serialVersionUID = 4090656233059899062L;
-
-    private static final Logger LOG = LoggerFactory.getLogger(SearchPage.class);
 
     private @SpringBean DocumentService documentService;
     private @SpringBean ExternalSearchService externalSearchService;

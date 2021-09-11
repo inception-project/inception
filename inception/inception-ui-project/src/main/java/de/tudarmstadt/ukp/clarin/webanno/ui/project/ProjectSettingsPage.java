@@ -43,8 +43,6 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -80,11 +78,9 @@ public class ProjectSettingsPage
     extends ApplicationPageBase
     implements ProjectContext
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectSettingsPage.class);
+    private static final long serialVersionUID = -2102136855109258306L;
 
     public static final String NEW_PROJECT_ID = "__NEW__";
-
-    private static final long serialVersionUID = -2102136855109258306L;
 
     // private static final Logger LOG = LoggerFactory.getLogger(ProjectPage.class);
 

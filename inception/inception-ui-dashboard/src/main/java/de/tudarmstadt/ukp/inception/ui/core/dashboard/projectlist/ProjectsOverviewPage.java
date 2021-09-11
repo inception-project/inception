@@ -62,8 +62,6 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.lang.Classes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -93,6 +91,8 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPa
 public class ProjectsOverviewPage
     extends ApplicationPageBase
 {
+    private static final long serialVersionUID = -2159246322262294746L;
+
     private static final String MID_CREATED = "created";
     private static final String MID_NAME = "name";
     private static final String MID_DESCRIPTION = "description";
@@ -110,10 +110,6 @@ public class ProjectsOverviewPage
     private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
     private static final String MID_START_TUTORIAL = "startTutorial";
     private static final String MID_IMPORT_PROJECT_BUTTON = "importProjectBtn";
-
-    private static final long serialVersionUID = -2159246322262294746L;
-
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectsOverviewPage.class);
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;

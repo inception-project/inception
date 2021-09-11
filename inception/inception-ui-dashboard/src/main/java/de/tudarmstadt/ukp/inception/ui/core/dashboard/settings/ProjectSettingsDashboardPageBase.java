@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,8 +33,6 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -54,8 +51,6 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
 public class ProjectSettingsDashboardPageBase
     extends ProjectPageBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     private static final long serialVersionUID = -2487663821276301436L;
 
     private @SpringBean ProjectService projectService;
