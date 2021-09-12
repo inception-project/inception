@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -49,7 +50,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.value.AttributeMap;
 import org.apache.wicket.util.value.IValueMap;
@@ -105,7 +105,6 @@ public class CurationSidebar
     private final Label noDocsLabel;
     private final Label finishedLabel;
 
-    private AnnotationPage annoPage;
     private final MergeDialog mergeConfirm;
 
     public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
@@ -113,25 +112,20 @@ public class CurationSidebar
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
-        annoPage = aAnnotationPage;
 
         // init. state with stored curation user
         AnnotatorState state = aModel.getObject();
         String currentUsername = userRepository.getCurrentUsername();
-        User curationUser = curationService.retrieveCurationUser(currentUsername,
-                state.getProject().getId());
-
-        // if curation user changed we have to reload the document
-        if (!state.getUser().equals(curationUser)) {
-            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-            annoPage.actionLoadDocument(target.orElseGet(null));
-        }
-
-        state.setUser(curationUser);
 
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
+        mainContainer.add(visibleWhen(this::isCuratable));
         add(mainContainer);
+
+        WebMarkupContainer notCuratableNotice = new WebMarkupContainer("notCuratableNotice");
+        notCuratableNotice.setOutputMarkupId(true);
+        notCuratableNotice.add(visibleWhen(() -> !isCuratable()));
+        add(notCuratableNotice);
 
         // Add empty space message
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
@@ -157,11 +151,12 @@ public class CurationSidebar
         mainContainer.add(settingsForm);
 
         // confirmation dialog when using automatic merging (might change user's annos)
-        IModel<String> documentNameModel = PropertyModel.of(annoPage.getModel(), "document.name");
+        IModel<String> documentNameModel = PropertyModel.of(getAnnotationPage().getModel(),
+                "document.name");
         add(mergeConfirm = new MergeDialog("mergeConfirmDialog",
                 new StringResourceModel("mergeConfirmTitle", this),
-                new StringResourceModel("mergeConfirmText", this).setModel(annoPage.getModel())
-                        .setParameters(documentNameModel),
+                new StringResourceModel("mergeConfirmText", this)
+                        .setModel(getAnnotationPage().getModel()).setParameters(documentNameModel),
                 documentNameModel));
         mainContainer.add(mergeConfirm);
 
@@ -182,6 +177,39 @@ public class CurationSidebar
         state.setMetaData(CurationMetadata.CURATION_USER_PROJECT, true);
 
         usersForm.add(enabledWhen(() -> !finishedLabel.isVisible()));
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        if (!isCuratable()) {
+            return;
+        }
+
+        String currentUsername = userRepository.getCurrentUsername();
+        AnnotatorState state = getModelObject();
+
+        // If curation is possible and the curation target user is different from the user set in
+        // the annotation state, then we need to update the state and reload.
+        User curationUser = curationService.retrieveCurationUser(currentUsername,
+                state.getProject().getId());
+        if (!state.getUser().equals(curationUser)) {
+            state.setUser(curationUser);
+            // Optional<AjaxRequestTarget> target =
+            // RequestCycle.get().find(AjaxRequestTarget.class);
+            // getAnnotationPage().actionLoadDocument(target.orElseGet(null));
+            new RestartResponseException(getPage());
+        }
+    }
+
+    private boolean isCuratable()
+    {
+        // Curation sidebar is not allowed when viewing another users annotations
+        String currentUsername = userRepository.getCurrentUsername();
+        AnnotatorState state = getModelObject();
+        return asList(CURATION_USER, currentUsername).contains(state.getUser().getUsername());
     }
 
     private Form<Void> createSettingsForm(String aId)
@@ -252,7 +280,7 @@ public class CurationSidebar
             boolean mergeIncomplete = form.getModelObject().isMergeIncompleteAnnotations();
             doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject(),
                     mergeIncomplete);
-            target.add(annoPage);
+            target.add(getAnnotationPage());
         });
         mergeConfirm.show(aTarget);
     }
@@ -363,7 +391,7 @@ public class CurationSidebar
 
         updateUsers(state);
         aTarget.add(usersForm);
-        annoPage.actionRefreshDocument(aTarget);
+        getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
     private void updateForNewCurator(AjaxRequestTarget aTarget, Form<Void> aForm)
@@ -380,7 +408,7 @@ public class CurationSidebar
         // close settingsForm after apply was pressed
         settingsForm.setVisible(false);
         // open curation doc
-        annoPage.actionLoadDocument(aTarget);
+        getAnnotationPage().actionLoadDocument(aTarget);
     }
 
     private void updateUsers(AnnotatorState aState)
@@ -397,7 +425,6 @@ public class CurationSidebar
         curationService.clearUsersSelectedForCuration(userRepository.getCurrentUsername(),
                 state.getProject().getId());
         aTarget.add(usersForm);
-        annoPage.actionRefreshDocument(aTarget);
+        getAnnotationPage().actionRefreshDocument(aTarget);
     }
-
 }
