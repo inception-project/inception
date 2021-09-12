@@ -81,7 +81,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         super.onAjaxUpdate(aTarget);
         if (!expanded) {
             expanded = true;
-            aTarget.ifPresent(_target -> _target.add(getPage()));
+            aTarget.ifPresent(_target -> WicketUtil.refreshPage(_target, getPage()));
         }
     }
 
