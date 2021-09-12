@@ -165,8 +165,7 @@ public class KnowledgeBaseDetailsPanel
             KnowledgeBaseWrapper kbw = kbwModel.getObject();
 
             // if dealing with a remote repository and a non-empty URL, get a new
-            // RepositoryImplConfig
-            // for the new URL; otherwise keep using the existing config
+            // RepositoryImplConfig for the new URL; otherwise keep using the existing config
             RepositoryImplConfig cfg;
             if (kbw.getKb().getType() == RepositoryType.REMOTE && kbw.getUrl() != null) {
                 cfg = kbService.getRemoteConfig(kbw.getUrl());
