@@ -25,6 +25,8 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DE
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.io.BufferedInputStream;
@@ -34,6 +36,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.net.URI;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,6 +80,7 @@ import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
+import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
@@ -441,6 +445,30 @@ public class KnowledgeBaseServiceImpl
     {
         assertRegistration(kb);
         Repository repo = repoManager.getRepository(kb.getRepositoryId());
+
+        if (repo instanceof SPARQLRepository) {
+            SPARQLRepositoryConfig sparqlRepoConfig = (SPARQLRepositoryConfig) getKnowledgeBaseConfig(
+                    kb);
+            URI uri = URI.create(sparqlRepoConfig.getQueryEndpointUrl());
+            String userInfo = uri.getUserInfo();
+            if (StringUtils.isNotBlank(userInfo)) {
+                userInfo = userInfo.trim();
+                String username;
+                String password;
+                if (userInfo.contains(":")) {
+                    username = substringBefore(userInfo, ":");
+                    password = substringAfter(userInfo, ":");
+                }
+                else {
+                    username = userInfo;
+                    password = "";
+                }
+
+                SPARQLRepository sparqlRepo = (SPARQLRepository) repo;
+                sparqlRepo.setUsernameAndPassword(username, password);
+            }
+        }
+
         return new RepositoryConnectionWrapper(repo, repo.getConnection())
         {
             {
