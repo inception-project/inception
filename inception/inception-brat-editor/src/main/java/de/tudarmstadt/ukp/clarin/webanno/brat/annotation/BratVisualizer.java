@@ -137,9 +137,12 @@ public abstract class BratVisualizer
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
 
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
-        String[] script = { "Util.embedByURL(", "  '" + vis.getMarkupId() + "',",
-                "  '" + collProvider.getCallbackUrl() + "', ",
-                "  '" + docProvider.getCallbackUrl() + "', ", "  null);", };
+        String[] script = { //
+                "Util.embedByURL(", //
+                "  '" + vis.getMarkupId() + "',", //
+                "  '" + collProvider.getCallbackUrl() + "', ", //
+                "  '" + docProvider.getCallbackUrl() + "', ", //
+                "  null);" };
 
         // This doesn't work with head.js because the onLoad event is fired before all the
         // JavaScript references are loaded.

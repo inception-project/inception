@@ -185,11 +185,11 @@ public class CurationPage
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
 
-        handleParameters(document, focus, true);
+        handleParameters(document, focus, null, true);
 
         commonInit();
 
-        updateDocumentView(null, null, focus);
+        updateDocumentView(null, null, null, focus);
     }
 
     private void commonInit()
@@ -607,7 +607,7 @@ public class CurationPage
 
     @Override
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
-            boolean aLockIfPreset)
+            StringValue aUser, boolean aLockIfPreset)
     {
         Project project = getProject();
 
@@ -655,7 +655,7 @@ public class CurationPage
 
     @Override
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
-            StringValue aFocusParameter)
+            User aPreviousUser, StringValue aFocusParameter)
     {
         SourceDocument currentDocument = getModelObject().getDocument();
         if (currentDocument == null) {
