@@ -93,4 +93,48 @@
             <artifactId>inception-api-dao</artifactId>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>pl.allegro</groupId>
+                <artifactId>grunt-maven-plugin</artifactId>
+                <version>1.5.0</version>
+                <configuration>
+                    <gruntExecutable>node_modules/grunt-cli/bin/grunt</gruntExecutable>
+                    <sourceDirectory>src/main</sourceDirectory>
+                    <jsSourceDirectory>js</jsSourceDirectory>
+                    <gruntBuildDirectory>${basedir}/src/main/ts</gruntBuildDirectory>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>create-resources</goal>
+                            <goal>npm</goal>
+                            <goal>grunt</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>default</id>
+                            <configuration>
+                                <excludes combine.children="append">
+                                    <exclude>src/main/js/ExperienceAPI.js</exclude>
+                                    <exclude>src/main/ts/package.json</exclude>
+                                    <exclude>src/main/ts/ExperienceAPI.js</exclude>
+                                </excludes>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

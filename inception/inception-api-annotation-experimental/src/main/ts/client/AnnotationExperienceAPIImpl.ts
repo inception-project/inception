@@ -74,8 +74,6 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             return new WebSocket(aUrl);
         });
 
-        console.log(this.stompClient)
-
         const that = this;
 
         // ------ STOMP CONNECTION ESTABLISHED ----//
@@ -192,67 +190,36 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
         console.log('RECEIVED DOCUMENT' + aMessage);
 
-        console.log(aMessage.viewport[0].sourceDocumentId)
-        console.log(aMessage.viewport[0].documentText)
-        console.log(aMessage.viewport[0].spans)
-        console.log(aMessage.viewport[0].arcs)
-
         that.annotationEditor.viewport = aMessage.viewport;
-
-        /*
-        this.viewport = aMessage.viewport;
-        this.viewport.documentText = this.viewport.documentText.split("\n").join("");
-        this.documentID = aMessage.documentId;
-        this.spans = aMessage.spans;
-        this.arcs = aMessage.arcs;
-
-         */
     }
 
     onSpanCreate(aMessage: SpanCreatedMessage)
     {
-
         console.log('RECEIVED SPAN CREATE' + aMessage);
-        let span = new Span(aMessage.spanId, aMessage.begin, aMessage.end, aMessage.layerId, aMessage.features, aMessage.color)
 
+        let span = new Span(aMessage.spanId, aMessage.begin, aMessage.end, aMessage.layerId, aMessage.features, aMessage.color)
     }
 
     onArcCreate(aMessage: ArcCreatedMessage)
     {
         console.log('RECEIVED ARC CREATE' + aMessage);
+
         let arc = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.layerId, aMessage.features, aMessage.color)
     }
 
     onAnnotationDelete(aMessage: DeleteAnnotationMessage)
     {
         console.log('RECEIVED DELETE ANNOTATION' + aMessage);
-        /*
-        this.spans.forEach((item, index) => {
-            if (item.id === aMessage.annotationId) {
-                this.spans.splice(index, 1);
-            }
-        });
-        this.arcs.forEach((item, index) => {
-            if (item.id === aMessage.annotationId) {
-                this.arcs.splice(index, 1);
-            }
-        });
-         */
+
+        let annotationID = aMessage.annotationId;
     }
 
     onFeaturesUpdate(aMessage: UpdateFeatureMessage) {
         console.log('RECEIVED UPDATE ANNOTATION' + aMessage);
-        /*
-        let arc = this.arcs.findIndex(r => r.id == aMessage.annotationId);
-        if (arc != null) {
-            this.arcs[arc].features = aMessage.features;
-            return;
-        } else {
-            let span = this.spans.findIndex(r => r.id == aMessage.annotationId);
-            this.arcs[arc].features = aMessage.features;
-        }
 
-         */
+        let annotationID = aMessage.annotationId;
+        let feature = aMessage.feature
+        let newValue = aMessage.value;
     }
 
     onError(aMessage: AdviceMessage)
