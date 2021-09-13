@@ -92,6 +92,10 @@
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-api-dao</artifactId>
         </dependency>
+        <dependency>
+            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+            <artifactId>inception-brat-editor</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -103,7 +107,7 @@
                     <gruntExecutable>node_modules/grunt-cli/bin/grunt</gruntExecutable>
                     <sourceDirectory>src/main</sourceDirectory>
                     <jsSourceDirectory>js</jsSourceDirectory>
-                    <gruntBuildDirectory>${basedir}/src/main/ts</gruntBuildDirectory>
+                    <gruntBuildDirectory>src/main/ts</gruntBuildDirectory>
                 </configuration>
                 <executions>
                     <execution>
