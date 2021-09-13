@@ -13,7 +13,9 @@ custom annotation editor. Still, it is advisable to talk to the INCEpTION develo
 to make the implementation smoother by acquiring all the required knowledge for creating a custom annotation
 editor. Furthermore, reading this README file carefully will also help to understand its fundamental concepts.
 The following editor was one of the first to be implemented with the API concept:
-PICTURE.
+
+![](resources/META-INF/asciidoc/user-guide/images/word_alignment_editor.png?raw=true "Title")
+
 
 ### API endpoints
 This section divides between the API endpoints available to the front-end (for any custom annotation editor) 
@@ -114,12 +116,14 @@ implementation. We will put this into several steps that should be followed prec
 open your custom editor from the annotation pages 'settings'. Thereafter, feel free to play with the endpoints which the 
 'Experience API' offers to your for your custom annotation editor.
 
-Of course, how your editor works and looks like is completly up to you!
+Of course, how your editor works and looks like is completely up to you!
 
 1. Create a new module that contains your editor files. For the sake of example, we'll create a word_alignment editor. Therefore,
 the name of the module will be 'inception-word-alignment-editor'.
 2. Create the following package structure as seen in the picture
-PICTURE
+
+![](resources/META-INF/asciidoc/user-guide/images/package_structure.png?raw=true "Title")
+
 HINT: Simply look into 
     -       'inception-experimental-editor/src/main/java/.../editor'
      for the configuration- (in '/config') and resource files (in '/resources')
@@ -131,8 +135,7 @@ factory. Be advised, if you add a constraint to this '@Configuration' file do no
 in the 'application.yml' file in 
     -       inception-app-webapp/src/main/resources/application.yml
 6. Create a 'WordAlignmentEditorReference' in the '/resources' folder. The referenced JavaScript file path must point
-to your JavaScript file. It is recommended to update your package structure with a '/js' package structure as shown
-in the following PICTURE 
+to your JavaScript file. It is recommended to update your package structure with a '/js' package structure
 7. Create your 'WordAlignmentEditor' class which must extend 'AnnotationEditorBase'
 8. Add to the 'renderHead()' method in your 'WordAlignmentEditor' the following lines
     -      aResponse.render(forReference(WordAlignmentEditorReference.get()));
@@ -194,6 +197,9 @@ Do NOT forget to add the @EventListener() notation above the method.
 NOTE: All APIs are implementations of their respective interfaces. Therefore, please extend the interfaces.
 
 Overall, this streamlined process can also be seen in the following figure.
+
+![](resources/META-INF/asciidoc/user-guide/images/streamlined_process.png?raw=true "Title")
+
 If you encounter any issues, please contact the INCEpTION team.
 
 ## License
