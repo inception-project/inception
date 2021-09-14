@@ -566,7 +566,6 @@ public class SearchServiceImpl
             statistics.put("Number of Documents", statistics.get("n"));
             statistics.remove("n");
 
-            statistics.put("Number of Hits", statistics.get("sourceNumber"));
             statistics.remove("sourceNumber");
 
             Map<String, Map<String, Double>> statisticsMap = new HashMap<String, Map<String, Double>>();
@@ -576,7 +575,6 @@ public class SearchServiceImpl
             statistics.put("Number of Documents", statistics.get("n"));
             statistics.remove("n");
 
-            statistics.put("Number of Hits", statistics.get("sourceNumber"));
             statistics.remove("sourceNumber");
             statisticsMap.put("per Sentence: " + aQuery, statistics);
             StatisticsResult results = new StatisticsResult(statRequest, statisticsMap,

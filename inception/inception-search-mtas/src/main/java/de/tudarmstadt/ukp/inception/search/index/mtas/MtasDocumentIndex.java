@@ -407,12 +407,14 @@ public class MtasDocumentIndex
     public StatisticsResult getAnnotationStatistics(StatisticRequest aStatisticRequest)
         throws IOException, ExecutionException
     {
+
         List<Integer> fullDocSet = getUniqueDocuments(aStatisticRequest);
         Map<String, Map<String, Double>> allStats = new HashMap<String, Map<String, Double>>();
         Map<String, Map<String, Double>> nonNullStats = new HashMap<String, Map<String, Double>>();
         List<AnnotationLayer> layers = schemaService
                 .listAnnotationLayer(aStatisticRequest.getProject());
         for (AnnotationLayer layer : layers) {
+            long begin = System.nanoTime();
             List<AnnotationFeature> features = schemaService.listAnnotationFeature(layer);
             for (AnnotationFeature feature : features) {
                 String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
@@ -442,6 +444,9 @@ public class MtasDocumentIndex
                             results);
                 }
             }
+            long end = System.nanoTime();
+            System.out.println((end-begin)/(1000000.0*1000.0));
+
         }
         Map<String, Double> results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>",
                 fullDocSet, false);

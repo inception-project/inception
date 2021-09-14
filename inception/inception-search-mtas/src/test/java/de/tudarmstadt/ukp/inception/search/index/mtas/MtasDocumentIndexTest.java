@@ -669,78 +669,106 @@ public class MtasDocumentIndexTest
 
     public static File getResource(String aResourceName)
     {
-        //return Paths.get("src", "test", "resources", aResourceName).toFile();
+        // return Paths.get("src", "test", "resources", aResourceName).toFile();
         return Paths.get(aResourceName).toFile();
     }
 
+    public void uploadLargeProject(String aFolderPath, Project aProject, User aUser)
+        throws Exception
+    {
+
+        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
+            for (final File fileEntry : getResource(aFolderPath).listFiles()) {
+
+                String xmiPath = aFolderPath + "\\" + fileEntry.getName();
+
+                CAS cas = loadCas(xmiPath);
+
+                SourceDocument sourceDocument = new SourceDocument();
+
+                sourceDocument.setName(fileEntry.getName());
+                sourceDocument.setProject(aProject);
+                sourceDocument.setFormat("text");
+
+                String sourceContent = cas.getDocumentText();
+
+                try (InputStream fileStream = new ByteArrayInputStream(
+                        sourceContent.getBytes(UTF_8))) {
+                    documentService.uploadSourceDocument(fileStream, sourceDocument);
+                }
+
+                documentService.writeAnnotationCas(cas,
+                        documentService.createOrGetAnnotationDocument(sourceDocument, aUser),
+                        false);
+            }
+        }
+        await("Waiting for indexing process to complete") //
+                .atMost(60, SECONDS) //
+                .pollInterval(5, SECONDS) //
+                .until(() -> searchService.isIndexValid(aProject)
+                        && searchService.getIndexProgress(aProject).isEmpty());
+
+    }
+
     @Test
-    public void testStatisticsWithRealProject() throws Exception{
-
+    public void testStatisticsWithRealProject() throws Exception
+    {
         long startTime = System.nanoTime();
-
-        String xmiPath = "D:\\Falko\\Documents\\UKP\\Statistics\\Testdaten\\admin.xmi";
-
-        CAS cas = loadCas(xmiPath);
-        //System.out.println(cas.getDocumentText());
-
         Project project = new Project();
         project.setName("TestStatistics");
 
         createProject(project);
 
         User user = userRepository.get("admin");
+        String folderPath = "D:\\Falko\\Documents\\UKP\\Statistics\\Testdaten\\austen";
 
-        SourceDocument sourceDocument = new SourceDocument();
+        long startUpload = System.nanoTime();
+        uploadLargeProject(folderPath, project, user);
+        long endUpload = System.nanoTime();
+        System.out.println((endUpload - startUpload) / (1000000.0 * 1000.0)); // in seconds
 
-
-        sourceDocument.setName("doc1");
-        sourceDocument.setProject(project);
-        sourceDocument.setFormat("text");
-
-        String sourceContent = cas.getDocumentText();
-
-        uploadDocument(Pair.of(sourceDocument, sourceContent));
-
-        // Create annotation document
-        AnnotationDocument annotationDocument = documentService
-            .createOrGetAnnotationDocument(sourceDocument, user);
-
-        // Write annotated CAS to annotated document
-        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
-            log.info("Writing annotated document using documentService.writeAnnotationCas");
-            documentService.writeAnnotationCas(cas, annotationDocument, false);
-        }
-
-        log.info("Writing for annotated document to be indexed");
-        await("Waiting for indexing process to complete") //
-            .atMost(60, SECONDS) //
-            .pollInterval(5, SECONDS) //
-            .until(() -> searchService.isIndexValid(project)
-                && searchService.getIndexProgress(project).isEmpty());
-        log.info("Indexing complete!");
-
-        String statistic = "n,min,max,mean,median,standarddeviation";
         OptionalInt minTokenPerDoc = OptionalInt.empty();
         OptionalInt maxTokenPerDoc = OptionalInt.empty();
+        long afterBuild;
+        long afterStats;
+        long endTime;
+        double durationStats;
+        double durationSearch;
+        String statistic;
+        String query;
+        StatisticsResult statsResults;
+        StatisticsResult queryStatsResults;
 
-        String query = "Kahmi";
-        long afterBuild = System.nanoTime();
-        StatisticsResult statsResults = searchService.getProjectStatistics(user, project, statistic,
-            minTokenPerDoc, maxTokenPerDoc);
-        long afterStats = System.nanoTime();
-        StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project,
-            statistic, query, minTokenPerDoc, maxTokenPerDoc);
-        long endTime = System.nanoTime();
+        statistic = "n,min,max,mean,median,standarddeviation";
+        query = "the";
+        afterBuild = System.nanoTime();
+        statsResults = searchService.getProjectStatistics(user, project, statistic, minTokenPerDoc,
+                maxTokenPerDoc);
+        afterStats = System.nanoTime();
+        //queryStatsResults = searchService.getQueryStatistics(user, project, statistic, query,
+        //        minTokenPerDoc, maxTokenPerDoc);
+        endTime = System.nanoTime();
+        durationStats = (afterStats - afterBuild) / (1000000.0 * 1000.0);
+        durationSearch = (endTime - afterStats) / (1000000.0 * 1000.0);
+        System.out.println(durationStats);
+        System.out.println(durationSearch);
 
-        double durationBuild = (afterBuild - startTime)/1000000.0;  //divide by 1000000 to get milliseconds.
-        double durationStats = (afterStats - afterBuild)/1000000.0;
-        double durationSearch = (endTime - afterStats)/1000000.0;
-        System.out.println(durationBuild);
+        statistic = "max";
+        query = "computer";
+        afterBuild = System.nanoTime();
+        statsResults = searchService.getProjectStatistics(user, project, statistic, minTokenPerDoc,
+                maxTokenPerDoc);
+        afterStats = System.nanoTime();
+        //queryStatsResults = searchService.getQueryStatistics(user, project, statistic, query,
+        //        minTokenPerDoc, maxTokenPerDoc);
+        endTime = System.nanoTime();
+        durationStats = (afterStats - afterBuild) / (1000000.0*100.0);
+        durationSearch = (endTime - afterStats) / (1000000.0*100.0);
         System.out.println(durationStats);
         System.out.println(durationSearch);
 
         assertTrue(0 == 0);
-}
+    }
 
     @SpringBootConfiguration
     public static class TestContext
