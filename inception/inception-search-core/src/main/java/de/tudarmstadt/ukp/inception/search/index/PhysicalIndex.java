@@ -25,6 +25,7 @@ import java.util.Optional;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
+import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.StatisticRequest;
@@ -55,8 +56,8 @@ public interface PhysicalIndex
     long numberOfQueryResults(SearchQueryRequest aSearchQueryRequest)
         throws IOException, ExecutionException;
 
-    public Map<String, Double> getLayerStatistics(StatisticRequest aStatisticRequest,
-            String aFeatureQuery, List<Integer> aFullDocSet, boolean aPerSentence)
+    public LayerStatistics getLayerStatistics(StatisticRequest aStatisticRequest,
+            String aFeatureQuery, List<Integer> aFullDocSet)
         throws IOException, ExecutionException;
 
     public List<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest) throws IOException;

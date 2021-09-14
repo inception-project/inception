@@ -18,11 +18,11 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -33,14 +33,12 @@ public class StatisticsResult
     private OptionalInt maxTokenPerDoc;
     private User user;
     private Project project;
-    private List<String> metrics;
-
-    private Map<String, Map<String, Double>> allResults;
-    private Map<String, Map<String, Double>> nonTrivialResults;
+    private String query;
+    private Map<String, LayerStatistics> allResults;
+    private Map<String, LayerStatistics> nonTrivialResults;
 
     public StatisticsResult(StatisticRequest aStatisticRequest,
-            Map<String, Map<String, Double>> allResults,
-            Map<String, Map<String, Double>> nonTrivialResults)
+            Map<String, LayerStatistics> allResults, Map<String, LayerStatistics> nonTrivialResults)
     {
         maxTokenPerDoc = aStatisticRequest.getMaxTokenPerDoc();
         minTokenPerDoc = aStatisticRequest.getMinTokenPerDoc();
@@ -48,14 +46,8 @@ public class StatisticsResult
         project = aStatisticRequest.getProject();
         this.allResults = allResults;
         this.nonTrivialResults = nonTrivialResults;
-        //metrics = Arrays.asList(aStatisticRequest.getStatistic().split(","));
-        metrics = new ArrayList<String>();
-        for (String key: allResults.keySet()) {
-            for (String metric: allResults.get(key).keySet()) {
-                metrics.add(metric);
-            }
-            break;
-        }
+        query = aStatisticRequest.getQuery();
+
     }
 
     public ArrayList<String> getAllLayers()
@@ -63,12 +55,12 @@ public class StatisticsResult
         return new ArrayList<String>(allResults.keySet());
     }
 
-    public Map<String, Map<String, Double>> getAllResults()
+    public Map<String, LayerStatistics> getAllResults()
     {
         return allResults;
     }
 
-    public Map<String, Map<String, Double>> getNonNullResults()
+    public Map<String, LayerStatistics> getNonNullResults()
     {
         return nonTrivialResults;
     }
@@ -78,13 +70,32 @@ public class StatisticsResult
         return new ArrayList<String>(nonTrivialResults.keySet());
     }
 
-    public Map<String, Double> getLayerResult(String aLayerName, String aFeatureName) throws ExecutionException
+    public LayerStatistics getLayerResult(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
     {
-        String fullName = aLayerName + "." + aFeatureName;
+        String fullName = aLayer.getUiName() + "." + aFeature.getUiName();
         if (!allResults.keySet().contains(fullName)) {
-            throw new ExecutionException("The layer " + fullName + " does not exist!");
+            throw new ExecutionException("No results for layer " + fullName);
         }
         return allResults.get(fullName);
+    }
+
+    public LayerStatistics getTokenResult()
+    {
+        return allResults.get("Token Count");
+    }
+
+    public LayerStatistics getSentenceResult()
+    {
+        return allResults.get("Sentence Count");
+    }
+
+    public LayerStatistics getQueryResult() throws ExecutionException
+    {
+        if (query == null) {
+            throw new ExecutionException("No query was given!");
+        }
+        return allResults.get(query);
     }
 
     public Project getProject()
@@ -107,13 +118,76 @@ public class StatisticsResult
         return minTokenPerDoc;
     }
 
-    public List<String> getMetrics() {return metrics;}
+    public long getTotal(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName()).getTotal();
+    }
 
-    public Double getStatistic(String aMetric, String aLayerName, String aFeatureName) throws ExecutionException {
-        if (!metrics.contains(aMetric)) {
-            throw new ExecutionException("The given metric is not valid: " + aMetric);
-        }
-        return getLayerResult(aLayerName, aFeatureName).get(aMetric);
+    public long getMinimum(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName()).getMinimum();
+    }
+
+    public long getMaximum(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName()).getMaximum();
+    }
+
+    public double getMean(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName()).getMean();
+    }
+
+    public double getMedian(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName()).getMedian();
+    }
+
+    public double getStandardDeviation(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName())
+                .getStandardDeviation();
+    }
+
+    public double getMinimumPerSentence(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName())
+                .getMinimumPerSentence();
+    }
+
+    public double getMaximumPerSentence(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName())
+                .getMaximumPerSentence();
+    }
+
+    public double getMeanPerSentence(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName()).getMeanPerSentence();
+    }
+
+    public double getMedianPerSentence(AnnotationLayer aLayer, AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName())
+                .getMedianPerSentence();
+    }
+
+    public double getStandardDeviationPerSentence(AnnotationLayer aLayer,
+            AnnotationFeature aFeature)
+        throws ExecutionException
+    {
+        return allResults.get(aLayer.getUiName() + "." + aFeature.getUiName())
+                .getStandardDeviationPerSentence();
     }
 
 }

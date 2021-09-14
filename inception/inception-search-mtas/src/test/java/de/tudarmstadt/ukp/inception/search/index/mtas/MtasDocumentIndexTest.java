@@ -17,36 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
-import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.search.SearchResult;
-import de.tudarmstadt.ukp.inception.search.SearchService;
-import de.tudarmstadt.ukp.inception.search.StatisticsResult;
-import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalInt;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -73,22 +61,39 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.FileSystemUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.lang.reflect.Method;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.OptionalInt;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.LayerStatistics;
+import de.tudarmstadt.ukp.inception.search.SearchResult;
+import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.StatisticsResult;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAutoConfiguration;
 
 @EnableAutoConfiguration
 @EntityScan({ //
@@ -510,10 +515,7 @@ public class MtasDocumentIndexTest
         uploadDocument(Pair.of(sourceDocument, fileContent));
         annotateDocument(project, user, sourceDocument);
 
-        // does not work with capital. the latter two work
-        String query = "capital";
-        query = "<Named_entity.value=\"LOC\"/>";
-        // query = "<Token=\"\"/>";
+        String query = "<Named_entity.value=\"LOC\"/>";
 
         List<SearchResult> results = searchService.query(user, project, query);
 
@@ -564,94 +566,55 @@ public class MtasDocumentIndexTest
 
         uploadDocument(Pair.of(otherDocument, otherContent));
 
-        String statistic = "n,min,max,mean,median,standarddeviation";
+        // String statistic = "n,min,max,mean,median,standarddeviation";
         OptionalInt minTokenPerDoc = OptionalInt.empty();
         OptionalInt maxTokenPerDoc = OptionalInt.empty();
 
+        AnnotationLayer ne = new AnnotationLayer();
+        ne.setUiName("Named entity");
+        AnnotationFeature value = new AnnotationFeature();
+        value.setUiName("value");
+        value.setLayer(ne);
+        List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
+        features.add(value);
+
         String query = "moon";
 
-        StatisticsResult statsResults = searchService.getProjectStatistics(user, project, statistic,
-                minTokenPerDoc, maxTokenPerDoc);
+        StatisticsResult statsResults = searchService.getProjectStatistics(user, project,
+                minTokenPerDoc, maxTokenPerDoc, features);
 
         assertThat(statsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
         assertThat(statsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
         assertThat(statsResults.getProject()).isEqualTo(project);
         assertThat(statsResults.getUser()).isEqualTo(user);
 
-        Map<String, Map<String, Double>> expectedResults = new HashMap<String, Map<String, Double>>();
+        Map<String, LayerStatistics> expectedResults = new HashMap<String, LayerStatistics>();
 
-        Map<String, Double> expectedNamedEntity = new HashMap<String, Double>();
-        expectedNamedEntity.put("min", 0.0);
-        expectedNamedEntity.put("median", 1.0);
-        expectedNamedEntity.put("max", 2.0);
-        expectedNamedEntity.put("mean", 1.0);
-        expectedNamedEntity.put("standarddeviation", Math.pow(2, 0.5));
-        expectedNamedEntity.put("Number of Documents", 2.0);
-        Map<String, Double> expectedToken = new HashMap<String, Double>();
-        expectedToken.put("min", 6.0);
-        expectedToken.put("median", 7.5);
-        expectedToken.put("max", 9.0);
-        expectedToken.put("mean", 7.5);
-        expectedToken.put("standarddeviation", Math.pow(4.5, 0.5));
-        expectedToken.put("Number of Documents", 2.0);
-        Map<String, Double> expectedSentence = new HashMap<String, Double>();
-        expectedSentence.put("min", 1.0);
-        expectedSentence.put("median", 1.5);
-        expectedSentence.put("max", 2.0);
-        expectedSentence.put("mean", 1.5);
-        expectedSentence.put("standarddeviation", Math.pow(0.5, 0.5));
-        expectedSentence.put("Number of Documents", 2.0);
-        Map<String, Double> expectedTokenPerSentence = new HashMap<String, Double>();
-        expectedTokenPerSentence.put("min", 3.0);
-        expectedTokenPerSentence.put("median", 6.0);
-        expectedTokenPerSentence.put("max", 9.0);
-        expectedTokenPerSentence.put("mean", 6.0);
-        expectedTokenPerSentence.put("standarddeviation", Math.pow(18, 0.5));
-        expectedTokenPerSentence.put("Number of Documents", 2.0);
-        Map<String, Double> expectedNamedEntityPerSentence = new HashMap<String, Double>();
-        expectedNamedEntityPerSentence.put("min", 0.0);
-        expectedNamedEntityPerSentence.put("median", 1.0);
-        expectedNamedEntityPerSentence.put("max", 2.0);
-        expectedNamedEntityPerSentence.put("mean", 1.0);
-        expectedNamedEntityPerSentence.put("standarddeviation", Math.pow(2, 0.5));
-        expectedNamedEntityPerSentence.put("Number of Documents", 2.0);
+        LayerStatistics expectedNamedEntity = new LayerStatistics(2, 2, 0, 1.0, 1.0,
+                Math.pow(2, 0.5), 2.0, 0.0, 1.0, 1.0, Math.pow(2, 0.5), 2);
+        LayerStatistics expectedToken = new LayerStatistics(15, 9, 6, 7.5, 7.5, Math.pow(4.5, 0.5),
+                9.0, 3.0, 6.0, 6.0, Math.pow(18, 0.5), 2);
+        LayerStatistics expectedSentence = new LayerStatistics(3, 2, 1, 1.5, 1.5,
+                Math.pow(0.5, 0.5), 1.0, 1.0, 1.0, 1.0, 0.0, 2);
 
-        expectedResults.put("per Sentence: Token Count", expectedTokenPerSentence);
         expectedResults.put("Named entity.value", expectedNamedEntity);
         expectedResults.put("Token Count", expectedToken);
         expectedResults.put("Sentence Count", expectedSentence);
-        expectedResults.put("per Sentence: Named entity.value", expectedNamedEntityPerSentence);
 
-        StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project,
-                statistic, query, minTokenPerDoc, maxTokenPerDoc);
+        StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project, query,
+                minTokenPerDoc, maxTokenPerDoc, features);
 
         assertThat(queryStatsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
         assertThat(queryStatsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
         assertThat(queryStatsResults.getUser()).isEqualTo(user);
         assertThat(queryStatsResults.getProject()).isEqualTo(project);
 
-        Map<String, Map<String, Double>> expected = new HashMap<String, Map<String, Double>>();
+        Map<String, LayerStatistics> expected = new HashMap<String, LayerStatistics>();
 
-        Map<String, Double> expectedSearch = new HashMap<String, Double>();
-        expectedSearch.put("min", 0.0);
-        expectedSearch.put("median", 0.5);
-        expectedSearch.put("max", 1.0);
-        expectedSearch.put("mean", 0.5);
-        expectedSearch.put("standarddeviation", Math.pow(0.5, 0.5));
-        expectedSearch.put("Number of Documents", 2.0);
-        expectedSearch.put("Number of Hits", 1.0);
+        LayerStatistics expectedSearch = new LayerStatistics(1, 1, 0, 0.5, 0.5, Math.pow(0.5, 0.5),
+                0.5, 0.0, 0.25, 0.25, Math.pow(0.125, 0.5), 2);
 
-        Map<String, Double> expectedSearchPerSentence = new HashMap<String, Double>();
-        expectedSearchPerSentence.put("min", 0.0);
-        expectedSearchPerSentence.put("median", 0.25);
-        expectedSearchPerSentence.put("max", 0.5);
-        expectedSearchPerSentence.put("mean", 0.25);
-        expectedSearchPerSentence.put("standarddeviation", Math.pow(0.125, 0.5));
-        expectedSearchPerSentence.put("Number of Documents", 2.0);
-        expectedSearchPerSentence.put("Number of Hits", 1.0);
-
-        expected.put("moon", expectedSearch);
-        expected.put("per Sentence: moon", expectedSearchPerSentence);
+        expected.put("query.moon", expectedSearch);
 
         assertTrue(expectedResults.equals(statsResults.getNonNullResults()));
         assertTrue(expected.equals(queryStatsResults.getNonNullResults()));
@@ -669,14 +632,12 @@ public class MtasDocumentIndexTest
 
     public static File getResource(String aResourceName)
     {
-        // return Paths.get("src", "test", "resources", aResourceName).toFile();
         return Paths.get(aResourceName).toFile();
     }
 
     public void uploadLargeProject(String aFolderPath, Project aProject, User aUser)
         throws Exception
     {
-
         try (CasStorageSession casStorageSession = CasStorageSession.open()) {
             for (final File fileEntry : getResource(aFolderPath).listFiles()) {
 
@@ -707,9 +668,9 @@ public class MtasDocumentIndexTest
                 .pollInterval(5, SECONDS) //
                 .until(() -> searchService.isIndexValid(aProject)
                         && searchService.getIndexProgress(aProject).isEmpty());
-
     }
 
+    // executing this method takes around 30 minutes!
     @Test
     public void testStatisticsWithRealProject() throws Exception
     {
@@ -729,6 +690,13 @@ public class MtasDocumentIndexTest
 
         OptionalInt minTokenPerDoc = OptionalInt.empty();
         OptionalInt maxTokenPerDoc = OptionalInt.empty();
+        AnnotationLayer ne = new AnnotationLayer();
+        ne.setUiName("named entity");
+        AnnotationFeature value = new AnnotationFeature();
+        value.setUiName("value");
+        value.setLayer(ne);
+        List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
+        features.add(value);
         long afterBuild;
         long afterStats;
         long endTime;
@@ -739,35 +707,19 @@ public class MtasDocumentIndexTest
         StatisticsResult statsResults;
         StatisticsResult queryStatsResults;
 
-        statistic = "n,min,max,mean,median,standarddeviation";
         query = "the";
         afterBuild = System.nanoTime();
-        statsResults = searchService.getProjectStatistics(user, project, statistic, minTokenPerDoc,
-                maxTokenPerDoc);
+        statsResults = searchService.getProjectStatistics(user, project, minTokenPerDoc,
+                maxTokenPerDoc, features);
         afterStats = System.nanoTime();
-        //queryStatsResults = searchService.getQueryStatistics(user, project, statistic, query,
-        //        minTokenPerDoc, maxTokenPerDoc);
+        queryStatsResults = searchService.getQueryStatistics(user, project, query, minTokenPerDoc,
+                maxTokenPerDoc, features);
         endTime = System.nanoTime();
-        durationStats = (afterStats - afterBuild) / (1000000.0 * 1000.0);
+        durationStats = (afterStats - afterBuild) / (1000000.0 * 1000.0); // in seconds
         durationSearch = (endTime - afterStats) / (1000000.0 * 1000.0);
-        System.out.println(durationStats);
-        System.out.println(durationSearch);
 
-        statistic = "max";
-        query = "computer";
-        afterBuild = System.nanoTime();
-        statsResults = searchService.getProjectStatistics(user, project, statistic, minTokenPerDoc,
-                maxTokenPerDoc);
-        afterStats = System.nanoTime();
-        //queryStatsResults = searchService.getQueryStatistics(user, project, statistic, query,
-        //        minTokenPerDoc, maxTokenPerDoc);
-        endTime = System.nanoTime();
-        durationStats = (afterStats - afterBuild) / (1000000.0*100.0);
-        durationSearch = (endTime - afterStats) / (1000000.0*100.0);
-        System.out.println(durationStats);
-        System.out.println(durationSearch);
-
-        assertTrue(0 == 0);
+        assertTrue(durationStats < 45);
+        assertTrue(durationSearch < 15);
     }
 
     @SpringBootConfiguration

@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.OptionalInt;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -26,25 +29,28 @@ public class StatisticRequest
 {
     private final Project project;
     private final User user;
-    private final String statistic;
 
     private final OptionalInt minTokenPerDoc;
     private final OptionalInt maxTokenPerDoc;
 
-    public StatisticRequest(Project aProject, User aUser, String aStatistic)
+    private List<AnnotationFeature> features;
+    private String query;
+
+    public StatisticRequest(Project aProject, User aUser)
     {
-        this(aProject, aUser, aStatistic, null, null);
+        this(aProject, aUser, null, null, new ArrayList<AnnotationFeature>(), null);
     }
 
-    public StatisticRequest(Project aProject, User aUser, String aStatistic,
-            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc)
+    public StatisticRequest(Project aProject, User aUser, OptionalInt aMinTokenPerDoc,
+            OptionalInt aMaxTokenPerDoc, List<AnnotationFeature> aFeatures, String aQuery)
     {
         project = aProject;
         user = aUser;
-        statistic = aStatistic;
 
         minTokenPerDoc = aMinTokenPerDoc;
         maxTokenPerDoc = aMaxTokenPerDoc;
+        query = aQuery;
+        features = aFeatures;
     }
 
     public Project getProject()
@@ -57,11 +63,6 @@ public class StatisticRequest
         return user;
     }
 
-    public String getStatistic()
-    {
-        return statistic;
-    }
-
     public OptionalInt getMinTokenPerDoc()
     {
         return minTokenPerDoc;
@@ -70,6 +71,26 @@ public class StatisticRequest
     public OptionalInt getMaxTokenPerDoc()
     {
         return maxTokenPerDoc;
+    }
+
+    public List<AnnotationFeature> getFeatures()
+    {
+        return features;
+    }
+
+    public void addFeature(AnnotationFeature aFeature)
+    {
+        if (features.contains(aFeature)) {
+
+        }
+        else {
+            features.add(aFeature);
+        }
+    }
+
+    public String getQuery()
+    {
+        return query;
     }
 
 }

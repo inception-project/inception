@@ -535,8 +535,9 @@ public class SearchServiceImpl
     }
 
     @Override
-    public StatisticsResult getProjectStatistics(User aUser, Project aProject, String aStatistic,
-            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc)
+    public StatisticsResult getProjectStatistics(User aUser, Project aProject,
+            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc,
+            List<AnnotationFeature> aFeatures)
         throws IOException, ExecutionException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
@@ -544,13 +545,14 @@ public class SearchServiceImpl
             ensureIndexIsCreatedAndValid(aProject, index);
 
             return index.getPhysicalIndex().getAnnotationStatistics(new StatisticRequest(aProject,
-                    aUser, aStatistic, aMinTokenPerDoc, aMaxTokenPerDoc));
+                    aUser, aMinTokenPerDoc, aMaxTokenPerDoc, aFeatures, null));
         }
     }
 
     @Override
-    public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aStatistic,
-            String aQuery, OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc)
+    public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aQuery,
+            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc,
+            List<AnnotationFeature> aFeatures)
         throws ExecutionException, IOException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
@@ -558,25 +560,14 @@ public class SearchServiceImpl
             ensureIndexIsCreatedAndValid(aProject, index);
             PhysicalIndex physicalIndex = index.getPhysicalIndex();
 
-            StatisticRequest statRequest = new StatisticRequest(aProject, aUser, aStatistic,
-                    aMinTokenPerDoc, aMaxTokenPerDoc);
-            Map<String, Double> statistics = physicalIndex.getLayerStatistics(statRequest, aQuery,
-                    physicalIndex.getUniqueDocuments(statRequest), false);
+            StatisticRequest statRequest = new StatisticRequest(aProject, aUser, aMinTokenPerDoc,
+                    aMaxTokenPerDoc, aFeatures, aQuery);
+            LayerStatistics statistics = physicalIndex.getLayerStatistics(statRequest,
+                    statRequest.getQuery(), physicalIndex.getUniqueDocuments(statRequest));
 
-            statistics.put("Number of Documents", statistics.get("n"));
-            statistics.remove("n");
+            Map<String, LayerStatistics> statisticsMap = new HashMap<String, LayerStatistics>();
+            statisticsMap.put("query." + aQuery, statistics);
 
-            statistics.remove("sourceNumber");
-
-            Map<String, Map<String, Double>> statisticsMap = new HashMap<String, Map<String, Double>>();
-            statisticsMap.put(aQuery, statistics);
-            statistics = physicalIndex.getLayerStatistics(statRequest, aQuery,
-                    physicalIndex.getUniqueDocuments(statRequest), true);
-            statistics.put("Number of Documents", statistics.get("n"));
-            statistics.remove("n");
-
-            statistics.remove("sourceNumber");
-            statisticsMap.put("per Sentence: " + aQuery, statistics);
             StatisticsResult results = new StatisticsResult(statRequest, statisticsMap,
                     statisticsMap);
 

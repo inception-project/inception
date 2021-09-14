@@ -101,6 +101,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
+import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
@@ -407,69 +408,29 @@ public class MtasDocumentIndex
     public StatisticsResult getAnnotationStatistics(StatisticRequest aStatisticRequest)
         throws IOException, ExecutionException
     {
-
         List<Integer> fullDocSet = getUniqueDocuments(aStatisticRequest);
-        Map<String, Map<String, Double>> allStats = new HashMap<String, Map<String, Double>>();
-        Map<String, Map<String, Double>> nonNullStats = new HashMap<String, Map<String, Double>>();
-        List<AnnotationLayer> layers = schemaService
-                .listAnnotationLayer(aStatisticRequest.getProject());
-        for (AnnotationLayer layer : layers) {
-            long begin = System.nanoTime();
-            List<AnnotationFeature> features = schemaService.listAnnotationFeature(layer);
-            for (AnnotationFeature feature : features) {
-                String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
-                        + feature.getUiName().replace(' ', '_') + "=\"\"/>";
+        Map<String, LayerStatistics> allStats = new HashMap<String, LayerStatistics>();
+        Map<String, LayerStatistics> nonNullStats = new HashMap<String, LayerStatistics>();
+        List<AnnotationFeature> features = aStatisticRequest.getFeatures();
 
-                Map<String, Double> results = getLayerStatistics(aStatisticRequest, searchString,
-                        fullDocSet, false);
-                results.remove("stats");
-                results.remove("sourceNumber");
-                results.put("Number of Documents", results.get("n"));
-                results.remove("n");
-                allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
-                if (results.get("max") > 0.0) {
-                    nonNullStats.put(layer.getUiName() + "." + feature.getUiName(), results);
-                }
+        for (AnnotationFeature feature : features) {
+            AnnotationLayer layer = feature.getLayer();
+            String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
+                    + feature.getUiName().replace(' ', '_') + "=\"\"/>";
 
-                results = getLayerStatistics(aStatisticRequest, searchString, fullDocSet, true);
-                results.remove("stats");
-                results.remove("sourceNumber");
-                results.put("Number of Documents", results.get("n"));
-                results.remove("n");
-                allStats.put("per Sentence: " + layer.getUiName() + "." + feature.getUiName(),
-                        results);
-                if (results.get("max") > 0.0) {
-                    nonNullStats.put(
-                            "per Sentence: " + layer.getUiName() + "." + feature.getUiName(),
-                            results);
-                }
+            LayerStatistics results = getLayerStatistics(aStatisticRequest, searchString,
+                    fullDocSet);
+            allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
+            if (results.getMaximum() > 0.0) {
+                nonNullStats.put(layer.getUiName() + "." + feature.getUiName(), results);
             }
-            long end = System.nanoTime();
-            System.out.println((end-begin)/(1000000.0*1000.0));
-
         }
-        Map<String, Double> results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>",
-                fullDocSet, false);
-        results.remove("stats");
-        results.remove("sourceNumber");
-        results.put("Number of Documents", results.get("n"));
-        results.remove("n");
+        LayerStatistics results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>",
+                fullDocSet);
         allStats.put("Token Count", results);
         nonNullStats.put("Token Count", results);
 
-        results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>", fullDocSet, true);
-        results.remove("stats");
-        results.remove("sourceNumber");
-        results.put("Number of Documents", results.get("n"));
-        results.remove("n");
-        allStats.put("per Sentence: Token Count", results);
-        nonNullStats.put("per Sentence: Token Count", results);
-
-        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet, false);
-        results.remove("stats");
-        results.remove("sourceNumber");
-        results.put("Number of Documents", results.get("n"));
-        results.remove("n");
+        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
         allStats.put("Sentence Count", results);
         nonNullStats.put("Sentence Count", results);
 
@@ -537,13 +498,15 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public Map<String, Double> getLayerStatistics(StatisticRequest aStatisticRequest,
-            String aFeatureQuery, List<Integer> aFullDocSet, boolean aPerSentence)
+    public LayerStatistics getLayerStatistics(StatisticRequest aStatisticRequest,
+            String aFeatureQuery, List<Integer> aFullDocSet)
         throws IOException, ExecutionException
     {
+        LayerStatistics layerStats = new LayerStatistics();
         IndexSearcher searcher = null;
         Map<String, Object> resultsMap = null;
-        Map<String, Double> resultsMapDouble = new HashMap<String, Double>();
+        Map<String, Object> resultsMapSentence = null;
+
         Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
                 aStatisticRequest.getProject(), aStatisticRequest.getUser());
         Double minToken = aStatisticRequest.getMinTokenPerDoc().isPresent()
@@ -570,51 +533,46 @@ public class MtasDocumentIndex
             // https://github.com/textexploration/mtas/blob/96c7911e9c591c2bd4a419dbf0e2194813376776/src/main/java/mtas/codec/util/CodecComponent.java
             CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
                     FIELD_CONTENT);
-            // If we are not interested in per sentence statistics, we only have one query. This is either
+            // The query is
+            // either
             // an actual query (if the method is called from getQueryStatistics in SearchService)
-            // or a mock query, e.g. "<Token=\"\"/>" (if the method is called from getAnnotationStatistics in
-            // MtasDocumentIndex)
-            MtasSpanQuery[] spanQuerys = new MtasSpanQuery[1];
+            // or a mock query, e.g. "<Token=\"\"/>" (if the method shall return statistics for a
+            // layer)
+            MtasSpanQuery[] spanQuerys = new MtasSpanQuery[2];
 
-            // we need exactly one function. Each function consists of 3 parts
+            // we need two functions. Each function consists of 3 parts
             // 1. The key. This is just a unique identifier
-            String[] functionKeys = new String[1];
+            String[] functionKeys = new String[2];
             // 2. The actual instructions of the function
-            String[] functions = new String[1];
+            String[] functions = new String[2];
             // 3. Which values the function shall output
-            String[] functionTypes = new String[1];
+            String[] functionTypes = new String[2];
 
             // add the preprocessed query to the spanQueryList
             MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery);
             fieldStats.spanQueryList.add(parsedQuery);
 
-            if (!aPerSentence) {
-                // maybe using a function for this simple case is too slow...
-                spanQuerys[0] = parsedQuery;
-                functionKeys[0] = "currentLayer";
-                // This is a mock function (mathematically, the identity function).
-                // q0 indicates the result of the first parsed query
-                functions[0] = "$q0";
-                // The output should be all the requested statistics
-                functionTypes[0] = aStatisticRequest.getStatistic();
-            }
-            else {
-                // If we want per Sentence statistics we need two queries
-                spanQuerys = new MtasSpanQuery[2];
-                // the actual query
-                spanQuerys[0] = parsedQuery;
-                // A query which counts sentences
-                MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>");
-                fieldStats.spanQueryList.add(parsedSentQuery);
+            // maybe using a function for this simple case is too slow...
+            spanQuerys[0] = parsedQuery;
+            functionKeys[0] = "currentLayer";
+            // This is a mock function (mathematically, the identity function).
+            // q0 indicates the result of the first parsed query
+            functions[0] = "$q0";
+            // The output should be all the requested statistics
+            functionTypes[0] = layerStats.STATS;
 
-                spanQuerys[1] = parsedSentQuery;
-                functionKeys[0] = "perSentence";
-                // q0 is the result of the actual query. q1 is the result of counting the sentences
-                // we divide them using /
-                functions[0] = "$q0/$q1";
-                // The output should be all the requested statistics
-                functionTypes[0] = aStatisticRequest.getStatistic();
-            }
+            // A query which counts sentences
+            MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>");
+            fieldStats.spanQueryList.add(parsedSentQuery);
+
+            spanQuerys[1] = parsedSentQuery;
+            functionKeys[1] = "perSentence";
+            // q0 is the result of the actual query. q1 is the result of counting the sentences
+            // we divide them using /
+            functions[1] = "$q0/$q1";
+            // The output should be all the requested statistics
+            functionTypes[1] = layerStats.STATS;
+
             // now we are finished with the spanQueryList
 
             // Next we look at the statsSpanList
@@ -624,8 +582,7 @@ public class MtasDocumentIndex
             // minToken and maxToken indicate that only documents with a number of tokens bigger
             // than minToken and smaller than maxToken should be considered
             fieldStats.statsSpanList.add(new CodecComponent.ComponentSpan(spanQuerys, "ax2",
-                    minToken, maxToken, aStatisticRequest.getStatistic(), functionKeys, functions,
-                    functionTypes));
+                    minToken, maxToken, layerStats.STATS, functionKeys, functions, functionTypes));
 
             // Now we are done with the preparations
             // Next we actually collect the data and do all the calculations
@@ -635,18 +592,29 @@ public class MtasDocumentIndex
                     (ArrayList<Integer>) fullDocList, (ArrayList<Integer>) aFullDocSet, fieldStats,
                     new Status());
             // All that is left now is extracting the statistics from fieldStats
-            // statsSpanList only has one entry and we also only have one function
+            // statsSpanList only has one entry and the first function is the perDocument statistics
             MtasDataItem<?, ?> results = fieldStats.statsSpanList.get(0).functions
                     .get(0).dataCollector.getResult().getData();
 
-            // everything is cast to Double
             resultsMap = results.rewrite(true);
-            for (String str : resultsMap.keySet()) {
-                if ((resultsMap.get(str) instanceof Number)) {
-                    resultsMapDouble.put(str, Double.valueOf(resultsMap.get(str).toString()));
-                }
-            }
-            return resultsMapDouble;
+
+            // the second function is the perSentence statistics
+            MtasDataItem<?, ?> resultsPerSentence = fieldStats.statsSpanList.get(0).functions
+                    .get(1).dataCollector.getResult().getData();
+
+            resultsMapSentence = resultsPerSentence.rewrite(true);
+
+            layerStats = new LayerStatistics(Math.round((double) resultsMap.get("sum")),
+                    Math.round((double) resultsMap.get("max")),
+                    Math.round((double) resultsMap.get("min")), (double) resultsMap.get("mean"),
+                    (double) resultsMap.get("median"), (double) resultsMap.get("standarddeviation"),
+                    (double) resultsMapSentence.get("max"), (double) resultsMapSentence.get("min"),
+                    (double) resultsMapSentence.get("mean"),
+                    (double) resultsMapSentence.get("median"),
+                    (double) resultsMapSentence.get("standarddeviation"),
+                    (long) resultsMapSentence.get("n"));
+
+            return layerStats;
         }
         catch (mtas.parser.function.ParseException e) {
             throw new ExecutionException("Search function could not be parsed!", e);
