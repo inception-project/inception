@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support;
+package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,19 +39,19 @@ import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
  * @author Ernesto Reinaldo Barreiro (reiern70@gmail.com)
  * @author Jordi Deu-Pons (jordi@jordeu.net)
  */
-public class AJAXDownload
+public class AjaxDownloadBehavior
     extends AbstractAjaxBehavior
 {
     private static final long serialVersionUID = -3702600595997355221L;
     private boolean addAntiCache;
     private String fileName;
 
-    public AJAXDownload()
+    public AjaxDownloadBehavior()
     {
         this(true);
     }
 
-    public AJAXDownload(boolean addAntiCache)
+    public AjaxDownloadBehavior(boolean addAntiCache)
     {
         super();
         this.addAntiCache = addAntiCache;

@@ -80,10 +80,10 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 
 public class PairwiseCodingAgreementTable
@@ -330,7 +330,7 @@ public class PairwiseCodingAgreementTable
             @Override
             protected void onEvent(AjaxRequestTarget aTarget)
             {
-                AJAXDownload download = new AJAXDownload()
+                AjaxDownloadBehavior download = new AjaxDownloadBehavior()
                 {
                     private static final long serialVersionUID = 1L;
 

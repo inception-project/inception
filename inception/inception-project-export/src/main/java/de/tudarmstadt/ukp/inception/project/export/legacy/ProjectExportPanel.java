@@ -56,8 +56,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTaskHandle;
@@ -81,7 +81,7 @@ public class ProjectExportPanel
     private Form<FullProjectExportRequest> form;
     private ProgressBar fileGenerationProgress;
     private LambdaAjaxLink cancelLink;
-    private AJAXDownload exportProjectDownload;
+    private AjaxDownloadBehavior exportProjectDownload;
 
     private boolean exportInProgress = false;
     private ProjectExportTaskHandle exportTask;
@@ -101,7 +101,7 @@ public class ProjectExportPanel
         cancelLink.add(visibleWhen(() -> exportInProgress));
         form.add(cancelLink);
 
-        exportProjectDownload = new AJAXDownload()
+        exportProjectDownload = new AjaxDownloadBehavior()
         {
             private static final long serialVersionUID = 2005074740832698081L;
 
