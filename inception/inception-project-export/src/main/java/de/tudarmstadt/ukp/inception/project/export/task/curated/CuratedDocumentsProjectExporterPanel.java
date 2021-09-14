@@ -44,7 +44,6 @@ public class CuratedDocumentsProjectExporterPanel extends Panel
         return (IModel<CuratedDocumentsProjectExportRequest>) getDefaultModel();
     }
 
-    @SuppressWarnings("unchecked")
     public CuratedDocumentsProjectExportRequest getModelObject() {
         return (CuratedDocumentsProjectExportRequest) getDefaultModelObject();
     }
@@ -57,6 +56,6 @@ public class CuratedDocumentsProjectExporterPanel extends Panel
                 SecurityContextHolder.getContext()
                 .getAuthentication().getName());
 
-        projectExportService.startTask(null);
+        projectExportService.startTask(task);
     }
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
+package de.tudarmstadt.ukp.inception.project.export.legacy;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -68,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTaskHandle;
 
@@ -80,7 +79,7 @@ public class ProjectExportPanel
 {
     private static final long serialVersionUID = 2116717853865353733L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectSettingsPage.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectExportPanel.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;

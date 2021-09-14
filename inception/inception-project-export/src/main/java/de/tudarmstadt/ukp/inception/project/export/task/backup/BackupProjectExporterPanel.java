@@ -49,7 +49,6 @@ public class BackupProjectExporterPanel
         return (IModel<FullProjectExportRequest>) getDefaultModel();
     }
 
-    @SuppressWarnings("unchecked")
     public FullProjectExportRequest getModelObject()
     {
         return (FullProjectExportRequest) getDefaultModelObject();
@@ -64,6 +63,6 @@ public class BackupProjectExporterPanel
         BackupProjectExportTask task = new BackupProjectExportTask(request,
                 authentication.getName());
 
-        projectExportService.startTask(null);
+        projectExportService.startTask(task);
     }
 }

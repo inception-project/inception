@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
+package de.tudarmstadt.ukp.inception.project.export.legacy;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -26,8 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
 @Component
-@Order(ExportProjectSettingsPanelFactory2.ORDER)
-public class ExportProjectSettingsPanelFactory2
+@Order(ExportProjectSettingsPanelFactory.ORDER)
+public class ExportProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
     public static final int ORDER = 10000;
@@ -35,18 +35,18 @@ public class ExportProjectSettingsPanelFactory2
     @Override
     public String getPath()
     {
-        return "/export2";
+        return "/export";
     }
 
     @Override
     public String getLabel()
     {
-        return "Export (new)";
+        return "Export";
     }
 
     @Override
     public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
     {
-        return new ProjectExportPanel2(aID, aProjectModel);
+        return new ProjectExportPanel(aID, aProjectModel);
     }
 }

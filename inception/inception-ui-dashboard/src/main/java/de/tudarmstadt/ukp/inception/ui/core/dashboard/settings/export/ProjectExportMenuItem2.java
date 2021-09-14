@@ -23,7 +23,7 @@ import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.export.ExportProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.project.export.legacy.ExportProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
 @Component
