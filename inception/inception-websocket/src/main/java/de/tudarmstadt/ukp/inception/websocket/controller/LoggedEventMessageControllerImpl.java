@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
-import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+import de.tudarmstadt.ukp.inception.websocket.model.WebsocketEventMessage;
 
 @Controller
 @ConditionalOnBean(SimpMessagingTemplate.class)
@@ -81,9 +81,9 @@ public class LoggedEventMessageControllerImpl
 
     @SubscribeMapping(LOGGED_EVENTS)
     @Override
-    public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal)
+    public List<WebsocketEventMessage> getMostRecentLoggedEvents(Principal aPrincipal)
     {
-        List<LoggedEventMessage> recentEvents = getMostRecentLoggedEvents(aPrincipal.getName(),
+        List<WebsocketEventMessage> recentEvents = getMostRecentLoggedEvents(aPrincipal.getName(),
                 MAX_EVENTS);
         return recentEvents;
     }
@@ -96,7 +96,7 @@ public class LoggedEventMessageControllerImpl
         return exception.getMessage();
     }
 
-    private List<LoggedEventMessage> getMostRecentLoggedEvents(String aUsername, int aMaxEvents)
+    private List<WebsocketEventMessage> getMostRecentLoggedEvents(String aUsername, int aMaxEvents)
     {
         return eventRepo.listRecentActivity(aUsername, aMaxEvents).stream()
                 .map(event -> createLoggedEventMessage(event.getUser(), event.getProject(),
@@ -104,7 +104,7 @@ public class LoggedEventMessageControllerImpl
                 .collect(toList());
     }
 
-    private LoggedEventMessage createLoggedEventMessage(String aUsername, long aProjectId,
+    private WebsocketEventMessage createLoggedEventMessage(String aUsername, long aProjectId,
             Date aCreated, String aEventType, long aDocId)
     {
         String projectName = null;
@@ -118,6 +118,6 @@ public class LoggedEventMessageControllerImpl
             }
         }
 
-        return new LoggedEventMessage(aUsername, projectName, docName, aCreated, aEventType);
+        return new WebsocketEventMessage(aUsername, projectName, docName, aCreated, aEventType);
     }
 }

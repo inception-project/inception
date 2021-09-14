@@ -21,7 +21,7 @@ import java.util.Date;
 
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
-public class LoggedEventMessage
+public class WebsocketEventMessage
 {
     private String actorName;
     private String projectName;
@@ -30,26 +30,27 @@ public class LoggedEventMessage
     private String eventType;
 
     private String eventMsg;
+    private String errorMsg;
 
-    public LoggedEventMessage()
+    public WebsocketEventMessage()
     {
         // Nothing to do
     }
 
-    public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
+    public WebsocketEventMessage(String aActorName, String aProjectName, String aDocumentName,
             Date aCreationDate, String aEventType)
     {
         this(aActorName, aProjectName, aDocumentName, aCreationDate.getTime());
         eventType = aEventType;
     }
 
-    public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
+    public WebsocketEventMessage(String aActorName, String aProjectName, String aDocumentName,
             Date aCreationDate)
     {
         this(aActorName, aProjectName, aDocumentName, aCreationDate.getTime());
     }
 
-    public LoggedEventMessage(LoggedEvent aEvent, String aProjectName, String aDocumentName)
+    public WebsocketEventMessage(LoggedEvent aEvent, String aProjectName, String aDocumentName)
     {
         actorName = aEvent.getAnnotator();
         projectName = aProjectName;
@@ -58,19 +59,29 @@ public class LoggedEventMessage
         eventMsg = aEvent.getEvent();
     }
 
-    public LoggedEventMessage(String aUser, String aProjectName, long aTimestamp, String aEventType)
+    public WebsocketEventMessage(String aUser, String aProjectName, long aTimestamp, String aEventType)
     {
         this(aUser, aProjectName, null, aTimestamp);
         eventType = aEventType;
     }
 
-    public LoggedEventMessage(String aActorName, String aProjectName, String aDocumentName,
+    public WebsocketEventMessage(String aActorName, String aProjectName, String aDocumentName,
             long aTime)
     {
         actorName = aActorName;
         projectName = aProjectName;
         documentName = aDocumentName;
         timestamp = aTime;
+    }
+
+    public String getErrorMsg()
+    {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String aErrorMsg)
+    {
+        errorMsg = aErrorMsg;
     }
 
     public String getActorName()

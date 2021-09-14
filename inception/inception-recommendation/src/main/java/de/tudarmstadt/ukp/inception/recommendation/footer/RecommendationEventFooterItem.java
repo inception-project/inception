@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket.footer;
+package de.tudarmstadt.ukp.inception.recommendation.footer;
 
 import org.apache.wicket.Component;
 import org.springframework.core.annotation.Order;

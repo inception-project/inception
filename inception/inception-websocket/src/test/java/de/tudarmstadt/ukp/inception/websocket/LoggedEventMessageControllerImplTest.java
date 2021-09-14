@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistryImpl;
 import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
 import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageControllerImpl;
-import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+import de.tudarmstadt.ukp.inception.websocket.model.WebsocketEventMessage;
 
 @ExtendWith(SpringExtension.class)
 public class LoggedEventMessageControllerImplTest
@@ -91,7 +91,7 @@ public class LoggedEventMessageControllerImplTest
                 new SpanCreatedEvent(getClass(), testDoc, testAdmin.getUsername(), null, null));
 
         List<Message<?>> messages = outboundChannel.getMessages();
-        LoggedEventMessage msg = (LoggedEventMessage) messages.get(0).getPayload();
+        WebsocketEventMessage msg = (WebsocketEventMessage) messages.get(0).getPayload();
 
         assertThat(messages).hasSize(1);
         assertThat(msg.getDocumentName()).isEqualTo(testDoc.getName());

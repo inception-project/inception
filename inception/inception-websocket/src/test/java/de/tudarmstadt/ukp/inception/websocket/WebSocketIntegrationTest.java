@@ -73,7 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
-import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+import de.tudarmstadt.ukp.inception.websocket.model.WebsocketEventMessage;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
@@ -147,7 +147,7 @@ public class WebSocketIntegrationTest
     public void thatRecentMessageIsReceived()
         throws InterruptedException, ExecutionException, TimeoutException
     {
-        List<LoggedEventMessage> receivedMessages = new ArrayList<>();
+        List<WebsocketEventMessage> receivedMessages = new ArrayList<>();
         CountDownLatch latch = new CountDownLatch(1);
         StompSessionHandlerAdapter sessionHandler = new StompSessionHandlerAdapter()
         {
@@ -161,13 +161,13 @@ public class WebSocketIntegrationTest
                     @Override
                     public Type getPayloadType(StompHeaders aHeaders)
                     {
-                        return LoggedEventMessage.class;
+                        return WebsocketEventMessage.class;
                     }
 
                     @Override
                     public void handleFrame(StompHeaders aHeaders, Object aPayload)
                     {
-                        receivedMessages.add((LoggedEventMessage) aPayload);
+                        receivedMessages.add((WebsocketEventMessage) aPayload);
                         latch.countDown();
                     }
                 });
@@ -196,7 +196,7 @@ public class WebSocketIntegrationTest
         session.disconnect();
 
         assertThat(receivedMessages.size()).isEqualTo(1);
-        LoggedEventMessage msg1 = receivedMessages.get(0);
+        WebsocketEventMessage msg1 = receivedMessages.get(0);
         assertThat(msg1.getEventType()).isEqualTo(DocumentStateChangedEvent.class.getSimpleName());
     }
 

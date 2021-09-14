@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket.footer;
+package de.tudarmstadt.ukp.inception.recommendation.footer;
 
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
@@ -38,9 +38,9 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.recommendation.controller.RecommendationEventMessageControllerImpl;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
-import de.tudarmstadt.ukp.inception.websocket.controller.RecommendationEventMessageControllerImpl;
 import de.tudarmstadt.ukp.inception.websocket.feedback.FeedbackPanelExtensionBehavior;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_USER")

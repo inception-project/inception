@@ -15,13 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket.controller;
+package de.tudarmstadt.ukp.inception.recommendation.chart.vue;
 
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public interface RecommendationEventMessageController
+public class EvalChartJavascriptReference
+    extends JavaScriptResourceReference
 {
-    String handleException(Throwable exception);
+    private static final long serialVersionUID = 1L;
 
-    void onRecommenderErrorEvent(RecommenderTaskEvent aEvent);
+    private static final EvalChartJavascriptReference INSTANCE = //
+            new EvalChartJavascriptReference();
+
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static EvalChartJavascriptReference get()
+    {
+        return INSTANCE;
+    }
+
+    private EvalChartJavascriptReference()
+    {
+        super(EvalChartJavascriptReference.class, "evalChart.js");
+    }
+
 }

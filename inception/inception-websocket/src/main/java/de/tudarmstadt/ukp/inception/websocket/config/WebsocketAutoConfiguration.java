@@ -27,7 +27,6 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageController;
 import de.tudarmstadt.ukp.inception.websocket.footer.LoggedEventFooterItem;
-import de.tudarmstadt.ukp.inception.websocket.footer.RecommendationEventFooterItem;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -41,11 +40,5 @@ public class WebsocketAutoConfiguration
     public LoggedEventFooterItem loggedEventFooterItem()
     {
         return new LoggedEventFooterItem();
-    }
-
-    @Bean
-    public RecommendationEventFooterItem recommendationEventFooterItem()
-    {
-        return new RecommendationEventFooterItem();
     }
 }
