@@ -41,8 +41,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.progressbar.ProgressBar;
@@ -60,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTaskHandle;
@@ -72,8 +69,6 @@ public class ProjectExportPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 2116717853865353733L;
-
-    private static final Logger LOG = LoggerFactory.getLogger(ProjectExportPanel.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
@@ -260,23 +255,7 @@ public class ProjectExportPanel
 
         ProjectExportTaskMonitor monitor = exportService.getTaskMonitor(exportTask);
 
-        while (!monitor.getMessages().isEmpty()) {
-            LogMessage msg = monitor.getMessages().poll();
-            switch (msg.getLevel()) {
-            case INFO:
-                info(msg.getMessage());
-                break;
-            case WARN:
-                warn(msg.getMessage());
-                break;
-            case ERROR:
-                error(msg.getMessage());
-                break;
-            default:
-                error(msg.getMessage());
-                break;
-            }
-        }
+        monitor.getMessages().forEach(m -> m.toWicket(this));
 
         switch (monitor.getState()) {
         case COMPLETED:
