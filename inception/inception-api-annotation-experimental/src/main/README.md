@@ -197,7 +197,7 @@ Do NOT forget to add the @EventListener() notation above the method.
 NOTE: All APIs are implementations of their respective interfaces. Therefore, please extend the interfaces.
 
 Overall, this streamlined process can also be seen in the following figure.
-
+    
 ![](resources/META-INF/asciidoc/user-guide/images/streamlined_process.png?raw=true "Title")
 
 If you encounter any issues, please contact the INCEpTION team.
