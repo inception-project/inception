@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -537,7 +538,7 @@ public class SearchServiceImpl
     @Override
     public StatisticsResult getProjectStatistics(User aUser, Project aProject,
             OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc,
-            List<AnnotationFeature> aFeatures)
+            Set<AnnotationFeature> aFeatures)
         throws IOException, ExecutionException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
@@ -552,7 +553,7 @@ public class SearchServiceImpl
     @Override
     public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aQuery,
             OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc,
-            List<AnnotationFeature> aFeatures)
+            Set<AnnotationFeature> aFeatures)
         throws ExecutionException, IOException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
@@ -568,11 +569,9 @@ public class SearchServiceImpl
             Map<String, LayerStatistics> statisticsMap = new HashMap<String, LayerStatistics>();
             statisticsMap.put("query." + aQuery, statistics);
 
-            StatisticsResult results = new StatisticsResult(statRequest, statisticsMap,
-                    statisticsMap);
+            StatisticsResult results = new StatisticsResult(statRequest, statisticsMap, aFeatures);
 
             return results;
-
         }
     }
 

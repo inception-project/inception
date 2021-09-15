@@ -49,6 +49,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -410,8 +411,7 @@ public class MtasDocumentIndex
     {
         List<Integer> fullDocSet = getUniqueDocuments(aStatisticRequest);
         Map<String, LayerStatistics> allStats = new HashMap<String, LayerStatistics>();
-        Map<String, LayerStatistics> nonNullStats = new HashMap<String, LayerStatistics>();
-        List<AnnotationFeature> features = aStatisticRequest.getFeatures();
+        Set<AnnotationFeature> features = aStatisticRequest.getFeatures();
 
         for (AnnotationFeature feature : features) {
             AnnotationLayer layer = feature.getLayer();
@@ -421,20 +421,15 @@ public class MtasDocumentIndex
             LayerStatistics results = getLayerStatistics(aStatisticRequest, searchString,
                     fullDocSet);
             allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
-            if (results.getMaximum() > 0.0) {
-                nonNullStats.put(layer.getUiName() + "." + feature.getUiName(), results);
-            }
         }
         LayerStatistics results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>",
                 fullDocSet);
         allStats.put("Token Count", results);
-        nonNullStats.put("Token Count", results);
 
         results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
         allStats.put("Sentence Count", results);
-        nonNullStats.put("Sentence Count", results);
 
-        return new StatisticsResult(aStatisticRequest, allStats, nonNullStats);
+        return new StatisticsResult(aStatisticRequest, allStats, aStatisticRequest.getFeatures());
     }
 
     @Override
@@ -502,7 +497,6 @@ public class MtasDocumentIndex
             String aFeatureQuery, List<Integer> aFullDocSet)
         throws IOException, ExecutionException
     {
-        LayerStatistics layerStats = new LayerStatistics();
         IndexSearcher searcher = null;
         Map<String, Object> resultsMap = null;
         Map<String, Object> resultsMapSentence = null;
@@ -528,16 +522,15 @@ public class MtasDocumentIndex
             // https://textexploration.github.io/mtas/search_component_stats_spans.html
 
             // The ComponentField is a big container which can contain many stuff. The only relevant
-            // things for us are statsSpanList, spanQueryList
+            // things for us are statsSpanList and spanQueryList
             // Source Code:
             // https://github.com/textexploration/mtas/blob/96c7911e9c591c2bd4a419dbf0e2194813376776/src/main/java/mtas/codec/util/CodecComponent.java
             CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
                     FIELD_CONTENT);
-            // The query is
-            // either
-            // an actual query (if the method is called from getQueryStatistics in SearchService)
-            // or a mock query, e.g. "<Token=\"\"/>" (if the method shall return statistics for a
-            // layer)
+            // The query is either an actual query (if the method is called from
+            // getQueryStatistics in SearchService) or a mock query, e.g. "<Token=\"\"/>"
+            //  (if the method shall return statistics for a layer). The second query always
+            // counts the sentences for per sentence statistics.
             MtasSpanQuery[] spanQuerys = new MtasSpanQuery[2];
 
             // we need two functions. Each function consists of 3 parts
@@ -548,7 +541,7 @@ public class MtasDocumentIndex
             // 3. Which values the function shall output
             String[] functionTypes = new String[2];
 
-            // add the preprocessed query to the spanQueryList
+            // Add the preprocessed query to the spanQueryList
             MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery);
             fieldStats.spanQueryList.add(parsedQuery);
 
@@ -559,7 +552,7 @@ public class MtasDocumentIndex
             // q0 indicates the result of the first parsed query
             functions[0] = "$q0";
             // The output should be all the requested statistics
-            functionTypes[0] = layerStats.STATS;
+            functionTypes[0] = LayerStatistics.STATS;
 
             // A query which counts sentences
             MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>");
@@ -568,21 +561,22 @@ public class MtasDocumentIndex
             spanQuerys[1] = parsedSentQuery;
             functionKeys[1] = "perSentence";
             // q0 is the result of the actual query. q1 is the result of counting the sentences
-            // we divide them using /
+            // We divide them using /
             functions[1] = "$q0/$q1";
             // The output should be all the requested statistics
-            functionTypes[1] = layerStats.STATS;
+            functionTypes[1] = LayerStatistics.STATS;
 
-            // now we are finished with the spanQueryList
+            // Now we are finished with the spanQueryList
 
             // Next we look at the statsSpanList
             // We add a ComponentSpan to the statsSpanList which is created using all the things
             // we defined above
-            // the key is a unique but somewhat arbitrary identifier
+            // The key is a unique but somewhat arbitrary identifier
             // minToken and maxToken indicate that only documents with a number of tokens bigger
             // than minToken and smaller than maxToken should be considered
-            fieldStats.statsSpanList.add(new CodecComponent.ComponentSpan(spanQuerys, "ax2",
-                    minToken, maxToken, layerStats.STATS, functionKeys, functions, functionTypes));
+            fieldStats.statsSpanList
+                    .add(new CodecComponent.ComponentSpan(spanQuerys, "ax2", minToken, maxToken,
+                            LayerStatistics.STATS, functionKeys, functions, functionTypes));
 
             // Now we are done with the preparations
             // Next we actually collect the data and do all the calculations
@@ -598,13 +592,16 @@ public class MtasDocumentIndex
 
             resultsMap = results.rewrite(true);
 
-            // the second function is the perSentence statistics
+            // The second function is the perSentence statistics
             MtasDataItem<?, ?> resultsPerSentence = fieldStats.statsSpanList.get(0).functions
                     .get(1).dataCollector.getResult().getData();
 
             resultsMapSentence = resultsPerSentence.rewrite(true);
 
-            layerStats = new LayerStatistics(Math.round((double) resultsMap.get("sum")),
+            // We only round things which are natural numbers already
+            // so this does not change their value.
+            LayerStatistics layerStats = new LayerStatistics(
+                    Math.round((double) resultsMap.get("sum")),
                     Math.round((double) resultsMap.get("max")),
                     Math.round((double) resultsMap.get("min")), (double) resultsMap.get("mean"),
                     (double) resultsMap.get("median"), (double) resultsMap.get("standarddeviation"),

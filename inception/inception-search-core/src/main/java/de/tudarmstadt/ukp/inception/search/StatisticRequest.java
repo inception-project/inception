@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.OptionalInt;
+import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -33,16 +32,11 @@ public class StatisticRequest
     private final OptionalInt minTokenPerDoc;
     private final OptionalInt maxTokenPerDoc;
 
-    private List<AnnotationFeature> features;
-    private String query;
-
-    public StatisticRequest(Project aProject, User aUser)
-    {
-        this(aProject, aUser, null, null, new ArrayList<AnnotationFeature>(), null);
-    }
+    private Set<AnnotationFeature> features;
+    private final String query;
 
     public StatisticRequest(Project aProject, User aUser, OptionalInt aMinTokenPerDoc,
-            OptionalInt aMaxTokenPerDoc, List<AnnotationFeature> aFeatures, String aQuery)
+            OptionalInt aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures, String aQuery)
     {
         project = aProject;
         user = aUser;
@@ -73,24 +67,16 @@ public class StatisticRequest
         return maxTokenPerDoc;
     }
 
-    public List<AnnotationFeature> getFeatures()
+    public Set<AnnotationFeature> getFeatures()
     {
         return features;
     }
 
     public void addFeature(AnnotationFeature aFeature)
     {
-        if (features.contains(aFeature)) {
-
-        }
-        else {
-            features.add(aFeature);
-        }
+        features.add(aFeature);
     }
 
-    public String getQuery()
-    {
-        return query;
-    }
+    public String getQuery() { return query; }
 
 }

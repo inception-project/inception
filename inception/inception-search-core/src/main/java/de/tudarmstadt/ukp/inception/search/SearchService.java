@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -125,9 +126,8 @@ public interface SearchService
      * @throws ExecutionException covers many exceptions which have to do with parsing aStatistic
      *                            and the layers
      */
-
     public StatisticsResult getProjectStatistics(User aUser, Project aProject,
-            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc, List<AnnotationFeature> aFeatures)
+            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws IOException, ExecutionException;
 
     /**
@@ -147,7 +147,7 @@ public interface SearchService
      * @throws IOException
      */
     public StatisticsResult getQueryStatistics(User aUser, Project aProject,
-            String aQuery, OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc, List<AnnotationFeature> aFeatures)
+            String aQuery, OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws ExecutionException, IOException;
 
     void enqueueReindexTask(Project aProject, String aTrigger);

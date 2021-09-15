@@ -17,29 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 public class LayerStatistics
 {
     /** The stats to be calculated */
     public static final String STATS = "n,sum,min,max,mean,median,standarddeviation";
 
-    private long total;
-    private long maximum;
-    private long minimum;
-    private double mean;
-    private double median;
-    private double standardDeviation;
+    private final long total;
+    private final long maximum;
+    private final long minimum;
+    private final double mean;
+    private final double median;
+    private final double standardDeviation;
 
-    private double maximumPerSentence;
-    private double minimumPerSentence;
-    private double meanPerSentence;
-    private double medianPerSentence;
-    private double standardDeviationPerSentence;
+    private final double maximumPerSentence;
+    private final double minimumPerSentence;
+    private final double meanPerSentence;
+    private final double medianPerSentence;
+    private final double standardDeviationPerSentence;
 
-    private long noOfDocuments;
-
-    public LayerStatistics()
-    {
-    }
+    private final long noOfDocuments;
 
     public LayerStatistics(long aTotal, long aMaximum, long aMinimum, double aMean, double aMedian,
             double aStandardDeviation, double aMaximumPerSentence, double aMinimumPerSentence,
@@ -60,14 +59,6 @@ public class LayerStatistics
         standardDeviationPerSentence = aStandardDeviationPerSentence;
 
         noOfDocuments = aNoOfDocuments;
-    }
-
-    public boolean isLayerTrivial()
-    {
-        if (maximum == 0L) {
-            return true;
-        }
-        return false;
     }
 
     public long getTotal()
@@ -131,6 +122,12 @@ public class LayerStatistics
     }
 
     @Override
+    public int hashCode()
+    {
+        return HashCodeBuilder.reflectionHashCode(this);
+    }
+
+    @Override
     public boolean equals(Object o)
     {
         if (o == this) {
@@ -142,16 +139,6 @@ public class LayerStatistics
         }
 
         LayerStatistics ls = (LayerStatistics) o;
-
-        return ((ls.getTotal() == getTotal()) && (ls.getMaximum() == getMaximum())
-                && (ls.getMinimum() == getMinimum()) && (ls.getMedian() == getMedian())
-                && (ls.getMean() == getMean())
-                && (ls.getStandardDeviation() == getStandardDeviation())
-                && (ls.getNoOfDocuments() == getNoOfDocuments())
-                && (ls.getMaximumPerSentence() == getMaximumPerSentence())
-                && (ls.getMinimumPerSentence() == getMinimumPerSentence())
-                && (ls.getMedianPerSentence() == getMedianPerSentence())
-                && (ls.getMeanPerSentence() == getMeanPerSentence())
-                && (ls.getStandardDeviationPerSentence() == getStandardDeviationPerSentence()));
+        return EqualsBuilder.reflectionEquals(this, ls);
     }
 }

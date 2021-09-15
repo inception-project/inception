@@ -31,9 +31,11 @@ import java.lang.reflect.Method;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -539,6 +541,7 @@ public class MtasDocumentIndexTest
     @Test
     public void testStatistics() throws Exception
     {
+        //Create sample project with two documents
         Project project = new Project();
         project.setName("TestStatistics");
 
@@ -563,10 +566,9 @@ public class MtasDocumentIndexTest
         otherDocument.setFormat("text");
 
         String otherContent = "Goodbye moon. Hello World.";
-
         uploadDocument(Pair.of(otherDocument, otherContent));
 
-        // String statistic = "n,min,max,mean,median,standarddeviation";
+        //Define input for the statistics methods
         OptionalInt minTokenPerDoc = OptionalInt.empty();
         OptionalInt maxTokenPerDoc = OptionalInt.empty();
 
@@ -575,18 +577,12 @@ public class MtasDocumentIndexTest
         AnnotationFeature value = new AnnotationFeature();
         value.setUiName("value");
         value.setLayer(ne);
-        List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
+        Set<AnnotationFeature> features = new HashSet<AnnotationFeature>();
         features.add(value);
 
-        String query = "moon";
-
+        //Check layer-based statistics
         StatisticsResult statsResults = searchService.getProjectStatistics(user, project,
                 minTokenPerDoc, maxTokenPerDoc, features);
-
-        assertThat(statsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
-        assertThat(statsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
-        assertThat(statsResults.getProject()).isEqualTo(project);
-        assertThat(statsResults.getUser()).isEqualTo(user);
 
         Map<String, LayerStatistics> expectedResults = new HashMap<String, LayerStatistics>();
 
@@ -601,13 +597,17 @@ public class MtasDocumentIndexTest
         expectedResults.put("Token Count", expectedToken);
         expectedResults.put("Sentence Count", expectedSentence);
 
+        assertThat(statsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
+        assertThat(statsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
+        assertThat(statsResults.getProject()).isEqualTo(project);
+        assertThat(statsResults.getUser()).isEqualTo(user);
+        assertTrue(expectedResults.equals(statsResults.getResults()));
+
+        //Check query-based statistics
+        String query = "moon";
+
         StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project, query,
                 minTokenPerDoc, maxTokenPerDoc, features);
-
-        assertThat(queryStatsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
-        assertThat(queryStatsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
-        assertThat(queryStatsResults.getUser()).isEqualTo(user);
-        assertThat(queryStatsResults.getProject()).isEqualTo(project);
 
         Map<String, LayerStatistics> expected = new HashMap<String, LayerStatistics>();
 
@@ -616,110 +616,12 @@ public class MtasDocumentIndexTest
 
         expected.put("query.moon", expectedSearch);
 
-        assertTrue(expectedResults.equals(statsResults.getNonNullResults()));
-        assertTrue(expected.equals(queryStatsResults.getNonNullResults()));
+        assertThat(queryStatsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
+        assertThat(queryStatsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
+        assertThat(queryStatsResults.getUser()).isEqualTo(user);
+        assertThat(queryStatsResults.getProject()).isEqualTo(project);
+        assertTrue(expected.equals(queryStatsResults.getResults()));
 
-    }
-
-    private static CAS loadCas(String aPathToXmi) throws Exception
-    {
-        try (FileInputStream fis = new FileInputStream(getResource(aPathToXmi))) {
-            JCas jcas = JCasFactory.createJCas();
-            CasIOUtils.load(fis, jcas.getCas());
-            return jcas.getCas();
-        }
-    }
-
-    public static File getResource(String aResourceName)
-    {
-        return Paths.get(aResourceName).toFile();
-    }
-
-    public void uploadLargeProject(String aFolderPath, Project aProject, User aUser)
-        throws Exception
-    {
-        try (CasStorageSession casStorageSession = CasStorageSession.open()) {
-            for (final File fileEntry : getResource(aFolderPath).listFiles()) {
-
-                String xmiPath = aFolderPath + "\\" + fileEntry.getName();
-
-                CAS cas = loadCas(xmiPath);
-
-                SourceDocument sourceDocument = new SourceDocument();
-
-                sourceDocument.setName(fileEntry.getName());
-                sourceDocument.setProject(aProject);
-                sourceDocument.setFormat("text");
-
-                String sourceContent = cas.getDocumentText();
-
-                try (InputStream fileStream = new ByteArrayInputStream(
-                        sourceContent.getBytes(UTF_8))) {
-                    documentService.uploadSourceDocument(fileStream, sourceDocument);
-                }
-
-                documentService.writeAnnotationCas(cas,
-                        documentService.createOrGetAnnotationDocument(sourceDocument, aUser),
-                        false);
-            }
-        }
-        await("Waiting for indexing process to complete") //
-                .atMost(60, SECONDS) //
-                .pollInterval(5, SECONDS) //
-                .until(() -> searchService.isIndexValid(aProject)
-                        && searchService.getIndexProgress(aProject).isEmpty());
-    }
-
-    // executing this method takes around 30 minutes!
-    @Test
-    public void testStatisticsWithRealProject() throws Exception
-    {
-        long startTime = System.nanoTime();
-        Project project = new Project();
-        project.setName("TestStatistics");
-
-        createProject(project);
-
-        User user = userRepository.get("admin");
-        String folderPath = "D:\\Falko\\Documents\\UKP\\Statistics\\Testdaten\\austen";
-
-        long startUpload = System.nanoTime();
-        uploadLargeProject(folderPath, project, user);
-        long endUpload = System.nanoTime();
-        System.out.println((endUpload - startUpload) / (1000000.0 * 1000.0)); // in seconds
-
-        OptionalInt minTokenPerDoc = OptionalInt.empty();
-        OptionalInt maxTokenPerDoc = OptionalInt.empty();
-        AnnotationLayer ne = new AnnotationLayer();
-        ne.setUiName("named entity");
-        AnnotationFeature value = new AnnotationFeature();
-        value.setUiName("value");
-        value.setLayer(ne);
-        List<AnnotationFeature> features = new ArrayList<AnnotationFeature>();
-        features.add(value);
-        long afterBuild;
-        long afterStats;
-        long endTime;
-        double durationStats;
-        double durationSearch;
-        String statistic;
-        String query;
-        StatisticsResult statsResults;
-        StatisticsResult queryStatsResults;
-
-        query = "the";
-        afterBuild = System.nanoTime();
-        statsResults = searchService.getProjectStatistics(user, project, minTokenPerDoc,
-                maxTokenPerDoc, features);
-        afterStats = System.nanoTime();
-        queryStatsResults = searchService.getQueryStatistics(user, project, query, minTokenPerDoc,
-                maxTokenPerDoc, features);
-        endTime = System.nanoTime();
-        durationStats = (afterStats - afterBuild) / (1000000.0 * 1000.0); // in seconds
-        durationSearch = (endTime - afterStats) / (1000000.0 * 1000.0);
-
-        assertTrue(durationStats < 45);
-        assertTrue(durationSearch < 15);
     }
 
     @SpringBootConfiguration
