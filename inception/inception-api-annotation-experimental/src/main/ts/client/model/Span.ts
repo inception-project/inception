@@ -17,7 +17,6 @@
  */
 import {FeatureX} from "./FeatureX";
 
-
 /**
  * Support Class representing an Span annotation
  *
