@@ -27,6 +27,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
+import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
@@ -529,6 +532,46 @@ public class SearchServiceImpl
 
             return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser,
                     aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
+        }
+    }
+
+    @Override
+    public StatisticsResult getProjectStatistics(User aUser, Project aProject,
+            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc,
+            Set<AnnotationFeature> aFeatures)
+        throws IOException, ExecutionException
+    {
+        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+            Index index = pooledIndex.get();
+            ensureIndexIsCreatedAndValid(aProject, index);
+
+            return index.getPhysicalIndex().getAnnotationStatistics(new StatisticRequest(aProject,
+                    aUser, aMinTokenPerDoc, aMaxTokenPerDoc, aFeatures, null));
+        }
+    }
+
+    @Override
+    public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aQuery,
+            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc,
+            Set<AnnotationFeature> aFeatures)
+        throws ExecutionException, IOException
+    {
+        try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
+            Index index = pooledIndex.get();
+            ensureIndexIsCreatedAndValid(aProject, index);
+            PhysicalIndex physicalIndex = index.getPhysicalIndex();
+
+            StatisticRequest statRequest = new StatisticRequest(aProject, aUser, aMinTokenPerDoc,
+                    aMaxTokenPerDoc, aFeatures, aQuery);
+            LayerStatistics statistics = physicalIndex.getLayerStatistics(statRequest,
+                    statRequest.getQuery(), physicalIndex.getUniqueDocuments(statRequest));
+
+            Map<String, LayerStatistics> statisticsMap = new HashMap<String, LayerStatistics>();
+            statisticsMap.put("query." + aQuery, statistics);
+
+            StatisticsResult results = new StatisticsResult(statRequest, statisticsMap, aFeatures);
+
+            return results;
         }
     }
 
