@@ -41,6 +41,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.FileResourceStream;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.wicketstuff.progressbar.ProgressBar;
@@ -101,17 +102,9 @@ public class ProjectExportPanel
         cancelLink.add(visibleWhen(() -> exportInProgress));
         form.add(cancelLink);
 
-        exportProjectDownload = new AjaxDownloadBehavior()
-        {
-            private static final long serialVersionUID = 2005074740832698081L;
-
-            @Override
-            protected String getFileName()
-            {
-                return ProjectExportPanel.this
-                        .getFilename(exportService.getExportRequest(exportTask));
-            }
-        };
+        exportProjectDownload = new AjaxDownloadBehavior(
+                LoadableDetachableModel.of(() -> getFilename(exportTask)),
+                LoadableDetachableModel.of(() -> getExport(exportTask)));
         form.add(exportProjectDownload);
 
         fileGenerationProgress = createProjectExportPreparationProgressBar("progress",
@@ -228,18 +221,26 @@ public class ProjectExportPanel
         return link;
     }
 
-    private String getFilename(ProjectExportRequest_ImplBase aRequest)
+    private String getFilename(ProjectExportTaskHandle aHandle)
     {
-        String name = aRequest.getProject().getSlug();
+        ProjectExportRequest_ImplBase request = exportService.getExportRequest(aHandle);
 
-        if (isNotBlank(aRequest.getFilenameTag())) {
-            name += aRequest.getFilenameTag();
+        String name = request.getProject().getSlug();
+
+        if (isNotBlank(request.getFilenameTag())) {
+            name += request.getFilenameTag();
         }
 
         SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
         name += "_" + fmt.format(new Date()) + ".zip";
 
         return name;
+    }
+
+    private FileResourceStream getExport(ProjectExportTaskHandle aHandle)
+    {
+        ProjectExportTaskMonitor monitor = exportService.getTaskMonitor(aHandle);
+        return new FileResourceStream(monitor.getExportedFile());
     }
 
     private void actionCancel(AjaxRequestTarget aTarget)
@@ -259,7 +260,7 @@ public class ProjectExportPanel
 
         switch (monitor.getState()) {
         case COMPLETED:
-            exportProjectDownload.initiate(aTarget, monitor.getExportedFile().getAbsolutePath());
+            exportProjectDownload.initiate(aTarget);
             exportInProgress = false;
             info("Project export complete");
             break;
