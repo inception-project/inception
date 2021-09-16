@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.lang.reflect.InvocationTargetException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -48,6 +49,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -65,6 +67,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.LeafReaderContext;
@@ -99,16 +102,22 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
+import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
+import de.tudarmstadt.ukp.inception.search.StatisticRequest;
+import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasTokenizerFactory;
+import mtas.codec.util.CodecComponent;
 import mtas.codec.util.CodecInfo;
 import mtas.codec.util.CodecUtil;
+import mtas.codec.util.Status;
+import mtas.codec.util.collector.MtasDataItem;
 import mtas.parser.cql.MtasCQLParser;
 import mtas.parser.cql.ParseException;
 import mtas.search.spans.util.MtasSpanQuery;
@@ -394,6 +403,234 @@ public class MtasDocumentIndex
         throws ExecutionException, IOException
     {
         return _executeQuery(this::doCountResults, aRequest);
+    }
+
+    @Override
+    public StatisticsResult getAnnotationStatistics(StatisticRequest aStatisticRequest)
+        throws IOException, ExecutionException
+    {
+        List<Integer> fullDocSet = getUniqueDocuments(aStatisticRequest);
+        Map<String, LayerStatistics> allStats = new HashMap<String, LayerStatistics>();
+        Set<AnnotationFeature> features = aStatisticRequest.getFeatures();
+
+        for (AnnotationFeature feature : features) {
+            AnnotationLayer layer = feature.getLayer();
+            String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
+                    + feature.getUiName().replace(' ', '_') + "=\"\"/>";
+
+            LayerStatistics results = getLayerStatistics(aStatisticRequest, searchString,
+                    fullDocSet);
+            allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
+        }
+        LayerStatistics results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>",
+                fullDocSet);
+        allStats.put("Token Count", results);
+
+        results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
+        allStats.put("Sentence Count", results);
+
+        return new StatisticsResult(aStatisticRequest, allStats, aStatisticRequest.getFeatures());
+    }
+
+    @Override
+    public List<Integer> getUniqueDocuments(StatisticRequest aStatisticRequest) throws IOException
+    {
+        IndexSearcher searcher = null;
+        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
+                aStatisticRequest.getProject(), aStatisticRequest.getUser());
+
+        List<Integer> fullDocSet = new ArrayList<Integer>();
+
+        try {
+            searcher = getSearcherManager().acquire();
+            IndexReader reader = searcher.getIndexReader();
+
+            for (int i = 0; i < reader.maxDoc(); i++) {
+                String sourceID = reader.document(i).get(FIELD_SOURCE_DOCUMENT_ID);
+                String annotationID = reader.document(i).get(FIELD_ANNOTATION_DOCUMENT_ID);
+                // a -1 indicates source document
+                if (Long.valueOf(annotationID) != -1L) {
+                    if (reader.document(i).get(FIELD_USER)
+                            .equals(aStatisticRequest.getUser().getUsername())) {
+                        fullDocSet.add(i);
+                    }
+                }
+                // source document without annotation layer? then user is not relevant
+                else if (!annotatableDocuments.containsKey(Long.valueOf(sourceID))) {
+                    fullDocSet.add(i);
+                }
+            }
+        }
+        finally {
+            if (searcher != null) {
+                // Releasing and setting to null per recommendation in JavaDoc of
+                // release(searcher) method
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
+        return fullDocSet;
+    }
+
+    public MtasSpanQuery parseQuery(String aQuery) throws ExecutionException, IOException
+    {
+        final MtasSpanQuery mtasSpanQuery;
+        try {
+            String modifiedQuery = preprocessQuery(aQuery);
+            MtasSpanQuery mtasSpanQuery1;
+            try (Reader queryReader = new StringReader(modifiedQuery)) {
+                MtasCQLParser parser = new MtasCQLParser(queryReader);
+                mtasSpanQuery1 = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+            }
+            mtasSpanQuery = mtasSpanQuery1;
+        }
+        catch (ParseException | Error e) {
+            // The exceptions thrown by the MTAS CQL Parser are inheriting from
+            // java.lang.Error...
+            throw new ExecutionException("Unable to parse query [" + aQuery + "]", e);
+        }
+        return mtasSpanQuery;
+    }
+
+    @Override
+    public LayerStatistics getLayerStatistics(StatisticRequest aStatisticRequest,
+            String aFeatureQuery, List<Integer> aFullDocSet)
+        throws IOException, ExecutionException
+    {
+        IndexSearcher searcher = null;
+        Map<String, Object> resultsMap = null;
+        Map<String, Object> resultsMapSentence = null;
+
+        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
+                aStatisticRequest.getProject(), aStatisticRequest.getUser());
+        Double minToken = aStatisticRequest.getMinTokenPerDoc().isPresent()
+                ? (double) aStatisticRequest.getMinTokenPerDoc().getAsInt()
+                : null;
+        Double maxToken = aStatisticRequest.getMaxTokenPerDoc().isPresent()
+                ? (double) aStatisticRequest.getMaxTokenPerDoc().getAsInt()
+                : null;
+        try {
+            searcher = getSearcherManager().acquire();
+            IndexReader reader = searcher.getIndexReader();
+
+            // what does this parameter do?
+            List<Integer> fullDocList = new ArrayList<Integer>();
+
+            // there is no real documentation for using mtas directly in Java. This can help:
+            // https://textexploration.github.io/mtas/installation_lucene.html
+            // This describes the functionality better but only for solr:
+            // https://textexploration.github.io/mtas/search_component_stats_spans.html
+
+            // The ComponentField is a big container which can contain many stuff. The only relevant
+            // things for us are statsSpanList and spanQueryList
+            // Source Code:
+            // https://github.com/textexploration/mtas/blob/96c7911e9c591c2bd4a419dbf0e2194813376776/src/main/java/mtas/codec/util/CodecComponent.java
+            CodecComponent.ComponentField fieldStats = new CodecComponent.ComponentField(
+                    FIELD_CONTENT);
+            // The query is either an actual query (if the method is called from
+            // getQueryStatistics in SearchService) or a mock query, e.g. "<Token=\"\"/>"
+            //  (if the method shall return statistics for a layer). The second query always
+            // counts the sentences for per sentence statistics.
+            MtasSpanQuery[] spanQuerys = new MtasSpanQuery[2];
+
+            // we need two functions. Each function consists of 3 parts
+            // 1. The key. This is just a unique identifier
+            String[] functionKeys = new String[2];
+            // 2. The actual instructions of the function
+            String[] functions = new String[2];
+            // 3. Which values the function shall output
+            String[] functionTypes = new String[2];
+
+            // Add the preprocessed query to the spanQueryList
+            MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery);
+            fieldStats.spanQueryList.add(parsedQuery);
+
+            // maybe using a function for this simple case is too slow...
+            spanQuerys[0] = parsedQuery;
+            functionKeys[0] = "currentLayer";
+            // This is a mock function (mathematically, the identity function).
+            // q0 indicates the result of the first parsed query
+            functions[0] = "$q0";
+            // The output should be all the requested statistics
+            functionTypes[0] = LayerStatistics.STATS;
+
+            // A query which counts sentences
+            MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>");
+            fieldStats.spanQueryList.add(parsedSentQuery);
+
+            spanQuerys[1] = parsedSentQuery;
+            functionKeys[1] = "perSentence";
+            // q0 is the result of the actual query. q1 is the result of counting the sentences
+            // We divide them using /
+            functions[1] = "$q0/$q1";
+            // The output should be all the requested statistics
+            functionTypes[1] = LayerStatistics.STATS;
+
+            // Now we are finished with the spanQueryList
+
+            // Next we look at the statsSpanList
+            // We add a ComponentSpan to the statsSpanList which is created using all the things
+            // we defined above
+            // The key is a unique but somewhat arbitrary identifier
+            // minToken and maxToken indicate that only documents with a number of tokens bigger
+            // than minToken and smaller than maxToken should be considered
+            fieldStats.statsSpanList
+                    .add(new CodecComponent.ComponentSpan(spanQuerys, "ax2", minToken, maxToken,
+                            LayerStatistics.STATS, functionKeys, functions, functionTypes));
+
+            // Now we are done with the preparations
+            // Next we actually collect the data and do all the calculations
+            // Only documents in aFullDocSet are considered
+            // I do not know for what Status and fullDocList are needed...
+            CodecUtil.collectField(FIELD_CONTENT, searcher, reader,
+                    (ArrayList<Integer>) fullDocList, (ArrayList<Integer>) aFullDocSet, fieldStats,
+                    new Status());
+            // All that is left now is extracting the statistics from fieldStats
+            // statsSpanList only has one entry and the first function is the perDocument statistics
+            MtasDataItem<?, ?> results = fieldStats.statsSpanList.get(0).functions
+                    .get(0).dataCollector.getResult().getData();
+
+            resultsMap = results.rewrite(true);
+
+            // The second function is the perSentence statistics
+            MtasDataItem<?, ?> resultsPerSentence = fieldStats.statsSpanList.get(0).functions
+                    .get(1).dataCollector.getResult().getData();
+
+            resultsMapSentence = resultsPerSentence.rewrite(true);
+
+            // We only round things which are natural numbers already
+            // so this does not change their value.
+            LayerStatistics layerStats = new LayerStatistics(
+                    Math.round((double) resultsMap.get("sum")),
+                    Math.round((double) resultsMap.get("max")),
+                    Math.round((double) resultsMap.get("min")), (double) resultsMap.get("mean"),
+                    (double) resultsMap.get("median"), (double) resultsMap.get("standarddeviation"),
+                    (double) resultsMapSentence.get("max"), (double) resultsMapSentence.get("min"),
+                    (double) resultsMapSentence.get("mean"),
+                    (double) resultsMapSentence.get("median"),
+                    (double) resultsMapSentence.get("standarddeviation"),
+                    (long) resultsMapSentence.get("n"));
+
+            return layerStats;
+        }
+        catch (mtas.parser.function.ParseException e) {
+            throw new ExecutionException("Search function could not be parsed!", e);
+        }
+        catch (IllegalAccessException e) {
+            throw new ExecutionException("Collector could not access data!", e);
+        }
+        catch (InvocationTargetException e) {
+            throw new ExecutionException("Problem with collecting the data!", e.getCause());
+        }
+        finally {
+            if (searcher != null) {
+                // Releasing and setting to null per recommendation in JavaDoc of
+                // release(searcher)
+                // method
+                getSearcherManager().release(searcher);
+                searcher = null;
+            }
+        }
     }
 
     private <T> T _executeQuery(QueryRunner<T> aRunner, SearchQueryRequest aRequest)

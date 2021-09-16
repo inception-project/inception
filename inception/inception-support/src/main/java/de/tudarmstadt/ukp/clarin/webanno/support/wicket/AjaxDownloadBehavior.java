@@ -16,20 +16,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.request.resource.ContentDisposition;
-import org.apache.wicket.util.resource.AbstractResourceStream;
+import org.apache.wicket.util.resource.FileResourceStream;
+import org.apache.wicket.util.resource.FileSystemResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
-import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 
 /**
  * @see <a href=
@@ -43,18 +37,21 @@ public class AjaxDownloadBehavior
     extends AbstractAjaxBehavior
 {
     private static final long serialVersionUID = -3702600595997355221L;
-    private boolean addAntiCache;
-    private String fileName;
 
-    public AjaxDownloadBehavior()
+    private IModel<String> filename;
+    private IModel<IResourceStream> data;
+
+    private boolean addAntiCache = true;
+
+    public AjaxDownloadBehavior(IModel<IResourceStream> aData)
     {
-        this(true);
+        this(null, aData);
     }
 
-    public AjaxDownloadBehavior(boolean addAntiCache)
+    public AjaxDownloadBehavior(IModel<String> aFilename, IModel<IResourceStream> aData)
     {
-        super();
-        this.addAntiCache = addAntiCache;
+        filename = aFilename;
+        data = aData;
     }
 
     /**
@@ -62,12 +59,9 @@ public class AjaxDownloadBehavior
      * 
      * @param aTarget
      *            the AJAX target.
-     * @param aFileName
-     *            the filename.
      */
-    public void initiate(AjaxRequestTarget aTarget, String aFileName)
+    public void initiate(AjaxRequestTarget aTarget)
     {
-        fileName = aFileName;
         String url = getCallbackUrl().toString();
 
         if (addAntiCache) {
@@ -82,55 +76,25 @@ public class AjaxDownloadBehavior
     @Override
     public void onRequest()
     {
-        ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(getResourceStream(),
-                getFileName());
+        IResourceStream is = data.getObject();
+
+        if (is == null) {
+            return;
+        }
+
+        // If no filename has been set explicitly, try to get it from the resource
+        String name = filename != null ? filename.getObject() : null;
+        if (name == null) {
+            if (is instanceof FileResourceStream) {
+                name = ((FileResourceStream) is).getFile().getName();
+            }
+            else if (is instanceof FileSystemResourceStream) {
+                name = ((FileSystemResourceStream) is).getPath().getFileName().toString();
+            }
+        }
+
+        ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(is, name);
         handler.setContentDisposition(ContentDisposition.ATTACHMENT);
         getComponent().getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
-    }
-
-    /**
-     * Override this method for a file name which will let the browser prompt with a save/open
-     * dialog.
-     * 
-     * @return the filename.
-     */
-    protected String getFileName()
-    {
-        return new File(fileName).getName();
-    }
-
-    /**
-     * Hook method providing the actual resource stream.
-     * 
-     * @return the stream.
-     */
-    protected IResourceStream getResourceStream()
-    {
-        return new AbstractResourceStream()
-        {
-            private static final long serialVersionUID = 1L;
-
-            private InputStream inStream;
-
-            @Override
-            public InputStream getInputStream() throws ResourceStreamNotFoundException
-            {
-                try {
-                    inStream = new FileInputStream(fileName);
-                }
-                catch (IOException e) {
-                    throw new ResourceStreamNotFoundException(e);
-                }
-                return inStream;
-            }
-
-            @Override
-            public void close() throws IOException
-            {
-                IOUtils.closeQuietly(inStream);
-                inStream = null;
-                FileUtils.forceDelete(new File(fileName));
-            }
-        };
     }
 }
