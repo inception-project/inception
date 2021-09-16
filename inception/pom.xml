@@ -91,7 +91,7 @@
     <wicket.version>9.4.0</wicket.version>
     <wicketstuff.version>9.4.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.3.2</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>6.0.0-M3</wicket-bootstrap.version>
+    <wicket-bootstrap.version>6.0.0-M5-SNAPSHOT</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.3</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
@@ -861,6 +861,10 @@
           <exclusion>
             <groupId>com.google.javascript</groupId>
             <artifactId>closure-compiler-unshaded</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
