@@ -92,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
@@ -483,9 +484,7 @@ public class CurationPage
         // Update timestamp in state
         Optional<Long> diskTimestamp = curationDocumentService
                 .getCurationCasTimestamp(state.getDocument());
-        if (diskTimestamp.isPresent()) {
-            state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-        }
+        AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
     }
 
     @Override
