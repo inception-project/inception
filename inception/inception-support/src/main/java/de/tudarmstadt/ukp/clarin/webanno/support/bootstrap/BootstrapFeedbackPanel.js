@@ -15,13 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+ function bootstrapFeedbackPanelCloseAll() {
+  $('.alert').each((i, e) => bootstrap.Alert.getOrCreateInstance(e).close());
+ }
+ 
 function bootstrapFeedbackPanelFade() {
   setTimeout(function() {
     $(".alert.alert-success").fadeTo(600, 0, function(){
-      $(".alert.alert-success").alert('close');
+      $(".alert.alert-success").each((i, e) => bootstrap.Alert.getOrCreateInstance(e).close());
     });
     $(".alert.alert-info").fadeTo(600, 0, function(){
-      $(".alert.alert-info").alert('close');
+      $(".alert.alert-info").each((i, e) => bootstrap.Alert.getOrCreateInstance(e).close());
     });
   }, 2000);
 }
