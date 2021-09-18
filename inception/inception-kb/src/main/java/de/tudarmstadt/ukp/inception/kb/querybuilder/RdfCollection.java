@@ -41,7 +41,7 @@ public class RdfCollection
         super(" ", aElements);
     }
 
-    public static RdfObject collectionOf(QueryElement... aElements)
+    public static RdfCollection collectionOf(QueryElement... aElements)
     {
         return new RdfCollection(asList(aElements));
     }
