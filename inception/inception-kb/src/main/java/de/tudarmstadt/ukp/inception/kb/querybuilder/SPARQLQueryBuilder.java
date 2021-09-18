@@ -830,7 +830,7 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns
-                    .add(((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
+                    .add(collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
                             .has(FUSEKI_QUERY,
                                     collectionOf(VAR_MATCH_TERM_PROPERTY,
                                             literalOf(sanitizedValue)))
@@ -995,9 +995,8 @@ public class SPARQLQueryBuilder
                 sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
             }
 
-            valuePatterns.add(((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
-                    .has(FUSEKI_QUERY,
-                            collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(fuzzyQuery))));
+            valuePatterns.add(collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM).has(FUSEKI_QUERY,
+                    collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(fuzzyQuery))));
         }
 
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
@@ -1133,7 +1132,7 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns
-                    .add(((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
+                    .add(collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
                             .has(FUSEKI_QUERY,
                                     collectionOf(VAR_MATCH_TERM_PROPERTY,
                                             literalOf(sanitizedValue)))
@@ -1369,7 +1368,7 @@ public class SPARQLQueryBuilder
         // filter them by those which actually start with the prefix.
         return GraphPatterns
                 .and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                        ((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
+                        collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
                                 .has(FUSEKI_QUERY,
                                         collectionOf(VAR_MATCH_TERM_PROPERTY,
                                                 literalOf(queryString)))
