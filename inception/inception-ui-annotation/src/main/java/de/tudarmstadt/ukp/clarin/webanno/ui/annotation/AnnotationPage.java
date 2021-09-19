@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
@@ -364,9 +365,7 @@ public class AnnotationPage
         // Update timestamp in state
         Optional<Long> diskTimestamp = documentService
                 .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
-        if (diskTimestamp.isPresent()) {
-            state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-        }
+        AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
     }
 
     @Override

@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.oneOrMore;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.RdfCollection.collectionOf;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY_RESTRICTIONS;
@@ -44,6 +42,9 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANG;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATCHES;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REGEX;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
+import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.oneOrMore;
+import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.path;
+import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.zeroOrMore;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.filterExists;
@@ -290,33 +291,31 @@ public class SPARQLQueryBuilder
             switch (this) {
             case ITEM: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
+                classPatterns.add(VAR_SUBJECT.has(path(oneOrMore(subClassProperty)), aContext));
                 classPatterns.add(VAR_SUBJECT
-                        .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), aContext));
+                        .has(path(typeOfProperty, zeroOrMore(subClassProperty)), aContext));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
                     classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
+                            path(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST), aContext));
                 }
 
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case CLASS: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
+                classPatterns.add(VAR_SUBJECT.has(path(oneOrMore(subClassProperty)), aContext));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
                     classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
+                            path(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST), aContext));
                 }
 
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case INSTANCE:
-                return VAR_SUBJECT.has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)),
+                return VAR_SUBJECT.has(path(typeOfProperty, zeroOrMore(subClassProperty)),
                         aContext);
             case PROPERTY:
-                return VAR_SUBJECT.has(Path.of(oneOrMore(subPropertyProperty)), aContext);
+                return VAR_SUBJECT.has(path(oneOrMore(subPropertyProperty)), aContext);
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
             }
@@ -336,19 +335,19 @@ public class SPARQLQueryBuilder
             case CLASS:
             case INSTANCE: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(aContext.has(Path.of(oneOrMore(subClassProperty)), VAR_SUBJECT));
-                classPatterns.add(aContext
-                        .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), VAR_SUBJECT));
+                classPatterns.add(aContext.has(path(oneOrMore(subClassProperty)), VAR_SUBJECT));
+                classPatterns.add(aContext.has(path(typeOfProperty, zeroOrMore(subClassProperty)),
+                        VAR_SUBJECT));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
-                    classPatterns.add(aContext.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            VAR_SUBJECT));
+                    classPatterns.add(
+                            aContext.has(path(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
+                                    VAR_SUBJECT));
                 }
 
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
-                return aContext.has(Path.of(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
+                return aContext.has(path(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
             }
@@ -371,8 +370,7 @@ public class SPARQLQueryBuilder
                 classPatterns.add(VAR_SUBJECT.has(typeOfProperty, aContext));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
                     classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
+                            path(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST), aContext));
                 }
 
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
@@ -387,8 +385,7 @@ public class SPARQLQueryBuilder
                 classPatterns.add(VAR_SUBJECT.has(subClassProperty, aContext));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
                     classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
+                            path(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST), aContext));
                 }
 
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
@@ -415,15 +412,15 @@ public class SPARQLQueryBuilder
                 classPatterns.add(aContext.has(subClassProperty, VAR_SUBJECT));
                 classPatterns.add(aContext.has(typeOfProperty, VAR_SUBJECT));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
-                    classPatterns.add(aContext.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            VAR_SUBJECT));
+                    classPatterns.add(
+                            aContext.has(path(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
+                                    VAR_SUBJECT));
                 }
 
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
-                return aContext.has(Path.of(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
+                return aContext.has(path(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
             default:
                 throw new IllegalStateException(
                         "Can only request classes or properties as parents");
@@ -626,7 +623,7 @@ public class SPARQLQueryBuilder
     {
         Iri pLabel = mode.getLabelProperty(kb);
         Iri pSubProperty = iri(kb.getSubPropertyIri());
-        var primaryLabelPattern = aVariable.has(Path.of(zeroOrMore(pSubProperty)), pLabel);
+        var primaryLabelPattern = aVariable.has(path(zeroOrMore(pSubProperty)), pLabel);
         return optional(primaryLabelPattern);
     }
 
@@ -638,7 +635,7 @@ public class SPARQLQueryBuilder
     {
         Iri pLabel = mode.getLabelProperty(kb);
         Iri pSubProperty = iri(kb.getSubPropertyIri());
-        var primaryLabelPattern = aVariable.has(Path.of(zeroOrMore(pSubProperty)), pLabel);
+        var primaryLabelPattern = aVariable.has(path(zeroOrMore(pSubProperty)), pLabel);
 
         if (mode.getAdditionalMatchingProperties(kb).isEmpty()) {
             // If we only have a single label property, let's make the label optional
@@ -651,7 +648,7 @@ public class SPARQLQueryBuilder
         patterns.add(primaryLabelPattern);
 
         for (Iri pAddSearch : mode.getAdditionalMatchingProperties(kb)) {
-            patterns.add(aVariable.has(Path.of(zeroOrMore(pSubProperty)), pAddSearch));
+            patterns.add(aVariable.has(path(zeroOrMore(pSubProperty)), pAddSearch));
         }
 
         // If additional label properties are specified, then having a label candidate
@@ -701,12 +698,12 @@ public class SPARQLQueryBuilder
 
         addPattern(PRIMARY, union(GraphPatterns.and(
                 // Find all super-classes of the domain type
-                iri(aIdentifier).has(Path.of(zeroOrMore(subClassProperty)), superClass),
+                iri(aIdentifier).has(path(zeroOrMore(subClassProperty)), superClass),
                 // Either there is a domain which matches the given one
                 VAR_SUBJECT.has(iri(RDFS.DOMAIN), superClass)),
                 // ... the property does not define or inherit domain
-                isPropertyPattern().and(filterNotExists(VAR_SUBJECT.has(
-                        Path.of(zeroOrMore(subPropertyProperty), iri(RDFS.DOMAIN)), bNode())))));
+                isPropertyPattern().and(filterNotExists(VAR_SUBJECT
+                        .has(path(zeroOrMore(subPropertyProperty), iri(RDFS.DOMAIN)), bNode())))));
 
         return this;
     }
@@ -833,7 +830,7 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns
-                    .add(((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
+                    .add(collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
                             .has(FUSEKI_QUERY,
                                     collectionOf(VAR_MATCH_TERM_PROPERTY,
                                             literalOf(sanitizedValue)))
@@ -998,9 +995,8 @@ public class SPARQLQueryBuilder
                 sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
             }
 
-            valuePatterns.add(((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
-                    .has(FUSEKI_QUERY,
-                            collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(fuzzyQuery))));
+            valuePatterns.add(collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM).has(FUSEKI_QUERY,
+                    collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(fuzzyQuery))));
         }
 
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
@@ -1136,7 +1132,7 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns
-                    .add(((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
+                    .add(collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
                             .has(FUSEKI_QUERY,
                                     collectionOf(VAR_MATCH_TERM_PROPERTY,
                                             literalOf(sanitizedValue)))
@@ -1372,7 +1368,7 @@ public class SPARQLQueryBuilder
         // filter them by those which actually start with the prefix.
         return GraphPatterns
                 .and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                        ((RdfCollection) collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM))
+                        collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
                                 .has(FUSEKI_QUERY,
                                         collectionOf(VAR_MATCH_TERM_PROPERTY,
                                                 literalOf(queryString)))
@@ -1564,7 +1560,7 @@ public class SPARQLQueryBuilder
         // ... it participates in an owl:intersectionOf
         if (OWL.CLASS.stringValue().equals(kb.getClassIri())) {
             classPatterns.add(VAR_SUBJECT
-                    .has(Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST), bNode()));
+                    .has(path(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST), bNode()));
         }
 
         addPattern(PRIMARY_RESTRICTIONS,
@@ -1604,7 +1600,7 @@ public class SPARQLQueryBuilder
         // An item is a property if ...
         // ... it is explicitly defined as being a property
         propertyPatterns
-                .add(VAR_SUBJECT.has(Path.of(typeOfProperty, zeroOrMore(pSubClass)), propertyIri));
+                .add(VAR_SUBJECT.has(path(typeOfProperty, zeroOrMore(pSubClass)), propertyIri));
         // ... it has any subproperties
         propertyPatterns.add(bNode().has(subPropertyProperty, VAR_SUBJECT));
         // ... it has any superproperties
