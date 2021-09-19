@@ -41,6 +41,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -55,13 +57,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEve
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DeleteAnnotationRequest;
 import de.tudarmstadt.ukp.inception.experimental.api.messages.request.DocumentRequest;
@@ -154,20 +156,27 @@ public class AnnotationSystemAPIImpl
     @Override
     public void handleDocumentRequest(DocumentRequest aDocumentRequest) throws IOException
     {
-        try {
+        try (CasStorageSession session = CasStorageSession.open()) {
+
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            double b = System.currentTimeMillis();
             // For every viewport retrieve the annotations
             // REMARK: Every viewport has its own layers it is enabled to retrieve annotation from
 
             for (Viewport viewport : aDocumentRequest.getViewport()) {
-
                 // Retrieve the CAS
-                CAS cas = getCasForDocument(aDocumentRequest.getAnnotatorName(),
-                        aDocumentRequest.getProjectId(), viewport.getSourceDocumentId());
+                CAS cas = documentService
+                        .readAnnotationCas(
+                                documentService.getSourceDocument(aDocumentRequest.getProjectId(),
+                                        aDocumentRequest.getViewport().get(0)
+                                                .getSourceDocumentId()),
+                                aDocumentRequest.getAnnotatorName());
 
                 // getAnnotations retrieve a two lists, one with Spans and the other with Arcs
                 // Therefore, a Pair element has been chosen
-                Pair<List<Span>, List<Arc>> retrievedAnnotations = getAnnotations(cas,
-                        aDocumentRequest.getProjectId(), viewport);
+
+                Pair<List<Span>, List<Arc>> retrievedAnnotations = getAnnotations(cas, viewport);
+
                 if (retrievedAnnotations.getLeft() != null) {
                     viewport.setSpans(retrievedAnnotations.getLeft());
                 }
@@ -229,6 +238,7 @@ public class AnnotationSystemAPIImpl
     public void handleCreateArc(CreateArcRequest aCreateArcRequest) throws IOException
     {
         try (CasStorageSession session = CasStorageSession.open()) {
+
             MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
             // Retrieve the SourceDocument
@@ -255,6 +265,7 @@ public class AnnotationSystemAPIImpl
                     documentService.getSourceDocument(aCreateArcRequest.getProjectId(),
                             aCreateArcRequest.getSourceDocumentId()),
                     aCreateArcRequest.getAnnotatorName(), source, target, cas);
+
         }
         catch (Exception e) {
             LOG.error("Exception has been thrown during handleCreateRelation()", e);
@@ -484,17 +495,13 @@ public class AnnotationSystemAPIImpl
      *
      * @param aCas
      *            Required to retrieve the annotations
-     * @param aProjectId
-     *            Required to create a custom Span / Arc from the annotation suitable for the data
-     *            transfer
      * @param aViewport
      *            Viewport within its borders (begin, end) is searched for annotation for specific
      *            layers
      *
      * @return Pair<List<Span>,List<Arc>>
      */
-    private Pair<List<Span>, List<Arc>> getAnnotations(CAS aCas, long aProjectId,
-            Viewport aViewport)
+    private Pair<List<Span>, List<Arc>> getAnnotations(CAS aCas, Viewport aViewport)
     {
         // Lists to be returned together in a Pair
         List<Span> spans = new ArrayList<>();
@@ -507,59 +514,47 @@ public class AnnotationSystemAPIImpl
         }
 
         // Iterate over all layers for which annotations shall be received
-        for (AnnotationLayer layer : requestedLayers) {
-
+        requestedLayers.stream().forEach(layer -> {
             // Get the adapter for the layer
             TypeAdapter adapter = annotationService.getAdapter(layer);
 
-            // Obtain a list with annotations
-            // Only annotations will be added that are within the viewports bounds
-            List<AnnotationFS> annotations = aCas.select(adapter.getAnnotationType(aCas))
-                    .coveredBy(0, aViewport.getEnd()).includeAnnotationsWithEndBeyondBounds()
-                    .map(fs -> (AnnotationFS) fs).filter(ann -> AnnotationPredicates
-                            .overlapping(ann, aViewport.getBegin(), aViewport.getEnd()))
-                    .collect(toList());
-
-            // Iterate over all annotation found for that layer within the bounds of the viewport
-            for (AnnotationFS annotation : annotations) {
-
-                // Check the type of the TypeAdapter (either SpanAdapter or RelationAdapter)
-                if (adapter instanceof SpanAdapter) {
-                    // Add the span to the list
-                    spans.add(new Span(new VID(annotation._id()), annotation.getBegin(),
-                            annotation.getEnd(), adapter.getTypeId(),
-                            getColorForAnnotation(annotation,
-                                    projectService.getProject(aProjectId)),
-                            getFeatures(annotation)));
-                }
-
-                if (adapter instanceof RelationAdapter) {
-                    // Both the source and target annotation of the Relation are required
-                    AnnotationFS source = null;
-                    AnnotationFS target = null;
-
-                    // Iterate through the annotations features to retrieve the addresses
-                    // of the source and target annotations
-                    for (Feature f : annotation.getType().getFeatures()) {
-                        if (f.getName().contains(WebAnnoConst.FEAT_REL_SOURCE)) {
-                            source = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
-                                    annotation.getAddress());
-                        }
-                        if (f.getName().contains(WebAnnoConst.FEAT_REL_TARGET)) {
-                            target = WebAnnoCasUtil.selectAnnotationByAddr(aCas,
-                                    annotation.getAddress());
-                        }
-                    }
-
-                    // Add the relation
-                    arcs.add(new Arc(new VID(annotation._id()), new VID(source._id()),
-                            new VID(target._id()),
-                            getColorForAnnotation(annotation,
-                                    projectService.getProject(aProjectId)),
-                            adapter.getLayer().getId(), getFeatures(annotation)));
-                }
+            //Relation
+            if (adapter instanceof RelationAdapter) {
+                aCas.select(adapter.getAnnotationType(aCas)).coveredBy(0, aViewport.getEnd())
+                        .includeAnnotationsWithEndBeyondBounds().map(fs -> (AnnotationFS) fs)
+                        .filter(ann -> AnnotationPredicates.overlapping(ann, aViewport.getBegin(),
+                                aViewport.getEnd()))
+                        .collect(toList()).parallelStream().forEach(anno -> {
+                            arcs.add(new Arc(new VID(anno._id()),
+                                    new VID(anno.getFeatureValue(
+                                            anno.getType().getFeatures().parallelStream()
+                                                    .filter(feat -> feat.getName()
+                                                            .contains(WebAnnoConst.FEAT_REL_SOURCE))
+                                                    .findFirst().get())
+                                            ._id()),
+                                    new VID(anno.getFeatureValue(
+                                            anno.getType().getFeatures().parallelStream()
+                                                    .filter(feat -> feat.getName()
+                                                            .contains(WebAnnoConst.FEAT_REL_TARGET))
+                                                    .findFirst().get())
+                                            ._id()),
+                                    "#224499", adapter.getLayer().getId(), getFeatures(anno)));
+                        });
             }
-        }
+
+            //Span
+            if (adapter instanceof SpanAdapter) {
+                aCas.select(adapter.getAnnotationType(aCas)).coveredBy(0, aViewport.getEnd())
+                        .includeAnnotationsWithEndBeyondBounds().map(fs -> (AnnotationFS) fs)
+                        .filter(ann -> AnnotationPredicates.overlapping(ann, aViewport.getBegin(),
+                                aViewport.getEnd()))
+                        .collect(toList()).parallelStream().forEach(anno -> {
+                            spans.add(new Span(new VID(anno._id()), anno.getBegin(), anno.getEnd(),
+                                    adapter.getLayer().getId(), "#882233", getFeatures(anno)));
+                        });
+            }
+        });
+
         // Return the Pair of lists
         return new ImmutablePair<>(spans, arcs);
     }
