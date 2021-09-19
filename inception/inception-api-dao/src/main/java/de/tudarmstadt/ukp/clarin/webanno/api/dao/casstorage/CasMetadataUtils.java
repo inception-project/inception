@@ -77,10 +77,12 @@ public class CasMetadataUtils
             long diskLastModified = aCasFile.lastModified();
             if (diskLastModified != lastKnownUpdate) {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                throw new IOException("There was a concurrent change to the document. Re-open the "
-                        + "document to continue editing (expected: " + sdf.format(lastKnownUpdate)
-                        + " actual on storage: " + sdf.format(diskLastModified) + ", delta: "
-                        + formatDurationHMS(diskLastModified - lastKnownUpdate) + ")");
+                throw new IOException(
+                        "There was a concurrent modification to the annotation CAS for user ["
+                                + aUsername + "] in document " + aDocument + " (expected: "
+                                + sdf.format(lastKnownUpdate) + " actual on storage: "
+                                + sdf.format(diskLastModified) + ", delta: "
+                                + formatDurationHMS(diskLastModified - lastKnownUpdate) + ")");
 
             }
         }
