@@ -19,32 +19,51 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.chevron_left_s;
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.chevron_right_s;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
+import org.apache.wicket.extensions.markup.html.tabs.TabbedPanel;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 public class SidebarTabbedPanel<T extends SidebarTab>
     extends AjaxTabbedPanel<T>
 {
     private static final long serialVersionUID = -5077247310722334915L;
 
+    public static final Key<AnnotationSidebarState> KEY_SIDEBAR_STATE = new Key<>(
+            AnnotationSidebarState.class, "annotation/left-sidebar");
+
     private boolean expanded = false;
 
-    public SidebarTabbedPanel(String aId, List<T> aTabs)
+    private @SpringBean UserDao userService;
+    private @SpringBean PreferencesService prefService;
+
+    private IModel<AnnotatorState> state;
+
+    public SidebarTabbedPanel(String aId, List<T> aTabs, IModel<AnnotatorState> aState)
     {
         super(aId, aTabs);
+
+        state = aState;
 
         setOutputMarkupPlaceholderTag(true);
         setOutputMarkupId(true);
@@ -55,11 +74,14 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         showHideLink.add(new Icon("showHideIcon",
                 LoadableDetachableModel.of(() -> isExpanded() ? chevron_left_s : chevron_right_s)));
         ((WebMarkupContainer) get("tabs-container")).add(showHideLink);
+
+        loadSidebarState();
     }
 
     private void showHideAction(AjaxRequestTarget aTarget)
     {
         expanded = !expanded;
+        saveSidebarState();
         WicketUtil.refreshPage(aTarget, getPage());
     }
 
@@ -81,7 +103,42 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         super.onAjaxUpdate(aTarget);
         if (!expanded) {
             expanded = true;
+            saveSidebarState();
             aTarget.ifPresent(_target -> WicketUtil.refreshPage(_target, getPage()));
+        }
+    }
+
+    @Override
+    public TabbedPanel<T> setSelectedTab(int aIndex)
+    {
+        TabbedPanel<T> t = super.setSelectedTab(aIndex);
+        saveSidebarState();
+        return t;
+    }
+
+    private void saveSidebarState()
+    {
+        AnnotationSidebarState sidebarState = new AnnotationSidebarState();
+        sidebarState.setSelectedTab(getTabs().get(getSelectedTab()).getFactoryId());
+        sidebarState.setExpanded(expanded);
+        User user = userService.getCurrentUser();
+        prefService.saveTraitsForUserAndProject(KEY_SIDEBAR_STATE, user,
+                state.getObject().getProject(), sidebarState);
+    }
+
+    private void loadSidebarState()
+    {
+        User user = userService.getCurrentUser();
+        AnnotationSidebarState sidebarState = prefService.loadTraitsForUserAndProject(
+                KEY_SIDEBAR_STATE, user, state.getObject().getProject());
+        if (isNotBlank(sidebarState.getSelectedTab())) {
+            var tabFactories = getTabs().stream().map(SidebarTab::getFactoryId)
+                    .collect(Collectors.toList());
+            var tabIndex = tabFactories.indexOf(sidebarState.getSelectedTab());
+            if (tabIndex >= 0) {
+                super.setSelectedTab(tabIndex);
+            }
+            expanded = sidebarState.isExpanded();
         }
     }
 
