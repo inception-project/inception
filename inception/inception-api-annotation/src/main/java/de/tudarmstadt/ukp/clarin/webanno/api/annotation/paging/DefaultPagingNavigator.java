@@ -32,8 +32,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.Annotato
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 
 public class DefaultPagingNavigator
