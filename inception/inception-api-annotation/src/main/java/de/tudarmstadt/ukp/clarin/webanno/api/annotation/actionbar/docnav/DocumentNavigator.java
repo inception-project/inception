@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open.OpenDocum
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import wicket.contrib.input.events.InputBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 
 public class DocumentNavigator
