@@ -17,33 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
-import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
-import org.apache.wicket.model.IModel;
-
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-
-public abstract class SidebarTab
-    extends AbstractTab
+public class AnnotationSidebarState
 {
-    private static final long serialVersionUID = -3205381571000021331L;
+    private String selectedTab;
+    private boolean expanded;
 
-    private final IconType icon;
-    private final String factoryId;
-
-    public SidebarTab(IModel<String> aTitle, IconType aIcon, String aFactoryId)
+    public void setSelectedTab(String aFactoryId)
     {
-        super(aTitle);
-        icon = aIcon;
-        factoryId = aFactoryId;
+        selectedTab = aFactoryId;
     }
 
-    public IconType getIcon()
+    public String getSelectedTab()
     {
-        return icon;
+        return selectedTab;
     }
 
-    public String getFactoryId()
+    public void setExpanded(boolean aExpanded)
     {
-        return factoryId;
+        expanded = aExpanded;
+    }
+
+    public boolean isExpanded()
+    {
+        return expanded;
     }
 }
