@@ -21,7 +21,7 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public class RecommenderTaskEvent
+public class RecommenderErrorEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = 777340980838549414L;
@@ -30,7 +30,7 @@ public class RecommenderTaskEvent
     private final Recommender recommender;
     private String errorMsg;
 
-    public RecommenderTaskEvent(Object aSource, String aUser, String aError,
+    public RecommenderErrorEvent(Object aSource, String aUser, String aError,
             Recommender aRecommender)
     {
         super(aSource);
@@ -39,7 +39,7 @@ public class RecommenderTaskEvent
         recommender = aRecommender;
     }
 
-    public RecommenderTaskEvent(Object aSource, String aUser, Recommender aRecommender)
+    public RecommenderErrorEvent(Object aSource, String aUser, Recommender aRecommender)
     {
         this(aSource, aUser, null, aRecommender);
     }

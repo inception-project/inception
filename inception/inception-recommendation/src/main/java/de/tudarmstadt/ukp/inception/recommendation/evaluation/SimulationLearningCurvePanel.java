@@ -229,8 +229,6 @@ public class SimulationLearningCurvePanel
                 EvaluationResult evaluationResult = recommenderEngine.evaluate(casList,
                         splitStrategy);
                 
-                // TODO create event here that is published by websocket just as on recommendation sidebar?
-
                 if (!evaluationResult.isEvaluationSkipped()) {
                     evaluationResults.getObject().add(evaluationResult);
                 }

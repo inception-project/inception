@@ -56,8 +56,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommende
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderErrorEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.SelectionTaskEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 
@@ -153,9 +153,10 @@ public class SelectionTask
                             log.error("[{}][{}]: No recommender factory available for [{}]",
                                     user.getUsername(), r.getName(), r.getTool());
                             appEventPublisher.publishEvent(
-                                    new SelectionTaskEvent(this, recommender, user.getUsername(),
+                                    new RecommenderErrorEvent(this, user.getUsername(),
                                             String.format("No recommender factory available for %s",
-                                                    recommender.getTool())));
+                                                    recommender.getTool()),
+                                            recommender));
                             continue;
                         }
 
@@ -249,20 +250,19 @@ public class SelectionTask
                                 System.currentTimeMillis() - start, activated));
 
                         Optional<String> recError = result.getErrorMsg();
-                        SelectionTaskEvent evalEvent = new SelectionTaskEvent(this, recommender,
-                                user.getUsername(), result);
                         if (recError.isPresent()) {
-                            evalEvent.setErrorMsg(recError.get());
+                            RecommenderErrorEvent errorEvent = new RecommenderErrorEvent(this,
+                                    user.getUsername(), recError.get(), recommender);
+                            appEventPublisher.publishEvent(errorEvent);
                         }
-                        appEventPublisher.publishEvent(evalEvent);
                     }
 
                     // Catching Throwable is intentional here as we want to continue the execution
                     // even if a particular recommender fails.
                     catch (Throwable e) {
                         log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
-                        appEventPublisher.publishEvent(new SelectionTaskEvent(this, recommender,
-                                user.getUsername(), e.getMessage()));
+                        appEventPublisher.publishEvent(new RecommenderErrorEvent(this,
+                                user.getUsername(), e.getMessage(), recommender));
                     }
                 }
 

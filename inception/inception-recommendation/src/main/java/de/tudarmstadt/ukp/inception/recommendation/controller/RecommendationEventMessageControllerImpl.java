@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.controller;
 
 import java.io.IOException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
@@ -46,21 +47,23 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderErrorEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
 import de.tudarmstadt.ukp.inception.websocket.model.WebsocketEventMessage;
 
-@ConditionalOnBean(SimpMessagingTemplate.class)
+@ConditionalOnProperty(name = "websocket.enabled", havingValue = "true")
 @Controller
 public class RecommendationEventMessageControllerImpl
     implements RecommendationEventMessageController
-{
+{  
     private final Logger log = LoggerFactory
             .getLogger(RecommendationEventMessageControllerImpl.class);
 
     public static final String REC_EVENTS = "/recEvents";
+    public static final String REC_EVAL_EVENTS = "/recEvalEvents";
     public static final String REC_EVENTS_TOPIC = "/queue" + REC_EVENTS;
+    public static final String REC_EVAL_EVENTS_TOPIC = "/queue" + REC_EVAL_EVENTS;
     
     private static final int MAX_POINTS_TO_PLOT = 50;
     
@@ -72,7 +75,7 @@ public class RecommendationEventMessageControllerImpl
 
     @Autowired
     public RecommendationEventMessageControllerImpl(SimpMessagingTemplate aMsgTemplate, 
-            ProjectService aProjectService, @Autowired UserDao aUserDao, 
+            ProjectService aProjectService, UserDao aUserDao, 
             RecommendationService aRecommendationService, EventRepository aEventRepository)
     {
         msgTemplate = aMsgTemplate;
@@ -84,33 +87,46 @@ public class RecommendationEventMessageControllerImpl
 
     @EventListener
     @Override
-    public void onRecommenderEvent(RecommenderTaskEvent aEvent)
+    public void onRecommenderErrorEvent(RecommenderErrorEvent aEvent)
     {
+        String errorMsg = aEvent.getErrorMsg();
+        if (errorMsg == null) {
+            return;
+        }
         Recommender recommender = aEvent.getRecommender();
         Project project = recommender.getProject();
-        User user = userService.get(aEvent.getUser());
-        WebsocketEventMessage eventMsg = addEvalResultMetrics(recommender, user, 
-                new WebsocketEventMessage(aEvent.getUser(), project.getName(),
-                aEvent.getTimestamp(), aEvent.getClass().getSimpleName()));
-        
-        String errorMsg = aEvent.getErrorMsg();
-        if (errorMsg != null) {
-            eventMsg.setErrorMsg("[" + recommender.getName() + "] " + errorMsg);
-            eventMsg.setEventType(aEvent.getClass().getSimpleName());
-        }
-        
+        WebsocketEventMessage eventMsg = new WebsocketEventMessage(aEvent.getTimestamp(),
+                aEvent.getClass().getSimpleName());
+        eventMsg.setEventMsg("[" + recommender.getName() + "] " + errorMsg);
+
         String channel = REC_EVENTS_TOPIC + "/" + project.getId();
         log.debug("Sending websocket event: {} '{}' to {}.", eventMsg.getEventType(),
                 eventMsg.getEventMsg(), channel);
         msgTemplate.convertAndSendToUser(aEvent.getUser(), channel, eventMsg);
     }
     
-    @SubscribeMapping(REC_EVENTS_TOPIC + "/{aProjectId}")
+    @EventListener
+    @Override
+    public void onRecommenderEvaluationEvent(RecommenderEvaluationResultEvent aEvent)
+    {
+        Recommender recommender = aEvent.getRecommender();
+        Project project = recommender.getProject();
+        User user = userService.get(aEvent.getUser());
+        WebsocketEventMessage eventMsg = addEvalResultMetrics(recommender, user, 
+                new WebsocketEventMessage(aEvent.getTimestamp(), aEvent.getClass().getSimpleName()));
+        
+        String channel = REC_EVAL_EVENTS_TOPIC + "/" + project.getId();
+        log.debug("Sending websocket event: {} '{}' to {}.", eventMsg.getEventType(),
+                eventMsg.getEventMsg(), channel);
+        msgTemplate.convertAndSendToUser(aEvent.getUser(), channel, eventMsg);
+    }
+    
+    @SubscribeMapping(REC_EVAL_EVENTS + "/{aProjectId}")
     @Override
     public List<WebsocketEventMessage> getMostRecentRecommenderEvents(Principal aPrincipal,
             @DestinationVariable String aProjectId)
     {
-        List<WebsocketEventMessage> recentEvents = null;
+        List<WebsocketEventMessage> recentEvents = new ArrayList<>();
         Project project = projectService.getProject(Long.valueOf(aProjectId));
         String username = aPrincipal.getName();
         User user = userService.get(username);
@@ -129,14 +145,15 @@ public class RecommendationEventMessageControllerImpl
               .flatMap(r -> eventRepo.listLoggedEventsForRecommender(
                 project, username,
                 recommenderEvalEventType, MAX_POINTS_TO_PLOT, r.getId()).stream()//
-                      .map(event ->  createWebsocketEventMessage(event, project, r)))//
+                      .map(event ->  createWebsocketEventMessageForRecommenderEvaluation(event, project, r)))//
               .collect(Collectors.toList());
-        
+        log.debug("Sending websocket event: {}  to {}.",
+                recentEvents.stream().map(event -> event.toString()), username);
         return recentEvents;
     }
     
-    private WebsocketEventMessage createWebsocketEventMessage(LoggedEvent aEvent, Project aProject,
-            Recommender aRec)
+    private WebsocketEventMessage createWebsocketEventMessageForRecommenderEvaluation(
+            LoggedEvent aEvent, Project aProject, Recommender aRec)
     {
         Details recDetails;
         String recMetrics = null;
@@ -147,11 +164,10 @@ public class RecommendationEventMessageControllerImpl
         catch (IOException e) {
             e.printStackTrace();
         }
-        WebsocketEventMessage msg = new WebsocketEventMessage(aEvent.getUser(), aProject.getName(),
-                aEvent.getCreated().getTime(), RecommenderTaskEvent.class.getSimpleName());
+        WebsocketEventMessage msg = new WebsocketEventMessage(aEvent.getCreated(),
+                RecommenderErrorEvent.class.getSimpleName());
         msg.setEventMsg(recMetrics);
         return msg;
-
     }
 
     private WebsocketEventMessage addEvalResultMetrics(Recommender aRec, User aUser, WebsocketEventMessage aMsg)
@@ -173,7 +189,7 @@ public class RecommendationEventMessageControllerImpl
 
     @Override
     @MessageExceptionHandler
-    @SendToUser("/queue/errors")
+    @SendToUser(destinations = "/queue/errors", broadcast = false)
     public String handleException(Throwable exception)
     {
         return exception.getMessage();
@@ -181,7 +197,7 @@ public class RecommendationEventMessageControllerImpl
     
     public class RecommenderMetrics
     {
-        private String recommenderName;
+        private String name;
         private double accuracy;
         private double precision;
         private double recall;
@@ -193,7 +209,7 @@ public class RecommendationEventMessageControllerImpl
         }
         
         public RecommenderMetrics(String aRecName, double aAcc, double aPrec, double aRecall, double aF1) {
-            recommenderName = aRecName;
+            name = aRecName;
             accuracy = aAcc;
             precision = aPrec;
             recall = aRecall;
@@ -212,14 +228,14 @@ public class RecommendationEventMessageControllerImpl
             this(aRec.getName(), aRecDetails.accuracy, aRecDetails.precision, aRecDetails.recall, aRecDetails.f1);
         }
 
-        public String getRecommenderName()
+        public String getName()
         {
-            return recommenderName;
+            return name;
         }
 
-        public void setRecommenderName(String aRecommenderName)
+        public void setName(String aRecommenderName)
         {
-            recommenderName = aRecommenderName;
+            name = aRecommenderName;
         }
 
         public double getAccuracy()

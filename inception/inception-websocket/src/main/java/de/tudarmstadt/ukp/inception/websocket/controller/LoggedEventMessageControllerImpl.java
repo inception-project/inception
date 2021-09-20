@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.websocket.controller;
 import static java.util.stream.Collectors.toList;
 
 import java.security.Principal;
-import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +33,6 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.stereotype.Controller;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.websocket.model.WebsocketEventMessage;
@@ -52,20 +49,15 @@ public class LoggedEventMessageControllerImpl
     public static final String LOGGED_EVENTS_TOPIC = "/topic" + LOGGED_EVENTS;
 
     private final SimpMessagingTemplate msgTemplate;
-    private final ProjectService projectService;
-    private final DocumentService docService;
     private final EventRepository eventRepo;
     private final EventLoggingAdapterRegistry adapterRegistry;
 
     @Autowired
     public LoggedEventMessageControllerImpl(SimpMessagingTemplate aMsgTemplate,
-            EventLoggingAdapterRegistry aAdapterRegistry, DocumentService aDocService,
-            ProjectService aProjectService, EventRepository aEventRepository)
+            EventLoggingAdapterRegistry aAdapterRegistry, EventRepository aEventRepository)
     {
         msgTemplate = aMsgTemplate;
         adapterRegistry = aAdapterRegistry;
-        docService = aDocService;
-        projectService = aProjectService;
         eventRepo = aEventRepository;
     }
 
@@ -74,8 +66,7 @@ public class LoggedEventMessageControllerImpl
     public void onApplicationEvent(ApplicationEvent aEvent)
     {
         adapterRegistry.getAdapter(aEvent)
-                .map(a -> createLoggedEventMessage(a.getUser(aEvent), a.getProject(aEvent),
-                        a.getCreated(aEvent), a.getEvent(aEvent), a.getDocument(aEvent)))
+                .map(a -> new WebsocketEventMessage(a.getCreated(aEvent), a.getEvent(aEvent)))
                 .ifPresent(eventMsg -> msgTemplate.convertAndSend(LOGGED_EVENTS_TOPIC, eventMsg));
     }
 
@@ -99,25 +90,7 @@ public class LoggedEventMessageControllerImpl
     private List<WebsocketEventMessage> getMostRecentLoggedEvents(String aUsername, int aMaxEvents)
     {
         return eventRepo.listRecentActivity(aUsername, aMaxEvents).stream()
-                .map(event -> createLoggedEventMessage(event.getUser(), event.getProject(),
-                        event.getCreated(), event.getEvent(), event.getDocument()))
+                .map(event ->  new WebsocketEventMessage(event.getCreated(), event.getEvent()))
                 .collect(toList());
-    }
-
-    private WebsocketEventMessage createLoggedEventMessage(String aUsername, long aProjectId,
-            Date aCreated, String aEventType, long aDocId)
-    {
-        String projectName = null;
-        String docName = null;
-
-        if (aProjectId > -1) {
-            projectName = projectService.getProject(aProjectId).getName();
-
-            if (aDocId > -1) {
-                docName = docService.getSourceDocument(aProjectId, aDocId).getName();
-            }
-        }
-
-        return new WebsocketEventMessage(aUsername, projectName, docName, aCreated, aEventType);
     }
 }

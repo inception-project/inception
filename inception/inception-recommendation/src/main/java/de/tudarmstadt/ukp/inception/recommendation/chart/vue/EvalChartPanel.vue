@@ -20,7 +20,7 @@
     <div class="card-header">
       Evaluation Scores
     </div>
-    <div id="chartContainer" class="card-body">
+    <div id="chartContainer" class="card-body" style="height:200px">
     </div>
   </div>
 </template>
@@ -57,15 +57,16 @@ module.exports = {
           if (that.projectId == -1){
             return;
           }
-          that.stompClient.subscribe('/user/queue' + that.topicChannel + '/' + that.projectId, function (msg) {
+          // call for intial data
+          that.stompClient.subscribe('/app' + that.topicChannel + '/' + that.projectId, function (msg) {
             let msgBody = JSON.parse(msg.body);
-            // FIXME might need to find a solution for this being an error msg 
-            // and not an evaluation message?
-            if (evalChart === null){
-              that.evalChart = new EvalChart("chartContainer", msgBody);
-            } else{
-              that.evalChart.update(msgBody.eventMsg);
-            }
+            that.evalChart = new EvalChart("chartContainer", msgBody);
+            //subscribe for further updates
+            that.stompClient.subscribe('/user/queue' + that.topicChannel + '/' + that.projectId, function (msg) {
+                console.log('subscription to user queue from sidebar, got answer: ');
+            	let msgBody = JSON.parse(msg.body);
+            	that.evalChart.update(JSON.parse(msgBody.eventMsg));
+          	});
           });
         },
         function(error){

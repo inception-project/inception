@@ -80,7 +80,7 @@ public class LoggedEventMessageControllerImplTest
         when(docService.getSourceDocument(1L, 2L)).thenReturn(testDoc);
 
         sut = new LoggedEventMessageControllerImpl(new SimpMessagingTemplate(outboundChannel),
-                adapterRegistry, docService, projectService, eventRepository);
+                adapterRegistry, eventRepository);
     }
 
     @Test
@@ -94,9 +94,6 @@ public class LoggedEventMessageControllerImplTest
         WebsocketEventMessage msg = (WebsocketEventMessage) messages.get(0).getPayload();
 
         assertThat(messages).hasSize(1);
-        assertThat(msg.getDocumentName()).isEqualTo(testDoc.getName());
-        assertThat(msg.getProjectName()).isEqualTo(testProject.getName());
-        assertThat(msg.getActorName()).isEqualTo(testAdmin.getUsername());
         assertThat(msg.getEventType()).isEqualTo(SpanCreatedEvent.class.getSimpleName());
     }
 

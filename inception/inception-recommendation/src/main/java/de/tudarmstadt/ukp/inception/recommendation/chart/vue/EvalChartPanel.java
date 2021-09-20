@@ -25,6 +25,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.WicketRuntimeException;
+import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.model.Model;
@@ -59,7 +60,7 @@ public class EvalChartPanel extends VueComponent
         super.onConfigure();
         // model will be added as props to vue component
         setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(), 
-                "topicChannel", RecommendationEventMessageControllerImpl.REC_EVENTS, //
+                "topicChannel", RecommendationEventMessageControllerImpl.REC_EVAL_EVENTS, //
                 "projectId", getProjectId())));
     }
 
@@ -100,6 +101,12 @@ public class EvalChartPanel extends VueComponent
         super.renderHead(aResponse);
         aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
                 "webstomp-client/current/dist/webstomp.min.js")));
+
+        aResponse.render(forReference(new WebjarsJavaScriptResourceReference("d3js/current/d3.js")));
+        aResponse.render(forReference(new WebjarsJavaScriptResourceReference("d3-selection/current/dist/d3-selection.min.js")));
+        aResponse.render(forReference(new WebjarsJavaScriptResourceReference("d3-transition/current/dist/d3-transition.min.js")));
+        
+        aResponse.render(CssHeaderItem.forReference(EvalChartCssReference.get()));
         aResponse.render(
                 JavaScriptHeaderItem.forReference(EvalChartJavascriptReference.get()));
     }

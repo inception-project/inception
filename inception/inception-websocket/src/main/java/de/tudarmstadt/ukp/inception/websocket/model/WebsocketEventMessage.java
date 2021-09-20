@@ -19,100 +19,46 @@ package de.tudarmstadt.ukp.inception.websocket.model;
 
 import java.util.Date;
 
+import org.apache.commons.lang3.StringUtils;
+
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 public class WebsocketEventMessage
 {
-    private String actorName;
-    private String projectName;
-    private String documentName;
     private long timestamp;
-    private String eventType;
-
     private String eventMsg;
-    private String errorMsg;
+    private String eventType;
 
     public WebsocketEventMessage()
     {
         // Nothing to do
     }
 
-    public WebsocketEventMessage(String aActorName, String aProjectName, String aDocumentName,
-            Date aCreationDate, String aEventType)
+    public WebsocketEventMessage(Date aCreationDate, String aEventType)
     {
-        this(aActorName, aProjectName, aDocumentName, aCreationDate.getTime());
-        eventType = aEventType;
+        this(aCreationDate.getTime(), aEventType);
     }
 
-    public WebsocketEventMessage(String aActorName, String aProjectName, String aDocumentName,
-            Date aCreationDate)
+    public WebsocketEventMessage(LoggedEvent aEvent)
     {
-        this(aActorName, aProjectName, aDocumentName, aCreationDate.getTime());
-    }
-
-    public WebsocketEventMessage(LoggedEvent aEvent, String aProjectName, String aDocumentName)
-    {
-        actorName = aEvent.getAnnotator();
-        projectName = aProjectName;
-        documentName = aDocumentName;
         timestamp = aEvent.getCreated().getTime();
         eventMsg = aEvent.getEvent();
+        eventType = aEvent.getClass().getSimpleName();
     }
 
-    public WebsocketEventMessage(String aUser, String aProjectName, long aTimestamp, String aEventType)
+    public WebsocketEventMessage(long aTimestamp, String aEventType)
     {
-        this(aUser, aProjectName, null, aTimestamp);
+        timestamp = aTimestamp;
         eventType = aEventType;
     }
 
-    public WebsocketEventMessage(String aActorName, String aProjectName, String aDocumentName,
+    public WebsocketEventMessage(String aMsg, String aEventType,
             long aTime)
     {
-        actorName = aActorName;
-        projectName = aProjectName;
-        documentName = aDocumentName;
-        timestamp = aTime;
+        this(aTime, aEventType);
+        eventMsg = aMsg;
     }
 
-    public String getErrorMsg()
-    {
-        return errorMsg;
-    }
-
-    public void setErrorMsg(String aErrorMsg)
-    {
-        errorMsg = aErrorMsg;
-    }
-
-    public String getActorName()
-    {
-        return actorName;
-    }
-
-    public void setActorName(String aActorName)
-    {
-        actorName = aActorName;
-    }
-
-    public String getProjectName()
-    {
-        return projectName;
-    }
-
-    public void setProjectName(String aProjectName)
-    {
-        projectName = aProjectName;
-    }
-
-    public String getDocumentName()
-    {
-        return documentName;
-    }
-
-    public void setDocumentName(String aDocumentName)
-    {
-        documentName = aDocumentName;
-    }
 
     public long getTimestamp()
     {
@@ -133,7 +79,7 @@ public class WebsocketEventMessage
     {
         eventMsg = aEventMsg;
     }
-
+    
     public String getEventType()
     {
         return eventType;
@@ -142,5 +88,21 @@ public class WebsocketEventMessage
     public void setEventType(String aEventType)
     {
         eventType = aEventType;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append(getClass().getSimpleName());
+        builder.append(" [");
+        builder.append("eventType=");
+        builder.append(eventType);
+        if (StringUtils.isNotBlank(getEventMsg())) {
+            builder.append(", eventMsg=[");
+            builder.append(getEventMsg());
+            builder.append("] ");
+        }
+        builder.append(")]");
+        return builder.toString();
     }
 }

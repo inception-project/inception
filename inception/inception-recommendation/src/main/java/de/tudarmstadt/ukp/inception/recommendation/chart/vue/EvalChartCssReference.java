@@ -15,23 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.controller;
+package de.tudarmstadt.ukp.inception.recommendation.chart.vue;
 
-import java.security.Principal;
-import java.util.List;
+import org.apache.wicket.request.resource.CssResourceReference;
 
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderErrorEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
-import de.tudarmstadt.ukp.inception.websocket.model.WebsocketEventMessage;
 
-public interface RecommendationEventMessageController
+public class EvalChartCssReference
+    extends CssResourceReference
 {
-    String handleException(Throwable exception);
+    private static final long serialVersionUID = 1L;
 
-    void onRecommenderErrorEvent(RecommenderErrorEvent aEvent);
+    private static final EvalChartCssReference INSTANCE = new EvalChartCssReference();
 
-    List<WebsocketEventMessage> getMostRecentRecommenderEvents(Principal aPrincipal,
-            String aProjectId);
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static EvalChartCssReference get()
+    {
+        return INSTANCE;
+    }
 
-    void onRecommenderEvaluationEvent(RecommenderEvaluationResultEvent aEvent);
+    /**
+     * Private constructor
+     */
+    private EvalChartCssReference()
+    {
+        super(EvalChartCssReference.class, "evalChart.css");
+    }
 }

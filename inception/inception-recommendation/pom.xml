@@ -141,6 +141,10 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-core</artifactId>
     </dependency>
+        <dependency>
+    	<groupId>org.springframework</groupId>
+    	<artifactId>spring-messaging</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.apache.wicket</groupId>
@@ -157,6 +161,10 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-util</artifactId>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.wicket</groupId>
+    	<artifactId>wicket-auth-roles</artifactId>
     </dependency>
     <dependency>
       <groupId>org.danekja</groupId>
@@ -226,6 +234,16 @@
       <groupId>org.webjars</groupId>
       <artifactId>d3js</artifactId>
     </dependency>
+    <dependency>
+    	<groupId>org.webjars.npm</groupId>
+    	<artifactId>d3-selection</artifactId>
+    	<version>${d3-selection.version}</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.webjars.npm</groupId>
+    	<artifactId>d3-transition</artifactId>
+    	<version>${d3-transition.version}</version>
+    </dependency>
 
     <!-- DEPENDENCIES FOR TESTING -->
     <dependency>
@@ -258,6 +276,7 @@
       <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
     </dependency>
+
   </dependencies>
 
   <build>
@@ -274,6 +293,7 @@
               -->
               <usedDependency>org.webjars:d3js</usedDependency>
               <usedDependency>org.webjars:c3</usedDependency>
+              <usedDependency>org.webjars:d3-selection</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

@@ -66,7 +66,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderErrorEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 
@@ -179,7 +179,7 @@ public class TrainingTask
                             logMessages.add(error(this,
                                     "Recommender [%s] configured with invalid layer or feature - skipping recommender.",
                                     r.getRecommender().getName()));
-                            appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
+                            appEventPublisher.publishEvent(new RecommenderErrorEvent(this,
                                     user.getUsername(),
                                     "Recommender configured with invalid layer or feature - skipping training recommender.",
                                     recommender));
@@ -246,7 +246,7 @@ public class TrainingTask
                                     docNum, duration);
                             logMessages
                                     .add(info(this, "Training not successful (%d ms).", duration));
-                            appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
+                            appEventPublisher.publishEvent(new RecommenderErrorEvent(this,
                                     user.getUsername(),
                                     format("Training on %d out of %d documents not successful (%d ms)",
                                             trainDocNum, docNum, duration),
@@ -275,7 +275,7 @@ public class TrainingTask
                                 (System.currentTimeMillis() - startTime), e);
                         logMessages.add(error(this, "Training failed (%d ms): %s", duration,
                                 getRootCauseMessage(e)));
-                        appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
+                        appEventPublisher.publishEvent(new RecommenderErrorEvent(this,
                                 user.getUsername(), String.format("Training failed (%d ms) with %s",
                                         duration, e.getMessage()),
                                 recommender));

@@ -15,62 +15,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-class EvalChart{
-   /**
-   * @param {string} aContainerId    id of the component that holds the chart svg
-   * @param {object} aInitData initial data should be of format array of websocket-messages
-   * e.g.
-    [
-        {
-            "actorName": "admin",
-            "projectName": "Game of Thrones",
-            "documentName": null,
-            "timestamp": 1631015412000,
-            "eventType": "RecommenderTaskUpdateEvent",
-            "eventMsg": { 'recommenderName': "rec1",
-                'accuracy': 0.0,
-                'precision': 0.1,
-                'recall': 0.2,
-                'f1': 0.15},
-            "errorMsg": null
-        },
-        {
-            "actorName": "admin",
-            "projectName": "Game of Thrones",
-            "documentName": null,
-            "timestamp": 1631015412000,
-            "eventType": "RecommenderTaskUpdateEvent",
-            "eventMsg": { 'recommenderName': "rec2",
-                'accuracy': 0.3,
-                'precision': 0.4,
-                'recall': 0.2,
-                'f1': 0.3},
-            "errorMsg": null
-        }
-    ]
-   */
-    constructor(aContainerId, aInitData){
+class EvalChart {
+    /**
+    * @param {string} aContainerId    id of the component that holds the chart svg
+    * @param {object} aInitData initial data should be of format array of websocket-messages
+    * e.g.
+     [
+         {
+             "timestamp": 1631015412000
+             "eventMsg": { 'name': "rec1",
+                 'accuracy': 0.0,
+                 'precision': 0.1,
+                 'recall': 0.2,
+                 'f1': 0.15}
+         },
+         {
+             "timestamp": 1631015412000,
+             "eventMsg": { 'name': "rec2",
+                 'accuracy': 0.3,
+                 'precision': 0.4,
+                 'recall': 0.2,
+                 'f1': 0.3}
+         }
+     ]
+    */
+    constructor(aContainerId, aInitData) {
         // chart data will be of format
-        // chartData = {
-        //      'rec1' : [{ 'date' : 1631015412000,
-        //          'acc' : 0.1,
-        //          'precision' : 0.3,
-        //          ...
-        //          },
-        //          'acc' : 0.2,
-        //          'precision' : 0.4,
-        //          ...
-        //          },
-        //          ],
-        //      'rec2' : [{
-        //          'acc' : 0.0,
-        //          ...
-        //          }, ...]
-        //      }
+        // chartData = [
+        //    //rec 0
+        //  [{ 
+        //     'acc' : 0.1,
+        //     'precision' : 0.3,
+        //     ...
+        //   },
+        //   {  
+        //     'acc' : 0.2,
+        //     'precision' : 0.4,
+        //     ...
+        //   },
+        //  ],
+        //    // rec1  
+        //  [{
+        //      'acc' : 0.0,
+        //      ...
+        //      }, 
+        //   ...
+        //   ]
+        // ]
         // recommenders with less evaluations will be padded with 0.0 at the beginning
-        this.chartData = this.msgToChartData(aInitData);
-        // TODO: change, let's select one of the recommenders for a first test
-        this.yAccessor = (d) => d.acc;
+        this.seriesNameToIndex = new Map();
+        this.chartData = [];
+        this.insertAll(aInitData);
+
+        // TODO add dropdown to select metric
+        this.yAccessor = (d) => d.accuracy;
         this.xAccessor = (_, i) => i + 1;
 
         // sizes
@@ -82,19 +80,25 @@ class EvalChart{
         this.boundedWidth = width - margin.left - margin.right;
         this.boundedHeight = height - margin.top - margin.bottom;
 
+        // colors
+        this.lineColors = d3.scaleOrdinal().domain(this.chartData.keys())
+            .range(['#8dd3c7', '#ffffb3', '#bebada', '#fb8072',
+                '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd']);
+
         // scales 
         this.xScale = null;
         this.yScale = d3.scaleLinear()
             // extent determines min, max of data using accessor function
             // domain is data space
             .domain([0, 1])
-            // range is graphic space: min max of graphic, starting at the top left corner (d3 coordinate system)
+            // range is graphic space: min max of graphic, starting at the top left corner 
+            // (d3 coordinate system)
             .range([this.boundedHeight, 0]);
 
         // init chart
         // remove old chart if necessary
         let chartSvg = chartContainer.select('#evalChartSvg');
-        if (chartSvg){
+        if (chartSvg) {
             chartSvg.remove();
         }
         this.chartGroup = chartContainer
@@ -125,7 +129,7 @@ class EvalChart{
       * @param {object} aEvalDatum    evaluation data item that should be added to the chart
       * should be of format
       * {
-      *     'recommenderName' : 'rec1
+      *     'name' : 'rec1
       *     'accuracy': 0.0,
       *     'precision': 0.1,
       *     'recall': 0.2,
@@ -133,69 +137,80 @@ class EvalChart{
       * }
       */
     update(aEvalDatum) {
-        this.chartData[aEvalDatum.recommenderName].push({
+        let seriesName = aEvalDatum.name;
+        let isNewSeries = !this.seriesNameToIndex.has(seriesName);
+        this.insertDatum(aEvalDatum);
+        if (isNewSeries) {
+            this.fillMissingValuesForSeries(this.seriesNameToIndex.get(seriesName),
+                d3.max(this.chartData, a => a.length));
+        }
+        this.updateChart();
+    }
+
+    insertDatum(aEvalDatum) {
+        if (!aEvalDatum) {
+            return;
+        }
+        let seriesName = aEvalDatum.name;
+        if (!this.seriesNameToIndex.has(seriesName)) {
+            let seriesIdx = this.chartData.length;
+            this.seriesNameToIndex.set(seriesName, seriesIdx);
+            this.chartData[seriesIdx] = [];
+        }
+        this.chartData[this.seriesNameToIndex.get(seriesName)].push({
             'accuracy': aEvalDatum.accuracy,
             'precision': aEvalDatum.precision,
             'recall': aEvalDatum.recall,
             'f1': aEvalDatum.f1
         });
-
-        this.updateChart();
     }
 
-    msgToChartData(aMsgArr){
-        let metricsByRec = {};
-        let metricsNum = {};
-        // sort data by recommender name
-        aMsgArr.forEach(msg => {
-            let recName = msg.eventMsg.recommenderName;
-            if (metricsByRec[recName]){
-                metricsByRec[recname].push({ 
-                    'date' : msg.timestamp,
-                    'metrics' : {
-                        'accuracy' : msg.eventMsg.accuracy, 
-                        'precision' : msg.eventMsg.precision,
-                        'recall' : msg.eventMsg.recall,
-                        'f1' : msg.eventMsg.f1
-                    }
-                });
-                metricsNum[recName] += 1;
-            } else
-            {
-                chartDatum[recName] = [];
-                metricsNum[recName] = 0;
-            }
-        })
-        let numDataPts = Math.max(...metricsNum.values());
-        // sort all data points for each recommender by date
-        // and prepend with 0 values if needed
-        metricsByRec.forEach( (value) => {
-            value.sort((a, b) => a.date - b.date);
-            value.map(m => m.metrics);
-            let prependArr = new Array(numDataPts - value.length).fill({
-                'accuracy' : 0.0, 
-                'precision' : 0.0,
-                'recall' : 0.0,
-                'f1' : 0.0
-            })
-            value = prependArr.concat(value);
-        })
-        return metricsByRec;
-    };
+    insertAll(aMsgArr) {
+        // sort data by date and insert into data structures
+        let sortedMsgs = aMsgArr.sort((a, b) => a.date - b.date);
+        sortedMsgs.forEach(msg => this.insertDatum(JSON.parse(msg.eventMsg)));
+        // prepend with zero for missing evaluations
+        this.fillMissingValues();
+    }
+
+    fillMissingValues() {
+        if (!this.chartData || this.chartData.length < 2) {
+            return;
+        }
+        let numEvals = d3.max(this.chartData, a => a.length);
+        for (let i = 0; i < this.chartData.length; i++) {
+            this.fillMissingValuesForSeries(i, numEvals);
+        }
+    }
+
+    fillMissingValuesForSeries(i, numEvals) {
+        let currentMetrics = this.chartData[i];
+        let numDataPts = currentMetrics.length;
+        if (numEvals > numDataPts) {
+            let prependArr = new Array(numEvals - numDataPts).fill({
+                'accuracy': 0.0,
+                'precision': 0.0,
+                'recall': 0.0,
+                'f1': 0.0
+            });
+            this.chartData[i] = prependArr.concat(currentMetrics);
+        }
+    }
 
     updateChart() {
         // update x-scale (min, max may have changed)
-        //define scaling from data space to space inside graphic
-        const xMinMax = d3.extent(this.chartData, this.xAccessor);
+        // define scaling from data space to space inside graphic
+        const maxVals = d3.max(this.chartData, a => a.length);
         this.xScale = d3.scaleLinear()
-            .domain(xMinMax)
+            .domain([0, maxVals])
             .range([0, this.boundedWidth]);
 
         // update x-axis
         const xAxisGenerator = d3.axisBottom()
             .scale(this.xScale)
             // axis should have amount of x-values ticks with interval size 1
-            .ticks(xMinMax[1], 'f');
+            .ticks(maxVals, 'f')
+            .tickFormat("");
         this.xAxis = this.chartGroup
             .select('#x-axis')
             .call(xAxisGenerator);
@@ -209,7 +224,7 @@ class EvalChart{
 
         const lineSelection = this.chartGroup
             .selectAll('.eval-line')
-            .data([this.chartData]);
+            .data(this.chartData);
 
         // handle incoming and changing data
         lineSelection.join(
@@ -218,14 +233,14 @@ class EvalChart{
                 enter
                     .append('path')
                     .attr('class', 'eval-line')
-                    .attr("fill", "none")
-                    .attr("stroke-width", 2)
-                    .attr("stroke", "black")
+                    // select color depending on index in data 
+                    // (refers to the associated recommender)
+                    .attr("stroke", (d) => this.lineColors(d))
                     .attr('d', evalLine),
             update =>
                 update
                     .transition()
-                    .duration(750)
+                    .duration(500)
                     .attr('d', evalLine),
             exit => exit.remove()
         );
