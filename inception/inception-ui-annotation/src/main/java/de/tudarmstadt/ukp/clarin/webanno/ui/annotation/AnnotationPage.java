@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -325,7 +326,7 @@ public class AnnotationPage
                         getModelObject().getPreferences().getSidebarSizeRight()))));
         detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);
-        rightSidebar.add(visibleWhen(getModel().map(AnnotatorState::getAnnotationLayers)
+        rightSidebar.add(visibleWhen(getModel().map(AnnotatorState::getSelectableLayers)
                 .map(List::isEmpty).map(b -> !b)));
         return rightSidebar;
     }
@@ -399,7 +400,14 @@ public class AnnotationPage
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
 
-            if (isEditable()) {
+            boolean editable = isEditable();
+            applicationEventPublisherHolder.get()
+                    .publishEvent(new BeforeDocumentOpenedEvent(this, editorCas,
+                            getModelObject().getDocument(),
+                            getModelObject().getUser().getUsername(),
+                            userRepository.getCurrentUser().getUsername(), editable));
+
+            if (editable) {
                 // After creating an new CAS or upgrading the CAS, we need to save it. If the
                 // document is accessed for the first time and thus will transition from NEW to
                 // IN_PROGRESS, then we use this opportunity also to set the timestamp of the

@@ -39,7 +39,6 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.event.IEvent;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -52,7 +51,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
@@ -195,33 +192,6 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
         catch (Exception e) {
             handleException(this, aTarget, e);
-        }
-    }
-
-    private void initSingletons()
-    {
-        try {
-            CAS cas = jcasProvider.get();
-            boolean singletonAdded = false;
-            for (AnnotationLayer layer : listMetadataLayers()) {
-                if (!getLayerSupport(layer).readTraits(layer).isSingleton()) {
-                    continue;
-                }
-
-                DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
-                        .getAdapter(layer);
-                if (cas.select(adapter.getAnnotationType(cas)).isEmpty()) {
-                    adapter.add(state.getDocument(), state.getUser().getUsername(), cas);
-                    singletonAdded = true;
-                }
-            }
-
-            if (singletonAdded) {
-                annotationPage.writeEditorCas(cas);
-            }
-        }
-        catch (Exception e) {
-            handleException(this, RequestCycle.get().find(AjaxRequestTarget.class).orElse(null), e);
         }
     }
 
@@ -429,22 +399,6 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
 
         findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
-    }
-
-    @Override
-    public void onEvent(IEvent<?> aEvent)
-    {
-        if (aEvent.getPayload() instanceof DocumentOpenedEvent) {
-            onDocumentOpenedEvent((DocumentOpenedEvent) aEvent.getPayload());
-        }
-    }
-
-    // For some reason, @OnEvent doesn't trigger here - no idea why...
-    // @OnEvent
-    public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
-    {
-        initSingletons();
-        aEvent.getRequestTarget().add(annotationsContainer);
     }
 
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,

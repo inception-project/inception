@@ -38,6 +38,6 @@ public class DocumentMetadataLayerTraitsEditor
     @Override
     protected void initializeForm(Form<DocumentMetadataLayerTraits> aForm)
     {
-        aForm.add(new CheckBox("singleton"));
+        aForm.add(new CheckBox("singleton").setOutputMarkupId(true));
     }
 }

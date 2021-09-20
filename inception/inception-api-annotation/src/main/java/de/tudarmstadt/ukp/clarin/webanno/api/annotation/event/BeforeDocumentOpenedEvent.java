@@ -22,10 +22,15 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class DocumentOpenedEvent
+/**
+ * Fire BeforeDocumentOpenedEvent to give listeners a chance to look at or even modify the CAS
+ * before the editor gets it. Modification should not be performed if editable is false. If editable
+ * is true, then the modification is persisted.
+ */
+public class BeforeDocumentOpenedEvent
     extends ApplicationEvent
 {
-    private static final long serialVersionUID = -2739175937794842083L;
+    private static final long serialVersionUID = -4644605041626140906L;
 
     private final CAS cas;
     private final SourceDocument document;
@@ -33,15 +38,17 @@ public class DocumentOpenedEvent
     private final String annotator;
     // user who opened the document
     private final String opener;
+    private final boolean editable;
 
-    public DocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument,
-            String aAnnotator, String aOpener)
+    public BeforeDocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument,
+            String aAnnotator, String aOpener, boolean aEditable)
     {
         super(aSource);
         cas = aCas;
         document = aDocument;
         annotator = aAnnotator;
         opener = aOpener;
+        editable = aEditable;
     }
 
     public CAS getCas()
@@ -62,5 +69,10 @@ public class DocumentOpenedEvent
     public String getAnnotator()
     {
         return annotator;
+    }
+
+    public boolean isEditable()
+    {
+        return editable;
     }
 }
