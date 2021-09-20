@@ -20,23 +20,23 @@ package de.tudarmstadt.ukp.inception.kb;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
+import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.path;
+import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.zeroOrMore;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
+import java.net.URI;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +77,7 @@ import org.eclipse.rdf4j.repository.manager.RepositoryManager;
 import org.eclipse.rdf4j.repository.manager.RepositoryProvider;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sail.config.SailRepositoryConfig;
+import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.RDFParseException;
@@ -100,9 +101,6 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
@@ -123,7 +121,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.querybuilder.Path;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
@@ -140,8 +137,6 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 public class KnowledgeBaseServiceImpl
     implements KnowledgeBaseService, DisposableBean
 {
-    private static final String KNOWLEDGEBASE_PROFILES_YAML = "knowledgebase-profiles.yaml";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @PersistenceContext EntityManager entityManager;
@@ -441,6 +436,30 @@ public class KnowledgeBaseServiceImpl
     {
         assertRegistration(kb);
         Repository repo = repoManager.getRepository(kb.getRepositoryId());
+
+        if (repo instanceof SPARQLRepository) {
+            SPARQLRepositoryConfig sparqlRepoConfig = (SPARQLRepositoryConfig) getKnowledgeBaseConfig(
+                    kb);
+            URI uri = URI.create(sparqlRepoConfig.getQueryEndpointUrl());
+            String userInfo = uri.getUserInfo();
+            if (StringUtils.isNotBlank(userInfo)) {
+                userInfo = userInfo.trim();
+                String username;
+                String password;
+                if (userInfo.contains(":")) {
+                    username = substringBefore(userInfo, ":");
+                    password = substringAfter(userInfo, ":");
+                }
+                else {
+                    username = userInfo;
+                    password = "";
+                }
+
+                SPARQLRepository sparqlRepo = (SPARQLRepository) repo;
+                sparqlRepo.setUsernameAndPassword(username, password);
+            }
+        }
+
         return new RepositoryConnectionWrapper(repo, repo.getConnection())
         {
             {
@@ -1065,13 +1084,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
-        try (Reader r = new InputStreamReader(
-                getClass().getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML), UTF_8)) {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
-            {
-            });
-        }
+        return KnowledgeBaseProfile.readKnowledgeBaseProfiles();
     }
 
     /**
@@ -1181,11 +1194,11 @@ public class KnowledgeBaseServiceImpl
             List<GraphPattern> patterns = new ArrayList<>();
             if (aClassInstance) {
                 Iri pSubProperty = iri(aKB.getSubPropertyIri());
-                patterns.add(property.has(Path.of(zeroOrMore(pSubProperty)), pLabel));
+                patterns.add(property.has(path(zeroOrMore(pSubProperty)), pLabel));
             }
             if (aProperties) {
                 Iri pPropertyLabel = iri(aKB.getPropertyLabelIri());
-                patterns.add(property.has(Path.of(zeroOrMore(pPropertyLabel)), pLabel));
+                patterns.add(property.has(path(zeroOrMore(pPropertyLabel)), pLabel));
             }
 
             query.where(GraphPatterns.union(patterns.stream().toArray(GraphPattern[]::new)));

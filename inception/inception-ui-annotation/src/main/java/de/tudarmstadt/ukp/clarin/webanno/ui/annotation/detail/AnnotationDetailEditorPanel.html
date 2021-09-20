@@ -84,19 +84,29 @@
         <div wicket:id="layerContainer" class="card"/>
         <div class="flex-content panel card">
           <div class="card-header">
+            <div class="clearfix">
             Annotation
-            <div wicket:id="buttonContainer" class="actions">
-              <button wicket:id="delete" class="btn btn-danger" wicket:message="title:delete">
-                <i class="fas fa-trash"></i>
-                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="delete"/></span>
+              <div wicket:id="buttonContainer" class="actions">
+                <button wicket:id="delete" class="btn btn-danger" wicket:message="title:delete">
+                  <i class="fas fa-trash"></i>
+                  <span class="d-none d-xl-inline">&nbsp;<wicket:message key="delete"/></span>
+                </button>
+                <button wicket:id="reverse" class="btn btn-secondary" wicket:message="title:reverse">
+                  <i class="fas fa-arrows-alt-h"></i>
+                  <span class="d-none d-xl-inline">&nbsp;<wicket:message key="reverse"/></span>
+                </button>
+                <button wicket:id="clear" class="btn btn-secondary" wicket:message="title:clear">
+                  <i class="fas fa-times"></i>
+                  <span class="d-none d-xl-inline">&nbsp;<wicket:message key="clear"/></span>
+                </button>
+              </div>
+            </div>
+            <div wicket:id="navContainer" class="btn-group w-100 mt-2" role="group">
+              <button wicket:id="previousAnnotation" type="button" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left"></i>
               </button>
-              <button wicket:id="reverse" class="btn btn-secondary" wicket:message="title:reverse">
-                <i class="fas fa-arrows-alt-h"></i>
-                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="reverse"/></span>
-              </button>
-              <button wicket:id="clear" class="btn btn-secondary" wicket:message="title:clear">
-                <i class="fas fa-times"></i>
-                <span class="d-none d-xl-inline">&nbsp;<wicket:message key="clear"/></span>
+              <button wicket:id="nextAnnotation" type="button" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-right"></i>
               </button>
             </div>
           </div>

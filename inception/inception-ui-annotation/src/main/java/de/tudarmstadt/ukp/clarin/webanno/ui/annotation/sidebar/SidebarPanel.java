@@ -68,7 +68,7 @@ public class SidebarPanel
         annotationPage = aAnnotationPage;
         stateModel = aModel;
 
-        tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent", makeTabs());
+        tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent", makeTabs(), stateModel);
         add(tabsPanel);
 
         add(new AttributeAppender("class",
@@ -109,7 +109,8 @@ public class SidebarPanel
             }
 
             String factoryId = factory.getBeanName();
-            SidebarTab tab = new SidebarTab(Model.of(factory.getDisplayName()), factory.getIcon())
+            SidebarTab tab = new SidebarTab(Model.of(factory.getDisplayName()), factory.getIcon(),
+                    factory.getBeanName())
             {
                 private static final long serialVersionUID = 2144644282070158783L;
 

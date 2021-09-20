@@ -18,12 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -76,6 +78,7 @@ public abstract class AnnotationPageBase
     private static final long serialVersionUID = -1133219266479577443L;
 
     public static final String PAGE_PARAM_DOCUMENT = "d";
+    public static final String PAGE_PARAM_USER = "u";
     public static final String PAGE_PARAM_FOCUS = "f";
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -91,6 +94,7 @@ public abstract class AnnotationPageBase
         super(aParameters);
 
         StringValue documentParameter = getPageParameters().get(PAGE_PARAM_DOCUMENT);
+        StringValue userParameter = getPageParameters().get(PAGE_PARAM_USER);
 
         // If the page was accessed using an URL form ending in a document ID, let's move
         // the document ID into the fragment and redirect to the form without the document ID.
@@ -101,8 +105,12 @@ public abstract class AnnotationPageBase
             RequestCycle requestCycle = getRequestCycle();
             Url clientUrl = requestCycle.getRequest().getClientUrl();
             clientUrl.resolveRelative(Url.parse("./"));
-            clientUrl.setFragment(
-                    String.format("!%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
+            List<String> fragmentParams = new ArrayList<>();
+            fragmentParams.add(format("%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
+            if (!userParameter.isEmpty()) {
+                fragmentParams.add(format("%s=%s", PAGE_PARAM_USER, userParameter.toString()));
+            }
+            clientUrl.setFragment("!" + fragmentParams.stream().collect(joining("&")));
             String url = requestCycle.getUrlRenderer().renderRelativeUrl(clientUrl);
             throw new RedirectToUrlException(url.toString());
         }
@@ -167,6 +175,7 @@ public abstract class AnnotationPageBase
             {
                 StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT);
                 StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
+                StringValue user = aRequestParameters.getParameterValue(PAGE_PARAM_USER);
 
                 // nothing changed, do not check for project, because inception always opens
                 // on a project
@@ -175,18 +184,19 @@ public abstract class AnnotationPageBase
                 }
 
                 SourceDocument previousDoc = getModelObject().getDocument();
-                handleParameters(document, focus, false);
+                User aPreviousUser = getModelObject().getUser();
+                handleParameters(document, focus, user, false);
 
-                updateDocumentView(aTarget, previousDoc, focus);
+                updateDocumentView(aTarget, previousDoc, aPreviousUser, focus);
             }
         };
     }
 
     protected abstract void handleParameters(StringValue aDocumentParameter,
-            StringValue aFocusParameter, boolean aLockIfPreset);
+            StringValue aFocusParameter, StringValue aUser, boolean aLockIfPreset);
 
     protected abstract void updateDocumentView(AjaxRequestTarget aTarget,
-            SourceDocument aPreviousDocument, StringValue aFocusParameter);
+            SourceDocument aPreviousDocument, User aPreviousUser, StringValue aFocusParameter);
 
     protected void updateUrlFragment(AjaxRequestTarget aTarget)
     {
@@ -239,8 +249,7 @@ public abstract class AnnotationPageBase
         if (switched || !(state.getWindowBeginOffset() <= aBegin
                 && aEnd <= state.getWindowEndOffset())) {
             CAS cas = getEditorCas();
-            state.setFirstVisibleUnit(selectSentenceCovering(cas, aBegin));
-            state.setFocusUnitIndex(getSentenceNumber(cas, aBegin));
+            state.getPagingStrategy().moveToOffset(state, cas, aBegin, CENTERED);
         }
 
         actionRefreshDocument(aTarget);
@@ -473,9 +482,13 @@ public abstract class AnnotationPageBase
                 return;
             }
 
+            urlFragmentLastDocumentId = currentDocumentId;
+            urlFragmentLastFocusUnitIndex = currentFocusUnitIndex;
+
             UrlFragment fragment = new UrlFragment(aTarget);
 
             fragment.putParameter(PAGE_PARAM_DOCUMENT, currentDocumentId);
+
             if (state.getFocusUnitIndex() > 0) {
                 fragment.putParameter(PAGE_PARAM_FOCUS, currentFocusUnitIndex);
             }
@@ -483,8 +496,12 @@ public abstract class AnnotationPageBase
                 fragment.removeParameter(PAGE_PARAM_FOCUS);
             }
 
-            urlFragmentLastDocumentId = currentDocumentId;
-            urlFragmentLastFocusUnitIndex = currentFocusUnitIndex;
+            if (userRepository.getCurrentUsername().equals(state.getUser().getUsername())) {
+                fragment.removeParameter(PAGE_PARAM_USER);
+            }
+            else {
+                fragment.putParameter(PAGE_PARAM_USER, state.getUser().getUsername());
+            }
 
             // If we do not manually set editedFragment to false, then changing the URL
             // manually or using the back/forward buttons in the browser only works every

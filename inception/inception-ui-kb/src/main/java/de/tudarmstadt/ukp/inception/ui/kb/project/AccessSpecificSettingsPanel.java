@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,19 +55,17 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
-import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.rjeschke.txtmark.Processor;
+
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -186,13 +186,9 @@ public class AccessSpecificSettingsPanel
         wmc.add(defaultDatasetField);
     }
 
-    private TextField<String> defaultDataset(String aId, IModel<IRI> model)
+    private TextField<String> defaultDataset(String aId, IModel<String> model)
     {
-        IModel<String> adapter = new LambdaModelAdapter<String>(() -> {
-            return model.getObject() != null ? model.getObject().stringValue() : null;
-        }, str -> model
-                .setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : null));
-        TextField<String> defaultDataset = new TextField<>(aId, adapter);
+        TextField<String> defaultDataset = new TextField<>(aId, model);
         defaultDataset.add(Validators.IRI_VALIDATOR);
         return defaultDataset;
     }
@@ -214,6 +210,8 @@ public class AccessSpecificSettingsPanel
                     // sets root concepts list - if null then an empty list otherwise change the
                     // values to IRI and populate the list
                     kbModel.getObject().getKb().applyRootConcepts(item.getModelObject());
+                    kbModel.getObject().getKb()
+                            .applyAdditionalMatchingProperties(item.getModelObject());
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
                     kbInfoModel.setObject(item.getModelObject().getInfo());
                     kbModel.getObject().getKb().setFullTextSearchIri(
@@ -235,15 +233,18 @@ public class AccessSpecificSettingsPanel
     private WebMarkupContainer createKbInfoContainer(String aId)
     {
         WebMarkupContainer wmc = new WebMarkupContainer(aId);
-        wmc.add(new Label("description", kbInfoModel.bind("description"))
-                .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+        wmc.add(new Label("description",
+                kbInfoModel.bind("description")
+                        .map(description -> Processor.process((String) description, true)))
+                                .setEscapeModelStrings(false)
+                                .add(visibleWhen(() -> kbInfoModel.getObject() != null)));
         wmc.add(new Label("hostInstitutionName", kbInfoModel.bind("hostInstitutionName"))
-                .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+                .add(visibleWhen(() -> kbInfoModel.getObject() != null)));
         wmc.add(new Label("authorName", kbInfoModel.bind("authorName"))
-                .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+                .add(visibleWhen(() -> kbInfoModel.getObject() != null)));
         wmc.add(new ExternalLink("websiteURL", kbInfoModel.bind("websiteURL"),
                 kbInfoModel.bind("websiteURL"))
-                        .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+                        .add(visibleWhen(() -> kbInfoModel.getObject() != null)));
         return wmc;
     }
 

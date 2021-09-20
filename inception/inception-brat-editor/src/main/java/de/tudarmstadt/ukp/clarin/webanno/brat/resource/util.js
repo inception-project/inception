@@ -624,6 +624,7 @@ var Util = (function (window, undefined) {
   var embed = function (container, collData, docData, webFontURLs) {
     var dispatcher = new Dispatcher();
     var visualizer = new Visualizer(dispatcher, container, webFontURLs);
+    new VisualizerUI(dispatcher, visualizer.svg);
     docData.collection = null;
     dispatcher.post('collectionLoaded', [collData]);
     dispatcher.post('requestRenderData', [docData]);
