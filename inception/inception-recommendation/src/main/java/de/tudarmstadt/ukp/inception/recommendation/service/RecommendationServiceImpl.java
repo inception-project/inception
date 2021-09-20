@@ -712,8 +712,20 @@ public class RecommendationServiceImpl
     {
         SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
         // Could be an anonymous session without information.
-        if (info != null) {
-            String username = (String) info.getPrincipal();
+        if (info == null) {
+            return;
+        }
+
+        String username = null;
+        if (info.getPrincipal() instanceof String) {
+            username = (String) info.getPrincipal();
+        }
+
+        if (info.getPrincipal() instanceof User) {
+            username = ((User) info.getPrincipal()).getUsername();
+        }
+
+        if (username != null) {
             clearState(username);
             schedulingService.stopAllTasksForUser(username);
         }

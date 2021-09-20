@@ -35,6 +35,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -277,7 +278,8 @@ public class KnowledgeBaseServiceImplIntegrationTest
                 .hasFieldOrPropertyWithValue("labelIri", RDFS.LITERAL.stringValue())
                 .hasFieldOrPropertyWithValue("propertyTypeIri", OWL.OBJECTPROPERTY.stringValue())
                 .hasFieldOrPropertyWithValue("basePrefix", "MyBasePrefix")
-                .hasFieldOrPropertyWithValue("rootConcepts", asList(rootConcept1, rootConcept2));
+                .hasFieldOrPropertyWithValue("rootConcepts",
+                        new LinkedHashSet<>(asList(rootConcept1, rootConcept2)));
     }
 
     @ParameterizedTest(name = "Reification = {0}")

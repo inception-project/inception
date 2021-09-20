@@ -91,7 +91,7 @@
     <wicket.version>9.4.0</wicket.version>
     <wicketstuff.version>9.4.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.3.2</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>6.0.0-M3</wicket-bootstrap.version>
+    <wicket-bootstrap.version>6.0.0-M4</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.3</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
@@ -651,6 +651,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-project-export</artifactId>
+        <version>21.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-curation-legacy</artifactId>
         <version>21.0-SNAPSHOT</version>
       </dependency>
@@ -856,6 +861,10 @@
           <exclusion>
             <groupId>com.google.javascript</groupId>
             <artifactId>closure-compiler-unshaded</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1727,6 +1736,7 @@
     <module>inception-model</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
+    <module>inception-project-export</module>
     <module>inception-remote</module>
     <module>inception-security</module>
     <module>inception-telemetry</module>

@@ -110,7 +110,7 @@ public class KnowledgeBaseExporter
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            
+
             ExportedKnowledgeBase exportedKB = new ExportedKnowledgeBase();
             exportedKB.setId(kb.getRepositoryId());
             exportedKB.setName(kb.getName());
@@ -129,7 +129,9 @@ public class KnowledgeBaseExporter
             exportedKB.setReification(kb.getReification().toString());
             exportedKB.setSupportConceptLinking(kb.isSupportConceptLinking());
             exportedKB.setBasePrefix(kb.getBasePrefix());
-            exportedKB.setRootConcepts(kb.getRootConcepts());
+            exportedKB.setRootConcepts(new ArrayList<>(kb.getRootConcepts()));
+            exportedKB.setAdditionalMatchingProperties(
+                    new ArrayList<>(kb.getAdditionalMatchingProperties()));
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
             exportedKB.setDefaultDatasetIri(
                     kb.getDefaultDatasetIri() != null ? kb.getDefaultDatasetIri() : null);
@@ -231,6 +233,14 @@ public class KnowledgeBaseExporter
             else {
                 kb.setRootConcepts(new ArrayList<>());
             }
+
+            if (exportedKB.getAdditionalMatchingProperties() != null) {
+                kb.setAdditionalMatchingProperties(exportedKB.getAdditionalMatchingProperties());
+            }
+            else {
+                kb.setAdditionalMatchingProperties(new ArrayList<>());
+            }
+
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
             kb.setDefaultDatasetIri(
                     exportedKB.getDefaultDatasetIri() != null ? exportedKB.getDefaultDatasetIri() //

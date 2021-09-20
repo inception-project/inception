@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -111,6 +112,7 @@ public class KnowledgeBaseCreationWizard
         try {
             profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles().entrySet().stream()
                     .filter(e -> !e.getValue().isDisabled())
+                    .sorted(Comparator.comparing(e -> e.getValue().getName()))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
         catch (IOException e) {

@@ -32,6 +32,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
+import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Left;
+import static wicket.contrib.input.events.key.KeyType.Right;
+import static wicket.contrib.input.events.key.KeyType.Shift;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -114,7 +118,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * Annotation Detail Editor Panel.
@@ -138,6 +144,7 @@ public abstract class AnnotationDetailEditorPanel
     private final AnnotationInfoPanel selectedAnnotationInfoPanel;
     private final FeatureEditorListPanel featureEditorListPanel;
     private final WebMarkupContainer buttonContainer;
+    private final WebMarkupContainer navContainer;
     private final AttachedAnnotationListPanel relationListPanel;
 
     // Components
@@ -181,6 +188,65 @@ public abstract class AnnotationDetailEditorPanel
         buttonContainer.add(createReverseButton());
         buttonContainer.add(createClearButton());
         add(buttonContainer);
+
+        navContainer = new WebMarkupContainer("navContainer");
+        navContainer
+                .add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        navContainer.setOutputMarkupPlaceholderTag(true);
+        navContainer.add(createNextAnnotationButton());
+        navContainer.add(createPreviousAnnotationButton());
+        add(navContainer);
+    }
+
+    private LambdaAjaxLink createNextAnnotationButton()
+    {
+        LambdaAjaxLink link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
+        link.add(new InputBehavior(new KeyType[] { Shift, Right }, click));
+        return link;
+    }
+
+    private LambdaAjaxLink createPreviousAnnotationButton()
+    {
+        LambdaAjaxLink link = new LambdaAjaxLink("previousAnnotation",
+                this::actionPreviousAnnotation);
+        link.add(new InputBehavior(new KeyType[] { Shift, Left }, click));
+        return link;
+    }
+
+    private void actionNextAnnotation(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        Selection sel = getModelObject().getSelection();
+        if (!sel.isSet()) {
+            return;
+        }
+
+        CAS cas = getEditorCas();
+        AnnotationFS cur = WebAnnoCasUtil.selectByAddr(cas, AnnotationFS.class,
+                sel.getAnnotation().getId());
+        AnnotationFS next = WebAnnoCasUtil.getNext(cur);
+
+        if (next != null) {
+            actionSelectAndJump(aTarget, next);
+        }
+    }
+
+    private void actionPreviousAnnotation(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        Selection sel = getModelObject().getSelection();
+        if (!sel.isSet()) {
+            return;
+        }
+
+        CAS cas = getEditorCas();
+        AnnotationFS cur = WebAnnoCasUtil.selectByAddr(cas, AnnotationFS.class,
+                sel.getAnnotation().getId());
+        AnnotationFS prev = WebAnnoCasUtil.getPrev(cur);
+
+        if (prev != null) {
+            actionSelectAndJump(aTarget, prev);
+        }
     }
 
     private Component createForwardAnnotationKeySequenceCapturingForm()
@@ -1743,8 +1809,8 @@ public abstract class AnnotationDetailEditorPanel
             aTarget.add(layerSelectionPanel);
         }
 
-        aTarget.add(buttonContainer, selectedAnnotationInfoPanel, featureEditorListPanel,
-                relationListPanel);
+        aTarget.add(buttonContainer, navContainer, selectedAnnotationInfoPanel,
+                featureEditorListPanel, relationListPanel);
     }
 
     @OnEvent(stop = true)

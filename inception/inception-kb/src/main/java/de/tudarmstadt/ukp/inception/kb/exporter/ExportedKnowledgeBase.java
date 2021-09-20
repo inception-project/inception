@@ -81,6 +81,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("root_concepts")
     private List<String> rootConcepts;
 
+    @JsonProperty("additional_matching_properties")
+    private List<String> additionalMatchingProperties;
+
     @JsonProperty("default_language")
     private String defaultLanguage;
 
@@ -280,6 +283,16 @@ public class ExportedKnowledgeBase
     public void setRootConcepts(List<String> aRootConcepts)
     {
         rootConcepts = aRootConcepts;
+    }
+
+    public void setAdditionalMatchingProperties(List<String> aAdditionalMatchingProperties)
+    {
+        additionalMatchingProperties = aAdditionalMatchingProperties;
+    }
+
+    public List<String> getAdditionalMatchingProperties()
+    {
+        return additionalMatchingProperties;
     }
 
     public String getDefaultLanguage()
