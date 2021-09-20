@@ -325,6 +325,8 @@ public class AnnotationPage
                         getModelObject().getPreferences().getSidebarSizeRight()))));
         detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);
+        rightSidebar.add(visibleWhen(getModel().map(AnnotatorState::getAnnotationLayers)
+                .map(List::isEmpty).map(b -> !b)));
         return rightSidebar;
     }
 

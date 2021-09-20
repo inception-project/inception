@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.io.IOException;
@@ -38,6 +39,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.event.IEvent;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -50,6 +52,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
@@ -105,6 +109,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<String> username;
     private final IModel<AnnotationLayer> selectedLayer;
+    private final IModel<List<AnnotationListItem>> annotations;
     private final WebMarkupContainer annotationsContainer;
     private final AnnotationActionHandler actionHandler;
     private WebMarkupContainer selectedAnnotation;
@@ -126,34 +131,43 @@ public class DocumentMetadataAnnotationSelectionPanel
         username = aUsername;
         jcasProvider = aCasProvider;
         project = aProject;
-        selectedLayer = Model.of(listMetadataLayers().stream().findFirst().orElse(null));
-        IModel<List<AnnotationLayer>> availableLayersModel = LoadableDetachableModel
-                .of(this::listMetadataLayers);
+        selectedLayer = Model.of(selectableMetadataLayers().stream().findFirst().orElse(null));
+        IModel<List<AnnotationLayer>> availableLayers = LoadableDetachableModel
+                .of(this::selectableMetadataLayers);
         actionHandler = aActionHandler;
         state = aState;
-
-        add(new WebMarkupContainer("noLayersWarning").add(visibleWhen(
-                () -> availableLayersModel.map(List::isEmpty).orElse(true).getObject())));
+        annotations = LoadableDetachableModel.of(this::listAnnotations);
 
         WebMarkupContainer content = new WebMarkupContainer("content");
-        content.add(visibleWhen(
-                () -> !availableLayersModel.map(List::isEmpty).orElse(true).getObject()));
         add(content);
 
         annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
         annotationsContainer.setOutputMarkupId(true);
         annotationsContainer.add(createAnnotationList());
+        annotationsContainer
+                .add(visibleWhen(() -> !availableLayers.map(List::isEmpty).orElse(true).getObject()
+                        || !annotations.map(List::isEmpty).orElse(true).getObject()));
         content.add(annotationsContainer);
 
         DropDownChoice<AnnotationLayer> layer = new DropDownChoice<>(CID_LAYER);
         layer.setModel(selectedLayer);
-        layer.setChoices(availableLayersModel);
+        layer.setChoices(availableLayers);
         layer.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layer.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        layer.add(visibleWhen(() -> !availableLayers.map(List::isEmpty).orElse(true).getObject()));
         content.add(layer);
 
         content.add(new LambdaAjaxLink(CID_CREATE, this::actionCreate)
-                .add(enabledWhen(() -> annotationPage.isEditable())));
+                .add(enabledWhen(() -> annotationPage.isEditable())) //
+                .add(visibleWhen(
+                        () -> !availableLayers.map(List::isEmpty).orElse(true).getObject())));
+
+        WebMarkupContainer noLayersWarning = new WebMarkupContainer("noLayersWarning");
+        noLayersWarning
+                .add(visibleWhen(() -> availableLayers.map(List::isEmpty).orElse(true).getObject()
+                        && annotations.map(List::isEmpty).orElse(true).getObject()));
+        add(noLayersWarning);
+
     }
 
     public Project getModelObject()
@@ -181,6 +195,33 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
         catch (Exception e) {
             handleException(this, aTarget, e);
+        }
+    }
+
+    private void initSingletons()
+    {
+        try {
+            CAS cas = jcasProvider.get();
+            boolean singletonAdded = false;
+            for (AnnotationLayer layer : listMetadataLayers()) {
+                if (!getLayerSupport(layer).readTraits(layer).isSingleton()) {
+                    continue;
+                }
+
+                DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
+                        .getAdapter(layer);
+                if (cas.select(adapter.getAnnotationType(cas)).isEmpty()) {
+                    adapter.add(state.getDocument(), state.getUser().getUsername(), cas);
+                    singletonAdded = true;
+                }
+            }
+
+            if (singletonAdded) {
+                annotationPage.writeEditorCas(cas);
+            }
+        }
+        catch (Exception e) {
+            handleException(this, RequestCycle.get().find(AjaxRequestTarget.class).orElse(null), e);
         }
     }
 
@@ -249,9 +290,7 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private ListView<AnnotationListItem> createAnnotationList()
     {
-        DocumentMetadataAnnotationSelectionPanel selectionPanel = this;
-        return new ListView<AnnotationListItem>(CID_ANNOTATIONS,
-                LoadableDetachableModel.of(this::listAnnotations))
+        return new ListView<AnnotationListItem>(CID_ANNOTATIONS, annotations)
         {
             private static final long serialVersionUID = -6833373063896777785L;
 
@@ -279,6 +318,8 @@ public class DocumentMetadataAnnotationSelectionPanel
 
                 container.add(new AjaxEventBehavior("click")
                 {
+                    private static final long serialVersionUID = 1L;
+
                     @Override
                     protected void onEvent(AjaxRequestTarget aTarget)
                     {
@@ -286,7 +327,8 @@ public class DocumentMetadataAnnotationSelectionPanel
                     }
                 });
 
-                detailPanel.add(visibleWhen(() -> selectedAnnotation == container));
+                detailPanel.add(visibleWhen(
+                        () -> selectedAnnotation == container || aItem.getModelObject().singleton));
 
                 if (createdAnnotationAddress == vid.getId()) {
                     createdAnnotationAddress = -1;
@@ -295,21 +337,25 @@ public class DocumentMetadataAnnotationSelectionPanel
                 }
 
                 WebMarkupContainer close = new WebMarkupContainer("close");
-                close.add(visibleWhen(() -> !detailPanel.isVisible()));
+                close.add(visibleWhen(
+                        () -> !detailPanel.isVisible() && !aItem.getModelObject().singleton));
                 close.setOutputMarkupId(true);
                 container.add(close);
 
                 WebMarkupContainer open = new WebMarkupContainer("open");
-                open.add(visibleWhen(detailPanel::isVisible));
+                open.add(visibleWhen(
+                        () -> detailPanel.isVisible() && !aItem.getModelObject().singleton));
                 open.setOutputMarkupId(true);
                 container.add(open);
 
                 container.add(new Label(CID_TYPE, aItem.getModelObject().layer.getUiName()));
-                container.add(new Label(CID_LABEL));
+                container.add(new Label(CID_LABEL)
+                        .add(visibleWhen(() -> !aItem.getModelObject().singleton)));
                 container.setOutputMarkupId(true);
 
                 aItem.add(new LambdaAjaxLink(CID_DELETE,
                         _target -> actionDelete(_target, detailPanel))
+                                .add(visibleWhen(() -> !aItem.getModelObject().singleton))
                                 .add(enabledWhen(annotationPage::isEditable))
                                 .add(AttributeAppender.append("class",
                                         () -> annotationPage.isEditable() ? "" : "disabled")));
@@ -325,6 +371,18 @@ public class DocumentMetadataAnnotationSelectionPanel
                 .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())
                         && layer.isEnabled())
                 .collect(Collectors.toList());
+    }
+
+    private List<AnnotationLayer> selectableMetadataLayers()
+    {
+        return listMetadataLayers().stream()
+                .filter(layer -> !getLayerSupport(layer).readTraits(layer).isSingleton())
+                .collect(toList());
+    }
+
+    private DocumentMetadataLayerSupport getLayerSupport(AnnotationLayer aLayer)
+    {
+        return (DocumentMetadataLayerSupport) layerSupportRegistry.getLayerSupport(aLayer);
     }
 
     private List<AnnotationListItem> listAnnotations()
@@ -344,12 +402,14 @@ public class DocumentMetadataAnnotationSelectionPanel
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
                     () -> annotationService.listAnnotationFeature(layer));
+            boolean singleton = getLayerSupport(layer).readTraits(layer).isSingleton();
 
             for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
                 Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
                         fs, features);
                 String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
-                items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText, layer));
+                items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText, layer,
+                        singleton));
             }
         }
 
@@ -369,6 +429,22 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
 
         findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
+    }
+
+    @Override
+    public void onEvent(IEvent<?> aEvent)
+    {
+        if (aEvent.getPayload() instanceof DocumentOpenedEvent) {
+            onDocumentOpenedEvent((DocumentOpenedEvent) aEvent.getPayload());
+        }
+    }
+
+    // For some reason, @OnEvent doesn't trigger here - no idea why...
+    // @OnEvent
+    public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
+    {
+        initSingletons();
+        aEvent.getRequestTarget().add(annotationsContainer);
     }
 
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
@@ -400,13 +476,16 @@ public class DocumentMetadataAnnotationSelectionPanel
         final int addr;
         final String label;
         final AnnotationLayer layer;
+        final boolean singleton;
 
-        public AnnotationListItem(int aAddr, String aLabel, AnnotationLayer aLayer)
+        public AnnotationListItem(int aAddr, String aLabel, AnnotationLayer aLayer,
+                boolean aSingleton)
         {
             super();
             addr = aAddr;
             label = aLabel;
             layer = aLayer;
+            singleton = aSingleton;
         }
     }
 }

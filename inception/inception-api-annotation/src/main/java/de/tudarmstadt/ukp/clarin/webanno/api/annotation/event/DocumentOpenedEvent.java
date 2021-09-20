@@ -21,9 +21,11 @@ import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
 public class DocumentOpenedEvent
     extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = -2739175937794842083L;
 
