@@ -319,7 +319,7 @@ public class AnnotationPage
     private WebMarkupContainer createRightSidebar()
     {
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
-        rightSidebar.setOutputMarkupId(true);
+        rightSidebar.setOutputMarkupPlaceholderTag(true);
         // Override sidebar width from preferences
         rightSidebar.add(new AttributeModifier("style",
                 LoadableDetachableModel.of(() -> String.format("flex-basis: %d%%;",
