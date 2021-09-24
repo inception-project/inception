@@ -76,13 +76,13 @@ class EvalChart {
         const margin = { 'right': 5, 'left': 30, 'top': 5, bottom: '20' };
         const width = chartContainer.node().clientWidth;
         const height = chartContainer.node().clientHeight;
-
+        
         this.boundedWidth = width - margin.left - margin.right;
         this.boundedHeight = height - margin.top - margin.bottom;
 
         // colors
         this.lineColors = d3.scaleOrdinal().domain(this.chartData.keys())
-            .range(['#8dd3c7', '#ffffb3', '#bebada', '#fb8072',
+            .range(['#8dd3c7', '#bebada', '#fb8072',
                 '#80b1d3', '#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd']);
 
         // scales 
@@ -196,6 +196,20 @@ class EvalChart {
             this.chartData[i] = prependArr.concat(currentMetrics);
         }
     }
+    
+	/**
+     * return recommender names and their associated colors
+     */
+    getRecommenders(){
+        let recs = [];
+        for (const name of this.seriesNameToIndex.keys()){
+            recs.push({
+                'name' : name,
+                'color' : this.lineColors(this.seriesNameToIndex.get(name)) 
+            });
+        }
+        return recs;
+    }
 
     updateChart() {
         // update x-scale (min, max may have changed)
@@ -235,7 +249,7 @@ class EvalChart {
                     .attr('class', 'eval-line')
                     // select color depending on index in data 
                     // (refers to the associated recommender)
-                    .attr("stroke", (d) => this.lineColors(d))
+                    .attr("stroke", (_,i) => this.lineColors(i))
                     .attr('d', evalLine),
             update =>
                 update

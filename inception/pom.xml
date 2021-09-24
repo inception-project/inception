@@ -120,8 +120,7 @@
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.12.5</jackson.version>
     <okhttp.version>4.9.1</okhttp.version>
-    <d3-selection.version>3.0.0</d3-selection.version>
-    <d3-transition.version>3.0.1</d3-transition.version>
+    <d3.version>7.0.3</d3.version>
   </properties>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->

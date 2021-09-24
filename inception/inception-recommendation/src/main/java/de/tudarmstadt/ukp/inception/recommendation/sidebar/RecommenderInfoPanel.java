@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Gro
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.chart.vue.EvalChartPanel;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 
 public class RecommenderInfoPanel
@@ -106,7 +107,7 @@ public class RecommenderInfoPanel
             return repeat("<i class=\"fas fa-circle\"></i>&nbsp;", p.getDone())
                     + repeat("<i class=\"far fa-circle\"></i>&nbsp;", p.getTodo());
         })).setEscapeModelStrings(false));
-
+        
         WebMarkupContainer recommenderContainer = new WebMarkupContainer("recommenderContainer");
         add(recommenderContainer);
 
@@ -201,6 +202,9 @@ public class RecommenderInfoPanel
 
         recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
         recommenderContainer.add(searchResultGroups);
+        
+        add(new EvalChartPanel("evalChart"))
+            .add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
     }
 
     private String exportModelName(Recommender aRecommender)

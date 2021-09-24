@@ -20,7 +20,11 @@
     <div class="card-header">
       Evaluation Scores
     </div>
-    <div id="chartContainer" class="card-body" style="height:200px">
+    <div id="chartContainer" class="card-body" style="height:200px"></div>
+    <div class="card-body small p-0">
+		<ul>
+            <li v-for="rec in recommenders" :style="{color: rec.color}">{{rec.name}}</li>
+        </ul>
     </div>
   </div>
 </template>
@@ -37,7 +41,8 @@ module.exports = {
       socket: null,
       stompClient: null,
       connected: false,
-      evalChart: null
+      evalChart: null,
+      recommenders: []
     }
   },
   methods: {
@@ -57,15 +62,16 @@ module.exports = {
           if (that.projectId == -1){
             return;
           }
-          // call for intial data
+          // call for initial data
           that.stompClient.subscribe('/app' + that.topicChannel + '/' + that.projectId, function (msg) {
             let msgBody = JSON.parse(msg.body);
             that.evalChart = new EvalChart("chartContainer", msgBody);
+            that.recommenders = that.evalChart.getRecommenders();
             //subscribe for further updates
             that.stompClient.subscribe('/user/queue' + that.topicChannel + '/' + that.projectId, function (msg) {
-                console.log('subscription to user queue from sidebar, got answer: ');
             	let msgBody = JSON.parse(msg.body);
             	that.evalChart.update(JSON.parse(msgBody.eventMsg));
+				that.recommenders = that.evalChart.getRecommenders();
           	});
           });
         },

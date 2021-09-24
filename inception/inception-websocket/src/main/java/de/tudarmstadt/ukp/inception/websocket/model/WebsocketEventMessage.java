@@ -21,8 +21,6 @@ import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-
 public class WebsocketEventMessage
 {
     private long timestamp;
@@ -37,13 +35,6 @@ public class WebsocketEventMessage
     public WebsocketEventMessage(Date aCreationDate, String aEventType)
     {
         this(aCreationDate.getTime(), aEventType);
-    }
-
-    public WebsocketEventMessage(LoggedEvent aEvent)
-    {
-        timestamp = aEvent.getCreated().getTime();
-        eventMsg = aEvent.getEvent();
-        eventType = aEvent.getClass().getSimpleName();
     }
 
     public WebsocketEventMessage(long aTimestamp, String aEventType)
@@ -102,7 +93,7 @@ public class WebsocketEventMessage
             builder.append(getEventMsg());
             builder.append("] ");
         }
-        builder.append(")]");
+        builder.append("]");
         return builder.toString();
     }
 }

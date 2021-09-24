@@ -230,19 +230,14 @@
       <groupId>org.webjars</groupId>
       <artifactId>c3</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.webjars</groupId>
-      <artifactId>d3js</artifactId>
+        <dependency>
+    	<groupId>org.webjars.npm</groupId>
+    	<artifactId>d3</artifactId>
+    	<version>${d3.version}</version>
     </dependency>
     <dependency>
-    	<groupId>org.webjars.npm</groupId>
-    	<artifactId>d3-selection</artifactId>
-    	<version>${d3-selection.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>org.webjars.npm</groupId>
-    	<artifactId>d3-transition</artifactId>
-    	<version>${d3-transition.version}</version>
+    	<groupId>org.webjars</groupId>
+    	<artifactId>d3js</artifactId>
     </dependency>
 
     <!-- DEPENDENCIES FOR TESTING -->
@@ -276,7 +271,6 @@
       <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 
   <build>
@@ -293,7 +287,8 @@
               -->
               <usedDependency>org.webjars:d3js</usedDependency>
               <usedDependency>org.webjars:c3</usedDependency>
-              <usedDependency>org.webjars:d3-selection</usedDependency>
+              <usedDependency>org.webjars.npm:d3</usedDependency>
+              <usedDependency>org.webjars.npm:github-com-susielu-d3-legend</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

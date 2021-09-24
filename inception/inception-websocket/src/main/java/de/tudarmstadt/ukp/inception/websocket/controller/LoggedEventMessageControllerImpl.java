@@ -22,6 +22,8 @@ import static java.util.stream.Collectors.toList;
 import java.security.Principal;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,6 +45,9 @@ import de.tudarmstadt.ukp.inception.websocket.model.WebsocketEventMessage;
 public class LoggedEventMessageControllerImpl
     implements LoggedEventMessageController
 {
+    private final Logger log = LoggerFactory
+            .getLogger(LoggedEventMessageControllerImpl.class);
+    
     private static final int MAX_EVENTS = 5;
 
     public static final String LOGGED_EVENTS = "/loggedEvents";
@@ -67,7 +72,10 @@ public class LoggedEventMessageControllerImpl
     {
         adapterRegistry.getAdapter(aEvent)
                 .map(a -> new WebsocketEventMessage(a.getCreated(aEvent), a.getEvent(aEvent)))
-                .ifPresent(eventMsg -> msgTemplate.convertAndSend(LOGGED_EVENTS_TOPIC, eventMsg));
+                .ifPresent(eventMsg -> {
+                    log.debug("Sending websocket message: {}", eventMsg);
+                    msgTemplate.convertAndSend(LOGGED_EVENTS_TOPIC, eventMsg);
+                });
     }
 
     @SubscribeMapping(LOGGED_EVENTS)
@@ -76,6 +84,7 @@ public class LoggedEventMessageControllerImpl
     {
         List<WebsocketEventMessage> recentEvents = getMostRecentLoggedEvents(aPrincipal.getName(),
                 MAX_EVENTS);
+        log.debug("Send websocket messages: {}", recentEvents.stream().map(event -> event.toString()));
         return recentEvents;
     }
 

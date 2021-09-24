@@ -44,18 +44,25 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfi
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.messaging.Message;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
 import org.springframework.messaging.simp.stomp.StompSessionHandlerAdapter;
+import org.springframework.messaging.support.AbstractSubscribableChannel;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.security.config.annotation.web.messaging.MessageSecurityMetadataSourceRegistry;
 import org.springframework.security.config.annotation.web.socket.AbstractSecurityWebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -122,6 +129,10 @@ public class WebSocketIntegrationTest
         // create websocket client
         websocketUrl = "ws://localhost:" + port + "/ws-endpoint";
         webSocketClient = new WebSocketStompClient(new StandardWebSocketClient());
+        // client will run a task after subscription to make sure that subscription has been handled
+        ThreadPoolTaskScheduler taskScheduler = new ThreadPoolTaskScheduler();
+        taskScheduler.afterPropertiesSet();
+        webSocketClient.setTaskScheduler(taskScheduler);
         webSocketClient.setMessageConverter(new MappingJackson2MessageConverter());
         createTestdata();
     }
@@ -156,6 +167,7 @@ public class WebSocketIntegrationTest
             public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
             {
                 super.afterConnected(aSession, aConnectedHeaders);
+                aSession.setAutoReceipt(true);
                 aSession.subscribe("/topic/loggedEvents", new StompFrameHandler()
                 {
                     @Override
@@ -170,9 +182,17 @@ public class WebSocketIntegrationTest
                         receivedMessages.add((WebsocketEventMessage) aPayload);
                         latch.countDown();
                     }
-                });
-                applicationEventPublisher.publishEvent(new DocumentStateChangedEvent(new Object(),
-                        testDoc, SourceDocumentState.NEW));
+                }).addReceiptTask(new Runnable() {
+
+                    @Override
+                    public void run()
+                    {
+                        // after subscription. publish event that should be relayed to subscribed client
+                        applicationEventPublisher.publishEvent(new DocumentStateChangedEvent(new Object(),
+                                testDoc, SourceDocumentState.NEW));
+                    }
+                    
+                });                
             }
 
             @Override
@@ -219,6 +239,25 @@ public class WebSocketIntegrationTest
         protected boolean sameOriginDisabled()
         {
             return true;
+        }
+
+        // SimpleBrokerMessageHandler doesn't support RECEIPT frame, hence we emulate it this way,
+        // from
+        // https://github.com/spring-projects/spring-integration/blob/main/spring-integration-stomp/src/test/java/org/springframework/integration/stomp/inbound/StompInboundChannelAdapterWebSocketIntegrationTests.java
+        @Bean
+        public ApplicationListener<SessionSubscribeEvent> webSocketEventListener(
+                final AbstractSubscribableChannel clientOutboundChannel)
+        {
+            return event -> {
+                Message<byte[]> message = event.getMessage();
+                StompHeaderAccessor stompHeaderAccessor = StompHeaderAccessor.wrap(message);
+                if (stompHeaderAccessor.getReceipt() != null) {
+                    stompHeaderAccessor.setHeader("stompCommand", StompCommand.RECEIPT);
+                    stompHeaderAccessor.setReceiptId(stompHeaderAccessor.getReceipt());
+                    clientOutboundChannel.send(MessageBuilder.createMessage(new byte[0],
+                            stompHeaderAccessor.getMessageHeaders()));
+                }
+            };
         }
     }
 

@@ -102,9 +102,7 @@ public class EvalChartPanel extends VueComponent
         aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
                 "webstomp-client/current/dist/webstomp.min.js")));
 
-        aResponse.render(forReference(new WebjarsJavaScriptResourceReference("d3js/current/d3.js")));
-        aResponse.render(forReference(new WebjarsJavaScriptResourceReference("d3-selection/current/dist/d3-selection.min.js")));
-        aResponse.render(forReference(new WebjarsJavaScriptResourceReference("d3-transition/current/dist/d3-transition.min.js")));
+        aResponse.render(forReference(new WebjarsJavaScriptResourceReference("d3/current/dist/d3.min.js")));
         
         aResponse.render(CssHeaderItem.forReference(EvalChartCssReference.get()));
         aResponse.render(

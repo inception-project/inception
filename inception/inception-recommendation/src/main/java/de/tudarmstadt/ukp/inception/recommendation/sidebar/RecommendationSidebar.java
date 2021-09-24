@@ -60,7 +60,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.chart.vue.EvalChartPanel;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 public class RecommendationSidebar
@@ -136,9 +135,6 @@ public class RecommendationSidebar
 
         // add(new LearningCurveChartPanel(LEARNING_CURVE, aModel)
         // .add(visibleWhen(() -> !recommenders.isEmpty())));
-        
-        add(new EvalChartPanel("evalChart"))
-        .add(visibleWhen(() -> !recommenders.isEmpty()));
 
         recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
         recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
