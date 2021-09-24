@@ -15,35 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
+package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
-import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
-import org.apache.wicket.model.IModel;
+import java.io.Serializable;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-
-public abstract class SidebarTab
-    extends AbstractTab
+public class DocumentMetadataLayerTraits
+    implements Serializable
 {
-    private static final long serialVersionUID = -3205381571000021331L;
+    private static final long serialVersionUID = -266971494687450612L;
 
-    private final IconType icon;
-    private final String factoryId;
+    private boolean singleton;
 
-    public SidebarTab(IModel<String> aTitle, IconType aIcon, String aFactoryId)
+    public void setSingleton(boolean aSingleton)
     {
-        super(aTitle);
-        icon = aIcon;
-        factoryId = aFactoryId;
+        singleton = aSingleton;
     }
 
-    public IconType getIcon()
+    public boolean isSingleton()
     {
-        return icon;
-    }
-
-    public String getFactoryId()
-    {
-        return factoryId;
+        return singleton;
     }
 }
