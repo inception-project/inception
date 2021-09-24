@@ -910,13 +910,12 @@ public abstract class AnnotationDetailEditorPanel
         // If we created a new annotation, then refresh the available annotation layers in the
         // detail panel.
         if (state.getSelection().getAnnotation().isNotSet()) {
-            if (layerSelectionPanel.getSelectableLayers().isEmpty()) {
+            if (state.getSelectableLayers().isEmpty()) {
                 state.setSelectedAnnotationLayer(new AnnotationLayer());
             }
             else if (state.getSelectedAnnotationLayer() == null) {
                 if (state.getRememberedSpanLayer() == null) {
-                    state.setSelectedAnnotationLayer(
-                            layerSelectionPanel.getSelectableLayers().get(0));
+                    state.setSelectedAnnotationLayer(state.getSelectableLayers().get(0));
                 }
                 else {
                     state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
@@ -1301,7 +1300,7 @@ public abstract class AnnotationDetailEditorPanel
             // If we reset the layers while doing a relation, we won't be able to complete the
             // relation - so in this case, we leave the layers alone...
             if (!selection.isArc()) {
-                layerSelectionPanel.refreshSelectableLayers();
+                state.refreshSelectableLayers(annotationEditorProperties);
             }
 
             if (selection.getAnnotation().isSet()) {
@@ -1629,7 +1628,7 @@ public abstract class AnnotationDetailEditorPanel
         state.getSelection().clear();
 
         // Refresh the selectable layers dropdown
-        layerSelectionPanel.refreshSelectableLayers();
+        state.refreshSelectableLayers(annotationEditorProperties);
         if (aTarget != null) {
             aTarget.add(layerSelectionPanel);
         }

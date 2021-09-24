@@ -27,6 +27,8 @@ import java.util.function.Supplier;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -49,7 +51,7 @@ import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayer
  * </p>
  */
 public class DocumentMetadataLayerSupport
-    extends LayerSupport_ImplBase<DocumentMetadataLayerAdapter, Void>
+    extends LayerSupport_ImplBase<DocumentMetadataLayerAdapter, DocumentMetadataLayerTraits>
     implements InitializingBean
 {
     public static final String TYPE = "document-metadata";
@@ -129,5 +131,23 @@ public class DocumentMetadataLayerSupport
     {
         return new NopRenderer(createAdapter(aLayer, aFeatures), getLayerSupportRegistry(),
                 featureSupportRegistry);
+    }
+
+    @Override
+    public Panel createTraitsEditor(String aId, IModel<AnnotationLayer> aLayerModel)
+    {
+        AnnotationLayer layer = aLayerModel.getObject();
+
+        if (!accepts(layer)) {
+            throw unsupportedLayerTypeException(layer);
+        }
+
+        return new DocumentMetadataLayerTraitsEditor(aId, this, aLayerModel);
+    }
+
+    @Override
+    public DocumentMetadataLayerTraits createTraits()
+    {
+        return new DocumentMetadataLayerTraits();
     }
 }
