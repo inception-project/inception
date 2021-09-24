@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
@@ -37,6 +39,7 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
@@ -134,6 +137,11 @@ public class AnnotatorStateImpl
      * All project annotation layers.
      */
     private List<AnnotationLayer> allAnnotationLayers = new ArrayList<>();
+
+    /**
+     * Selectable annotation layers.
+     */
+    private List<AnnotationLayer> selectableLayers = new ArrayList<>();
 
     private AnnotationPreference preferences = new AnnotationPreference();
 
@@ -380,6 +388,45 @@ public class AnnotatorStateImpl
                     .filter(layer -> layer.getType().equals(WebAnnoConst.SPAN_TYPE)).findFirst()
                     .orElse(null);
             defaultAnnotationLayer = selectedAnnotationLayer;
+        }
+    }
+
+    public void setSelectableLayers(List<AnnotationLayer> aSelectableLayers)
+    {
+        selectableLayers = aSelectableLayers;
+    }
+
+    @Override
+    public List<AnnotationLayer> getSelectableLayers()
+    {
+        return selectableLayers;
+    }
+
+    @Override
+    public void refreshSelectableLayers(AnnotationEditorProperties aProperties)
+    {
+        selectableLayers.clear();
+
+        for (AnnotationLayer layer : getAnnotationLayers()) {
+            if (!layer.isEnabled() || layer.isReadonly() || aProperties.isLayerBlocked(layer)) {
+                continue;
+            }
+
+            if (layer.getType().equals(SPAN_TYPE) || layer.getType().equals(CHAIN_TYPE)) {
+                selectableLayers.add(layer);
+            }
+        }
+
+        // if there is only one layer, we use it to create new annotations
+        if (selectableLayers.size() == 1) {
+            setDefaultAnnotationLayer(selectableLayers.get(0));
+        }
+
+        if (getDefaultAnnotationLayer() != null) {
+            setSelectedAnnotationLayer(getDefaultAnnotationLayer());
+        }
+        else if (!selectableLayers.isEmpty()) {
+            setSelectedAnnotationLayer(selectableLayers.get(0));
         }
     }
 
