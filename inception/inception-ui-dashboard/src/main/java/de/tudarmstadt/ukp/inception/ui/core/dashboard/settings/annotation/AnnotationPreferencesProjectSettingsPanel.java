@@ -15,35 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
-import java.io.Serializable;
+import org.apache.wicket.model.IModel;
 
-public class AnnotationSidebarState
-    implements Serializable
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+
+public class AnnotationPreferencesProjectSettingsPanel
+    extends ProjectSettingsPanelBase
 {
-    private static final long serialVersionUID = -5212679894035839772L;
+    private static final long serialVersionUID = 4618192360418016955L;
 
-    private String selectedTab;
-    private boolean expanded;
+    private static final String CID_ANNOTATION_SIDEBAR = "annotationSidebar";
 
-    public void setSelectedTab(String aFactoryId)
+    public AnnotationPreferencesProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
-        selectedTab = aFactoryId;
-    }
+        super(aId, aProjectModel);
+        setOutputMarkupPlaceholderTag(true);
 
-    public String getSelectedTab()
-    {
-        return selectedTab;
-    }
-
-    public void setExpanded(boolean aExpanded)
-    {
-        expanded = aExpanded;
-    }
-
-    public boolean isExpanded()
-    {
-        return expanded;
+        add(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProjectModel));
     }
 }

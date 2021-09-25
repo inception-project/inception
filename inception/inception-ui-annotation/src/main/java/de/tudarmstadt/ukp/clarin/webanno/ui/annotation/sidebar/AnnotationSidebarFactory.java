@@ -23,6 +23,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 public interface AnnotationSidebarFactory
@@ -34,11 +35,21 @@ public interface AnnotationSidebarFactory
 
     String getDisplayName();
 
+    String getDescription();
+
     IconType getIcon();
 
     AnnotationSidebar_ImplBase create(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
             AnnotationPage aAnnotationPage);
+
+    /**
+     * Override for cases when sidebar should not be available by default
+     */
+    default boolean available(Project aProject)
+    {
+        return true;
+    }
 
     /**
      * Override for cases when sidebar should not be added by default

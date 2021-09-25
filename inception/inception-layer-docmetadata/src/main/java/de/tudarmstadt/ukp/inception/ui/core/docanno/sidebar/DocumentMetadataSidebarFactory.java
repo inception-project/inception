@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -55,16 +56,27 @@ public class DocumentMetadataSidebarFactory
     }
 
     @Override
+    public String getDescription()
+    {
+        return "Document-level annotations.";
+    }
+
+    @Override
     public IconType getIcon()
     {
         return FontAwesome5IconType.tags_s;
     }
 
     @Override
+    public boolean available(Project aProject)
+    {
+        return schemaService.existsEnabledLayerOfType(aProject, DocumentMetadataLayerSupport.TYPE);
+    }
+
+    @Override
     public boolean applies(AnnotatorState aState)
     {
-        return schemaService.existsEnabledLayerOfType(aState.getProject(),
-                DocumentMetadataLayerSupport.TYPE);
+        return available(aState.getProject());
     }
 
     @Override

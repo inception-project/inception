@@ -29,4 +29,8 @@ public interface PreferencesService
     <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject);
 
     <T> void saveTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject, T aTraits);
+
+    <T> T loadDefaultTraitsForProject(Key<T> aKey, Project aProject);
+
+    <T> void saveDefaultTraitsForProject(Key<T> aKey, Project aProject, T aTraits);
 }
