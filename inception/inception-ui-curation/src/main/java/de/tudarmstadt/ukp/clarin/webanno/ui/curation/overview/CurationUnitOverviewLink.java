@@ -60,7 +60,7 @@ public class CurationUnitOverviewLink
         final CurationUnit unitState = getModelObject();
         final AnnotatorState state = annotatorState.getObject();
 
-        aTag.append(ATTR_CLASS, unitState.getSentenceState().getCssClass(), " ");
+        aTag.append(ATTR_CLASS, unitState.getState().getCssClass(), " ");
 
         // Is in focus?
         if (unitState.getUnitIndex() == state.getFocusUnitIndex()) {

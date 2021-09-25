@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -63,8 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -80,7 +79,7 @@ public class DocumentMetadataAnnotationDetailPanel
             .getLogger(DocumentMetadataAnnotationDetailPanel.class);
 
     private static final String CID_EDITOR = "editor";
-    private static final String CID_FEATURE_VALUES = "featureValues";
+    private static final String CID_FEATURE_EDITORS = "featureEditors";
 
     public static final String ID_PREFIX = "metaFeatureEditorHead";
 
@@ -132,7 +131,7 @@ public class DocumentMetadataAnnotationDetailPanel
 
     private ListView<FeatureState> createFeaturesList()
     {
-        return new ListView<FeatureState>(CID_FEATURE_VALUES,
+        return new ListView<FeatureState>(CID_FEATURE_EDITORS,
                 LoadableDetachableModel.of(this::listFeatures))
         {
             private static final long serialVersionUID = -1139622234318691941L;
@@ -140,10 +139,6 @@ public class DocumentMetadataAnnotationDetailPanel
             @Override
             protected void populateItem(ListItem<FeatureState> item)
             {
-                // Feature editors that allow multiple values may want to update themselves,
-                // e.g. to add another slot.
-                item.setOutputMarkupId(true);
-
                 final FeatureState featureState = item.getModelObject();
                 final FeatureEditor editor;
 
@@ -159,10 +154,8 @@ public class DocumentMetadataAnnotationDetailPanel
                     // component for the feature lost focus - but updating is for every component
                     // edited LinkFeatureEditors must be excluded because the auto-update will break
                     // the ability to add slots. Adding a slot is NOT an annotation action.
-                    AnnotationFeature feature = featureState.feature;
-                    if (!(feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
-                            && feature.getLinkMode().equals(LinkMode.WITH_ROLE))) {
-                        addAnnotateActionBehavior(editor);
+                    if (!(editor instanceof LinkFeatureEditor)) {
+                        editor.addFeatureUpdateBehavior();
                     }
 
                     // Add tooltip on label
@@ -186,7 +179,6 @@ public class DocumentMetadataAnnotationDetailPanel
                 // We need to enable the markup ID here because we use it during the AJAX behavior
                 // that automatically saves feature editors on change/blur.
                 // Check addAnnotateActionBehavior.
-                editor.setOutputMarkupId(true);
                 editor.setOutputMarkupPlaceholderTag(true);
 
                 // Ensure that markup IDs of feature editor focus components remain constant
@@ -249,11 +241,6 @@ public class DocumentMetadataAnnotationDetailPanel
         }
 
         return featureStates;
-    }
-
-    private void addAnnotateActionBehavior(final FeatureEditor aFrag)
-    {
-        aFrag.addFeatureUpdateBehavior();
     }
 
     private void actionAnnotate(AjaxRequestTarget aTarget)

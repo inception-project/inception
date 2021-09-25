@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
 
@@ -51,11 +50,10 @@ public class InputFieldTextFeatureEditor
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
     }
 
+    @SuppressWarnings("rawtypes")
     @Override
     protected AbstractTextComponent createInputField()
     {
-        TextField<String> textfield = new TextField<>("value");
-        textfield.add(new AjaxPreventSubmitBehavior());
-        return textfield;
+        return new TextField<>("value");
     }
 }
