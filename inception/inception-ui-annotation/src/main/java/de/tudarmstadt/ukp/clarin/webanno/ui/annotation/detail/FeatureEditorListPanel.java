@@ -275,10 +275,6 @@ public class FeatureEditorListPanel
                     + item.getModelObject().feature.getUiName() + ": " + item.getModelObject().value
                     + ")");
 
-            // Feature editors that allow multiple values may want to update themselves,
-            // e.g. to add another slot.
-            item.setOutputMarkupId(true);
-
             final FeatureState featureState = item.getModelObject();
             final FeatureEditor editor;
 
@@ -291,8 +287,6 @@ public class FeatureEditorListPanel
 
             // We need to enable the markup ID here because we use it during the AJAX behavior
             // that automatically saves feature editors on change/blur.
-            // Check addAnnotateActionBehavior.
-            editor.setOutputMarkupId(true);
             editor.setOutputMarkupPlaceholderTag(true);
 
             // Ensure that markup IDs of feature editor focus components remain constant across
