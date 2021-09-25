@@ -23,32 +23,35 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 public enum AnnotationState
 {
     /**
-     * All annotators and the curated document have the same annotation.
+     * Curator selected this configuration.
      */
-    AGREE("#bbbbbb"),
+    ACCEPTED_BY_CURATOR("#77dd77"), // cf. "curated" class in CurationPage.html
     /**
-     * color for the arc annotation that is in agreement
+     * Curator did choose a configuration but not this one. The configuration the curator chose does
+     * not have to match any configuration that provided by the annotators - it can be a completely
+     * new one.
      */
-    AGREE_ARC("#000000"),
+    REJECTED_BY_CURATOR("#0dcaf0"), // Bootstrap 5 cyan
     /**
-     * Annotators have annotated differently. Curated document not yet has any annotations.
+     * All annotators agree but the curator did not make a choice yet.
      */
-    DISAGREE("#7fa2ff"),
+    // Bootstrap 5 orange - cannot use "agree" class in CurationPage.html because that is white and
+    // that would cause relations to become invisible.
+
+    ANNOTATORS_AGREE("#fd7e14"),
     /**
-     * Annotators have annotated differently. Annotation for current document and curation document
-     * are equal.
+     * Annotators disagree and curator did not make a decision yet.
      */
-    USE("#004413"),
+    ANNOTATORS_DISAGREE("#FF9999"), // cf. "disagree" class in CurationPage.html
     /**
-     * Annotators have annotated differently. Annotation for current document and curation document
-     * are not equal.
+     * Annotators have not all annotated (incomplete) and curator did not make a decision yet.
      */
-    DO_NOT_USE("#ff7fa2"),
+    ANNOTATORS_INCOMPLETE("#DDA0DD"), // cf. "incomplete" class in CurationPage.html
     /**
      * Error state. Annotation has been added to the visualization, but has not been identified by
      * the CasDiff.
      */
-    NOT_SUPPORTED("#111111");
+    ERROR("#111111"); // almost black
 
     private String colorCode;
 

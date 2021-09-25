@@ -348,20 +348,6 @@ public class FeatureEditorListPanel
             item.add(editor);
         }
 
-        private void addRefreshFeaturePanelBehavior(final FeatureEditor aFrag)
-        {
-            aFrag.getFocusComponent().add(new AjaxFormComponentUpdatingBehavior("change")
-            {
-                private static final long serialVersionUID = 5179816588460867471L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    owner.refresh(aTarget);
-                }
-            });
-        }
-
         @Override
         protected Iterator<IModel<FeatureState>> getItemModels()
         {
@@ -459,5 +445,4 @@ public class FeatureEditorListPanel
 
         aTarget.focusComponent(aComponent);
     }
-
 }

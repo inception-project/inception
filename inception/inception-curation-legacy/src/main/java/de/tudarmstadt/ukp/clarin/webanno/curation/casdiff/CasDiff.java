@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.collections4.CollectionUtils.subtract;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -965,14 +966,14 @@ public class CasDiff
 
         private final Map<Position, ConfigurationSet> data;
         private final Set<String> casGroupIds;
-        private final Map<ConfigurationSet, Boolean> completenessCache = new HashMap<>();
-        private final boolean cachedHasDifferences;
+        private final Map<ConfigurationSet, Set<String>> unseenCasGroupIDsCache = new HashMap<>();
+
+        private Boolean cachedHasDifferences;
 
         private DiffResult(CasDiff aDiff)
         {
             data = Collections.unmodifiableMap(aDiff.configSets);
             casGroupIds = new LinkedHashSet<>(aDiff.cases.keySet());
-            cachedHasDifferences = !getDifferingConfigurationSets().isEmpty();
         }
 
         public Set<String> getCasGroupIds()
@@ -982,6 +983,10 @@ public class CasDiff
 
         public boolean hasDifferences()
         {
+            if (cachedHasDifferences == null) {
+                cachedHasDifferences = !getDifferingConfigurationSets().isEmpty();
+            }
+
             return cachedHasDifferences;
         }
 
@@ -1030,15 +1035,44 @@ public class CasDiff
          */
         public boolean isAgreement(ConfigurationSet aConfigurationSet)
         {
+            return isAgreementWithExceptions(aConfigurationSet);
+        }
+
+        /**
+         * Determine if all CASes see agreed on the given configuration set. This method returns
+         * {@code false} if there was disagreement (there are multiple configurations in the set).
+         * When using this method, make sure you also take into account whether the set is actually
+         * complete (cf. {@link #isComplete(ConfigurationSet)}.
+         * 
+         * @param aConfigurationSet
+         *            a configuration set.
+         * @param aCasGroupIDsToIgnore
+         *            the exceptions - these CAS group IDs do not count towards completeness.
+         * @return if all seen CASes agreed on this set.
+         */
+        public boolean isAgreementWithExceptions(ConfigurationSet aConfigurationSet,
+                String... aCasGroupIDsToIgnore)
+        {
             if (data.get(aConfigurationSet.position) != aConfigurationSet) {
                 throw new IllegalArgumentException(
                         "Configuration set does not belong to this diff or positions mismatch");
             }
 
-            // If there is only a single configuration in the set, we call it an agreement
-            if (aConfigurationSet.configurations.size() == 1) {
-                return true;
+            // Shortcut: no exceptions
+            if (aCasGroupIDsToIgnore == null || aCasGroupIDsToIgnore.length == 0) {
+                // If there is only a single configuration in the set, we call it an agreement
+                return aConfigurationSet.configurations.size() == 1;
             }
+
+            Set<String> exceptions = new HashSet<>(asList(aCasGroupIDsToIgnore));
+            return aConfigurationSet.configurations.stream()
+                    // Ignore configuration sets containing only exceptions and nothing else
+                    .filter(cfg -> !subtract(cfg.getCasGroupIds(), exceptions).isEmpty())
+                    // We can stop once we found 2 because if there are more than two configurations
+                    // then it cannot be an agreement.
+                    .limit(2)
+                    // So if there is exactly one configuration remaining, it is an agreement
+                    .count() == 1;
 
             // Issue 21 GitHub - REC - not really sure if we should call this an agreement
             // // If there are multiple configurations in the set, we only call it an agreement if
@@ -1050,8 +1084,6 @@ public class CasDiff
             // return true;
             // }
             // }
-
-            return false;
         }
 
         /**
@@ -1063,29 +1095,62 @@ public class CasDiff
          */
         public boolean isComplete(ConfigurationSet aConfigurationSet)
         {
+            return isCompleteWithExceptions(aConfigurationSet);
+        }
+
+        /**
+         * Determine if the given set has been observed in all CASes but not considering the CASes
+         * from the given CAS groups.
+         * 
+         * @param aConfigurationSet
+         *            a configuration set.
+         * @param aCasGroupIDsToIgnore
+         *            the exceptions - these CAS group IDs do not count towards completeness.
+         * @return if seen in all CASes.
+         */
+        public boolean isCompleteWithExceptions(ConfigurationSet aConfigurationSet,
+                String... aCasGroupIDsToIgnore)
+        {
             if (data.get(aConfigurationSet.position) != aConfigurationSet) {
                 throw new IllegalArgumentException(
                         "Configuration set does not belong to this diff or positions mismatch");
             }
 
-            Boolean complete = completenessCache.get(aConfigurationSet);
-            if (complete == null) {
-                HashSet<String> unseenGroupCasIDs = new HashSet<>(casGroupIds);
+            Set<String> unseenGroupCasIDs = unseenCasGroupIDsCache.get(aConfigurationSet);
+            if (unseenGroupCasIDs == null) {
+                unseenGroupCasIDs = new HashSet<>(casGroupIds);
                 for (Configuration cfg : aConfigurationSet.configurations) {
                     unseenGroupCasIDs.removeAll(cfg.fsAddresses.keySet());
                 }
-                complete = unseenGroupCasIDs.isEmpty();
-                completenessCache.put(aConfigurationSet, complete);
+                unseenCasGroupIDsCache.put(aConfigurationSet, unseenGroupCasIDs);
             }
 
-            return complete;
+            // Short-cut: no exceptions to consider
+            if (aCasGroupIDsToIgnore == null || aCasGroupIDsToIgnore.length == 0) {
+                return unseenGroupCasIDs.isEmpty();
+            }
+
+            // Short-cut: the common use-case is to ignore a single exception, usually the curator
+            if (aCasGroupIDsToIgnore.length == 1) {
+                return unseenGroupCasIDs.size() == 1
+                        && unseenGroupCasIDs.contains(aCasGroupIDsToIgnore[0]);
+            }
+
+            // The set is complete if the unseen CAS group IDs match exactly the exceptions.
+            return unseenGroupCasIDs.containsAll(asList(aCasGroupIDsToIgnore));
         }
 
         public Map<Position, ConfigurationSet> getDifferingConfigurationSets()
         {
+            return getDifferingConfigurationSetsWithExceptions();
+        }
+
+        public Map<Position, ConfigurationSet> getDifferingConfigurationSetsWithExceptions(
+                String... aCasGroupIDsToIgnore)
+        {
             Map<Position, ConfigurationSet> diffs = new LinkedHashMap<>();
             for (Entry<Position, ConfigurationSet> e : data.entrySet()) {
-                if (!isAgreement(e.getValue())) {
+                if (!isAgreementWithExceptions(e.getValue(), aCasGroupIDsToIgnore)) {
                     diffs.put(e.getKey(), e.getValue());
                 }
             }
@@ -1095,9 +1160,19 @@ public class CasDiff
 
         public Map<Position, ConfigurationSet> getIncompleteConfigurationSets()
         {
+            return getIncompleteConfigurationSetsWithExceptions();
+        }
+
+        /**
+         * @param aCasGroupIDsToIgnore
+         *            the exceptions - these CAS group IDs do not count towards completeness.
+         */
+        public Map<Position, ConfigurationSet> getIncompleteConfigurationSetsWithExceptions(
+                String... aCasGroupIDsToIgnore)
+        {
             Map<Position, ConfigurationSet> diffs = new LinkedHashMap<>();
             for (Entry<Position, ConfigurationSet> e : data.entrySet()) {
-                if (!isComplete(e.getValue())) {
+                if (!isCompleteWithExceptions(e.getValue(), aCasGroupIDsToIgnore)) {
                     diffs.put(e.getKey(), e.getValue());
                 }
             }
