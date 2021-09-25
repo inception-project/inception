@@ -18,14 +18,16 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -34,6 +36,8 @@ public class TextAreaFeatureEditor
     extends TextFeatureEditorBase
 {
     private static final long serialVersionUID = 8686646370500180943L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public TextAreaFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
@@ -44,7 +48,6 @@ public class TextAreaFeatureEditor
     protected AbstractTextComponent createInputField()
     {
         TextArea<String> textarea = new TextArea<>("value");
-        textarea.add(new AjaxPreventSubmitBehavior());
         try {
             String traitsString = getModelObject().feature.getTraits();
             StringFeatureTraits traits = JSONUtil.fromJsonString(StringFeatureTraits.class,
@@ -56,7 +59,7 @@ public class TextAreaFeatureEditor
                     "this.rows=" + traits.getCollapsedRows() + ";"));
         }
         catch (IOException e) {
-            e.printStackTrace();
+            LOG.error("Unable to create feature editor", e);
         }
         return textarea;
     }
