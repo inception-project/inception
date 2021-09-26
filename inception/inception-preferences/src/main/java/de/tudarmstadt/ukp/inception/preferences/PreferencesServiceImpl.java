@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.preferences;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
@@ -253,6 +254,27 @@ public class PreferencesServiceImpl
         catch (NoResultException e) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    @Transactional
+    public List<DefaultProjectPreference> listDefaultTraitsForProject(Project aProject)
+    {
+        String query = String.join("\n", //
+                "FROM DefaultProjectPreference ", //
+                "WHERE project = :project");
+
+        return entityManager //
+                .createQuery(query, DefaultProjectPreference.class) //
+                .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public void saveDefaultProjectPreference(DefaultProjectPreference aPreference)
+    {
+        entityManager.persist(aPreference);
     }
 
     /*
