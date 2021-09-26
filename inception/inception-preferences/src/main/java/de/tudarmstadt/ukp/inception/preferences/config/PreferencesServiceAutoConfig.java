@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesServiceImpl;
+import de.tudarmstadt.ukp.inception.preferences.exporter.DefaultProjectPreferencesExporter;
 
 @Configuration
 public class PreferencesServiceAutoConfig
@@ -35,5 +36,12 @@ public class PreferencesServiceAutoConfig
     public PreferencesService preferencesService()
     {
         return new PreferencesServiceImpl(entityManager);
+    }
+
+    @Bean
+    public DefaultProjectPreferencesExporter defaultPreferenceExporter(
+            PreferencesService aPreferencesService)
+    {
+        return new DefaultProjectPreferencesExporter(aPreferencesService);
     }
 }

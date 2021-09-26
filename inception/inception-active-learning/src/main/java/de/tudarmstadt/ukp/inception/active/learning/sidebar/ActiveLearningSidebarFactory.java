@@ -25,6 +25,7 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -55,15 +56,28 @@ public class ActiveLearningSidebarFactory
     }
 
     @Override
+    public String getDescription()
+    {
+        return "Guides the user through recommendations to be reviewed. Only available if the "
+                + "project contains enabled recommenders.";
+    }
+
+    @Override
     public IconType getIcon()
     {
         return FontAwesome5IconType.robot_s;
     }
 
     @Override
+    public boolean available(Project aProject)
+    {
+        return recommendationService.existsEnabledRecommender(aProject);
+    }
+
+    @Override
     public boolean applies(AnnotatorState aState)
     {
-        return recommendationService.existsEnabledRecommender(aState.getProject());
+        return available(aState.getProject());
     }
 
     @Override

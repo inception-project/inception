@@ -61,9 +61,10 @@ public class CurationServiceAutoConfiguration
     }
 
     @Bean("curationSidebar")
-    public CurationSidebarFactory curationSidebarFactory(ProjectService aProjectService)
+    public CurationSidebarFactory curationSidebarFactory(ProjectService aProjectService,
+            UserDao aUserService)
     {
-        return new CurationSidebarFactory(aProjectService);
+        return new CurationSidebarFactory(aProjectService, aUserService);
     }
 
     @Bean
