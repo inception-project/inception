@@ -211,7 +211,7 @@ If you have not imported the example project yet, we propose to follow the instr
 image::getting_started_settings.png[align="center"]
 
 [[documents_in_getting_started]]
-==== Documents
+=== Documents
 Here, you may upload your files to be annotated.
 Make sure that the format selected in the dropdown on the right is the same as the one of the file to be uploaded.
 
@@ -225,7 +225,7 @@ For example, a user may be added to the {product-name} instance but not to a cer
 Or she may have different rights in several projects.
 
 [[users_in_getting_started]]
-==== Users
+=== Users
 Here, you may add users to your _project_ and change their rights within that project.
 You can only add users to a project from the dropdown at the left if they exist already in the {product-name} _instance_.
 
@@ -268,7 +268,7 @@ image::getting_started_users.png[align="center"]
 
 [[layers_and_features_in_getting_started]]
 
-==== Layers
+=== Layers
 In this section, you may create custom layers and modify them later.
 Built-in layers should not be changed.
 In case you do not want to work on built-in layers only but wish to create custom layers designed for your individual task, we recommend reading the documentation for details on <<Layers>>.
@@ -300,7 +300,7 @@ However, new features can be added.
 See the main documentation for details on <<Layers>>, features, the different types of layers and features, how to create custom layers and how to adjust them for your individual task.
 
 [[tagsets_in_getting_started]]
-==== Tagsets
+=== Tagsets
 Behind this tab, you can modify and create the tagsets for your layers.
 Tagsets are always bound to a layer, or more precisely to a certain feature of a layer.
 
@@ -367,7 +367,7 @@ Others need to be saved manually.
 Whenever there is a blue _Save_ button, it is necessary to click it to save the work.
 
 [[knowledge_bases_in_getting_started]]
-==== Knowledge Bases
+=== Knowledge Bases
 In this section, you can change the settings for the knowledge bases used in your project, you can import local and remote knowledge bases into your project and you can create a custom knowledge base.
 The latter will be empty at first.
 It will not be filled here in the settings but at the knowledge base page ( -> _Dashboard_, -> _Knowledge base_; also see the part xref:knowledge_bases_in_getting_started_in_structrue[Knowledge Base] in <<Structure of an Annotation Project>>).
@@ -398,7 +398,7 @@ image::getting_started_kb_page.png[align="center"]
 It contains a small knowledge base, too.
 
 [[recommenders_in_getting_started]]
-==== Recommenders
+=== Recommenders
 In this section, you can create and modify your recommenders.
 They learn from what the user annotates and give suggestions.
 For details on how to _use_ recommenders, see our main documentation on xref:sect_annotation_recommendation[Recommenders] in the Annotation section.
@@ -414,7 +414,7 @@ On the annotation page (→ _Dashboard_ → _Annotation_ → open any document),
 image::getting_started_guidelines.png[align="center"]
 
 [[export_in_getting_started]]
-==== Export
+=== Export
 In this section, you can export your project partially or wholly.
 Projects which have been exported can be imported again in INCEpTION the way we did with our example project in section <<Download and import an Example Project>>: at the start page with the *Import* button.
 We recommend exporting projects on a regular basis in order to have a backup.
@@ -432,11 +432,11 @@ If you just logged in, choose a project by clicking on its name.
 As you are a Project Manager (see xref:User_rights[User Rights]), you see all of the following sub pages.
 For details on each section, check the section on <<sect_core_funct, Core Functionalities>>.
 
-==== Annotation
+=== Annotation
 If you went to <<First Annotations with {product-name}>> before, you have been here already.
 Here, the annotators can go to annotate the texts.
 
-==== Curation
+=== Curation
 Everyone with curation rights (see xref:User_rights[User Rights]) within a project can curate it.
 All other users do not have access to nor see this page.
 Only documents marked as finished by at least one annotator can be curated.
@@ -462,13 +462,13 @@ It works exactly like on the Annotation page.
 Note that users who have nothing but curation rights do not see nor have access to the annotation page (see xref:User_rights[User Rights]).
 
 [[knowledge_bases_in_getting_started_in_structrue]]
-==== Knowledge Base
+=== Knowledge Base
 Also see xref:knowledge_bases_in_getting_started[the section on knowledge bases in the project settings].
 On the Knowledge Base page, you can manage and create your knowledge base(s) for the project you are in.
 You can create new knowledge bases from scratch, modify them and integrate existing knowledge bases into your project which are either local (that is, they are saved on your device) or remote (that is, they are online).
 Note that this knowledge base page is distinct from the tab of the same name in the project settings (see xref:knowledge_bases_in_getting_started[Knowledge Base in section Project Settings]).
 
-==== Agreement
+=== Agreement
 On this page, you can calculate the annotator agreement.
 *_Note:_* Only documents *marked as finished* by annotators (clicking on the little lock on the annotation page) are taken into account.
 
@@ -478,16 +478,16 @@ For agreement, some common measures are provided.
 
 image::getting_started_agreement.png[align="center"]
 
-==== Workload
+=== Workload
 Here you can check the overall progress of your project; see which user is working on or has finished which document; and toggle for each user the status of each document between *Done / In Progress* or between *New / Locked*.
 For details, see <<sect_workload>> in the main documentation.
 
 image::getting_started_monitoring.png[align="center"]
 
-==== Evaluation
+=== Evaluation
 The evaluation page shows a learning curve diagram of each recommender (see xref:recommenders_in_getting_started[Recommender]).
 
-==== Settings
+=== Settings
 Here, you can organize, manage and adjust all the details of your project.
 We had a look at those you need to get started for your own projects in the section <<Project Settings>> already.
 
