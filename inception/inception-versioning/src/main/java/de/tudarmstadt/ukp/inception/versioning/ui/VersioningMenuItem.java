@@ -17,30 +17,34 @@
  */
 package de.tudarmstadt.ukp.inception.versioning.ui;
 
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
+import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link VersioningServiceAutoConfiguration#versioningSettingsPanelFactory()} ()}.
+ * {@link VersioningServiceAutoConfiguration#versioningMenuItem()} ()}.
  * </p>
  */
 @Order(VersioningSettingsPanelFactory.ORDER)
-public class VersioningSettingsPanelFactory
-    implements ProjectSettingsPanelFactory
+public class VersioningMenuItem
+    extends ProjectSettingsMenuItemBase
 {
-    public static final int ORDER = 8000;
-
     @Override
     public String getPath()
     {
-        return "/versioning";
+        return "/settings/versioning";
+    }
+
+    @Override
+    public IconType getIcon()
+    {
+        return FontAwesome5IconType.history_s;
     }
 
     @Override
@@ -50,8 +54,8 @@ public class VersioningSettingsPanelFactory
     }
 
     @Override
-    public Panel createSettingsPanel(String aID, IModel<Project> aProjectModel)
+    public Class<? extends Page> getPageClass()
     {
-        return new VersioningSettingsPanel(aID, aProjectModel);
+        return VersioningPreferencesPage.class;
     }
 }
