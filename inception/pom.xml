@@ -112,9 +112,9 @@
     <rdf4j.version>3.7.2</rdf4j.version>
     <jena.version>3.17.0</jena.version>
 
-    <asciidoctor.plugin.version>2.1.0</asciidoctor.plugin.version>
-    <asciidoctor.version>2.3.0</asciidoctor.version>
-    <asciidoctor-diagram.version>2.0.2</asciidoctor-diagram.version>
+    <asciidoctor.plugin.version>2.2.1</asciidoctor.plugin.version>
+    <asciidoctor.version>2.5.2</asciidoctor.version>
+    <asciidoctor-diagram.version>2.2.1</asciidoctor-diagram.version>
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
