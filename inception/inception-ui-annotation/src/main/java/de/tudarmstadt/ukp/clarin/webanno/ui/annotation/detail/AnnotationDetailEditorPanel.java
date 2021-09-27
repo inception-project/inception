@@ -39,6 +39,7 @@ import static wicket.contrib.input.events.key.KeyType.Shift;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -131,7 +132,7 @@ public abstract class AnnotationDetailEditorPanel
 {
     private static final long serialVersionUID = 7324241992353693848L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String KEY_BACKSPACE = "8";
     private static final String KEY_ENTER = "13";
