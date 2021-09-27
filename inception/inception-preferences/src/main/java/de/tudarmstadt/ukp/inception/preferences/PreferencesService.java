@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.preferences;
 
+import java.util.List;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.preferences.model.DefaultProjectPreference;
 
 public interface PreferencesService
 {
@@ -29,4 +32,12 @@ public interface PreferencesService
     <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject);
 
     <T> void saveTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject, T aTraits);
+
+    <T> T loadDefaultTraitsForProject(Key<T> aKey, Project aProject);
+
+    <T> void saveDefaultTraitsForProject(Key<T> aKey, Project aProject, T aTraits);
+
+    List<DefaultProjectPreference> listDefaultTraitsForProject(Project aProject);
+
+    void saveDefaultProjectPreference(DefaultProjectPreference aPreference);
 }
