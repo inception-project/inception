@@ -167,7 +167,7 @@ class EvalChart {
 
     insertAll(aMsgArr) {
         // sort data by date and insert into data structures
-        let sortedMsgs = aMsgArr.sort((a, b) => a.date - b.date);
+        let sortedMsgs = aMsgArr.sort((a, b) => a.timestamp - b.timestamp);
         sortedMsgs.forEach(msg => this.insertDatum(JSON.parse(msg.eventMsg)));
         // prepend with zero for missing evaluations
         this.fillMissingValues();

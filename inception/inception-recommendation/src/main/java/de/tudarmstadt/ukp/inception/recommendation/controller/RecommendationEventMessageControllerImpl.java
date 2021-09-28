@@ -116,7 +116,7 @@ public class RecommendationEventMessageControllerImpl
                 new WebsocketEventMessage(aEvent.getTimestamp(), aEvent.getClass().getSimpleName()));
         
         String channel = REC_EVAL_EVENTS_TOPIC + "/" + project.getId();
-        log.debug("Sending websocket event: {} '{}' to {}.", eventMsg.getEventType(),
+        log.debug("onRecommenderEvaluationEvent: Sending websocket event: {} '{}' to {}.", eventMsg.getEventType(),
                 eventMsg.getEventMsg(), channel);
         msgTemplate.convertAndSendToUser(aEvent.getUser(), channel, eventMsg);
     }
@@ -147,7 +147,7 @@ public class RecommendationEventMessageControllerImpl
                 recommenderEvalEventType, MAX_POINTS_TO_PLOT, r.getId()).stream()//
                       .map(event ->  createWebsocketEventMessageForRecommenderEvaluation(event, project, r)))//
               .collect(Collectors.toList());
-        log.debug("Sending websocket event: {}  to {}.",
+        log.debug("getMostRecentRecommenderEvents: Sending websocket event: {}  to {}.",
                 recentEvents.stream().map(event -> event.toString()), username);
         return recentEvents;
     }

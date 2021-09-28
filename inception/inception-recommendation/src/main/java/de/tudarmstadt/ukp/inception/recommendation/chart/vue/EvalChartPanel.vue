@@ -65,11 +65,13 @@ module.exports = {
           // call for initial data
           that.stompClient.subscribe('/app' + that.topicChannel + '/' + that.projectId, function (msg) {
             let msgBody = JSON.parse(msg.body);
+            console.log("subscribe to get intitial evaluation scores: " + msgBody);
             that.evalChart = new EvalChart("chartContainer", msgBody);
             that.recommenders = that.evalChart.getRecommenders();
             //subscribe for further updates
             that.stompClient.subscribe('/user/queue' + that.topicChannel + '/' + that.projectId, function (msg) {
             	let msgBody = JSON.parse(msg.body);
+            	console.log("update on evaluation scores: " + msgBody);
             	that.evalChart.update(JSON.parse(msgBody.eventMsg));
 				that.recommenders = that.evalChart.getRecommenders();
           	});

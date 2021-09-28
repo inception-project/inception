@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.support.vue;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forScript;
 
 import java.io.IOException;
 
@@ -28,6 +27,7 @@ import javax.servlet.ServletContext;
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.request.IRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.resource.ResourceReferenceRequestHandler;
@@ -112,10 +112,8 @@ public class VueBehavior
         script.append("  },\n");
         script.append(" template: `<VueComponent v-bind='props'/>`\n");
         script.append("});\n");
-        script.append(
-                "document.addEventListener('DOMContentLoaded', () => { const vm = app.mount('#"
-                        + aComponent.getMarkupId() + "') });\n}");
+        script.append("const vm = app.mount('#" + aComponent.getMarkupId() + "');\n}");
 
-        aResponse.render(forScript(script, aComponent.getMarkupId() + "-vue"));
+        aResponse.render(OnDomReadyHeaderItem.forScript(script));
     }
 }
