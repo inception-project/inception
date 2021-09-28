@@ -15,43 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.versioning.ui;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
+import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link VersioningServiceAutoConfiguration#versioningSettingsPanelFactory()} ()}.
- * </p>
- */
-@Order(VersioningSettingsPanelFactory.ORDER)
-public class VersioningSettingsPanelFactory
-    implements ProjectSettingsPanelFactory
+@Component
+@Order(AnnotationPreferencesProjectSettingsPanelFactory.ORDER)
+public class AnnotationPreferencesMenuItem
+    extends ProjectSettingsMenuItemBase
 {
-    public static final int ORDER = 8000;
-
     @Override
     public String getPath()
     {
-        return "/versioning";
+        return "/settings/annotation";
+    }
+
+    @Override
+    public IconType getIcon()
+    {
+        return FontAwesome5IconType.highlighter_s;
     }
 
     @Override
     public String getLabel()
     {
-        return "Versioning";
+        return "Annotation";
     }
 
     @Override
-    public Panel createSettingsPanel(String aID, IModel<Project> aProjectModel)
+    public Class<? extends Page> getPageClass()
     {
-        return new VersioningSettingsPanel(aID, aProjectModel);
+        return AnnotationPreferencesPage.class;
     }
 }

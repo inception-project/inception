@@ -15,43 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.versioning.ui;
+package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link VersioningServiceAutoConfiguration#versioningSettingsPanelFactory()} ()}.
- * </p>
- */
-@Order(VersioningSettingsPanelFactory.ORDER)
-public class VersioningSettingsPanelFactory
+@Component
+@Order(AnnotationPreferencesProjectSettingsPanelFactory.ORDER)
+public class AnnotationPreferencesProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
-    public static final int ORDER = 8000;
+    public static final int ORDER = 350;
 
     @Override
     public String getPath()
     {
-        return "/versioning";
+        return "/annotation";
     }
 
     @Override
     public String getLabel()
     {
-        return "Versioning";
+        return "Annotation";
     }
 
     @Override
     public Panel createSettingsPanel(String aID, IModel<Project> aProjectModel)
     {
-        return new VersioningSettingsPanel(aID, aProjectModel);
+        return new AnnotationPreferencesProjectSettingsPanel(aID, aProjectModel);
     }
 }

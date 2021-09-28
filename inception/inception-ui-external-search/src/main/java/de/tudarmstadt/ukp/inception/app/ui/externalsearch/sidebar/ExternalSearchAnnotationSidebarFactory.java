@@ -24,6 +24,7 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -54,15 +55,28 @@ public class ExternalSearchAnnotationSidebarFactory
     }
 
     @Override
+    public String getDescription()
+    {
+        return "Allows searching document repositories and importing documents. Only available if "
+                + "there are document repositories defined in the project.";
+    }
+
+    @Override
     public IconType getIcon()
     {
         return FontAwesome5IconType.database_s;
     }
 
     @Override
+    public boolean available(Project aProject)
+    {
+        return externalSearchService.existsEnabledDocumentRepository(aProject);
+    }
+
+    @Override
     public boolean applies(AnnotatorState aState)
     {
-        return externalSearchService.existsEnabledDocumentRepository(aState.getProject());
+        return available(aState.getProject());
     }
 
     @Override

@@ -15,35 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
+package de.tudarmstadt.ukp.inception.preferences.exporter;
 
-import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
-public class AnnotationSidebarState
-    implements Serializable
+@JsonPropertyOrder(alphabetic = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class ExportedDefaultProjectPreference
 {
-    private static final long serialVersionUID = -5212679894035839772L;
+    @JsonProperty("name")
+    private String name;
 
-    private String selectedTab;
-    private boolean expanded;
+    @JsonProperty("traits")
+    private String traits;
 
-    public void setSelectedTab(String aFactoryId)
+    public String getName()
     {
-        selectedTab = aFactoryId;
+        return name;
     }
 
-    public String getSelectedTab()
+    public void setName(String aName)
     {
-        return selectedTab;
+        name = aName;
     }
 
-    public void setExpanded(boolean aExpanded)
+    public String getTraits()
     {
-        expanded = aExpanded;
+        return traits;
     }
 
-    public boolean isExpanded()
+    public void setTraits(String aTraits)
     {
-        return expanded;
+        traits = aTraits;
     }
 }
