@@ -15,14 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {AnnotationExperienceAPIImpl} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPIImpl";
-import {Viewport} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Viewport";
-import {Arc} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Arc";
-import {Span} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Span";
+import {AnnotationExperienceAPIImpl} from "../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPIImpl";
+import {Viewport} from "../../../../inception-api-annotation-experimental/src/main/ts/client/model/Viewport";
 import {AnnotationExperienceAPIWordAlignmentEditorVisualization} from "./visualization/AnnotationExperienceAPIWordAlignmentEditorVisualization";
 import {AnnotationExperienceAPIWordAlignmentEditorActionHandler} from "./action/AnnotationExperienceAPIWordAlignmentEditorActionHandler";
 
-export class AnnotationExperienceAPIWordAlignmentEditor {
+export class WordAlignmentEditor {
 
     annotationExperienceAPI: AnnotationExperienceAPIImpl;
     annotationExperienceAPIVisualization: AnnotationExperienceAPIWordAlignmentEditorVisualization;
@@ -41,7 +39,8 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
     oddSentenceOffset: number = 0;
     evenSentence: string;
     evenSentenceOffset: number = 1;
-    spanType : string;
+    spanType : number;
+    arcType : number = 279;
 
     constructor(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string, aLayers: [number,string][])
     {
@@ -73,7 +72,7 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
             return;
         }
 
-        this.spanType = document.getElementsByClassName("filter-option-inner-inner")[0].innerText;
+        this.spanType = 278;
 
         let oddUnitContainerSize =  document.getElementById("odd_unit_container").children.length - 2;
         let evenUnitContainerSize = document.getElementById("even_unit_container").children.length - 2;
@@ -92,27 +91,42 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                     let oddUnitContainerElementTextId = oddUnitContainerElementText.id.split("_");
                     let evenUnitContainerElementTextId = evenUnitContainerElementText.id.split("_");
 
+                    console.log("ADDMING NOW SPAN FROM " + oddUnitContainerElementTextId[1] + " to " + oddUnitContainerElementTextId[2]);
+                    console.log("ADDMING NOW SPAN FROM " + evenUnitContainerElementTextId[1] + " to " + evenUnitContainerElementTextId[2]);
+
                     pairs.push([
                         oddUnitContainerElementTextId[1],
                         evenUnitContainerElementTextId[1]]
                     );
 
-                    this.createSpanRequest(oddUnitContainerElementTextId[1], oddUnitContainerElementTextId[2], null);
-                    this.createSpanRequest(evenUnitContainerElementTextId[1], evenUnitContainerElementTextId[2], null);
+                    this.createSpanRequest(oddUnitContainerElementTextId[1], oddUnitContainerElementTextId[2], this.spanType);
+                    this.createSpanRequest(evenUnitContainerElementTextId[1], evenUnitContainerElementTextId[2], this.spanType);
                 }
             }
         }
 
         setTimeout(function () {
-            let source, target;
+            console.log(pairs)
+            console.log(that.viewport[0].spans)
             for (let i = 0; i < pairs.length; i++) {
-                for (let j = 0; j < that.viewport[0].spans[i].length; j++) {
+                let source, target;
+                for (let j = 0; j < that.viewport[0].spans.length; j++) {
+                    console.log(that.viewport[0].spans[j])
+                    console.log(pairs[i][0])
 
-                    if (pairs[i][0] == that.viewport[0].spans[j].begin) {
+
+                    if (pairs[i][0] == that.viewport[0].spans[j].begin.toString()) {
                         source = that.viewport[0].spans[j];
+                        console.log("FOUND SRC")
                     }
-                    if (pairs[i][1] == that.viewport[0].spans[j].begin) {
+                    console.log(pairs[i][1])
+                    if (pairs[i][1] == that.viewport[0].spans[j].begin.toString()) {
                         target = that.viewport[0].spans[j];
+                        console.log("FOUND DEP")
+                    }
+                    if (source != null && target != null) {
+                        console.log("BREAK now")
+                        break;
                     }
                 }
                 that.annotationExperienceAPI.requestCreateArc(
@@ -121,9 +135,9 @@ export class AnnotationExperienceAPIWordAlignmentEditor {
                     that.viewport[0].sourceDocumentId,
                     source.id,
                     target.id,
-                    null) //TODO
+                    that.arcType)
             }
-        }, 1500)
+        }, 2000)
 
         document.getElementById("save_alignment").disabled = true
 

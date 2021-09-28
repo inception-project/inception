@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import {Span} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Span";
+import {Span} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Span";
 import {AnnotationExperienceAPIBasicEditor} from "../AnnotationExperienceAPIBasicEditor";
 
 export class AnnotationExperienceAPIBasicEditorVisualization {
@@ -49,7 +49,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         textArea.innerHTML = '';
 
         //Sentences
-        let units = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText.split(".");
+        let units = this.annotationExperienceAPIBasicEditor.viewport[0].documentText.split(".");
 
         //SVG element
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -112,7 +112,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
 
         //Highlighting
         if (this.showHighlighting) {
-            svg.appendChild(this.drawAnnotation(this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.spans, aElementId));
+            svg.appendChild(this.drawAnnotation(this.annotationExperienceAPIBasicEditor.viewport[0].spans, aElementId));
         }
     }
 
@@ -140,7 +140,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
 
     calculateInitialOffset(aUnitNumber: Number) {
         let offset: number = 0;
-        let units = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText.split(".");
+        let units = this.annotationExperienceAPIBasicEditor.viewport[0].documentText.split(".");
         for (let i = 0; i < aUnitNumber; i++) {
             let words = units[i].split(" ");
             for (let j = 0; j < words.length; j++) {
@@ -155,7 +155,7 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         //Unitnumbers
         let unitNumbers = document.createElementNS("http://www.w3.org/2000/svg", "g");
         unitNumbers.setAttribute("class", "sentence_numbers");
-        unitNumbers.display = "block";
+        unitNumbers.style.display = "block";
         unitNumbers.innerHTML = "";
 
         for (let i = 0; i < this.unitCount; i++) {
@@ -175,8 +175,10 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
         highlighting.style.display = "block";
         highlighting.innerHTML = "";
 
+        console.log(aAnnotations)
+
         if (aAnnotations.length > 0) {
-            let units = this.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText;
+            let units = this.annotationExperienceAPIBasicEditor.viewport[0].documentText;
             this.unitCount = units.length - 1;
             let i = 0;
 
@@ -202,34 +204,35 @@ export class AnnotationExperienceAPIBasicEditorVisualization {
                     let word: String = "";
 
 
+                    console.log("CURRENT ANNOTATION: " + span.begin + ", " + span.end)
                     for (let char of child.children) {
+
+                        console.log("POS: " + char.getAttribute("char_pos"))
 
 
                         if (span.begin.toString() === char.getAttribute("char_pos")) {
                             begin = char.getAttribute("x");
                             word = word.concat(char.textContent);
                             check = true;
+                            console.log("FOUND (1)")
                             continue;
                         }
 
                         if (span.end.toString() === char.getAttribute("char_pos")) {
 
-                            if (begin != null && word === span.coveredText) {
-                                end = char.getAttribute("x")
-                                let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                                rect.setAttribute("x", Number(begin).toString());
-                                rect.setAttribute("y", (i * 20).toString());
-                                rect.setAttribute("width", (Number(end) - Number(begin)).toString());
-                                rect.setAttribute("height", "20");
-                                rect.setAttribute("id", String(span.id));
-                                rect.setAttribute("type", span.type);
-                                rect.setAttribute("fill", span.color);
-                                rect.style.opacity = "0.5";
-                                text_row.appendChild(rect);
-                                break;
-                            } else {
-                                break;
-                            }
+                            console.log("FOUND (2)")
+                            end = char.getAttribute("x")
+                            let rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                            rect.setAttribute("x", Number(begin).toString());
+                            rect.setAttribute("y", (i * 20).toString());
+                            rect.setAttribute("width", (Number(end) - Number(begin)).toString());
+                            rect.setAttribute("height", "20");
+                            rect.setAttribute("id", String(span.id));
+                            rect.setAttribute("layerId", String(span.layerId));
+                            rect.setAttribute("fill", span.color);
+                            rect.style.opacity = "0.5";
+                            text_row.appendChild(rect);
+
                         } else {
 
                             if (check) {

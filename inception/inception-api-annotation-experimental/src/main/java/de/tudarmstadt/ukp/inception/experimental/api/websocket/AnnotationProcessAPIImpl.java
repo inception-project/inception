@@ -66,6 +66,8 @@ public class AnnotationProcessAPIImpl
 
     private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
 
+    private static double create = 0;
+    private double begin = 0;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final AnnotationSystemAPIImpl annotationSystemAPIImpl;
 
@@ -166,17 +168,21 @@ public class AnnotationProcessAPIImpl
             String aDocumentID)
         throws IOException
     {
+
+
         LOG.debug("SENDING NOW CREATE SPAN TO CLIENTS listening to: {}",
                 SERVER_SEND_CREATE_SPAN + aProjectID + "/" + aDocumentID);
         simpMessagingTemplate.convertAndSend(
                 SERVER_SEND_CREATE_SPAN + aProjectID + "/" + aDocumentID,
                 JSONUtil.toJsonString(aCreateSpanMessage));
+
     }
 
     @Override
     @MessageMapping(SERVER_RECEIVE_CREATE_ARC)
     public void receiveCreateArcRequest(Message<String> aMessage) throws IOException
     {
+        begin = System.currentTimeMillis();
         LOG.debug("RECEIVED CREATE ARC BY CLIENT, Message: {}", aMessage);
         annotationSystemAPIImpl.handleCreateArc(
                 JSONUtil.fromJsonString(CreateArcRequest.class, aMessage.getPayload()));
@@ -192,6 +198,13 @@ public class AnnotationProcessAPIImpl
         simpMessagingTemplate.convertAndSend(
                 SERVER_SEND_CREATE_ARC + aProjectID + "/" + aDocumentID,
                 JSONUtil.toJsonString(aCreateArcMessage));
+        System.out.println("TIME CREATE: " + (System.currentTimeMillis() - begin));
+        if (create == 0) {
+            create = (System.currentTimeMillis() - begin);
+        } else {
+            create = ( create + (System.currentTimeMillis() - begin)) / 2 ;
+        }
+        begin = 0;
     }
 
     @Override

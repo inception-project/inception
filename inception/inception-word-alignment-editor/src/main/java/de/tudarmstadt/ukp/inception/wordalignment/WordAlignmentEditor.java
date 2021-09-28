@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.wordalignment;
+package de.tudarmstadt.ukp.inception.wordalignment;
 
 import javax.servlet.ServletContext;
 
@@ -33,17 +33,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIWordAlignmentEditorReference;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
+import de.tudarmstadt.ukp.inception.wordalignment.resources.WordAlignmentEditorReference;
 
-public class ExperimentalWordAlignmentEditor
+public class WordAlignmentEditor
     extends AnnotationEditorBase
 {
     private static final long serialVersionUID = -3812646280364767142L;
 
     private @SpringBean ServletContext servletContext;
 
-    public ExperimentalWordAlignmentEditor(String aId, IModel<AnnotatorState> aModel,
+    public WordAlignmentEditor(String aId, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
@@ -53,7 +53,7 @@ public class ExperimentalWordAlignmentEditor
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        aResponse.render(JavaScriptHeaderItem.forReference((ExperimentalAPIWordAlignmentEditorReference.get())));
+        aResponse.render(JavaScriptHeaderItem.forReference((WordAlignmentEditorReference.get())));
         aResponse.render(OnDomReadyHeaderItem.forScript(setupExperienceAPI()));
     }
 
@@ -70,9 +70,9 @@ public class ExperimentalWordAlignmentEditor
             sb.append("layers.push([" + layer.getId() + ",'" + layer.getUiName() + "']);");
         }
         sb.append("const editor = new AnnotationExperienceAPIWordAlignmentEditor("
-        + state.getProject().getId() + "," + state.getDocument().getId() + ",\""
-        + state.getUser().getUsername() + "\",\""
-        + RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl) + "\", layers);");
+                + state.getProject().getId() + "," + state.getDocument().getId() + ",\""
+                + state.getUser().getUsername() + "\",\""
+                + RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl) + "\", layers);");
         sb.append("}())");
         return sb.toString();
     }
@@ -80,6 +80,13 @@ public class ExperimentalWordAlignmentEditor
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        // Rendering should be handled by the scripting language files
+        try {
+
+            // Will be made next
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

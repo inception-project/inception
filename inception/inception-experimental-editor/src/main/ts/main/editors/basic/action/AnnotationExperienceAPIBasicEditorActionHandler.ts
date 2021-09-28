@@ -33,15 +33,14 @@ export class AnnotationExperienceAPIBasicEditorActionHandler {
         let that = this;
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
-            if (elem.className === 'far fa-caret-square-right' || 'far fa-caret-square-left') {
+            if (elem.className === 'far fa-caret-square-right' || elem.className === 'far fa-caret-square-left') {
                 setTimeout(function() {
                     that.annotationExperienceAPIBasicEditor.annotationExperienceAPI.requestDocument(
-                        that.annotationExperienceAPIBasicEditor.annotationExperienceAPI.clientName,
-                        that.annotationExperienceAPIBasicEditor.annotationExperienceAPI.projectID,
-                        Number(document.location.href.split("=")[1].split("&")[0]));
+                        that.annotationExperienceAPIBasicEditor.annotatorName,
+                        that.annotationExperienceAPIBasicEditor.projectId,
+                        that.annotationExperienceAPIBasicEditor.viewport);
                     setTimeout(function () {
-                        that.sentences = that.annotationExperienceAPIBasicEditor.annotationExperienceAPI.viewport.documentText.split(".");
-                        that.annotationExperienceAPIBasicEditor.annotationExperienceAPIVisualization.refreshEditor("textarea")
+                        that.annotationExperienceAPIBasicEditor.annotationExperienceAPIVisualization.refreshEditor("textarea");
                     }, 2000)
                 }, 200);
             }

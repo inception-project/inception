@@ -1832,6 +1832,7 @@
     <!-- Versioning -->
     <module>inception-versioning</module>
     <module>inception-websocket</module>
+      <module>inception-word-alignment-editor</module>
   </modules>
 
   <build>

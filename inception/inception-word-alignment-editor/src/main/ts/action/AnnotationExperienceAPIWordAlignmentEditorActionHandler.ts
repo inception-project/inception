@@ -16,14 +16,16 @@
  * limitations under the License.
  */
 
-import {AnnotationExperienceAPIWordAlignmentEditor} from "../AnnotationExperienceAPIWordAlignmentEditor";
+import {WordAlignmentEditor} from "../AnnotationExperienceAPIWordAlignmentEditor";
+import {Viewport} from "../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Viewport";
+import {FeatureX} from "../../../../../inception-api-annotation-experimental/src/main/ts/client/model/FeatureX";
 
 export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
-    annotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor;
+    annotationExperienceAPIWordAlignmentEditor: WordAlignmentEditor;
 
     sentences : string[];
 
-    constructor(aAnnotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor) {
+    constructor(aAnnotationExperienceAPIWordAlignmentEditor: WordAlignmentEditor) {
         this.annotationExperienceAPIWordAlignmentEditor = aAnnotationExperienceAPIWordAlignmentEditor;
         this.registerDefaultActionHandler();
     }
@@ -33,7 +35,7 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
         let that = this;
         onclick = function (aEvent) {
             let elem = <Element>aEvent.target;
-            if (elem.className === 'far fa-caret-square-right' || 'far fa-caret-square-left') {
+            if (elem.className === 'far fa-caret-square-right' || elem.className === 'far fa-caret-square-left') {
                 setTimeout(function() {
                     that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestDocument(
                         that.annotationExperienceAPIWordAlignmentEditor.annotatorName,
@@ -80,6 +82,32 @@ export class AnnotationExperienceAPIWordAlignmentEditorActionHandler {
 
             if (elem.id === 'show_relations') {
                 that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPIVisualization.drawLines();
+            }
+
+            if (elem.id === 'new') {
+
+                let layersToAdd : number[] = [];
+
+                for(let i = 0; i < that.annotationExperienceAPIWordAlignmentEditor.layers.length; i++) {
+                    layersToAdd.push(that.annotationExperienceAPIWordAlignmentEditor.layers[i][0]);
+                }
+                let v = new Viewport(41738,"",0,74,layersToAdd,null,null);
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestDocument("admin",20, [v]);
+            }
+
+            if (elem.id === 'createS') {
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestCreateSpan("admin",20,41738,0,9,278)
+            }
+            if (elem.id === 'createR') {
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestCreateArc("admin",20,41738,that.annotationExperienceAPIWordAlignmentEditor.viewport[0].spans[0].id,that.annotationExperienceAPIWordAlignmentEditor.viewport[0].spans[0].id,279)
+            }
+
+            if (elem.id === 'delete') {
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestDeleteAnnotation("admin",20,41738,that.annotationExperienceAPIWordAlignmentEditor.viewport[0].spans[0].id,278)
+            }
+
+            if (elem.id === 'update') {
+                that.annotationExperienceAPIWordAlignmentEditor.annotationExperienceAPI.requestUpdateFeature("admin",20,41738,that.annotationExperienceAPIWordAlignmentEditor.viewport[0].spans[0].id,278,that.annotationExperienceAPIWordAlignmentEditor.viewport[0].spans[0].features[2],"TEST")
             }
         }
     }

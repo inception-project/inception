@@ -15,24 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.resources;
+package de.tudarmstadt.ukp.inception.wordalignment.resources;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class ExperimentalAPIWordAlignmentEditorReference
+public class WordAlignmentEditorReference
     extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final ExperimentalAPIWordAlignmentEditorReference INSTANCE =
-        new ExperimentalAPIWordAlignmentEditorReference();
+    private static final WordAlignmentEditorReference INSTANCE = new WordAlignmentEditorReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static ExperimentalAPIWordAlignmentEditorReference get()
+    public static WordAlignmentEditorReference get()
     {
         return INSTANCE;
     }
@@ -40,9 +39,8 @@ public class ExperimentalAPIWordAlignmentEditorReference
     /**
      * Private constructor
      */
-    private ExperimentalAPIWordAlignmentEditorReference()
+    private WordAlignmentEditorReference()
     {
-        super(ExperimentalAPIWordAlignmentEditorReference.class,
-                "AnnotationExperienceAPIWordAlignmentEditor.js");
+        super(WordAlignmentEditorReference.class, "AnnotationExperienceAPIWordAlignmentEditor.js");
     }
 }

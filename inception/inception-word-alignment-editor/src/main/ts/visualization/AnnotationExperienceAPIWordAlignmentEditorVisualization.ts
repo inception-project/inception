@@ -16,20 +16,20 @@
  * limitations under the License.
  */
 
-import {AnnotationExperienceAPI} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPI";
-import {Span} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/model/Span";
-import {AnnotationExperienceAPIWordAlignmentEditor} from "../AnnotationExperienceAPIWordAlignmentEditor";
+import {AnnotationExperienceAPI} from "../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPI";
+import {Span} from "../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Span";
+import {WordAlignmentEditor} from "../AnnotationExperienceAPIWordAlignmentEditor";
 
 export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
 
-    annotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor;
+    annotationExperienceAPIWordAlignmentEditor: WordAlignmentEditor;
 
     oddLanguage : string = "English";
     evenLanguage : string = "German";
 
     headerOffset = 75;
 
-    constructor(aAnnotationExperienceAPIWordAlignmentEditor: AnnotationExperienceAPIWordAlignmentEditor) {
+    constructor(aAnnotationExperienceAPIWordAlignmentEditor: WordAlignmentEditor) {
         this.annotationExperienceAPIWordAlignmentEditor = aAnnotationExperienceAPIWordAlignmentEditor;
     }
 
@@ -72,6 +72,7 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
 
         let begin, end;
         for (let i = 0; i < words.length; i++) {
+
             let wordDIV = document.createElement("div");
             wordDIV.className = "form-group";
             wordDIV.style.height = "40px";
@@ -84,6 +85,9 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
 
             end = begin + words[i].length;
 
+            if (words[i] == "") {
+                continue;
+            }
             let wordLABEL = document.createElement("label");
             wordLABEL.setAttribute("style", "text-align: right")
             wordLABEL.id = "offset_" + begin + "_" + end;
@@ -177,7 +181,7 @@ export class AnnotationExperienceAPIWordAlignmentEditorVisualization {
             for (let j = 0; j < words.length; j++) {
                 offset += words[j].length + 1;
             }
-            offset++;
+            offset += 1;
         }
         return offset;
     }

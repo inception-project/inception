@@ -92,10 +92,6 @@
             <groupId>de.tudarmstadt.ukp.inception.app</groupId>
             <artifactId>inception-api-dao</artifactId>
         </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-brat-editor</artifactId>
-        </dependency>
     </dependencies>
     <build>
         <plugins>
@@ -131,8 +127,8 @@
                             <configuration>
                                 <excludes combine.children="append">
                                     <exclude>src/main/js/ExperienceAPI.js</exclude>
-                                    <exclude>src/main/ts/package.json</exclude>
                                     <exclude>src/main/ts/ExperienceAPI.js</exclude>
+                                    <exclude>src/main/ts/package.json</exclude>
                                 </excludes>
                             </configuration>
                         </execution>

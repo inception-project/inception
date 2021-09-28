@@ -87,6 +87,8 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
             console.log('Additional details: ' + frame.body);
         };
 
+        this.stompClient.reconnectDelay = 50;
+
         this.stompClient.activate();
     }
 
@@ -186,25 +188,22 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     onDocument(aMessage: DocumentMessage)
     {
-        let that = this;
-
         console.log('RECEIVED DOCUMENT' + aMessage);
-
-        that.annotationEditor.viewport = aMessage.viewport;
+        this.annotationEditor.viewport = aMessage.viewport;
     }
 
     onSpanCreate(aMessage: SpanCreatedMessage)
     {
         console.log('RECEIVED SPAN CREATE' + aMessage);
 
-        let span = new Span(aMessage.spanId, aMessage.begin, aMessage.end, aMessage.layerId, aMessage.features, aMessage.color)
+        this.annotationEditor.viewport[0].spans.push(new Span(aMessage.spanId, aMessage.begin, aMessage.end, aMessage.layerId, aMessage.features, aMessage.color))
     }
 
     onArcCreate(aMessage: ArcCreatedMessage)
     {
         console.log('RECEIVED ARC CREATE' + aMessage);
 
-        let arc = new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.layerId, aMessage.features, aMessage.color)
+        this.annotationEditor.viewport[0].arcs.push(new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.layerId, aMessage.features, aMessage.color))
     }
 
     onAnnotationDelete(aMessage: DeleteAnnotationMessage)

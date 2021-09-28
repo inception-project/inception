@@ -17,8 +17,9 @@
  */
 
 import {AnnotationExperienceAPIBasicEditorVisualization} from "./visualization/AnnotationExperienceAPIBasicEditorVisualization";
-import {AnnotationExperienceAPIImpl} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/main/client/AnnotationExperienceAPIImpl";
+import {AnnotationExperienceAPIImpl} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPIImpl";
 import {AnnotationExperienceAPIBasicEditorActionHandler} from "./action/AnnotationExperienceAPIBasicEditorActionHandler";
+import {Viewport} from "../../../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Viewport";
 
 export class AnnotationExperienceAPIBasicEditor
 {
@@ -26,9 +27,32 @@ export class AnnotationExperienceAPIBasicEditor
     annotationExperienceAPIVisualization: AnnotationExperienceAPIBasicEditorVisualization;
     annotationExperienceAPIActionHandler : AnnotationExperienceAPIBasicEditorActionHandler;
 
-    constructor()
+    //States
+    projectId: number;
+    annotatorName: string;
+
+    layers: [number,string][];
+
+    viewport : Viewport[] = [];
+    sentences : string[];
+
+    constructor(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string, aLayers: [number,string][])
     {
+        this.projectId = aProjectId;
+        this.annotatorName = aAnnotatorName;
+        this.layers = aLayers;
+
+        let layersToAdd : number[] = [];
+
+        for(let i = 0; i < aLayers.length; i++) {
+            layersToAdd.push(aLayers[i][0]);
+        }
+
+        this.viewport.push(new Viewport(aDocumentId,"",0, 75, layersToAdd, null, null));
+
+        this.annotationExperienceAPI = new AnnotationExperienceAPIImpl(aProjectId, this.viewport[0].sourceDocumentId, aAnnotatorName, aUrl, this);
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIBasicEditorVisualization(this);
         this.annotationExperienceAPIActionHandler = new AnnotationExperienceAPIBasicEditorActionHandler(this);
+
     }
 }
