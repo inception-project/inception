@@ -536,7 +536,7 @@ public class MtasDocumentIndexTest
     @Test
     public void testStatistics() throws Exception
     {
-        //Create sample project with two documents
+        // Create sample project with two documents
         Project project = new Project();
         project.setName("TestStatistics");
 
@@ -563,7 +563,7 @@ public class MtasDocumentIndexTest
         String otherContent = "Goodbye moon. Hello World.";
         uploadDocument(Pair.of(otherDocument, otherContent));
 
-        //Define input for the statistics methods
+        // Define input for the statistics methods
         OptionalInt minTokenPerDoc = OptionalInt.empty();
         OptionalInt maxTokenPerDoc = OptionalInt.empty();
 
@@ -575,22 +575,34 @@ public class MtasDocumentIndexTest
         Set<AnnotationFeature> features = new HashSet<AnnotationFeature>();
         features.add(value);
 
-        //Check layer-based statistics
+        AnnotationLayer raw = new AnnotationLayer();
+        raw.setUiName("Raw text");
+        AnnotationFeature sent = new AnnotationFeature();
+        sent.setUiName("sentence");
+        sent.setLayer(raw);
+        AnnotationFeature token = new AnnotationFeature();
+        token.setUiName("token");
+        token.setLayer(raw);
+
+        // Check layer-based statistics
         StatisticsResult statsResults = searchService.getProjectStatistics(user, project,
                 minTokenPerDoc, maxTokenPerDoc, features);
 
         Map<String, LayerStatistics> expectedResults = new HashMap<String, LayerStatistics>();
 
-        LayerStatistics expectedNamedEntity = new LayerStatistics(2, 2, 0, 1.0, 1.0,
-                Math.pow(2, 0.5), 2.0, 0.0, 1.0, 1.0, Math.pow(2, 0.5), 2);
-        LayerStatistics expectedToken = new LayerStatistics(15, 9, 6, 7.5, 7.5, Math.pow(4.5, 0.5),
-                9.0, 3.0, 6.0, 6.0, Math.pow(18, 0.5), 2);
-        LayerStatistics expectedSentence = new LayerStatistics(3, 2, 1, 1.5, 1.5,
-                Math.pow(0.5, 0.5), 1.0, 1.0, 1.0, 1.0, 0.0, 2);
+        LayerStatistics expectedNamedEntity = new LayerStatistics(2.0, 2.0, 0.0, 1.0, 1.0,
+                Math.pow(2, 0.5), 2.0, 2.0, 0.0, 1.0, 1.0, Math.pow(2, 0.5), 2.0);
+        expectedNamedEntity.setFeature(value);
+        LayerStatistics expectedToken = new LayerStatistics(15.0, 9.0, 6.0, 7.5, 7.5,
+                Math.pow(4.5, 0.5), 12.0, 9.0, 3.0, 6.0, 6.0, Math.pow(18, 0.5), 2.0);
+        expectedToken.setFeature(token);
+        LayerStatistics expectedSentence = new LayerStatistics(3.0, 2.0, 1.0, 1.5, 1.5,
+                Math.pow(0.5, 0.5), 2.0, 1.0, 1.0, 1.0, 1.0, 0.0, 2.0);
+        expectedSentence.setFeature(sent);
 
         expectedResults.put("Named entity.value", expectedNamedEntity);
-        expectedResults.put("Token Count", expectedToken);
-        expectedResults.put("Sentence Count", expectedSentence);
+        expectedResults.put("Raw text.token", expectedToken);
+        expectedResults.put("Raw text.sentence", expectedSentence);
 
         assertThat(statsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
         assertThat(statsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
@@ -598,7 +610,7 @@ public class MtasDocumentIndexTest
         assertThat(statsResults.getUser()).isEqualTo(user);
         assertTrue(expectedResults.equals(statsResults.getResults()));
 
-        //Check query-based statistics
+        // Check query-based statistics
         String query = "moon";
 
         StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project, query,
@@ -606,9 +618,9 @@ public class MtasDocumentIndexTest
 
         Map<String, LayerStatistics> expected = new HashMap<String, LayerStatistics>();
 
-        LayerStatistics expectedSearch = new LayerStatistics(1, 1, 0, 0.5, 0.5, Math.pow(0.5, 0.5),
-                0.5, 0.0, 0.25, 0.25, Math.pow(0.125, 0.5), 2);
-
+        LayerStatistics expectedSearch = new LayerStatistics(1.0, 1.0, 0.0, 0.5, 0.5, Math.pow(0.5, 0.5),
+                0.5, 0.5, 0.0, 0.25, 0.25, Math.pow(0.125, 0.5), 2.0);
+        expectedSearch.setQuery("moon");
         expected.put("query.moon", expectedSearch);
 
         assertThat(queryStatsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);

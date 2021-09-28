@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.OptionalInt;
 import java.util.Set;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class StatisticsResult
 {
@@ -98,7 +98,7 @@ public class StatisticsResult
         if (query == null) {
             throw new ExecutionException("No query was given!");
         }
-        return results.get(query);
+        return results.get("query."+ query);
     }
 
     public Project getProject()
@@ -135,19 +135,19 @@ public class StatisticsResult
         return layers;
     }
 
-    public long getTotal(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public double getTotal(AnnotationLayer aLayer, AnnotationFeature aFeature)
         throws ExecutionException
     {
         return getLayerResult(aLayer, aFeature).getTotal();
     }
 
-    public long getMinimum(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public double getMinimum(AnnotationLayer aLayer, AnnotationFeature aFeature)
         throws ExecutionException
     {
         return getLayerResult(aLayer, aFeature).getMinimum();
     }
 
-    public long getMaximum(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public double getMaximum(AnnotationLayer aLayer, AnnotationFeature aFeature)
         throws ExecutionException
     {
         return getLayerResult(aLayer, aFeature).getMaximum();

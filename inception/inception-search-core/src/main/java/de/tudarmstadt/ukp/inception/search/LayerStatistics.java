@@ -17,33 +17,52 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class LayerStatistics
 {
     /** The stats to be calculated */
-    public static final String STATS = "n,sum,min,max,mean,median,standarddeviation";
+    private static final String DOC_COUNT = "n";
+    private static final String TOTAL = "sum";
+    private static final String MINIMUM = "min";
+    private static final String MAXIMUM = "max";
+    private static final String MEAN = "mean";
+    private static final String MEDIAN = "median";
+    private static final String STANDARD_DEVIATION = "standarddeviation";
 
-    private final long total;
-    private final long maximum;
-    private final long minimum;
+    public static final String STATS = DOC_COUNT + "," + TOTAL + "," + MINIMUM + "," + MAXIMUM + ","
+            + MEAN + "," + MEDIAN + "," + STANDARD_DEVIATION;
+    public static final List<String> STATS_LIST = Arrays.asList(STATS.split(","));
+
+    private final double total;
+    private final double maximum;
+    private final double minimum;
     private final double mean;
     private final double median;
     private final double standardDeviation;
 
+    private final double totalPerSentence;
     private final double maximumPerSentence;
     private final double minimumPerSentence;
     private final double meanPerSentence;
     private final double medianPerSentence;
     private final double standardDeviationPerSentence;
 
-    private final long noOfDocuments;
+    private final double noOfDocuments;
 
-    public LayerStatistics(long aTotal, long aMaximum, long aMinimum, double aMean, double aMedian,
-            double aStandardDeviation, double aMaximumPerSentence, double aMinimumPerSentence,
-            double aMeanPerSentence, double aMedianPerSentence,
-            double aStandardDeviationPerSentence, long aNoOfDocuments)
+    private String query;
+    private AnnotationFeature feature;
+
+    public LayerStatistics(double aTotal, double aMaximum, double aMinimum, double aMean,
+            double aMedian, double aStandardDeviation, double aTotalPerSentence,
+            double aMaximumPerSentence, double aMinimumPerSentence, double aMeanPerSentence,
+            double aMedianPerSentence, double aStandardDeviationPerSentence, double aNoOfDocuments)
     {
         total = aTotal;
         maximum = aMaximum;
@@ -52,6 +71,7 @@ public class LayerStatistics
         median = aMedian;
         standardDeviation = aStandardDeviation;
 
+        totalPerSentence = aTotalPerSentence;
         maximumPerSentence = aMaximumPerSentence;
         minimumPerSentence = aMinimumPerSentence;
         meanPerSentence = aMeanPerSentence;
@@ -59,19 +79,83 @@ public class LayerStatistics
         standardDeviationPerSentence = aStandardDeviationPerSentence;
 
         noOfDocuments = aNoOfDocuments;
+
+        query = null;
     }
 
-    public long getTotal()
+    public double getMetric(String aMetric, boolean aPerSentence) throws ExecutionException
+    {
+
+        if (!STATS_LIST.contains(aMetric)) {
+            throw new ExecutionException("Metric " + aMetric + " is not supported");
+        }
+
+        switch (aMetric) {
+        case DOC_COUNT:
+            if (!aPerSentence) {
+                return getNoOfDocuments();
+            }
+            else {
+                return getNoOfDocuments();
+            }
+        case TOTAL:
+            if (!aPerSentence) {
+                return getTotal();
+            }
+            else {
+                return getTotalPerSentence();
+            }
+        case MINIMUM:
+            if (!aPerSentence) {
+                return getMinimum();
+            }
+            else {
+                return getMinimumPerSentence();
+            }
+        case MAXIMUM:
+            if (!aPerSentence) {
+                return getMaximum();
+            }
+            else {
+                return getMaximumPerSentence();
+            }
+        case MEAN:
+            if (!aPerSentence) {
+                return getMean();
+            }
+            else {
+                return getMeanPerSentence();
+            }
+        case MEDIAN:
+            if (!aPerSentence) {
+                return getMedian();
+            }
+            else {
+                return getMedianPerSentence();
+            }
+        case STANDARD_DEVIATION:
+            if (!aPerSentence) {
+                return getStandardDeviation();
+            }
+            else {
+                return getStandardDeviationPerSentence();
+            }
+        }
+        //formal return statement. is never reached
+        return -1;
+    }
+
+    public double getTotal()
     {
         return total;
     }
 
-    public long getMaximum()
+    public double getMaximum()
     {
         return maximum;
     }
 
-    public long getMinimum()
+    public double getMinimum()
     {
         return minimum;
     }
@@ -89,6 +173,11 @@ public class LayerStatistics
     public double getStandardDeviation()
     {
         return standardDeviation;
+    }
+
+    public double getTotalPerSentence()
+    {
+        return totalPerSentence;
     }
 
     public double getMaximumPerSentence()
@@ -116,9 +205,29 @@ public class LayerStatistics
         return standardDeviationPerSentence;
     }
 
-    public long getNoOfDocuments()
+    public double getNoOfDocuments()
     {
         return noOfDocuments;
+    }
+
+    public String getQuery()
+    {
+        return query;
+    }
+
+    public AnnotationFeature getFeature()
+    {
+        return feature;
+    }
+
+    public void setQuery(String aQuery)
+    {
+        query = aQuery;
+    }
+
+    public void setFeature(AnnotationFeature aFeature)
+    {
+        feature = aFeature;
     }
 
     @Override
