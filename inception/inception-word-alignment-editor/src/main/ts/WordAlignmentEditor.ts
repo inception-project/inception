@@ -16,11 +16,14 @@
  * limitations under the License.
  */
 import {AnnotationExperienceAPIImpl} from "../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPIImpl";
+import {AnnotationExperienceAPI} from "../../../../inception-api-annotation-experimental/src/main/ts/client/AnnotationExperienceAPI";
 import {Viewport} from "../../../../inception-api-annotation-experimental/src/main/ts/client/model/Viewport";
+import {Observer} from "../../../../inception-api-annotation-experimental/src/main/ts/client/Observer";
 import {AnnotationExperienceAPIWordAlignmentEditorVisualization} from "./visualization/AnnotationExperienceAPIWordAlignmentEditorVisualization";
 import {AnnotationExperienceAPIWordAlignmentEditorActionHandler} from "./action/AnnotationExperienceAPIWordAlignmentEditorActionHandler";
 
-export class WordAlignmentEditor {
+export class WordAlignmentEditor implements Observer
+{
 
     annotationExperienceAPI: AnnotationExperienceAPIImpl;
     annotationExperienceAPIVisualization: AnnotationExperienceAPIWordAlignmentEditorVisualization;
@@ -60,6 +63,11 @@ export class WordAlignmentEditor {
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIWordAlignmentEditorVisualization(this);
         this.annotationExperienceAPIWordAlignmentEditorActionHandler = new AnnotationExperienceAPIWordAlignmentEditorActionHandler(this);
 
+    }
+
+    update(annotationExperienceAPI: AnnotationExperienceAPI)
+    {
+        console.log("RECEIVED NOTIFICATION")
     }
 
     saveAlignments()

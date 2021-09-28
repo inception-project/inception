@@ -32,6 +32,7 @@ import {Viewport} from "./model/Viewport";
 import {DeleteAnnotationRequest} from "./messages/request/DeleteAnnotationRequest";
 import {UpdateFeatureRequest} from "./messages/request/UpdateFeatureRequest";
 import {Arc} from "./model/Arc";
+import {Observer} from "./Observer";
 
 /**
  * Implementation of the Interface AnnotationExperienceAPI within that package.
@@ -45,6 +46,8 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     stompClient: Client;
 
     annotationEditor: any;
+
+    observers: Observer[] = [];
 
     /**
      * Constructor: creates the Annotation Experience API.
@@ -135,6 +138,37 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
         }, {id: "span_delete"});
     }
 
+    attach(observer: Observer)
+    {
+        const isExist = this.observers.indexOf(observer) != -1;
+        if (isExist) {
+            return console.log("Observer already attached");
+        }
+
+        console.log("Attached an observer");
+        this.observers.push(observer);
+    }
+
+    detach(observer: Observer)
+    {
+        const observerIndex = this.observers.indexOf(observer);
+        if (observerIndex === -1) {
+            return console.log("Observer not found");
+        }
+
+        this.observers.splice(observerIndex, 1);
+        console.log("Observer detached");
+    }
+
+    notify()
+    {
+        console.log("Notifying observers");
+        for (const observer of this.observers) {
+            observer.update(this);
+        }
+    }
+
+
     unsubscribe(aViewport: Viewport)
     {
        // this.stompClient.unsubscribe(aChannel);
@@ -189,32 +223,34 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
     onDocument(aMessage: DocumentMessage)
     {
         console.log('RECEIVED DOCUMENT' + aMessage);
+        this.notify();
         this.annotationEditor.viewport = aMessage.viewport;
     }
 
     onSpanCreate(aMessage: SpanCreatedMessage)
     {
         console.log('RECEIVED SPAN CREATE' + aMessage);
-
+        this.notify();
         this.annotationEditor.viewport[0].spans.push(new Span(aMessage.spanId, aMessage.begin, aMessage.end, aMessage.layerId, aMessage.features, aMessage.color))
     }
 
     onArcCreate(aMessage: ArcCreatedMessage)
     {
         console.log('RECEIVED ARC CREATE' + aMessage);
-
+        this.notify();
         this.annotationEditor.viewport[0].arcs.push(new Arc(aMessage.arcId, aMessage.sourceId, aMessage.targetId, aMessage.layerId, aMessage.features, aMessage.color))
     }
 
     onAnnotationDelete(aMessage: DeleteAnnotationMessage)
     {
         console.log('RECEIVED DELETE ANNOTATION' + aMessage);
-
+        this.notify();
         let annotationID = aMessage.annotationId;
     }
 
     onFeaturesUpdate(aMessage: UpdateFeatureMessage) {
         console.log('RECEIVED UPDATE ANNOTATION' + aMessage);
+        this.notify();
 
         let annotationID = aMessage.annotationId;
         let feature = aMessage.feature
@@ -223,6 +259,8 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 
     onError(aMessage: AdviceMessage)
     {
+        console.log('RECEIVED ERROR MESSAGE' + aMessage);
+        this.notify();
         console.log(aMessage);
     }
 }

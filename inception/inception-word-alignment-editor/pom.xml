@@ -73,4 +73,25 @@
             <artifactId>inception-websocket</artifactId>
         </dependency>
     </dependencies>
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>default</id>
+                            <configuration>
+                                <excludes combine.children="append">
+                                    <exclude>src/main/ts/package.json</exclude>
+                                    <exclude>src/main/ts/node_modules/*/**</exclude>
+                                </excludes>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>

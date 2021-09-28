@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import {Span} from "../../../../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Span";
+import {Span} from "../../../../../../inception-api-annotation-experimental/src/main/ts/client/model/Span";
 import {AnnotationExperienceAPIBasicEditor} from "../AnnotationExperienceAPIBasicEditor";
 
 export class AnnotationExperienceAPIBasicEditorVisualization {

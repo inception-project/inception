@@ -1,2 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.wordalignment.config.WordAlignmentAnnotationEditorAutoConfiguration
+de.tudarmstadt.ukp.inception.wordalignment.config.WordAlignmentAutoConfiguration

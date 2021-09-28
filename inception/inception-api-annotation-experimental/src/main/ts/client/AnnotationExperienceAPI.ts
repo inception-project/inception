@@ -15,6 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import {Observer} from "./Observer";
 import {Viewport} from "./model/Viewport";
 import {FeatureX} from "./model/FeatureX";
 import {AdviceMessage} from "./messages/response/AdviceMessage";
@@ -82,6 +83,16 @@ export interface AnnotationExperienceAPI
     disconnect();
 
 
+    /**
+     * Observer attach and detach methods to provide better usage of the API
+     * for all editors
+     * @param observer
+     */
+    attach(observer: Observer);
+
+    detach(observer: Observer);
+
+    notify();
 
     /**
      * request() functions as explained in Interface-definition.

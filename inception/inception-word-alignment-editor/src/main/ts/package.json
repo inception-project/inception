@@ -7,8 +7,7 @@
     "Annotation"
   ],
   "scripts": {
-    "es_editor_basic": "./node_modules/esbuild/bin/esbuild main/editors/basic/AnnotationExperienceAPIBasicEditor.ts --format=cjs --target=es6 --bundle --outfile=../java/de/tudarmstadt/ukp/inception/experimental/editor/resources/AnnotationExperienceAPIBasicEditor.js",
-    "es_editor_word_alignment": "./node_modules/esbuild/bin/esbuild main/editors/wordalignment/AnnotationExperienceAPIWordAlignmentEditor.ts --format=cjs --target=es6 --bundle --outfile=../java/de/tudarmstadt/ukp/inception/experimental/editor/resources/AnnotationExperienceAPIWordAlignmentEditor.js"
+    "es_editor_word_alignment": "./node_modules/esbuild/bin/esbuild WordAlignmentEditor.ts --format=cjs --target=es6 --bundle --outfile=../java/de/tudarmstadt/ukp/inception/wordalignment/resources/WordAlignmentEditor.js"
   },
   "external": {},
   "devDependencies": {
