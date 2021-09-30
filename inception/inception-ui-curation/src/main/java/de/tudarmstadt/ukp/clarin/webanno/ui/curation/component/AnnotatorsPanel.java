@@ -553,7 +553,7 @@ public class AnnotatorsPanel
      * the curation annotation.
      */
     private void addSuggestionColor(Project aProject, Map<String, CAS> aCasMap,
-            Map<String, Map<VID, AnnotationState>> aSuggestionColors,
+            Map<String, Map<VID, AnnotationState>> aAnnotationStatesForAllUsers,
             Collection<ConfigurationSet> aConfigurationSets, ConfigurationSetType aSetType)
     {
         for (ConfigurationSet configurationSet : aConfigurationSets) {
@@ -562,7 +562,7 @@ public class AnnotatorsPanel
                     continue;
                 }
 
-                Map<VID, AnnotationState> colors = aSuggestionColors.computeIfAbsent(user,
+                Map<VID, AnnotationState> annotationStates = aAnnotationStatesForAllUsers.computeIfAbsent(user,
                         k -> new HashMap<>());
 
                 for (Configuration configuration : configurationSet.getConfigurations(user)) {
@@ -588,31 +588,31 @@ public class AnnotatorsPanel
 
                     // The curator has accepted this configuration
                     if (configuration.getCasGroupIds().contains(CURATION_USER)) {
-                        colors.put(vid, ACCEPTED_BY_CURATOR);
+                        annotationStates.put(vid, ACCEPTED_BY_CURATOR);
                         continue;
                     }
 
                     // The curator has accepted *another* configuration in this set
                     if (configurationSet.getCasGroupIds().contains(CURATION_USER)) {
-                        colors.put(vid, REJECTED_BY_CURATOR);
+                        annotationStates.put(vid, REJECTED_BY_CURATOR);
                         continue;
                     }
 
                     // All annotators participated and agree but the curator did not make a decision
                     // yet.
                     if (aSetType == ConfigurationSetType.COMPLETE_AGREEMENT_SET) {
-                        colors.put(vid, ANNOTATORS_AGREE);
+                        annotationStates.put(vid, ANNOTATORS_AGREE);
                         continue;
                     }
 
                     // Annotators disagree and the curator has not made a choice yet
                     if (aSetType == ConfigurationSetType.DISAGREEMENT_SET) {
-                        colors.put(vid, ANNOTATORS_DISAGREE);
+                        annotationStates.put(vid, ANNOTATORS_DISAGREE);
                         continue;
                     }
 
                     // Annotation is incomplete and the curator has not made a choice yet
-                    colors.put(vid, ANNOTATORS_INCOMPLETE);
+                    annotationStates.put(vid, ANNOTATORS_INCOMPLETE);
                 }
             }
         }

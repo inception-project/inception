@@ -130,8 +130,6 @@ public class TestFixtures
 
     public static Repository buildRepository(KnowledgeBaseProfile profile) throws IOException
     {
-        ;
-
         switch (profile.getType()) {
         case LOCAL: {
             LuceneSail lucenesail = new LuceneSail();

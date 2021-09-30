@@ -118,6 +118,12 @@ public class RelationRenderer
     }
 
     @Override
+    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    {
+        return selectCovered(aCas, type, aWindowBegin, aWindowEnd);
+    }
+
+    @Override
     public void render(final CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
             int aWindowBegin, int aWindowEnd)
     {
@@ -135,7 +141,9 @@ public class RelationRenderer
         // Index mapping annotations to the corresponding rendered arcs
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
 
-        for (AnnotationFS fs : selectCovered(aCas, type, aWindowBegin, aWindowEnd)) {
+        List<AnnotationFS> annotations = selectAnnotationsInWindow(aCas, aWindowBegin, aWindowEnd);
+
+        for (AnnotationFS fs : annotations) {
             for (VObject arc : render(aResponse, fs, aFeatures, aWindowBegin, aWindowEnd)) {
                 if (!(arc instanceof VArc)) {
                     continue;
