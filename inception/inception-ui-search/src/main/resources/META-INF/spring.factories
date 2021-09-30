@@ -1,2 +1,4 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.app.ui.search.config.SearchServiceUIAutoConfiguration
+de.tudarmstadt.ukp.inception.app.ui.search.config.SearchServiceUIAutoConfiguration,\
+de.tudarmstadt.ukp.inception.app.ui.search.config.StatsServiceUIAutoConfiguration
+
