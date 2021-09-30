@@ -94,8 +94,14 @@ public class ChainRenderer
     }
 
     @Override
+    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    {
+        return selectFS(aCas, chainType);
+    }
+
+    @Override
     public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            int aPageBegin, int aPageEnd)
+            int aWindowBegin, int aWindowEnd)
     {
         if (!checkTypeSystem(aCas)) {
             return;
@@ -123,7 +129,8 @@ public class ChainRenderer
 
         int colorIndex = 0;
         // Iterate over the chains
-        for (FeatureStructure chainFs : selectFS(aCas, chainType)) {
+        List<AnnotationFS> annotations = selectAnnotationsInWindow(aCas, aWindowBegin, aWindowEnd);
+        for (FeatureStructure chainFs : annotations) {
             AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
             AnnotationFS prevLinkFs = null;
 
@@ -134,13 +141,13 @@ public class ChainRenderer
                 AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
-                if (linkFs.getBegin() >= aPageEnd) {
+                if (linkFs.getBegin() >= aWindowEnd) {
                     break; // Go to next chain
                 }
 
                 // Is not overlapping the viewport? We only need links that are actually visible in
                 // the viewport
-                if (!overlapping(linkFs, aPageBegin, aPageEnd)) {
+                if (!overlapping(linkFs, aWindowBegin, aWindowEnd)) {
                     // prevLinkFs remains null until we enter the window
                     linkFs = nextLinkFs;
                     continue; // Go to next link
@@ -150,7 +157,7 @@ public class ChainRenderer
 
                 // Render span
                 {
-                    Optional<VRange> range = VRange.clippedRange(aPageBegin, aPageEnd, linkFs);
+                    Optional<VRange> range = VRange.clippedRange(aWindowBegin, aWindowEnd, linkFs);
 
                     if (!range.isPresent()) {
                         continue;
@@ -201,7 +208,7 @@ public class ChainRenderer
         }
 
         for (SpanLayerBehavior behavior : behaviors) {
-            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aPageBegin, aPageEnd);
+            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx, aWindowBegin, aWindowEnd);
         }
     }
 

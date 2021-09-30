@@ -28,7 +28,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.subtract;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.PrintStream;
 import java.io.Serializable;
@@ -85,7 +84,7 @@ public class CasDiff
 
     private int end;
 
-    private final Map<String, DiffAdapter> typeAdapters = new HashMap<>();
+    private final Map<String, DiffAdapter> diffAdapters = new HashMap<>();
 
     private final LinkCompareBehavior linkCompareBehavior;
 
@@ -99,7 +98,7 @@ public class CasDiff
         linkCompareBehavior = aLinkCompareBehavior;
         if (aAdapters != null) {
             for (DiffAdapter adapter : aAdapters) {
-                typeAdapters.put(adapter.getType(), adapter);
+                diffAdapters.put(adapter.getType(), adapter);
             }
         }
     }
@@ -241,18 +240,18 @@ public class CasDiff
 
     private DiffAdapter getAdapter(String aType)
     {
-        DiffAdapter adapter = typeAdapters.get(aType);
+        DiffAdapter adapter = diffAdapters.get(aType);
         if (adapter == null) {
             LOG.warn("No diff adapter for type [" + aType + "] -- treating as without features");
             adapter = new SpanDiffAdapter(aType, emptySet());
-            typeAdapters.put(aType, adapter);
+            diffAdapters.put(aType, adapter);
         }
         return adapter;
     }
 
     public Map<String, DiffAdapter> getTypeAdapters()
     {
-        return typeAdapters;
+        return diffAdapters;
     }
 
     public Map<String, List<CAS>> getCasMap()
@@ -323,12 +322,14 @@ public class CasDiff
             return;
         }
 
+        DiffAdapter adapter = getAdapter(aType);
+
         Collection<AnnotationFS> annotations;
         if (begin == -1 && end == -1) {
             annotations = select(aCas, type);
         }
         else {
-            annotations = selectCovered(aCas, type, begin, end);
+            annotations = adapter.selectAnnotationsInWindow(aCas, begin, end);
         }
 
         if (annotations.isEmpty()) {
@@ -341,17 +342,16 @@ public class CasDiff
                 + annotations.size() + "] annotations of type [" + aType + "]");
 
         int posBefore = configSets.keySet().size();
-        LOG.debug("Positions before: [" + posBefore + "]");
+        LOG.debug("Positions before: [{}]", posBefore);
 
         for (AnnotationFS fs : annotations) {
             List<Position> positions = new ArrayList<>();
 
             // Get/create configuration set at the current position
-            positions.add(getAdapter(aType).getPosition(aCasId, fs));
+            positions.add(adapter.getPosition(aCasId, fs));
 
             // Generate secondary positions for multi-link features
-            positions.addAll(
-                    getAdapter(aType).generateSubPositions(aCasId, fs, linkCompareBehavior));
+            positions.addAll(adapter.generateSubPositions(aCasId, fs, linkCompareBehavior));
 
             for (Position pos : positions) {
                 ConfigurationSet configSet = configSets.get(pos);
@@ -359,11 +359,6 @@ public class CasDiff
                     configSet = new ConfigurationSet(pos);
                     configSets.put(pos, configSet);
                 }
-
-                // REC: appears to be left-over debug code that can be removed...
-                // if (pos.getClass() != configSet.position.getClass()) {
-                // pos.compareTo(configSet.position);
-                // }
 
                 assert pos.getClass() == configSet.position.getClass() : "Position type mismatch ["
                         + pos.getClass() + "] vs [" + configSet.position.getClass() + "]";
@@ -373,12 +368,8 @@ public class CasDiff
             }
         }
 
-        LOG.debug("Positions after: [" + configSets.keySet().size() + "] (delta: "
-                + (configSets.keySet().size() - posBefore) + ")");
-
-        //
-        // // Remember that we have processed the type
-        // entryTypes.add(aType);
+        LOG.debug("Positions after: [{}] (delta: {})", configSets.keySet().size(),
+                (configSets.keySet().size() - posBefore));
     }
 
     private void addConfiguration(ConfigurationSet aSet, String aCasGroupId, FeatureStructure aFS)
@@ -634,7 +625,7 @@ public class CasDiff
             return false;
         }
 
-        DiffAdapter adapter = typeAdapters.get(type1.getName());
+        DiffAdapter adapter = diffAdapters.get(type1.getName());
 
         if (adapter == null) {
             LOG.warn("No diff adapter for type [" + type1.getName() + "] -- ignoring!");

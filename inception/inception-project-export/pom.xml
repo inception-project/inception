@@ -111,12 +111,5 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    
-    <!-- DEPENDENCIES FOR TESTING -->
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-export</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
 </project>
