@@ -1,0 +1,74 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: inception-pv
+  labels:
+    type: local
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/inception"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: inception-pvc
+spec:
+  storageClassName: standard
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+apiVersion: v1
+kind: Service
+metadata:
+   name: inception-svc
+   labels:
+     app: inception
+spec:
+   type: ClusterIP
+   ports:
+   - name: rest
+     port: 8080
+   selector:
+     app: inception
+---     
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inception
+  #namespace: atctenant
+spec:
+  selector:
+    matchLabels:
+      app: inception
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: inception
+    spec:
+      securityContext: 
+        #fsGroup: 65534
+        #runAsUser: 842999
+      containers:
+      - name: inception
+        image: inceptionproject/inception-snapshots
+        imagePullPolicy: Always  
+        securityContext:
+          privileged: false
+        volumeMounts:
+        - mountPath: /export
+          name: mapr
+        imagePullPolicy: Always
+      volumes:
+      - name: inception-pv
+        persistentVolumeClaim:
+          claimName: inception-pvc
