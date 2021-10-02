@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.isProfileSelfServiceAllowed;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil.isNameValidUserName;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -54,7 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
 
 /**
  * Manage Application wide Users.
@@ -139,7 +139,7 @@ public class ManageUsersPage
             else if (aValidatable.getValue().contains(" ")) {
                 aValidatable.error(new ValidationError().addKey("username.containsSpaceError"));
             }
-            else if (!NameUtil.isNameValid(aValidatable.getValue())) {
+            else if (!isNameValidUserName(aValidatable.getValue())) {
                 aValidatable.error(new ValidationError().addKey("username.invalidCharactersError"));
             }
         }

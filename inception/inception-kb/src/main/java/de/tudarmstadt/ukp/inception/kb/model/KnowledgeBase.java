@@ -18,13 +18,14 @@
 package de.tudarmstadt.ukp.inception.kb.model;
 
 import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
-import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -179,7 +180,12 @@ public class KnowledgeBase
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "knowledgebase_root_classes")
     @Column(name = "name")
-    private List<String> rootConcepts = new ArrayList<>();
+    private Set<String> rootConcepts = new LinkedHashSet<>();
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "knowledgebase_add_match_props")
+    @Column(name = "name")
+    private Set<String> additionalMatchingProperties = new LinkedHashSet<>();
 
     /**
      * The default language for labels and descriptions of KB elements
@@ -403,14 +409,14 @@ public class KnowledgeBase
         basePrefix = aBasePrefix;
     }
 
-    public List<String> getRootConcepts()
+    public Set<String> getRootConcepts()
     {
         return rootConcepts;
     }
 
-    public void setRootConcepts(List<String> aExplicitlyDefinedRootConcepts)
+    public void setRootConcepts(Collection<String> aExplicitlyDefinedRootConcepts)
     {
-        rootConcepts = new ArrayList<>(aExplicitlyDefinedRootConcepts);
+        rootConcepts = new LinkedHashSet<>(aExplicitlyDefinedRootConcepts);
     }
 
     public int getMaxResults()
@@ -439,10 +445,21 @@ public class KnowledgeBase
     public void applyRootConcepts(KnowledgeBaseProfile aProfile)
     {
         if (aProfile.getRootConcepts() == null) {
-            rootConcepts = emptyList();
+            rootConcepts = emptySet();
         }
         else {
-            rootConcepts = new ArrayList<>(aProfile.getRootConcepts());
+            rootConcepts = new LinkedHashSet<>(aProfile.getRootConcepts());
+        }
+    }
+
+    public void applyAdditionalMatchingProperties(KnowledgeBaseProfile aProfile)
+    {
+        if (aProfile.getAdditionalMatchingProperties() == null) {
+            additionalMatchingProperties = emptySet();
+        }
+        else {
+            additionalMatchingProperties = new LinkedHashSet<>(
+                    aProfile.getAdditionalMatchingProperties());
         }
     }
 
@@ -464,6 +481,16 @@ public class KnowledgeBase
     public boolean isSkipSslValidation()
     {
         return skipSslValidation;
+    }
+
+    public void setAdditionalMatchingProperties(Collection<String> aProperties)
+    {
+        additionalMatchingProperties = new LinkedHashSet<>(aProperties);
+    }
+
+    public Set<String> getAdditionalMatchingProperties()
+    {
+        return additionalMatchingProperties;
     }
 
     @Override

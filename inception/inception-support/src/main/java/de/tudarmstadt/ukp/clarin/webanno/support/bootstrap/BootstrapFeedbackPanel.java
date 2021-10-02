@@ -67,7 +67,7 @@ public class BootstrapFeedbackPanel
     @Override
     protected String getCSSClass(FeedbackMessage message)
     {
-        String cssClass = "alert alert-dismissable";
+        String cssClass = "alert alert-dismissible";
         switch (message.getLevel()) {
         case FeedbackMessage.ERROR:
         case FeedbackMessage.FATAL:
@@ -87,5 +87,4 @@ public class BootstrapFeedbackPanel
         }
         return cssClass;
     }
-
 }

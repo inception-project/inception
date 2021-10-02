@@ -1,16 +1,16 @@
 = Documents
 
-To add or delete documents, you have to click on the tab *Documents* in the project pane. Two frames will be displayed. In the first frame you can import new documents.
+The documents in a project can be managed on the documents panel. 
 
-image::project6.jpg[align="center"]
+To upload one or more documents, use the folder icon in the *Files to import* field. A browser dialog will open which allows you to navigate to some folder on your computer, select files, and then upload them. Typically, you can select multiple files in this dialog either by holding the *control* key on your keyboard then then selecting them one-by-one with the mouse - or by clicking on the first file, then holding *shift* on the keyboard and then clicking on the last file - thereby selecting all files in between the two. Note that if you upload multiple files, they must all have the same format.
 
-Open the upload dialog by on *Choose Files*. If you browser supports uploading multiple documents, you can usually either select a range of files or multiple files individually. To select a range, click on the fist document, press *SHIFT* and then clicking on the last document in the desired range. To (de)select individual files, press *CTRL* and then the file you want to (de)select.
+After selecting the files, use the *Format* dropdown to choose which format your files are in. A project can contain files in different formats.
 
-Select the *Format* corresponding to the documents you upload. If you are uploading multiple documents at once, the all must have the same format.
+Finally, use the *Import* button to upload the files and add them to the project. 
 
-Then click on *Import Document*. 
-The imported documents can be seen in the list below.
-To delete a document from the project, you have to click on it and then click on *Delete* in the right lower corner.
+image::project_documents.png[align="center"]
+
+To delete a document from the project, you have to click on it and then click on *Delete* in the right lower corner. Again, you can select multiple files for deletion using with the aid of the *control* or *shift* keys on the keyboard.
 
 .Uploading large numbers of documents
 While it is possible to upload multiple documents at once, there are limits to how many documents can be uploaded in a single upload operation. For a start, it can take quite some time to upload thousands of documents. Also, the server configuration limits the individual file size and total batch size (the default limit is 100MB for both). Finally, browsers differ in their capability of dealing with large numbers of documents in an upload. In a test with 5000 documents of each ca. 2.5kb size including Chrome, Safari and Firebird, only Chrome (80.0.3987.122) completed the operation successfully. Safari (13.0.5) was only able to do upload about 3400 documents. Firebird (73.0.1) froze during the upload and was unable to deliver anything to the server. With a lower number of documents (e.g. 500), none of the browsers had any problems.

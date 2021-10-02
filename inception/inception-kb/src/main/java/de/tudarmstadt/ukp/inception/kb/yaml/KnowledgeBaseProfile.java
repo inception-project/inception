@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 public class KnowledgeBaseProfile
     implements Serializable
 {
-    private static final String KNOWLEDGEBASE_PROFILES_YAML = "knowledgebase-profiles.yaml";
+    public static final String KNOWLEDGEBASE_PROFILES_YAML = "knowledgebase-profiles.yaml";
     private static final long serialVersionUID = -2684575269500649910L;
 
     @JsonProperty("name")
@@ -60,6 +60,9 @@ public class KnowledgeBaseProfile
 
     @JsonProperty("root-concepts")
     private List<String> rootConcepts;
+
+    @JsonProperty("additional-matching-properties")
+    private List<String> additionalMatchingProperties;
 
     @JsonProperty("info")
     private KnowledgeBaseInfo info;
@@ -160,6 +163,16 @@ public class KnowledgeBaseProfile
     public void setRootConcepts(List<String> aRootConcepts)
     {
         rootConcepts = aRootConcepts;
+    }
+
+    public List<String> getAdditionalMatchingProperties()
+    {
+        return additionalMatchingProperties;
+    }
+
+    public void setAdditionalMatchingProperties(List<String> aProperties)
+    {
+        additionalMatchingProperties = aProperties;
     }
 
     public KnowledgeBaseInfo getInfo()

@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.core.menubar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.support.help.DocLink.Book.USER_GUIDE;
 
 import java.util.MissingResourceException;
@@ -49,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ImageLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.logout.LogoutPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectContext;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.admin.AdminDashboardPage;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
@@ -93,7 +93,7 @@ public class MenuBar
 
         helpLink = new DocLink(CID_HELP_LINK, USER_GUIDE, new ResourceModel("page.help.link", ""));
         helpLink.setBody(Model.of("<i class=\"fas fa-question-circle\"></i>"
-                + " <span class=\"nav-link active p-0 d-none d-md-inline\">Help</span>"));
+                + " <span class=\"nav-link active p-0 d-none d-lg-inline\">Help</span>"));
         helpLink.add(visibleWhen(this::isPageHelpAvailable));
         add(helpLink);
 
@@ -120,8 +120,15 @@ public class MenuBar
 
             public PageParameters getPageParameters()
             {
-                return new PageParameters().set(PAGE_PARAM_PROJECT,
-                        project.map(Project::getId).orElse(-1l).getObject());
+                PageParameters pageParameters = new PageParameters();
+                if (project.isPresent().getObject()) {
+                    ProjectPageBase.setProjectPageParameter(pageParameters, project.getObject());
+                }
+                else {
+                    pageParameters.set(ProjectPageBase.PAGE_PARAM_PROJECT, -1);
+                }
+
+                return pageParameters;
             }
         };
         dashboardLink.add(visibleWhen(user.map(this::userCanAccessProject).orElse(false)));

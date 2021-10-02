@@ -34,9 +34,11 @@
 
 @import "package!shim-bootstrap3";
 @import "package!shim-kendo";
+@import "package!shim-wicket";
 @import "package!shim-wicketstuff";
 @import "package!shim-bootstrapselect";
 @import "package!shim-jquery";
+@import "package!shim-fileinput";
 
 .w-min-220px {
   min-width: 220px;
@@ -44,4 +46,22 @@
 
 .w-min-440px {
   min-width: 440px;
+}
+
+.h-max-400px {
+  max-height: 440px;
+}
+
+@for $i from 1 through 10 {
+  @media only screen and (min-height: #{$i * 200}px) {
+    .dropdown-menu { max-height: #{$i * 100}px; overflow-y: auto; }
+  }   
+}
+
+.form-row {
+  @extend .mb-2;
+}
+
+.above-modal {
+  z-index: 30000;
 }

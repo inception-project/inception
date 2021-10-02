@@ -92,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
@@ -167,8 +168,6 @@ public class CurationPage
     private AnnotationEditorBase annotationEditor;
     private AnnotatorsPanel annotatorsPanel;
 
-    private CurationUnit focussedUnit;
-
     public CurationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
@@ -185,11 +184,11 @@ public class CurationPage
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
 
-        handleParameters(document, focus, true);
+        handleParameters(document, focus, null, true);
 
         commonInit();
 
-        updateDocumentView(null, null, focus);
+        updateDocumentView(null, null, null, focus);
     }
 
     private void commonInit()
@@ -198,7 +197,6 @@ public class CurationPage
         getModelObject().setUser(new User(CURATION_USER, Role.ROLE_USER));
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         curationUnits = new ListModel<>(new ArrayList<>());
-        focussedUnit = new CurationUnit();
 
         add(createUrlFragmentBehavior());
 
@@ -233,8 +231,7 @@ public class CurationPage
 
         annotatorsPanel = new AnnotatorsPanel("annotatorsPanel", new ListModel<>(segments));
         annotatorsPanel.setOutputMarkupPlaceholderTag(true);
-        annotatorsPanel.add(visibleWhen(
-                () -> getModelObject() != null && getModelObject().getDocument() != null));
+        annotatorsPanel.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         splitter.add(annotatorsPanel);
 
         rightSidebar = makeRightSidebar("rightSidebar");
@@ -245,8 +242,7 @@ public class CurationPage
         annotationEditor = new BratAnnotationEditor("annotationEditor", getModel(), detailPanel,
                 this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
-        annotationEditor.add(visibleWhen(
-                () -> getModelObject() != null && getModelObject().getDocument() != null));
+        annotationEditor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         annotationEditor.setOutputMarkupPlaceholderTag(true);
         splitter.add(annotationEditor);
 
@@ -359,12 +355,12 @@ public class CurationPage
     @OnEvent
     public void onUnitClickedEvent(CurationUnitClickedEvent aEvent)
     {
-        focussedUnit = aEvent.getUnit();
         try {
             AnnotatorState state = CurationPage.this.getModelObject();
             CAS cas = curationDocumentService.readCurationCas(state.getDocument());
-            state.getPagingStrategy().moveToOffset(state, cas, focussedUnit.getBegin(), CENTERED);
-            state.setFocusUnitIndex(focussedUnit.getUnitIndex());
+            state.getPagingStrategy().moveToOffset(state, cas, aEvent.getUnit().getBegin(),
+                    CENTERED);
+            state.setFocusUnitIndex(aEvent.getUnit().getUnitIndex());
 
             actionRefreshDocument(aEvent.getTarget());
         }
@@ -483,9 +479,7 @@ public class CurationPage
         // Update timestamp in state
         Optional<Long> diskTimestamp = curationDocumentService
                 .getCurationCasTimestamp(state.getDocument());
-        if (diskTimestamp.isPresent()) {
-            state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-        }
+        AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
     }
 
     @Override
@@ -542,9 +536,8 @@ public class CurationPage
 
             curationUnits.setObject(buildUnitOverview(state));
             detailPanel.reset(aTarget);
-            commonUpdate();
 
-            annotatorsPanel.init(aTarget, getModelObject(), focussedUnit);
+            annotatorsPanel.init(aTarget, getModelObject());
 
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
@@ -584,19 +577,19 @@ public class CurationPage
         AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
 
         Map<String, CAS> casses = readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
-        CAS mergeCas = readCurationCas(state, state.getDocument(), casses, randomAnnotationDocument,
-                true, aMergeIncompleteAnnotations, aForceRecreateCas);
 
-        return mergeCas;
+        CAS curationCas = readCurationCas(state, state.getDocument(), casses,
+                randomAnnotationDocument, true, aMergeIncompleteAnnotations, aForceRecreateCas);
+
+        return curationCas;
     }
 
     @Override
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
-            commonUpdate();
             annotationEditor.requestRender(aTarget);
-            annotatorsPanel.requestRender(aTarget, getModelObject(), focussedUnit);
+            annotatorsPanel.requestRender(aTarget, getModelObject());
             aTarget.add(curationUnitOverview);
             aTarget.add(splitter.get(MID_NUMBER_OF_PAGES));
         }
@@ -607,7 +600,7 @@ public class CurationPage
 
     @Override
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
-            boolean aLockIfPreset)
+            StringValue aUser, boolean aLockIfPreset)
     {
         Project project = getProject();
 
@@ -655,7 +648,7 @@ public class CurationPage
 
     @Override
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
-            StringValue aFocusParameter)
+            User aPreviousUser, StringValue aFocusParameter)
     {
         SourceDocument currentDocument = getModelObject().getDocument();
         if (currentDocument == null) {
@@ -695,14 +688,6 @@ public class CurationPage
                 error("Error reading CAS " + e.getMessage());
             }
         }
-    }
-
-    private void commonUpdate()
-    {
-        AnnotatorState state = CurationPage.this.getModelObject();
-
-        focussedUnit.setCurationBegin(state.getWindowBeginOffset());
-        focussedUnit.setCurationEnd(state.getWindowEndOffset());
     }
 
     @Override

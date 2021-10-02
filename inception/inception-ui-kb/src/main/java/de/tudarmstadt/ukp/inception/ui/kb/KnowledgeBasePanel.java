@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePage.PAGE_PARAM_KB_NAME;
 
 import java.util.Arrays;
@@ -46,9 +45,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -118,18 +117,17 @@ public class KnowledgeBasePanel
         kbModel = aKbModel;
 
         // add the selector for the knowledge bases
-        DropDownChoice<KnowledgeBase> ddc = new BootstrapSelect<KnowledgeBase>("knowledgebases",
+        DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
                 LoadableDetachableModel
                         .of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())));
 
         ddc.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            long projectId = aProjectModel.getObject().getId();
             String kbName = aKbModel.getObject().getName();
 
-            PageParameters params = new PageParameters().set(PAGE_PARAM_PROJECT, projectId)
-                    .set(PAGE_PARAM_KB_NAME, kbName);
-
-            setResponsePage(KnowledgeBasePage.class, params);
+            PageParameters pageParameters = new PageParameters();
+            ProjectPageBase.setProjectPageParameter(pageParameters, aProjectModel.getObject());
+            pageParameters.set(PAGE_PARAM_KB_NAME, kbName);
+            setResponsePage(KnowledgeBasePage.class, pageParameters);
         }));
 
         ddc.setModel(aKbModel);
@@ -165,10 +163,14 @@ public class KnowledgeBasePanel
                 Optional<KBObject> optKbObject = kbService.readItem(kbModel.getObject(),
                         selectedResource.getIdentifier());
 
-                if (optKbObject.isPresent()) {
-                    KBObject kbObject = optKbObject.get();
-                    sendSelectionChangedEvents(aTarget, kbObject);
+                if (!optKbObject.isPresent()) {
+                    error("The selected item is neither a concept, nor an instance nor a property. "
+                            + "It cannot be viewed/edited on this page.");
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                    return;
                 }
+
+                sendSelectionChangedEvents(aTarget, optKbObject.get());
             }
         };
 
@@ -253,7 +255,7 @@ public class KnowledgeBasePanel
             models.stream().filter(model -> model.getObject() != null && model.getObject()
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
-                        Optional<KBObject> kbObject = kbService.readItem(kbModel.getObject(),
+                        Optional<KBHandle> kbObject = kbService.readHandle(kbModel.getObject(),
                                 model.getObject().getIdentifier());
                         if (kbObject.isPresent()) {
                             model.getObject().setName(kbObject.get().getName());

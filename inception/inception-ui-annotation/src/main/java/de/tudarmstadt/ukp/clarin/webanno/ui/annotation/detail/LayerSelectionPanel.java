@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -26,7 +25,6 @@ import static java.util.Objects.isNull;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -41,11 +39,9 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -74,8 +70,6 @@ public class LayerSelectionPanel
     private final DropDownChoice<AnnotationLayer> layerSelector;
     private final WebMarkupContainer forwardAnnotationGroup;
     private final AnnotationDetailEditorPanel owner;
-
-    private final List<AnnotationLayer> selectableLayers = new ArrayList<>();
 
     public LayerSelectionPanel(String aId, IModel<AnnotatorState> aModel,
             AnnotationDetailEditorPanel aOwner)
@@ -112,6 +106,11 @@ public class LayerSelectionPanel
     public AnnotationPageBase getEditorPage()
     {
         return (AnnotationPageBase) getPage();
+    }
+
+    public IModel<AnnotatorState> getModel()
+    {
+        return (IModel<AnnotatorState>) getDefaultModel();
     }
 
     public AnnotatorState getModelObject()
@@ -152,8 +151,8 @@ public class LayerSelectionPanel
 
     private DropDownChoice<AnnotationLayer> createDefaultAnnotationLayerSelector()
     {
-        DropDownChoice<AnnotationLayer> selector = new BootstrapSelect<>("defaultAnnotationLayer");
-        selector.setChoices(LoadableDetachableModel.of(this::getSelectableLayers));
+        DropDownChoice<AnnotationLayer> selector = new DropDownChoice<>("defaultAnnotationLayer");
+        selector.setChoices(getModel().map(AnnotatorState::getSelectableLayers));
         selector.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         selector.setOutputMarkupId(true);
         selector.add(LambdaAjaxFormComponentUpdatingBehavior.onUpdate("change",
@@ -273,39 +272,5 @@ public class LayerSelectionPanel
     {
         return annotationService.listAnnotationFeature(aLayer).stream().filter(f -> f.isEnabled())
                 .filter(f -> f.isVisible()).collect(Collectors.toList());
-    }
-
-    public void refreshSelectableLayers()
-    {
-        AnnotatorState state = getModelObject();
-        selectableLayers.clear();
-
-        for (AnnotationLayer layer : state.getAnnotationLayers()) {
-            if (!layer.isEnabled() || layer.isReadonly()
-                    || annotationEditorProperties.isLayerBlocked(layer)) {
-                continue;
-            }
-
-            if (layer.getType().equals(SPAN_TYPE) || layer.getType().equals(CHAIN_TYPE)) {
-                selectableLayers.add(layer);
-            }
-        }
-
-        // if there is only one layer, we use it to create new annotations
-        if (selectableLayers.size() == 1) {
-            state.setDefaultAnnotationLayer(selectableLayers.get(0));
-        }
-
-        if (state.getDefaultAnnotationLayer() != null) {
-            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
-        }
-        else if (!selectableLayers.isEmpty()) {
-            state.setSelectedAnnotationLayer(selectableLayers.get(0));
-        }
-    }
-
-    public List<AnnotationLayer> getSelectableLayers()
-    {
-        return selectableLayers;
     }
 }

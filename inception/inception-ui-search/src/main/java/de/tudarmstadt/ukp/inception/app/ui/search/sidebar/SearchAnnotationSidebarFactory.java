@@ -45,6 +45,12 @@ public class SearchAnnotationSidebarFactory
     }
 
     @Override
+    public String getDescription()
+    {
+        return "Allows searching for text and annotations.";
+    }
+
+    @Override
     public IconType getIcon()
     {
         return FontAwesome5IconType.search_s;

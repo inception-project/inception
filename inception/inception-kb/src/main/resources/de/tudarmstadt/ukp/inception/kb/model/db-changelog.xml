@@ -417,4 +417,19 @@
       </column>
     </addColumn>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20210905-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="knowledgebase_add_match_props"/>
+      </not>
+    </preConditions>
+    <createTable tableName="knowledgebase_add_match_props">
+      <column name="knowledgebase_repositoryId" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="name" type="VARCHAR(255)">
+      </column>
+    </createTable>
+  </changeSet>
 </databaseChangeLog>

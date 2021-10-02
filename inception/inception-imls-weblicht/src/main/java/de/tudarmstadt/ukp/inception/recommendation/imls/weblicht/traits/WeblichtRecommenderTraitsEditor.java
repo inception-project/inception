@@ -52,7 +52,6 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.DateTextField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInput;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -189,8 +188,8 @@ public class WeblichtRecommenderTraitsEditor
             languageField.setModelObject("unknown");
         }
 
-        formatField = new BootstrapSelect<WeblichtFormat>("chainInputFormat",
-                asList(WeblichtFormat.values()), new EnumChoiceRenderer<>(this));
+        formatField = new DropDownChoice<>("chainInputFormat", asList(WeblichtFormat.values()),
+                new EnumChoiceRenderer<>(this));
         formatField.setRequired(true);
         formatField.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                 _target -> _target.add(languageField)));

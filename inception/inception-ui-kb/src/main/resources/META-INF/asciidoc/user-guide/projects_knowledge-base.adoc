@@ -41,19 +41,193 @@ The remote knowledge bases, there are the following settings:
 
 === Schema mapping
 
-Different types of knowledge base schemata are supported via a configurable mapping mechanism. The user can choose one of the pre-configured mapping or provide her own custom defined mapping as shown in the screenshot below. 
+Different types of knowledge base schemata are supported via a configurable mapping mechanism. The user can choose one of the pre-configured mapping or provide a custom mapping.
+
+
+[cols="1,1,3a"]
+|====
+| Setting | Description | Example
+
+| Class IRI
+| Identifies a concept as a class
+|
+`http://www.w3.org/2002/07/owl#Class`
+[%collapsible]
+====
+.`http://my-kb/foo` is a class
+[source,turtle,role="small"]
+----
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix owl: <http://www.w3.org/2002/07/owl#>.
+
+<http://my-kb/foo> 
+  rdf:type owl:Class.
+----
+====
+
+| Subclass IRI (property)
+| Indicates the sub-class relation between two classes
+|
+`http://www.w3.org/2000/01/rdf-schema#subClassOf`
+[%collapsible]
+====
+.`http://my-kb/foo` is a sub-class of `http://my-bb/bar`
+[source,turtle,role="small"]
+----
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+
+<http://my-kb/foo> 
+  rdfs:subClassOf <http://my-bb/bar>.
+----
+====
+
+| Type IRI (property)
+| Indicates the is-a relation between an instance and a class
+|
+`http://www.w3.org/1999/02/22-rdf-syntax-ns#type`
+[%collapsible]
+====
+.`http://my-kb/foo` is an instance of `http://my-bb/bar`
+[source,turtle,role="small"]
+----
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+
+<http://my-kb/foo> 
+  rdf:type <http://my-bb/bar>.
+----
+====
+
+| Label IRI (property)
+| Name of the class or instance
+|
+`http://www.w3.org/2000/01/rdf-schema#label`
+[%collapsible]
+====
+.`http://my-kb/foo` has a name
+[source,turtle,role="small"]
+----
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+
+<http://my-kb/foo> 
+  rdfs:label "Foo".
+----
+====
+
+| Description IRI (property)
+| Description of a class or instance
+|
+`http://www.w3.org/2000/01/rdf-schema#comment`
+[%collapsible]
+====
+.`http://my-kb/foo` has a description
+[source,turtle,role="small"]
+----
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+
+<http://my-kb/foo> 
+  rdfs:comment "This entry describes a Foo".
+----
+====
+
+| Property IRI
+| Identifies a concept as a property
+|
+`http://www.w3.org/1999/02/22-rdf-syntax-ns#Property`
+[%collapsible]
+====
+.`http://my-kb/foo` is marked as being a property
+[source,turtle,role="small"]
+----
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+
+<http://my-kb/foo> 
+  rdf:type rdf:Property.
+----
+====
+
+| Sub-property IRI (property)
+| Indicates the sub-property relation between two properties
+| 
+`http://www.w3.org/1999/02/22-rdf-syntax-ns#subPropertyOf`
+[%collapsible]
+====
+.`http://my-kb/foo` is a sub-property of `http://my-bb/bar`
+[source,turtle,role="small"]
+----
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+
+<http://my-kb/foo> 
+  rdf:subPropertyOf <http://my-kb/bar> .
+----
+====
+
+| Property label IRI (property)
+| Name of the property
+| 
+`http://www.w3.org/2000/01/rdf-schema#label`
+[%collapsible]
+====
+.`http://my-kb/foo` has a name
+[source,turtle,role="small"]
+----
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+
+<http://my-kb/foo> 
+  rdfs:label "Foo".
+----
+====
+
+| Property description IRI (property)
+| Description of the property
+| 
+`http://www.w3.org/2000/01/rdf-schema#comment`
+[%collapsible]
+====
+.`http://my-kb/foo` has a description
+[source,turtle,role="small"]
+----
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+
+<http://my-kb/foo> 
+  rdfs:comment "This entry describes a Foo".
+----
+====
+|====
+
+=== Root Concepts
 
 In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
+
+
+=== Additional Matching Properties
+
+When searching for a concept e.g. in the annotation editor, by default the search terms are matched only against the concept name (label). There should only be one label for each concept
+(although there can be multiple label entries for a concept in the knowledge base, but theses
+should refer to different languages). However, it is common that this one label is actually only
+the preferred label and there could be any number of synonyms through which the concept can 
+also be found. Thus, here you can enter a list of properties which should also be considered
+when searching for a concept.
+
+NOTE: Not all remote SPARQL knowledge bases may support additional matching properties. 
+      If a full text index is used (recommended!), then the full text index may have to be configured to index 
+      all properties listed here.
  
 === Full text search
 
 Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. Two full text search modes are supported:
 
-* `bif:contains`: use with remote Virtuoso SPARQL endpoints.
-* `text:query`: use with remote Fuseki SPARQL endpoints.
-* `https://www.mediawiki.org/ontology#API/`: use with the official Wikidata SPARQL endpoint.
-* `lucenesail#matches`: use with local knowledge bases or possibly with remote knowledge bases using the RDF4J Lucene SAIL.
-* `FTS:NONE`: use if there is not full text search support in the triple store - this will be very slow in particular for large KBs.
+* `bif:contains`: use with remote link:https://virtuoso.openlinksw.com[Virtuoso SPARQL] endpoints.
+* `text:query`: use with remote link:https://jena.apache.org/documentation/fuseki2/[Apache Jena Fuseki] SPARQL endpoints. Note that on the side of the Fuseki server, the full text index must be configured with the options `text:storeValues` and `text:multilingualSupport` both set to `true` (cf. link:https://jena.apache.org/documentation/query/text-query.html[Text Dataset Assembler documentation]).
+* `\https://www.mediawiki.org/ontology#API/`: use with the link:https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service/queries[official Wikidata SPARQL endpoint].
+* `lucenesail#matches`: use with local knowledge bases or possibly with remote knowledge bases using the link:https://rdf4j.org/documentation/programming/lucene/[RDF4J Lucene SAIL].
+* `FTS:NONE`: use if there is no full text search support in the triple store - this will be very slow in particular for large KBs.
 
 === Importing RDF
 

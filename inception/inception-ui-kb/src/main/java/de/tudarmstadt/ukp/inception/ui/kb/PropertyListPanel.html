@@ -22,7 +22,7 @@
 <wicket:panel>
   <div class="flex-content card">
     <div class="card-header">
-      <form wicket:id="form" class="float-right">
+      <form wicket:id="form" class="float-end">
         <input type="checkbox" wicket:id="showAllProperties"/>
         <wicket:message key="property.list.showall"/>
       </form>
@@ -31,9 +31,9 @@
     <div class="card-body flex-v-container flex-content fit-child-snug">
       <select wicket:id="properties" class="form-control list-panel"></select>
     </div>
-    <div class="card-footer text-right">
-      <button wicket:id="add" type="submit" class="btn btn-primary">
-        <i class="fas fa-plus"></i>
+    <div class="card-footer text-end">
+      <button wicket:id="add" type="submit" class="btn btn-sm btn-primary">
+        <i class="fas fa-plus me-1"></i>
         <wicket:container wicket:id="label"/>
       </button> 
     </div>

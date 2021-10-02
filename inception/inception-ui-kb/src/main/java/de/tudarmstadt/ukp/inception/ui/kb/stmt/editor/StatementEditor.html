@@ -26,18 +26,22 @@
   <wicket:fragment wicket:id="viewMode">
     <wicket:container wicket:id="value"></wicket:container>
     
-    <div class="float-right">
-      <a wicket:id="makeExplicit" wicket:message="title:makeExplicit" class="btn-link"> <i class="fas fa-gavel"></i></a>
-      <a wicket:id="edit" wicket:message="title:edit" class="btn-link"> <i class="fas fa-edit"></i></a>
+    <div class="float-end">
+      <a wicket:id="makeExplicit" wicket:message="title:makeExplicit" class="btn-link">
+        <i class="fas fa-gavel"></i>
+      </a>
+      <a wicket:id="edit" wicket:message="title:edit" class="btn-link">
+        <i class="fas fa-edit"></i>
+      </a>
     </div>
     <div>
       <div wicket:id="qualifierListWrapper" class="flex-v-container flex-content">
         <div wicket:id="qualifierList" class="qualifier-group-statement-wrapper">
-            <div wicket:id="qualifier" class="qualifier-editor"></div>
+          <div wicket:id="qualifier" class="qualifier-editor"></div>
         </div>
       </div>
     </div>
-    <div class="float-right" wicket:enclosure="addQualifier">
+    <div class="float-end" wicket:enclosure="addQualifier">
       <a wicket:id="addQualifier" class="btn-link">
         <i class="fas fa-plus" aria-hidden="true"></i>
         <wicket:container wicket:id="label"></wicket:container>
@@ -46,12 +50,12 @@
   </wicket:fragment>
 
   <wicket:fragment wicket:id="editMode">
-    <form wicket:id="form" class="form-inline">
-      <div class="flex-fill flex-h-container flex-gutter flex-only-internal-gutter" style="flex-wrap: wrap">
-        <div class="flex-h-container" style="width: 8em;">
-          <select wicket:id="valueType" class="flex-content form-control" data-container="body"></select>
+    <form wicket:id="form" class="flex-v-container flex-gutter flex-only-internal-gutter">
+      <div class="flex-h-container flex-gutter flex-only-internal-gutter" wicket:id="value"></div>
+      <div class="flex-h-container flex-gutter flex-only-internal-gutter">
+        <div class="flex-h-container flex-fill">
+          <select wicket:id="valueType" class="flex-content form-select" data-container="body"/>
         </div>
-        <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" wicket:id="value"></div>
         <div class="statement-editor-button-row">
           <div class="btn-group">
             <a wicket:id="save" wicket:message="title:statement.save" class="btn btn-primary">

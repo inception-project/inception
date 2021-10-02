@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.containsNone;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -33,17 +37,22 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
+import org.apache.commons.lang3.Validate;
 import org.hibernate.annotations.Type;
 
 /**
  * A persistence object for a Project.
  */
 @Entity
-@Table(name = "project", uniqueConstraints = { @UniqueConstraint(columnNames = { "name" }) })
+@Table(name = "project", uniqueConstraints = { @UniqueConstraint(columnNames = { "slug" }) })
 public class Project
     implements Serializable
 {
     private static final long serialVersionUID = -5426914078691460011L;
+
+    public static final String PROJECT_NAME_ILLEGAL_CHARACTERS = "^/\\&*?+$![]";
+    public static final int MIN_PROJECT_SLUG_LENGTH = 3;
+    public static final int MAX_PROJECT_SLUG_LENGTH = 40;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,6 +60,9 @@ public class Project
 
     @Column(nullable = false)
     private String name;
+
+    @Column(nullable = true)
+    private String slug;
 
     @Lob
     @Column(length = 64000)
@@ -89,10 +101,15 @@ public class Project
         // Nothing to do
     }
 
-    public Project(String aName)
+    /**
+     * Constructor used for testing purposes. Set the {@link #name} to the same value as the
+     * {@link #slug}.
+     */
+    public Project(String aSlug)
     {
         super();
-        name = aName;
+        setName(aSlug);
+        setSlug(aSlug);
         mode = "annotation";
     }
 
@@ -113,7 +130,19 @@ public class Project
 
     public void setName(String aName)
     {
+        Validate.isTrue(isValidProjectName(aName), "Invalid project name: [%s]", aName);
         name = aName;
+    }
+
+    public void setSlug(String aSlug)
+    {
+        Validate.isTrue(isValidProjectSlug(aSlug), format("Invalid project URL slug: [%s]", aSlug));
+        slug = aSlug;
+    }
+
+    public String getSlug()
+    {
+        return slug;
     }
 
     public String getDescription()
@@ -236,7 +265,7 @@ public class Project
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((slug == null) ? 0 : slug.hashCode());
         return result;
     }
 
@@ -253,12 +282,12 @@ public class Project
             return false;
         }
         Project other = (Project) obj;
-        if (name == null) {
-            if (other.name != null) {
+        if (slug == null) {
+            if (other.slug != null) {
                 return false;
             }
         }
-        else if (!name.equals(other.name)) {
+        else if (!slug.equals(other.slug)) {
             return false;
         }
         return true;
@@ -268,5 +297,54 @@ public class Project
     public String toString()
     {
         return "[" + name + "](" + id + ")";
+    }
+
+    /**
+     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
+     * will conflict with file naming system
+     * 
+     * @param aName
+     *            a name.
+     * @return if the name is valid.
+     */
+    public static boolean isValidProjectName(String aName)
+    {
+        return aName != null && containsNone(aName, PROJECT_NAME_ILLEGAL_CHARACTERS);
+    }
+
+    public static boolean isValidProjectSlug(String aSlug)
+    {
+        if (isEmpty(aSlug)) {
+            return false;
+        }
+
+        if (aSlug.length() < MIN_PROJECT_SLUG_LENGTH || aSlug.length() > MAX_PROJECT_SLUG_LENGTH) {
+            return false;
+        }
+
+        // Must start with a letter character
+        if (!isValidProjectSlugInitialCharacter(aSlug.charAt(0))) {
+            return false;
+        }
+
+        // Must consist only of valid characters
+        for (int i = 0; i < aSlug.length(); i++) {
+            if (!isValidProjectSlugCharacter(aSlug.charAt(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static boolean isValidProjectSlugInitialCharacter(char aChar)
+    {
+        return ('a' <= aChar && aChar <= 'z');
+    }
+
+    public static boolean isValidProjectSlugCharacter(char aChar)
+    {
+        return ('0' <= aChar && aChar <= '9') || ('a' <= aChar && aChar <= 'z') || aChar == '-'
+                || aChar == '_';
     }
 }

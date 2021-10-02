@@ -183,18 +183,12 @@ The project has now been added and you can use it to follow the explanations of 
 
 image::getting_started_import_project.png[align="center"]
 
-== Settings and Structure of an Annotation Project
+== Project Settings
 
-In this section, we will have a look at the structure of annotation projects in {product-name}.
+In this section we will see what elements each project _has_ and where you can adjust these elements by examining the <<Project Settings>>. Note that you may have different projects in {product-name} at the same time.
+
 If you prefer to make some annotations first, you may go on with <<First Annotations with {product-name}>> and return later.
-This section here gives you a basic orientation in {product-name}.
 
-You may have different projects in {product-name} at the same time.
-First, let's see what elements each project _has_ and where you can adjust these elements by examining the <<Project Settings>>.
-Second, we will find out what you can _do_ in each project having a look at the <<Structure of an Annotation Project>>.
-
-
-=== Project Settings
 
 Each project consists at least of the following elements.
 There are more optional elements such as tagsets, document repositories etc. but to get started, we will focus on the most important ones:
@@ -217,7 +211,8 @@ If you have not imported the example project yet, we propose to follow the instr
 image::getting_started_settings.png[align="center"]
 
 [[documents_in_getting_started]]
-* *Documents:* Here, you may upload your files to be annotated.
+=== Documents
+Here, you may upload your files to be annotated.
 Make sure that the format selected in the dropdown on the right is the same as the one of the file to be uploaded.
 
 image::getting_started_documents.png[align="center"]
@@ -230,15 +225,17 @@ For example, a user may be added to the {product-name} instance but not to a cer
 Or she may have different rights in several projects.
 
 [[users_in_getting_started]]
-* *Users*: Here, you may add users to your _project_ and change their rights within that project.
+=== Users
+Here, you may add users to your _project_ and change their rights within that project.
 You can only add users to a project from the dropdown at the left if they exist already in the {product-name} _instance_.
-** *Add new users:* In order to find users for a _project_ in the dropdown, you need to add them to your {product-name} _instance_ first.
+
+* *Add new users:* In order to find users for a _project_ in the dropdown, you need to add them to your {product-name} _instance_ first.
 Click on the *administration* button in the very top right corner and select section *Users* on the left.
 For *user roles* (for an _instance_ of {product-name}) see the <<User Management>> in the main documentation.
 +
 image::getting_started_create_users.png[align="center"]
 +
-** *Giving rights to users:* After selecting a user from the dropdown in the project settings section *Users*, you can check and uncheck the user's rights on the right side.
+* *Giving rights to users:* After selecting a user from the dropdown in the project settings section *Users*, you can check and uncheck the user's rights on the right side.
 User rights count for that _project_ only and are different from user roles which count for the whole {product-name} _instance_.
 Any combination of rights is possible and the user will always have the sum of all rights given.
 +
@@ -270,7 +267,9 @@ image::getting_started_users.png[align="center"]
 |===
 
 [[layers_and_features_in_getting_started]]
-* *Layers:* In this section, you may create custom layers and modify them later.
+
+=== Layers
+In this section, you may create custom layers and modify them later.
 Built-in layers should not be changed.
 In case you do not want to work on built-in layers only but wish to create custom layers designed for your individual task, we recommend reading the documentation for details on <<Layers>>.
 
@@ -301,15 +300,16 @@ However, new features can be added.
 See the main documentation for details on <<Layers>>, features, the different types of layers and features, how to create custom layers and how to adjust them for your individual task.
 
 [[tagsets_in_getting_started]]
-* *Tagsets:* Behind this tab, you can modify and create the tagsets for your layers.
+=== Tagsets
+Behind this tab, you can modify and create the tagsets for your layers.
 Tagsets are always bound to a layer, or more precisely to a certain feature of a layer.
-+
+
 NOTE: *Tagsets:* In order for all annotations to have consistent labels, it is preferable to use defined tags which can be given to the annotations.
 If users do not enter free text for a label but stick to predefined tags, they avoid different names for the same thing and varying spelling.
 A set of such defined tags is called a tagset i.e. a collection of labels which can be used for annotation.
 {product-name} comes with predefined tagsets out of the box and they serve as a suggestion and starting point only.
 You can modify them or create your own ones.
-+
+
 NOTE: *Feature Types:* The tags of your tagset must always fit the type of the feature for which it will be used.
 The feature type defines what type of information the feature can be, for example "`Primitive: Integer`" for whole numbers, "`Primitive: Float`" for decimals; "`Primitive: Boolean`" for a true/false label only; the most common one "`Primitive: String`" for text labels or "`KB: Concept/Instance/Property`" if the feature shall link to a knowledge base.
 There are more types for features but these are the most important ones for you to know. +
@@ -317,13 +317,13 @@ Changing the type does only work for custom features, not for built-in features.
 In order to do so, scroll in the _Feature Details_ panel (in the _Layers_ tab) until you see the field _Type_ and select the type of your choice.
 If a tagset shall be linked to a feature, they must have the same type.
 For more details, see the <<Features>> in the main documentation.
-+
-** In order to *create a new tagset*, click on the blue create button on top.
+
+* In order to *create a new tagset*, click on the blue create button on top.
 Enter a name for it and - not technically necessary but highly recommended to avoid misunderstandings - a speaking description for the tagset.
 As an example, let's choose "`Example_Tagset`" for the name and "`This tagset serves as a playground to get started.`" for the description.
 Check or uncheck _Annotators may add new tags_ as you prefer.
 Now, click on the blue save-button.
-** In order to *fill your tagset with tags*, first choose the set from the list on the left.
+* In order to *fill your tagset with tags*, first choose the set from the list on the left.
 Then, click on the blue create-button in the _Tags_ panel at the bottom.
 A new panel called _Tag Details_ opens right beside it.
 Enter a name and description for a tag.
@@ -334,7 +334,7 @@ As another example, create a new tag for the name "`DOG`" and description "`This
 image::getting_started_tagset_create.png[align="center"]
 +
 [[link_to_a_layer_and_feature]]
-** In order to use the tagset, it is necessary to *link it to a layer and feature*.
+* In order to use the tagset, it is necessary to *link it to a layer and feature*.
 Herefore, click on the _Layers_ tab and select the layer from the list at the left.
 As an example, let's select the layer _Named entity_.
 Two new panels open now: _Layer Details_ and _Features_.
@@ -347,7 +347,7 @@ The tagset which was selected before is not linked to the layer any more but the
 +
 image::getting_started_tagset_link.png[align="center"]
 +
-** From now on, you can select your tags for annotating.
+* From now on, you can select your tags for annotating.
 Navigate to the annotation page (click _INCEpTION_ on the top left -> _Annotation_ and choose the document _pets2.txt_).
 On the layer dropdown on the right, choose the layer _Named entity_.
 When you double-click on any part in the text, for example "`Socke`" in line one, and click on the dropdown _value_ on the right, you find the tags "`DOG`" and "`CAT`" to choose from.
@@ -355,11 +355,11 @@ When you double-click on any part in the text, for example "`Socke`" in line one
 +
 image::getting_started_tagset_use.png[align="center"]
 +
-** You might want to link Named Entity tags again to the _Named entity_ Layer and _value_ feature in order to use them like they were before our little experiment.
+* You might want to link Named Entity tags again to the _Named entity_ Layer and _value_ feature in order to use them like they were before our little experiment.
 
-** For more details on Tagsets, see the main documentation, <<Tagsets>>.
+* For more details on Tagsets, see the main documentation, <<Tagsets>>.
 
-** _Note_: Tagsets can be changed and deleted.
+* _Note_: Tagsets can be changed and deleted.
 But the annotations they have been used for will remain with the same tag though. Other than the built-in layers, built-in tagsets can also be deleted.
 
 NOTE: *Saving:* Some steps, like annotations, are saved automatically in {product-name}.
@@ -367,13 +367,14 @@ Others need to be saved manually.
 Whenever there is a blue _Save_ button, it is necessary to click it to save the work.
 
 [[knowledge_bases_in_getting_started]]
-* In the section *Knowledge Bases*, you can change the settings for the knowledge bases used in your project, you can import local and remote knowledge bases into your project and you can create a custom knowledge base.
+=== Knowledge Bases
+In this section, you can change the settings for the knowledge bases used in your project, you can import local and remote knowledge bases into your project and you can create a custom knowledge base.
 The latter will be empty at first.
 It will not be filled here in the settings but at the knowledge base page ( -> _Dashboard_, -> _Knowledge base_; also see the part xref:knowledge_bases_in_getting_started_in_structrue[Knowledge Base] in <<Structure of an Annotation Project>>).
 In order to import or create a knowledge base, just click the _Create_ button and {product-name} will lead you.
-+
+
 image::getting_started_kbs.png[align="center"]
-+
+
 NOTE: *Knowledge Bases* are data bases for knowledge.
 Let's assume, the mention "`Paris`" is to be annotated.
 There are many different Parises - persons, the capital city of France and more - so the annotation is to tell clearly what entity with the name "`Paris`" is meant here.
@@ -382,37 +383,39 @@ In the annotation, we then want to make a reference to that very entry. +
 There are knowledge bases on the web (“remote”) which can be used with {product-name} like e.g. WikiData.
 You can also create your own, new knowledge bases and use them in {product-name}.
 They will be saved on your device (“local”).
-+
-** *Note* that you can have several knowledge bases in your INCEpTION instance but you can choose for every project which one(s) to use.
+
+* *Note* that you can have several knowledge bases in your INCEpTION instance but you can choose for every project which one(s) to use.
 Using many little knowledge bases in one project will slow down the performance more than few big ones.
-** Via the Dashboard (click the Dashboard-button at the top centre), you get to the *knowledge base page*.
+* Via the Dashboard (click the Dashboard-button at the top centre), you get to the *knowledge base page*.
 This is a page different from the one in the project settings where you can modify and work on your knowledge bases.
 +
 image::getting_started_kb_page.png[align="center"]
 +
 
-** *For details* on knowledge bases, see our main documentation on <<Knowledge Base>>s, or our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s../[tutorial video “Overview“^] mentioning knowledge bases.
+* *For details* on knowledge bases, see our main documentation on <<Knowledge Base>>s, or our https://www.youtube.com/watch?v=wp4AN3p23mQ&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3&t=0s../[tutorial video “Overview“^] mentioning knowledge bases.
 
-** If you like to explore a knowledge base check the example project we have downloaded and imported before.
+* If you like to explore a knowledge base check the example project we have downloaded and imported before.
 It contains a small knowledge base, too.
 
 [[recommenders_in_getting_started]]
-* In the section *Recommenders*, you can create and modify your recommenders.
+=== Recommenders
+In this section, you can create and modify your recommenders.
 They learn from what the user annotates and give suggestions.
 For details on how to _use_ recommenders, see our main documentation on xref:sect_annotation_recommendation[Recommenders] in the Annotation section.
 For details on _how to create and adjust_ them, see xref:sect_projects_recommendation[Recommenders] in the Projects section.
 Or check the https://www.youtube.com/watch?v=Xz3Hs8Lyoeg&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-&index=3/[tutorial video “Recommender Basics”^].
 
 image::getting_started_recommenders.png[align="center"]
-
-* In the *Guidelines* section, you may import files with annotation guidelines.
+==== Guidelines
+In this section, you may import files with annotation guidelines.
 There is no automatic correction or warning from {product-name} if guidelines are violated but it is a short way for every user in the project to read and check the team guidelines while working.
 On the annotation page (→ _Dashboard_ → _Annotation_ → open any document), annotators can quickly look them up by clicking on the guidelines button on the top which looks like a book (this button only appears if at least one guideline was imported).
 
 image::getting_started_guidelines.png[align="center"]
 
 [[export_in_getting_started]]
-* In the *Export* section, you can export your project partially or wholly.
+=== Export
+In this section, you can export your project partially or wholly.
 Projects which have been exported can be imported again in INCEpTION the way we did with our example project in section <<Download and import an Example Project>>: at the start page with the *Import* button.
 We recommend exporting projects on a regular basis in order to have a backup.
 For the different formats, their strengths and weaknesses, check the main documentation, xref:sect_formats[Appendix A: Formats].
@@ -420,48 +423,53 @@ We recommend using _WebAnno TSV x.x_ (where "`x.x.`" is the highest number avail
 Since it has been created specially for this application, it will provide all features required.
 However, many other formats are provided.
 
-=== Structure of an Annotation Project
+== Structure of an Annotation Project
 
-In this section, we examine the dashboard.
+Here, we will find out what you can _do_ in each project having a look at the <<Structure of an Annotation Project>>. Therefore, we examine the dashboard.
+
 If you are in a project already, click on the dashboard button on the top to get there.
 If you just logged in, choose a project by clicking on its name.
 As you are a Project Manager (see xref:User_rights[User Rights]), you see all of the following sub pages.
 For details on each section, check the section on <<sect_core_funct, Core Functionalities>>.
 
-* *Annotation*: If you went to <<First Annotations with {product-name}>> before, you have been here already.
+=== Annotation
+If you went to <<First Annotations with {product-name}>> before, you have been here already.
 Here, the annotators can go to annotate the texts.
 
-* *Curation*: Everyone with curation rights (see xref:User_rights[User Rights]) within a project can curate it.
+=== Curation
+Everyone with curation rights (see xref:User_rights[User Rights]) within a project can curate it.
 All other users do not have access to nor see this page.
 Only documents marked as finished by at least one annotator can be curated.
 For details on how to curate, see the main documentation -> xref:sect_curation[Curation] or just try it out:
-+
+
 NOTE: *Curation:* If several annotators work on a project, their annotations usually do not match perfectly.
 During the process called "Curation", you decide which annotations to keep in the final result.
-+
-** Create some annotations in any document
-** Mark the document as finished: Just click on the lock on top.
-** Add another user, just for testing this (see xref:users_in_getting_started[Users] in the section <<Project Settings>>).
-** Log out and log in again as the test user.
-** In the very same document, make some annotations which are the same and some which are different than before.
+
+* Create some annotations in any document
+* Mark the document as finished: Just click on the lock on top.
+* Add another user, just for testing this (see xref:users_in_getting_started[Users] in the section <<Project Settings>>).
+* Log out and log in again as the test user.
+* In the very same document, make some annotations which are the same and some which are different than before.
 Mark the document as finished.
-** Log in as any user with curation rights (e.g. as the "`admin`" user we used before), enter the curation page and explore how to curate: You see the automatic merge on top (what both users agreed on has been accepted already) and the annotations of each of the users below.
+* Log in as any user with curation rights (e.g. as the "`admin`" user we used before), enter the curation page and explore how to curate: You see the automatic merge on top (what both users agreed on has been accepted already) and the annotations of each of the users below.
 Differences are highlighted.
 You can accept an annotation by clicking on it.
-+
+
 image::getting_started_curation.png[align="center"]
-+
-** As a curator, you can also create new annotations on this page.
+
+* As a curator, you can also create new annotations on this page.
 It works exactly like on the Annotation page.
 Note that users who have nothing but curation rights do not see nor have access to the annotation page (see xref:User_rights[User Rights]).
 
 [[knowledge_bases_in_getting_started_in_structrue]]
-* *Knowledge Base*: Also see xref:knowledge_bases_in_getting_started[the section on knowledge bases in the project settings].
+=== Knowledge Base
+Also see xref:knowledge_bases_in_getting_started[the section on knowledge bases in the project settings].
 On the Knowledge Base page, you can manage and create your knowledge base(s) for the project you are in.
 You can create new knowledge bases from scratch, modify them and integrate existing knowledge bases into your project which are either local (that is, they are saved on your device) or remote (that is, they are online).
 Note that this knowledge base page is distinct from the tab of the same name in the project settings (see xref:knowledge_bases_in_getting_started[Knowledge Base in section Project Settings]).
 
-* *Agreement*: On this page, you can calculate the annotator agreement.
+=== Agreement
+On this page, you can calculate the annotator agreement.
 *_Note:_* Only documents *marked as finished* by annotators (clicking on the little lock on the annotation page) are taken into account.
 
 NOTE: *Agreement:* The annotations of different annotators usually do not match perfectly.
@@ -470,14 +478,17 @@ For agreement, some common measures are provided.
 
 image::getting_started_agreement.png[align="center"]
 
-* *Workload:* Here you can check the overall progress of your project; see which user is working on or has finished which document; and toggle for each user the status of each document between *Done / In Progress* or between *New / Locked*.
+=== Workload
+Here you can check the overall progress of your project; see which user is working on or has finished which document; and toggle for each user the status of each document between *Done / In Progress* or between *New / Locked*.
 For details, see <<sect_workload>> in the main documentation.
 
 image::getting_started_monitoring.png[align="center"]
 
-* *Evaluation*: The evaluation page shows a learning curve diagram of each recommender (see xref:recommenders_in_getting_started[Recommender]).
+=== Evaluation
+The evaluation page shows a learning curve diagram of each recommender (see xref:recommenders_in_getting_started[Recommender]).
 
-* *Settings*: Here, you can organize, manage and adjust all the details of your project.
+=== Settings
+Here, you can organize, manage and adjust all the details of your project.
 We had a look at those you need to get started for your own projects in the section <<Project Settings>> already.
 
 This was the overview on what you can _do_ in each project and what elements each project _has_.

@@ -23,7 +23,7 @@ A recommender learns from this interaction to further improve the quality of its
 
 Recommenders are trained every time an annotation is created, updated or deleted. In order to determine 
 whether the annotations are good enough, recommenders are evaluated on the annotation data.
-During recommender evaluation a score for each recommender is calcultated and if this score does not
+During recommender evaluation a score for each recommender is calculated and if this score does not
 meet the configured threshold, the recommender will not be used.
 
 Recommenders can be configured in the *Project Settings* under the *Recommenders* tab. To create a new
@@ -53,3 +53,5 @@ can be selected from the left pane, edited and then saved. Recommenders can be d
 *Delete*. This also removes all predictions by this recommender.
 
 image::recommender_settings.png[align="center"]
+
+NOTE: *Stacked annotations*: If you configured a recommender on a layer that allows stacking (i.e. multiple annotations of the same layer type at the same position in the text), accepting a suggestion will always create a new annotation with the suggested feature value. Even if annotation(s) of the same type already exist at this position, the suggested feature value will not be added to this annotation, but a new one will be created instead.

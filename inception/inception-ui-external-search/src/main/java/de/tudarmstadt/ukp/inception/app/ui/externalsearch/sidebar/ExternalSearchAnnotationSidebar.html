@@ -26,28 +26,22 @@
       <div class="card-body flex-v-container flex-content flex-gutter flex-only-internal-gutter">
         <form wicket:id="repositorySelectionForm">
           <div class="input-group">
-            <div class="input-group-prepend">
-              <div class="input-group-text">
-                <i class="fas fa-database"></i>
-              </div>
+            <div class="input-group-text">
+              <i class="fas fa-database"></i>
             </div>
-            <select wicket:id="repositoryCombo" class="form-control" ></select>
+            <select wicket:id="repositoryCombo" class="form-select"/>
           </div>
         </form>
         <div class="flex-h-container">
           <form wicket:id="searchForm" class="flex-content">
             <div class="input-group">
-              <div class="input-group-prepend">
-                <div class="input-group-text">
-                  <i class="fas fa-search"></i>
-                </div>
+              <div class="input-group-text">
+                <i class="fas fa-search"></i>
               </div>
               <input wicket:id="queryInput" class="form-control" type="text" />
-              <div class="input-group-append">
-                <button wicket:id="submitSearch" class="btn btn-secondary" type="submit">
-                  <wicket:message key="searchLabel"/>
-                </button>
-              </div>
+              <button wicket:id="submitSearch" class="btn btn-secondary" type="submit">
+                <wicket:message key="searchLabel"/>
+              </button>
             </div>
           </form>
         </div>

@@ -47,10 +47,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAttachme
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationCrossSentenceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationOverlapBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -65,8 +67,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 public class RelationRendererTest
 {
-    private FeatureSupportRegistry featureSupportRegistry;
-    private LayerSupportRegistry layerSupportRegistry;
+    private FeatureSupportRegistryImpl featureSupportRegistry;
+    private LayerSupportRegistryImpl layerSupportRegistry;
     private Project project;
     private AnnotationLayer depLayer;
     private AnnotationFeature dependencyLayerGovernor;
@@ -116,8 +118,16 @@ public class RelationRendererTest
         dependencyLayerDependent = new AnnotationFeature(3l, depLayer, "Dependent",
                 Token.class.getName());
 
+        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        layerBehaviorRegistry.init();
+
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
-        layerSupportRegistry = new LayerSupportRegistryImpl(asList());
+        featureSupportRegistry.init();
+        layerSupportRegistry = new LayerSupportRegistryImpl(asList(
+                new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
+        layerSupportRegistry.init();
 
         behaviors = asList(new RelationAttachmentBehavior(), new RelationOverlapBehavior(),
                 new RelationCrossSentenceBehavior());

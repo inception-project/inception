@@ -165,8 +165,7 @@ public class KnowledgeBaseDetailsPanel
             KnowledgeBaseWrapper kbw = kbwModel.getObject();
 
             // if dealing with a remote repository and a non-empty URL, get a new
-            // RepositoryImplConfig
-            // for the new URL; otherwise keep using the existing config
+            // RepositoryImplConfig for the new URL; otherwise keep using the existing config
             RepositoryImplConfig cfg;
             if (kbw.getKb().getType() == RepositoryType.REMOTE && kbw.getUrl() != null) {
                 cfg = kbService.getRemoteConfig(kbw.getUrl());
@@ -293,6 +292,10 @@ public class KnowledgeBaseDetailsPanel
 
             Component rootConcepts = new RootConceptsPanel("rootConcepts", kbwModel);
             add(rootConcepts);
+
+            Component additionalMatchingProperties = new AdditionalMatchingPropertiesPanel(
+                    "additionalMatchingProperties", kbwModel);
+            add(additionalMatchingProperties);
         }
     }
 }

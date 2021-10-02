@@ -51,7 +51,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -137,7 +136,7 @@ public class StatementGroupPanel
             IModel<KBProperty> property = Model.of();
 
             Form<KBProperty> form = new Form<>("form", property);
-            DropDownChoice<KBProperty> type = new BootstrapSelect<>("property");
+            DropDownChoice<KBProperty> type = new DropDownChoice<>("property");
             type.setModel(property);
             type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
             type.setChoices(getUnusedProperties());

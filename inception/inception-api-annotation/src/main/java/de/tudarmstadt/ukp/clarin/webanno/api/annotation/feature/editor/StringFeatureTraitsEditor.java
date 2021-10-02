@@ -36,7 +36,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.UimaPrimitiveFeatureSupport_ImplBase;
@@ -116,7 +115,7 @@ public class StringFeatureTraitsEditor
                 () -> traits.getObject().isMultipleRows() && !traits.getObject().isDynamicSize()));
         form.add(expandedRows);
 
-        DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
+        DropDownChoice<TagSet> tagset = new DropDownChoice<>("tagset");
         tagset.setOutputMarkupPlaceholderTag(true);
         tagset.setChoiceRenderer(new ChoiceRenderer<>("name"));
         tagset.setNullValid(true);
@@ -152,7 +151,7 @@ public class StringFeatureTraitsEditor
         editorTypeContainer.setOutputMarkupPlaceholderTag(true);
         editorTypeContainer.add(visibleWhen(() -> !traits.getObject().isMultipleRows()
                 && aFeature.getObject().getTagset() != null));
-        DropDownChoice<StringFeatureTraits.EditorType> editorType = new BootstrapSelect<>(
+        DropDownChoice<StringFeatureTraits.EditorType> editorType = new DropDownChoice<>(
                 "editorType");
         editorType.setModel(PropertyModel.of(traits, "editorType"));
         editorType.setChoices(Arrays.asList(StringFeatureTraits.EditorType.values()));

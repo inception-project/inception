@@ -64,10 +64,8 @@ import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementReportExportFormat;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementUtils;
@@ -81,10 +79,11 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.PopoverBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 
 public class PairwiseCodingAgreementTable
@@ -132,7 +131,7 @@ public class PairwiseCodingAgreementTable
             return raters;
         });
 
-        add(formatField = new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
+        add(formatField = new DropDownChoice<AgreementReportExportFormat>("exportFormat",
                 Model.of(CSV), asList(AgreementReportExportFormat.values()),
                 new EnumChoiceRenderer<>(this)));
         formatField.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
@@ -331,55 +330,56 @@ public class PairwiseCodingAgreementTable
             @Override
             protected void onEvent(AjaxRequestTarget aTarget)
             {
-                AJAXDownload download = new AJAXDownload()
-                {
-                    private static final long serialVersionUID = 1L;
-
-                    @Override
-                    protected IResourceStream getResourceStream()
-                    {
-                        return new AbstractResourceStream()
-                        {
-                            private static final long serialVersionUID = 1L;
-
-                            @Override
-                            public InputStream getInputStream()
-                                throws ResourceStreamNotFoundException
-                            {
-                                try {
-                                    CodingAgreementResult result = PairwiseCodingAgreementTable.this
-                                            .getModelObject().getStudy(aKey1, aKey2);
-
-                                    switch (formatField.getModelObject()) {
-                                    case CSV:
-                                        return AgreementUtils.generateCsvReport(result);
-                                    case DEBUG:
-                                        return generateDebugReport(result);
-                                    default:
-                                        throw new IllegalStateException("Unknown export format ["
-                                                + formatField.getModelObject() + "]");
-                                    }
-                                }
-                                catch (Exception e) {
-                                    // FIXME Is there some better error handling here?
-                                    LOG.error("Unable to generate agreement report", e);
-                                    throw new ResourceStreamNotFoundException(e);
-                                }
-                            }
-
-                            @Override
-                            public void close() throws IOException
-                            {
-                                // Nothing to do
-                            }
-                        };
-                    }
-                };
+                AjaxDownloadBehavior download = new AjaxDownloadBehavior(
+                        LoadableDetachableModel.of(PairwiseCodingAgreementTable.this::getFilename),
+                        LoadableDetachableModel.of(() -> getAgreementTableData(aKey1, aKey2)));
                 getComponent().add(download);
-                download.initiate(aTarget,
-                        "agreement" + formatField.getModelObject().getExtension());
+                download.initiate(aTarget);
             }
         };
+    }
+
+    private AbstractResourceStream getAgreementTableData(final String aKey1, final String aKey2)
+    {
+        return new AbstractResourceStream()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public InputStream getInputStream() throws ResourceStreamNotFoundException
+            {
+                try {
+                    CodingAgreementResult result = PairwiseCodingAgreementTable.this
+                            .getModelObject().getStudy(aKey1, aKey2);
+
+                    switch (formatField.getModelObject()) {
+                    case CSV:
+                        return AgreementUtils.generateCsvReport(result);
+                    case DEBUG:
+                        return generateDebugReport(result);
+                    default:
+                        throw new IllegalStateException(
+                                "Unknown export format [" + formatField.getModelObject() + "]");
+                    }
+                }
+                catch (Exception e) {
+                    // FIXME Is there some better error handling here?
+                    LOG.error("Unable to generate agreement report", e);
+                    throw new ResourceStreamNotFoundException(e);
+                }
+            }
+
+            @Override
+            public void close() throws IOException
+            {
+                // Nothing to do
+            }
+        };
+    }
+
+    private String getFilename()
+    {
+        return "agreement" + formatField.getModelObject().getExtension();
     }
 
     private InputStream generateDebugReport(CodingAgreementResult aResult)

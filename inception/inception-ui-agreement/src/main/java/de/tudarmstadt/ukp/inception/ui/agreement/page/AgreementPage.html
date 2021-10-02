@@ -28,24 +28,24 @@
           <div class="card">
             <div class="card-header">
               <wicket:message key="settings"/>
-              <span class="float-right">
+              <span class="float-end">
                 <a wicket:id="agreementHelpLink"/>
               </span>
             </div>
             <div class="card-body flex-h-container">
               <div class="flex-content">
-                <div class="form-group form-row" wicket:enclosure="feature">
+                <div class="row form-row" wicket:enclosure="feature">
                   <label wicket:for="feature" class="col-sm-4 col-form-label">
                   <wicket:label key="feature"/></label>
                   <div class="col-sm-8">
-                    <select wicket:id="feature" class="form-control" data-container="body"></select>
+                    <select wicket:id="feature" class="form-select" data-container="body"/>
                   </div>
                 </div>
-                <div class="form-group form-row" wicket:enclosure="measure">
+                <div class="row form-row" wicket:enclosure="measure">
                   <label wicket:for="measure" class="col-sm-4 col-form-label">
                   <wicket:label key="measure"/></label>
                   <div class="col-sm-8">
-                    <select wicket:id="measure" class="form-control" data-container="body"></select>
+                    <select wicket:id="measure" class="form-select" data-container="body"/>
                   </div>
                 </div>
               </div>
@@ -54,7 +54,7 @@
               </div>
             </div>
             <div class="card-footer flex-h-container">
-              <div class="flex-content text-right">
+              <div class="flex-content text-end">
                 <input type="submit" wicket:id="run" class="btn btn-primary" wicket:message="value:run"></input>
               </div>
             </div>

@@ -32,9 +32,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
+import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Delete;
+import static wicket.contrib.input.events.key.KeyType.Left;
+import static wicket.contrib.input.events.key.KeyType.Right;
+import static wicket.contrib.input.events.key.KeyType.Shift;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -57,6 +63,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -87,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
@@ -112,7 +120,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
+import wicket.contrib.input.events.key.KeyType;
 
 /**
  * Annotation Detail Editor Panel.
@@ -123,7 +133,7 @@ public abstract class AnnotationDetailEditorPanel
 {
     private static final long serialVersionUID = 7324241992353693848L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String KEY_BACKSPACE = "8";
     private static final String KEY_ENTER = "13";
@@ -136,6 +146,7 @@ public abstract class AnnotationDetailEditorPanel
     private final AnnotationInfoPanel selectedAnnotationInfoPanel;
     private final FeatureEditorListPanel featureEditorListPanel;
     private final WebMarkupContainer buttonContainer;
+    private final WebMarkupContainer navContainer;
     private final AttachedAnnotationListPanel relationListPanel;
 
     // Components
@@ -179,6 +190,65 @@ public abstract class AnnotationDetailEditorPanel
         buttonContainer.add(createReverseButton());
         buttonContainer.add(createClearButton());
         add(buttonContainer);
+
+        navContainer = new WebMarkupContainer("navContainer");
+        navContainer
+                .add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        navContainer.setOutputMarkupPlaceholderTag(true);
+        navContainer.add(createNextAnnotationButton());
+        navContainer.add(createPreviousAnnotationButton());
+        add(navContainer);
+    }
+
+    private LambdaAjaxLink createNextAnnotationButton()
+    {
+        LambdaAjaxLink link = new LambdaAjaxLink("nextAnnotation", this::actionNextAnnotation);
+        link.add(new InputBehavior(new KeyType[] { Shift, Right }, click));
+        return link;
+    }
+
+    private LambdaAjaxLink createPreviousAnnotationButton()
+    {
+        LambdaAjaxLink link = new LambdaAjaxLink("previousAnnotation",
+                this::actionPreviousAnnotation);
+        link.add(new InputBehavior(new KeyType[] { Shift, Left }, click));
+        return link;
+    }
+
+    private void actionNextAnnotation(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        Selection sel = getModelObject().getSelection();
+        if (!sel.isSet()) {
+            return;
+        }
+
+        CAS cas = getEditorCas();
+        AnnotationFS cur = WebAnnoCasUtil.selectByAddr(cas, AnnotationFS.class,
+                sel.getAnnotation().getId());
+        AnnotationFS next = WebAnnoCasUtil.getNext(cur);
+
+        if (next != null) {
+            actionSelectAndJump(aTarget, next);
+        }
+    }
+
+    private void actionPreviousAnnotation(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        Selection sel = getModelObject().getSelection();
+        if (!sel.isSet()) {
+            return;
+        }
+
+        CAS cas = getEditorCas();
+        AnnotationFS cur = WebAnnoCasUtil.selectByAddr(cas, AnnotationFS.class,
+                sel.getAnnotation().getId());
+        AnnotationFS prev = WebAnnoCasUtil.getPrev(cur);
+
+        if (prev != null) {
+            actionSelectAndJump(aTarget, prev);
+        }
     }
 
     private Component createForwardAnnotationKeySequenceCapturingForm()
@@ -842,13 +912,12 @@ public abstract class AnnotationDetailEditorPanel
         // If we created a new annotation, then refresh the available annotation layers in the
         // detail panel.
         if (state.getSelection().getAnnotation().isNotSet()) {
-            if (layerSelectionPanel.getSelectableLayers().isEmpty()) {
+            if (state.getSelectableLayers().isEmpty()) {
                 state.setSelectedAnnotationLayer(new AnnotationLayer());
             }
             else if (state.getSelectedAnnotationLayer() == null) {
                 if (state.getRememberedSpanLayer() == null) {
-                    state.setSelectedAnnotationLayer(
-                            layerSelectionPanel.getSelectableLayers().get(0));
+                    state.setSelectedAnnotationLayer(state.getSelectableLayers().get(0));
                 }
                 else {
                     state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
@@ -1233,7 +1302,7 @@ public abstract class AnnotationDetailEditorPanel
             // If we reset the layers while doing a relation, we won't be able to complete the
             // relation - so in this case, we leave the layers alone...
             if (!selection.isArc()) {
-                layerSelectionPanel.refreshSelectableLayers();
+                state.refreshSelectableLayers(annotationEditorProperties);
             }
 
             if (selection.getAnnotation().isSet()) {
@@ -1392,6 +1461,35 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
+    @OnEvent
+    public void onAnnotationDeletedEvent(BulkAnnotationEvent aEvent)
+    {
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+        if (selection.getAnnotation().isNotSet()) {
+            return;
+        }
+
+        if (!state.getUser().getUsername().equals(aEvent.getUser())) {
+            return;
+        }
+
+        try {
+            int id = selection.getAnnotation().getId();
+            boolean annotationStillExists = getEditorCas().select(Annotation.class) //
+                    .at(selection.getBegin(), selection.getEnd()) //
+                    .anyMatch(ann -> ann._id() == id);
+            if (!annotationStillExists) {
+                state.getSelection().clear();
+                refresh(aEvent.getRequestTarget());
+
+            }
+        }
+        catch (Exception e) {
+            handleException(this, aEvent.getRequestTarget(), e);
+        }
+    }
+
     protected void onAutoForward(AjaxRequestTarget aTarget)
     {
         // Overriden in CurationPanel
@@ -1532,7 +1630,7 @@ public abstract class AnnotationDetailEditorPanel
         state.getSelection().clear();
 
         // Refresh the selectable layers dropdown
-        layerSelectionPanel.refreshSelectableLayers();
+        state.refreshSelectableLayers(annotationEditorProperties);
         if (aTarget != null) {
             aTarget.add(layerSelectionPanel);
         }
@@ -1631,6 +1729,7 @@ public abstract class AnnotationDetailEditorPanel
         // Avoid deleting in read-only layers
         link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
                 && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
+        link.add(new InputBehavior(new KeyType[] { Shift, Delete }, click));
         return link;
     }
 
@@ -1712,8 +1811,8 @@ public abstract class AnnotationDetailEditorPanel
             aTarget.add(layerSelectionPanel);
         }
 
-        aTarget.add(buttonContainer, selectedAnnotationInfoPanel, featureEditorListPanel,
-                relationListPanel);
+        aTarget.add(buttonContainer, navContainer, selectedAnnotationInfoPanel,
+                featureEditorListPanel, relationListPanel);
     }
 
     @OnEvent(stop = true)

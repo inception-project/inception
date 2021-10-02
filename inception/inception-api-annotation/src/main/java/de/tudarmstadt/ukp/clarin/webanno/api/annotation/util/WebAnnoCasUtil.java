@@ -30,6 +30,7 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -39,11 +40,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -450,6 +453,80 @@ public class WebAnnoCasUtil
         }
 
         return nextToken;
+    }
+
+    public static <T extends AnnotationFS> T getNext(T aRef)
+    {
+        CAS cas = aRef.getCAS();
+        AnnotationIndex<AnnotationFS> idx = cas.getAnnotationIndex(aRef.getType());
+        FSIterator<AnnotationFS> it = idx.iterator(aRef);
+
+        if (!it.isValid()) {
+            return null;
+        }
+
+        // First match is a hit?
+        if (it.get() == aRef) {
+            it.moveToNext();
+            return it.isValid() ? (T) it.get() : null;
+        }
+
+        // Seek left until we hit the last FS that is no longer equal to the current
+        boolean moved = false;
+        while (it.isValid() && idx.compare(it.get(), aRef) == 0) {
+            it.moveToPrevious();
+            moved = true;
+        }
+
+        if (moved) {
+            it.moveToNext();
+        }
+
+        while (it.isValid() && idx.compare(it.get(), aRef) == 0) {
+            if (it.get() == aRef) {
+                it.moveToNext();
+                return it.isValid() ? (T) it.get() : null;
+            }
+        }
+
+        return null;
+    }
+
+    public static <T extends AnnotationFS> T getPrev(T aRef)
+    {
+        CAS cas = aRef.getCAS();
+        AnnotationIndex<AnnotationFS> idx = cas.getAnnotationIndex(aRef.getType());
+        FSIterator<AnnotationFS> it = idx.iterator(aRef);
+
+        if (!it.isValid()) {
+            return null;
+        }
+
+        // First match is a hit?
+        if (it.get() == aRef) {
+            it.moveToPrevious();
+            return it.isValid() ? (T) it.get() : null;
+        }
+
+        // Seek left until we hit the last FS that is no longer equal to the current
+        boolean moved = false;
+        while (it.isValid() && idx.compare(it.get(), aRef) == 0) {
+            it.moveToPrevious();
+            moved = true;
+        }
+
+        if (moved) {
+            it.moveToNext();
+        }
+
+        while (it.isValid() && idx.compare(it.get(), aRef) == 0) {
+            if (it.get() == aRef) {
+                it.moveToPrevious();
+                return it.isValid() ? (T) it.get() : null;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -890,5 +967,12 @@ public class WebAnnoCasUtil
         catch (IllegalArgumentException e) {
             return null;
         }
+    }
+
+    public static Set<FeatureStructure> findAllFeatureStructures(CAS aCas)
+    {
+        Set<FeatureStructure> allFSes = new LinkedHashSet<>();
+        ((CASImpl) aCas).walkReachablePlusFSsSorted(allFSes::add, null, null, null);
+        return allFSes;
     }
 }
