@@ -20,13 +20,17 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -67,6 +71,12 @@ public class RelationDiffAdapter
     public String getTargetFeature()
     {
         return targetFeature;
+    }
+
+    @Override
+    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    {
+        return selectCovered(aCas, CasUtil.getType(aCas, getType()), aWindowBegin, aWindowEnd);
     }
 
     @Override
