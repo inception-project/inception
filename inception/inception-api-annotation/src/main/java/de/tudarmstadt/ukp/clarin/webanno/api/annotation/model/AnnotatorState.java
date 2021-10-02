@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -210,6 +211,10 @@ public interface AnnotatorState
      *            usable layers
      */
     void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers);
+
+    void refreshSelectableLayers(AnnotationEditorProperties aProperties);
+
+    List<AnnotationLayer> getSelectableLayers();
 
     // ---------------------------------------------------------------------------------------------
     // Feature value models

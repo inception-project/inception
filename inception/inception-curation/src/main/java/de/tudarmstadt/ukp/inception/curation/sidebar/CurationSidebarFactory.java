@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -41,17 +42,25 @@ public class CurationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
     private final ProjectService projectService;
+    private final UserDao userService;
 
     @Autowired
-    public CurationSidebarFactory(ProjectService aProjectService)
+    public CurationSidebarFactory(ProjectService aProjectService, UserDao aUserService)
     {
         projectService = aProjectService;
+        userService = aUserService;
     }
 
     @Override
     public String getDisplayName()
     {
         return "Curation";
+    }
+
+    @Override
+    public String getDescription()
+    {
+        return "Allows curation via the annotation page. Only available to curators.";
     }
 
     @Override
@@ -71,8 +80,8 @@ public class CurationSidebarFactory
     @Override
     public boolean applies(AnnotatorState aState)
     {
+        String currentUser = userService.getCurrentUsername();
         boolean isCurator = projectService.isCurator(aState.getProject(), aState.getUser());
-        return isCurator;
+        return isCurator && aState.getUser().getUsername().equals(currentUser);
     }
-
 }

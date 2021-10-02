@@ -33,12 +33,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Delete;
 import static wicket.contrib.input.events.key.KeyType.Left;
 import static wicket.contrib.input.events.key.KeyType.Right;
 import static wicket.contrib.input.events.key.KeyType.Shift;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -131,7 +133,7 @@ public abstract class AnnotationDetailEditorPanel
 {
     private static final long serialVersionUID = 7324241992353693848L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String KEY_BACKSPACE = "8";
     private static final String KEY_ENTER = "13";
@@ -910,13 +912,12 @@ public abstract class AnnotationDetailEditorPanel
         // If we created a new annotation, then refresh the available annotation layers in the
         // detail panel.
         if (state.getSelection().getAnnotation().isNotSet()) {
-            if (layerSelectionPanel.getSelectableLayers().isEmpty()) {
+            if (state.getSelectableLayers().isEmpty()) {
                 state.setSelectedAnnotationLayer(new AnnotationLayer());
             }
             else if (state.getSelectedAnnotationLayer() == null) {
                 if (state.getRememberedSpanLayer() == null) {
-                    state.setSelectedAnnotationLayer(
-                            layerSelectionPanel.getSelectableLayers().get(0));
+                    state.setSelectedAnnotationLayer(state.getSelectableLayers().get(0));
                 }
                 else {
                     state.setSelectedAnnotationLayer(state.getRememberedSpanLayer());
@@ -1301,7 +1302,7 @@ public abstract class AnnotationDetailEditorPanel
             // If we reset the layers while doing a relation, we won't be able to complete the
             // relation - so in this case, we leave the layers alone...
             if (!selection.isArc()) {
-                layerSelectionPanel.refreshSelectableLayers();
+                state.refreshSelectableLayers(annotationEditorProperties);
             }
 
             if (selection.getAnnotation().isSet()) {
@@ -1629,7 +1630,7 @@ public abstract class AnnotationDetailEditorPanel
         state.getSelection().clear();
 
         // Refresh the selectable layers dropdown
-        layerSelectionPanel.refreshSelectableLayers();
+        state.refreshSelectableLayers(annotationEditorProperties);
         if (aTarget != null) {
             aTarget.add(layerSelectionPanel);
         }
@@ -1728,6 +1729,7 @@ public abstract class AnnotationDetailEditorPanel
         // Avoid deleting in read-only layers
         link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
                 && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
+        link.add(new InputBehavior(new KeyType[] { Shift, Delete }, click));
         return link;
     }
 

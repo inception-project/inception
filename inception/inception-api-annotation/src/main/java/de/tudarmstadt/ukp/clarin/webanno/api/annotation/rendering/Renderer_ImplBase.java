@@ -136,4 +136,7 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     {
         aVObject.addLazyDetails(getLazyDetails(fs, aFeatures));
     }
+
+    public abstract List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin,
+            int aWindowEnd);
 }

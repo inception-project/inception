@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
@@ -86,7 +87,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -127,13 +127,17 @@ public class BratRenderer
      *            the response.
      * @param aState
      *            the annotator model.
+     * @param aVDoc
+     *            the visual document representation.
      * @param aCas
      *            the CAS.
+     * @param aColoringStrategy
+     *            the coloring strategy.
      */
     public void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
             CAS aCas, ColoringStrategy aColoringStrategy)
     {
-        aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
+        aResponse.setRtlMode(RTL == aState.getScriptDirection());
         aResponse.setFontZoom(aState.getPreferences().getFontZoom());
 
         renderText(aCas, aResponse, aState);
@@ -354,8 +358,9 @@ public class BratRenderer
         }
 
         for (Offsets offsets : bratTokenOffsets) {
-            split(aResponse.getSentenceOffsets(),
-                    visibleText.substring(offsets.getBegin(), offsets.getEnd()), offsets.getBegin(),
+            split(aResponse.getSentenceOffsets(), //
+                    visibleText, //
+                    offsets.getBegin(), //
                     offsets.getEnd()).forEach(range -> {
                         aResponse.addToken(range.getBegin(), range.getEnd());
                     });

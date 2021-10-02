@@ -47,6 +47,12 @@ public class NopRenderer
     }
 
     @Override
+    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    {
+        return Collections.emptyList();
+    }
+
+    @Override
     public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
             int windowBeginOffset, int windowEndOffset)
     {

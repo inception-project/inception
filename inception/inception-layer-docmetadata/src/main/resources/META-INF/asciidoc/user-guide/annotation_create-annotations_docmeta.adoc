@@ -25,3 +25,11 @@ On the annotation page, you can now:
 
 image::metadata-sidebar.png[align="center"]
 
+== Singletons
+
+If you want to define a document metadata layer for which each document should have exactly one
+annotation, then you can mark the layer as a *singleton*. This means that in every document, an
+annotation of this type is automatically created when the annotator opens the document. It is
+immediately accessible via the document metadata sidebar - the annotator does not have to create
+it first. Also, the singleton annotation cannot be deleted.
+

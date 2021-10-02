@@ -48,8 +48,8 @@ class FeedbackPanelExtension {
 
     // create item with new info content
     let msgItem = document.createElement('li');
-    msgItem.classList.add('alert', 'alert-dismissable', msgClass);
-    
+    msgItem.classList.add('alert', 'alert-dismissible', msgClass);
+
     // add closable link
     let msgCloseLink = this.createCloseLink();
     msgItem.appendChild(msgCloseLink);
@@ -66,7 +66,7 @@ class FeedbackPanelExtension {
       feedbackMsgList.className = 'feedbackPanel';
       this.feedbackPanel.appendChild(feedbackMsgList);
     }
-    
+
     feedbackMsgList.appendChild(msgItem);
     bootstrapFeedbackPanelFade();
   }
@@ -74,6 +74,7 @@ class FeedbackPanelExtension {
   createCloseLink() {
     var closeLink = document.createElement('button');
     closeLink.classList.add('btn-close');
+    closeLink.setAttribute('type', 'button');
     closeLink.setAttribute('data-bs-dismiss', 'alert');
     closeLink.setAttribute('aria-label', 'close');
     closeLink.href = "#";
