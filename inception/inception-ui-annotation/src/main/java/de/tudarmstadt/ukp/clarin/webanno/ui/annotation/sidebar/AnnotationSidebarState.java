@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
+import java.io.Serializable;
+
 public class AnnotationSidebarState
+    implements Serializable
 {
+    private static final long serialVersionUID = -5212679894035839772L;
+
     private String selectedTab;
     private boolean expanded;
 

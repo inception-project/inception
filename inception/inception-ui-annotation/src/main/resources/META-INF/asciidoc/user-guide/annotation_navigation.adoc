@@ -58,4 +58,7 @@ You can also use the following keyboard assignments in order to navigate only us
 
 | *SHIFT+CURSOR RIGHT* 
 | go to next annotation on the current layer, if available
+
+| *SHIFT+DELETE* 
+| delete the currently selected annotation
 |====

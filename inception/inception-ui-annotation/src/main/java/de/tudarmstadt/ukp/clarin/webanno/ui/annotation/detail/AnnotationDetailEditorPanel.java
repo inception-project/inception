@@ -33,12 +33,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Delete;
 import static wicket.contrib.input.events.key.KeyType.Left;
 import static wicket.contrib.input.events.key.KeyType.Right;
 import static wicket.contrib.input.events.key.KeyType.Shift;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -131,7 +133,7 @@ public abstract class AnnotationDetailEditorPanel
 {
     private static final long serialVersionUID = 7324241992353693848L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String KEY_BACKSPACE = "8";
     private static final String KEY_ENTER = "13";
@@ -1727,6 +1729,7 @@ public abstract class AnnotationDetailEditorPanel
         // Avoid deleting in read-only layers
         link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
                 && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
+        link.add(new InputBehavior(new KeyType[] { Shift, Delete }, click));
         return link;
     }
 

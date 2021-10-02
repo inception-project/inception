@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.versioning.ui;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
@@ -30,9 +31,11 @@ import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfi
  * {@link VersioningServiceAutoConfiguration#versioningSettingsPanelFactory()} ()}.
  * </p>
  */
+@Order(VersioningSettingsPanelFactory.ORDER)
 public class VersioningSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
+    public static final int ORDER = 8000;
 
     @Override
     public String getPath()

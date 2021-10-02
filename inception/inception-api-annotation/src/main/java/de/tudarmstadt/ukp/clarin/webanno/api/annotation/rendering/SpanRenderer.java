@@ -91,6 +91,15 @@ public class SpanRenderer
     }
 
     @Override
+    public List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd)
+    {
+        return aCas.select(type).coveredBy(0, aWindowEnd).includeAnnotationsWithEndBeyondBounds()
+                .map(fs -> (AnnotationFS) fs)
+                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
+                .collect(toList());
+    }
+
+    @Override
     public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
             int aWindowBegin, int aWindowEnd)
     {
@@ -103,10 +112,7 @@ public class SpanRenderer
         // Index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
 
-        List<AnnotationFS> annotations = aCas.select(type).coveredBy(0, aWindowEnd)
-                .includeAnnotationsWithEndBeyondBounds().map(fs -> (AnnotationFS) fs)
-                .filter(ann -> AnnotationPredicates.overlapping(ann, aWindowBegin, aWindowEnd))
-                .collect(toList());
+        List<AnnotationFS> annotations = selectAnnotationsInWindow(aCas, aWindowBegin, aWindowEnd);
 
         // List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin, aWindowEnd);
         for (AnnotationFS fs : annotations) {

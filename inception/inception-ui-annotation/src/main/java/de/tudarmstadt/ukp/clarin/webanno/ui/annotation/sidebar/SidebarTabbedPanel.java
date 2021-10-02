@@ -137,8 +137,8 @@ public class SidebarTabbedPanel<T extends SidebarTab>
             var tabIndex = tabFactories.indexOf(sidebarState.getSelectedTab());
             if (tabIndex >= 0) {
                 super.setSelectedTab(tabIndex);
+                expanded = sidebarState.isExpanded();
             }
-            expanded = sidebarState.isExpanded();
         }
     }
 
