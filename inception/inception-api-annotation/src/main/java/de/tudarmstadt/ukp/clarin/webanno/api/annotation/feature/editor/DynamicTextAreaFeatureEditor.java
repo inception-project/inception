@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
@@ -45,7 +44,6 @@ public class DynamicTextAreaFeatureEditor
     {
         textarea = new TextArea<>("value");
         textarea.setOutputMarkupId(true);
-        textarea.add(new AjaxPreventSubmitBehavior());
         return textarea;
     }
 

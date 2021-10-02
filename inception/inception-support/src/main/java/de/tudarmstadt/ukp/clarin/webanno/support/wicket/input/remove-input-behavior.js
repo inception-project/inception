@@ -1,0 +1,1 @@
+shortcut.remove("${keys}");

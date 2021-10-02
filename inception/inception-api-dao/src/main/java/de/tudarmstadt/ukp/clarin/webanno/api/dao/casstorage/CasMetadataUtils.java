@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
+import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -71,19 +73,23 @@ public class CasMetadataUtils
         }
         else if (cmds.size() == 1) {
             AnnotationFS cmd = cmds.get(0);
-            long lastChangedOnDisk = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
-            if (aCasFile.lastModified() != lastChangedOnDisk) {
+            long lastKnownUpdate = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
+            long diskLastModified = aCasFile.lastModified();
+            if (diskLastModified != lastKnownUpdate) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
                 throw new IOException(
-                        "Detected concurrent modification to file in storage (expected timestamp: "
-                                + lastChangedOnDisk + "; actual timestamp in storage "
-                                + aCasFile.lastModified() + ") - "
-                                + "please try reloading before saving again.");
+                        "There was a concurrent modification to the annotation CAS for user ["
+                                + aUsername + "] in document " + aDocument + " (expected: "
+                                + sdf.format(lastKnownUpdate) + " actual on storage: "
+                                + sdf.format(diskLastModified) + ", delta: "
+                                + formatDurationHMS(diskLastModified - lastKnownUpdate) + ")");
+
             }
         }
         else {
             LOG.info(
                     "Annotation file [{}] of user [{}] for document [{}]({}) in project "
-                            + "[{}]({}) does not support CASMetadata yet - unable to check for "
+                            + "[{}]({}) does not contain CASMetadata yet - unable to check for "
                             + "concurrent modifications",
                     aCasFile.getName(), aUsername, aDocument.getName(), aDocument.getId(),
                     aDocument.getProject().getName(), aDocument.getProject().getId());

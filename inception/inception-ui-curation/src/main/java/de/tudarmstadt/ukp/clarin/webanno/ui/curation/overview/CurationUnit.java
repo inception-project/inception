@@ -29,25 +29,13 @@ public class CurationUnit
     private static final long serialVersionUID = 9219600871129699568L;
 
     // begin/end offset of sentences list, default is the begin of the document
-    private final Integer begin;
-    private final Integer end;
-    private final Integer sentenceNumber;
-
-    // begin of the curation/suggestion sentences list
-    private int curationBegin;
-    // end of the curation/suggestion sentences list
-    private int curationEnd;
+    private final int begin;
+    private final int end;
+    private final int sentenceNumber;
 
     private CurationUnitState sentenceState;
 
     private boolean isCurrentSentence;
-
-    public CurationUnit()
-    {
-        begin = null;
-        end = null;
-        sentenceNumber = null;
-    }
 
     public CurationUnit(int aBegin, int aEnd, int aUnitIndex)
     {
@@ -66,27 +54,7 @@ public class CurationUnit
         return end;
     }
 
-    public int getCurationBegin()
-    {
-        return curationBegin;
-    }
-
-    public void setCurationBegin(int curationBegin)
-    {
-        this.curationBegin = curationBegin;
-    }
-
-    public int getCurationEnd()
-    {
-        return curationEnd;
-    }
-
-    public void setCurationEnd(int curationEnd)
-    {
-        this.curationEnd = curationEnd;
-    }
-
-    public CurationUnitState getSentenceState()
+    public CurationUnitState getState()
     {
         return sentenceState;
     }
