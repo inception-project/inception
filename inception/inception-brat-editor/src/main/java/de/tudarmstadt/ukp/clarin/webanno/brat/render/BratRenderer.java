@@ -358,8 +358,9 @@ public class BratRenderer
         }
 
         for (Offsets offsets : bratTokenOffsets) {
-            split(aResponse.getSentenceOffsets(),
-                    visibleText.substring(offsets.getBegin(), offsets.getEnd()), offsets.getBegin(),
+            split(aResponse.getSentenceOffsets(), //
+                    visibleText, //
+                    offsets.getBegin(), //
                     offsets.getEnd()).forEach(range -> {
                         aResponse.addToken(range.getBegin(), range.getEnd());
                     });

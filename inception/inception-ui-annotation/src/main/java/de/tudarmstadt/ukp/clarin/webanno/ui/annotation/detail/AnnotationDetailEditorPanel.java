@@ -33,6 +33,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static wicket.contrib.input.events.EventType.click;
+import static wicket.contrib.input.events.key.KeyType.Delete;
 import static wicket.contrib.input.events.key.KeyType.Left;
 import static wicket.contrib.input.events.key.KeyType.Right;
 import static wicket.contrib.input.events.key.KeyType.Shift;
@@ -1728,6 +1729,7 @@ public abstract class AnnotationDetailEditorPanel
         // Avoid deleting in read-only layers
         link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
                 && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
+        link.add(new InputBehavior(new KeyType[] { Shift, Delete }, click));
         return link;
     }
 
