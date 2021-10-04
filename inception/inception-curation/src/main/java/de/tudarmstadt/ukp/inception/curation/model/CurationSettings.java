@@ -19,7 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.inception.curation.model;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -32,6 +32,8 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
+
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSettingsId;
 
 @Entity
 @IdClass(CurationSettingsId.class)

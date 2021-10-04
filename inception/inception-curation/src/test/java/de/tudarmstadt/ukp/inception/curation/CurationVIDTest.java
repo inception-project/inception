@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.curation.sidebar.render.CurationVID;
 
 public class CurationVIDTest
 {

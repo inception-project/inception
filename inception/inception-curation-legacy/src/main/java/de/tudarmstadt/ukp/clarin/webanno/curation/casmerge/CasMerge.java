@@ -49,6 +49,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -88,6 +89,8 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.DefaultMergeStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -108,7 +111,7 @@ public class CasMerge
     private final AnnotationSchemaService schemaService;
     private final ApplicationEventPublisher eventPublisher;
 
-    private boolean mergeIncompleteAnnotations = false;
+    private MergeStrategy mergeStrategy = new DefaultMergeStrategy();
     private boolean silenceEvents = false;
     private Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
     private LoadingCache<AnnotationLayer, TypeAdapter> adapterCache;
@@ -137,36 +140,20 @@ public class CasMerge
         return silenceEvents;
     }
 
-    public void setMergeIncompleteAnnotations(boolean aMergeIncompleteAnnotations)
+    public void setMergeStrategy(MergeStrategy aMergeStrategy)
     {
-        mergeIncompleteAnnotations = aMergeIncompleteAnnotations;
+        mergeStrategy = aMergeStrategy;
     }
 
-    public boolean isMergeIncompleteAnnotations()
+    public MergeStrategy getMergeStrategy()
     {
-        return mergeIncompleteAnnotations;
+        return mergeStrategy;
     }
 
-    private boolean shouldMerge(DiffResult aDiff, ConfigurationSet cfgs)
+    private Optional<Configuration> chooseConfigurationToMerge(DiffResult aDiff,
+            ConfigurationSet cfgs, Map<String, List<CAS>> aCasMap)
     {
-        boolean stacked = cfgs.getConfigurations().stream().filter(Configuration::isStacked)
-                .findAny().isPresent();
-        if (stacked) {
-            LOG.trace(" `-> Not merging stacked annotation");
-            return false;
-        }
-
-        if (!aDiff.isComplete(cfgs) && !isMergeIncompleteAnnotations()) {
-            LOG.trace(" `-> Not merging incomplete annotation");
-            return false;
-        }
-
-        if (!aDiff.isAgreement(cfgs)) {
-            LOG.trace(" `-> Not merging annotation with disagreement");
-            return false;
-        }
-
-        return true;
+        return mergeStrategy.chooseConfigurationToMerge(aDiff, cfgs);
     }
 
     /**
@@ -207,6 +194,9 @@ public class CasMerge
         if (aCases.isEmpty()) {
             return;
         }
+
+        Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+        aCases.forEach((k, v) -> casMap.put(k, asList(v)));
 
         // Set up a cache for resolving type to layer to avoid hammering the DB as we process each
         // position
@@ -252,14 +242,15 @@ public class CasMerge
                 LOG.trace(" |   processing {}", position);
                 ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
-                if (!shouldMerge(aDiff, cfgs)) {
+                Optional<Configuration> cfgToMerge = chooseConfigurationToMerge(aDiff, cfgs,
+                        casMap);
+
+                if (cfgToMerge.isEmpty()) {
                     continue;
                 }
 
                 try {
-                    Map<String, List<CAS>> casMap = new LinkedHashMap<>();
-                    aCases.forEach((k, v) -> casMap.put(k, asList(v)));
-                    AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
+                    AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.get()
                             .getRepresentative(casMap);
                     CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,
@@ -300,14 +291,15 @@ public class CasMerge
                 LOG.trace(" |   processing {}", position);
                 ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
-                if (!shouldMerge(aDiff, cfgs)) {
+                Optional<Configuration> cfgToMerge = chooseConfigurationToMerge(aDiff, cfgs,
+                        casMap);
+
+                if (cfgToMerge.isEmpty()) {
                     continue;
                 }
 
                 try {
-                    Map<String, List<CAS>> casMap = new LinkedHashMap<>();
-                    aCases.forEach((k, v) -> casMap.put(k, asList(v)));
-                    AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
+                    AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.get()
                             .getRepresentative(casMap);
                     AID sourceFsAid = cfgs.getConfigurations().get(0).getRepresentativeAID();
                     mergeSlotFeature(aTargetDocument, aTargetUsername,
@@ -340,14 +332,15 @@ public class CasMerge
                 LOG.trace(" |   processing {}", position);
                 ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
-                if (!shouldMerge(aDiff, cfgs)) {
+                Optional<Configuration> cfgToMerge = chooseConfigurationToMerge(aDiff, cfgs,
+                        casMap);
+
+                if (cfgToMerge.isEmpty()) {
                     continue;
                 }
 
                 try {
-                    Map<String, List<CAS>> casMap = new LinkedHashMap<>();
-                    aCases.forEach((k, v) -> casMap.put(k, asList(v)));
-                    AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
+                    AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.get()
                             .getRepresentative(casMap);
                     CasMergeOperationResult result = mergeRelationAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,

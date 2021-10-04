@@ -29,7 +29,14 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
+import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link WorkloadManagementAutoConfiguration#workloadExtensionPoint}.
+ * </p>
+ */
 public class WorkloadManagerExtensionPointImpl
     extends ExtensionPoint_ImplBase<Project, WorkloadManagerExtension<?>>
     implements WorkloadManagerExtensionPoint

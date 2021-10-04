@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.curation.config;
 
+import java.util.List;
+
 import javax.persistence.EntityManager;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -30,19 +34,39 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.curation.CurationEditorExtension;
-import de.tudarmstadt.ukp.inception.curation.CurationRenderer;
-import de.tudarmstadt.ukp.inception.curation.CurationService;
-import de.tudarmstadt.ukp.inception.curation.CurationServiceImpl;
-import de.tudarmstadt.ukp.inception.curation.merge.AutomaticMergeStrategy;
-import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.merge.DefaultMergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeIncompleteStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactoryExtensionPoint;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactoryExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyFactoryImpl;
+import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationServiceImpl;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarFactory;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarServiceImpl;
+import de.tudarmstadt.ukp.inception.curation.sidebar.merge.AutomaticMergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.sidebar.merge.ManualMergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.sidebar.render.CurationRenderer;
 
 @Configuration
-@ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
 public class CurationServiceAutoConfiguration
 {
+    @Bean
+    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
+    public CurationSidebarService curationService(EntityManager aEntityManager,
+            DocumentService aDocumentService, SessionRegistry aSessionRegistry,
+            ProjectService aProjectService, UserDao aUserRegistry,
+            CasStorageService aCasStorageService)
+    {
+        return new CurationSidebarServiceImpl(aEntityManager, aDocumentService, aSessionRegistry,
+                aProjectService, aUserRegistry, aCasStorageService);
+    }
+
     @Bean(CurationEditorExtension.EXTENSION_ID)
+    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
     public CurationEditorExtension curationEditorExtension(
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
             CurationRenderer aCurationRenderer)
@@ -50,17 +74,8 @@ public class CurationServiceAutoConfiguration
         return new CurationEditorExtension(aAnnotationService, aDocumentService, aCurationRenderer);
     }
 
-    @Bean
-    public CurationService curationService(EntityManager aEntityManager,
-            DocumentService aDocumentService, SessionRegistry aSessionRegistry,
-            ProjectService aProjectService, UserDao aUserRegistry,
-            CasStorageService aCasStorageService)
-    {
-        return new CurationServiceImpl(aEntityManager, aDocumentService, aSessionRegistry,
-                aProjectService, aUserRegistry, aCasStorageService);
-    }
-
     @Bean("curationSidebar")
+    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
     public CurationSidebarFactory curationSidebarFactory(ProjectService aProjectService,
             UserDao aUserService)
     {
@@ -68,7 +83,8 @@ public class CurationServiceAutoConfiguration
     }
 
     @Bean
-    public CurationRenderer curationRenderer(CurationService aCurationService,
+    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
+    public CurationRenderer curationRenderer(CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
             UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
     {
@@ -77,15 +93,49 @@ public class CurationServiceAutoConfiguration
     }
 
     @Bean(AutomaticMergeStrategy.BEAN_NAME)
-    public AutomaticMergeStrategy automaticMergeStrategy(CurationService aCurationService,
-            AnnotationSchemaService aAnnotationService)
+    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
+    public AutomaticMergeStrategy automaticSidebarMergeStrategy(
+            CurationSidebarService aCurationService, AnnotationSchemaService aAnnotationService)
     {
         return new AutomaticMergeStrategy(aCurationService, aAnnotationService);
     }
 
     @Bean(ManualMergeStrategy.BEAN_NAME)
-    public ManualMergeStrategy manualMergeStrategy()
+    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
+    public ManualMergeStrategy manualSidebarMergeStrategy()
     {
         return new ManualMergeStrategy();
+    }
+
+    @Bean
+    public CurationService curationService(EntityManager aEntityManager,
+            MergeStrategyFactoryExtensionPoint aMergeStrategyFactoryExtensionPoint)
+    {
+        return new CurationServiceImpl(aEntityManager, aMergeStrategyFactoryExtensionPoint);
+    }
+
+    @Bean
+    public MergeStrategyFactoryExtensionPoint mergeStrategyFactoryExtensionPoint(
+            @Lazy @Autowired(required = false) List<MergeStrategyFactory<?>> aExtensions)
+    {
+        return new MergeStrategyFactoryExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public DefaultMergeStrategyFactory defaultMergingStrategyFactory()
+    {
+        return new DefaultMergeStrategyFactory();
+    }
+
+    @Bean
+    public MergeIncompleteStrategyFactory mergeIncompleteStrategyFactory()
+    {
+        return new MergeIncompleteStrategyFactory();
+    }
+
+    @Bean
+    public ThresholdBasedMergeStrategyFactory thresholdBasedMergeStrategyFactory()
+    {
+        return new ThresholdBasedMergeStrategyFactoryImpl();
     }
 }

@@ -15,38 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
+package de.tudarmstadt.ukp.inception.curation.settings;
 
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
+import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
 @Component
-@Order(AnnotationPreferencesProjectSettingsPanelFactory.ORDER)
-public class AnnotationPreferencesProjectSettingsPanelFactory
-    implements ProjectSettingsPanelFactory
+@Order(CurationProjectSettingsPanelFactory.ORDER)
+public class CurationProjectSettingsMenuItem
+    extends ProjectSettingsMenuItemBase
 {
-    public static final int ORDER = 330;
-
     @Override
     public String getPath()
     {
-        return "/annotation";
+        return "/settings/curation";
+    }
+
+    @Override
+    public IconType getIcon()
+    {
+        return FontAwesome5IconType.clipboard_s;
     }
 
     @Override
     public String getLabel()
     {
-        return "Annotation";
+        return "Curation";
     }
 
     @Override
-    public Panel createSettingsPanel(String aID, IModel<Project> aProjectModel)
+    public Class<? extends Page> getPageClass()
     {
-        return new AnnotationPreferencesProjectSettingsPanel(aID, aProjectModel);
+        return CurationProjectSettingsPage.class;
     }
 }

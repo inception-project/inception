@@ -15,38 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
+package de.tudarmstadt.ukp.inception.curation.merge;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 
-@Component
-@Order(AnnotationPreferencesProjectSettingsPanelFactory.ORDER)
-public class AnnotationPreferencesProjectSettingsPanelFactory
-    implements ProjectSettingsPanelFactory
+public interface MergeStrategyFactory<T>
+    extends Extension<Project>
+
 {
-    public static final int ORDER = 330;
+    String getLabel();
 
     @Override
-    public String getPath()
+    default boolean accepts(Project aContext)
     {
-        return "/annotation";
+        return true;
     }
 
-    @Override
-    public String getLabel()
-    {
-        return "Annotation";
-    }
+    T readTraits(CurationWorkflow aCurationWorkflow);
 
-    @Override
-    public Panel createSettingsPanel(String aID, IModel<Project> aProjectModel)
-    {
-        return new AnnotationPreferencesProjectSettingsPanel(aID, aProjectModel);
-    }
+    void writeTraits(CurationWorkflow aCurationWorkflow, T aTrait);
+
+    MergeStrategy makeStrategy(T aTraits);
+
+    Component createTraitsEditor(String aString, IModel<CurationWorkflow> aModel);
 }

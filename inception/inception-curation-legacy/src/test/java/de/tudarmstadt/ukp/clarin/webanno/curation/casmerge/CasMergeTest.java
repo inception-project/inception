@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.MergeIncompleteStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -141,7 +142,7 @@ public class CasMergeTest
 
         DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
-        sut.setMergeIncompleteAnnotations(true);
+        sut.setMergeStrategy(new MergeIncompleteStrategy());
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();

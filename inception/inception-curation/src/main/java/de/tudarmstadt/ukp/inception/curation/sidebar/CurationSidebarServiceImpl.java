@@ -19,7 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -63,8 +63,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
+import de.tudarmstadt.ukp.inception.curation.sidebar.merge.ManualMergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.sidebar.merge.SidebarMergeStrategy;
 
 /**
  * <p>
@@ -72,8 +73,8 @@ import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
  * {@link CurationServiceAutoConfiguration#curationService}.
  * </p>
  */
-public class CurationServiceImpl
-    implements CurationService
+public class CurationSidebarServiceImpl
+    implements CurationSidebarService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -88,7 +89,7 @@ public class CurationServiceImpl
     private final CasStorageService casStorageService;
 
     @Autowired
-    public CurationServiceImpl(EntityManager aEntityManager, DocumentService aDocumentService,
+    public CurationSidebarServiceImpl(EntityManager aEntityManager, DocumentService aDocumentService,
             SessionRegistry aSessionRegistry, ProjectService aProjectService, UserDao aUserRegistry,
             CasStorageService aCasStorageService)
     {
@@ -193,7 +194,7 @@ public class CurationServiceImpl
         // to find source document of the curated document
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationUser;
-        private MergeStrategy selectedStrategy;
+        private SidebarMergeStrategy selectedStrategy;
         private boolean showAll;
 
         public CurationState(String aUser)
@@ -229,12 +230,12 @@ public class CurationServiceImpl
             curationUser = aCurationName;
         }
 
-        public void setMergeStrategy(MergeStrategy aStrategy)
+        public void setMergeStrategy(SidebarMergeStrategy aStrategy)
         {
             selectedStrategy = aStrategy;
         }
 
-        public MergeStrategy getMergeStrategy()
+        public SidebarMergeStrategy getMergeStrategy()
         {
             return selectedStrategy;
         }
@@ -353,7 +354,7 @@ public class CurationServiceImpl
     }
 
     @Override
-    public void updateMergeStrategy(String aCurrentUser, long aProjectId, MergeStrategy aStrategy)
+    public void updateSidebarMergeStrategy(String aCurrentUser, long aProjectId, SidebarMergeStrategy aStrategy)
     {
         synchronized (curationStates) {
             getCurationState(aCurrentUser, aProjectId).setMergeStrategy(aStrategy);
@@ -515,7 +516,7 @@ public class CurationServiceImpl
     }
 
     @Override
-    public MergeStrategy retrieveMergeStrategy(String aUsername, long aProjectId)
+    public SidebarMergeStrategy retrieveSidebarMergeStrategy(String aUsername, long aProjectId)
     {
         return getCurationState(aUsername, aProjectId).getMergeStrategy();
     }

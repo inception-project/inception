@@ -104,6 +104,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationS
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.MergeIncompleteStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -868,7 +869,9 @@ public class CurationPage
 
         try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
             CasMerge casMerge = new CasMerge(annotationService);
-            casMerge.setMergeIncompleteAnnotations(aMergeIncompleteAnnotations);
+            if (aMergeIncompleteAnnotations) {
+                casMerge.setMergeStrategy(new MergeIncompleteStrategy());
+            }
             casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
                     editorCas, aCasses);
         }

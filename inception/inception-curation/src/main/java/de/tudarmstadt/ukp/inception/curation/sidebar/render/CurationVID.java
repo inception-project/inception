@@ -19,9 +19,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.inception.curation.sidebar.render;
 
-import static de.tudarmstadt.ukp.inception.curation.CurationEditorExtension.EXTENSION_ID;
+import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationEditorExtension.EXTENSION_ID;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

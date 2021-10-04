@@ -17,54 +17,54 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import java.util.Map;
+import org.apache.wicket.Component;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.model.IModel;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.MergeIncompleteStrategy;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link CurationServiceAutoConfiguration#manualMergeStrategy}.
+ * {@link CurationServiceAutoConfiguration#mergeIncompleteStrategyFactory}.
  * </p>
  */
-public class ManualMergeStrategy
-    implements MergeStrategy
+public class MergeIncompleteStrategyFactory
+    extends MergeStrategyFactory_ImplBase<Void>
 {
-    public static final String BEAN_NAME = "manualStrategy";
-
-    private final String UI_NAME = "Manual";
+    public static final String BEAN_NAME = "incompleteAgreementNonStacked";
 
     @Override
-    public boolean equals(final Object other)
+    public String getId()
     {
-        if (!(other instanceof ManualMergeStrategy)) {
-            return false;
-        }
-        ManualMergeStrategy castOther = (ManualMergeStrategy) other;
-        return new EqualsBuilder().append(UI_NAME, castOther.UI_NAME).isEquals();
+        return BEAN_NAME;
     }
 
     @Override
-    public int hashCode()
+    public String getLabel()
     {
-        return new HashCodeBuilder().append(UI_NAME).toHashCode();
+        return "Merge incomplete agreeing non-stacked annotations";
     }
 
     @Override
-    public void merge(AnnotatorState aState, CAS aCas, Map<String, CAS> aUserCases,
-            boolean aMergeIncomplete)
+    protected Void createTraits()
     {
-        // Do nothing
+        // No traits
+        return null;
     }
 
     @Override
-    public String getUiName()
+    public MergeIncompleteStrategy makeStrategy(Void aTraits)
     {
-        return UI_NAME;
+        return new MergeIncompleteStrategy();
+    }
+
+    @Override
+    public Component createTraitsEditor(String aString, IModel<CurationWorkflow> aModel)
+    {
+        // No traits
+        return new EmptyPanel(aString);
     }
 }

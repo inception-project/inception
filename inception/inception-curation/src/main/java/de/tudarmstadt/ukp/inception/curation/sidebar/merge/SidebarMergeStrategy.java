@@ -15,15 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.inception.curation.sidebar.merge;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateMetaDataKey;
+import java.util.Map;
 
-public final class CurationMetadata
+import org.apache.uima.cas.CAS;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+
+public interface SidebarMergeStrategy
 {
-    public static final AnnotatorStateMetaDataKey<Boolean> CURATION_USER_PROJECT = //
-            new AnnotatorStateMetaDataKey<Boolean>()
-            {
-                private static final long serialVersionUID = 1L;
-            };
+    void merge(AnnotatorState aState, CAS aCas, Map<String, CAS> aUserCases,
+            boolean aMergeIncomplete);
+
+    String getUiName();
 }

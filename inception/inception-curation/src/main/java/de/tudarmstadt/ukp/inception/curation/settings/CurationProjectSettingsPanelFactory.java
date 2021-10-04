@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
+package de.tudarmstadt.ukp.inception.curation.settings;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -26,27 +26,27 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
 @Component
-@Order(AnnotationPreferencesProjectSettingsPanelFactory.ORDER)
-public class AnnotationPreferencesProjectSettingsPanelFactory
+@Order(CurationProjectSettingsPanelFactory.ORDER)
+public class CurationProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
-    public static final int ORDER = 330;
+    public static final int ORDER = 340;
 
     @Override
     public String getPath()
     {
-        return "/annotation";
+        return "/curation";
     }
 
     @Override
     public String getLabel()
     {
-        return "Annotation";
+        return "Curation";
     }
 
     @Override
     public Panel createSettingsPanel(String aID, IModel<Project> aProjectModel)
     {
-        return new AnnotationPreferencesProjectSettingsPanel(aID, aProjectModel);
+        return new CurationProjectSettingsPanel(aID, aProjectModel);
     }
 }

@@ -43,6 +43,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarService;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarServiceImpl;
 
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
         properties = { //
@@ -54,7 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 public class CurationServiceTest
 {
-    private CurationService sut;
+    private CurationSidebarService sut;
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -67,7 +69,7 @@ public class CurationServiceTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sut = new CurationServiceImpl(testEntityManager.getEntityManager(), null, null, null, null,
+        sut = new CurationSidebarServiceImpl(testEntityManager.getEntityManager(), null, null, null, null,
                 null);
 
         // create users

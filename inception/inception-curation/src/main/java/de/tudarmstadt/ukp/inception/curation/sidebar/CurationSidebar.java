@@ -72,11 +72,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
-import de.tudarmstadt.ukp.inception.curation.CurationMetadata;
-import de.tudarmstadt.ukp.inception.curation.CurationService;
-import de.tudarmstadt.ukp.inception.curation.merge.AutomaticMergeStrategy;
-import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.sidebar.merge.AutomaticMergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.sidebar.merge.ManualMergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.sidebar.merge.SidebarMergeStrategy;
 
 public class CurationSidebar
     extends AnnotationSidebar_ImplBase
@@ -88,11 +86,11 @@ public class CurationSidebar
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
-    private @SpringBean CurationService curationService;
+    private @SpringBean CurationSidebarService curationService;
     private @SpringBean DocumentService documentService;
 
-    private @SpringBean(name = ManualMergeStrategy.BEAN_NAME) MergeStrategy manualMergeStrat;
-    private @SpringBean(name = AutomaticMergeStrategy.BEAN_NAME) MergeStrategy autoMergeStrat;
+    private @SpringBean(name = ManualMergeStrategy.BEAN_NAME) SidebarMergeStrategy manualMergeStrat;
+    private @SpringBean(name = AutomaticMergeStrategy.BEAN_NAME) SidebarMergeStrategy autoMergeStrat;
 
     private CheckGroup<User> selectedUsers;
     private final Form<List<User>> usersForm;
@@ -275,7 +273,7 @@ public class CurationSidebar
         // update selected users
         updateUsers(state);
         long projectId = state.getProject().getId();
-        curationService.updateMergeStrategy(currentUser.getUsername(), projectId, autoMergeStrat);
+        curationService.updateSidebarMergeStrategy(currentUser.getUsername(), projectId, autoMergeStrat);
         mergeConfirm.setConfirmAction((target, form) -> {
             boolean mergeIncomplete = form.getModelObject().isMergeIncompleteAnnotations();
             doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject(),
@@ -313,7 +311,7 @@ public class CurationSidebar
             Optional<CAS> targetCas = curationService.retrieveCurationCAS(aCurator,
                     aState.getProject().getId(), doc);
             if (targetCas.isPresent()) {
-                MergeStrategy mergeStrat = curationService.retrieveMergeStrategy(
+                SidebarMergeStrategy mergeStrat = curationService.retrieveSidebarMergeStrategy(
                         userRepository.getCurrentUsername(), aState.getProject().getId());
                 mergeStrat.merge(aState, targetCas.get(), userCases, aMergeIncomplete);
                 log.debug("{} merge done", mergeStrat.getUiName());
@@ -386,7 +384,7 @@ public class CurationSidebar
     {
         // switch to manual merge
         AnnotatorState state = getModelObject();
-        curationService.updateMergeStrategy(userRepository.getCurrentUsername(),
+        curationService.updateSidebarMergeStrategy(userRepository.getCurrentUsername(),
                 state.getProject().getId(), manualMergeStrat);
 
         updateUsers(state);
@@ -400,7 +398,7 @@ public class CurationSidebar
         AnnotatorState state = getModelObject();
         User currentUser = userRepository.getCurrentUser();
         updateCurator(state, currentUser);
-        curationService.updateMergeStrategy(currentUser.getUsername(), state.getProject().getId(),
+        curationService.updateSidebarMergeStrategy(currentUser.getUsername(), state.getProject().getId(),
                 manualMergeStrat);
         curationService.setShowAll(currentUser.getUsername(), state.getProject().getId(),
                 showAll.getModelObject());

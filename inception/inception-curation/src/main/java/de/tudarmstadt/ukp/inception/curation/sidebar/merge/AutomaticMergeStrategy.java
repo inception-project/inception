@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation.merge;
+package de.tudarmstadt.ukp.inception.curation.sidebar.merge;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 
@@ -36,9 +36,10 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.MergeIncompleteStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.curation.CurationService;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarService;
 
 /**
  * <p>
@@ -47,7 +48,7 @@ import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfigura
  * </p>
  */
 public class AutomaticMergeStrategy
-    implements MergeStrategy
+    implements SidebarMergeStrategy
 {
     public static final String BEAN_NAME = "automaticStrategy";
 
@@ -55,10 +56,10 @@ public class AutomaticMergeStrategy
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final CurationService curationService;
+    private final CurationSidebarService curationService;
     private final AnnotationSchemaService annotationService;
 
-    public AutomaticMergeStrategy(CurationService aCurationService,
+    public AutomaticMergeStrategy(CurationSidebarService aCurationService,
             AnnotationSchemaService aAnnotationService)
     {
         curationService = aCurationService;
@@ -90,15 +91,16 @@ public class AutomaticMergeStrategy
             boolean aMergeIncomplete)
     {
         // FIXME: should merging not overwrite the current users annos? (can result in deleting the
-        // users annos!!!), currently fixed by warn message to user
-        // prepare merged cas
+        // users annos!!!), currently fixed by warn message to user prepare merged cas
         List<AnnotationLayer> layers = aState.getAnnotationLayers();
         List<DiffAdapter> adapters = CasDiff.getDiffAdapters(annotationService, layers);
         DiffResult diff = CasDiff.doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aUserCasses, 0,
                 aTargetCas.getDocumentText().length()).toResult();
         CasMerge casMerge = new CasMerge(annotationService);
         try {
-            casMerge.setMergeIncompleteAnnotations(aMergeIncomplete);
+            if (aMergeIncomplete) {
+                casMerge.setMergeStrategy(new MergeIncompleteStrategy());
+            }
             casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
                     aTargetCas, aUserCasses);
         }

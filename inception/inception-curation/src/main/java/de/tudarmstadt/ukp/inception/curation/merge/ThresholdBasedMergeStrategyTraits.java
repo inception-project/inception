@@ -17,17 +17,33 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import java.util.Map;
+import java.io.Serializable;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-
-public interface MergeStrategy
+public class ThresholdBasedMergeStrategyTraits
+    implements Serializable
 {
+    private static final long serialVersionUID = -7084390245091025371L;
 
-    void merge(AnnotatorState aState, CAS aCas, Map<String, CAS> aUserCases,
-            boolean aMergeIncomplete);
+    private int userThreshold;
+    private double confidenceThreshold;
 
-    String getUiName();
+    public int getUserThreshold()
+    {
+        return userThreshold;
+    }
+
+    public void setUserThreshold(int aUserThreshold)
+    {
+        userThreshold = aUserThreshold;
+    }
+
+    public double getConfidenceThreshold()
+    {
+        return confidenceThreshold;
+    }
+
+    public void setConfidenceThreshold(double aConfidenceThreshold)
+    {
+        confidenceThreshold = aConfidenceThreshold;
+    }
 }

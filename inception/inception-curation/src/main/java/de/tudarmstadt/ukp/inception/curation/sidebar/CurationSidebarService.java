@@ -19,7 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -33,9 +33,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.sidebar.merge.SidebarMergeStrategy;
 
-public interface CurationService
+public interface CurationSidebarService
 {
     /**
      * List users that were selected to be shown for curation by the given user
@@ -87,12 +87,12 @@ public interface CurationService
     /**
      * Returns the merge strategy that the user previously selected or the manual one as default
      */
-    MergeStrategy retrieveMergeStrategy(String aUsername, long aProjectId);
+    SidebarMergeStrategy retrieveSidebarMergeStrategy(String aUsername, long aProjectId);
 
     /**
      * Store the selected merge-strategy for the given user and project
      */
-    void updateMergeStrategy(String aCurrentUser, long aProjectId, MergeStrategy aStrategy);
+    void updateSidebarMergeStrategy(String aCurrentUser, long aProjectId, SidebarMergeStrategy aStrategy);
 
     /**
      * Returns the user corresponding to the CAS used as curation (target) CAS

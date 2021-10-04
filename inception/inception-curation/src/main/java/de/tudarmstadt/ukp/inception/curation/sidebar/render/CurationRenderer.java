@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.curation;
+package de.tudarmstadt.ukp.inception.curation.sidebar.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarService;
 
 /**
  * <p>
@@ -75,13 +76,13 @@ public class CurationRenderer
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final CurationService curationService;
+    private final CurationSidebarService curationService;
     private final LayerSupportRegistry layerSupportRegistry;
     private final DocumentService documentService;
     private final UserDao userRepository;
     private final AnnotationSchemaService annotationService;
 
-    public CurationRenderer(CurationService aCurationService,
+    public CurationRenderer(CurationSidebarService aCurationService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
             UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
     {
