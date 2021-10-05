@@ -30,6 +30,7 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -59,7 +60,7 @@ public class MergeStrategyPanel
         super(aId, aModel);
         setOutputMarkupPlaceholderTag(true);
 
-        Form<CurationWorkflow> form = new Form<>(MID_FORM);
+        Form<CurationWorkflow> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aModel));
         add(form);
 
         IModel<Pair<String, String>> mergeStrategyModel = LambdaModelAdapter.of( //
@@ -97,7 +98,6 @@ public class MergeStrategyPanel
         };
 
         mergeStrategyChoice.setChoiceRenderer(new ChoiceRenderer<>("value"));
-        mergeStrategyChoice.setRequired(true);
         mergeStrategyChoice.setOutputMarkupId(true);
         mergeStrategyChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             t.add(mergeStrategyTraitsContainer);

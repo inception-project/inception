@@ -25,6 +25,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
@@ -33,6 +34,10 @@ public class CurationProjectSettingsPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 4618192360418016955L;
+
+    private static final String MID_FORM = "form";
+    private static final String MID_MERGE_STRATEGY = "mergeStrategy";
+    private static final String MID_SAVE = "save";
 
     private @SpringBean CurationService curationService;
 
@@ -43,12 +48,14 @@ public class CurationProjectSettingsPanel
         super(aId, aProjectModel);
         setOutputMarkupPlaceholderTag(true);
 
-        Form<CurationWorkflow> form = new Form<>("form");
+        Form<CurationWorkflow> form = new Form<>(MID_FORM);
         add(form);
 
         curationWorkflowModel = LoadableDetachableModel.of(this::loadCurationWorkflow);
 
-        form.add(new MergeStrategyPanel("mergeStrategy", curationWorkflowModel));
+        form.add(new MergeStrategyPanel(MID_MERGE_STRATEGY, curationWorkflowModel));
+
+        form.add(new LambdaAjaxButton<>(MID_SAVE, this::actionSave));
     }
 
     private CurationWorkflow loadCurationWorkflow()
@@ -56,7 +63,7 @@ public class CurationProjectSettingsPanel
         return curationService.readOrCreateCurationWorkflow(getModelObject());
     }
 
-    public void actionSave(AjaxRequestTarget aTarget)
+    public void actionSave(AjaxRequestTarget aTarget, Form<CurationWorkflow> aForm)
     {
         curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
 

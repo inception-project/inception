@@ -19,22 +19,22 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <form wicket:id="form" class="form-horizontal">
-    <div class="row form-row" wicket:enclosure="url">
-      <label class="col-sm-3 col-form-label" wicket:for="url">
+    <div class="row form-row" wicket:enclosure="userThreshold">
+      <label class="col-sm-3 col-form-label" wicket:for="userThreshold">
         User threshold
       </label>
       <div class="col-sm-9">
-        <input wicket:id="userThreshold" class="w-100"></input>
+        <input wicket:id="userThreshold" type="number" class="form-control"></input>
       </div>
     </div>
-    <div class="row form-row" wicket:enclosure="url">
-      <label class="col-sm-3 col-form-label" wicket:for="url">
+    <div class="row form-row" wicket:enclosure="confidenceThreshold">
+      <label class="col-sm-3 col-form-label" wicket:for="confidenceThreshold">
         Confidence threshold
       </label>
       <div class="col-sm-9">
-        <input wicket:id="confidenceThreshold" class="w-100"></input>
+        <input wicket:id="confidenceThreshold" type="number" class="form-control"></input>
       </div>
     </div>
-  </div>
+  </form>
 </wicket:panel>
 </html>
