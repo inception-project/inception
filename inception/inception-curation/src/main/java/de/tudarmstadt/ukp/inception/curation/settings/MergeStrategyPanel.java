@@ -42,6 +42,11 @@ import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 public class MergeStrategyPanel
     extends Panel
 {
+    private static final String MID_FORM = "form";
+    private static final String MID_MERGE_STRATEGY_TRAITS_CONTAINER = "mergeStrategyTraitsContainer";
+    private static final String MID_MERGE_STRATEGY_TRAITS = "mergeStrategyTraits";
+    private static final String MID_MERGE_STRATEGY = "mergeStrategy";
+
     private static final long serialVersionUID = -1006138487509501842L;
 
     private @SpringBean MergeStrategyFactoryExtensionPoint mergeStrategyFactoryExtensionPoint;
@@ -54,7 +59,7 @@ public class MergeStrategyPanel
         super(aId, aModel);
         setOutputMarkupPlaceholderTag(true);
 
-        Form<CurationWorkflow> form = new Form<>("form");
+        Form<CurationWorkflow> form = new Form<>(MID_FORM);
         add(form);
 
         IModel<Pair<String, String>> mergeStrategyModel = LambdaModelAdapter.of( //
@@ -65,7 +70,7 @@ public class MergeStrategyPanel
                 }, //
                 (v) -> getModelObject().setMergeStrategy(v != null ? v.getKey() : null));
 
-        mergeStrategyChoice = new DropDownChoice<Pair<String, String>>("mergeStrategy",
+        mergeStrategyChoice = new DropDownChoice<Pair<String, String>>(MID_MERGE_STRATEGY,
                 mergeStrategyModel, this::listMergeStrategies)
         {
             private static final long serialVersionUID = -1869081847783375166L;
@@ -80,11 +85,11 @@ public class MergeStrategyPanel
                                 .orElse(null));
 
                 if (factoryModel.isPresent().getObject()) {
-                    newTraits = factoryModel.getObject().createTraitsEditor("mergeStrategyTraits",
-                            form.getModel());
+                    newTraits = factoryModel.getObject()
+                            .createTraitsEditor(MID_MERGE_STRATEGY_TRAITS, form.getModel());
                 }
                 else {
-                    newTraits = new EmptyPanel("mergeStrategyTraits");
+                    newTraits = new EmptyPanel(MID_MERGE_STRATEGY_TRAITS);
                 }
 
                 mergeStrategyTraitsContainer.addOrReplace(newTraits);
@@ -99,9 +104,9 @@ public class MergeStrategyPanel
         }));
         form.add(mergeStrategyChoice);
 
-        mergeStrategyTraitsContainer = new WebMarkupContainer("mergeStrategyTraitsContainer");
+        mergeStrategyTraitsContainer = new WebMarkupContainer(MID_MERGE_STRATEGY_TRAITS_CONTAINER);
         mergeStrategyTraitsContainer.setOutputMarkupPlaceholderTag(true);
-        mergeStrategyTraitsContainer.add(new EmptyPanel("mergeStrategyTraits"));
+        mergeStrategyTraitsContainer.add(new EmptyPanel(MID_MERGE_STRATEGY_TRAITS));
         form.add(mergeStrategyTraitsContainer);
     }
 

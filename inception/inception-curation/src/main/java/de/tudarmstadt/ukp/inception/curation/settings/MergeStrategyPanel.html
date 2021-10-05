@@ -19,9 +19,17 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <form wicket:id="form" class="flex-h-container flex-gutter">
-      <div class="flex-v-container flex-content flex-gutter">
-        <div wicket:id="mergeStrategy"/>
+    <form wicket:id="form" class="flex-content card">
+      <div class="row form-row" wicket:enclosure="mergeStrategy">
+        <label wicket:for="mergeStrategy" class="col-sm-3 col-form-label">
+          <wicket:label key="mergeStrategy"/>
+        </label>
+        <div class="col-sm-9">
+          <select wicket:id="mergeStrategy" class="form-select" data-container="body"/>
+        </div>
+      </div>
+      <div wicket:id="mergeStrategyTraitsContainer">
+        <div wicket:id="mergeStrategyTraits"></div>
       </div>
     </form>
   </wicket:panel>

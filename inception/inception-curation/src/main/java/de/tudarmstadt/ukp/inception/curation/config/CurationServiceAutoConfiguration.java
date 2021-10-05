@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.config;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,6 +44,8 @@ import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyFa
 import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyFactoryImpl;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationServiceImpl;
+import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsMenuItem;
+import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarService;
@@ -54,9 +57,11 @@ import de.tudarmstadt.ukp.inception.curation.sidebar.render.CurationRenderer;
 @Configuration
 public class CurationServiceAutoConfiguration
 {
+    private @PersistenceContext EntityManager entityManager;
+
     @Bean
     @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
-    public CurationSidebarService curationService(EntityManager aEntityManager,
+    public CurationSidebarService curationSidebarService(EntityManager aEntityManager,
             DocumentService aDocumentService, SessionRegistry aSessionRegistry,
             ProjectService aProjectService, UserDao aUserRegistry,
             CasStorageService aCasStorageService)
@@ -108,10 +113,15 @@ public class CurationServiceAutoConfiguration
     }
 
     @Bean
-    public CurationService curationService(EntityManager aEntityManager,
-            MergeStrategyFactoryExtensionPoint aMergeStrategyFactoryExtensionPoint)
+    public CurationProjectSettingsMenuItem curationProjectSettingsMenuItem()
     {
-        return new CurationServiceImpl(aEntityManager, aMergeStrategyFactoryExtensionPoint);
+        return new CurationProjectSettingsMenuItem();
+    }
+
+    @Bean
+    public CurationProjectSettingsPanelFactory curationProjectSettingsPanelFactory()
+    {
+        return new CurationProjectSettingsPanelFactory();
     }
 
     @Bean
@@ -119,6 +129,13 @@ public class CurationServiceAutoConfiguration
             @Lazy @Autowired(required = false) List<MergeStrategyFactory<?>> aExtensions)
     {
         return new MergeStrategyFactoryExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public CurationService curationService(
+            MergeStrategyFactoryExtensionPoint aMergeStrategyFactoryExtensionPoint)
+    {
+        return new CurationServiceImpl(entityManager, aMergeStrategyFactoryExtensionPoint);
     }
 
     @Bean
