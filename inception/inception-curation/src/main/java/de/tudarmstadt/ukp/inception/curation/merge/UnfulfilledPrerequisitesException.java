@@ -15,35 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
+package de.tudarmstadt.ukp.inception.curation.merge;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
 /**
- * Indiates that a merge operation could not be performed because there was a conflict, e.g. because
- * the target CAS already contains a conflicting annotation at the same location.
+ * Indicates that the prerequisites to perform a merge operation are not fulfilled. E.g. on an
+ * attempt to merge a relation if no suitable end-points for the relations are present in the target
+ * CAS.
  */
-public class MergeConflictException
+public class UnfulfilledPrerequisitesException
     extends AnnotationException
 {
-    private static final long serialVersionUID = -6732300638977474716L;
+    private static final long serialVersionUID = -6592130672804779018L;
 
-    public MergeConflictException()
+    public UnfulfilledPrerequisitesException()
     {
         super();
     }
 
-    public MergeConflictException(String message)
+    public UnfulfilledPrerequisitesException(String message)
     {
         super(message);
     }
 
-    public MergeConflictException(String aMessage, Throwable aCause)
+    public UnfulfilledPrerequisitesException(String aMessage, Throwable aCause)
     {
         super(aMessage, aCause);
     }
 
-    public MergeConflictException(Throwable aCause)
+    public UnfulfilledPrerequisitesException(Throwable aCause)
     {
         super(aCause);
     }

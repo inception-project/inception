@@ -15,35 +15,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
+package de.tudarmstadt.ukp.inception.curation.merge;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-
-/**
- * Thrown if there is a problem during CAS merge operation.
- */
-public class CasMergeException
-    extends AnnotationException
+public class CasMergeOperationResult
 {
-    private static final long serialVersionUID = -6460916278737957937L;
-
-    public CasMergeException()
+    public static enum ResultState
     {
-        super();
+        /**
+         * Merge resulted into a new annotation being created.
+         */
+        CREATED,
+
+        /**
+         * Merge updated an existing annotation.
+         */
+        UPDATED;
     }
 
-    public CasMergeException(String message)
+    private final ResultState state;
+    private final int resultFSAddress;
+
+    public CasMergeOperationResult(ResultState aState, int aResultAddress)
     {
-        super(message);
+        state = aState;
+        resultFSAddress = aResultAddress;
     }
 
-    public CasMergeException(String aMessage, Throwable aCause)
+    public ResultState getState()
     {
-        super(aMessage, aCause);
+        return state;
     }
 
-    public CasMergeException(Throwable aCause)
+    public int getResultFSAddress()
     {
-        super(aCause);
+        return resultFSAddress;
     }
 }
