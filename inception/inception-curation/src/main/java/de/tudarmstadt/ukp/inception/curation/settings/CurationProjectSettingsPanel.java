@@ -19,11 +19,14 @@ package de.tudarmstadt.ukp.inception.curation.settings;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
@@ -40,6 +43,7 @@ public class CurationProjectSettingsPanel
     private static final String MID_SAVE = "save";
 
     private @SpringBean CurationService curationService;
+    private @SpringBean ProjectService projectService;
 
     private IModel<CurationWorkflow> curationWorkflowModel;
 
@@ -48,12 +52,14 @@ public class CurationProjectSettingsPanel
         super(aId, aProjectModel);
         setOutputMarkupPlaceholderTag(true);
 
-        Form<CurationWorkflow> form = new Form<>(MID_FORM);
+        Form<Project> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aProjectModel));
         add(form);
 
         curationWorkflowModel = LoadableDetachableModel.of(this::loadCurationWorkflow);
 
         form.add(new MergeStrategyPanel(MID_MERGE_STRATEGY, curationWorkflowModel));
+
+        form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
 
         form.add(new LambdaAjaxButton<>(MID_SAVE, this::actionSave));
     }
@@ -63,9 +69,11 @@ public class CurationProjectSettingsPanel
         return curationService.readOrCreateCurationWorkflow(getModelObject());
     }
 
-    public void actionSave(AjaxRequestTarget aTarget, Form<CurationWorkflow> aForm)
+    public void actionSave(AjaxRequestTarget aTarget, Form<Project> aForm)
     {
         curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
+
+        projectService.updateProject(aForm.getModelObject());
 
         success("Settings saved");
         aTarget.addChildren(getPage(), IFeedback.class);
