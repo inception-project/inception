@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_settings_search]]
-=== Document Repositories Settings
+= Document Repositories Settings
 
 This section describes the global settings related to the external document repository support.
 

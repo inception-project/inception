@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.support.logging;
 
 import java.io.Serializable;
 
+import org.apache.wicket.feedback.IFeedbackContributor;
+
 public class LogMessage
     implements Serializable
 {
@@ -62,6 +64,24 @@ public class LogMessage
     public String getSource()
     {
         return source;
+    }
+
+    public void toWicket(IFeedbackContributor aComponent)
+    {
+        switch (getLevel()) {
+        case INFO:
+            aComponent.info(getMessage());
+            break;
+        case WARN:
+            aComponent.warn(getMessage());
+            break;
+        case ERROR:
+            aComponent.error(getMessage());
+            break;
+        default:
+            aComponent.error(getMessage());
+            break;
+        }
     }
 
     @Override

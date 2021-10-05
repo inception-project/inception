@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>21.0-SNAPSHOT</version>
+    <version>22.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-curation-legacy</artifactId>
   <name>INCEpTION - Core - Curation</name>
@@ -29,6 +29,10 @@
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-collections4</artifactId>
     </dependency>
     <dependency>
       <groupId>commons-io</groupId>

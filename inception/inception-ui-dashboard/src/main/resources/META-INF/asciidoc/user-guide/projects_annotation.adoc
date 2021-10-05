@@ -1,0 +1,16 @@
+[[sect_projects_annotation]]
+= Annotation 
+
+Here the project manager can configure settings that affect the experience on the annotation page.
+
+== Default sidebar
+
+Certain functionalities such as for example document-level annotations are accessible via a sidebar
+on the annotation page. A project manager may choose a default sidebar here which will be expanded
+by default when a new annotator opens a document for annotation. Note that this does not affect
+any annotators that are already working in the current project. Thus, the manager should set the
+default sidebar before adding annotators to the project. Not all pipelines are available to all
+users. If the selected default sidebar is not available to a user, this setting has no effect. A
+typical use for this setting is to set the document metadata sidebar as the default sidebar such
+that annotators can open a document and immediately edit the document-level annotations without 
+first having to search for the sidebar.

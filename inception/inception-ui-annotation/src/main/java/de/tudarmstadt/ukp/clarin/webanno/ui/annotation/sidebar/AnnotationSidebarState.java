@@ -15,34 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.kb.querybuilder;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
-import static java.util.stream.Collectors.joining;
+import java.io.Serializable;
 
-import java.util.Arrays;
-
-import org.eclipse.rdf4j.sparqlbuilder.core.QueryElement;
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
-import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicate;
-
-/**
- * Construct property paths for use with the {@link SparqlBuilder}
- */
-public class Path
+public class AnnotationSidebarState
+    implements Serializable
 {
-    public static RdfPredicate of(QueryElement... aElements)
+    private static final long serialVersionUID = -5212679894035839772L;
+
+    private String selectedTab;
+    private boolean expanded;
+
+    public void setSelectedTab(String aFactoryId)
     {
-        return () -> Arrays.stream(aElements).map(QueryElement::getQueryString)
-                .collect(joining("/"));
+        selectedTab = aFactoryId;
     }
 
-    public static QueryElement zeroOrMore(QueryElement aElement)
+    public String getSelectedTab()
     {
-        return () -> aElement.getQueryString() + "*";
+        return selectedTab;
     }
 
-    public static QueryElement oneOrMore(QueryElement aElement)
+    public void setExpanded(boolean aExpanded)
     {
-        return () -> aElement.getQueryString() + "+";
+        expanded = aExpanded;
+    }
+
+    public boolean isExpanded()
+    {
+        return expanded;
     }
 }

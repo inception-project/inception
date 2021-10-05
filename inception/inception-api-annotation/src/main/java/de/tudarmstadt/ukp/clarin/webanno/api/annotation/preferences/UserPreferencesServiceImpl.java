@@ -108,10 +108,14 @@ public class UserPreferencesServiceImpl
         Optional<AnnotationLayer> defaultLayer = aState.getAnnotationLayers().stream()
                 .filter(layer -> Objects.equals(layer.getId(), preference.getDefaultLayer()))
                 .findFirst();
+
         if (defaultLayer.isPresent()) {
             aState.setDefaultAnnotationLayer(defaultLayer.get());
             aState.setSelectedAnnotationLayer(defaultLayer.get());
         }
+
+        // Make sure the visibility logic of the right sidebar sees if there are selectable layers
+        aState.refreshSelectableLayers(annotationEditorProperties);
     }
 
     @Override

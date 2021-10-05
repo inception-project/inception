@@ -18,11 +18,10 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <hr class="mx-n1 mb-1"/>
-  <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div wicket:id="featureValues" class="feature-editors-sidebar">
+  <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter feature-editors-sidebar">
+    <wicket:container wicket:id="featureEditors">
       <div wicket:id="editor"></div>
-    </div>
+    </wicket:container>
   </div>
 </wicket:panel>
 </html>

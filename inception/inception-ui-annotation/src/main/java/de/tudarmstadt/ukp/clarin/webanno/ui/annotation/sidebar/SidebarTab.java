@@ -27,16 +27,23 @@ public abstract class SidebarTab
 {
     private static final long serialVersionUID = -3205381571000021331L;
 
-    private IconType icon;
+    private final IconType icon;
+    private final String factoryId;
 
-    public SidebarTab(IModel<String> aTitle, IconType aIcon)
+    public SidebarTab(IModel<String> aTitle, IconType aIcon, String aFactoryId)
     {
         super(aTitle);
         icon = aIcon;
+        factoryId = aFactoryId;
     }
 
     public IconType getIcon()
     {
         return icon;
+    }
+
+    public String getFactoryId()
+    {
+        return factoryId;
     }
 }

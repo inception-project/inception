@@ -189,6 +189,10 @@ public class AnnotationPreferencesDialogContent
                     .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                     .collect(Collectors.toList()));
 
+            // Make sure the visibility logic of the right sidebar sees if there are selectable
+            // layers
+            state.refreshSelectableLayers(annotationEditorProperties);
+
             userPreferencesService.savePreference(state, userDao.getCurrentUsername());
         }
         catch (IOException e) {
@@ -232,7 +236,7 @@ public class AnnotationPreferencesDialogContent
                 // hide disabled Layers
                 .filter(layer -> layer.isEnabled())
                 // hide blocked layers
-                .filter(layer -> annotationEditorProperties.isLayerBlocked(layer))
+                .filter(layer -> !annotationEditorProperties.isLayerBlocked(layer))
                 .filter(layer -> !(layer.getType().equals(CHAIN_TYPE)
                         && CURATION == state.getMode()))
                 .collect(Collectors.toList());

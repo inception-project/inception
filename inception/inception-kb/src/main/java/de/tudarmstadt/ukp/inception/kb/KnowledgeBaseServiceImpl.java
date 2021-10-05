@@ -20,12 +20,13 @@ package de.tudarmstadt.ukp.inception.kb;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
+import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.path;
+import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.zeroOrMore;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
 import java.io.BufferedInputStream;
@@ -120,7 +121,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.querybuilder.Path;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQuery;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
@@ -1194,11 +1194,11 @@ public class KnowledgeBaseServiceImpl
             List<GraphPattern> patterns = new ArrayList<>();
             if (aClassInstance) {
                 Iri pSubProperty = iri(aKB.getSubPropertyIri());
-                patterns.add(property.has(Path.of(zeroOrMore(pSubProperty)), pLabel));
+                patterns.add(property.has(path(zeroOrMore(pSubProperty)), pLabel));
             }
             if (aProperties) {
                 Iri pPropertyLabel = iri(aKB.getPropertyLabelIri());
-                patterns.add(property.has(Path.of(zeroOrMore(pPropertyLabel)), pLabel));
+                patterns.add(property.has(path(zeroOrMore(pPropertyLabel)), pLabel));
             }
 
             query.where(GraphPatterns.union(patterns.stream().toArray(GraphPattern[]::new)));
