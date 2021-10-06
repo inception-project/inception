@@ -107,4 +107,8 @@ public class StatisticsProvider
         list = aList;
     }
 
+    public List<LayerStatistics> getData() {
+        return list;
+    }
+
 }

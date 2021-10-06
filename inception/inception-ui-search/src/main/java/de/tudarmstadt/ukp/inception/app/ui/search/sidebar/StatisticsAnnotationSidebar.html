@@ -34,10 +34,20 @@
                                     </span>
                                 </button>
                                 <select wicket:id="format" class="form-select-sm" data-container="body" wicket:message="title:format"/>
-                                <button wicket:id="export" type="submit" class="btn btn-primary flex-content" wicket:message="title:export">
-                                    <span class="d-none d-xl-inline">&nbsp;
+
+                                <!--<button wicket:id="export" type="submit" class="btn btn-primary flex-content" wicket:message="title:export">
+                                    <span class="d-none d-xl-inline">
+                                        &nbsp;
                                         <wicket:message key="export"/>
                                     </span>
+                                </button>
+                                -->
+                                <button wicket:id="export" type="submit" class="btn btn-primary flex-content">
+                                    <span class="d-none d-xl-inline">
+                                        &nbsp;
+                                        <wicket:message key="export" />
+                                    </span>
+                                    <i class="fas fa-download"></i>
                                 </button>
                                 <table class="dataview" cellspacing="0" wicket:id="datatable" wicket:message="title:results">[table]</table>
                             </form>

@@ -19,6 +19,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -36,8 +37,10 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.resource.AbstractResourceStream;
+import org.apache.wicket.util.resource.IResourceStream;
+import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +54,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.search.Formats;
@@ -93,17 +98,21 @@ public class StatisticsAnnotationSidebar
     private List<IColumn> columns;
     private DefaultDataTable resultsTable;
 
-
     // private DropDownChoice<AnnotationLayer> layerChoice;
     // private DropDownChoice<AnnotationFeature> featureChoice;
     private DropDownChoice<String> granularityChoice;
     private DropDownChoice<String> statisticChoice;
     private DropDownChoice<String> formatChoice;
 
+    private AjaxDownloadLink exportButton;
+
     private String selectedFormat;
     private String selectedStatistic;
     private String selectedGranularity;
     private String propertyExpressionStatistic;
+
+    private List<LayerStatistics> layerStatsList;
+    private List<AnnotationFeature> features;
 
     private CompoundPropertyModel<StatisticsOptions> statisticsOptions = CompoundPropertyModel
             .of(new StatisticsOptions());
@@ -130,6 +139,9 @@ public class StatisticsAnnotationSidebar
         selectedGranularity = null;
         selectedStatistic = null;
         propertyExpressionStatistic = "";
+
+        layerStatsList = null;
+        features = annotationService.listAnnotationFeature((projectModel.getObject()));
 
         /*
          * layerChoice = new DropDownChoice<>(MID_LAYER, this::listLayers);
@@ -174,14 +186,19 @@ public class StatisticsAnnotationSidebar
                 return "Format:";
             }
         };
+        // formatChoice.add(visibleWhen(() -> columns.size() > 1));
         statisticsForm.add(formatChoice);
+        formatChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
         LambdaAjaxButton<StatisticsOptions> calculateButton = new LambdaAjaxButton<StatisticsOptions>(
                 "calculate", this::actionCalculate);
         statisticsForm.add(calculateButton);
+        calculateButton.add(new LambdaAjaxFormComponentUpdatingBehavior("calculated"));
 
-        LambdaAjaxButton<StatisticsOptions> exportButton = new LambdaAjaxButton<StatisticsOptions>(
-                "export", this::actionExport);
+        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults" +
+        selectedFormat,
+        this::actionExport);
+        // exportButton.add(visibleWhen(() -> columns.size() > 1));
         statisticsForm.add(exportButton);
 
         statsProvider = new StatisticsProvider(new ArrayList<>());
@@ -189,27 +206,6 @@ public class StatisticsAnnotationSidebar
         columns = new ArrayList<IColumn>();
         columns.add(new PropertyColumn(new Model<String>("Features"), "getLayerFeatureName",
                 "getLayerFeatureName"));
-        //try {
-            /*
-            columns.add(new PropertyColumn(new Model<String>(selectedStatistic),
-                    StatisticsOptions.uiToInternal(selectedStatistic),
-                    StatisticsOptions.uiToInternal(selectedStatistic)));
-
-             */
-        /*
-            columns.add(new PropertyColumn(new Model<String>(selectedStatistic),
-                //propertyExpressionStatistic
-                "getMean"
-            ));
-
-         */
-        //}
-        /*
-        catch (ExecutionException e) {
-            LOG.error("Problem converting UI name of statistic to internal name!");
-        }
-
-         */
 
         resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 30);
         resultsTable.setOutputMarkupId(true);
@@ -221,13 +217,6 @@ public class StatisticsAnnotationSidebar
     private void actionCalculate(AjaxRequestTarget aTarget, Form<StatisticsOptions> aForm)
         throws ExecutionException
     {
-        List<LayerStatistics> layerStatsList = new ArrayList<LayerStatistics>();
-        // List<Double> resultsList = new ArrayList<Double>();
-        // List<String> featureNameList = new ArrayList<String>();
-
-        List<AnnotationFeature> features = annotationService
-                .listAnnotationFeature((projectModel.getObject()));
-
         if (selectedGranularity == null) {
             LOG.error("Error: No granularity selected!");
             error("Error: No granularity selected!");
@@ -237,26 +226,18 @@ public class StatisticsAnnotationSidebar
             LOG.error("Error: No statistic selected!");
             error("Error: No statistic selected!");
             aTarget.addChildren(getPage(), IFeedback.class);
-
         }
         else {
             try {
-                StatisticsResult result = searchService.getProjectStatistics(currentUser,
-                        projectModel.getObject(), OptionalInt.empty(), OptionalInt.empty(),
-                        new HashSet<AnnotationFeature>(features));
-
-                layerStatsList.add(result.getTokenResult());
-                layerStatsList.add(result.getSentenceResult());
-                for (AnnotationFeature feature : features) {
-                    LayerStatistics layerStats = result.getLayerResult(feature.getLayer(), feature);
-                    // resultsList.add(
-                    // layerStats.getMetric(StatisticsOptions.uiToInternal(selectedStatistic),
-                    // selectedGranularity == GRANULARITY_LEVELS.get(1)));
-                    // featureNameList.add(feature.getUiName());
-                    layerStatsList.add(layerStats);
+                if (layerStatsList == null) {
+                    StatisticsResult result = searchService.getProjectStatistics(currentUser,
+                            projectModel.getObject(), OptionalInt.empty(), OptionalInt.empty(),
+                            new HashSet<AnnotationFeature>(features));
+                    layerStatsList = new ArrayList<>(result.getResults().values());
                 }
-
-                propertyExpressionStatistic = StatisticsOptions.buildPropertyExpression(Metrics.uiToInternal(selectedStatistic), Granularities.uiToInternal(selectedGranularity));
+                propertyExpressionStatistic = StatisticsOptions.buildPropertyExpression(
+                        Metrics.uiToInternal(selectedStatistic),
+                        Granularities.uiToInternal(selectedGranularity));
             }
             catch (ExecutionException e) {
                 e.printStackTrace();
@@ -274,26 +255,40 @@ public class StatisticsAnnotationSidebar
             columns.remove(1);
         }
         columns.add(new PropertyColumn(new Model<String>(selectedStatistic),
-            propertyExpressionStatistic, propertyExpressionStatistic));
+                propertyExpressionStatistic, propertyExpressionStatistic));
 
         statsProvider.setData(layerStatsList);
 
-        // resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 20);
-        // resultsTable.setOutputMarkupId(true);
-        // aTarget.add(resultsTable);
-
-        // resultsTable.replaceWith(new DefaultDataTable("datatable", columns, statsProvider,
-        // 20).setOutputMarkupId(true));
         aTarget.add(resultsTable);
     }
 
-    private void actionExport(AjaxRequestTarget aTarget, Form<StatisticsOptions> aForm)
-    {
-        // selectedResult = null;
-        // searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
-        // executeSearchResultsGroupedQuery(aTarget);
-        aTarget.add(mainContainer);
-        aTarget.addChildren(getPage(), IFeedback.class);
+    private IResourceStream actionExport() {
+        if (selectedFormat == null) {
+            LOG.error("Error: No format selected!");
+            error("Error: No format selected!");
+        } else {
+            return new AbstractResourceStream() {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public InputStream getInputStream() throws ResourceStreamNotFoundException {
+                    StatisticsExporter exporter = new StatisticsExporter();
+                    try {
+                        return exporter.generateFile(layerStatsList,
+                            Formats.uiToInternal(selectedFormat));
+                    } catch (Exception e) {
+                        LOG.error("Unable to generate statistics file", e);
+                        error("Error: " + e.getMessage());
+                        throw new ResourceStreamNotFoundException(e);
+                    }
+                }
+
+                @Override
+                public void close() throws IOException {
+                    // Nothing to do
+                }
+            };
+        } return null;
     }
 
     /*
