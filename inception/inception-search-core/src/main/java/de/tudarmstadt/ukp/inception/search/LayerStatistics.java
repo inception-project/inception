@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -26,28 +27,31 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
 public class LayerStatistics
+    implements Serializable
 {
-    /** The stats to be calculated */
-    private static final String DOC_COUNT = "n";
-    private static final String TOTAL = "sum";
-    private static final String MINIMUM = "min";
-    private static final String MAXIMUM = "max";
-    private static final String MEAN = "mean";
-    private static final String MEDIAN = "median";
-    private static final String STANDARD_DEVIATION = "standarddeviation";
+    /*
+     * /** The stats to be calculated private static final String DOC_COUNT = "n"; private static
+     * final String TOTAL = "sum"; private static final String MINIMUM = "min"; private static final
+     * String MAXIMUM = "max"; private static final String MEAN = "mean"; private static final
+     * String MEDIAN = "median"; private static final String STANDARD_DEVIATION =
+     * "standarddeviation";
+     * 
+     */
 
-    public static final String STATS = DOC_COUNT + "," + TOTAL + "," + MINIMUM + "," + MAXIMUM + ","
-            + MEAN + "," + MEDIAN + "," + STANDARD_DEVIATION;
+    // public static final String STATS = DOC_COUNT + "," + TOTAL + "," + MINIMUM + "," + MAXIMUM +
+    // ","
+    // + MEAN + "," + MEDIAN + "," + STANDARD_DEVIATION;
+    public static final String STATS = Metrics.mtasRegExp();
     public static final List<String> STATS_LIST = Arrays.asList(STATS.split(","));
 
-    private final double total;
+    private final double sum;
     private final double maximum;
     private final double minimum;
     private final double mean;
     private final double median;
     private final double standardDeviation;
 
-    private final double totalPerSentence;
+    private final double sumPerSentence;
     private final double maximumPerSentence;
     private final double minimumPerSentence;
     private final double meanPerSentence;
@@ -59,19 +63,19 @@ public class LayerStatistics
     private String query;
     private AnnotationFeature feature;
 
-    public LayerStatistics(double aTotal, double aMaximum, double aMinimum, double aMean,
-            double aMedian, double aStandardDeviation, double aTotalPerSentence,
+    public LayerStatistics(double aSum, double aMaximum, double aMinimum, double aMean,
+            double aMedian, double aStandardDeviation, double aSumPerSentence,
             double aMaximumPerSentence, double aMinimumPerSentence, double aMeanPerSentence,
             double aMedianPerSentence, double aStandardDeviationPerSentence, double aNoOfDocuments)
     {
-        total = aTotal;
+        sum = aSum;
         maximum = aMaximum;
         minimum = aMinimum;
         mean = aMean;
         median = aMedian;
         standardDeviation = aStandardDeviation;
 
-        totalPerSentence = aTotalPerSentence;
+        sumPerSentence = aSumPerSentence;
         maximumPerSentence = aMaximumPerSentence;
         minimumPerSentence = aMinimumPerSentence;
         meanPerSentence = aMeanPerSentence;
@@ -83,13 +87,13 @@ public class LayerStatistics
         query = null;
     }
 
-    public double getMetric(String aMetric, boolean aPerSentence) throws ExecutionException
+    public String getLayerFeatureName()
     {
+        return feature.getLayer().getUiName() + "." + feature.getUiName();
+    }
 
-        if (!STATS_LIST.contains(aMetric)) {
-            throw new ExecutionException("Metric " + aMetric + " is not supported");
-        }
-
+    public double getMetric(Metrics aMetric, boolean aPerSentence)
+    {
         switch (aMetric) {
         case DOC_COUNT:
             if (!aPerSentence) {
@@ -98,21 +102,21 @@ public class LayerStatistics
             else {
                 return getNoOfDocuments();
             }
-        case TOTAL:
+        case SUM:
             if (!aPerSentence) {
-                return getTotal();
+                return getSum();
             }
             else {
-                return getTotalPerSentence();
+                return getSumPerSentence();
             }
-        case MINIMUM:
+        case MIN:
             if (!aPerSentence) {
                 return getMinimum();
             }
             else {
                 return getMinimumPerSentence();
             }
-        case MAXIMUM:
+        case MAX:
             if (!aPerSentence) {
                 return getMaximum();
             }
@@ -141,13 +145,35 @@ public class LayerStatistics
                 return getStandardDeviationPerSentence();
             }
         }
-        //formal return statement. is never reached
+        // formal return statement. is never reached
         return -1;
     }
 
-    public double getTotal()
+    public static String getPropertyExpression(Metrics aMetric)
     {
-        return total;
+        switch (aMetric) {
+        case DOC_COUNT:
+            return "getNoOfDocuments";
+        case SUM:
+            return "getSum";
+        case MIN:
+            return "getMinimum";
+        case MAX:
+            return "getMaximum";
+        case MEAN:
+            return "getMean";
+        case MEDIAN:
+            return "getMedian";
+        case STANDARD_DEVIATION:
+            return "getStandardDeviation";
+        }
+        // formal return statement. is never reached
+        return "";
+    }
+
+    public double getSum()
+    {
+        return sum;
     }
 
     public double getMaximum()
@@ -175,9 +201,9 @@ public class LayerStatistics
         return standardDeviation;
     }
 
-    public double getTotalPerSentence()
+    public double getSumPerSentence()
     {
-        return totalPerSentence;
+        return sumPerSentence;
     }
 
     public double getMaximumPerSentence()
@@ -206,6 +232,11 @@ public class LayerStatistics
     }
 
     public double getNoOfDocuments()
+    {
+        return noOfDocuments;
+    }
+
+    public double getNoOfDocumentsPerSentence()
     {
         return noOfDocuments;
     }

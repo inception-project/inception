@@ -63,7 +63,7 @@ public class StatisticsProvider
     public StatisticsProvider(List<LayerStatistics> aList)
     {
         // The default sorting
-        setSort("feature.getUiName", SortOrder.ASCENDING);
+        setSort("getLayerFeatureName", SortOrder.ASCENDING);
         list = aList;
 
     }
@@ -101,6 +101,10 @@ public class StatisticsProvider
     public long size()
     {
         return list.size();
+    }
+
+    public void setData(List<LayerStatistics> aList) {
+        list = aList;
     }
 
 }

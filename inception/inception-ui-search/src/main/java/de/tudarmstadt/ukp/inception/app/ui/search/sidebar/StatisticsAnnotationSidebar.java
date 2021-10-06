@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.OptionalInt;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
@@ -37,6 +36,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,9 +54,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.app.ui.search.Formats;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.StatisticsOptions;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
+import de.tudarmstadt.ukp.inception.search.Granularities;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
+import de.tudarmstadt.ukp.inception.search.Metrics;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
@@ -67,13 +70,13 @@ public class StatisticsAnnotationSidebar
     private static final Logger LOG = LoggerFactory.getLogger(StatisticsAnnotationSidebar.class);
 
     private static final String GRANULARITY = "granularity";
-    private static final List<String> GRANULARITY_LEVELS = StatisticsOptions.GRANULARITY_LEVELS;
+    private static final List<String> GRANULARITY_LEVELS = Granularities.uiList();
 
     private static final String STATISTIC = "statistic";
-    private static final List<String> STATISTICS = StatisticsOptions.STATISTICS_UI;
+    private static final List<String> STATISTICS = Metrics.uiList();
 
     private static final String FORMAT = "format";
-    private static final List<String> FORMATS = StatisticsOptions.FORMATS;
+    private static final List<String> FORMATS = Formats.uiList();
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -87,8 +90,9 @@ public class StatisticsAnnotationSidebar
     private WebMarkupContainer mainContainer;
 
     private IModel<Project> projectModel;
+    private List<IColumn> columns;
+    private DefaultDataTable resultsTable;
 
-    //private IModel<String> targetQuery = Model.of("");
 
     // private DropDownChoice<AnnotationLayer> layerChoice;
     // private DropDownChoice<AnnotationFeature> featureChoice;
@@ -99,16 +103,11 @@ public class StatisticsAnnotationSidebar
     private String selectedFormat;
     private String selectedStatistic;
     private String selectedGranularity;
+    private String propertyExpressionStatistic;
 
     private CompoundPropertyModel<StatisticsOptions> statisticsOptions = CompoundPropertyModel
             .of(new StatisticsOptions());
 
-    //private DropDownChoice<AnnotationFeature> groupingFeature;
-    //private CheckBox lowLevelPagingCheckBox;
-
-    private DataTable<Double, String> resultsTable;
-
-    //private SearchResult selectedResult;
     private StatisticsProvider statsProvider;
 
     public StatisticsAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
@@ -130,6 +129,7 @@ public class StatisticsAnnotationSidebar
         selectedFormat = null;
         selectedGranularity = null;
         selectedStatistic = null;
+        propertyExpressionStatistic = "";
 
         /*
          * layerChoice = new DropDownChoice<>(MID_LAYER, this::listLayers);
@@ -140,39 +140,42 @@ public class StatisticsAnnotationSidebar
          * featureChoice.setModelObject(null); })); mainContainer.add(layerChoice);
          * 
          */
-        Form<StatisticsOptions> statisticsForm = new Form<>("settings",
-                statisticsOptions);
+        Form<StatisticsOptions> statisticsForm = new Form<>("settings", statisticsOptions);
 
-        granularityChoice = new DropDownChoice<String>(GRANULARITY, new PropertyModel<String>(this, "selectedGranularity"), GRANULARITY_LEVELS) {
+        granularityChoice = new DropDownChoice<String>(GRANULARITY,
+                new PropertyModel<String>(this, "selectedGranularity"), GRANULARITY_LEVELS)
+        {
             @Override
-            protected String getNullKeyDisplayValue() {
+            protected String getNullKeyDisplayValue()
+            {
                 return "Granularity:";
             }
         };
-        // granularityChoice.setChoiceRenderer()
-        //granularityChoice.setRequired(true);
 
         statisticsForm.add(granularityChoice);
 
-        statisticChoice = new DropDownChoice<String>(STATISTIC, new PropertyModel<String>(this, "selectedStatistic"), STATISTICS) {
+        statisticChoice = new DropDownChoice<String>(STATISTIC,
+                new PropertyModel<String>(this, "selectedStatistic"), STATISTICS)
+        {
             @Override
-            protected String getNullKeyDisplayValue() {
+            protected String getNullKeyDisplayValue()
+            {
                 return "Statistic:";
             }
         };
-        //statisticChoice.setRequired(true);
         statisticsForm.add(statisticChoice);
 
-        formatChoice = new DropDownChoice<String>(FORMAT, new PropertyModel<String>(this, "selectedFormat"), FORMATS) {
+        formatChoice = new DropDownChoice<String>(FORMAT,
+                new PropertyModel<String>(this, "selectedFormat"), FORMATS)
+        {
             @Override
-            protected String getNullKeyDisplayValue() {
+            protected String getNullKeyDisplayValue()
+            {
                 return "Format:";
             }
         };
-        //formatChoice.setRequired(true);
         statisticsForm.add(formatChoice);
 
-        // statisticsForm.add(new TextArea<>("queryInput", targetQuery));
         LambdaAjaxButton<StatisticsOptions> calculateButton = new LambdaAjaxButton<StatisticsOptions>(
                 "calculate", this::actionCalculate);
         statisticsForm.add(calculateButton);
@@ -181,45 +184,60 @@ public class StatisticsAnnotationSidebar
                 "export", this::actionExport);
         statisticsForm.add(exportButton);
 
-        // searchForm.setDefaultButton(searchButton);
-
-        mainContainer.add(statisticsForm);
-
         statsProvider = new StatisticsProvider(new ArrayList<>());
 
-        List<IColumn> columns = new ArrayList<IColumn>();
-        columns.add(
-                new PropertyColumn(new Model<String>("Features"),
-                        "feature.getUiName", "feature.getUiName"));
-        try {
-                new PropertyColumn(new Model(statisticChoice.getChoicesModel().getObject().get(0)),
-                    StatisticsOptions.uiToInternal(statisticChoice.getChoicesModel().getObject().get(0)),
-                    StatisticsOptions.uiToInternal(statisticChoice.getChoicesModel().getObject().get(0)));
-        }
+        columns = new ArrayList<IColumn>();
+        columns.add(new PropertyColumn(new Model<String>("Features"), "getLayerFeatureName",
+                "getLayerFeatureName"));
+        //try {
+            /*
+            columns.add(new PropertyColumn(new Model<String>(selectedStatistic),
+                    StatisticsOptions.uiToInternal(selectedStatistic),
+                    StatisticsOptions.uiToInternal(selectedStatistic)));
+
+             */
+        /*
+            columns.add(new PropertyColumn(new Model<String>(selectedStatistic),
+                //propertyExpressionStatistic
+                "getMean"
+            ));
+
+         */
+        //}
+        /*
         catch (ExecutionException e) {
             LOG.error("Problem converting UI name of statistic to internal name!");
         }
 
-        DefaultDataTable table = new DefaultDataTable("datatable", columns, statsProvider, 20);
+         */
 
-        mainContainer.add(table);
+        resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 30);
+        resultsTable.setOutputMarkupId(true);
+
+        statisticsForm.add(resultsTable);
+        mainContainer.add(statisticsForm);
     }
 
-    private void actionCalculate(AjaxRequestTarget aTarget, Form<StatisticsOptions> aForm) throws ExecutionException
+    private void actionCalculate(AjaxRequestTarget aTarget, Form<StatisticsOptions> aForm)
+        throws ExecutionException
     {
-        System.out.println("asdf");
         List<LayerStatistics> layerStatsList = new ArrayList<LayerStatistics>();
-        List<Double> resultsList = new ArrayList<Double>();
-        List<String> featureNameList = new ArrayList<String>();
+        // List<Double> resultsList = new ArrayList<Double>();
+        // List<String> featureNameList = new ArrayList<String>();
 
         List<AnnotationFeature> features = annotationService
                 .listAnnotationFeature((projectModel.getObject()));
 
         if (selectedGranularity == null) {
-            LOG.error("No granularity selected!");
+            LOG.error("Error: No granularity selected!");
+            error("Error: No granularity selected!");
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
         else if (selectedStatistic == null) {
-            LOG.error("No statistic selected!");
+            LOG.error("Error: No statistic selected!");
+            error("Error: No statistic selected!");
+            aTarget.addChildren(getPage(), IFeedback.class);
+
         }
         else {
             try {
@@ -227,22 +245,46 @@ public class StatisticsAnnotationSidebar
                         projectModel.getObject(), OptionalInt.empty(), OptionalInt.empty(),
                         new HashSet<AnnotationFeature>(features));
 
+                layerStatsList.add(result.getTokenResult());
+                layerStatsList.add(result.getSentenceResult());
                 for (AnnotationFeature feature : features) {
                     LayerStatistics layerStats = result.getLayerResult(feature.getLayer(), feature);
-                    resultsList.add(layerStats.getMetric(StatisticsOptions.uiToInternal(selectedStatistic),
-                            selectedGranularity == GRANULARITY_LEVELS.get(1)));
-                    featureNameList.add(feature.getUiName());
+                    // resultsList.add(
+                    // layerStats.getMetric(StatisticsOptions.uiToInternal(selectedStatistic),
+                    // selectedGranularity == GRANULARITY_LEVELS.get(1)));
+                    // featureNameList.add(feature.getUiName());
                     layerStatsList.add(layerStats);
                 }
+
+                propertyExpressionStatistic = StatisticsOptions.buildPropertyExpression(Metrics.uiToInternal(selectedStatistic), Granularities.uiToInternal(selectedGranularity));
             }
             catch (ExecutionException e) {
+                e.printStackTrace();
                 LOG.error("Error: Something went wrong parsing the input.");
+                error("Error: Something went wrong parsing the input.");
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
             catch (IOException e) {
                 LOG.error("Error: Something went wrong accessing files.");
+                error("Error: Something went wrong accessing files.");
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
-        statsProvider = new StatisticsProvider(layerStatsList);
+        if (columns.size() > 1) {
+            columns.remove(1);
+        }
+        columns.add(new PropertyColumn(new Model<String>(selectedStatistic),
+            propertyExpressionStatistic, propertyExpressionStatistic));
+
+        statsProvider.setData(layerStatsList);
+
+        // resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 20);
+        // resultsTable.setOutputMarkupId(true);
+        // aTarget.add(resultsTable);
+
+        // resultsTable.replaceWith(new DefaultDataTable("datatable", columns, statsProvider,
+        // 20).setOutputMarkupId(true));
+        aTarget.add(resultsTable);
     }
 
     private void actionExport(AjaxRequestTarget aTarget, Form<StatisticsOptions> aForm)

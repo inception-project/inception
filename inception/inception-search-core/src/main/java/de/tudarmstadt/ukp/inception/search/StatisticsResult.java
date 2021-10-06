@@ -83,14 +83,14 @@ public class StatisticsResult
 
     public LayerStatistics getTokenResult() throws ExecutionException
     {
-        featureResultExists("Token Count");
-        return results.get("Token Count");
+        featureResultExists("Raw text.token");
+        return results.get("Raw text.token");
     }
 
     public LayerStatistics getSentenceResult() throws ExecutionException
     {
-        featureResultExists("Sentence Count");
-        return results.get("Sentence Count");
+        featureResultExists("Raw text.sentence");
+        return results.get("Raw text.sentence");
     }
 
     public LayerStatistics getQueryResult() throws ExecutionException
@@ -135,10 +135,10 @@ public class StatisticsResult
         return layers;
     }
 
-    public double getTotal(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public double getSum(AnnotationLayer aLayer, AnnotationFeature aFeature)
         throws ExecutionException
     {
-        return getLayerResult(aLayer, aFeature).getTotal();
+        return getLayerResult(aLayer, aFeature).getSum();
     }
 
     public double getMinimum(AnnotationLayer aLayer, AnnotationFeature aFeature)

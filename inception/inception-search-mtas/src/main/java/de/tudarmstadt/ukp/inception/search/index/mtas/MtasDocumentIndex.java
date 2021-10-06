@@ -415,8 +415,8 @@ public class MtasDocumentIndex
 
         for (AnnotationFeature feature : features) {
             AnnotationLayer layer = feature.getLayer();
-            String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
-                    + feature.getUiName().replace(' ', '_') + "=\"\"/>";
+            String searchString = "<" + MtasUimaParser.getIndexedName(layer.getUiName()) + "."
+                    + MtasUimaParser.getIndexedName(feature.getUiName()) + "=\"\"/>";
 
             LayerStatistics results = getLayerStatistics(aStatisticRequest, searchString,
                     fullDocSet);

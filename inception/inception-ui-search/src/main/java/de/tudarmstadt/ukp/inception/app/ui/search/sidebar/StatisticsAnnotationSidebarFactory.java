@@ -57,4 +57,9 @@ public class StatisticsAnnotationSidebarFactory
         return new StatisticsAnnotationSidebar(aId, aModel, aActionHandler, aCasProvider,
                 aAnnotationPage);
     }
+
+    @Override
+    public String getDescription() {
+        return "Calculates high-level statistics.";
+    }
 }
