@@ -23,18 +23,10 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.core.session.SessionRegistry;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.curation.merge.DefaultMergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeIncompleteStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
@@ -46,71 +38,11 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsMenuItem;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationEditorExtension;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarFactory;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarService;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarServiceImpl;
-import de.tudarmstadt.ukp.inception.curation.sidebar.merge.AutomaticMergeStrategy;
-import de.tudarmstadt.ukp.inception.curation.sidebar.merge.ManualMergeStrategy;
-import de.tudarmstadt.ukp.inception.curation.sidebar.render.CurationRenderer;
 
 @Configuration
 public class CurationServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
-
-    @Bean
-    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
-    public CurationSidebarService curationSidebarService(EntityManager aEntityManager,
-            DocumentService aDocumentService, SessionRegistry aSessionRegistry,
-            ProjectService aProjectService, UserDao aUserRegistry,
-            CasStorageService aCasStorageService)
-    {
-        return new CurationSidebarServiceImpl(aEntityManager, aDocumentService, aSessionRegistry,
-                aProjectService, aUserRegistry, aCasStorageService);
-    }
-
-    @Bean(CurationEditorExtension.EXTENSION_ID)
-    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
-    public CurationEditorExtension curationEditorExtension(
-            AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
-            CurationRenderer aCurationRenderer)
-    {
-        return new CurationEditorExtension(aAnnotationService, aDocumentService, aCurationRenderer);
-    }
-
-    @Bean("curationSidebar")
-    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
-    public CurationSidebarFactory curationSidebarFactory(ProjectService aProjectService,
-            UserDao aUserService)
-    {
-        return new CurationSidebarFactory(aProjectService, aUserService);
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
-    public CurationRenderer curationRenderer(CurationSidebarService aCurationService,
-            LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
-            UserDao aUserRepository, AnnotationSchemaService aAnnotationService)
-    {
-        return new CurationRenderer(aCurationService, aLayerSupportRegistry, aDocumentService,
-                aUserRepository, aAnnotationService);
-    }
-
-    @Bean(AutomaticMergeStrategy.BEAN_NAME)
-    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
-    public AutomaticMergeStrategy automaticSidebarMergeStrategy(
-            CurationSidebarService aCurationService, AnnotationSchemaService aAnnotationService)
-    {
-        return new AutomaticMergeStrategy(aCurationService, aAnnotationService);
-    }
-
-    @Bean(ManualMergeStrategy.BEAN_NAME)
-    @ConditionalOnProperty(prefix = "curation.sidebar", name = "enabled", havingValue = "true")
-    public ManualMergeStrategy manualSidebarMergeStrategy()
-    {
-        return new ManualMergeStrategy();
-    }
 
     @Bean
     public CurationProjectSettingsMenuItem curationProjectSettingsMenuItem()

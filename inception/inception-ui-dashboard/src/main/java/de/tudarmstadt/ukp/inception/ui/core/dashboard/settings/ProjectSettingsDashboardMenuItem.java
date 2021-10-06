@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings;
 
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
@@ -33,6 +34,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.details.ProjectDe
  * {@link DashboardAutoConfiguration#projectSettingsDashboardMenuItem()}.
  * </p>
  */
+@Order(8000)
 public class ProjectSettingsDashboardMenuItem
     extends ProjectSettingsMenuItemBase
 {

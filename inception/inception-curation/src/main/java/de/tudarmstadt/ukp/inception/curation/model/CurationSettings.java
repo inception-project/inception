@@ -33,8 +33,6 @@ import javax.persistence.IdClass;
 import javax.persistence.JoinColumn;
 import javax.persistence.Table;
 
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSettingsId;
-
 @Entity
 @IdClass(CurationSettingsId.class)
 @Table(name = "curation_settings")

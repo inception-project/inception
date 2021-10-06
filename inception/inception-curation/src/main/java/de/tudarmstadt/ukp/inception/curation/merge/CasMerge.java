@@ -89,8 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.DefaultMergeStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -100,6 +98,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 
 /**
  * Do a merge CAS out of multiple user annotations

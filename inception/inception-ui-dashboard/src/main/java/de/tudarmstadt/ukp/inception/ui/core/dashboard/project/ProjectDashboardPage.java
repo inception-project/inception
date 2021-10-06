@@ -24,7 +24,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -39,8 +42,9 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ActivitiesDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtension;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
@@ -52,10 +56,15 @@ public class ProjectDashboardPage
 {
     private static final long serialVersionUID = -2487663821276301436L;
 
+    private static final String MID_MENU = "menu";
+    private static final String MID_RIGHT_SIDEBAR_DASHLETS = "rightSidebarDashlets";
+    private static final String MID_CURRENT_PROJECT_DASHLET = "currentProjectDashlet";
+
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean MenuItemRegistry menuItemService;
     private @SpringBean WorkloadManagementService workloadService;
+    private @SpringBean ProjectDashboardDashletExtensionPoint dashletRegistry;
 
     public ProjectDashboardPage(final PageParameters aPageParameters)
     {
@@ -70,10 +79,29 @@ public class ProjectDashboardPage
             requireProjectRole(currentUser);
         }
 
-        add(new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems)));
-        add(new CurrentProjectDashlet("currentProjectDashlet", getProjectModel()));
-        add(new ActivitiesDashlet("activitiesDashlet", getProjectModel())
-                .add(visibleWhen(this::isActivitiesDashletVisible)));
+        add(new DashboardMenu(MID_MENU, LoadableDetachableModel.of(this::getMenuItems)));
+        add(new CurrentProjectDashlet(MID_CURRENT_PROJECT_DASHLET, getProjectModel()));
+        add(createRightSidebarDashlets(MID_RIGHT_SIDEBAR_DASHLETS));
+    }
+
+    private Component createRightSidebarDashlets(String aId)
+    {
+        var sidebarModel = LoadableDetachableModel.of(dashletRegistry::getExtensions);
+
+        var sidebar = new ListView<ProjectDashboardDashletExtension>(aId, sidebarModel)
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void populateItem(ListItem<ProjectDashboardDashletExtension> aItem)
+            {
+                aItem.add(aItem.getModelObject().createDashlet("dashlet", getProjectModel()));
+            }
+        };
+
+        sidebar.add(visibleWhen(sidebarModel.map(dashlets -> !dashlets.isEmpty())));
+
+        return sidebar;
     }
 
     @Override
@@ -93,11 +121,5 @@ public class ProjectDashboardPage
     {
         return menuItemService.getMenuItems().stream()
                 .filter(item -> item.getPath().matches("/[^/]+")).collect(Collectors.toList());
-    }
-
-    private boolean isActivitiesDashletVisible()
-    {
-        return workloadService.getWorkloadManagerExtension(getProject())
-                .isDocumentRandomAccessAllowed(getProject());
     }
 }

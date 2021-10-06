@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 
 public interface MergeStrategyFactory<T>
