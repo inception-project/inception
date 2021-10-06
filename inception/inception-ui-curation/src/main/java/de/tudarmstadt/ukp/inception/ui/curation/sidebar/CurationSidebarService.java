@@ -33,7 +33,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.merge.SidebarMergeStrategy;
 
 public interface CurationSidebarService
 {
@@ -83,16 +82,6 @@ public interface CurationSidebarService
      * Returns the name of the user corresponding to the CAS used as curation (target) CAS
      */
     String retrieveCurationTarget(String aUser, long aProjectId);
-
-    /**
-     * Returns the merge strategy that the user previously selected or the manual one as default
-     */
-    SidebarMergeStrategy retrieveSidebarMergeStrategy(String aUsername, long aProjectId);
-
-    /**
-     * Store the selected merge-strategy for the given user and project
-     */
-    void updateSidebarMergeStrategy(String aCurrentUser, long aProjectId, SidebarMergeStrategy aStrategy);
 
     /**
      * Returns the user corresponding to the CAS used as curation (target) CAS

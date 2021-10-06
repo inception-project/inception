@@ -35,8 +35,6 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarServiceImpl;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.merge.AutomaticMergeStrategy;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.merge.ManualMergeStrategy;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationRenderer;
 
 @Configuration
@@ -78,18 +76,5 @@ public class CurationSidebarAutoConfiguration
     {
         return new CurationRenderer(aCurationService, aLayerSupportRegistry, aDocumentService,
                 aUserRepository, aAnnotationService);
-    }
-
-    @Bean(AutomaticMergeStrategy.BEAN_NAME)
-    public AutomaticMergeStrategy automaticSidebarMergeStrategy(
-            CurationSidebarService aCurationService, AnnotationSchemaService aAnnotationService)
-    {
-        return new AutomaticMergeStrategy(aCurationService, aAnnotationService);
-    }
-
-    @Bean(ManualMergeStrategy.BEAN_NAME)
-    public ManualMergeStrategy manualSidebarMergeStrategy()
-    {
-        return new ManualMergeStrategy();
     }
 }

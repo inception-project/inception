@@ -65,8 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettings;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSettingsId;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.merge.ManualMergeStrategy;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.merge.SidebarMergeStrategy;
 
 /**
  * <p>
@@ -90,8 +88,9 @@ public class CurationSidebarServiceImpl
     private final CasStorageService casStorageService;
 
     @Autowired
-    public CurationSidebarServiceImpl(EntityManager aEntityManager, DocumentService aDocumentService,
-            SessionRegistry aSessionRegistry, ProjectService aProjectService, UserDao aUserRegistry,
+    public CurationSidebarServiceImpl(EntityManager aEntityManager,
+            DocumentService aDocumentService, SessionRegistry aSessionRegistry,
+            ProjectService aProjectService, UserDao aUserRegistry,
             CasStorageService aCasStorageService)
     {
         curationStates = new ConcurrentHashMap<>();
@@ -195,20 +194,17 @@ public class CurationSidebarServiceImpl
         // to find source document of the curated document
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationUser;
-        private SidebarMergeStrategy selectedStrategy;
         private boolean showAll;
 
         public CurationState(String aUser)
         {
             curationUser = aUser;
-            selectedStrategy = new ManualMergeStrategy();
         }
 
         public CurationState(String aCurationUserName, List<User> aSelectedUsers)
         {
             curationUser = aCurationUserName;
             selectedUsers = new ArrayList<>(aSelectedUsers);
-            selectedStrategy = new ManualMergeStrategy();
         }
 
         public List<User> getSelectedUsers()
@@ -229,16 +225,6 @@ public class CurationSidebarServiceImpl
         public void setCurationName(String aCurationName)
         {
             curationUser = aCurationName;
-        }
-
-        public void setMergeStrategy(SidebarMergeStrategy aStrategy)
-        {
-            selectedStrategy = aStrategy;
-        }
-
-        public SidebarMergeStrategy getMergeStrategy()
-        {
-            return selectedStrategy;
         }
 
         public boolean isShowAll()
@@ -351,14 +337,6 @@ public class CurationSidebarServiceImpl
     {
         synchronized (curationStates) {
             getCurationState(aCurrentUser, aProjectId).setCurationName(aUserName);
-        }
-    }
-
-    @Override
-    public void updateSidebarMergeStrategy(String aCurrentUser, long aProjectId, SidebarMergeStrategy aStrategy)
-    {
-        synchronized (curationStates) {
-            getCurationState(aCurrentUser, aProjectId).setMergeStrategy(aStrategy);
         }
     }
 
@@ -514,12 +492,6 @@ public class CurationSidebarServiceImpl
         else {
             return userRegistry.get(curationUser);
         }
-    }
-
-    @Override
-    public SidebarMergeStrategy retrieveSidebarMergeStrategy(String aUsername, long aProjectId)
-    {
-        return getCurationState(aUsername, aProjectId).getMergeStrategy();
     }
 
     @Override
