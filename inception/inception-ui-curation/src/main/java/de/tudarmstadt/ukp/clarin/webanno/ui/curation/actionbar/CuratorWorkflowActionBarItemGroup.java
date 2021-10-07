@@ -130,8 +130,7 @@ public class CuratorWorkflowActionBarItemGroup
     protected void actionResetDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)
         throws Exception
     {
-        ((CurationPage) page)
-                .readOrCreateMergeCas(aForm.getModelObject().isMergeIncompleteAnnotations(), true);
+        ((CurationPage) page).readOrCreateMergeCas(true);
 
         // ... and load it
         page.actionLoadDocument(aTarget);

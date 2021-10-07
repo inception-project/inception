@@ -81,7 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
-import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
+import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 
 public class CurationSidebar
     extends AnnotationSidebar_ImplBase
@@ -93,7 +93,8 @@ public class CurationSidebar
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
-    private @SpringBean CurationSidebarService curationService;
+    private @SpringBean CurationSidebarService curationSidebarService;
+    private @SpringBean CurationService curationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
 
@@ -136,8 +137,8 @@ public class CurationSidebar
                 LoadableDetachableModel.of(state::getUser)));
         finishedLabel.setOutputMarkupPlaceholderTag(true);
         mainContainer.add(finishedLabel);
-        finishedLabel
-                .add(visibleWhen(() -> curationService.isCurationFinished(state, currentUsername)));
+        finishedLabel.add(visibleWhen(
+                () -> curationSidebarService.isCurationFinished(state, currentUsername)));
         noDocsLabel.add(
                 visibleWhen(() -> !finishedLabel.isVisible() && users.getModelObject().isEmpty()));
         mainContainer.add(noDocsLabel);
@@ -196,7 +197,7 @@ public class CurationSidebar
 
         // If curation is possible and the curation target user is different from the user set in
         // the annotation state, then we need to update the state and reload.
-        User curationUser = curationService.retrieveCurationUser(currentUsername,
+        User curationUser = curationSidebarService.retrieveCurationUser(currentUsername,
                 state.getProject().getId());
         if (!state.getUser().equals(curationUser)) {
             state.setUser(curationUser);
@@ -240,7 +241,7 @@ public class CurationSidebar
             }
         };
         curationTargetChoice = new BootstrapRadioChoice<String>("curationTargetRadioBtn",
-                Model.of(curationService.retrieveCurationTarget(
+                Model.of(curationSidebarService.retrieveCurationTarget(
                         userRepository.getCurrentUser().getUsername(),
                         getModelObject().getProject().getId())),
                 curationTargets, choiceRenderer)
@@ -262,7 +263,7 @@ public class CurationSidebar
         form.add(curationTargetChoice);
 
         showAll = new CheckBox("showAll",
-                Model.of(curationService.isShowAll(userRepository.getCurrentUsername(),
+                Model.of(curationSidebarService.isShowAll(userRepository.getCurrentUsername(),
                         getModelObject().getProject().getId())));
         showAll.setOutputMarkupPlaceholderTag(true);
         form.add(showAll);
@@ -278,9 +279,7 @@ public class CurationSidebar
         // update selected users
         updateUsers(state);
         mergeConfirm.setConfirmAction((target, form) -> {
-            boolean mergeIncomplete = form.getModelObject().isMergeIncompleteAnnotations();
-            doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject(),
-                    mergeIncomplete);
+            doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject());
             target.add(getAnnotationPage());
         });
         mergeConfirm.show(aTarget);
@@ -294,25 +293,24 @@ public class CurationSidebar
 
         // update curation target
         if (curationTargetChoice.getModelObject().equals(currentUsername)) {
-            curationService.updateCurationName(currentUsername, project, currentUsername);
+            curationSidebarService.updateCurationName(currentUsername, project, currentUsername);
         }
         else {
             curator = new User(CURATION_USER, Role.ROLE_USER);
-            curationService.updateCurationName(currentUsername, project, CURATION_USER);
+            curationSidebarService.updateCurationName(currentUsername, project, CURATION_USER);
         }
 
         aState.setUser(curator);
         aState.getSelection().clear();
     }
 
-    private void doMerge(AnnotatorState aState, String aCurator, Collection<User> aUsers,
-            boolean aMergeIncomplete)
+    private void doMerge(AnnotatorState aState, String aCurator, Collection<User> aUsers)
     {
         // merge cases
         try {
             SourceDocument doc = aState.getDocument();
-            Map<String, CAS> userCases = curationService.retrieveUserCases(aUsers, doc);
-            Optional<CAS> maybeTargetCas = curationService.retrieveCurationCAS(aCurator,
+            Map<String, CAS> userCases = curationSidebarService.retrieveUserCases(aUsers, doc);
+            Optional<CAS> maybeTargetCas = curationSidebarService.retrieveCurationCAS(aCurator,
                     aState.getProject().getId(), doc);
             if (!maybeTargetCas.isPresent()) {
                 return;
@@ -326,11 +324,9 @@ public class CurationSidebar
             List<DiffAdapter> adapters = CasDiff.getDiffAdapters(annotationService, layers);
             DiffResult diff = CasDiff.doDiffSingle(adapters, LINK_ROLE_AS_LABEL, userCases, 0,
                     aTargetCas.getDocumentText().length()).toResult();
-            CasMerge casMerge = new CasMerge(annotationService);
             try {
-                if (aMergeIncomplete) {
-                    casMerge.setMergeStrategy(new MergeIncompleteStrategy());
-                }
+                CasMerge casMerge = new CasMerge(annotationService);
+                casMerge.setMergeStrategy(curationService.getMergeStrategy(aState.getProject()));
                 casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
                         aTargetCas, userCases);
             }
@@ -339,7 +335,8 @@ public class CurationSidebar
                         aState.getUser().getUsername(), aState.getDocument().getId()), e);
             }
             // write back and update timestamp
-            curationService.writeCurationCas(aTargetCas, aState, aState.getProject().getId());
+            curationSidebarService.writeCurationCas(aTargetCas, aState,
+                    aState.getProject().getId());
 
             log.debug("Merge done");
         }
@@ -388,8 +385,10 @@ public class CurationSidebar
 
     private List<User> listSelectedUsers()
     {
-        return curationService.listUsersSelectedForCuration(userRepository.getCurrentUsername(),
-                getModelObject().getProject().getId()).orElse(emptyList());
+        return curationSidebarService
+                .listUsersSelectedForCuration(userRepository.getCurrentUsername(),
+                        getModelObject().getProject().getId())
+                .orElse(emptyList());
     }
 
     /**
@@ -399,7 +398,7 @@ public class CurationSidebar
     {
         User currentUser = userRepository.getCurrentUser();
         String curatorName = getModelObject().getUser().getUsername();
-        return curationService
+        return curationSidebarService
                 .listFinishedUsers(getModelObject().getProject(), getModelObject().getDocument())
                 .stream()
                 .filter(user -> !user.equals(currentUser) || curatorName.equals(CURATION_USER))
@@ -422,7 +421,7 @@ public class CurationSidebar
         AnnotatorState state = getModelObject();
         User currentUser = userRepository.getCurrentUser();
         updateCurator(state, currentUser);
-        curationService.setShowAll(currentUser.getUsername(), state.getProject().getId(),
+        curationSidebarService.setShowAll(currentUser.getUsername(), state.getProject().getId(),
                 showAll.getModelObject());
         updateUsers(state);
         // close settingsForm after apply was pressed
@@ -434,7 +433,7 @@ public class CurationSidebar
     private void updateUsers(AnnotatorState aState)
     {
         Collection<User> users = selectedUsers.getModelObject();
-        curationService.updateUsersSelectedForCuration(userRepository.getCurrentUsername(),
+        curationSidebarService.updateUsersSelectedForCuration(userRepository.getCurrentUsername(),
                 aState.getProject().getId(), users);
     }
 
@@ -442,7 +441,7 @@ public class CurationSidebar
     {
         AnnotatorState state = getModelObject();
         selectedUsers.setModelObject(new ArrayList<>());
-        curationService.clearUsersSelectedForCuration(userRepository.getCurrentUsername(),
+        curationSidebarService.clearUsersSelectedForCuration(userRepository.getCurrentUsername(),
                 state.getProject().getId());
         aTarget.add(usersForm);
         getAnnotationPage().actionRefreshDocument(aTarget);

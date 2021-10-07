@@ -27,7 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactoryExtensionPoint;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 
 /**
@@ -81,5 +83,17 @@ public class CurationServiceImpl
         }
 
         return result;
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    @Transactional
+    public MergeStrategy getMergeStrategy(Project aProject)
+    {
+        CurationWorkflow curationWorkflow = readOrCreateCurationWorkflow(aProject);
+        MergeStrategyFactory factory = mergeStrategyFactoryExtensionPoint
+                .getExtension(curationWorkflow.getMergeStrategy())
+                .orElseGet(mergeStrategyFactoryExtensionPoint::getDefault);
+        return factory.makeStrategy(factory.readTraits(curationWorkflow));
     }
 }

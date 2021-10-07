@@ -126,7 +126,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverviewLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
-import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
+import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
@@ -151,6 +151,7 @@ public class CurationPage
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean WorkloadManagementService workloadManagementService;
+    private @SpringBean CurationService curationService;
 
     private long currentprojectId;
 
@@ -521,7 +522,7 @@ public class CurationPage
                 currentprojectId = state.getProject().getId();
             }
 
-            CAS mergeCas = readOrCreateMergeCas(false, false);
+            CAS mergeCas = readOrCreateMergeCas(false);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
@@ -552,7 +553,7 @@ public class CurationPage
         LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 
-    public CAS readOrCreateMergeCas(boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
+    public CAS readOrCreateMergeCas(boolean aForceRecreateCas)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         AnnotatorState state = getModelObject();
@@ -580,7 +581,7 @@ public class CurationPage
         Map<String, CAS> casses = readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
 
         CAS curationCas = readCurationCas(state, state.getDocument(), casses,
-                randomAnnotationDocument, true, aMergeIncompleteAnnotations, aForceRecreateCas);
+                randomAnnotationDocument, true, aForceRecreateCas);
 
         return curationCas;
     }
@@ -714,8 +715,7 @@ public class CurationPage
         Map<String, CAS> casses = readAllCasesSharedNoUpgrade(
                 documentService.listFinishedAnnotationDocuments(aState.getDocument()));
 
-        CAS editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false, false,
-                false);
+        CAS editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false, false);
 
         casses.put(CURATION_USER, editorCas);
 
@@ -828,11 +828,11 @@ public class CurationPage
      */
     private CAS readCurationCas(AnnotatorState aState, SourceDocument aDocument,
             Map<String, CAS> aCasses, AnnotationDocument aTemplate, boolean aUpgrade,
-            boolean aMergeIncompleteAnnotations, boolean aForceRecreateCas)
+            boolean aForceRecreateCas)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         if (aForceRecreateCas || !curationDocumentService.existsCurationCas(aDocument)) {
-            return initializeEditorCas(aState, aCasses, aTemplate, aMergeIncompleteAnnotations);
+            return initializeEditorCas(aState, aCasses, aTemplate);
         }
 
         CAS mergeCas = curationDocumentService.readCurationCas(aDocument);
@@ -847,7 +847,7 @@ public class CurationPage
     }
 
     private CAS initializeEditorCas(AnnotatorState aState, Map<String, CAS> aCasses,
-            AnnotationDocument aTemplate, boolean aMergeIncompleteAnnotations)
+            AnnotationDocument aTemplate)
         throws ClassNotFoundException, UIMAException, IOException, AnnotationException
     {
         Validate.notNull(aState, "State must be specified");
@@ -869,9 +869,7 @@ public class CurationPage
 
         try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
             CasMerge casMerge = new CasMerge(annotationService);
-            if (aMergeIncompleteAnnotations) {
-                casMerge.setMergeStrategy(new MergeIncompleteStrategy());
-            }
+            casMerge.setMergeStrategy(curationService.getMergeStrategy(getProject()));
             casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
                     editorCas, aCasses);
         }

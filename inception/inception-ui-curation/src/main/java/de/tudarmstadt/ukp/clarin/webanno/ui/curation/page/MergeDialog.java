@@ -24,7 +24,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
@@ -193,12 +192,6 @@ public class MergeDialog
         String expectedResponse;
         String response;
         String feedback;
-        boolean mergeIncompleteAnnotations;
-
-        public boolean isMergeIncompleteAnnotations()
-        {
-            return mergeIncompleteAnnotations;
-        }
     }
 
     private class ContentPanel
@@ -217,7 +210,6 @@ public class MergeDialog
             form.add(new Label("challenge").setEscapeModelStrings(false));
             form.add(new Label("feedback"));
             form.add(new TextField<>("response"));
-            form.add(new CheckBox("mergeIncompleteAnnotations"));
             form.add(new LambdaAjaxButton<>("confirm", MergeDialog.this::onConfirmInternal));
             form.add(new LambdaAjaxLink("cancel", MergeDialog.this::onCancelInternal));
 
