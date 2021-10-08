@@ -61,7 +61,7 @@ public class CurationProjectSettingsPanel
 
         form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
 
-        form.add(new LambdaAjaxButton<>(MID_SAVE, this::actionSave));
+        form.add(new LambdaAjaxButton<>(MID_SAVE, this::actionSave).triggerAfterSubmit());
     }
 
     private CurationWorkflow loadCurationWorkflow()

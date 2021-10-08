@@ -79,21 +79,7 @@ public class MergeStrategyPanel
             @Override
             protected void onModelChanged()
             {
-                // If the feature type has changed, we need to set up a new traits editor
-                Component newTraits;
-                IModel<MergeStrategyFactory<?>> factoryModel = mergeStrategyChoice.getModel()
-                        .map(_sel -> mergeStrategyFactoryExtensionPoint.getExtension(_sel.getKey())
-                                .orElse(null));
-
-                if (factoryModel.isPresent().getObject()) {
-                    newTraits = factoryModel.getObject()
-                            .createTraitsEditor(MID_MERGE_STRATEGY_TRAITS, form.getModel());
-                }
-                else {
-                    newTraits = new EmptyPanel(MID_MERGE_STRATEGY_TRAITS);
-                }
-
-                mergeStrategyTraitsContainer.addOrReplace(newTraits);
+                mergeStrategyTraitsContainer.addOrReplace(makeMergeStrategyTraitsEditor());
             }
         };
 
@@ -106,8 +92,27 @@ public class MergeStrategyPanel
 
         mergeStrategyTraitsContainer = new WebMarkupContainer(MID_MERGE_STRATEGY_TRAITS_CONTAINER);
         mergeStrategyTraitsContainer.setOutputMarkupPlaceholderTag(true);
-        mergeStrategyTraitsContainer.add(new EmptyPanel(MID_MERGE_STRATEGY_TRAITS));
+        mergeStrategyTraitsContainer.add(makeMergeStrategyTraitsEditor());
         form.add(mergeStrategyTraitsContainer);
+    }
+
+    private Component makeMergeStrategyTraitsEditor()
+    {
+        // If the feature type has changed, we need to set up a new traits editor
+        Component newTraits;
+        IModel<MergeStrategyFactory<?>> factoryModel = mergeStrategyChoice.getModel()
+                .map(_sel -> mergeStrategyFactoryExtensionPoint.getExtension(_sel.getKey())
+                        .orElse(null));
+
+        if (factoryModel.isPresent().getObject()) {
+            newTraits = factoryModel.getObject().createTraitsEditor(MID_MERGE_STRATEGY_TRAITS,
+                    getModel());
+        }
+        else {
+            newTraits = new EmptyPanel(MID_MERGE_STRATEGY_TRAITS);
+        }
+
+        return newTraits;
     }
 
     public CurationWorkflow getModelObject()

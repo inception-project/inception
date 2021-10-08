@@ -22,7 +22,7 @@
     <form wicket:id="form" class="w_flex_container">
       <div class="w_flex_content">
         <div class="fluid-container">
-          <div class="row">
+          <div class="row form-row">
             <div class="col-sm-12">
               <p>
                 <wicket:container wicket:id="challenge" />
@@ -30,15 +30,30 @@
               <div>
                 <input wicket:id="response" class="form-control"/>
               </div>
-              <p>
-                <span wicket:id="feedback"></span>
-              </p>
             </div>
           </div>
+          <div class="row form-row">
+            <div class="col-sm-12">
+              <div wicket:id="mergeStrategySettings"/>
+            </div>
+          </div>
+          <div class="row form-row" wicket:enclosure="saveSettingsAsDefault">
+            <div class="col-sm-12">
+              <div class="form-check">
+                <input wicket:id="saveSettingsAsDefault" class="form-check-input" type="checkbox"/>
+                <label wicket:for="saveSettingsAsDefault" class="form-check-label">
+                  Update project merge strategy settings
+                </label>
+              </div>
+            </div>
+          </div>
+          <p>
+            <span wicket:id="feedback"></span>
+          </p>
         </div>
       </div>
       <div class="w_flex_footer card-footer text-end">
-        <div class=" text-end">
+        <div class="text-end">
           <button wicket:id="confirm" class="btn btn-primary">
             <i class="fas fa-check"></i>&nbsp;
             <wicket:message key="confirm.label"/>

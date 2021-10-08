@@ -37,6 +37,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
@@ -81,6 +82,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 
 public class CurationSidebar
@@ -105,6 +108,7 @@ public class CurationSidebar
     private WebMarkupContainer mainContainer;
     private ListView<User> users;
     private CheckBox showAll;
+    private final IModel<CurationWorkflow> curationWorkflowModel;
 
     private final Label noDocsLabel;
     private final Label finishedLabel;
@@ -154,6 +158,9 @@ public class CurationSidebar
         settingsForm.setVisible(false);
         mainContainer.add(settingsForm);
 
+        curationWorkflowModel = Model
+                .of(curationService.readOrCreateCurationWorkflow(state.getProject()));
+
         // confirmation dialog when using automatic merging (might change user's annos)
         IModel<String> documentNameModel = PropertyModel.of(getAnnotationPage().getModel(),
                 "document.name");
@@ -161,7 +168,7 @@ public class CurationSidebar
                 new StringResourceModel("mergeConfirmTitle", this),
                 new StringResourceModel("mergeConfirmText", this)
                         .setModel(getAnnotationPage().getModel()).setParameters(documentNameModel),
-                documentNameModel));
+                documentNameModel, curationWorkflowModel));
         mainContainer.add(mergeConfirm);
 
         // add toggle for settings
@@ -280,7 +287,15 @@ public class CurationSidebar
         updateUsers(state);
         mergeConfirm.setConfirmAction((target, form) -> {
             doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject());
+            if (form.getModelObject().isSaveSettingsAsDefault()) {
+                curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
+                success("Updated project merge strategy settings");
+            }
+            MergeStrategyFactory<?> mergeStrategyFactory = curationService
+                    .getMergeStrategyFactory(curationWorkflowModel.getObject());
+            success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
             target.add(getAnnotationPage());
+            target.addChildren(getPage(), IFeedback.class);
         });
         mergeConfirm.show(aTarget);
     }
@@ -326,7 +341,8 @@ public class CurationSidebar
                     aTargetCas.getDocumentText().length()).toResult();
             try {
                 CasMerge casMerge = new CasMerge(annotationService);
-                casMerge.setMergeStrategy(curationService.getMergeStrategy(aState.getProject()));
+                casMerge.setMergeStrategy(
+                        curationService.getMergeStrategy(curationWorkflowModel.getObject()));
                 casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
                         aTargetCas, userCases);
             }

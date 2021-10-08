@@ -85,15 +85,30 @@ public class CurationServiceImpl
         return result;
     }
 
+    @Override
+    @Transactional
+    public MergeStrategy getDefaultMergeStrategy(Project aProject)
+    {
+        return getMergeStrategy(readOrCreateCurationWorkflow(aProject));
+    }
+
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     @Transactional
-    public MergeStrategy getMergeStrategy(Project aProject)
+    public MergeStrategy getMergeStrategy(CurationWorkflow aCurationWorkflow)
     {
-        CurationWorkflow curationWorkflow = readOrCreateCurationWorkflow(aProject);
         MergeStrategyFactory factory = mergeStrategyFactoryExtensionPoint
-                .getExtension(curationWorkflow.getMergeStrategy())
+                .getExtension(aCurationWorkflow.getMergeStrategy())
                 .orElseGet(mergeStrategyFactoryExtensionPoint::getDefault);
-        return factory.makeStrategy(factory.readTraits(curationWorkflow));
+        return factory.makeStrategy(factory.readTraits(aCurationWorkflow));
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @Override
+    @Transactional
+    public MergeStrategyFactory getMergeStrategyFactory(CurationWorkflow aCurationWorkflow)
+    {
+        return mergeStrategyFactoryExtensionPoint.getExtension(aCurationWorkflow.getMergeStrategy())
+                .orElseGet(mergeStrategyFactoryExtensionPoint::getDefault);
     }
 }

@@ -24,8 +24,8 @@ public class ThresholdBasedMergeStrategyTraits
 {
     private static final long serialVersionUID = -7084390245091025371L;
 
-    private int userThreshold;
-    private double confidenceThreshold;
+    private int userThreshold = 1;
+    private double confidenceThreshold = 0.75d;
 
     public int getUserThreshold()
     {
