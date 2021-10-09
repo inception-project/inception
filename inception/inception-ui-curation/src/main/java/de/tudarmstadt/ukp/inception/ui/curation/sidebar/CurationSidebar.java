@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.refreshPage;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
@@ -28,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
@@ -293,13 +293,21 @@ public class CurationSidebar
             success("Updated project merge strategy settings");
         }
 
-        doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject());
+        try {
+            doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject());
+        }
+        catch (Exception e) {
+            error("Unable to merge: " + e.getMessage());
+            log.error("Unable to merge document {} to user {}", state.getUser(),
+                    state.getDocument(), e);
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
 
         MergeStrategyFactory<?> mergeStrategyFactory = curationService
                 .getMergeStrategyFactory(curationWorkflowModel.getObject());
         success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
-        aTarget.add(getAnnotationPage());
-        aTarget.addChildren(getPage(), IFeedback.class);
+        refreshPage(aTarget, getPage());
     }
 
     private void updateCurator(AnnotatorState aState, User aCurrentUser)
@@ -322,43 +330,28 @@ public class CurationSidebar
     }
 
     private void doMerge(AnnotatorState aState, String aCurator, Collection<User> aUsers)
+        throws IOException, UIMAException
     {
-        try {
-            SourceDocument doc = aState.getDocument();
-            Map<String, CAS> userCases = curationSidebarService.retrieveUserCases(aUsers, doc);
-            Optional<CAS> maybeTargetCas = curationSidebarService.retrieveCurationCAS(aCurator,
-                    aState.getProject().getId(), doc);
+        SourceDocument doc = aState.getDocument();
+        CAS aTargetCas = curationSidebarService
+                .retrieveCurationCAS(aCurator, aState.getProject().getId(), doc)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No target CAS configured in curation state"));
 
-            if (!maybeTargetCas.isPresent()) {
-                return;
-            }
+        Map<String, CAS> userCases = documentService.readAllCasesSharedNoUpgrade(doc, aUsers);
 
-            CAS aTargetCas = maybeTargetCas.get();
+        // FIXME: should merging not overwrite the current users annos? (can result in
+        // deleting the users annotations!!!), currently fixed by warn message to user
+        // prepare merged CAS
+        curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
+                aTargetCas, userCases,
+                curationService.getMergeStrategy(curationWorkflowModel.getObject()),
+                aState.getAnnotationLayers());
 
-            try {
-                // FIXME: should merging not overwrite the current users annos? (can result in
-                // deleting the users annotations!!!), currently fixed by warn message to user
-                // prepare merged CAS
-                curationMergeService.mergeCasses(aState.getDocument(),
-                        aState.getUser().getUsername(), aTargetCas, userCases,
-                        curationService.getMergeStrategy(curationWorkflowModel.getObject()),
-                        aState.getAnnotationLayers());
-            }
-            catch (UIMAException e) {
-                log.warn("Could not merge CAS for user {} and document {}",
-                        aState.getUser().getUsername(), aState.getDocument(), e);
-            }
+        // write back and update timestamp
+        curationSidebarService.writeCurationCas(aTargetCas, aState, aState.getProject().getId());
 
-            // write back and update timestamp
-            curationSidebarService.writeCurationCas(aTargetCas, aState,
-                    aState.getProject().getId());
-
-            log.debug("Merge done");
-        }
-        catch (IOException e) {
-            log.error("Could not retrieve CAS for user {} and project {}", aCurator,
-                    aState.getProject(), e);
-        }
+        log.debug("Merge done");
     }
 
     private Form<List<User>> createUserSelection()

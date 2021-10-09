@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
@@ -26,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLo
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
@@ -48,7 +50,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -816,6 +820,43 @@ public class DocumentServiceImpl
         String userName = aAnnotationDocument.getUser();
 
         return readAnnotationCas(aDocument, userName, aUpgradeMode);
+    }
+
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
+        throws IOException
+    {
+        Map<String, CAS> casses = new HashMap<>();
+        for (AnnotationDocument annDoc : aDocuments) {
+            String username = annDoc.getUser();
+            CAS cas = readAnnotationCas(annDoc.getDocument(), username, AUTO_CAS_UPGRADE,
+                    SHARED_READ_ONLY_ACCESS);
+            casses.put(username, cas);
+        }
+        return casses;
+    }
+
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public Map<String, CAS> readAllCasesSharedNoUpgrade(SourceDocument aDoc,
+            Collection<User> aUsers)
+    {
+        Map<String, CAS> casses = new HashMap<>();
+        for (User user : aUsers) {
+            try {
+                String username = user.getUsername();
+                CAS cas = readAnnotationCas(aDoc, username, AUTO_CAS_UPGRADE,
+                        SHARED_READ_ONLY_ACCESS);
+                casses.put(username, cas);
+            }
+            catch (IOException e) {
+                log.warn("Could not retrieve CAS for user {} and document {}", user, aDoc, e);
+            }
+        }
+        return casses;
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not

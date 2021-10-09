@@ -24,7 +24,6 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -72,11 +71,6 @@ public interface CurationSidebarService
      * Remove information on users that were selected to be shown for curation by the given user
      */
     void clearUsersSelectedForCuration(String aUsername, Long aId);
-
-    /**
-     * Retrieve cases for the given document for the given users
-     */
-    Map<String, CAS> retrieveUserCases(Collection<User> aUsers, SourceDocument aDoc);
 
     /**
      * Returns the name of the user corresponding to the CAS used as curation (target) CAS

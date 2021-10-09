@@ -62,13 +62,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link CurationServiceAutoConfiguration#curationRenderer}.
+ * {@link CurationSidebarAutoConfiguration#curationRenderer}.
  * </p>
  */
 public class CurationRenderer

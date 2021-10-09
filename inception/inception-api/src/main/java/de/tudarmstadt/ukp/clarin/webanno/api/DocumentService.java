@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -429,6 +430,11 @@ public interface DocumentService
     CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode,
             CasAccessMode aMode)
         throws IOException;
+
+    Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
+        throws IOException;
+
+    Map<String, CAS> readAllCasesSharedNoUpgrade(SourceDocument aDoc, Collection<User> aUsers);
 
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.

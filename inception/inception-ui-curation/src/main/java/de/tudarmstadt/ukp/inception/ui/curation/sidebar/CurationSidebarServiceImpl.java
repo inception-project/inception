@@ -27,9 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -447,24 +445,6 @@ public class CurationSidebarServiceImpl
         synchronized (curationStates) {
             getCurationState(aUsername, aProjectId).setShowAll(aValue);
         }
-    }
-
-    @Override
-    public Map<String, CAS> retrieveUserCases(Collection<User> aUsers, SourceDocument aDoc)
-    {
-        Map<String, CAS> casses = new HashMap<>();
-        for (User user : aUsers) {
-            try {
-                String username = user.getUsername();
-                casses.put(username, documentService.readAnnotationCas(aDoc, username));
-            }
-            catch (IOException e) {
-                log.warn(String.format("Could not retrieve CAS for user %s and document %d",
-                        user.getUsername(), aDoc.getId()));
-                e.printStackTrace();
-            }
-        }
-        return casses;
     }
 
     @Override

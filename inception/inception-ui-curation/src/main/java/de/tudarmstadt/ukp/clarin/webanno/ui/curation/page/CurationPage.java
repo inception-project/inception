@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
@@ -25,7 +24,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorSt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
@@ -48,7 +46,6 @@ import static java.lang.System.currentTimeMillis;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -577,10 +574,10 @@ public class CurationPage
             backToProjectPage();
         }
 
+        Map<String, CAS> casses = documentService
+                .readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
+
         AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
-
-        Map<String, CAS> casses = readAllCasesSharedNoUpgrade(finishedAnnotationDocuments);
-
         CAS curationCas = readCurationCas(state, state.getDocument(), casses,
                 randomAnnotationDocument, true, aMergeStrategy, aForceRecreateCas);
 
@@ -713,7 +710,7 @@ public class CurationPage
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         // get annotation documents
-        Map<String, CAS> casses = readAllCasesSharedNoUpgrade(
+        Map<String, CAS> casses = documentService.readAllCasesSharedNoUpgrade(
                 documentService.listFinishedAnnotationDocuments(aState.getDocument()));
 
         CAS editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false,
@@ -791,19 +788,6 @@ public class CurationPage
         }
 
         return DISAGREE;
-    }
-
-    private Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
-        throws IOException
-    {
-        Map<String, CAS> casses = new HashMap<>();
-        for (AnnotationDocument annDoc : aDocuments) {
-            String username = annDoc.getUser();
-            CAS cas = documentService.readAnnotationCas(annDoc.getDocument(), username,
-                    AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
-            casses.put(username, cas);
-        }
-        return casses;
     }
 
     /**
