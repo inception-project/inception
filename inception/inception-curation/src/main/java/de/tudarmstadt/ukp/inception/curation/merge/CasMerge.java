@@ -20,11 +20,11 @@ package de.tudarmstadt.ukp.inception.curation.merge;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.copyDocumentMetadata;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createDocumentMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBasicFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentSpanAnnotation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isPrimitiveType;
@@ -36,8 +36,6 @@ import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
-import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -58,13 +56,9 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
-import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -176,10 +170,11 @@ public class CasMerge
      *            the {@link DiffResult}
      * @param aCases
      *            a map of {@code CAS}s for each users and the random merge
+     * @throws UIMAException
      */
     public void reMergeCas(DiffResult aDiff, SourceDocument aTargetDocument, String aTargetUsername,
             CAS aTargetCas, Map<String, CAS> aCases)
-        throws AnnotationException, UIMAException
+        throws UIMAException
     {
         silenceEvents = true;
 
@@ -369,13 +364,19 @@ public class CasMerge
         }
     }
 
+    /**
+     * Removes all annotations except {@link Token} and {@link Sentence} annotations - but from
+     * these also only the offsets are kept and all other features are cleared.
+     * 
+     * @param aCas
+     *            the CAS to clear.
+     * @throws UIMAException
+     *             if there was a problem clearing the CAS.
+     */
     private static void clearAnnotations(CAS aCas) throws UIMAException
     {
-        CAS backup = CasFactory.createCas((TypeSystemDescription) null);
-
         // Copy the CAS - basically we do this just to keep the full type system information
-        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
-        deserializeCASComplete(serializer, (CASImpl) getRealCas(backup));
+        CAS backup = WebAnnoCasUtil.createCasCopy(aCas);
 
         // Remove all annotations from the target CAS but we keep the type system!
         aCas.reset();
@@ -385,7 +386,7 @@ public class CasMerge
             copyDocumentMetadata(backup, aCas);
         }
         else {
-            WebAnnoCasUtil.createDocumentMetadata(aCas);
+            createDocumentMetadata(aCas);
         }
         aCas.setDocumentLanguage(backup.getDocumentLanguage()); // DKPro Core Issue 435
         aCas.setDocumentText(backup.getDocumentText());

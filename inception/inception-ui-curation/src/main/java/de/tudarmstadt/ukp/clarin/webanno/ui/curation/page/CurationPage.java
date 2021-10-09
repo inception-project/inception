@@ -56,7 +56,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
@@ -113,7 +112,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -125,8 +123,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEv
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverviewLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
-import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
@@ -153,6 +151,7 @@ public class CurationPage
     private @SpringBean UserDao userRepository;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean CurationService curationService;
+    private @SpringBean CurationMergeService curationMergeService;
 
     private long currentprojectId;
 
@@ -822,66 +821,38 @@ public class CurationPage
      * @return the CAS.
      * @throws UIMAException
      *             hum?
-     * @throws ClassNotFoundException
-     *             hum?
      * @throws IOException
      *             if an I/O error occurs.
-     * @throws AnnotationException
-     *             hum?
      */
     private CAS readCurationCas(AnnotatorState aState, SourceDocument aDocument,
             Map<String, CAS> aCasses, AnnotationDocument aTemplate, boolean aUpgrade,
             MergeStrategy aMergeStrategy, boolean aForceRecreateCas)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+        throws UIMAException, IOException
     {
+        CAS mergeCas;
+
         if (aForceRecreateCas || !curationDocumentService.existsCurationCas(aDocument)) {
-            return initializeEditorCas(aState, aCasses, aTemplate, aMergeStrategy);
+            // We need a modifiable copy of some annotation document which we can use to initialize
+            // the curation CAS. This is an exceptional case where UNMANAGED_ACCESS is the correct
+            // choice
+            mergeCas = documentService.readAnnotationCas(aTemplate.getDocument(),
+                    aTemplate.getUser(), FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
+            curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
+                    mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers());
+            curationDocumentService.writeCurationCas(mergeCas, aTemplate.getDocument(), false);
         }
+        else {
+            mergeCas = curationDocumentService.readCurationCas(aDocument);
 
-        CAS mergeCas = curationDocumentService.readCurationCas(aDocument);
-        if (aUpgrade) {
-            curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
-            curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
-            updateDocumentTimestampAfterWrite(aState,
-                    curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
+            if (aUpgrade) {
+                curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
+                curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
+            }
         }
-
-        return mergeCas;
-    }
-
-    private CAS initializeEditorCas(AnnotatorState aState, Map<String, CAS> aCasses,
-            AnnotationDocument aTemplate, MergeStrategy aMergeStrategy)
-        throws ClassNotFoundException, UIMAException, IOException, AnnotationException
-    {
-        Validate.notNull(aState, "State must be specified");
-        Validate.notNull(aTemplate, "Annotation document must be specified");
-
-        // We need a modifiable copy of some annotation document which we can use to initialize
-        // the curation CAS. This is an exceptional case where BYPASS is the correct choice
-        CAS editorCas = documentService.readAnnotationCas(aTemplate.getDocument(),
-                aTemplate.getUser(), FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
-
-        List<DiffAdapter> adapters = getDiffAdapters(annotationService,
-                aState.getAnnotationLayers());
-
-        DiffResult diff;
-        try (StopWatch watch = new StopWatch(LOG, "CasDiff")) {
-            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCasses, 0,
-                    editorCas.getDocumentText().length()).toResult();
-        }
-
-        try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
-            CasMerge casMerge = new CasMerge(annotationService);
-            casMerge.setMergeStrategy(aMergeStrategy);
-            casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
-                    editorCas, aCasses);
-        }
-
-        curationDocumentService.writeCurationCas(editorCas, aTemplate.getDocument(), false);
 
         updateDocumentTimestampAfterWrite(aState,
                 curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
 
-        return editorCas;
+        return mergeCas;
     }
 }

@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.curation.merge.DefaultMergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeIncompleteStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
@@ -34,6 +35,8 @@ import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactoryExtension
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactoryExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyFactoryImpl;
+import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationMergeServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsMenuItem;
@@ -68,6 +71,12 @@ public class CurationServiceAutoConfiguration
             MergeStrategyFactoryExtensionPoint aMergeStrategyFactoryExtensionPoint)
     {
         return new CurationServiceImpl(entityManager, aMergeStrategyFactoryExtensionPoint);
+    }
+
+    @Bean
+    public CurationMergeService curationMergeService(AnnotationSchemaService aAnnotationService)
+    {
+        return new CurationMergeServiceImpl(aAnnotationService);
     }
 
     @Bean

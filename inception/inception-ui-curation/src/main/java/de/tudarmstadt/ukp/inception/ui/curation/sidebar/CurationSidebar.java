@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
@@ -66,12 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -81,9 +75,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
-import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog.State;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 
 public class CurationSidebar
@@ -98,6 +93,7 @@ public class CurationSidebar
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean CurationSidebarService curationSidebarService;
     private @SpringBean CurationService curationService;
+    private @SpringBean CurationMergeService curationMergeService;
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
 
@@ -278,26 +274,32 @@ public class CurationSidebar
         return form;
     }
 
-    private void merge(AjaxRequestTarget aTarget, Form<Void> aForm)
+    private void actionOpenMergeDialog(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         AnnotatorState state = getModelObject();
-        User currentUser = userRepository.getCurrentUser();
-        updateCurator(state, currentUser);
+        updateCurator(state, userRepository.getCurrentUser());
         // update selected users
         updateUsers(state);
-        mergeConfirm.setConfirmAction((target, form) -> {
-            doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject());
-            if (form.getModelObject().isSaveSettingsAsDefault()) {
-                curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
-                success("Updated project merge strategy settings");
-            }
-            MergeStrategyFactory<?> mergeStrategyFactory = curationService
-                    .getMergeStrategyFactory(curationWorkflowModel.getObject());
-            success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
-            target.add(getAnnotationPage());
-            target.addChildren(getPage(), IFeedback.class);
-        });
+        mergeConfirm.setConfirmAction(this::actionMerge);
         mergeConfirm.show(aTarget);
+    }
+
+    private void actionMerge(AjaxRequestTarget aTarget, Form<State> aForm)
+    {
+        AnnotatorState state = getModelObject();
+
+        if (aForm.getModelObject().isSaveSettingsAsDefault()) {
+            curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
+            success("Updated project merge strategy settings");
+        }
+
+        doMerge(state, state.getUser().getUsername(), selectedUsers.getModelObject());
+
+        MergeStrategyFactory<?> mergeStrategyFactory = curationService
+                .getMergeStrategyFactory(curationWorkflowModel.getObject());
+        success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
+        aTarget.add(getAnnotationPage());
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private void updateCurator(AnnotatorState aState, User aCurrentUser)
@@ -321,35 +323,32 @@ public class CurationSidebar
 
     private void doMerge(AnnotatorState aState, String aCurator, Collection<User> aUsers)
     {
-        // merge cases
         try {
             SourceDocument doc = aState.getDocument();
             Map<String, CAS> userCases = curationSidebarService.retrieveUserCases(aUsers, doc);
             Optional<CAS> maybeTargetCas = curationSidebarService.retrieveCurationCAS(aCurator,
                     aState.getProject().getId(), doc);
+
             if (!maybeTargetCas.isPresent()) {
                 return;
             }
 
             CAS aTargetCas = maybeTargetCas.get();
 
-            // FIXME: should merging not overwrite the current users annos? (can result in deleting
-            // the users annos!!!), currently fixed by warn message to user prepare merged cas
-            List<AnnotationLayer> layers = aState.getAnnotationLayers();
-            List<DiffAdapter> adapters = CasDiff.getDiffAdapters(annotationService, layers);
-            DiffResult diff = CasDiff.doDiffSingle(adapters, LINK_ROLE_AS_LABEL, userCases, 0,
-                    aTargetCas.getDocumentText().length()).toResult();
             try {
-                CasMerge casMerge = new CasMerge(annotationService);
-                casMerge.setMergeStrategy(
-                        curationService.getMergeStrategy(curationWorkflowModel.getObject()));
-                casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
-                        aTargetCas, userCases);
+                // FIXME: should merging not overwrite the current users annos? (can result in
+                // deleting the users annotations!!!), currently fixed by warn message to user
+                // prepare merged CAS
+                curationMergeService.mergeCasses(aState.getDocument(),
+                        aState.getUser().getUsername(), aTargetCas, userCases,
+                        curationService.getMergeStrategy(curationWorkflowModel.getObject()),
+                        aState.getAnnotationLayers());
             }
-            catch (AnnotationException | UIMAException e) {
-                log.warn(String.format("Could not merge CAS for user %s and document %d",
-                        aState.getUser().getUsername(), aState.getDocument().getId()), e);
+            catch (UIMAException e) {
+                log.warn("Could not merge CAS for user {} and document {}",
+                        aState.getUser().getUsername(), aState.getDocument(), e);
             }
+
             // write back and update timestamp
             curationSidebarService.writeCurationCas(aTargetCas, aState,
                     aState.getProject().getId());
@@ -357,9 +356,8 @@ public class CurationSidebar
             log.debug("Merge done");
         }
         catch (IOException e) {
-            log.error(String.format("Could not retrieve CAS for user %s and project %d", aCurator,
-                    aState.getProject().getId()));
-            e.printStackTrace();
+            log.error("Could not retrieve CAS for user {} and project {}", aCurator,
+                    aState.getProject(), e);
         }
     }
 
@@ -369,7 +367,7 @@ public class CurationSidebar
                 LoadableDetachableModel.of(this::listSelectedUsers));
         form.add(new LambdaAjaxButton<>("clear", this::clearUsers));
         form.add(new LambdaAjaxButton<>("show", this::selectAndShow));
-        form.add(new LambdaAjaxButton<>("merge", this::merge));
+        form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog));
         selectedUsers = new CheckGroup<User>("selectedUsers", form.getModelObject());
         users = new ListView<User>("users", LoadableDetachableModel.of(this::listUsers))
         {
@@ -448,9 +446,8 @@ public class CurationSidebar
 
     private void updateUsers(AnnotatorState aState)
     {
-        Collection<User> users = selectedUsers.getModelObject();
         curationSidebarService.updateUsersSelectedForCuration(userRepository.getCurrentUsername(),
-                aState.getProject().getId(), users);
+                aState.getProject().getId(), selectedUsers.getModelObject());
     }
 
     private void clearUsers(AjaxRequestTarget aTarget, Form<Void> aForm)
