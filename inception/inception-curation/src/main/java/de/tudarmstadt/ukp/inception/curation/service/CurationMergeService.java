@@ -49,4 +49,8 @@ public interface CurationMergeService
             Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
             List<AnnotationLayer> aLayers)
         throws UIMAException;
+
+    void mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
+            Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)
+        throws UIMAException;
 }

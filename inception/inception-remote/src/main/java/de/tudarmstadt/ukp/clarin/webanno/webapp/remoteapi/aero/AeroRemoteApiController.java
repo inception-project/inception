@@ -90,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -116,6 +115,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.export.ImportUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;

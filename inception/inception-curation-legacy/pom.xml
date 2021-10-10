@@ -172,25 +172,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <ignoredDependencies>
-              <!--
-               - Test dependencies used via auto-configuration and reflection
-               -->
-              <ignoredDependency>org.springframework.boot:spring-boot-test</ignoredDependency>
-              <ignoredDependency>org.springframework.boot:spring-boot-starter-data-jpa</ignoredDependency>
-              <ignoredDependency>com.h2database:h2</ignoredDependency>
-            </ignoredDependencies>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>  
 </project>

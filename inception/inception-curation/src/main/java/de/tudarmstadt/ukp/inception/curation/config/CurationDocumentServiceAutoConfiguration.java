@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.storage.config;
+package de.tudarmstadt.ukp.inception.curation.config;
 
 import javax.persistence.EntityManager;
 
@@ -27,8 +27,8 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentServiceImpl;
 
 @Configuration
 @AutoConfigureAfter(name = {

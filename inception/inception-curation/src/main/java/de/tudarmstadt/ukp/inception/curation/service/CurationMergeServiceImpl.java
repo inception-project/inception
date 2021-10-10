@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffS
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
@@ -56,6 +57,20 @@ public class CurationMergeServiceImpl
     public CurationMergeServiceImpl(AnnotationSchemaService aAnnotationService)
     {
         annotationService = aAnnotationService;
+    }
+
+    @Override
+    public void mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
+            Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)
+        throws UIMAException
+    {
+        List<AnnotationLayer> layers = annotationService.listSupportedLayers(aDocument.getProject())
+                .stream() //
+                .filter(AnnotationLayer::isEnabled) //
+                .collect(toList());
+
+        mergeCasses(aDocument, aTargetCasUserName, aTargetCas, aCassesToMerge, aMergeStrategy,
+                layers);
     }
 
     @Override

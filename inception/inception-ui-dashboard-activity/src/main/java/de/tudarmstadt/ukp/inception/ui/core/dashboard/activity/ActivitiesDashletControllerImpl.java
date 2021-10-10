@@ -48,13 +48,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEve
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
