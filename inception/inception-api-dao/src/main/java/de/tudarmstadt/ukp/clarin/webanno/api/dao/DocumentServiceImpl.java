@@ -38,9 +38,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTA
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -68,6 +70,7 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.Validate;
@@ -828,14 +831,23 @@ public class DocumentServiceImpl
     public Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
         throws IOException
     {
-        Map<String, CAS> casses = new HashMap<>();
-        for (AnnotationDocument annDoc : aDocuments) {
-            String username = annDoc.getUser();
-            CAS cas = readAnnotationCas(annDoc.getDocument(), username, AUTO_CAS_UPGRADE,
-                    SHARED_READ_ONLY_ACCESS);
-            casses.put(username, cas);
+        if (CollectionUtils.isEmpty(aDocuments)) {
+            return new HashMap<>();
         }
-        return casses;
+
+        SourceDocument doc = aDocuments.get(0).getDocument();
+        List<String> usernames = new ArrayList<>();
+        for (AnnotationDocument annDoc : aDocuments) {
+            if (!doc.equals(annDoc.getDocument())) {
+                throw new IllegalArgumentException(format(
+                        "Expected all annotation documents to belong to the  same source document "
+                                + "%s, but %s belongs to %s",
+                        doc, annDoc, annDoc.getDocument()));
+            }
+            usernames.add(annDoc.getUser());
+        }
+
+        return readAllCasesSharedNoUpgrade(doc, usernames.toArray(new String[usernames.size()]));
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -843,18 +855,28 @@ public class DocumentServiceImpl
     @Override
     public Map<String, CAS> readAllCasesSharedNoUpgrade(SourceDocument aDoc,
             Collection<User> aUsers)
+        throws IOException
     {
+        return readAllCasesSharedNoUpgrade(aDoc,
+                aUsers.stream().map(User::getUsername).toArray(String[]::new));
+    }
+
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public Map<String, CAS> readAllCasesSharedNoUpgrade(SourceDocument aDoc, String... aUsernames)
+        throws IOException
+    {
+        Validate.notNull(aDoc, "Source document must be specified");
+
+        if (isEmpty(aUsernames)) {
+            return new HashMap<>();
+        }
+
         Map<String, CAS> casses = new HashMap<>();
-        for (User user : aUsers) {
-            try {
-                String username = user.getUsername();
-                CAS cas = readAnnotationCas(aDoc, username, AUTO_CAS_UPGRADE,
-                        SHARED_READ_ONLY_ACCESS);
-                casses.put(username, cas);
-            }
-            catch (IOException e) {
-                log.warn("Could not retrieve CAS for user {} and document {}", user, aDoc, e);
-            }
+        for (String username : aUsernames) {
+            CAS cas = readAnnotationCas(aDoc, username, AUTO_CAS_UPGRADE, SHARED_READ_ONLY_ACCESS);
+            casses.put(username, cas);
         }
         return casses;
     }

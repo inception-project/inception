@@ -519,7 +519,7 @@ public class CurationPage
                 currentprojectId = state.getProject().getId();
             }
 
-            CAS mergeCas = readOrCreateMergeCas(
+            CAS mergeCas = readOrCreateCurationCas(
                     curationService.getDefaultMergeStrategy(getProject()), false);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
@@ -551,7 +551,7 @@ public class CurationPage
         LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 
-    public CAS readOrCreateMergeCas(MergeStrategy aMergeStrategy, boolean aForceRecreateCas)
+    public CAS readOrCreateCurationCas(MergeStrategy aMergeStrategy, boolean aForceRecreateCas)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         AnnotatorState state = getModelObject();
@@ -563,7 +563,7 @@ public class CurationPage
             getSession().error("This document has the state " + state.getDocument().getState()
                     + " but " + "there are no finished annotation documents! This "
                     + "can for example happen when curation on a document has already started "
-                    + "and afterwards all annotators have been remove from the project, have been "
+                    + "and afterwards all annotators have been removed from the project, have been "
                     + "disabled or if all were put back into " + AnnotationDocumentState.IN_PROGRESS
                     + " mode. It can "
                     + "also happen after importing a project when the users and/or permissions "
@@ -684,7 +684,7 @@ public class CurationPage
                 if (aTarget != null) {
                     aTarget.addChildren(getPage(), IFeedback.class);
                 }
-                LOG.info("Error reading CAS " + e.getMessage());
+                LOG.error("Error reading CAS " + e.getMessage(), e);
                 error("Error reading CAS " + e.getMessage());
             }
         }

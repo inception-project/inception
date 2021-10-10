@@ -434,7 +434,11 @@ public interface DocumentService
     Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
         throws IOException;
 
-    Map<String, CAS> readAllCasesSharedNoUpgrade(SourceDocument aDoc, Collection<User> aUsers);
+    Map<String, CAS> readAllCasesSharedNoUpgrade(SourceDocument aDoc, Collection<User> aUsers)
+        throws IOException;
+
+    Map<String, CAS> readAllCasesSharedNoUpgrade(SourceDocument aDoc, String... aUsernames)
+        throws IOException;
 
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.

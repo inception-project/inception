@@ -151,7 +151,7 @@ public class CuratorWorkflowActionBarItemGroup
             aTarget.addChildren(getPage(), IFeedback.class);
         }
 
-        ((CurationPage) page).readOrCreateMergeCas(mergeStrategy, true);
+        ((CurationPage) page).readOrCreateCurationCas(mergeStrategy, true);
 
         // ... and load it
         page.actionLoadDocument(aTarget);
