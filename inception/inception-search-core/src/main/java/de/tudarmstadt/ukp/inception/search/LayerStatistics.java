@@ -92,7 +92,7 @@ public class LayerStatistics
         return feature.getLayer().getUiName() + "." + feature.getUiName();
     }
 
-    public double getMetric(Metrics aMetric, boolean aPerSentence)
+    public double getMetric(Metrics aMetric, boolean aPerSentence) throws ExecutionException
     {
         switch (aMetric) {
         case DOC_COUNT:
@@ -144,12 +144,12 @@ public class LayerStatistics
             else {
                 return getStandardDeviationPerSentence();
             }
+        default:
+            throw new ExecutionException("This metric is not supported!");
         }
-        // formal return statement. is never reached
-        return -1;
     }
 
-    public static String getPropertyExpression(Metrics aMetric)
+    public static String getPropertyExpression(Metrics aMetric) throws ExecutionException
     {
         switch (aMetric) {
         case DOC_COUNT:
@@ -166,9 +166,9 @@ public class LayerStatistics
             return "getMedian";
         case STANDARD_DEVIATION:
             return "getStandardDeviation";
+        default:
+            throw new ExecutionException("This metric is not supported!");
         }
-        // formal return statement. is never reached
-        return "";
     }
 
     public double getSum()

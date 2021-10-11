@@ -18,41 +18,45 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public enum Granularities
 {
-    PER_DOCUMENT, PER_SENTENCE;
+    PER_DOCUMENT("per Document"),
+    PER_SENTENCE("per Sentence");
 
-    public static String internalToUi(Granularities aGranularity)
-    {
-        switch (aGranularity) {
-        case PER_DOCUMENT:
-            return "per Document";
-        default:
-            return "per Sentence";
+    private static final Map<String, Granularities> UI_TO_INTERNAL = new HashMap<String, Granularities>();
+    private static final Map<Granularities, String> INTERNAL_TO_UI = new HashMap<Granularities, String>();
+
+    static {
+        for (Granularities g : values()) {
+            UI_TO_INTERNAL.put(g.uiName, g);
+            INTERNAL_TO_UI.put(g, g.uiName);
         }
     }
 
-    public static Granularities uiToInternal(String aGranularity) throws ExecutionException
+    public final String uiName;
+
+    private Granularities(String aUiName)
     {
-        switch (aGranularity) {
-        case "per Document":
-            return PER_DOCUMENT;
-        case "per Sentence":
-            return PER_SENTENCE;
-        default:
-            throw new ExecutionException("The granularity " + aGranularity + " is not supported!");
-        }
+        uiName = aUiName;
+    }
+
+    public static String internalToUi(Granularities aGranularity)
+    {
+        return INTERNAL_TO_UI.get(aGranularity);
+    }
+
+    public static Granularities uiToInternal(String aGranularity)
+    {
+        return UI_TO_INTERNAL.get(aGranularity);
     }
 
     public static List<String> uiList()
     {
-        List<String> granList = new ArrayList<String>();
-        for (Granularities granularity : Granularities.values()) {
-            granList.add(internalToUi(granularity));
-        }
-        return granList;
+        return new ArrayList(INTERNAL_TO_UI.values());
     }
 
 }

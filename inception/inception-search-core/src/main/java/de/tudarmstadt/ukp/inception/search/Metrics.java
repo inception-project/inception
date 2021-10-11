@@ -18,61 +18,56 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public enum Metrics
 {
-    DOC_COUNT, SUM, MIN, MAX, MEAN, MEDIAN, STANDARD_DEVIATION;
+    DOC_COUNT("n", "Number of Documents"),
+    SUM("sum", "Sum"),
+    MIN("min", "Min"),
+    MAX("max", "Max"),
+    MEAN("mean", "Mean"),
+    MEDIAN("median", "Median"),
+    STANDARD_DEVIATION("standarddeviation", "Standard Deviation");
 
-    public static String internalToMtas(Metrics aMetric)
-    {
-        switch (aMetric) {
-            case DOC_COUNT:
-                return "n";
-        case SUM:
-            return "sum";
-        case MIN:
-            return "min";
-        case MAX:
-            return "max";
-        case MEAN:
-            return "mean";
-        case MEDIAN:
-            return "median";
-        default:
-            return "standarddeviation";
+    private static final Map<String, Metrics> MTAS_TO_INTERNAL = new HashMap<String, Metrics>();
+    private static final Map<Metrics, String> INTERNAL_TO_MTAS = new HashMap<Metrics, String>();
+    private static final Map<String, Metrics> UI_TO_INTERNAL = new HashMap<String, Metrics>();
+    private static final Map<Metrics, String> INTERNAL_TO_UI = new HashMap<Metrics, String>();
+
+    static {
+        for (Metrics m : values()) {
+            MTAS_TO_INTERNAL.put(m.mtasName, m);
+            INTERNAL_TO_MTAS.put(m, m.mtasName);
+            UI_TO_INTERNAL.put(m.uiName, m);
+            INTERNAL_TO_UI.put(m, m.uiName);
         }
     }
 
-    public static Metrics mtasToInternal(String aMetric) throws ExecutionException
+    public final String mtasName;
+    public final String uiName;
+
+    private Metrics(String aMtasName, String aUiName)
     {
-        switch (aMetric) {
-            case "n":
-                return DOC_COUNT;
-        case "sum":
-            return SUM;
-        case "min":
-            return MIN;
-        case "max":
-            return MAX;
-        case "mean":
-            return MEAN;
-        case "median":
-            return MEDIAN;
-        case "standarddeviation":
-            return STANDARD_DEVIATION;
-        default:
-            throw new ExecutionException(aMetric + " is not a supported metric");
-        }
+        mtasName = aMtasName;
+        uiName = aUiName;
+    }
+
+    public static String internalToMtas(Metrics aMetric)
+    {
+        return INTERNAL_TO_MTAS.get(aMetric);
+    }
+
+    public static Metrics mtasToInternal(String aMetric)
+    {
+        return MTAS_TO_INTERNAL.get(aMetric);
     }
 
     public static List<String> mtasList()
     {
-        List<String> metricList = new ArrayList<String>();
-        for (Metrics metric : Metrics.values()) {
-            metricList.add(internalToMtas(metric));
-        }
-        return metricList;
+        return new ArrayList(INTERNAL_TO_MTAS.values());
     }
 
     public static String mtasRegExp()
@@ -86,53 +81,17 @@ public enum Metrics
 
     public static String internalToUi(Metrics aMetric)
     {
-        switch (aMetric) {
-            case DOC_COUNT:
-                return "Number of Documents";
-        case SUM:
-            return "Sum";
-        case MIN:
-            return "Minimum";
-        case MAX:
-            return "Maximum";
-        case MEAN:
-            return "Mean";
-        case MEDIAN:
-            return "Median";
-        default:
-            return "Standard Deviation";
-        }
+        return INTERNAL_TO_UI.get(aMetric);
     }
 
-    public static Metrics uiToInternal(String aMetric) throws ExecutionException
+    public static Metrics uiToInternal(String aMetric)
     {
-        switch (aMetric) {
-            case "Number of Documents":
-                return DOC_COUNT;
-        case "Sum":
-            return SUM;
-        case "Minimum":
-            return MIN;
-        case "Maximum":
-            return MAX;
-        case "Mean":
-            return MEAN;
-        case "Median":
-            return MEDIAN;
-        case "Standard Deviation":
-            return STANDARD_DEVIATION;
-        default:
-            throw new ExecutionException(aMetric + " is not a supported metric");
-        }
+        return UI_TO_INTERNAL.get(aMetric);
     }
 
     public static List<String> uiList()
     {
-        List<String> metricList = new ArrayList<String>();
-        for (Metrics metric : Metrics.values()) {
-            metricList.add(internalToUi(metric));
-        }
-        return metricList;
+        return new ArrayList(INTERNAL_TO_UI.values());
     }
 
 }

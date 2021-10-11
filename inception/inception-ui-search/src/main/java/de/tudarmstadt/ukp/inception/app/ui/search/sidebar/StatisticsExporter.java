@@ -26,27 +26,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
-import java.io.Reader;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.commons.csv.CSVRecord;
 
 import de.tudarmstadt.ukp.inception.app.ui.search.Formats;
+import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.Metrics;
-import de.tudarmstadt.ukp.inception.search.ResultsGroup;
-import de.tudarmstadt.ukp.inception.search.SearchResult;
 
 public class StatisticsExporter
 {
 
     public InputStream generateFile(List<LayerStatistics> aStatsList, Formats aFormat)
-        throws IOException
+        throws IOException, ExecutionException
     {
         CSVFormat format = MONGODB_TSV;
         if (aFormat == Formats.CSV) {
@@ -60,7 +55,8 @@ public class StatisticsExporter
         return new ByteArrayInputStream(buf.toByteArray());
     }
 
-    public static void toCSV(List<LayerStatistics> aStatsList, CSVPrinter aOut) throws IOException
+    public static void toCSV(List<LayerStatistics> aStatsList, CSVPrinter aOut)
+        throws IOException, ExecutionException
     {
         aOut.printRecord("Number of Documents: " + aStatsList.get(0).getNoOfDocuments());
         aOut.printRecord("layer name", "feature name", "Sum", "Minimum", "Maximum", "Mean",
@@ -86,41 +82,5 @@ public class StatisticsExporter
             aOut.printRecord(resultsList);
         }
     }
-    /*
 
-    // This method only exists for a better testing of the export method
-    public static List<ResultsGroup> importCSV(Path aDataPath) throws IOException
-    {
-        List<ResultsGroup> list = new ArrayList<ResultsGroup>();
-        Reader reader = Files.newBufferedReader(aDataPath);
-        Iterable<CSVRecord> records = EXCEL.parse(reader);
-
-        int i = 0;
-        List<SearchResult> inCurrentGroup = new ArrayList<SearchResult>();
-        for (CSVRecord record : records) {
-            // skip header
-            if (i != 0) {
-                // blank line indicates new group
-                if (record.size() < 3) {
-                    list.add(new ResultsGroup(String.valueOf(i), inCurrentGroup));
-                    inCurrentGroup = new ArrayList<SearchResult>();
-                }
-                else {
-                    SearchResult currentSearchResult = new SearchResult();
-                    currentSearchResult.setDocumentTitle(record.get(0));
-                    currentSearchResult.setOffsetStart(Integer.parseInt(record.get(1)));
-                    currentSearchResult.setOffsetEnd(Integer.parseInt(record.get(2)));
-                    currentSearchResult.setLeftContext(record.get(3));
-                    currentSearchResult.setText(record.get(4));
-                    currentSearchResult.setRightContext(record.get(5));
-                    inCurrentGroup.add(currentSearchResult);
-                }
-            }
-            i = i + 1;
-        }
-        reader.close();
-        return list;
-    }
-
-     */
 }

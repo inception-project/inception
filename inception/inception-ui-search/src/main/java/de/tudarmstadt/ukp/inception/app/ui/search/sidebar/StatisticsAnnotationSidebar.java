@@ -98,8 +98,7 @@ public class StatisticsAnnotationSidebar
     private List<IColumn> columns;
     private DefaultDataTable resultsTable;
 
-    // private DropDownChoice<AnnotationLayer> layerChoice;
-    // private DropDownChoice<AnnotationFeature> featureChoice;
+
     private DropDownChoice<String> granularityChoice;
     private DropDownChoice<String> statisticChoice;
     private DropDownChoice<String> formatChoice;
@@ -143,15 +142,7 @@ public class StatisticsAnnotationSidebar
         layerStatsList = null;
         features = annotationService.listAnnotationFeature((projectModel.getObject()));
 
-        /*
-         * layerChoice = new DropDownChoice<>(MID_LAYER, this::listLayers);
-         * layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
-         * layerChoice.setRequired(true); // The features and tools depend on the layer, so reload
-         * them when the layer is changed layerChoice.add(new
-         * LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-         * featureChoice.setModelObject(null); })); mainContainer.add(layerChoice);
-         * 
-         */
+
         Form<StatisticsOptions> statisticsForm = new Form<>("settings", statisticsOptions);
 
         granularityChoice = new DropDownChoice<String>(GRANULARITY,
@@ -195,9 +186,8 @@ public class StatisticsAnnotationSidebar
         statisticsForm.add(calculateButton);
         calculateButton.add(new LambdaAjaxFormComponentUpdatingBehavior("calculated"));
 
-        AjaxDownloadLink exportButton = new AjaxDownloadLink("export", () -> "searchResults" +
-        selectedFormat,
-        this::actionExport);
+        AjaxDownloadLink exportButton = new AjaxDownloadLink("export",
+                () -> "searchResults" + selectedFormat, this::actionExport);
         // exportButton.add(visibleWhen(() -> columns.size() > 1));
         statisticsForm.add(exportButton);
 
@@ -221,36 +211,37 @@ public class StatisticsAnnotationSidebar
             LOG.error("Error: No granularity selected!");
             error("Error: No granularity selected!");
             aTarget.addChildren(getPage(), IFeedback.class);
+            return;
         }
-        else if (selectedStatistic == null) {
+        if (selectedStatistic == null) {
             LOG.error("Error: No statistic selected!");
             error("Error: No statistic selected!");
             aTarget.addChildren(getPage(), IFeedback.class);
+            return;
         }
-        else {
-            try {
-                if (layerStatsList == null) {
-                    StatisticsResult result = searchService.getProjectStatistics(currentUser,
-                            projectModel.getObject(), OptionalInt.empty(), OptionalInt.empty(),
-                            new HashSet<AnnotationFeature>(features));
-                    layerStatsList = new ArrayList<>(result.getResults().values());
-                }
-                propertyExpressionStatistic = StatisticsOptions.buildPropertyExpression(
-                        Metrics.uiToInternal(selectedStatistic),
-                        Granularities.uiToInternal(selectedGranularity));
+        try {
+            if (layerStatsList == null) {
+                StatisticsResult result = searchService.getProjectStatistics(currentUser,
+                        projectModel.getObject(), OptionalInt.empty(), OptionalInt.empty(),
+                        new HashSet<AnnotationFeature>(features));
+                layerStatsList = new ArrayList<>(result.getResults().values());
             }
-            catch (ExecutionException e) {
-                e.printStackTrace();
-                LOG.error("Error: Something went wrong parsing the input.");
-                error("Error: Something went wrong parsing the input.");
-                aTarget.addChildren(getPage(), IFeedback.class);
-            }
-            catch (IOException e) {
-                LOG.error("Error: Something went wrong accessing files.");
-                error("Error: Something went wrong accessing files.");
-                aTarget.addChildren(getPage(), IFeedback.class);
-            }
+            propertyExpressionStatistic = StatisticsOptions.buildPropertyExpression(
+                    Metrics.uiToInternal(selectedStatistic),
+                    Granularities.uiToInternal(selectedGranularity));
         }
+        catch (ExecutionException e) {
+            e.printStackTrace();
+            LOG.error("Error: Something went wrong parsing the input.");
+            error("Error: Something went wrong parsing the input.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
+        catch (IOException e) {
+            LOG.error("Error: Something went wrong accessing files.");
+            error("Error: Something went wrong accessing files.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
+
         if (columns.size() > 1) {
             columns.remove(1);
         }
@@ -262,54 +253,37 @@ public class StatisticsAnnotationSidebar
         aTarget.add(resultsTable);
     }
 
-    private IResourceStream actionExport() {
+    private IResourceStream actionExport()
+    {
         if (selectedFormat == null) {
             LOG.error("Error: No format selected!");
             error("Error: No format selected!");
-        } else {
-            return new AbstractResourceStream() {
-                private static final long serialVersionUID = 1L;
+            return null;
+        }
+        return new AbstractResourceStream()
+        {
+            private static final long serialVersionUID = 1L;
 
-                @Override
-                public InputStream getInputStream() throws ResourceStreamNotFoundException {
-                    StatisticsExporter exporter = new StatisticsExporter();
-                    try {
-                        return exporter.generateFile(layerStatsList,
+            @Override
+            public InputStream getInputStream() throws ResourceStreamNotFoundException
+            {
+                StatisticsExporter exporter = new StatisticsExporter();
+                try {
+                    return exporter.generateFile(layerStatsList,
                             Formats.uiToInternal(selectedFormat));
-                    } catch (Exception e) {
-                        LOG.error("Unable to generate statistics file", e);
-                        error("Error: " + e.getMessage());
-                        throw new ResourceStreamNotFoundException(e);
-                    }
                 }
+                catch (Exception e) {
+                    LOG.error("Unable to generate statistics file", e);
+                    error("Error: " + e.getMessage());
+                    throw new ResourceStreamNotFoundException(e);
+                }
+            }
 
-                @Override
-                public void close() throws IOException {
-                    // Nothing to do
-                }
-            };
-        } return null;
+            @Override
+            public void close() throws IOException
+            {
+                // Nothing to do
+            }
+        };
     }
-
-    /*
-     * private List<AnnotationLayer> listLayers() { List<AnnotationLayer> layers = new
-     * ArrayList<>();
-     * 
-     * for (AnnotationLayer layer : annotationService
-     * .listAnnotationLayer(projectModel.getObject())) { if ((SPAN_TYPE.equals(layer.getType()) ||
-     * RELATION_TYPE.equals(layer.getType())) && !Token.class.getName().equals(layer.getName())) {
-     * layers.add(layer); } }
-     * 
-     * return layers; }
-     * 
-     */
-
-    /*
-     * private List<AnnotationFeature> listFeatures() { List<AnnotationFeature> features = new
-     * ArrayList<AnnotationFeature>(); if (selectedLayer != null) { for (AnnotationFeature feature :
-     * annotationService.listAnnotationFeature(selectedLayer)) { features.add(feature); } } else {
-     * return Collections.emptyList(); } return features; }
-     * 
-     */
-
 }

@@ -17,45 +17,46 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search;
 
-import de.tudarmstadt.ukp.inception.search.ExecutionException;
-import de.tudarmstadt.ukp.inception.search.Granularities;
-
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public enum Formats
 {
-    CSV, TXT;
+    CSV(".csv"),
+    TXT(".txt");
 
-    public static Formats uiToInternal(String aFormat) throws ExecutionException
-    {
-        switch (aFormat) {
-        case ".csv":
-            return CSV;
-        case ".txt":
-            return TXT;
-        default:
-            throw new ExecutionException("The format " + aFormat + " is not supported");
+    private static final Map<String, Formats> UI_TO_INTERNAL = new HashMap<String, Formats>();
+    private static final Map<Formats, String> INTERNAL_TO_UI = new HashMap<Formats, String>();
+
+    static {
+        for (Formats f : values()) {
+            UI_TO_INTERNAL.put(f.uiName, f);
+            INTERNAL_TO_UI.put(f, f.uiName);
         }
+    }
+
+    public final String uiName;
+
+    private Formats(String aUiName)
+    {
+        uiName = aUiName;
+    }
+
+    public static Formats uiToInternal(String aFormat)
+    {
+        return UI_TO_INTERNAL.get(aFormat);
     }
 
     public static String internalToUi(Formats aFormat)
     {
-        switch (aFormat) {
-        case CSV:
-            return ".csv";
-        default:
-            return ".txt";
-        }
+        return INTERNAL_TO_UI.get(aFormat);
     }
 
     public static List<String> uiList()
     {
-        List<String> formatList = new ArrayList<String>();
-        for (Formats format : Formats.values()) {
-            formatList.add(internalToUi(format));
-        }
-        return formatList;
+        return new ArrayList(INTERNAL_TO_UI.values());
     }
 
 }

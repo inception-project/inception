@@ -19,6 +19,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
 import de.tudarmstadt.ukp.inception.app.ui.search.Formats;
+import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.Granularities;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.Metrics;
@@ -68,6 +69,7 @@ public class StatisticsOptions
     }
 
     public static String buildPropertyExpression(Metrics aStatistic, Granularities aGranularity)
+        throws ExecutionException
     {
         String granularity = "";
         String metric = "";
