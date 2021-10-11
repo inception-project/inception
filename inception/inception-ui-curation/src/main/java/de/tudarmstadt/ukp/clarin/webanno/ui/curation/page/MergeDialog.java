@@ -27,7 +27,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.panel.FeedbackPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -210,7 +209,6 @@ public class MergeDialog
     {
         private static final long serialVersionUID = 5202661827792148838L;
 
-        private FeedbackPanel feedbackPanel;
         private Form<State> form;
 
         public ContentPanel(String aId, IModel<State> aModel)
@@ -222,7 +220,7 @@ public class MergeDialog
             form.add(new Label("feedback"));
             form.add(new TextField<>("response"));
             form.add(new MergeStrategyPanel("mergeStrategySettings", curationWorkflowModel));
-            form.add(new CheckBox("saveSettingsAsDefault"));
+            form.add(new CheckBox("saveSettingsAsDefault").setOutputMarkupId(true));
             form.add(new LambdaAjaxButton<>("confirm", MergeDialog.this::onConfirmInternal)
                     .triggerAfterSubmit());
             form.add(new LambdaAjaxLink("cancel", MergeDialog.this::onCancelInternal));
