@@ -28,6 +28,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.inception.curation.export.CuratedDocumentsExporter;
+import de.tudarmstadt.ukp.inception.curation.export.CurationWorkflowExporter;
 import de.tudarmstadt.ukp.inception.curation.merge.DefaultMergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeIncompleteStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
@@ -95,5 +99,18 @@ public class CurationServiceAutoConfiguration
     public ThresholdBasedMergeStrategyFactory thresholdBasedMergeStrategyFactory()
     {
         return new ThresholdBasedMergeStrategyFactoryImpl();
+    }
+
+    @Bean
+    public CuratedDocumentsExporter curatedDocumentsExporter(DocumentService aDocumentService,
+            DocumentImportExportService aImportExportService)
+    {
+        return new CuratedDocumentsExporter(aDocumentService, aImportExportService);
+    }
+
+    @Bean
+    public CurationWorkflowExporter curationWorkflowExporter(CurationService aCurationService)
+    {
+        return new CurationWorkflowExporter(aCurationService);
     }
 }
