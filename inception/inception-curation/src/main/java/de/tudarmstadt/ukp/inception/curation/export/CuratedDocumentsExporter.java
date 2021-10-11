@@ -60,7 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 import de.tudarmstadt.ukp.inception.export.exporters.SourceDocumentExporter;
 
 @Component
@@ -140,13 +139,12 @@ public class CuratedDocumentsExporter
 
                         FormatSupport format = importExportService.getWritableFormatById(formatId)
                                 .orElseGet(() -> {
-                                    FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
+                                    FormatSupport fallbackFormat = importExportService
+                                            .getFallbackFormat();
                                     aMonitor.addMessage(LogMessage.warn(this,
-                                            "Curation: [%s] No writer"
-                                                    + " found for original format [%s] - exporting as [%s] "
-                                                    + "instead.",
-                                            sourceDocument.getName(), formatId,
-                                            fallbackFormat.getName()));
+                                            "Curation: %s No writer found for original format [%s] "
+                                                    + "- exporting as [%s] instead.",
+                                            sourceDocument, formatId, fallbackFormat.getName()));
                                     return fallbackFormat;
                                 });
 
