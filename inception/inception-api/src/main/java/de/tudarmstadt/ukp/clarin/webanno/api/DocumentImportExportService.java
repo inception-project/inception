@@ -83,6 +83,8 @@ public interface DocumentImportExportService
         return getFormats().stream().filter(f -> f.getName().equals(aFormatName)).findFirst();
     }
 
+    FormatSupport getFallbackFormat();
+
     // --------------------------------------------------------------------------------------------
     // Methods related to importing/exporting
     // --------------------------------------------------------------------------------------------

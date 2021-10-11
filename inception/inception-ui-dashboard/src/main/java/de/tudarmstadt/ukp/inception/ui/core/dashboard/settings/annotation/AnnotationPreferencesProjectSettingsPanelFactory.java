@@ -30,7 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFa
 public class AnnotationPreferencesProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
-    public static final int ORDER = 350;
+    public static final int ORDER = 330;
 
     @Override
     public String getPath()

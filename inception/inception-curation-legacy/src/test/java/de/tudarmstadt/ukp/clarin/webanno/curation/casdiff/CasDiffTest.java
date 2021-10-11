@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.HOST_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.load;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.loadWebAnnoTsv3;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkFS;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.HOST_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.load;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.loadWebAnnoTsv3;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.makeLinkFS;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
@@ -351,10 +351,10 @@ public class CasDiffTest
     public void relationLabelTest() throws Exception
     {
         Map<String, List<CAS>> casByUser = new HashMap<>();
-        casByUser.put("user1", asList(
-                loadWebAnnoTsv3("testsuite/" + "relationLabelTest" + "/user1.tsv").getCas()));
-        casByUser.put("user2", asList(
-                loadWebAnnoTsv3("testsuite/" + "relationLabelTest" + "/user2.tsv").getCas()));
+        casByUser.put("user1",
+                asList(loadWebAnnoTsv3("casdiff/relationLabelTest/user1.tsv").getCas()));
+        casByUser.put("user2",
+                asList(loadWebAnnoTsv3("casdiff/relationLabelTest/user2.tsv").getCas()));
 
         List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
                 Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));

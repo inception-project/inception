@@ -34,10 +34,6 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-collections4</artifactId>
     </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.apache.uima</groupId>
@@ -48,10 +44,6 @@
       <artifactId>uimafit-core</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-support</artifactId>
-    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-model</artifactId>
@@ -76,10 +68,6 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-segmentation-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-metadata-asl</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -129,11 +117,6 @@
     <dependency>
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.ben-manes.caffeine</groupId>
-      <artifactId>caffeine</artifactId>
     </dependency>
 
     <!-- DEPENDENCIES FOR TESTING -->
@@ -189,25 +172,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <ignoredDependencies>
-              <!--
-               - Test dependencies used via auto-configuration and reflection
-               -->
-              <ignoredDependency>org.springframework.boot:spring-boot-test</ignoredDependency>
-              <ignoredDependency>org.springframework.boot:spring-boot-starter-data-jpa</ignoredDependency>
-              <ignoredDependency>com.h2database:h2</ignoredDependency>
-            </ignoredDependencies>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>  
 </project>

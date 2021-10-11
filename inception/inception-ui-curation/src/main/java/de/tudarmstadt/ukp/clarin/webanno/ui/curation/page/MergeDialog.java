@@ -37,15 +37,18 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxFormCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import de.tudarmstadt.ukp.inception.curation.settings.MergeStrategyPanel;
 
 public class MergeDialog
     extends ModalWindow
 {
     private static final long serialVersionUID = 5194857538069045172L;
 
-    private IModel<String> titleModel;
-    private IModel<String> challengeModel;
-    private IModel<String> expectedResponseModel;
+    private final IModel<String> titleModel;
+    private final IModel<String> challengeModel;
+    private final IModel<String> expectedResponseModel;
+    private final IModel<CurationWorkflow> curationWorkflowModel;
 
     private AjaxFormCallback<State> confirmAction;
     private AjaxCallback cancelAction;
@@ -53,13 +56,14 @@ public class MergeDialog
     private ContentPanel contentPanel;
 
     public MergeDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge,
-            IModel<String> aExpectedResponse)
+            IModel<String> aExpectedResponse, IModel<CurationWorkflow> aCurationWorkflow)
     {
         super(aId);
 
         titleModel = aTitle;
         challengeModel = aChallenge;
         expectedResponseModel = aExpectedResponse;
+        curationWorkflowModel = aCurationWorkflow;
 
         setOutputMarkupId(true);
         setInitialWidth(620);
@@ -193,11 +197,11 @@ public class MergeDialog
         String expectedResponse;
         String response;
         String feedback;
-        boolean mergeIncompleteAnnotations;
+        boolean saveSettingsAsDefault;
 
-        public boolean isMergeIncompleteAnnotations()
+        public boolean isSaveSettingsAsDefault()
         {
-            return mergeIncompleteAnnotations;
+            return saveSettingsAsDefault;
         }
     }
 
@@ -217,8 +221,10 @@ public class MergeDialog
             form.add(new Label("challenge").setEscapeModelStrings(false));
             form.add(new Label("feedback"));
             form.add(new TextField<>("response"));
-            form.add(new CheckBox("mergeIncompleteAnnotations"));
-            form.add(new LambdaAjaxButton<>("confirm", MergeDialog.this::onConfirmInternal));
+            form.add(new MergeStrategyPanel("mergeStrategySettings", curationWorkflowModel));
+            form.add(new CheckBox("saveSettingsAsDefault"));
+            form.add(new LambdaAjaxButton<>("confirm", MergeDialog.this::onConfirmInternal)
+                    .triggerAfterSubmit());
             form.add(new LambdaAjaxLink("cancel", MergeDialog.this::onCancelInternal));
 
             add(form);

@@ -49,4 +49,31 @@
     </createTable>
   </changeSet>
 
+  <changeSet author="INCEpTION Team" id="20211003-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="curation_workflow"/>
+      </not>
+    </preConditions>
+    <createTable tableName="curation_workflow">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="project" type="BIGINT">
+        <constraints nullable="false" />
+      </column>
+      <column name="mergeStrategy" type="VARCHAR(255)" />
+      <column name="mergeStrategyTraits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </createTable>
+    <addUniqueConstraint columnNames="project" constraintName="UK_curation_workflow_project"
+      tableName="curation_workflow" />
+    <createIndex indexName="FK_curation_workflow_project" tableName="curation_workflow">
+      <column name="project" />
+    </createIndex>
+    <addForeignKeyConstraint baseColumnNames="project" baseTableName="curation_workflow"
+      constraintName="FK_curation_workflow_project" deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="project" />
+  </changeSet>
 </databaseChangeLog>
