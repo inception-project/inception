@@ -55,9 +55,10 @@ public class ThresholdBasedMergeStrategyTraitsEditor
             }
         };
 
-        form.add(new NumberTextField<>("userThreshold", Integer.class));
+        form.add(new NumberTextField<>("userThreshold", Integer.class).setMinimum(0));
 
-        form.add(new NumberTextField<>("confidenceThreshold", Double.class));
+        form.add(new NumberTextField<>("confidenceThreshold", Double.class).setMinimum(0.0d)
+                .setMaximum(1.0d));
 
         add(form);
     }
