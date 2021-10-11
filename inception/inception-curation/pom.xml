@@ -41,6 +41,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-export</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-security</artifactId>
     </dependency>
     <dependency>
@@ -163,15 +167,14 @@
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-metadata-asl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-webanno-tsv</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-conll-asl</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-io-webanno-tsv</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
