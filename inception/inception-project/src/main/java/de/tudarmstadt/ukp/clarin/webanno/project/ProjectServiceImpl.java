@@ -996,8 +996,8 @@ public class ProjectServiceImpl
             return "";
         }
 
-        boolean lastCharMappedToUnderscore = true;
         StringBuilder buf = new StringBuilder();
+        boolean lastCharMappedToUnderscore = true;
         for (int i = 0; i < min(name.length(), MAX_PROJECT_SLUG_LENGTH); i++) {
             char c = name.charAt(i);
             if (Project.isValidProjectSlugCharacter(c)) {
@@ -1017,6 +1017,10 @@ public class ProjectServiceImpl
 
             buf.append("_");
             lastCharMappedToUnderscore = true;
+        }
+
+        if (buf.length() == 0) {
+            return "";
         }
 
         if (!isValidProjectSlugInitialCharacter(buf.charAt(0))) {
