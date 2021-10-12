@@ -693,9 +693,10 @@ public class LegacyRemoteApiController
 
         // Determine the format
         FormatSupport format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
-            LOG.info("[{}] Format [{}] is not writable - exporting as WebAnno TSV3 instead.",
-                    srcDoc.getName(), formatId);
-            return new WebAnnoTsv3FormatSupport();
+            FormatSupport formatSupport = importExportService.getFallbackFormat();
+            LOG.info("{} Format [{}] is not writable - exporting as [{}] instead.", srcDoc,
+                    formatId, formatSupport.getName());
+            return formatSupport;
         });
 
         // Temporary file of annotation document

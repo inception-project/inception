@@ -83,11 +83,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.AlreadyMergedException;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.MergeConflictException;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -103,6 +98,11 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSe
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.AnnotationStateColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
+import de.tudarmstadt.ukp.inception.curation.merge.AlreadyMergedException;
+import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
+import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeConflictException;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 
 /**
  * Panel with the annotator's annotations.

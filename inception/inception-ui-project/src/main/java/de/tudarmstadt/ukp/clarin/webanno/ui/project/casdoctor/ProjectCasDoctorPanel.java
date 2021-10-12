@@ -50,7 +50,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
@@ -71,7 +70,6 @@ public class ProjectCasDoctorPanel
     private static final long serialVersionUID = 2116717853865353733L;
 
     private @SpringBean DocumentService documentService;
-    private @SpringBean CurationDocumentService curationService;
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean DocumentImportExportService importExportService;
 

@@ -381,7 +381,7 @@ public class CasDiff
         if (aSet.position.getFeature() == null) {
             // Check if this configuration is already present
             Configuration configuration = null;
-            for (Configuration cfg : aSet.configurations) {
+            for (Configuration cfg : aSet.getConfigurations()) {
                 // Handle main positions
                 if (equalsFS(cfg.getRepresentative(cases), aFS)) {
                     configuration = cfg;
@@ -392,7 +392,7 @@ public class CasDiff
             // Not found, add new one
             if (configuration == null) {
                 configuration = new Configuration(aSet.position);
-                aSet.configurations.add(configuration);
+                aSet.addConfiguration(configuration);
             }
 
             configuration.add(aCasGroupId, aFS);
@@ -534,6 +534,11 @@ public class CasDiff
         public List<Configuration> getConfigurations()
         {
             return configurations;
+        }
+
+        public void addConfiguration(Configuration aCfg)
+        {
+            configurations.add(aCfg);
         }
 
         public Optional<Configuration> findConfiguration(String aCasGroupId, FeatureStructure aFS)
@@ -842,20 +847,25 @@ public class CasDiff
             return stacked;
         }
 
-        private void add(String aCasGroupId, FeatureStructure aFS)
+        /**
+         * Visible for testing only!
+         */
+        public void add(String aCasGroupId, AID aAID)
         {
-            AID old = fsAddresses.put(aCasGroupId, new AID(getAddr(aFS)));
+            AID old = fsAddresses.put(aCasGroupId, aAID);
             if (old != null) {
                 stacked = true;
             }
         }
 
+        private void add(String aCasGroupId, FeatureStructure aFS)
+        {
+            add(aCasGroupId, new AID(getAddr(aFS)));
+        }
+
         private void add(String aCasGroupId, FeatureStructure aFS, String aFeature, int aSlot)
         {
-            AID old = fsAddresses.put(aCasGroupId, new AID(getAddr(aFS), aFeature, aSlot));
-            if (old != null) {
-                stacked = true;
-            }
+            add(aCasGroupId, new AID(getAddr(aFS), aFeature, aSlot));
         }
 
         public AID getRepresentativeAID()
