@@ -95,7 +95,7 @@
     <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.3</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
-    <bootstrap.version>5.1.3</bootstrap.version>
+    <bootstrap.version>5.1.2</bootstrap.version>
     <hover.version>2.0.2</hover.version>
 
     <!--
