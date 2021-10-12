@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +68,9 @@ public enum Metrics
 
     public static List<String> mtasList()
     {
-        return new ArrayList(INTERNAL_TO_MTAS.values());
+        List<String> sortedList = new ArrayList<String>(INTERNAL_TO_MTAS.values());
+        Collections.sort(sortedList);
+        return sortedList;
     }
 
     public static String mtasRegExp()
@@ -91,7 +94,9 @@ public enum Metrics
 
     public static List<String> uiList()
     {
-        return new ArrayList(INTERNAL_TO_UI.values());
+        List<String> sortedList = new ArrayList<String>(INTERNAL_TO_UI.values());
+        Collections.sort(sortedList);
+        return sortedList;
     }
 
 }

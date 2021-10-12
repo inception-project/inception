@@ -71,13 +71,8 @@ public class StatisticsProvider
     @Override
     public Iterator<LayerStatistics> iterator(long aFirst, long aCount)
     {
-        // In this example the whole list gets copied, sorted and sliced; in real applications
-        // typically your database would deliver a sorted and limited list
-
-        // Get the data
         List<LayerStatistics> newList = new ArrayList<LayerStatistics>(list);
 
-        // Sort the data
         Collections.sort(newList, comparator);
 
         // Return the data for the current page - this can be determined only after sorting
@@ -108,7 +103,10 @@ public class StatisticsProvider
     }
 
     public List<LayerStatistics> getData() {
-        return list;
+        List<LayerStatistics> sortedList = new ArrayList<LayerStatistics>(list);
+        Collections.sort(sortedList, comparator);
+
+        return sortedList;
     }
 
 }

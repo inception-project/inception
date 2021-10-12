@@ -69,6 +69,8 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 public class StatisticsAnnotationSidebar
     extends AnnotationSidebar_ImplBase
 {
@@ -97,7 +99,6 @@ public class StatisticsAnnotationSidebar
     private IModel<Project> projectModel;
     private List<IColumn> columns;
     private DefaultDataTable resultsTable;
-
 
     private DropDownChoice<String> granularityChoice;
     private DropDownChoice<String> statisticChoice;
@@ -168,6 +169,22 @@ public class StatisticsAnnotationSidebar
         };
         statisticsForm.add(statisticChoice);
 
+        LambdaAjaxButton<StatisticsOptions> calculateButton = new LambdaAjaxButton<StatisticsOptions>(
+            "calculate", this::actionCalculate);
+        statisticsForm.add(calculateButton);
+        calculateButton.add(new LambdaAjaxFormComponentUpdatingBehavior("calculated"));
+
+        statsProvider = new StatisticsProvider(new ArrayList<>());
+
+        columns = new ArrayList<IColumn>();
+        columns.add(new PropertyColumn(new Model<String>("Features"), "getLayerFeatureName",
+            "getLayerFeatureName"));
+
+        resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 30);
+        resultsTable.setOutputMarkupId(true);
+
+        statisticsForm.add(resultsTable);
+
         formatChoice = new DropDownChoice<String>(FORMAT,
                 new PropertyModel<String>(this, "selectedFormat"), FORMATS)
         {
@@ -177,30 +194,22 @@ public class StatisticsAnnotationSidebar
                 return "Format:";
             }
         };
-        // formatChoice.add(visibleWhen(() -> columns.size() > 1));
+        formatChoice.add(visibleWhen(() -> columns.size() > 1));
+        formatChoice.setOutputMarkupPlaceholderTag(true);
         statisticsForm.add(formatChoice);
         formatChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
-        LambdaAjaxButton<StatisticsOptions> calculateButton = new LambdaAjaxButton<StatisticsOptions>(
-                "calculate", this::actionCalculate);
-        statisticsForm.add(calculateButton);
-        calculateButton.add(new LambdaAjaxFormComponentUpdatingBehavior("calculated"));
-
-        AjaxDownloadLink exportButton = new AjaxDownloadLink("export",
+        exportButton = new AjaxDownloadLink("export",
                 () -> "searchResults" + selectedFormat, this::actionExport);
-        // exportButton.add(visibleWhen(() -> columns.size() > 1));
+        exportButton.add(visibleWhen(() -> columns.size() > 1));
         statisticsForm.add(exportButton);
 
-        statsProvider = new StatisticsProvider(new ArrayList<>());
+        exportButton.setOutputMarkupPlaceholderTag(true);
+        //exportButton.setOutputMarkupId(true);
 
-        columns = new ArrayList<IColumn>();
-        columns.add(new PropertyColumn(new Model<String>("Features"), "getLayerFeatureName",
-                "getLayerFeatureName"));
 
-        resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 30);
-        resultsTable.setOutputMarkupId(true);
+        //exportButton.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
-        statisticsForm.add(resultsTable);
         mainContainer.add(statisticsForm);
     }
 
@@ -219,6 +228,7 @@ public class StatisticsAnnotationSidebar
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
+
         try {
             if (layerStatsList == null) {
                 StatisticsResult result = searchService.getProjectStatistics(currentUser,
@@ -226,20 +236,31 @@ public class StatisticsAnnotationSidebar
                         new HashSet<AnnotationFeature>(features));
                 layerStatsList = new ArrayList<>(result.getResults().values());
             }
-            propertyExpressionStatistic = StatisticsOptions.buildPropertyExpression(
-                    Metrics.uiToInternal(selectedStatistic),
-                    Granularities.uiToInternal(selectedGranularity));
         }
         catch (ExecutionException e) {
-            e.printStackTrace();
-            LOG.error("Error: Something went wrong parsing the input.");
-            error("Error: Something went wrong parsing the input.");
+            //e.printStackTrace();
+            LOG.error("Error: " + e.getMessage() + ". This can be caused by an invalid feature name.");
+            error("Error: " + e.getMessage() + ". This can be caused by an invalid feature name.");
             aTarget.addChildren(getPage(), IFeedback.class);
+            return;
         }
         catch (IOException e) {
             LOG.error("Error: Something went wrong accessing files.");
             error("Error: Something went wrong accessing files.");
             aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        try {
+            propertyExpressionStatistic = StatisticsOptions.buildPropertyExpression(
+                Metrics.uiToInternal(selectedStatistic),
+                Granularities.uiToInternal(selectedGranularity));
+        }
+        catch(ExecutionException e) {
+            LOG.error("Error: The selected statistic or the selected granularity is not valid.");
+            error("Error: The selected statistic or the selected granularity is not valid.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
         }
 
         if (columns.size() > 1) {
@@ -251,6 +272,8 @@ public class StatisticsAnnotationSidebar
         statsProvider.setData(layerStatsList);
 
         aTarget.add(resultsTable);
+        aTarget.add(formatChoice);
+        aTarget.add(exportButton);
     }
 
     private IResourceStream actionExport()
@@ -269,7 +292,7 @@ public class StatisticsAnnotationSidebar
             {
                 StatisticsExporter exporter = new StatisticsExporter();
                 try {
-                    return exporter.generateFile(layerStatsList,
+                    return exporter.generateFile(statsProvider.getData(),
                             Formats.uiToInternal(selectedFormat));
                 }
                 catch (Exception e) {

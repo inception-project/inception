@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.search;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,9 @@ public enum Formats
 
     public static List<String> uiList()
     {
-        return new ArrayList(INTERNAL_TO_UI.values());
+        List<String> sortedList = new ArrayList<String>(INTERNAL_TO_UI.values());
+        Collections.sort(sortedList);
+        return sortedList;
     }
 
 }

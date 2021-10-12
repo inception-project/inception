@@ -27,8 +27,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
@@ -59,25 +62,30 @@ public class StatisticsExporter
         throws IOException, ExecutionException
     {
         aOut.printRecord("Number of Documents: " + aStatsList.get(0).getNoOfDocuments());
-        aOut.printRecord("layer name", "feature name", "Sum", "Minimum", "Maximum", "Mean",
-                "Median", "Standard Deviation", "Sum per Sentence", "Minimum per Sentence",
-                "Maximum per Sentence", "Mean per Sentence", "Median per Sentence",
-                "Standard Deviation per Sentence");
+
+        List<String> perDocList = Metrics.uiList();
+        perDocList.add(0, "layer name");
+        perDocList.add(1, "feature name");
+        perDocList.remove("Number of Documents");
+        List<String> completeList = ListUtils.union(perDocList, Metrics.uiList().stream().map(s -> s + " per Sentence").collect(Collectors.toList()));
+        completeList.remove("Number of Documents per Sentence");
+        aOut.printRecord(completeList);
+
         for (LayerStatistics ls : aStatsList) {
             List<Object> resultsList = new ArrayList<Object>();
             resultsList.add(ls.getFeature().getLayer().getUiName());
             resultsList.add(ls.getFeature().getUiName());
-            for (Metrics metric : Metrics.values()) {
-                if (metric == Metrics.DOC_COUNT) {
+            for (String metric : Metrics.uiList()) {
+                if (metric == Metrics.DOC_COUNT.uiName) {
                     continue;
                 }
-                resultsList.add(ls.getMetric(metric, false));
+                resultsList.add(ls.getMetric(Metrics.uiToInternal(metric), false));
             }
-            for (Metrics metric : Metrics.values()) {
-                if (metric == Metrics.DOC_COUNT) {
+            for (String metric : Metrics.uiList()) {
+                if (metric == Metrics.DOC_COUNT.uiName) {
                     continue;
                 }
-                resultsList.add(ls.getMetric(metric, true));
+                resultsList.add(ls.getMetric(Metrics.uiToInternal(metric), true));
             }
             aOut.printRecord(resultsList);
         }
