@@ -78,6 +78,7 @@ installPrefs inception-ui-annotation
 installPrefs inception-ui-core
 installPrefs inception-ui-curation
 installPrefs inception-ui-dashboard
+installPrefs inception-ui-dashboard-activity
 installPrefs inception-ui-external-search
 installPrefs inception-ui-kb
 installPrefs inception-ui-monitoring

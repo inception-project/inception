@@ -31,6 +31,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,8 +46,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
@@ -56,25 +55,25 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 
 @SpringBootApplication(exclude = { //
         SecurityAutoConfiguration.class, //
-        LiquibaseAutoConfiguration.class, //
-        AnnotationSchemaServiceAutoConfiguration.class, //
-        DocumentImportExportServiceAutoConfiguration.class, //
-        DocumentServiceAutoConfiguration.class, //
-        ProjectServiceAutoConfiguration.class })
+        LiquibaseAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, //
         properties = { //
-                "spring.main.banner-mode=off" })
+                "spring.main.banner-mode=off",
+                "repository.path=" + WebhookServiceTest.TEST_OUTPUT_FOLDER })
+@EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.model", //
+        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 public class WebhookServiceTest
 {
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/WebhookServiceTest";
+
     private @LocalServerPort int port;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired WebhooksConfiguration webhooksConfiguration;
