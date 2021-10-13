@@ -6,15 +6,15 @@ body:
     id: description
     attributes:
       label: Describe the bug
-      description: A clear and concise description of what the bug is.
+      placeholder: A clear and concise description of what the bug is.
     validations:
       required: true
   - type: textarea
     id: reproduction
     attributes:
       label: To Reproduce
-      description: Steps to reproduce the behavior.
       value: |
+          Steps to reproduce the behavior:
           1. Go to '...'
           2. Click on '....'
           3. Scroll down to '....'
@@ -23,32 +23,25 @@ body:
     id: expectation
     attributes:
       label: Expected behavior
-      description: A clear and concise description of what you expected to happen.
+      placeholder: A clear and concise description of what you expected to happen.
   - type: textarea
     id: screenshots
     attributes:
       label: Screenshots
-      description: If applicable, add screenshots to help explain your problem.
-  - type: markdown
+      placeholder: | 
+        If applicable, add screenshots to help explain your problem. 
+        You can simply drag-and-drop your screenshots here.
+  - type: textarea
+    id: environment
     attributes:
-      value: Please complete the following information.
-  - type: input
-    id: version_and_build
-    attributes:
-      label: Version
+      label: Environment
       placeholder: see bottom of the browser screen
-  - type: input
-    id: os
-    attributes:
-      label: Operating system
-      placeholder: e.g. Windows, Linux, OS X
-  - type: input
-    id: browser
-    attributes:
-      label: Browser
-      placeholder: e.g. Chrome, Safari, Firefox, ...
+      value: |
+        Version and build ID: see bottom of the INCEpTION browser screen
+        Operating system: e.g. Windows, Linux, OS X
+        Browser: e.g. Chrome, Safari, Firefox, ...
   - type: textarea
     id: additional_context
     attributes:
       label: Additional context
-      description: Add any other context about the problem here.
+      placeholder: Add any other context about the problem here.
