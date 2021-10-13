@@ -99,7 +99,7 @@ public class StatisticsResult implements Serializable
         if (query == null) {
             throw new ExecutionException("No query was given!");
         }
-        return results.get("query."+ query);
+        return results.get("query." + query);
     }
 
     public Project getProject()

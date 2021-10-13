@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -67,7 +66,8 @@ public class StatisticsExporter
         perDocList.add(0, "layer name");
         perDocList.add(1, "feature name");
         perDocList.remove("Number of Documents");
-        List<String> completeList = ListUtils.union(perDocList, Metrics.uiList().stream().map(s -> s + " per Sentence").collect(Collectors.toList()));
+        List<String> completeList = ListUtils.union(perDocList, Metrics.uiList().stream()
+                .map(s -> s + " per Sentence").collect(Collectors.toList()));
         completeList.remove("Number of Documents per Sentence");
         aOut.printRecord(completeList);
 

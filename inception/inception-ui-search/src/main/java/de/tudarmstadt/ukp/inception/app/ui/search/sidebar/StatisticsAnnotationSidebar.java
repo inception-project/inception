@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
+
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,8 +69,6 @@ import de.tudarmstadt.ukp.inception.search.Metrics;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
-
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 public class StatisticsAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -143,7 +142,6 @@ public class StatisticsAnnotationSidebar
         layerStatsList = null;
         features = annotationService.listAnnotationFeature((projectModel.getObject()));
 
-
         Form<StatisticsOptions> statisticsForm = new Form<>("settings", statisticsOptions);
 
         granularityChoice = new DropDownChoice<String>(GRANULARITY,
@@ -170,7 +168,7 @@ public class StatisticsAnnotationSidebar
         statisticsForm.add(statisticChoice);
 
         LambdaAjaxButton<StatisticsOptions> calculateButton = new LambdaAjaxButton<StatisticsOptions>(
-            "calculate", this::actionCalculate);
+                "calculate", this::actionCalculate);
         statisticsForm.add(calculateButton);
         calculateButton.add(new LambdaAjaxFormComponentUpdatingBehavior("calculated"));
 
@@ -178,7 +176,7 @@ public class StatisticsAnnotationSidebar
 
         columns = new ArrayList<IColumn>();
         columns.add(new PropertyColumn(new Model<String>("Features"), "getLayerFeatureName",
-            "getLayerFeatureName"));
+                "getLayerFeatureName"));
 
         resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 30);
         resultsTable.setOutputMarkupId(true);
@@ -199,16 +197,15 @@ public class StatisticsAnnotationSidebar
         statisticsForm.add(formatChoice);
         formatChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
-        exportButton = new AjaxDownloadLink("export",
-                () -> "searchResults" + selectedFormat, this::actionExport);
+        exportButton = new AjaxDownloadLink("export", () -> "searchResults" + selectedFormat,
+                this::actionExport);
         exportButton.add(visibleWhen(() -> columns.size() > 1));
         statisticsForm.add(exportButton);
 
         exportButton.setOutputMarkupPlaceholderTag(true);
-        //exportButton.setOutputMarkupId(true);
+        // exportButton.setOutputMarkupId(true);
 
-
-        //exportButton.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        // exportButton.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
         mainContainer.add(statisticsForm);
     }
@@ -238,8 +235,9 @@ public class StatisticsAnnotationSidebar
             }
         }
         catch (ExecutionException e) {
-            //e.printStackTrace();
-            LOG.error("Error: " + e.getMessage() + ". This can be caused by an invalid feature name.");
+            // e.printStackTrace();
+            LOG.error("Error: " + e.getMessage()
+                    + ". This can be caused by an invalid feature name.");
             error("Error: " + e.getMessage() + ". This can be caused by an invalid feature name.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
@@ -253,10 +251,10 @@ public class StatisticsAnnotationSidebar
 
         try {
             propertyExpressionStatistic = StatisticsOptions.buildPropertyExpression(
-                Metrics.uiToInternal(selectedStatistic),
-                Granularities.uiToInternal(selectedGranularity));
+                    Metrics.uiToInternal(selectedStatistic),
+                    Granularities.uiToInternal(selectedGranularity));
         }
-        catch(ExecutionException e) {
+        catch (ExecutionException e) {
             LOG.error("Error: The selected statistic or the selected granularity is not valid.");
             error("Error: The selected statistic or the selected granularity is not valid.");
             aTarget.addChildren(getPage(), IFeedback.class);
