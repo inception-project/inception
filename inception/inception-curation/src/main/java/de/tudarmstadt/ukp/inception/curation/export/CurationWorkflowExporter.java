@@ -90,6 +90,7 @@ public class CurationWorkflowExporter
         ExportedCurationWorkflow exportedCurationWorkflow = maybeExportedCurationWorkflow.get();
 
         CurationWorkflow curationWorkflow = new CurationWorkflow();
+        curationWorkflow.setProject(aProject);
         curationWorkflow.setMergeStrategy(exportedCurationWorkflow.getMergeStrategy());
         curationWorkflow.setMergeStrategyTraits(exportedCurationWorkflow.getMergeStrategyTraits());
         curationService.createOrUpdateCurationWorkflow(curationWorkflow);
