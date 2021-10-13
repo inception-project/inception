@@ -31,7 +31,7 @@ body:
       description: If applicable, add screenshots to help explain your problem.
   - type: markdown
     attributes:
-      value: Please complete the following information:
+      value: Please complete the following information.
   - type: input
     id: version_and_build
     attributes:
