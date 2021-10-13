@@ -1,4 +1,4 @@
-name: Bug report
+name: Bug report (form)
 description: Create a report to help us improve
 labels: ["🐛Bug", "Triage"]
 body:
