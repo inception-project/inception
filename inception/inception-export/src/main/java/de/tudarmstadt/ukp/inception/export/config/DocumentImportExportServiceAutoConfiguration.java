@@ -55,7 +55,7 @@ public class DocumentImportExportServiceAutoConfiguration
     }
 
     @Bean
-    public SourceDocumentExporter SourceDocumentExporter(DocumentService aDocumentService,
+    public SourceDocumentExporter sourceDocumentExporter(DocumentService aDocumentService,
             RepositoryProperties aRepositoryProperties)
     {
         return new SourceDocumentExporter(aDocumentService, aRepositoryProperties);
