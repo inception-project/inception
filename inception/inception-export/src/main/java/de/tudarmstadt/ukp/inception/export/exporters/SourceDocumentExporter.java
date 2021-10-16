@@ -44,8 +44,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
@@ -59,8 +57,14 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DocumentImportExportServiceAutoConfiguration#sourceDocumentExporter}.
+ * </p>
+ */
 public class SourceDocumentExporter
     implements ProjectExporter
 {
@@ -68,8 +72,15 @@ public class SourceDocumentExporter
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Autowired DocumentService documentService;
-    private @Autowired RepositoryProperties repositoryProperties;
+    private final DocumentService documentService;
+    private final RepositoryProperties repositoryProperties;
+
+    public SourceDocumentExporter(DocumentService aDocumentService,
+            RepositoryProperties aRepositoryProperties)
+    {
+        documentService = aDocumentService;
+        repositoryProperties = aRepositoryProperties;
+    }
 
     @Override
     public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
