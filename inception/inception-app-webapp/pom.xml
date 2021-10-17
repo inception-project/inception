@@ -49,6 +49,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-ui-dashboard-activity</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-doc</artifactId>
     </dependency>
     <dependency>
@@ -879,6 +883,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-agreement</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-experimental-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-api-annotation-experimental</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-dashboard-activity</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>

@@ -57,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.Annota
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -67,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.config.UimaFormatsAutoConfiguration;
+import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.versioning.config.VersioningServiceAutoConfiguration;
 

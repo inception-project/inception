@@ -27,9 +27,11 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
+import de.tudarmstadt.ukp.inception.export.exporters.SourceDocumentExporter;
 
 @Configuration
 // @EnableConfigurationProperties({ DocumentImportExportServicePropertiesImpl.class })
@@ -50,5 +52,12 @@ public class DocumentImportExportServiceAutoConfiguration
     public DocumentImportExportServiceProperties documentImportExportServiceProperties()
     {
         return new DocumentImportExportServicePropertiesImpl();
+    }
+
+    @Bean
+    public SourceDocumentExporter sourceDocumentExporter(DocumentService aDocumentService,
+            RepositoryProperties aRepositoryProperties)
+    {
+        return new SourceDocumentExporter(aDocumentService, aRepositoryProperties);
     }
 }

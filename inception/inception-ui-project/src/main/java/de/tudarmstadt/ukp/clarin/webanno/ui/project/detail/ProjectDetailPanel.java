@@ -137,8 +137,6 @@ public class ProjectDetailPanel
 
         form.add(new CheckBox("disableExport").setOutputMarkupPlaceholderTag(true));
 
-        form.add(new CheckBox("anonymousCuration").setOutputMarkupPlaceholderTag(true));
-
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
     }
 

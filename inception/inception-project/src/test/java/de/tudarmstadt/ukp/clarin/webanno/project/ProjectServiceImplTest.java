@@ -169,6 +169,7 @@ public class ProjectServiceImplTest
         assertThat(sut.deriveSlugFromName("This is a test ")).isEqualTo("this-is-a-test");
         assertThat(sut.deriveSlugFromName("Nö, mog I net")).isEqualTo("n_-mog-i-net");
         assertThat(sut.deriveSlugFromName("hey 😎 name")).isEqualTo("hey-_-name");
+        assertThat(sut.deriveSlugFromName("😎")).isEqualTo("");
         assertThat(sut.deriveSlugFromName("")).isEqualTo("");
         assertThat(sut.deriveSlugFromName(null)).isEqualTo(null);
         assertThat(sut.deriveSlugFromName("x")).isEqualTo("x__");
