@@ -15,32 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-module.exports = function (grunt) {
-  "use strict";
+package de.tudarmstadt.ukp.inception.wordalignment.resources;
 
-  grunt.loadNpmTasks('grunt-run');
-  grunt.loadNpmTasks('grunt-contrib-clean');
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-  grunt.initConfig({
-    run: {
-      esbuild: {
-        cmd: './node_modules/esbuild/bin/esbuild',
-        args: [
-          "main/ts/client/AnnotationExperienceAPI.ts",
-          "--format=cjs",
-          "--target=es6",
-          "--bundle",
-          "--outfile=../jsAnnotationExperienceAPI.js"
-        ]
-      }
-    },
+public class VisualizationReference
+    extends JavaScriptResourceReference
+{
+    private static final long serialVersionUID = 1L;
 
-    clean: {
-      folder: {
-        src: ['node_modules', 'grunt-maven.json', 'package-lock.json', '.tscache']
-      }
+    private static final VisualizationReference INSTANCE = new VisualizationReference();
+
+    /**
+     * Gets the instance of the resource reference
+     *
+     * @return the single instance of the resource reference
+     */
+    public static VisualizationReference get()
+    {
+        return INSTANCE;
     }
-  });
 
-  grunt.registerTask("default", ["run:esbuild","clean"]);
-};
+    /**
+     * Private constructor
+     */
+    private VisualizationReference()
+    {
+        super(VisualizationReference.class, "Visualizer.js");
+    }
+}

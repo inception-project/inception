@@ -373,6 +373,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-word-alignment-editor</artifactId>
+        <version>21.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload</artifactId>
         <version>21.0-SNAPSHOT</version>
       </dependency>
@@ -1799,6 +1804,7 @@
     <module>inception-review-editor</module>
     <module>inception-api-annotation-experimental</module>
     <module>inception-experimental-editor</module>
+    <module>inception-word-alignment-editor</module>
     <!-- Schema extensions -->
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
@@ -1832,7 +1838,6 @@
     <!-- Versioning -->
     <module>inception-versioning</module>
     <module>inception-websocket</module>
-      <module>inception-word-alignment-editor</module>
   </modules>
 
   <build>

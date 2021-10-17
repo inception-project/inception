@@ -7,8 +7,7 @@
     "Annotation"
   ],
   "scripts": {
-    "es_editor_basic": "./node_modules/esbuild/bin/esbuild main/editors/basic/AnnotationExperienceAPIBasicEditor.ts --format=cjs --target=es6 --bundle --outfile=../java/de/tudarmstadt/ukp/inception/experimental/editor/resources/AnnotationExperienceAPIBasicEditor.js",
-    "es_editor_word_alignment": "./node_modules/esbuild/bin/esbuild main/editors/wordalignment/AnnotationExperienceAPIWordAlignmentEditor.ts --format=cjs --target=es6 --bundle --outfile=../java/de/tudarmstadt/ukp/inception/experimental/editor/resources/AnnotationExperienceAPIWordAlignmentEditor.js"
+    "es_api": "./node_modules/esbuild/bin/esbuild client/AnnotationExperienceAPIImpl.ts --format=cjs --target=es6 --bundle --outfile=../js/AnnotationExperienceAPI.js"
   },
   "external": {},
   "devDependencies": {
@@ -19,9 +18,7 @@
     "grunt": "^1.4.1",
     "grunt-cli": "^1.4.3",
     "grunt-contrib-clean": "^2.0.0",
-    "grunt-transform-amd": "^1.1.1",
-    "grunt-ts": "^5.5.1",
-    "heya-globalize": "^1.2.1",
+    "grunt-run": "^0.8.1",
     "typescript": "^4.4.2"
   }
 }

@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.inception.wordalignment.WordAlignmentEditor;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WordAlignmentAutoConfiguration#wordAlignmentEditorFactory}} ()}
+ * {@link WordAlignmentAutoConfiguration#wordAlignmentEditorFactory()}
  * </p>
  */
 public class WordAlignmentEditorFactory
