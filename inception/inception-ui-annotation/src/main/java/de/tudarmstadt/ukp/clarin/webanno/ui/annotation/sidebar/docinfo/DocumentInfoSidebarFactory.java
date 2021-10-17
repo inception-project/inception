@@ -18,18 +18,19 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.docinfo;
 
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 
-@Component("documentInfoSidebar")
+// This now mainly serves as example code - we do not actually use it
+//@Component("documentInfoSidebar")
 public class DocumentInfoSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
@@ -40,9 +41,21 @@ public class DocumentInfoSidebarFactory
     }
 
     @Override
+    public String getDescription()
+    {
+        return "Displays basic information about the current document.";
+    }
+
+    @Override
     public IconType getIcon()
     {
         return FontAwesome5IconType.info_s;
+    }
+
+    @Override
+    public boolean available(Project aProject)
+    {
+        return false;
     }
 
     @Override

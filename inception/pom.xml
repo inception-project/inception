@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception</artifactId>
-    <version>21.0-SNAPSHOT</version>
+    <version>22.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-app</artifactId>
   <packaging>pom</packaging>
@@ -91,7 +91,7 @@
     <wicket.version>9.4.0</wicket.version>
     <wicketstuff.version>9.4.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.3.2</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>6.0.0-M3</wicket-bootstrap.version>
+    <wicket-bootstrap.version>6.0.0-M4</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.3</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
@@ -109,12 +109,12 @@
     <solr.version>7.7.3</solr.version> <!-- 8.5.1 / 8.7.0 -->
     <mtas.version>7.7.1.0</mtas.version> <!-- 8.7.0.0 -->
     <elasticsearch.version>6.8.17</elasticsearch.version> <!-- 7.10.2 -->
-    <rdf4j.version>3.7.2</rdf4j.version>
+    <rdf4j.version>3.7.3</rdf4j.version>
     <jena.version>3.17.0</jena.version>
 
-    <asciidoctor.plugin.version>2.1.0</asciidoctor.plugin.version>
-    <asciidoctor.version>2.3.0</asciidoctor.version>
-    <asciidoctor-diagram.version>2.0.2</asciidoctor-diagram.version>
+    <asciidoctor.plugin.version>2.2.1</asciidoctor.plugin.version>
+    <asciidoctor.version>2.5.2</asciidoctor.version>
+    <asciidoctor-diagram.version>2.2.1</asciidoctor-diagram.version>
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
@@ -329,47 +329,47 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-doc</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-agreement</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-agreement</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-annotation</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-project</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-tagsets</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-curation</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-curation</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-search</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -379,290 +379,290 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload-dynamic</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload-matrix</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload-ui</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-core</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-pubannotation</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-elastic</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-solr</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-external-search</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-dashboard</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-kb</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-html-editor</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-html-recogito-editor</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-pdf-editor</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation-api</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-review-editor</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-sharing</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-preferences</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-active-learning</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-kb</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-concept-linking</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-opennlp</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <!--
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-dl4j</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       -->
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-external</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-lapps</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-weblicht</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-example-imls-data-majority</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-log</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-testing</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-layer-docmetadata</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-image</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-scheduling</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-core</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mtas</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-api</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-api-annotation</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-api-formats</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-api-dao</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-brat-editor</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-diag</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-constraints</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-export</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
 
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-json</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-text</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-html</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-webanno-tsv</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-conll</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-telemetry</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-remote</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-security</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-model</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-project</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-project-export</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-curation-legacy</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -677,52 +677,52 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-tcf</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support-jsass</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support-standalone</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-model-export</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-xmi</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-plugin-api</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-plugin-manager</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-versioning</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-websocket</artifactId>
-        <version>21.0-SNAPSHOT</version>
+        <version>22.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Testing -->
@@ -876,6 +876,10 @@
           <exclusion>
             <groupId>com.google.javascript</groupId>
             <artifactId>closure-compiler-unshaded</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

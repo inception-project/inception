@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -50,15 +51,28 @@ public class ImageSidebarFactory
     }
 
     @Override
+    public String getDescription()
+    {
+        return "Displays images linked to annotations that are currently visible on screen. Only "
+                + "available if the project defines at least one image feature on any layer.";
+    }
+
+    @Override
     public IconType getIcon()
     {
         return FontAwesome5IconType.images_s;
     }
 
     @Override
+    public boolean available(Project aProject)
+    {
+        return schemaService.existsEnabledFeatureOfType(aProject, TYPE_IMAGE_URL);
+    }
+
+    @Override
     public boolean applies(AnnotatorState aState)
     {
-        return schemaService.existsEnabledFeatureOfType(aState.getProject(), TYPE_IMAGE_URL);
+        return available(aState.getProject());
     }
 
     @Override

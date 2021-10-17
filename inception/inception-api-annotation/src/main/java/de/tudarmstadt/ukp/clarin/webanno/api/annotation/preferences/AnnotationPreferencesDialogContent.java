@@ -232,7 +232,7 @@ public class AnnotationPreferencesDialogContent
                 // hide disabled Layers
                 .filter(layer -> layer.isEnabled())
                 // hide blocked layers
-                .filter(layer -> annotationEditorProperties.isLayerBlocked(layer))
+                .filter(layer -> !annotationEditorProperties.isLayerBlocked(layer))
                 .filter(layer -> !(layer.getType().equals(CHAIN_TYPE)
                         && CURATION == state.getMode()))
                 .collect(Collectors.toList());

@@ -18,8 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static java.lang.String.format;
@@ -250,8 +249,7 @@ public abstract class AnnotationPageBase
         if (switched || !(state.getWindowBeginOffset() <= aBegin
                 && aEnd <= state.getWindowEndOffset())) {
             CAS cas = getEditorCas();
-            state.setFirstVisibleUnit(selectSentenceCovering(cas, aBegin));
-            state.setFocusUnitIndex(getSentenceNumber(cas, aBegin));
+            state.getPagingStrategy().moveToOffset(state, cas, aBegin, CENTERED);
         }
 
         actionRefreshDocument(aTarget);

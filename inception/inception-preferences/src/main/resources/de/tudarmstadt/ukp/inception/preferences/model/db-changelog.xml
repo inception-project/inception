@@ -84,4 +84,35 @@
       constraintName="UK_user_project_preference_user_name_project"
       tableName="user_project_preference" columnNames="user, project, name" />
   </changeSet>
+
+  <changeSet author="INCEpTION Team" id="20210925-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="default_project_preference" />
+      </not>
+    </preConditions>
+
+    <createTable tableName="default_project_preference">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="project" type="BIGINT"/>
+      <column name="name" type="VARCHAR(255)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </createTable>
+
+    <addForeignKeyConstraint 
+      constraintName="FK_default_project_preference_project"
+      baseTableName="default_project_preference" baseColumnNames="project"
+      referencedTableName="project" referencedColumnNames="id"
+      deferrable="false" initiallyDeferred="false"
+      onDelete="CASCADE" onUpdate="CASCADE"/>
+    <addUniqueConstraint
+      constraintName="UK_default_project_preference_name_project"
+      tableName="default_project_preference" columnNames="project, name" />
+  </changeSet>
 </databaseChangeLog>
