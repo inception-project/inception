@@ -128,7 +128,7 @@ public class CuratedDocumentsExporter
                     if (documentService.existsCas(sourceDocument, CURATION_USER)) {
                         // Copy CAS - this is used when importing the project again
                         try (OutputStream os = new FileOutputStream(
-                                new File(curationDir, CURATION_USER + ".ser"))) {
+                                new File(curationCasDir, CURATION_USER + ".ser"))) {
                             documentService.exportCas(sourceDocument, CURATION_USER, os);
                         }
 
