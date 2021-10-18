@@ -26,6 +26,7 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -37,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
@@ -60,8 +62,8 @@ public class CurationMergeServiceImpl
     }
 
     @Override
-    public void mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
-            Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)
+    public Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
+            CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)
         throws UIMAException
     {
         List<AnnotationLayer> layers = annotationService.listSupportedLayers(aDocument.getProject())
@@ -69,13 +71,13 @@ public class CurationMergeServiceImpl
                 .filter(AnnotationLayer::isEnabled) //
                 .collect(toList());
 
-        mergeCasses(aDocument, aTargetCasUserName, aTargetCas, aCassesToMerge, aMergeStrategy,
-                layers);
+        return mergeCasses(aDocument, aTargetCasUserName, aTargetCas, aCassesToMerge,
+                aMergeStrategy, layers);
     }
 
     @Override
-    public void mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
-            Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
+    public Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName,
+            CAS aTargetCas, Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
             List<AnnotationLayer> aLayers)
         throws UIMAException
     {
@@ -83,14 +85,15 @@ public class CurationMergeServiceImpl
 
         DiffResult diff;
         try (StopWatch watch = new StopWatch(LOG, "CasDiff")) {
-            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge, 0,
-                    aTargetCas.getDocumentText().length()).toResult();
+            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge, 0, Integer.MAX_VALUE)
+                    .toResult();
         }
 
         try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
             CasMerge casMerge = new CasMerge(annotationService);
             casMerge.setMergeStrategy(aMergeStrategy);
-            casMerge.reMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas, aCassesToMerge);
+            return casMerge.reMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
+                    aCassesToMerge);
         }
     }
 }
