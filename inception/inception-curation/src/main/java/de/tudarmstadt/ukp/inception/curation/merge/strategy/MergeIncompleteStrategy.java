@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+
 import java.lang.invoke.MethodHandles;
 import java.util.Optional;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,5 +56,11 @@ public class MergeIncompleteStrategy
         }
 
         return Optional.of(aCfgs.getConfigurations().get(0));
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, SHORT_PREFIX_STYLE).toString();
     }
 }
