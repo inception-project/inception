@@ -411,6 +411,7 @@ public class MtasDocumentIndex
     {
         List<Integer> fullDocSet = getUniqueDocuments(aStatisticRequest);
         Map<String, LayerStatistics> allStats = new HashMap<String, LayerStatistics>();
+        Map<String, LayerStatistics> nonNullStats = new HashMap<String, LayerStatistics>();
         Set<AnnotationFeature> features = aStatisticRequest.getFeatures();
 
         for (AnnotationFeature feature : features) {
@@ -421,6 +422,9 @@ public class MtasDocumentIndex
             LayerStatistics results = getLayerStatistics(aStatisticRequest, searchString,
                     fullDocSet);
             results.setFeature(feature);
+            if (results.getMaximum() > 0) {
+                nonNullStats.put(layer.getUiName() + "." + feature.getUiName(), results);
+            }
             allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
         }
         AnnotationLayer rawText = new AnnotationLayer();
@@ -439,12 +443,14 @@ public class MtasDocumentIndex
 
         results.setFeature(token);
         allStats.put("Raw text.token", results);
+        nonNullStats.put("Raw text.token", results);
 
         results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
         results.setFeature(sentence);
         allStats.put("Raw text.sentence", results);
+        nonNullStats.put("Raw text.sentence", results);
 
-        return new StatisticsResult(aStatisticRequest, allStats, aStatisticRequest.getFeatures());
+        return new StatisticsResult(aStatisticRequest, allStats, nonNullStats, aStatisticRequest.getFeatures());
     }
 
     @Override

@@ -29,7 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-public class StatisticsResult implements Serializable
+public class StatisticsResult
+    implements Serializable
 {
     private final OptionalInt minTokenPerDoc;
     private final OptionalInt maxTokenPerDoc;
@@ -37,16 +38,25 @@ public class StatisticsResult implements Serializable
     private final Project project;
     private final String query;
     private final Map<String, LayerStatistics> results;
+    private final Map<String, LayerStatistics> nonNullResults;
     private final Set<AnnotationFeature> features;
 
     public StatisticsResult(StatisticRequest aStatisticRequest,
             Map<String, LayerStatistics> aResults, Set<AnnotationFeature> aFeatures)
+    {
+        this(aStatisticRequest, aResults, null, aFeatures);
+    }
+
+    public StatisticsResult(StatisticRequest aStatisticRequest,
+            Map<String, LayerStatistics> aResults, Map<String, LayerStatistics> aNonNullResults,
+            Set<AnnotationFeature> aFeatures)
     {
         maxTokenPerDoc = aStatisticRequest.getMaxTokenPerDoc();
         minTokenPerDoc = aStatisticRequest.getMinTokenPerDoc();
         user = aStatisticRequest.getUser();
         project = aStatisticRequest.getProject();
         results = aResults;
+        nonNullResults = aNonNullResults;
         query = aStatisticRequest.getQuery();
         features = aFeatures;
     }
@@ -59,6 +69,11 @@ public class StatisticsResult implements Serializable
     public Map<String, LayerStatistics> getResults()
     {
         return results;
+    }
+
+    public Map<String, LayerStatistics> getNonNullResults()
+    {
+        return nonNullResults;
     }
 
     public void featureResultExists(AnnotationLayer aLayer, AnnotationFeature aFeature)

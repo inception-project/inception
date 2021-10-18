@@ -29,18 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 public class LayerStatistics
     implements Serializable
 {
-    /*
-     * /** The stats to be calculated private static final String DOC_COUNT = "n"; private static
-     * final String TOTAL = "sum"; private static final String MINIMUM = "min"; private static final
-     * String MAXIMUM = "max"; private static final String MEAN = "mean"; private static final
-     * String MEDIAN = "median"; private static final String STANDARD_DEVIATION =
-     * "standarddeviation";
-     * 
-     */
-
-    // public static final String STATS = DOC_COUNT + "," + TOTAL + "," + MINIMUM + "," + MAXIMUM +
-    // ","
-    // + MEAN + "," + MEDIAN + "," + STANDARD_DEVIATION;
     public static final String STATS = Metrics.mtasRegExp();
     public static final List<String> STATS_LIST = Arrays.asList(STATS.split(","));
 

@@ -72,6 +72,7 @@ public class StatisticsExporter
         aOut.printRecord(completeList);
 
         for (LayerStatistics ls : aStatsList) {
+
             List<Object> resultsList = new ArrayList<Object>();
             resultsList.add(ls.getFeature().getLayer().getUiName());
             resultsList.add(ls.getFeature().getUiName());
@@ -85,7 +86,12 @@ public class StatisticsExporter
                 if (metric == Metrics.DOC_COUNT.uiName) {
                     continue;
                 }
-                resultsList.add(ls.getMetric(Metrics.uiToInternal(metric), true));
+                if (ls.getFeature().getUiName() == "sentence") {
+                    resultsList.add("n/a");
+                }
+                else {
+                    resultsList.add(ls.getMetric(Metrics.uiToInternal(metric), true));
+                }
             }
             aOut.printRecord(resultsList);
         }

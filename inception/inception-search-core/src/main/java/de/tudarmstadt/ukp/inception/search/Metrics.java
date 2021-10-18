@@ -27,8 +27,8 @@ public enum Metrics
 {
     DOC_COUNT("n", "Number of Documents"),
     SUM("sum", "Sum"),
-    MIN("min", "Min"),
-    MAX("max", "Max"),
+    MIN("min", "Minimum"),
+    MAX("max", "Maximum"),
     MEAN("mean", "Mean"),
     MEDIAN("median", "Median"),
     STANDARD_DEVIATION("standarddeviation", "Standard Deviation");

@@ -73,7 +73,7 @@ public class StatisticsOptions
     {
         String granularity = "";
         String metric = "";
-        if (aGranularity == Granularities.PER_DOCUMENT) {
+        if (aGranularity == Granularities.PER_TOKEN) {
             granularity = "";
         }
         if (aGranularity == Granularities.PER_SENTENCE) {

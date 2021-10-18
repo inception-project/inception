@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.OptionalInt;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -32,6 +33,7 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -69,6 +71,7 @@ import de.tudarmstadt.ukp.inception.search.Metrics;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
+import de.tudarmstadt.ukp.inception.support.help.DocLink;
 
 public class StatisticsAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -99,16 +102,23 @@ public class StatisticsAnnotationSidebar
     private List<IColumn> columns;
     private DefaultDataTable resultsTable;
 
+    private DocLink helpLink;
     private DropDownChoice<String> granularityChoice;
     private DropDownChoice<String> statisticChoice;
     private DropDownChoice<String> formatChoice;
 
     private AjaxDownloadLink exportButton;
 
+    private CheckBox nonNullCheckBox;
+    private boolean hideNull;
+    Map<String, LayerStatistics> withoutProblematicStats;
+
     private String selectedFormat;
     private String selectedStatistic;
     private String selectedGranularity;
     private String propertyExpressionStatistic;
+
+    //private StatisticsResult result;
 
     private List<LayerStatistics> layerStatsList;
     private List<AnnotationFeature> features;
@@ -139,10 +149,18 @@ public class StatisticsAnnotationSidebar
         selectedStatistic = null;
         propertyExpressionStatistic = "";
 
+        hideNull = false;
+        //result = null;
+        withoutProblematicStats = null;
+
         layerStatsList = null;
         features = annotationService.listAnnotationFeature((projectModel.getObject()));
 
         Form<StatisticsOptions> statisticsForm = new Form<>("settings", statisticsOptions);
+
+        // helpLink.setBody(Model.of("<i class=\"fas fa-question-circle\"></i>"
+        // + " <span class=\"nav-link active p-0 d-none d-lg-inline\">Help</span>"));
+        statisticsForm.add(new DocLink("statisticsHelpLink", "sect_search_core"));
 
         granularityChoice = new DropDownChoice<String>(GRANULARITY,
                 new PropertyModel<String>(this, "selectedGranularity"), GRANULARITY_LEVELS)
@@ -167,6 +185,10 @@ public class StatisticsAnnotationSidebar
         };
         statisticsForm.add(statisticChoice);
 
+        nonNullCheckBox = new CheckBox("nonNull", new PropertyModel<Boolean>(this, "hideNull"));
+        nonNullCheckBox.setOutputMarkupId(true);
+        statisticsForm.add(nonNullCheckBox);
+
         LambdaAjaxButton<StatisticsOptions> calculateButton = new LambdaAjaxButton<StatisticsOptions>(
                 "calculate", this::actionCalculate);
         statisticsForm.add(calculateButton);
@@ -178,9 +200,10 @@ public class StatisticsAnnotationSidebar
         columns.add(new PropertyColumn(new Model<String>("Features"), "getLayerFeatureName",
                 "getLayerFeatureName"));
 
-        resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 30);
+        resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 20);
         resultsTable.setOutputMarkupId(true);
-
+        resultsTable.setOutputMarkupPlaceholderTag(true);
+        resultsTable.add(visibleWhen(() -> columns.size() > 1));
         statisticsForm.add(resultsTable);
 
         formatChoice = new DropDownChoice<String>(FORMAT,
@@ -203,9 +226,6 @@ public class StatisticsAnnotationSidebar
         statisticsForm.add(exportButton);
 
         exportButton.setOutputMarkupPlaceholderTag(true);
-        // exportButton.setOutputMarkupId(true);
-
-        // exportButton.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
         mainContainer.add(statisticsForm);
     }
@@ -227,12 +247,19 @@ public class StatisticsAnnotationSidebar
         }
 
         try {
-            if (layerStatsList == null) {
-                StatisticsResult result = searchService.getProjectStatistics(currentUser,
-                        projectModel.getObject(), OptionalInt.empty(), OptionalInt.empty(),
-                        new HashSet<AnnotationFeature>(features));
-                layerStatsList = new ArrayList<>(result.getResults().values());
-            }
+            /*
+             * result = searchService.getProjectStatistics(currentUser, projectModel.getObject(),
+             * OptionalInt.empty(), OptionalInt.empty(), new HashSet<AnnotationFeature>(features));
+             * 
+             */
+            withoutProblematicStats = hideNull
+                    ? searchService.getProjectStatistics(currentUser, projectModel.getObject(),
+                            OptionalInt.empty(), OptionalInt.empty(),
+                            new HashSet<AnnotationFeature>(features)).getNonNullResults()
+                    : searchService.getProjectStatistics(currentUser, projectModel.getObject(),
+                            OptionalInt.empty(), OptionalInt.empty(),
+                            new HashSet<AnnotationFeature>(features)).getResults();
+
         }
         catch (ExecutionException e) {
             // e.printStackTrace();
@@ -248,6 +275,12 @@ public class StatisticsAnnotationSidebar
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
+        //withoutProblematicStats = hideNull ? result.getNonNullResults() : result.getResults();
+
+        if (Granularities.uiToInternal(selectedGranularity) == Granularities.PER_SENTENCE) {
+            withoutProblematicStats.remove("Raw text.sentence");
+        }
+        layerStatsList = new ArrayList<LayerStatistics>(withoutProblematicStats.values());
 
         try {
             propertyExpressionStatistic = StatisticsOptions.buildPropertyExpression(
