@@ -103,6 +103,7 @@ public class CurationWorkflowExporterTest
     private CurationWorkflow curationWorkflow()
     {
         CurationWorkflow curationWorkflow = new CurationWorkflow();
+        curationWorkflow.setProject(project);
         curationWorkflow.setMergeStrategy(factory.getId());
         factory.writeTraits(curationWorkflow, new ThresholdBasedMergeStrategyTraits());
         return curationWorkflow;

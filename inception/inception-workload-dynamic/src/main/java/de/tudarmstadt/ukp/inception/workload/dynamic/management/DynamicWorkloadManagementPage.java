@@ -92,7 +92,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.core.utils.RequestCycleUtils;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
@@ -587,20 +586,17 @@ public class DynamicWorkloadManagementPage
             }
 
             @Override
-            public List<SourceDocument> getChoices()
+            public List<SourceDocument> getChoices(String aInput)
             {
-                final String input = RequestCycleUtils
-                        .getQueryParameterValue("filter[filters][0][value]").toString();
-
                 List<SourceDocument> result = new ArrayList<>();
 
                 if (userSelection.getModelObject() != null) {
-                    if (input != null) {
+                    if (aInput != null) {
                         for (SourceDocument sourceDocument : documentService
                                 .listAnnotatableDocuments(currentProject.getObject(),
                                         userSelection.getModelObject())
                                 .keySet()) {
-                            if (sourceDocument.getName().contains(input)) {
+                            if (sourceDocument.getName().contains(aInput)) {
                                 result.add(sourceDocument);
                             }
                         }
