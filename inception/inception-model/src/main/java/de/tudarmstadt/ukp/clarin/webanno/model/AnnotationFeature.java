@@ -125,7 +125,7 @@ public class AnnotationFeature
     @Column(length = 64000)
     private String traits;
 
-    private boolean curatable;
+    private boolean curatable = true;
 
     public AnnotationFeature()
     {
