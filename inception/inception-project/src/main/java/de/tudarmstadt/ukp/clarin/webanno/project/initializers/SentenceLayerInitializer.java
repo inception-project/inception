@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
-import static java.util.Arrays.asList;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,9 +56,7 @@ public class SentenceLayerInitializer
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return asList(
-                // Because locks to token boundaries
-                TokenLayerInitializer.class);
+        return Collections.emptyList();
     }
 
     @Override
@@ -71,7 +69,7 @@ public class SentenceLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer sentenceLayer = new AnnotationLayer(Sentence.class.getName(), "Sentence",
-                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, NO_OVERLAP);
+                SPAN_TYPE, aProject, true, AnchoringMode.CHARACTERS, NO_OVERLAP);
 
         // Since the user cannot turn off validation for the sentence layer if there is any kind of
         // problem with the validation functionality we are conservative here and disable validation
