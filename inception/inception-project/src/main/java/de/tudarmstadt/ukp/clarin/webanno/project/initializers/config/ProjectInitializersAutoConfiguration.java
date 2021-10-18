@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.OrthographyLayerIn
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSetInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SemPredArgLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SentenceLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SofaChangeOperationTagSetInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
@@ -169,5 +170,11 @@ public class ProjectInitializersAutoConfiguration
     public TokenLayerInitializer tokenLayerInitializer(AnnotationSchemaService aSchemaService)
     {
         return new TokenLayerInitializer(aSchemaService);
+    }
+
+    @Bean
+    public SentenceLayerInitializer sentenceLayerInitializer(AnnotationSchemaService aSchemaService)
+    {
+        return new SentenceLayerInitializer(aSchemaService);
     }
 }
