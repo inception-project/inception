@@ -42,6 +42,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -172,8 +173,8 @@ public class CasMerge
      *            a map of {@code CAS}s for each users and the random merge
      * @throws UIMAException
      */
-    public void reMergeCas(DiffResult aDiff, SourceDocument aTargetDocument, String aTargetUsername,
-            CAS aTargetCas, Map<String, CAS> aCases)
+    public Set<LogMessage> reMergeCas(DiffResult aDiff, SourceDocument aTargetDocument,
+            String aTargetUsername, CAS aTargetCas, Map<String, CAS> aCases)
         throws UIMAException
     {
         silenceEvents = true;
@@ -187,7 +188,7 @@ public class CasMerge
 
         // If there is nothing to merge, bail out
         if (aCases.isEmpty()) {
-            return;
+            return Collections.emptySet();
         }
 
         Map<String, List<CAS>> casMap = new LinkedHashMap<>();
@@ -202,17 +203,23 @@ public class CasMerge
 
         List<String> layerNames = new ArrayList<>(type2layer.keySet());
 
-        // Move token layer to front
-        if (layerNames.contains(Token.class.getName())) {
-            layerNames.remove(Token.class.getName());
-            layerNames.add(0, Token.class.getName());
-        }
-
-        // Move sentence layer to front
-        if (layerNames.contains(Sentence.class.getName())) {
-            layerNames.remove(Sentence.class.getName());
-            layerNames.add(0, Sentence.class.getName());
-        }
+        // As long as we retain tokens and sentences in clearAnnotations, we do not have to merge
+        // them at all
+        layerNames.remove(Token.class.getName());
+        layerNames.remove(Sentence.class.getName());
+        // If we start treating tokens and sentences as properly editable annotations, we should
+        // give them priority and we should no longer preserve them in clearAnnotations
+        // // Move token layer to front
+        // if (layerNames.contains(Token.class.getName())) {
+        // layerNames.remove(Token.class.getName());
+        // layerNames.add(0, Token.class.getName());
+        // }
+        //
+        // // Move sentence layer to front (i.e. before the token layer!)
+        // if (layerNames.contains(Sentence.class.getName())) {
+        // layerNames.remove(Sentence.class.getName());
+        // layerNames.add(0, Sentence.class.getName());
+        // }
 
         // First we process the SPAN layers since other layers can refer to them (via slot features
         // or as relation layers).
@@ -362,6 +369,8 @@ public class CasMerge
             eventPublisher.publishEvent(
                     new BulkAnnotationEvent(this, aTargetDocument, aTargetUsername, null));
         }
+
+        return messages;
     }
 
     /**
