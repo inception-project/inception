@@ -27,8 +27,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
@@ -38,8 +36,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DocumentImportExportServiceAutoConfiguration#projectMetaInfExporter}.
+ * </p>
+ */
 public class ProjectMetaInfExporter
     implements ProjectExporter
 {
@@ -48,7 +52,12 @@ public class ProjectMetaInfExporter
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Autowired ProjectService projectService;
+    private final ProjectService projectService;
+
+    public ProjectMetaInfExporter(ProjectService aProjectService)
+    {
+        projectService = aProjectService;
+    }
 
     @Override
     public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
