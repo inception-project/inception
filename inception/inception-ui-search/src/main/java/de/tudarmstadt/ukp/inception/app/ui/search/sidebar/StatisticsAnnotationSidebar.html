@@ -26,7 +26,7 @@
                     <div class="d-flex mb-2">
                         <div class="btn-group flex-content flex-h-container" role="group">
                             <form wicket:id="settings">
-                                <select wicket:id="granularity" class="form-select-sm" data-container="body" wicket:message="title:granularity"/>
+                                <select wicket:id="granularity" class="form-select-sm flex-static-item align-stretch" data-container="body" wicket:message="title:granularity"/>
                                 <button wicket:id="statisticsHelpLink" type="submit" class="btn flex-static-item" wicket:message="title:help">
                                     <i class="fas fa-question-mark"></i>
                                 </button>
@@ -45,15 +45,15 @@
                                     </span>
                                 </button>
                                 <table class="dataview" cellspacing="0" wicket:id="datatable" wicket:message="title:results">[table]</table>
-
-                                <select wicket:id="format" class="form-select-sm" data-container="body" wicket:message="title:format"/>
-                                <!-- <button wicket:id="export" type="submit" class="btn btn-primary border-start flex-static-item" wicket:message="title:calculate"> -->
-                                <button wicket:id="export" type="submit" class="btn btn-primary flex" wicket:message="title:calculate">
-                                <span class="d-none d-xl-inline">
+                                <div class="input-group">
+                                    <select class="form-select flex-content" wicket:id="format" data-container="body"/>
+                                    <a wicket:id="export" class="btn btn-primary">
+                                        <span class="d-none d-xl-inline">
                                         <wicket:message key="export" />
                                     </span>
-                                    <i class="fas fa-download"></i>
-                                </button>
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                </div>
                             </form>
                         </div>
                     </div>

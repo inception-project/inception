@@ -118,8 +118,6 @@ public class StatisticsAnnotationSidebar
     private String selectedGranularity;
     private String propertyExpressionStatistic;
 
-    //private StatisticsResult result;
-
     private List<LayerStatistics> layerStatsList;
     private List<AnnotationFeature> features;
 
@@ -150,7 +148,6 @@ public class StatisticsAnnotationSidebar
         propertyExpressionStatistic = "";
 
         hideNull = false;
-        //result = null;
         withoutProblematicStats = null;
 
         layerStatsList = null;
@@ -158,9 +155,7 @@ public class StatisticsAnnotationSidebar
 
         Form<StatisticsOptions> statisticsForm = new Form<>("settings", statisticsOptions);
 
-        // helpLink.setBody(Model.of("<i class=\"fas fa-question-circle\"></i>"
-        // + " <span class=\"nav-link active p-0 d-none d-lg-inline\">Help</span>"));
-        statisticsForm.add(new DocLink("statisticsHelpLink", "sect_search_core"));
+        statisticsForm.add(new DocLink("statisticsHelpLink", "sect_statistics"));
 
         granularityChoice = new DropDownChoice<String>(GRANULARITY,
                 new PropertyModel<String>(this, "selectedGranularity"), GRANULARITY_LEVELS)
@@ -247,11 +242,6 @@ public class StatisticsAnnotationSidebar
         }
 
         try {
-            /*
-             * result = searchService.getProjectStatistics(currentUser, projectModel.getObject(),
-             * OptionalInt.empty(), OptionalInt.empty(), new HashSet<AnnotationFeature>(features));
-             * 
-             */
             withoutProblematicStats = hideNull
                     ? searchService.getProjectStatistics(currentUser, projectModel.getObject(),
                             OptionalInt.empty(), OptionalInt.empty(),
@@ -262,7 +252,6 @@ public class StatisticsAnnotationSidebar
 
         }
         catch (ExecutionException e) {
-            // e.printStackTrace();
             LOG.error("Error: " + e.getMessage()
                     + ". This can be caused by an invalid feature name.");
             error("Error: " + e.getMessage() + ". This can be caused by an invalid feature name.");
@@ -275,7 +264,6 @@ public class StatisticsAnnotationSidebar
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
-        //withoutProblematicStats = hideNull ? result.getNonNullResults() : result.getResults();
 
         if (Granularities.uiToInternal(selectedGranularity) == Granularities.PER_SENTENCE) {
             withoutProblematicStats.remove("Raw text.sentence");
