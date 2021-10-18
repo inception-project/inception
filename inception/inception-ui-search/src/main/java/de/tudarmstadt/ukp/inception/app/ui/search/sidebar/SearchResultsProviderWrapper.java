@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -65,6 +66,7 @@ public class SearchResultsProviderWrapper
         }
 
         List<ResultsGroup> subList = resultsGroupsSublist(first, count);
+        Collections.sort(subList);
         searchResultsProvider.getPagesCacheModel().getObject().putPage(first, count, subList);
         return subList.iterator();
     }
