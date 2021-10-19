@@ -23,7 +23,7 @@ Basic UTF-8 plain text. Automatic sentence and token detection will be performed
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| Plain text
+| Plain text (`text`)
 | yes
 | yes
 | no
@@ -39,7 +39,7 @@ Basic UTF-8 plain text where each line is interpreted as one sentence.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| Plain text
+| Plain text (`textlines`)
 | yes
 | no
 | no
@@ -56,7 +56,7 @@ sentence.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| Plain text
+| Plain text (`pretokenized-textlines`)
 | yes
 | no
 | no

@@ -27,7 +27,7 @@ Tries its best to export the annotations into an inline XML representation. Over
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:https://uima.apache.org/d/uimaj-current/apidocs/org/apache/uima/util/CasToInlineXml.html[UIMA Inline XML]
+| link:https://uima.apache.org/d/uimaj-current/apidocs/org/apache/uima/util/CasToInlineXml.html[UIMA Inline XML] (`dkpro-core-uima-inline-xml`)
 | no
 | yes
 | yes
