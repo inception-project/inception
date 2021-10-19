@@ -33,7 +33,7 @@ to a specific set of columns that must appear exactly in a specific order: *toke
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| IMS CWB VRT
+| IMS CWB VRT (`imscwb`)
 | yes
 | no
 | no
