@@ -503,6 +503,27 @@ public interface DocumentService
         throws IOException;
 
     /**
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created.
+     * This method is good for bulk-importing because it accepts the project type system as a
+     * parameter instead of collecting it on every call.
+     * 
+     * @param aDocument
+     *            the source document.
+     * @param aUpgradeMode
+     *            whether to upgrade the type system in the CAS.
+     * @param aAccessMode
+     *            CAS access mode.
+     * @param aFullProjectTypeSystem
+     *            the project type system.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading the CAS.
+     */
+    CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode, TypeSystemDescription aFullProjectTypeSystem)
+        throws IOException;
+
+    /**
      * List all the {@link AnnotationDocument annotation documents} in a given project.
      * <p>
      * Note that this method does may not return an {@link AnnotationDocument annotation document}
