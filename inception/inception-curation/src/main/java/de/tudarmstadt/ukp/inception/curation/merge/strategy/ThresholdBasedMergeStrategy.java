@@ -18,12 +18,14 @@
 package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
 import static java.util.Comparator.comparing;
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +73,8 @@ public class ThresholdBasedMergeStrategy
                 .collect(Collectors.toList());
 
         if (cfgsAboveUserThreshold.isEmpty()) {
-            // INCOMPLETE
+            LOG.trace(" `-> Not merging as no configuration meets the user threshold [{}]",
+                    userThreshold);
             return Optional.empty();
         }
 
@@ -90,6 +93,16 @@ public class ThresholdBasedMergeStrategy
         }
 
         // DISPUTED
+        LOG.trace(" `-> Not merging as confidence [{}] is zero or does not meet the threshold [{}]",
+                confidence, confidenceThreshold);
         return Optional.empty();
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, SHORT_PREFIX_STYLE) //
+                .append("userThreshold", userThreshold)//
+                .append("confidenceThreshold", confidenceThreshold).toString();
     }
 }

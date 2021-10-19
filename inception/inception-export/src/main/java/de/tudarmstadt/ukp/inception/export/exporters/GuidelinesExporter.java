@@ -30,8 +30,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
@@ -41,9 +39,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 
-@Component
-public class GuildelinesExporter
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DocumentImportExportServiceAutoConfiguration#guidelinesExporter}.
+ * </p>
+ */
+public class GuidelinesExporter
     implements ProjectExporter
 {
     public static final String GUIDELINE = "guideline";
@@ -51,7 +55,12 @@ public class GuildelinesExporter
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Autowired ProjectService projectService;
+    private final ProjectService projectService;
+
+    public GuidelinesExporter(ProjectService aProjectService)
+    {
+        projectService = aProjectService;
+    }
 
     /**
      * Copy Project guidelines from the file system of this project to the export folder
