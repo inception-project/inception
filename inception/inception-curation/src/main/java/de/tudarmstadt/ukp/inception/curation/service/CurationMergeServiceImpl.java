@@ -33,12 +33,15 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
@@ -55,10 +58,13 @@ public class CurationMergeServiceImpl
     private final static Logger LOG = getLogger(lookup().lookupClass());
 
     private final AnnotationSchemaService annotationService;
+    private final AnnotationEditorProperties annotationEditorProperties;
 
-    public CurationMergeServiceImpl(AnnotationSchemaService aAnnotationService)
+    public CurationMergeServiceImpl(AnnotationSchemaService aAnnotationService,
+            AnnotationEditorProperties aAnnotationEditorProperties)
     {
         annotationService = aAnnotationService;
+        annotationEditorProperties = aAnnotationEditorProperties;
     }
 
     @Override
@@ -82,6 +88,14 @@ public class CurationMergeServiceImpl
         throws UIMAException
     {
         List<DiffAdapter> adapters = getDiffAdapters(annotationService, aLayers);
+
+        if (!annotationEditorProperties.isSentenceLayerEditable()) {
+            adapters.removeIf(adapter -> Sentence._TypeName.equals(adapter.getType()));
+        }
+
+        if (!annotationEditorProperties.isTokenLayerEditable()) {
+            adapters.removeIf(adapter -> Token._TypeName.equals(adapter.getType()));
+        }
 
         DiffResult diff;
         try (StopWatch watch = new StopWatch(LOG, "CasDiff")) {
