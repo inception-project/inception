@@ -17,15 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
+import de.tudarmstadt.ukp.inception.search.ResultsGroup;
+
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 
 public class SearchResultsPagesCache
     implements Serializable
@@ -41,7 +42,9 @@ public class SearchResultsPagesCache
 
     public List<ResultsGroup> getPage(long pageFirst, long pageCount)
     {
-        return pages.get(new PageKey(pageFirst, pageCount));
+        List<ResultsGroup> page = pages.get(new PageKey(pageFirst, pageCount));
+        Collections.sort(page);
+        return page;
     }
 
     public void putPage(long pageFirst, long pageCount, List<ResultsGroup> aPage)

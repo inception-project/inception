@@ -40,6 +40,7 @@ import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -1039,6 +1040,11 @@ public class MtasDocumentIndex
             catch (Exception e) {
                 log.error("Unable to process query results", e);
             }
+        }
+        for (String key : results.keySet()) {
+            List<SearchResult> toBeSorted = results.get(key);
+            Collections.sort(toBeSorted);
+            results.replace(key, results.get(key), toBeSorted);
         }
         return results;
     }

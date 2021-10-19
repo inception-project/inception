@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 import static java.util.Collections.emptyIterator;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -89,6 +90,7 @@ public class SearchResultsProvider
                             first, count)
                     .entrySet().stream().map(e -> new ResultsGroup(e.getKey(), e.getValue()))
                     .collect(Collectors.toList());
+            Collections.sort(queryResults);
 
             pagesCacheModel.getObject().putPage(first, count, queryResults);
             return queryResults.iterator();
