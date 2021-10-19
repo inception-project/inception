@@ -26,7 +26,7 @@ category of the current span.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:https://www.clips.uantwerpen.be/conll2003/ner/[CoNLL 2003]
+| link:https://www.clips.uantwerpen.be/conll2003/ner/[CoNLL 2003] (`conll2003`)
 | yes
 | yes
 | no

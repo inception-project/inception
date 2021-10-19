@@ -30,6 +30,7 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.curation.export.CuratedDocumentsExporter;
 import de.tudarmstadt.ukp.inception.curation.export.CurationWorkflowExporter;
 import de.tudarmstadt.ukp.inception.curation.merge.DefaultMergeStrategyFactory;
@@ -78,9 +79,10 @@ public class CurationServiceAutoConfiguration
     }
 
     @Bean
-    public CurationMergeService curationMergeService(AnnotationSchemaService aAnnotationService)
+    public CurationMergeService curationMergeService(AnnotationSchemaService aAnnotationService,
+            AnnotationEditorProperties aAnnotationEditorProperties)
     {
-        return new CurationMergeServiceImpl(aAnnotationService);
+        return new CurationMergeServiceImpl(aAnnotationService, aAnnotationEditorProperties);
     }
 
     @Bean
