@@ -27,7 +27,7 @@ The link:https://persistence.uni-leipzig.org/nlp2rdf/[NLP Interchange Format] (N
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:https://persistence.uni-leipzig.org/nlp2rdf/[NIF]
+| link:https://persistence.uni-leipzig.org/nlp2rdf/[NIF] (`nif`)
 | yes
 | yes
 | no

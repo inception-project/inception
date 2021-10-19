@@ -25,7 +25,7 @@ WebLicht platform.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:http://weblicht.sfs.uni-tuebingen.de/weblichtwiki/index.php/The_TCF_Format[TCF]
+| link:http://weblicht.sfs.uni-tuebingen.de/weblichtwiki/index.php/The_TCF_Format[TCF] (`tcf`)
 | yes
 | no
 | no

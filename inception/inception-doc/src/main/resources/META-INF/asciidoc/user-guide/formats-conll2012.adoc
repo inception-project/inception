@@ -34,7 +34,7 @@ Note that this format cannot deal with the following situations:
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:http://conll.cemantix.org/2012/data.html[CoNLL 2012]
+| link:http://conll.cemantix.org/2012/data.html[CoNLL 2012] (`conll2012`)
 | yes
 | yes
 | no

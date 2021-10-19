@@ -24,7 +24,7 @@ Sentences are separated by a blank new line.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:http://www.cnts.ua.ac.be/conll2002/ner/[CoNLL 2002]
+| link:http://www.cnts.ua.ac.be/conll2002/ner/[CoNLL 2002] (`conll2002`)
 | yes
 | yes
 | no
