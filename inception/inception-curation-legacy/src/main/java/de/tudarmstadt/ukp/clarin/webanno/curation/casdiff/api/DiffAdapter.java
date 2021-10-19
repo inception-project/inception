@@ -30,6 +30,9 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
 
 public interface DiffAdapter
 {
+    /**
+     * @return UIMA type name to which the adapter applies.
+     */
     String getType();
 
     Collection<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,

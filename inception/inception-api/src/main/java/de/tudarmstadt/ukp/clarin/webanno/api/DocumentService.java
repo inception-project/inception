@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -430,6 +431,15 @@ public interface DocumentService
             CasAccessMode aMode)
         throws IOException;
 
+    Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)
+        throws IOException;
+
+    Map<String, CAS> readAllCasesSharedNoUpgrade(SourceDocument aDoc, Collection<User> aUsers)
+        throws IOException;
+
+    Map<String, CAS> readAllCasesSharedNoUpgrade(SourceDocument aDoc, String... aUsernames)
+        throws IOException;
+
     /**
      * Read the initial CAS for the given document. If the CAS does not exist then it is created.
      * This method does not perform an upgrade of the type@Override system in the CAS.
@@ -490,6 +500,27 @@ public interface DocumentService
      */
     CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
             TypeSystemDescription aFullProjectTypeSystem)
+        throws IOException;
+
+    /**
+     * Read the initial CAS for the given document. If the CAS does not exist then it is created.
+     * This method is good for bulk-importing because it accepts the project type system as a
+     * parameter instead of collecting it on every call.
+     * 
+     * @param aDocument
+     *            the source document.
+     * @param aUpgradeMode
+     *            whether to upgrade the type system in the CAS.
+     * @param aAccessMode
+     *            CAS access mode.
+     * @param aFullProjectTypeSystem
+     *            the project type system.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was a problem loading the CAS.
+     */
+    CAS createOrReadInitialCas(SourceDocument aDocument, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode, TypeSystemDescription aFullProjectTypeSystem)
         throws IOException;
 
     /**

@@ -1,11 +1,10 @@
-= Curation
+= Curation Sidebar
 
 ====
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `curation.sidebar.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
 ====
 
-Curation i.e. the process of combining finished annotated documents into a final curated document,
-can be done via the *Curation Page* in INCEpTION (see <<sect_curation, Curation>>) 
+Curation i.e. the process of combining finished annotated documents into a final curated document, can be done via the *Curation Page* in INCEpTION (see <<sect_curation, Curation>>) 
 but also via the *Curation Sidebar* on the *Annotation Page*.
 
 image::curation-sidebar.png[Curation Sidebar]

@@ -39,7 +39,7 @@
   </dependencies>
   <profiles>
     <profile>
-      <id>docker-buildx-amd64</id>
+      <id>docker-buildx</id>
       <properties>
         <!-- This property us referenced in the Dockerfile -->
         <docker.jarfile>inception-app-webapp-${project.version}-standalone.jar</docker.jarfile>
@@ -105,7 +105,7 @@
                 <configuration>
                   <workingDirectory>${project.build.directory}/buildx</workingDirectory>
                   <executable>docker</executable>
-                  <commandlineArgs>buildx build --platform=linux/amd64 -t ${docker.image.name}:latest -t ${docker.image.name}:${project.version} .</commandlineArgs>
+                  <commandlineArgs>buildx build --push --platform=linux/amd64,linux/arm64 -t ${docker.image.name}:latest -t ${docker.image.name}:${project.version} .</commandlineArgs>
                 </configuration>
               </execution>
             </executions>

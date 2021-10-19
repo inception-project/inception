@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
-import static com.googlecode.wicket.jquery.core.utils.RequestCycleUtils.getQueryParameterValue;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -125,16 +124,14 @@ class UserSelectionPanel
             }
 
             @Override
-            public List<User> getChoices()
+            public List<User> getChoices(String aInput)
             {
-                final String input = getQueryParameterValue("filter[filters][0][value]").toString();
-
                 List<User> result = new ArrayList<>();
 
                 if (config.isHideUsers()) {
                     // only offer the user matching what the input entered into the field
-                    if (isNotBlank(input)) {
-                        User user = userRepository.get(input);
+                    if (isNotBlank(aInput)) {
+                        User user = userRepository.get(aInput);
                         if (user != null) {
                             result.add(user);
                         }
@@ -143,8 +140,8 @@ class UserSelectionPanel
                 else {
                     // offer all enabled users matching the input
                     userRepository.listEnabledUsers().stream()
-                            .filter(user -> input == null || user.getUsername().contains(input)
-                                    || user.getUiName().contains(input))
+                            .filter(user -> aInput == null || user.getUsername().contains(aInput)
+                                    || user.getUiName().contains(aInput))
                             .forEach(result::add);
                 }
 

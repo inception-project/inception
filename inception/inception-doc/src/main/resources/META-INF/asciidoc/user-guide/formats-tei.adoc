@@ -29,7 +29,7 @@ For more details about the supported element types, see the link:https://dkpro.g
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:https://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html[TEI P5]
+| link:https://www.tei-c.org/release/doc/tei-p5-doc/en/html/index.html[TEI P5]  (`dkpro-core-tei`)
 | yes
 | yes
 | no

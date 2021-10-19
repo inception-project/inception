@@ -189,6 +189,10 @@ public class AnnotationPreferencesDialogContent
                     .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                     .collect(Collectors.toList()));
 
+            // Make sure the visibility logic of the right sidebar sees if there are selectable
+            // layers
+            state.refreshSelectableLayers(annotationEditorProperties);
+
             userPreferencesService.savePreference(state, userDao.getCurrentUsername());
         }
         catch (IOException e) {

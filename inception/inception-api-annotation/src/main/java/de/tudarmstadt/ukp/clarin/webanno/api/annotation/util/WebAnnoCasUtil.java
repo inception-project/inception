@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_BEGIN;
 import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_END;
 import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_LANGUAGE;
+import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
+import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -38,12 +40,14 @@ import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
@@ -86,6 +90,23 @@ public class WebAnnoCasUtil
     public static CAS createCas() throws ResourceInitializationException
     {
         return createCas(null);
+    }
+
+    /**
+     * Creates a copy of the given CAS.
+     * 
+     * @param aOriginal
+     *            the original CAS
+     * @return the copy
+     * @throws UIMAException
+     *             if there was a problem preparing the copy.
+     */
+    public static CAS createCasCopy(CAS aOriginal) throws UIMAException
+    {
+        CAS copy = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aOriginal));
+        deserializeCASComplete(serializer, (CASImpl) getRealCas(copy));
+        return copy;
     }
 
     public static CAS getRealCas(CAS aCas)
@@ -273,11 +294,17 @@ public class WebAnnoCasUtil
      */
     public static boolean isBeginEndInSameSentence(CAS aCas, int aBegin, int aEnd)
     {
-        // return !aCas.select(getType(aCas, Sentence.class)).covering(aBegin, aEnd).isEmpty();
-        return StreamSupport
-                .stream(aCas.getAnnotationIndex(getType(aCas, Sentence.class)).spliterator(), false)
-                .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd())
-                .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd()).findFirst().isPresent();
+        var sentenceIndex = aCas.getAnnotationIndex(getType(aCas, Sentence.class));
+
+        if (sentenceIndex.isEmpty()) {
+            throw new IllegalArgumentException("Unable to check if start and end offsets are in "
+                    + "the same sentence because the CAS contains no sentences!");
+        }
+
+        return StreamSupport.stream(sentenceIndex.spliterator(), false) //
+                .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd()) //
+                .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd()) //
+                .findFirst().isPresent();
     }
 
     public static int getAddr(FeatureStructure aFS)
