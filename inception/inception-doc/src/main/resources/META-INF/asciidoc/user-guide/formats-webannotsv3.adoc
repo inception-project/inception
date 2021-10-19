@@ -23,7 +23,7 @@ The file format used by WebAnno version 3.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| <<sect_webannotsv,WebAnno TSV 3>>
+| <<sect_webannotsv,WebAnno TSV 3>> (`ctsv3`)
 | yes
 | yes
 | yes
