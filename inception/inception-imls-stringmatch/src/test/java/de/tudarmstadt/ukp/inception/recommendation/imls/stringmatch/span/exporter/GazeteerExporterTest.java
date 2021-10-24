@@ -127,7 +127,8 @@ public class GazeteerExporterTest
         // Export the project
         FullProjectExportRequest exportRequest = new FullProjectExportRequest(sourceProject, null,
                 false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(sourceProject, null,
+                "test");
         ExportedProject exportedProject = new ExportedProject();
         sut.exportData(exportRequest, monitor, exportedProject, temporaryFolder);
 

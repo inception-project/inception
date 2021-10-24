@@ -19,16 +19,17 @@ package de.tudarmstadt.ukp.inception.project.export;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.zip.ZipFile;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTaskHandle;
 
 public interface ProjectExportService
 {
@@ -51,4 +52,6 @@ public interface ProjectExportService
             FullProjectExportRequest aRequest, String aUsername);
 
     ProjectExportTaskHandle startTask(ProjectExportTask aTask);
+
+    List<ProjectExportTask> listRunningExportTasks(Project aProject);
 }

@@ -55,6 +55,8 @@ public class ProjectExportPanel2
             }
         };
         add(exporters);
+
+        add(new RunningExportsPanel("runningExports", aModel));
     }
 
     private List<ProjectExportExtension> listExtensions()

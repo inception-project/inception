@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.project.export.task.backup;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,7 +39,9 @@ public class BackupProjectExporterPanel
 
     public BackupProjectExporterPanel(String aId, IModel<Project> aModel)
     {
-        super(aId, aModel);
+        super(aId);
+
+        setDefaultModel(Model.of(new FullProjectExportRequest(aModel.getObject(), null, true)));
 
         add(new LambdaAjaxLink("startExport", this::actionStartExport));
     }

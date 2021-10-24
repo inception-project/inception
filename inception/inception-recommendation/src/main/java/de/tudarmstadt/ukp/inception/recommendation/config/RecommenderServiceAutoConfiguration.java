@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistr
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.evaluation.EvaluationSimulationPageMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.exporter.RecommenderExporter;
+import de.tudarmstadt.ukp.inception.recommendation.footer.RecommendationEventFooterItem;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationAcceptedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommendationRejectedEventAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderDeletedEventAdapter;
@@ -173,5 +174,12 @@ public class RecommenderServiceAutoConfiguration
     {
         return new RecommendationMetricsImpl(aRecService);
 
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public RecommendationEventFooterItem recommendationEventFooterItem()
+    {
+        return new RecommendationEventFooterItem();
     }
 }

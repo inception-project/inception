@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskStat
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
@@ -68,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -78,7 +80,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportTask;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportRequest;
 import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportTask;
@@ -363,9 +364,9 @@ public class ProjectExportServiceImpl
         request.setFilenameTag(aRequest.getFilenameTag());
         request.setFormat(aRequest.getFormat());
         request.setIncludeInProgress(aRequest.isIncludeInProgress());
-        
-        CuratedDocumentsProjectExportTask task = new CuratedDocumentsProjectExportTask(
-                request, aUsername);
+
+        CuratedDocumentsProjectExportTask task = new CuratedDocumentsProjectExportTask(request,
+                aUsername);
 
         return startTask(task);
     }
@@ -407,6 +408,16 @@ public class ProjectExportServiceImpl
         }
 
         return task.task.getMonitor();
+    }
+
+    @Override
+    public List<ProjectExportTask> listRunningExportTasks(Project aProject)
+    {
+        return tasks.values().stream() //
+                .filter(taskInfo -> aProject.equals(taskInfo.task.getRequest().getProject())) //
+                .filter(taskInfo -> taskInfo.future.isCancelled()) //
+                .map(taskInfo -> taskInfo.task) //
+                .collect(toList());
     }
 
     @Override

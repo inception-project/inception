@@ -19,9 +19,14 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div>
-      <div wicket:id="exporters">
-        <div wicket:id="exporter" />
+    <div class="scrolling flex-content flex-h-container">
+      <div class="scrolling flex-content flex-v-container">
+        <div wicket:id="exporters">
+          <div wicket:id="exporter" />
+        </div>
+      </div>
+      <div class="flex-sidebar scrolling border-start" style="min-width: 30rem;">
+        <div wicket:id="runningExports"/>
       </div>
     </div>
   </wicket:panel>

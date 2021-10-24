@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.websocket.controller;
+package de.tudarmstadt.ukp.inception.recommendation.footer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

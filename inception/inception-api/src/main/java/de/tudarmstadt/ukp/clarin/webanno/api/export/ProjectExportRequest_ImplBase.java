@@ -43,5 +43,7 @@ public abstract class ProjectExportRequest_ImplBase
         return project;
     }
 
+    public abstract String getTitle();
+
     public abstract String getFilenameTag();
 }

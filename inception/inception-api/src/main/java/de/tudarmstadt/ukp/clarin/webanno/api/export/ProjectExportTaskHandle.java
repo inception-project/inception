@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.model;
+package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -42,6 +42,22 @@ public class ProjectExportTaskHandle
     {
         runId = NEXT_ID.getAndIncrement();
         instanceId = INSTANCE_ID;
+    }
+
+    public ProjectExportTaskHandle(long aInstanceId, long aRunId)
+    {
+        runId = aRunId;
+        instanceId = aInstanceId;
+    }
+
+    public long getInstanceId()
+    {
+        return instanceId;
+    }
+
+    public long getRunId()
+    {
+        return runId;
     }
 
     @Override

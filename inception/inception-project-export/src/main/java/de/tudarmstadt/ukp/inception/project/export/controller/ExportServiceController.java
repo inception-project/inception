@@ -15,18 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.model;
+package de.tudarmstadt.ukp.inception.project.export.controller;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
-
-public interface ProjectExportTask<R extends ProjectExportRequest_ImplBase>
-    extends Runnable
+public interface ExportServiceController
 {
-    ProjectExportTaskHandle getHandle();
-
-    ProjectExportTaskMonitor getMonitor();
-
-    R getRequest();
+    static final String API_BASE = "/ui";
 }

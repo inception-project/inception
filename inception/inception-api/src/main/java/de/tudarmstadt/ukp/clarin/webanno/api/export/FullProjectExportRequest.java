@@ -89,4 +89,10 @@ public class FullProjectExportRequest
     {
         filenameTag = aFilenameTag;
     }
+
+    @Override
+    public String getTitle()
+    {
+        return String.format("Project archive (%s)", format);
+    }
 }

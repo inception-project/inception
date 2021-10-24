@@ -1,0 +1,168 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.inception.project.export.controller;
+
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static java.util.stream.Collectors.toList;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.security.Principal;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.annotation.SendToUser;
+import org.springframework.messaging.simp.annotation.SubscribeMapping;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportState;
+import io.swagger.v3.oas.annotations.Operation;
+
+@Controller
+@RequestMapping(ExportServiceController.API_BASE)
+public class ExportServiceControllerImpl
+    implements ExportServiceController
+{
+    private final UserDao userService;
+    private final ProjectService projectService;
+    private final ProjectExportService projectExportService;
+
+    @Autowired
+    public ExportServiceControllerImpl(UserDao aUserService, ProjectService aProjectService,
+            ProjectExportService aProjectExportService)
+    {
+        userService = aUserService;
+        projectService = aProjectService;
+        projectExportService = aProjectExportService;
+    }
+
+    @SubscribeMapping(NS_PROJECT + "/{" + PAGE_PARAM_PROJECT + "}/exports")
+    public List<ProjectExportState> getCurrentExportStates(Principal aPrincipal,
+            @DestinationVariable(PAGE_PARAM_PROJECT) long aProjectId)
+        throws AccessForbiddenException
+    {
+        // Should use this instead:
+        // https://newbedev.com/how-to-reject-topic-subscription-based-on-user-rights-with-spring-websocket
+        Project project = projectService.getProject(aProjectId);
+        User user = userService.get(aPrincipal.getName());
+
+        if (!projectService.existsProjectPermissionLevel(user, project, MANAGER)
+                && !userService.isAdministrator(user)) {
+            throw new AccessForbiddenException("Access denied");
+        }
+
+        return projectExportService.listRunningExportTasks(project).stream() //
+                .map(taskInfo -> new ProjectExportState(taskInfo.getMonitor(),
+                        taskInfo.getMonitor().getMessages())) //
+                .collect(toList());
+    }
+
+    @MessageExceptionHandler
+    @SendToUser("/queue/errors")
+    public String handleException(Throwable exception)
+    {
+        return exception.getMessage();
+    }
+
+    @MessageMapping("/export/{instanceId}/{runId}/cancel")
+    public void cancelDownload(@DestinationVariable("instanceId") long aInstanceId,
+            @DestinationVariable("runId") long aRunId)
+    {
+        ProjectExportTaskHandle handle = new ProjectExportTaskHandle(aInstanceId, aRunId);
+        ProjectExportTaskMonitor monitor = projectExportService.getTaskMonitor(handle);
+
+        if (monitor == null) {
+            return;
+        }
+
+        Project project = projectService.getProject(monitor.getProjectId());
+        User user = userService.getCurrentUser();
+        if (!projectService.hasRole(user, project, PermissionLevel.MANAGER)) {
+            return;
+        }
+
+        projectExportService.cancelTask(handle);
+    }
+
+    @Operation(summary = "Download a finished export")
+    @GetMapping(value = ("/export/{instanceId}/{runId}"), produces = { "application/zip" })
+    public ResponseEntity<InputStreamResource> projectExport(
+            @PathVariable("instanceId") long aInstanceId, @PathVariable("runId") long aRunId)
+        throws Exception
+    {
+        ProjectExportTaskHandle handle = new ProjectExportTaskHandle(aInstanceId, aRunId);
+        ProjectExportTaskMonitor monitor = projectExportService.getTaskMonitor(handle);
+
+        if (monitor == null || (monitor.getState() != ProjectExportTaskState.COMPLETED)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        // Get project (this also ensures that it exists
+        Project project = projectService.getProject(monitor.getProjectId());
+        User user = userService.getCurrentUser();
+        if (!projectService.hasRole(user, project, PermissionLevel.MANAGER)) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        File exportedFile = monitor.getExportedFile();
+
+        // Turn the file into a resource and auto-delete the file when the resource closes the
+        // stream.
+        InputStreamResource result = new InputStreamResource(new FileInputStream(exportedFile)
+        {
+            @Override
+            public void close() throws IOException
+            {
+                super.close();
+                FileUtils.forceDelete(exportedFile);
+            }
+        });
+
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.valueOf("application/zip"));
+        httpHeaders.setContentLength(exportedFile.length());
+        httpHeaders.set("Content-Disposition",
+                "attachment; filename=\"" + exportedFile.getName() + "\"");
+
+        return new ResponseEntity<>(result, httpHeaders, HttpStatus.OK);
+    }
+}

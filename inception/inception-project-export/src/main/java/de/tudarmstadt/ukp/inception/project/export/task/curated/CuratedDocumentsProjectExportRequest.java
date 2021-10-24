@@ -67,6 +67,7 @@ public class CuratedDocumentsProjectExportRequest
         return includeInProgress;
     }
 
+    @Override
     public String getFilenameTag()
     {
         return filenameTag;
@@ -75,5 +76,11 @@ public class CuratedDocumentsProjectExportRequest
     public void setFilenameTag(String aFilenameTag)
     {
         filenameTag = aFilenameTag;
+    }
+
+    @Override
+    public String getTitle()
+    {
+        return String.format("Curated documents (%s)", format);
     }
 }

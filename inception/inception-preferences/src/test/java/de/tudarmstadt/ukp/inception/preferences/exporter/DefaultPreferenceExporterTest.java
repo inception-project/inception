@@ -83,8 +83,7 @@ public class DefaultPreferenceExporterTest
     {
         // Export the project
         FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        exportRequest.setProject(project);
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
         ExportedProject exportedProject = new ExportedProject();
         File file = mock(File.class);
 

@@ -109,7 +109,7 @@ public class LayerExporterTest
     {
         // Export the project
         FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
         ExportedProject exportedProject = new ExportedProject();
 
         sut.exportData(exportRequest, monitor, exportedProject, workFolder);

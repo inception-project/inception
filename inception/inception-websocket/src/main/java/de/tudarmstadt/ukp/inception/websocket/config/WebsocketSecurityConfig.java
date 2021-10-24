@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.websocket.config;
 
 import static org.springframework.messaging.simp.SimpMessageType.DISCONNECT;
+import static org.springframework.messaging.simp.SimpMessageType.MESSAGE;
 import static org.springframework.messaging.simp.SimpMessageType.SUBSCRIBE;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -42,6 +43,8 @@ public class WebsocketSecurityConfig
                 .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")
                 // authenticated users can subscribe
                 .simpTypeMatchers(SUBSCRIBE).authenticated()
+                // authenticated clients can send messages
+                .simpTypeMatchers(MESSAGE).authenticated()
                 // all other messages are denied (if you later want users to send messages,
                 // you need to allow it for specific channels)
                 .anyMessage().denyAll();

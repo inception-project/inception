@@ -24,26 +24,31 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskStat
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
+import static java.lang.String.format;
 
 import java.io.File;
 import java.nio.channels.ClosedByInterruptException;
+
+import javax.servlet.ServletContext;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTaskHandle;
 
 public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_ImplBase>
-    implements ProjectExportTask<R>
+    implements ProjectExportTask<R>, InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -51,21 +56,28 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
     // ProjectExportService to allow access to tasks.
     private final ProjectExportTaskHandle handle;
     private final String username;
-    private final ProjectExportTaskMonitor monitor;
+    private ProjectExportTaskMonitor monitor;
     private final Project project;
     private final R request;
 
+    private @Autowired ServletContext servletContext;
     private @Autowired DocumentService documentService;
+    private @Autowired SimpMessagingTemplate msgTemplate;
 
     public ProjectExportTask_ImplBase(Project aProject, R aRequest, String aUsername)
     {
         project = aProject;
         request = aRequest;
         username = aUsername;
-        
-        handle = new ProjectExportTaskHandle();
-        monitor = new ProjectExportTaskMonitor();
 
+        handle = new ProjectExportTaskHandle();
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception
+    {
+        monitor = new NotifyingProjectExportTaskMonitor(project, handle, request.getTitle(),
+                msgTemplate);
         monitor.setCreateTime(System.currentTimeMillis());
     }
 
@@ -83,6 +95,8 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             File exportedFile = export(request, monitor);
 
             monitor.setExportedFile(exportedFile);
+            monitor.setDownloadUrl(format("%s/ui/export/%d/%d", servletContext.getContextPath(),
+                    monitor.getHandle().getInstanceId(), monitor.getHandle().getRunId()));
             monitor.setStateAndProgress(COMPLETED, 100);
         }
         catch (ClosedByInterruptException | InterruptedException e) {
@@ -98,8 +112,7 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
         }
     }
 
-    public abstract File export(R aRequest, ProjectExportTaskMonitor aMonitor)
-        throws Exception;
+    public abstract File export(R aRequest, ProjectExportTaskMonitor aMonitor) throws Exception;
 
     @Override
     public R getRequest()
