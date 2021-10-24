@@ -42,6 +42,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -172,8 +173,8 @@ public class CasMerge
      *            a map of {@code CAS}s for each users and the random merge
      * @throws UIMAException
      */
-    public void reMergeCas(DiffResult aDiff, SourceDocument aTargetDocument, String aTargetUsername,
-            CAS aTargetCas, Map<String, CAS> aCases)
+    public Set<LogMessage> reMergeCas(DiffResult aDiff, SourceDocument aTargetDocument,
+            String aTargetUsername, CAS aTargetCas, Map<String, CAS> aCases)
         throws UIMAException
     {
         silenceEvents = true;
@@ -187,7 +188,7 @@ public class CasMerge
 
         // If there is nothing to merge, bail out
         if (aCases.isEmpty()) {
-            return;
+            return Collections.emptySet();
         }
 
         Map<String, List<CAS>> casMap = new LinkedHashMap<>();
@@ -362,6 +363,8 @@ public class CasMerge
             eventPublisher.publishEvent(
                     new BulkAnnotationEvent(this, aTargetDocument, aTargetUsername, null));
         }
+
+        return messages;
     }
 
     /**

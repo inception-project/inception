@@ -56,7 +56,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 
 @Configuration
-@EnableConfigurationProperties(PrimitiveUimaFeatureSupportProperties.class)
+@EnableConfigurationProperties({ //
+        PrimitiveUimaFeatureSupportProperties.class, //
+        AnnotationEditorPropertiesImpl.class })
 public class AnnotationSchemaServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;

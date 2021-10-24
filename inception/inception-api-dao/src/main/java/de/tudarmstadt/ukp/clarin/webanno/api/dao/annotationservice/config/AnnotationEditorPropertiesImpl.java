@@ -15,14 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.stereotype.Component;
 
-@Component
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via {@code AnnotationSchemaServiceAutoConfiguration}.
+ * </p>
+ */
 @ConfigurationProperties("ui")
 @ManagedResource
 public class AnnotationEditorPropertiesImpl

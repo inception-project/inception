@@ -64,7 +64,7 @@ public class InspectableThreadPoolExecutor
     {
         return new BasicThreadFactory.Builder() //
                 .daemon(true) //
-                .namingPattern("recommender-worker-%d") //
+                .namingPattern("inception-worker-%d") //
                 .priority(MIN_PRIORITY) //
                 .build();
     }

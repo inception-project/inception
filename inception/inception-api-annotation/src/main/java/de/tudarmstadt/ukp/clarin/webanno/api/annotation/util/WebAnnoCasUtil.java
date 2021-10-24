@@ -294,11 +294,17 @@ public class WebAnnoCasUtil
      */
     public static boolean isBeginEndInSameSentence(CAS aCas, int aBegin, int aEnd)
     {
-        // return !aCas.select(getType(aCas, Sentence.class)).covering(aBegin, aEnd).isEmpty();
-        return StreamSupport
-                .stream(aCas.getAnnotationIndex(getType(aCas, Sentence.class)).spliterator(), false)
-                .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd())
-                .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd()).findFirst().isPresent();
+        var sentenceIndex = aCas.getAnnotationIndex(getType(aCas, Sentence.class));
+
+        if (sentenceIndex.isEmpty()) {
+            throw new IllegalArgumentException("Unable to check if start and end offsets are in "
+                    + "the same sentence because the CAS contains no sentences!");
+        }
+
+        return StreamSupport.stream(sentenceIndex.spliterator(), false) //
+                .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd()) //
+                .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd()) //
+                .findFirst().isPresent();
     }
 
     public static int getAddr(FeatureStructure aFS)

@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.inception.curation.service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 
 public interface CurationMergeService
@@ -44,13 +46,29 @@ public interface CurationMergeService
      *            the merge strategy
      * @param aLayers
      *            the layers to be merged
+     * @return any messages generated during the merge process.
      */
-    void mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
+    Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
             Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy,
             List<AnnotationLayer> aLayers)
         throws UIMAException;
 
-    void mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
+    /**
+     * Merge the data of multiple CASes into a target CAS using the given merge strategy.
+     * 
+     * @param aDocument
+     *            the source document for the target CAS
+     * @param aTargetCasUserName
+     *            the name of the user owning the target CAS
+     * @param aTargetCas
+     *            the target CAS
+     * @param aCassesToMerge
+     *            the CASes to be merged
+     * @param aMergeStrategy
+     *            the merge strategy
+     * @return any messages generated during the merge process.
+     */
+    Set<LogMessage> mergeCasses(SourceDocument aDocument, String aTargetCasUserName, CAS aTargetCas,
             Map<String, CAS> aCassesToMerge, MergeStrategy aMergeStrategy)
         throws UIMAException;
 }
