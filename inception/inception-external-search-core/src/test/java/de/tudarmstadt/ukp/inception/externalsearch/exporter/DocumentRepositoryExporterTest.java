@@ -54,6 +54,7 @@ public class DocumentRepositoryExporterTest
         initMocks(this);
 
         project = new Project();
+        project.setId(1l);
         project.setName("Test Project");
 
         when(externalSearchService.listDocumentRepositories(project))

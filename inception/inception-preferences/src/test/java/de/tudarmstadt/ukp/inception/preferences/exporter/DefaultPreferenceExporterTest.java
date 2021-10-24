@@ -58,6 +58,7 @@ public class DefaultPreferenceExporterTest
         openMocks(this);
 
         project = new Project();
+        project.setId(1l);
         project.setName("Test Project");
 
         sut = new DefaultProjectPreferencesExporter(preferencesService);
