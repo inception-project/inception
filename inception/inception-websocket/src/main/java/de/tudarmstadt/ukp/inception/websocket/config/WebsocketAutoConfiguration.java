@@ -41,4 +41,10 @@ public class WebsocketAutoConfiguration
     {
         return new LoggedEventFooterItem();
     }
+
+    @Bean
+    public WebsocketConfig websocketConfig()
+    {
+        return new WebsocketConfig();
+    }
 }

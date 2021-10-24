@@ -72,6 +72,7 @@ public class RecommenderExporterTest
         layer.setName("Layer");
 
         project = new Project();
+        project.setId(1l);
         project.setName("Test Project");
 
         when(annotationService.findLayer(project, layer.getName())).thenReturn(layer);
