@@ -17,11 +17,11 @@
 -->
 
 <template>
-  <ul class="list-group list-group-flush">
-    <li v-show="!runningExports.length" class="list-group-item p-1">
-      No exports.
-    </li>
-    <li v-for="item in runningExports" :key="item.handle.runId" class="list-group-item p-1">
+  <div v-show="!runningExports.length" class="flex-content flex-h-container no-data-notice">
+    No exports.
+  </div>
+  <ul v-show="runningExports.length" class="list-group list-group-flush">
+    <li v-for="item in runningExports" :key="item.handle.runId" class="list-group-item p-2">
       <div class="d-flex w-100 justify-content-between"> 
         <h5 class="mb-1">{{item.title}}</h5>
         <button type="button" class="btn-close" aria-label="Close" v-on:click="cancel(item)"/>
@@ -110,9 +110,9 @@ module.exports = {
       this.connected = false;
     },
     
-    cancel(runningExport) {
-      this.runningExports = this.runningExports.filter(i => i !== runningExport);
-      this.stompClient.send('/app' + this.topicChannel + "/cancel", {}, runningExport);
+    cancel(task) {
+      this.runningExports = this.runningExports.filter(i => i !== task);
+      this.stompClient.send('/app/export/' + task.handle.runId + '/cancel', {}, {});
     }
   },
   mounted() {

@@ -95,8 +95,8 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             File exportedFile = export(request, monitor);
 
             monitor.setExportedFile(exportedFile);
-            monitor.setDownloadUrl(format("%s/ui/export/%d/%d", servletContext.getContextPath(),
-                    monitor.getHandle().getInstanceId(), monitor.getHandle().getRunId()));
+            monitor.setDownloadUrl(format("%s/ui/export/%s", servletContext.getContextPath(),
+                    monitor.getHandle().getRunId()));
             monitor.setStateAndProgress(COMPLETED, 100);
         }
         catch (ClosedByInterruptException | InterruptedException e) {

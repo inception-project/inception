@@ -18,30 +18,42 @@
 package de.tudarmstadt.ukp.inception.project.export.task.backup;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.project.export.FormatDropdownChoice;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.settings.ProjectExporterPanelImplBase;
 
 public class BackupProjectExporterPanel
-    extends Panel
+    extends ProjectExporterPanelImplBase
 {
     private static final long serialVersionUID = 4106224145358319779L;
 
     private @SpringBean ProjectExportService projectExportService;
+    private @SpringBean DocumentImportExportService importExportService;
 
     public BackupProjectExporterPanel(String aId, IModel<Project> aModel)
     {
         super(aId);
 
-        setDefaultModel(Model.of(new FullProjectExportRequest(aModel.getObject(), null, true)));
+        CompoundPropertyModel<FullProjectExportRequest> model = CompoundPropertyModel
+                .of(new FullProjectExportRequest(aModel.getObject(), null, true));
+
+        setDefaultModel(model);
+
+        DropDownChoice<String> format = new FormatDropdownChoice("format", model.bind("format"));
+        format.add(new FormComponentUpdatingBehavior());
+        add(format);
 
         add(new LambdaAjaxLink("startExport", this::actionStartExport));
     }

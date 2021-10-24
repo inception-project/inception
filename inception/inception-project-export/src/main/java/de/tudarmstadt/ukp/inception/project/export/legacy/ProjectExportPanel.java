@@ -20,20 +20,15 @@ package de.tudarmstadt.ukp.inception.project.export.legacy;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Objects.nonNull;
-import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
@@ -54,13 +49,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
-import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
+import de.tudarmstadt.ukp.inception.project.export.FormatDropdownChoice;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 
 /**
@@ -162,29 +157,7 @@ public class ProjectExportPanel
 
     private DropDownChoice<String> createFormatDropdown(String aId)
     {
-        DropDownChoice<String> format = new DropDownChoice<>(aId);
-        format.setChoiceRenderer(new ChoiceRenderer<String>()
-        {
-            private static final long serialVersionUID = -6139450455463062998L;
-
-            @Override
-            public Object getDisplayValue(String aObject)
-            {
-                if (FullProjectExportRequest.FORMAT_AUTO.equals(aObject)) {
-                    return FullProjectExportRequest.FORMAT_AUTO;
-                }
-
-                return importExportService.getFormatById(aObject).get().getName();
-            }
-        });
-        format.setChoices(LoadableDetachableModel.of(() -> {
-            List<String> formats = importExportService.getWritableFormats().stream() //
-                    .sorted(Comparator.comparing(FormatSupport::getName)) //
-                    .map(FormatSupport::getId) //
-                    .collect(toCollection(ArrayList::new));
-            formats.add(0, FullProjectExportRequest.FORMAT_AUTO);
-            return formats;
-        }));
+        DropDownChoice<String> format = new FormatDropdownChoice(aId);
         // Needed to update the model with the selection because the DownloadLink does
         // not trigger a form submit.
         format.add(new FormComponentUpdatingBehavior());

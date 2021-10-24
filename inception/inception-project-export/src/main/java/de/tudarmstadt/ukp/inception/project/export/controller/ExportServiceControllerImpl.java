@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.project.export.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static java.util.stream.Collectors.toList;
 
 import java.io.File;
@@ -41,6 +40,7 @@ import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -77,10 +77,10 @@ public class ExportServiceControllerImpl
         projectExportService = aProjectExportService;
     }
 
-    @SubscribeMapping(NS_PROJECT + "/{" + PAGE_PARAM_PROJECT + "}/exports")
+    @SubscribeMapping(NS_PROJECT + "/{projectId}/exports")
     public List<ProjectExportState> getCurrentExportStates(Principal aPrincipal,
-            @DestinationVariable(PAGE_PARAM_PROJECT) long aProjectId)
-        throws AccessForbiddenException
+            @DestinationVariable("projectId") long aProjectId)
+        throws AccessDeniedException
     {
         // Should use this instead:
         // https://newbedev.com/how-to-reject-topic-subscription-based-on-user-rights-with-spring-websocket
@@ -89,7 +89,7 @@ public class ExportServiceControllerImpl
 
         if (!projectService.existsProjectPermissionLevel(user, project, MANAGER)
                 && !userService.isAdministrator(user)) {
-            throw new AccessForbiddenException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
 
         return projectExportService.listRunningExportTasks(project).stream() //
@@ -105,11 +105,10 @@ public class ExportServiceControllerImpl
         return exception.getMessage();
     }
 
-    @MessageMapping("/export/{instanceId}/{runId}/cancel")
-    public void cancelDownload(@DestinationVariable("instanceId") long aInstanceId,
-            @DestinationVariable("runId") long aRunId)
+    @MessageMapping("/export/{runId}/cancel")
+    public void cancelDownload(@DestinationVariable("runId") String aRunId)
     {
-        ProjectExportTaskHandle handle = new ProjectExportTaskHandle(aInstanceId, aRunId);
+        ProjectExportTaskHandle handle = new ProjectExportTaskHandle(aRunId);
         ProjectExportTaskMonitor monitor = projectExportService.getTaskMonitor(handle);
 
         if (monitor == null) {
@@ -127,11 +126,10 @@ public class ExportServiceControllerImpl
 
     @Operation(summary = "Download a finished export")
     @GetMapping(value = ("/export/{instanceId}/{runId}"), produces = { "application/zip" })
-    public ResponseEntity<InputStreamResource> projectExport(
-            @PathVariable("instanceId") long aInstanceId, @PathVariable("runId") long aRunId)
+    public ResponseEntity<InputStreamResource> projectExport(@PathVariable("runId") String aRunId)
         throws Exception
     {
-        ProjectExportTaskHandle handle = new ProjectExportTaskHandle(aInstanceId, aRunId);
+        ProjectExportTaskHandle handle = new ProjectExportTaskHandle(aRunId);
         ProjectExportTaskMonitor monitor = projectExportService.getTaskMonitor(handle);
 
         if (monitor == null || (monitor.getState() != ProjectExportTaskState.COMPLETED)) {

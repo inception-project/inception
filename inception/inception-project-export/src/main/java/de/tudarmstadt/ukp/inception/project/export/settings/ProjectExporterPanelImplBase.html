@@ -18,14 +18,10 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:extend>
-    <h2>Export curated documents</h2>
-    <div class="text-end">
-      <button wicket:id="startExport" type="button" class="btn btn-primary text-nowrap">
-        <i class="fas fa-download" aria-hidden="true"></i>&nbsp;
-        <wicket:message key="export"/>
-      </button>
+  <wicket:panel>
+    <div class="card p-2">
+      <wicket:child />
     </div>
-  </wicket:extend>
+  </wicket:panel>
 </body>
 </html>

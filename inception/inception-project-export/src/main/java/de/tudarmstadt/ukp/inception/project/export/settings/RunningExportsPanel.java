@@ -42,7 +42,6 @@ import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceR
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
-import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageController;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_ADMIN")
 public class RunningExportsPanel
@@ -50,7 +49,6 @@ public class RunningExportsPanel
 {
     private static final long serialVersionUID = -9006607500867612027L;
 
-    private @SpringBean LoggedEventMessageController loggedEventService;
     private @SpringBean ServletContext servletContext;
 
     private IModel<Project> project;

@@ -18,43 +18,50 @@
 package de.tudarmstadt.ukp.inception.project.export.task.curated;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.settings.ProjectExporterPanelImplBase;
 
-public class CuratedDocumentsProjectExporterPanel extends Panel
+public class CuratedDocumentsProjectExporterPanel
+    extends ProjectExporterPanelImplBase
+
 {
     private static final long serialVersionUID = 4106224145358319779L;
-    
+
     private @SpringBean ProjectExportService projectExportService;
-    
-    public CuratedDocumentsProjectExporterPanel(String aId, IModel<CuratedDocumentsProjectExportRequest> aModel)
+
+    public CuratedDocumentsProjectExporterPanel(String aId,
+            IModel<CuratedDocumentsProjectExportRequest> aModel)
     {
-        super(aId, aModel);
-        
+        super(aId);
+
+        setDefaultModel(aModel);
+
         add(new LambdaAjaxLink("startExport", this::actionStartExport));
     }
-    
+
     @SuppressWarnings("unchecked")
-    public IModel<CuratedDocumentsProjectExportRequest> getModel() {
+    public IModel<CuratedDocumentsProjectExportRequest> getModel()
+    {
         return (IModel<CuratedDocumentsProjectExportRequest>) getDefaultModel();
     }
 
-    public CuratedDocumentsProjectExportRequest getModelObject() {
+    public CuratedDocumentsProjectExportRequest getModelObject()
+    {
         return (CuratedDocumentsProjectExportRequest) getDefaultModelObject();
     }
 
-    private void actionStartExport(AjaxRequestTarget aTarget) {
+    private void actionStartExport(AjaxRequestTarget aTarget)
+    {
         var request = getModelObject();
         request.setFilenameTag("_project");
-        
+
         CuratedDocumentsProjectExportTask task = new CuratedDocumentsProjectExportTask(request,
-                SecurityContextHolder.getContext()
-                .getAuthentication().getName());
+                SecurityContextHolder.getContext().getAuthentication().getName());
 
         projectExportService.startTask(task);
     }

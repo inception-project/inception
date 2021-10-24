@@ -166,18 +166,35 @@ public class ProjectExportServiceImpl
     public File exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
         throws ProjectExportException, IOException, InterruptedException
     {
+        File projectZipFile = File.createTempFile(aRequest.getProject().getSlug(), ".zip");
+        boolean success = false;
+        try {
+            exportProject(aRequest, aMonitor, projectZipFile);
+            success = true;
+            return projectZipFile;
+        }
+        finally {
+            if (!success) {
+                FileUtils.forceDelete(projectZipFile);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            File projectZipFile)
+        throws ProjectExportException, IOException, InterruptedException
+    {
         boolean success = false;
         File exportTempDir = null;
         try (var logCtx = withProjectLogger(aRequest.getProject())) {
             // Directory to store source documents and annotation documents
-            exportTempDir = File.createTempFile("webanno-project", "export");
+            exportTempDir = File.createTempFile("inception-project", "export");
             exportTempDir.delete();
             exportTempDir.mkdirs();
 
-            // Target file
-            File projectZipFile = new File(exportTempDir.getAbsolutePath() + ".zip");
-
-            ExportedProject exProjekt = exportProject(aRequest, aMonitor, exportTempDir);
+            ExportedProject exProjekt = exportProjectToPath(aRequest, aMonitor, exportTempDir);
 
             // all metadata and project settings data from the database as JSON file
             File projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
@@ -194,8 +211,6 @@ public class ProjectExportServiceImpl
             }
 
             success = true;
-
-            return projectZipFile;
         }
         finally {
             if (!success && exportTempDir != null) {
@@ -211,7 +226,7 @@ public class ProjectExportServiceImpl
         }
     }
 
-    private ExportedProject exportProject(FullProjectExportRequest aRequest,
+    private ExportedProject exportProjectToPath(FullProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, File aStage)
         throws ProjectExportException, IOException, InterruptedException
     {
@@ -415,7 +430,7 @@ public class ProjectExportServiceImpl
     {
         return tasks.values().stream() //
                 .filter(taskInfo -> aProject.equals(taskInfo.task.getRequest().getProject())) //
-                .filter(taskInfo -> taskInfo.future.isCancelled()) //
+                .filter(taskInfo -> !taskInfo.future.isCancelled()) //
                 .map(taskInfo -> taskInfo.task) //
                 .collect(toList());
     }
@@ -429,7 +444,29 @@ public class ProjectExportServiceImpl
             return false;
         }
 
-        return task.future.cancel(true);
+        boolean cancelled = task.future.cancel(true);
+
+        if (cancelled) {
+            log.debug("Cancelled running export");
+        }
+        else {
+            log.debug("Cancelled completed export");
+        }
+
+        File exportedFile = task.task.getMonitor().getExportedFile();
+        if (exportedFile != null && exportedFile.exists()) {
+            log.debug("Deleted exported file {}", exportedFile);
+            try {
+                FileUtils.forceDelete(exportedFile);
+            }
+            catch (IOException ex) {
+                log.error("Unable to clean up cancelled exported file [{}]:", exportedFile, ex);
+            }
+        }
+
+        tasks.remove(aHandle);
+
+        return cancelled;
     }
 
     private void cleanUp()

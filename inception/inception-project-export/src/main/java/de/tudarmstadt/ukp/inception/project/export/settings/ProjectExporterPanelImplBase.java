@@ -15,15 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.controller;
+package de.tudarmstadt.ukp.inception.project.export.settings;
 
-public class AccessForbiddenException
-    extends Exception
+import org.apache.wicket.markup.html.panel.Panel;
+
+public abstract class ProjectExporterPanelImplBase
+    extends Panel
 {
-    private static final long serialVersionUID = -6915389529468382443L;
+    private static final long serialVersionUID = -3369730960827133042L;
 
-    public AccessForbiddenException(String aMessage)
+    public ProjectExporterPanelImplBase(String aId)
     {
-        super(aMessage);
+        super(aId);
     }
+
 }

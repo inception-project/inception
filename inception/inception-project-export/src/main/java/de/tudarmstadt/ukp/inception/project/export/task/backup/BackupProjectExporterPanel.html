@@ -18,12 +18,24 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:panel>
+  <wicket:extend>
     <h2>Export backup archive</h2>
-    <button wicket:id="startExport" type="button" class="btn btn-primary text-nowrap">
-      <i class="fas fa-download" aria-hidden="true"></i>&nbsp;
-      <wicket:message key="export"/>
-    </button>
-  </wicket:panel>
+
+    <div class="row form-row">
+      <label wicket:for="format" class="col-sm-4 col-form-label">
+        <wicket:label key="format"/>
+      </label>
+      <div class="col-sm-8">
+        <select wicket:id="format" class="input-group-btn form-select"/>
+      </div>
+    </div>
+    
+    <div class="text-end">
+      <button wicket:id="startExport" type="button" class="btn btn-primary text-nowrap">
+        <i class="fas fa-download" aria-hidden="true"></i>&nbsp;
+        <wicket:message key="export"/>
+      </button>
+    </div>
+  </wicket:extend>
 </body>
 </html>
