@@ -23,7 +23,7 @@ The CoNLL 2009 format targets semantic role labeling. Columns are tab-separated.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:http://ufal.mff.cuni.cz/conll2009-st/task-description.html[CoNLL 2009]
+| link:http://ufal.mff.cuni.cz/conll2009-st/task-description.html[CoNLL 2009] (`conll2009`)
 | yes
 | yes
 | no

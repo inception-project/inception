@@ -24,7 +24,7 @@ separated by a blank new line.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:http://universaldependencies.org/format.html[CoNLL-U]
+| link:http://universaldependencies.org/format.html[CoNLL-U] (`conllu`)
 | yes
 | yes
 | no

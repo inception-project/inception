@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBeha
 import static de.tudarmstadt.ukp.inception.curation.merge.CurationTestUtils.loadWebAnnoTsv3;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
-import static org.apache.uima.fit.factory.JCasFactory.createText;
+import static org.apache.uima.fit.factory.CasFactory.createText;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -38,7 +38,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -69,14 +68,12 @@ public class CasMergeSuiteTest
             casByUser.put(inputFile.getName(), List.of(loadWebAnnoTsv3(inputFile).getCas()));
         }
 
-        JCas curatorCas = createText(casByUser.values().stream().flatMap(Collection::stream)
+        CAS curatorCas = createText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
         DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
-        // result.print(System.out);
-
-        sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
+        sut.reMergeCas(result, document, null, curatorCas, getSingleCasByUser(casByUser));
 
         writeAndAssertEquals(curatorCas, aReferenceFolder);
     }
@@ -91,7 +88,7 @@ public class CasMergeSuiteTest
         return casByUserSingle;
     }
 
-    private void writeAndAssertEquals(JCas curatorCas, File aReferenceFolder) throws Exception
+    private void writeAndAssertEquals(CAS curatorCas, File aReferenceFolder) throws Exception
     {
         String targetFolder = "target/test-output/" + getClass().getSimpleName() + "/"
                 + aReferenceFolder.getName();
@@ -111,7 +108,6 @@ public class CasMergeSuiteTest
         String reference = FileUtils.readFileToString(referenceFile, "UTF-8");
         String actual = FileUtils.readFileToString(actualFile, "UTF-8");
 
-        assertThat(reference).isEqualToNormalizingNewlines(actual);
+        assertThat(actual).isEqualToNormalizingNewlines(reference);
     }
-
 }
