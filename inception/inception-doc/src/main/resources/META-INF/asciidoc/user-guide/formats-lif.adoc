@@ -27,7 +27,7 @@ The link:https://wiki.lappsgrid.org/interchange/[LAPPS Interchange Format] (LIF)
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:https://wiki.lappsgrid.org/interchange/[LIF]
+| link:https://wiki.lappsgrid.org/interchange/[LIF] (`lif`)
 | yes
 | yes
 | no

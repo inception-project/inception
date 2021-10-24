@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.workload.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 
 import java.io.Serializable;
@@ -67,21 +68,25 @@ public class WorkloadManagementServiceImpl
         schedulingService = aSchedulingService;
     }
 
-    /**
-     * Returns for a given project a WorkloadManager Object. Also applicable for older INCEpTION
-     * version where the workload feature was not present. Also, if no entity can be found, a new
-     * entry will be created and returned.
+    /*
+     * Method is synchronized to avoid a {@code ConstraintViolationException} if threads are
+     * concurrently trying to access a non-existing {@code WorkloadManager} causing it to be
+     * created.
      */
     @Override
     @Transactional
-    public WorkloadManager loadOrCreateWorkloadManagerConfiguration(Project aProject)
+    public synchronized WorkloadManager loadOrCreateWorkloadManagerConfiguration(Project aProject)
     {
         WorkloadManager result;
         try {
-            result = entityManager
-                    .createQuery("SELECT wm " + "FROM WorkloadManager wm "
-                            + "WHERE wm.project = :projectID", WorkloadManager.class)
-                    .setParameter("projectID", aProject).getSingleResult();
+            String query = join("\n", //
+                    "SELECT wm ", //
+                    "FROM WorkloadManager wm ", //
+                    "WHERE wm.project = :projectID");
+
+            result = entityManager.createQuery(query, WorkloadManager.class) //
+                    .setParameter("projectID", aProject) //
+                    .getSingleResult();
 
             // If the workload strategy set for this project is not there anymore, use the strategy
             // with the lowest order

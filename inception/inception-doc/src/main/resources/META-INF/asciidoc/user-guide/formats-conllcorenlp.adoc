@@ -24,7 +24,7 @@ Sentences are separated by a blank new line.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| link:https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/pipeline/CoNLLOutputter.html[CoreNLP CoNLL-like format]
+| link:https://nlp.stanford.edu/nlp/javadoc/javanlp/edu/stanford/nlp/pipeline/CoNLLOutputter.html[CoreNLP CoNLL-like format] (`conllcorenlp`)
 | yes
 | yes
 | no
