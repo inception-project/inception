@@ -57,6 +57,7 @@ public class CurationWorkflowExporterTest
         openMocks(this);
 
         project = new Project();
+        project.setId(1l);
         project.setName("Test Project");
 
         sut = new CurationWorkflowExporter(curationService);
