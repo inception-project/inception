@@ -71,7 +71,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
@@ -88,7 +87,6 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
                 SecurityAutoConfiguration.class })
 @Import({ //
         ProjectServiceAutoConfiguration.class, //
-        DocumentImportExportServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
