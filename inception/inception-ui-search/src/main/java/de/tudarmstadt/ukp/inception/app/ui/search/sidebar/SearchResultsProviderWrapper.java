@@ -66,7 +66,6 @@ public class SearchResultsProviderWrapper
         }
 
         List<ResultsGroup> subList = resultsGroupsSublist(first, count);
-        Collections.sort(subList);
         searchResultsProvider.getPagesCacheModel().getObject().putPage(first, count, subList);
         return subList.iterator();
     }

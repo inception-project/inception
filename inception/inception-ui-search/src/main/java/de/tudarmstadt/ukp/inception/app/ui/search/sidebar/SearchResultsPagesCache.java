@@ -43,7 +43,7 @@ public class SearchResultsPagesCache
     public List<ResultsGroup> getPage(long pageFirst, long pageCount)
     {
         List<ResultsGroup> page = pages.get(new PageKey(pageFirst, pageCount));
-        Collections.sort(page);
+        //Collections.sort(page);
         return page;
     }
 

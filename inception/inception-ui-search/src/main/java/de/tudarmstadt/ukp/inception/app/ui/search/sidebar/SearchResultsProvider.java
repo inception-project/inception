@@ -79,7 +79,7 @@ public class SearchResultsProvider
         }
 
         if (pagesCacheModel.getObject().containsPage(first, count)) {
-            return pagesCacheModel.getObject().getPage(first, count).iterator();
+            return pagesCacheModel.getObject().getPage(first,count).iterator();
         }
 
         // Query if the results in the given range are not in the cache i.e. if we need to fetch
@@ -90,7 +90,6 @@ public class SearchResultsProvider
                             first, count)
                     .entrySet().stream().map(e -> new ResultsGroup(e.getKey(), e.getValue()))
                     .collect(Collectors.toList());
-            Collections.sort(queryResults);
 
             pagesCacheModel.getObject().putPage(first, count, queryResults);
             return queryResults.iterator();

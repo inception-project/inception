@@ -40,7 +40,6 @@ import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.text.BreakIterator;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,10 +53,12 @@ import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -530,7 +531,7 @@ public class MtasDocumentIndex
                     FIELD_CONTENT);
             // The query is either an actual query (if the method is called from
             // getQueryStatistics in SearchService) or a mock query, e.g. "<Token=\"\"/>"
-            //  (if the method shall return statistics for a layer). The second query always
+            // (if the method shall return statistics for a layer). The second query always
             // counts the sentences for per sentence statistics.
             MtasSpanQuery[] spanQuerys = new MtasSpanQuery[2];
 
@@ -818,14 +819,56 @@ public class MtasDocumentIndex
         return annotateableDocuments;
     }
 
+    private List<LeafReaderContext> sortLeaves(List<LeafReaderContext> aLeaves,
+            IndexSearcher aSearcher, MtasSpanQuery aQuery)
+        throws IOException
+    {
+        List<Pair<LeafReaderContext, Long>> mapToDocId = new ArrayList<Pair<LeafReaderContext, Long>>();
+
+        SpanWeight spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
+                false, 0);
+        for (LeafReaderContext leafReaderContext : aLeaves) {
+            List<Long> allDocIds = new ArrayList<Long>();
+            try {
+                Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
+                if (spans != null) {
+                    while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                        if (segmentReader.numDocs() == segmentReader.maxDoc()
+                                || segmentReader.getLiveDocs().get(spans.docID())) {
+                            Document document = segmentReader.document(spans.docID());
+
+                            String user = document.get(FIELD_USER);
+
+                            String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                            if (rawSourceDocumentId == null) {
+                                continue;
+                            }
+                            allDocIds.add(Long.valueOf(rawSourceDocumentId));
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                log.error("Unable to process query results", e);
+            }
+            if (allDocIds.size() == 1) {
+                mapToDocId.add(Pair.of(leafReaderContext, allDocIds.get(0)));
+            }
+        }
+        mapToDocId.sort(Comparator.<Pair<LeafReaderContext, Long>> comparingLong(Pair::getValue));
+
+        return mapToDocId.stream().map(Pair::getKey).collect(Collectors.toList());
+    }
+
     private Map<String, List<SearchResult>> doQuery(IndexSearcher searcher,
             SearchQueryRequest aRequest, MtasSpanQuery q)
         throws IOException
     {
         Map<String, List<SearchResult>> results = new LinkedHashMap<>();
 
-        ListIterator<LeafReaderContext> leafReaderContextIterator = searcher.getIndexReader()
-                .leaves().listIterator();
+        ListIterator<LeafReaderContext> leafReaderContextIterator = sortLeaves(
+                searcher.getIndexReader().leaves(), searcher, q).listIterator();
 
         Map<SourceDocument, AnnotationDocument> sourceAnnotationDocPairs = documentService
                 .listAnnotatableDocuments(aRequest.getProject(), aRequest.getUser());
@@ -1040,11 +1083,6 @@ public class MtasDocumentIndex
             catch (Exception e) {
                 log.error("Unable to process query results", e);
             }
-        }
-        for (String key : results.keySet()) {
-            List<SearchResult> toBeSorted = results.get(key);
-            Collections.sort(toBeSorted);
-            results.replace(key, results.get(key), toBeSorted);
         }
         return results;
     }
