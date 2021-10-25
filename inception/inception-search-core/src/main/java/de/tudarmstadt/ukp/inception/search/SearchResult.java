@@ -23,7 +23,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class SearchResult
-    implements Serializable, Comparable<SearchResult>
+    implements Serializable
 {
     private static final long serialVersionUID = 2698492628701213714L;
 
@@ -198,6 +198,7 @@ public class SearchResult
         return true;
     }
 
+
     @Override
     public String toString()
     {
@@ -209,11 +210,4 @@ public class SearchResult
                 .append("rightContext", rightContext).toString();
     }
 
-    @Override
-    public int compareTo(SearchResult otherResult)
-    {
-        Long value1 = new Long(documentId);
-        Long value2 = new Long(otherResult.getDocumentId());
-        return value1.compareTo(value2);
-    }
 }

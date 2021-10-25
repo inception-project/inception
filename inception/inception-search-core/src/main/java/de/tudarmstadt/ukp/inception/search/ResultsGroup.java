@@ -22,7 +22,7 @@ import java.util.List;
 import java.lang.Math;
 
 public class ResultsGroup
-    implements Serializable //, Comparable<ResultsGroup>
+    implements Serializable
 {
     private static final long serialVersionUID = -4448435773623997560L;
 
@@ -45,16 +45,4 @@ public class ResultsGroup
         return results;
     }
 
-    /*
-    @Override
-    public int compareTo(ResultsGroup otherGroup) {
-       if (results.size() == 0 || otherGroup.getResults().size() == 0) {
-           return 0;
-       }
-        Long value1 = new Long(results.get(0).getDocumentId());
-        Long value2 = new Long(otherGroup.getResults().get(0).getDocumentId());
-           return value1.compareTo(value2);
-    }
-
-     */
 }
