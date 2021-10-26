@@ -27,6 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -176,6 +177,7 @@ public class MtasDocumentIndexTest
             }
         }
 
+
         // Avoid the compiler complaining about project not being an effectively final variable
         log.info("Waiting for uploaded documents to be indexed...");
         Project p = project;
@@ -240,6 +242,8 @@ public class MtasDocumentIndexTest
                         && searchService.getIndexProgress(aProject).isEmpty());
         log.info("Indexing complete!");
     }
+
+
 
     public void annotateDocumentAdvanced(Project aProject, User aUser,
             SourceDocument aSourceDocument)
@@ -531,6 +535,53 @@ public class MtasDocumentIndexTest
         expectedResult.setTokenLength(1);
 
         assertThat(results).usingFieldByFieldElementComparator().containsExactly(expectedResult);
+    }
+
+    @Test
+    public void testKeepResultsOrdering() throws Exception
+    {
+        Project project = new Project();
+        project.setName("KeepResultsOrdering");
+
+        createProject(project);
+
+        User user = userRepository.get("admin");
+
+        SourceDocument sourceDocument1 = new SourceDocument();
+
+        sourceDocument1.setName("Annotation document 1");
+        sourceDocument1.setProject(project);
+        sourceDocument1.setFormat("text");
+
+        String fileContent1 = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(Pair.of(sourceDocument1, fileContent1));
+        annotateDocument(project, user, sourceDocument1);
+
+
+        SourceDocument sourceDocument2 = new SourceDocument();
+
+        sourceDocument2.setName("Annotation document 2");
+        sourceDocument2.setProject(project);
+        sourceDocument2.setFormat("text");
+
+        String fileContent2 = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(Pair.of(sourceDocument2, fileContent2));
+        annotateDocument(project, user, sourceDocument2);
+
+
+        String query = "<Named_entity.value=\"LOC\"/>";
+
+        Map<String, List<SearchResult>> resultsBefore = searchService.query(user, project, query, null, null, null, 0, 10);
+
+        annotateDocument(project, user, sourceDocument1);
+
+        Map<String, List<SearchResult>> resultsAfter = searchService.query(user, project, query, null, null, null, 0,10);
+
+        // Before the fix, the keys of resultsAfter were ["Annotation document 2", "Annotation document 1"].
+        // Document 1 moved to the back of the index because we updated its annotation
+        assertThat(new ArrayList(resultsBefore.keySet())).isEqualTo(new ArrayList(resultsAfter.keySet()));
     }
 
     @Test
