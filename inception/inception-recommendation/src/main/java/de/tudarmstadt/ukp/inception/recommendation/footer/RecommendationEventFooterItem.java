@@ -21,12 +21,12 @@ import org.apache.wicket.Component;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link WebsocketAutoConfiguration#recommendationEventFooterItem}.
+ * {@link RecommenderServiceAutoConfiguration#recommendationEventFooterItem}.
  * </p>
  */
 @Order(FooterItem.ORDER_RIGHT - 100)

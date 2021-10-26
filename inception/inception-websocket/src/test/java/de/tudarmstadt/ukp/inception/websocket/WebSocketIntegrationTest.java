@@ -48,7 +48,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -72,12 +71,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
-import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
-import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageController;
-import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageControllerImpl;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @SpringBootTest( //
@@ -233,16 +228,6 @@ public class WebSocketIntegrationTest
         public DocumentStateChangedEventAdapter documentStateChangedEventAdapter()
         {
             return new DocumentStateChangedEventAdapter();
-        }
-
-        @Bean
-        public LoggedEventMessageController loggedEventMessageController(
-                SimpMessagingTemplate aMsgTemplate, EventLoggingAdapterRegistry aAdapterRegistry,
-                DocumentService aDocService, ProjectService aProjectService,
-                EventRepository aEventRepository)
-        {
-            return new LoggedEventMessageControllerImpl(aMsgTemplate, aAdapterRegistry, aDocService,
-                    aProjectService, aEventRepository);
         }
     }
 }
