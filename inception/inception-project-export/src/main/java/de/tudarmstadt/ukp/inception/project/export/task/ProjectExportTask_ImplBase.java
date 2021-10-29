@@ -91,12 +91,12 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
             MDC.put(KEY_REPOSITORY_PATH, documentService.getDir().toString());
 
             monitor.setState(RUNNING);
+            monitor.setUrl(format("%s/ui/export/%s", servletContext.getContextPath(),
+                    monitor.getHandle().getRunId()));
 
             File exportedFile = export(request, monitor);
 
             monitor.setExportedFile(exportedFile);
-            monitor.setDownloadUrl(format("%s/ui/export/%s", servletContext.getContextPath(),
-                    monitor.getHandle().getRunId()));
             monitor.setStateAndProgress(COMPLETED, 100);
         }
         catch (ClosedByInterruptException | InterruptedException e) {

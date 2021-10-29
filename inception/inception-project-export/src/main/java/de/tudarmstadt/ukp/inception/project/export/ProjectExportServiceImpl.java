@@ -465,6 +465,7 @@ public class ProjectExportServiceImpl
         }
 
         tasks.remove(aHandle);
+        task.task.destroy();
 
         return cancelled;
     }
@@ -485,6 +486,7 @@ public class ProjectExportServiceImpl
                 log.info("Cleaning up stale export task for project [{}]:",
                         e.getValue().task.getRequest().getProject().getName());
                 tasks.remove(e.getKey());
+                e.getValue().task.destroy();
                 File exportedFile = e.getValue().task.getMonitor().getExportedFile();
                 if (exportedFile.exists()) {
                     try {

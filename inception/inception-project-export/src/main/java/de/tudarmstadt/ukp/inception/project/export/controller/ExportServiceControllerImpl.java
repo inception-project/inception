@@ -26,8 +26,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.apache.commons.io.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.InputStreamResource;
@@ -55,7 +55,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportState;
+import de.tudarmstadt.ukp.inception.project.export.model.MProjectExportStateUpdate;
+import de.tudarmstadt.ukp.inception.project.export.model.RExportLogMessage;
 import io.swagger.v3.oas.annotations.Operation;
 
 @Controller
@@ -78,7 +79,7 @@ public class ExportServiceControllerImpl
     }
 
     @SubscribeMapping(NS_PROJECT + "/{projectId}/exports")
-    public List<ProjectExportState> getCurrentExportStates(Principal aPrincipal,
+    public List<MProjectExportStateUpdate> getCurrentExportStates(Principal aPrincipal,
             @DestinationVariable("projectId") long aProjectId)
         throws AccessDeniedException
     {
@@ -93,8 +94,7 @@ public class ExportServiceControllerImpl
         }
 
         return projectExportService.listRunningExportTasks(project).stream() //
-                .map(taskInfo -> new ProjectExportState(taskInfo.getMonitor(),
-                        taskInfo.getMonitor().getMessages())) //
+                .map(taskInfo -> new MProjectExportStateUpdate(taskInfo.getMonitor())) //
                 .collect(toList());
     }
 
@@ -124,9 +124,29 @@ public class ExportServiceControllerImpl
         projectExportService.cancelTask(handle);
     }
 
+    @Operation(summary = "Fetch export log messages")
+    @GetMapping(value = ("/export/{runId}/log"), produces = { "application/json" })
+    public ResponseEntity<List<RExportLogMessage>> projectExportLog(
+            @PathVariable("runId") String aRunId)
+        throws Exception
+    {
+        ProjectExportTaskHandle handle = new ProjectExportTaskHandle(aRunId);
+        ProjectExportTaskMonitor monitor = projectExportService.getTaskMonitor(handle);
+
+        if (monitor == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+
+        List<RExportLogMessage> result = monitor.getMessages().stream()
+                .map(msg -> new RExportLogMessage(msg)).collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+    }
+
     @Operation(summary = "Download a finished export")
-    @GetMapping(value = ("/export/{instanceId}/{runId}"), produces = { "application/zip" })
-    public ResponseEntity<InputStreamResource> projectExport(@PathVariable("runId") String aRunId)
+    @GetMapping(value = ("/export/{runId}/data"), produces = { "application/zip" })
+    public ResponseEntity<InputStreamResource> projectExportData(
+            @PathVariable("runId") String aRunId)
         throws Exception
     {
         ProjectExportTaskHandle handle = new ProjectExportTaskHandle(aRunId);
@@ -153,7 +173,7 @@ public class ExportServiceControllerImpl
             public void close() throws IOException
             {
                 super.close();
-                FileUtils.forceDelete(exportedFile);
+                projectExportService.cancelTask(handle);
             }
         });
 

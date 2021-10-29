@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.project.export.task;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
-import static java.util.Arrays.asList;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
@@ -27,12 +26,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportState;
+import de.tudarmstadt.ukp.inception.project.export.model.MProjectExportStateUpdate;
 
 public class NotifyingProjectExportTaskMonitor
     extends ProjectExportTaskMonitor
 {
     private final SimpMessagingTemplate msgTemplate;
+
+    private MProjectExportStateUpdate lastUpdate;
 
     public NotifyingProjectExportTaskMonitor(Project aProject, ProjectExportTaskHandle aHandle,
             String aTitle, SimpMessagingTemplate aMsgTemplate)
@@ -52,7 +53,7 @@ public class NotifyingProjectExportTaskMonitor
     public void addMessage(LogMessage aMessage)
     {
         super.addMessage(aMessage);
-        sendNotification(aMessage);
+        sendNotification();
     }
 
     @Override
@@ -70,9 +71,24 @@ public class NotifyingProjectExportTaskMonitor
         sendNotification();
     }
 
-    private void sendNotification(LogMessage... aMessages)
+    @Override
+    protected void onDestroy()
     {
-        msgTemplate.convertAndSend("/topic" + NS_PROJECT + "/" + getProjectId() + "/exports",
-                new ProjectExportState(this, asList(aMessages)));
+        MProjectExportStateUpdate msg = new MProjectExportStateUpdate(this, true);
+        msgTemplate.convertAndSend("/topic" + NS_PROJECT + "/" + getProjectId() + "/exports", msg);
+    }
+
+    private void sendNotification()
+    {
+        if (isDestroyed()) {
+            return;
+        }
+
+        MProjectExportStateUpdate msg = new MProjectExportStateUpdate(this);
+        if (lastUpdate == null || !lastUpdate.equals(msg)) {
+            msgTemplate.convertAndSend("/topic" + NS_PROJECT + "/" + getProjectId() + "/exports",
+                    msg);
+            lastUpdate = msg;
+        }
     }
 }

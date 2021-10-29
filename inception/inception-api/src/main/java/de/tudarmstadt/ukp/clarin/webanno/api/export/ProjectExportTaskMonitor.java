@@ -44,7 +44,9 @@ public class ProjectExportTaskMonitor
     private int progress = 0;
     private ProjectExportTaskState state = NOT_STARTED;
     private File exportedFile;
-    private String downloadUrl;
+    private String url;
+
+    private boolean destroyed = false;
 
     public ProjectExportTaskMonitor(Project aProject, ProjectExportTaskHandle aHandle,
             String aTitle)
@@ -146,13 +148,31 @@ public class ProjectExportTaskMonitor
         exportedFile = aExportedFile;
     }
 
-    public synchronized void setDownloadUrl(String aDownloadUrl)
+    public synchronized void setUrl(String aUrl)
     {
-        downloadUrl = aDownloadUrl;
+        url = aUrl;
     }
 
-    public synchronized String getDownloadUrl()
+    public synchronized String getUrl()
     {
-        return downloadUrl;
+        return url;
+    }
+
+    public synchronized void destroy()
+    {
+        if (!destroyed) {
+            destroyed = true;
+            onDestroy();
+        }
+    }
+
+    protected void onDestroy()
+    {
+        // By default do nothing
+    }
+
+    protected boolean isDestroyed()
+    {
+        return destroyed;
     }
 }

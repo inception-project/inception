@@ -17,21 +17,33 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.model;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
-public interface ProjectExportTask<R extends ProjectExportRequest_ImplBase>
-    extends Runnable
+public class RExportLogMessage
 {
-    ProjectExportTaskHandle getHandle();
+    private final LogLevel level;
+    private final String message;
 
-    ProjectExportTaskMonitor getMonitor();
-
-    R getRequest();
-
-    default void destroy()
+    public RExportLogMessage(LogMessage aMessage)
     {
-        getMonitor().destroy();
+        level = aMessage.getLevel();
+        message = aMessage.getMessage();
+    }
+
+    public RExportLogMessage(LogLevel aLevel, String aMessage)
+    {
+        level = aLevel;
+        message = aMessage;
+    }
+
+    public LogLevel getLevel()
+    {
+        return level;
+    }
+
+    public String getMessage()
+    {
+        return message;
     }
 }
