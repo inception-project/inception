@@ -17,31 +17,55 @@
 -->
 
 <template>
-  <div v-show="!exports.length" class="flex-content flex-h-container no-data-notice">
+  <div v-if="!exports.length" class="flex-content flex-h-container no-data-notice">
     No exports.
   </div>
-  <ul v-show="exports.length" class="list-group list-group-flush">
+  <ul v-if="exports.length" class="list-group list-group-flush">
     <li v-for="item in exports" :key="item.id" class="list-group-item p-2">
       <div class="d-flex w-100 justify-content-between"> 
         <h5 class="mb-1">{{item.title}}</h5>
-        <div v-show="!cancelPending.has(item.id)">
+        <div v-if="!cancelPending.has(item.id)">
           <button type="button" class="btn-close" aria-label="Close" v-on:click="cancel(item)"/>
         </div>
-        <div v-show="cancelPending.has(item.id)">
+        <div v-if="cancelPending.has(item.id)">
           Aborted!
         </div>
       </div>
-      <div v-show="item.state !== 'COMPLETED'">
+      <div v-if="item.state === 'RUNNING'">
         <progress max="100" :value="item.progress" class="w-100"/>
       </div>
-      <div v-show="item.state === 'COMPLETED'" class="text-center animated pulse">
-        <a :href="item.url + '/data'"><b>Download</b></a>
+      <div v-if="item.state === 'COMPLETED'" class="text-center">
+        <button type="button" class="animated pulse btn btn-primary" v-on:click="download(item)">
+          <i class="fas fa-download"></i> Download
+        </button>
       </div>
-      <ul class="list-group" style="max-height: 5em; overflow: auto;">
-        <li v-for="msg in item.messages" class="p0 m0">
-          <small class="text-muted">{{msg.level}}: {{msg.message}}</small>
-        </li>
-      </ul>
+      <div v-if="item.messages" class="card">
+        <div class="card-header small">
+          Messages
+          <button type="button" class="btn-close float-end" aria-label="Close" v-on:click="closeMessages(item)"/>
+        </div>
+        <div class="card-body" style="max-height: 10em; min-height: 3em; overflow: auto;">
+          <div v-for="message in item.messages">
+            <small>
+              <i v-if="message.level === 'ERROR'" class="text-danger fas fa-exclamation-triangle"></i>
+              <i v-else-if="message.level === 'WARN'" class="text-warning fas fa-exclamation-triangle"></i>
+              <i v-else class="text-muted fas fa-info-circle"></i>
+              {{message.message}}
+            </small>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="item.latestMessage" class="p-2">
+        <small>
+          <i v-if="item.latestMessage.level === 'ERROR'" class="text-danger fas fa-exclamation-triangle"></i>
+          <i v-else-if="item.latestMessage.level === 'WARN'" class="text-warning fas fa-exclamation-triangle"></i>
+          <i v-else class="text-muted fas fa-info-circle"></i>
+          {{item.latestMessage.message}}
+          <span v-if="item.messageCount > 1 && item.state !== 'RUNNING'" v-on:click="loadMessages(item)" class="float-end badge rounded-pill bg-light text-dark" style="cursor: pointer;">
+            Show all {{item.messageCount}} messages...
+          </span>
+        </small>
+      </div>
     </li>
   </ul>
 </template>
@@ -99,10 +123,6 @@ module.exports = {
                 that.cancelPending.delete(msgBody.id);
               }
             }
-
-            if (!msgBody.removed && msgBody.state === 'COMPLETED') {
-              window.location = msgBody.url + "/data";
-            }
           });
         },
         function(error){
@@ -118,9 +138,23 @@ module.exports = {
       this.connected = false;
     },
     
+    download(item) {
+      window.location=item.url + '/data';
+    },
+    
     cancel(task) {
       this.cancelPending.add(task.id);
       this.stompClient.send('/app/export/' + task.id + '/cancel', {}, {});
+    },
+
+    loadMessages(item) {
+      axios
+        .get(item.url + '/log')
+        .then(response => (item.messages = response['data']))
+    },
+    
+    closeMessages(item) {
+      item.messages = null;
     }
   },
   mounted() {

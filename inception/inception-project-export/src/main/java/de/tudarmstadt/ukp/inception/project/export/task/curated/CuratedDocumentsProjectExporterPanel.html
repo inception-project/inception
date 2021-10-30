@@ -20,9 +20,24 @@
 <body>
   <wicket:extend>
     <h2>Export curated documents</h2>
+
+    <p class="small">
+      Exports all curated documents that the curator has marked as <i>finished</i>. Documents where
+      the curation is still in progress or did not start yet are not included.
+    </p>
+
+    <div class="row form-row">
+      <label wicket:for="format" class="col-sm-4 col-form-label">
+        <wicket:label key="format"/>
+      </label>
+      <div class="col-sm-8">
+        <select wicket:id="format" class="input-group-btn form-select"/>
+      </div>
+    </div>
+    
     <div class="text-end">
       <button wicket:id="startExport" type="button" class="btn btn-primary text-nowrap">
-        <i class="fas fa-download" aria-hidden="true"></i>&nbsp;
+        <i class="fas fa-play"></i>&nbsp;
         <wicket:message key="export"/>
       </button>
     </div>

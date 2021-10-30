@@ -30,14 +30,15 @@ import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAu
  * {@link ProjectExportServiceAutoConfiguration#backupProjectExportExtension()}.
  * </p>
  */
-public class BackupProjectExportExtension implements ProjectExportExtension
+public class BackupProjectExportExtension
+    implements ProjectExportExtension
 {
     public static final String ID = "backup";
 
     @Override
     public String getId()
     {
-        return "backup";
+        return ID;
     }
 
     @Override

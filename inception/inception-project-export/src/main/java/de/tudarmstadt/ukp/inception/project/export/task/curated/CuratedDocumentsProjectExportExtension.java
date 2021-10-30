@@ -21,6 +21,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtension;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
@@ -28,30 +29,38 @@ import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAu
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectExportServiceAutoConfiguration#backupProjectExportExtension()}.
+ * {@link ProjectExportServiceAutoConfiguration#curatedDocumentsProjectExportExtension}.
  * </p>
  */
-public class CuratedDocumentsProjectExportExtension implements ProjectExportExtension
+public class CuratedDocumentsProjectExportExtension
+    implements ProjectExportExtension
 {
-    public static final String ID = "backup";
+    public static final String ID = "curated";
+
+    private final DocumentService documentService;
+
+    public CuratedDocumentsProjectExportExtension(DocumentService aDocumentService)
+    {
+        documentService = aDocumentService;
+    }
 
     @Override
     public String getId()
     {
-        return "backup";
+        return ID;
     }
 
     @Override
     public boolean accepts(Project aContext)
     {
-        return true;
+        return documentService.existsCurationDocument(aContext);
     }
 
     @Override
     public Panel createExporterPanel(String aId, IModel<Project> aProject)
     {
         var request = new CuratedDocumentsProjectExportRequest(aProject.getObject());
-        
+
         return new CuratedDocumentsProjectExporterPanel(aId, Model.of(request));
     }
 }

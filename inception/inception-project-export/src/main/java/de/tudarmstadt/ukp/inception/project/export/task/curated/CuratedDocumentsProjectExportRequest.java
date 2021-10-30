@@ -81,6 +81,10 @@ public class CuratedDocumentsProjectExportRequest
     @Override
     public String getTitle()
     {
-        return String.format("Curated documents (%s)", format);
+        StringBuilder sb = new StringBuilder("Curated documents");
+        if (format != null) {
+            sb.append(" (" + format + ")");
+        }
+        return sb.toString();
     }
 }

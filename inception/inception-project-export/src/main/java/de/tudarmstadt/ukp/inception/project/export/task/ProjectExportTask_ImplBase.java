@@ -105,9 +105,11 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
         catch (Throwable e) {
             // This marks the progression as complete and causes ProgressBar#onFinished
             // to be called where we display the messages
-            monitor.setStateAndProgress(FAILED, 100);
+            // Message needs to be aded before setting the state, otherwise the notification for the
+            // message may be throttled and it may never be displayed
             monitor.addMessage(LogMessage.error(this, "Unexpected error during project export: %s",
                     ExceptionUtils.getRootCauseMessage(e)));
+            monitor.setStateAndProgress(FAILED, 100);
             log.error("Unexpected error during project export", e);
         }
     }

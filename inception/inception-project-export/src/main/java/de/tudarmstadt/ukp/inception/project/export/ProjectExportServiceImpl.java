@@ -97,6 +97,9 @@ public class ProjectExportServiceImpl
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final Duration CLEANUP_INTERVAL = Duration.ofMinutes(5);
+    private static final Duration STALE_EXPORT_EXPIRY = Duration.ofMinutes(30);
+
     private final Map<ProjectExportTaskHandle, TaskInfo> tasks = new ConcurrentReferenceHashMap<>();
     private final ProjectService projectService;
     private final ExecutorService taskExecutorService;
@@ -118,7 +121,8 @@ public class ProjectExportServiceImpl
         taskExecutorService = Executors.newFixedThreadPool(4);
 
         cleaningScheduler = Executors.newScheduledThreadPool(1);
-        cleaningScheduler.scheduleAtFixedRate(this::cleanUp, 15, 15, TimeUnit.MINUTES);
+        cleaningScheduler.scheduleAtFixedRate(this::cleanUp, CLEANUP_INTERVAL.toMillis(),
+                CLEANUP_INTERVAL.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -482,7 +486,7 @@ public class ProjectExportServiceImpl
 
             // Remove task info from the tasks map one hour after completion/failure/etc.
             long age = System.currentTimeMillis() - monitor.getEndTime();
-            if (age > Duration.ofHours(1).toMillis()) {
+            if (age > STALE_EXPORT_EXPIRY.toMillis()) {
                 log.info("Cleaning up stale export task for project [{}]:",
                         e.getValue().task.getRequest().getProject().getName());
                 tasks.remove(e.getKey());

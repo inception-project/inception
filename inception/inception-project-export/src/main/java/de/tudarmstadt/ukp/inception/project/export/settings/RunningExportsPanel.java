@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.settings;
 
-import static de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference.DayJsPlugin.LOCALIZED_FORMAT;
-import static de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference.DayJsPlugin.RELATIVE_TIME;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
@@ -40,7 +38,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference;
+import de.tudarmstadt.ukp.inception.support.axios.AxiosResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_ADMIN")
@@ -84,10 +82,10 @@ public class RunningExportsPanel
     {
         super.renderHead(aResponse);
 
-        aResponse.render(forReference(new DayJsResourceReference(RELATIVE_TIME, LOCALIZED_FORMAT)));
         aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
                 "webstomp-client/current/dist/webstomp.min.js")));
         aResponse.render(CssHeaderItem
                 .forReference(new WebjarsCssResourceReference("animate.css/current/animate.css")));
+        aResponse.render(forReference(AxiosResourceReference.get()));
     }
 }

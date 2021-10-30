@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.project.export.task.backup;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -29,6 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.project.export.FormatDropdownChoice;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
@@ -52,7 +52,8 @@ public class BackupProjectExporterPanel
         setDefaultModel(model);
 
         DropDownChoice<String> format = new FormatDropdownChoice("format", model.bind("format"));
-        format.add(new FormComponentUpdatingBehavior());
+        format.setNullValid(true);
+        format.add(new LambdaAjaxFormComponentUpdatingBehavior());
         add(format);
 
         add(new LambdaAjaxLink("startExport", this::actionStartExport));

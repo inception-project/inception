@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtension;
@@ -63,9 +64,11 @@ public class ProjectExportServiceAutoConfiguration
     {
         return new BackupProjectExportExtension();
     }
-    
+
     @Bean
-    public CuratedDocumentsProjectExportExtension curatedDocumentsProjectExportExtension() {
-        return new CuratedDocumentsProjectExportExtension();
+    public CuratedDocumentsProjectExportExtension curatedDocumentsProjectExportExtension(
+            DocumentService aDocumentService)
+    {
+        return new CuratedDocumentsProjectExportExtension(aDocumentService);
     }
 }

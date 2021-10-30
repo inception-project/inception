@@ -93,6 +93,10 @@ public class FullProjectExportRequest
     @Override
     public String getTitle()
     {
-        return String.format("Project archive (%s)", format);
+        StringBuilder sb = new StringBuilder("Project backup");
+        if (format != null) {
+            sb.append(" (" + format + ")");
+        }
+        return sb.toString();
     }
 }

@@ -17,12 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.project.export.task.curated;
 
+import java.util.List;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.inception.project.export.FormatDropdownChoice;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.settings.ProjectExporterPanelImplBase;
 
@@ -39,9 +48,37 @@ public class CuratedDocumentsProjectExporterPanel
     {
         super(aId);
 
-        setDefaultModel(aModel);
+        CompoundPropertyModel<CuratedDocumentsProjectExportRequest> model = CompoundPropertyModel
+                .of(aModel);
+
+        setDefaultModel(model);
+
+        DropDownChoice<String> format = new FormatDropdownChoice("format", model.bind("format"));
+        format.add(new LambdaAjaxFormComponentUpdatingBehavior());
+        format.add(LambdaBehavior.onConfigure(
+                _comp -> model.getObject().setFormat(getDefaultFormat(format.getChoices()))));
+        add(format);
+
+        ;
 
         add(new LambdaAjaxLink("startExport", this::actionStartExport));
+    }
+
+    private String getDefaultFormat(List<? extends String> aFormats)
+    {
+        if (aFormats.contains(XmiFormatSupport.ID)) {
+            return XmiFormatSupport.ID;
+        }
+
+        if (aFormats.contains(FullProjectExportRequest.FORMAT_AUTO)) {
+            return FullProjectExportRequest.FORMAT_AUTO;
+        }
+
+        if (aFormats.isEmpty()) {
+            return null;
+        }
+
+        return aFormats.get(0);
     }
 
     @SuppressWarnings("unchecked")
