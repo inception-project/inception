@@ -30,14 +30,14 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBa
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtension;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtensionPoint;
 
-public class ProjectExportPanel2
+public class ProjectExportPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = -6052972915505762272L;
 
     private @SpringBean ProjectExportExtensionPoint projectExportExtensionPoint;
 
-    public ProjectExportPanel2(String aId, IModel<Project> aModel)
+    public ProjectExportPanel(String aId, IModel<Project> aModel)
     {
         super(aId, aModel);
 
@@ -51,7 +51,7 @@ public class ProjectExportPanel2
             {
                 var exporter = aItem.getModelObject();
                 aItem.add(exporter.createExporterPanel("exporter",
-                        ProjectExportPanel2.this.getModel()));
+                        ProjectExportPanel.this.getModel()));
             }
         };
         add(exporters);

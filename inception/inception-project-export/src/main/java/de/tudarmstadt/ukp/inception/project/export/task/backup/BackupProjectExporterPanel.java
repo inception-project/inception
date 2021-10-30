@@ -30,8 +30,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.project.export.FormatDropdownChoice;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.settings.FormatDropdownChoice;
 import de.tudarmstadt.ukp.inception.project.export.settings.ProjectExporterPanelImplBase;
 
 public class BackupProjectExporterPanel

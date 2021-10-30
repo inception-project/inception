@@ -23,11 +23,11 @@ import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
-import de.tudarmstadt.ukp.inception.project.export.legacy.ExportProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.project.export.legacy.LegacyExportProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
 @Component
-@Order(ExportProjectSettingsPanelFactory.ORDER)
+@Order(LegacyExportProjectSettingsPanelFactory.ORDER)
 public class ProjectExportMenuItem2
     extends ProjectSettingsMenuItemBase
 {

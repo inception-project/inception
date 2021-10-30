@@ -31,8 +31,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentU
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
-import de.tudarmstadt.ukp.inception.project.export.FormatDropdownChoice;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.settings.FormatDropdownChoice;
 import de.tudarmstadt.ukp.inception.project.export.settings.ProjectExporterPanelImplBase;
 
 public class CuratedDocumentsProjectExporterPanel

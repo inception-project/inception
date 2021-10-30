@@ -55,13 +55,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
-import de.tudarmstadt.ukp.inception.project.export.FormatDropdownChoice;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
+import de.tudarmstadt.ukp.inception.project.export.settings.FormatDropdownChoice;
 
 /**
  * A Panel used to add Project Guidelines in a selected {@link Project}
  */
-public class ProjectExportPanel
+public class LegacyProjectExportPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 2116717853865353733L;
@@ -82,7 +82,7 @@ public class ProjectExportPanel
     private boolean exportInProgress = false;
     private ProjectExportTaskHandle exportTask;
 
-    public ProjectExportPanel(String id, final IModel<Project> aProjectModel)
+    public LegacyProjectExportPanel(String id, final IModel<Project> aProjectModel)
     {
         super(id, aProjectModel);
 
@@ -138,11 +138,11 @@ public class ProjectExportPanel
             @Override
             public void onClick(final AjaxRequestTarget target)
             {
-                target.add(ProjectExportPanel.this.getPage());
+                target.add(LegacyProjectExportPanel.this.getPage());
                 Authentication authentication = SecurityContextHolder.getContext()
                         .getAuthentication();
                 FullProjectExportRequest request = aRequest.getObject();
-                request.setProject(ProjectExportPanel.this.getModelObject());
+                request.setProject(LegacyProjectExportPanel.this.getModelObject());
                 request.setFilenameTag("_project");
                 exportInProgress = true;
                 exportTask = exportService.startProjectExportTask(request,
@@ -174,11 +174,11 @@ public class ProjectExportPanel
             @Override
             public void onClick(final AjaxRequestTarget target)
             {
-                target.add(ProjectExportPanel.this.getPage());
+                target.add(LegacyProjectExportPanel.this.getPage());
                 Authentication authentication = SecurityContextHolder.getContext()
                         .getAuthentication();
                 FullProjectExportRequest request = aRequest.getObject();
-                request.setProject(ProjectExportPanel.this.getModelObject());
+                request.setProject(LegacyProjectExportPanel.this.getModelObject());
                 request.setFilenameTag("_curated_documents");
                 exportInProgress = true;
                 exportTask = exportService.startProjectExportCuratedDocumentsTask(request,
@@ -188,7 +188,7 @@ public class ProjectExportPanel
         };
         link.add(enabledWhen(() -> !exportInProgress));
         link.add(visibleWhen(() -> {
-            Project project = ProjectExportPanel.this.getModelObject();
+            Project project = LegacyProjectExportPanel.this.getModelObject();
             return nonNull(project) ? documentService.existsCurationDocument(project) : false;
         }));
         return link;

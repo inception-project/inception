@@ -26,8 +26,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 
 @Component
-@Order(ExportProjectSettingsPanelFactory.ORDER)
-public class ExportProjectSettingsPanelFactory
+@Order(LegacyExportProjectSettingsPanelFactory.ORDER)
+public class LegacyExportProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
 {
     public static final int ORDER = 10000;
@@ -47,6 +47,6 @@ public class ExportProjectSettingsPanelFactory
     @Override
     public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
     {
-        return new ProjectExportPanel(aID, aProjectModel);
+        return new LegacyProjectExportPanel(aID, aProjectModel);
     }
 }
