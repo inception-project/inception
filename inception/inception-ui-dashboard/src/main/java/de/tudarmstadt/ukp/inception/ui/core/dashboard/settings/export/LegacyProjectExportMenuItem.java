@@ -19,22 +19,27 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export;
 
 import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.inception.project.export.legacy.LegacyExportProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.config.DashboardAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DashboardAutoConfiguration#legacyProjectExportMenuItem}.
+ * </p>
+ */
 @Order(LegacyExportProjectSettingsPanelFactory.ORDER)
-public class ProjectExportMenuItem2
+public class LegacyProjectExportMenuItem
     extends ProjectSettingsMenuItemBase
 {
     @Override
     public String getPath()
     {
-        return "/settings/export2";
+        return "/settings/export";
     }
 
     @Override
@@ -46,12 +51,12 @@ public class ProjectExportMenuItem2
     @Override
     public String getLabel()
     {
-        return "Export (new)";
+        return "Export";
     }
 
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return ProjectExportPage2.class;
+        return LegacyProjectExportPage.class;
     }
 }

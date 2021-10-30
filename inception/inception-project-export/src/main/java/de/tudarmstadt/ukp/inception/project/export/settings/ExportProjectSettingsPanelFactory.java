@@ -20,12 +20,17 @@ package de.tudarmstadt.ukp.inception.project.export.settings;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ProjectExportServiceAutoConfiguration#exportProjectSettingsPanelFactory}.
+ * </p>
+ */
 @Order(ExportProjectSettingsPanelFactory.ORDER)
 public class ExportProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory
@@ -35,13 +40,13 @@ public class ExportProjectSettingsPanelFactory
     @Override
     public String getPath()
     {
-        return "/export2";
+        return "/export";
     }
 
     @Override
     public String getLabel()
     {
-        return "Export (new)";
+        return "Export";
     }
 
     @Override

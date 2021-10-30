@@ -20,12 +20,17 @@ package de.tudarmstadt.ukp.inception.project.export.legacy;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ProjectExportServiceAutoConfiguration#legacyExportProjectSettingsPanelFactory}.
+ * </p>
+ */
 @Order(LegacyExportProjectSettingsPanelFactory.ORDER)
 public class LegacyExportProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory

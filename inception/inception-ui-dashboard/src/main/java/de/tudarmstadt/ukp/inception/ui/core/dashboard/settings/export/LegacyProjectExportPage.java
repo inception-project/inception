@@ -23,16 +23,16 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.inception.project.export.settings.ProjectExportPanel;
+import de.tudarmstadt.ukp.inception.project.export.legacy.LegacyProjectExportPanel;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsDashboardPageBase;
 
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/settings/export2")
-public class ProjectExportPage2
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/settings/export")
+public class LegacyProjectExportPage
     extends ProjectSettingsDashboardPageBase
 {
     private static final long serialVersionUID = 5889016668816051716L;
 
-    public ProjectExportPage2(PageParameters aParameters)
+    public LegacyProjectExportPage(PageParameters aParameters)
     {
         super(aParameters);
     }
@@ -42,6 +42,6 @@ public class ProjectExportPage2
     {
         super.onInitialize();
 
-        add(new ProjectExportPanel("panel", getProjectModel()));
+        add(new LegacyProjectExportPanel("panel", getProjectModel()));
     }
 }
