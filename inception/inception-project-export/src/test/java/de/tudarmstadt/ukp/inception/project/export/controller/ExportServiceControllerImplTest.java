@@ -243,7 +243,7 @@ public class ExportServiceControllerImplTest
 
         assertThat(errorRecieved).isTrue();
         assertThat(messageRecieved).isFalse();
-        assertThat(errorMessage).isEqualTo("Access denied");
+        assertThat(errorMessage.toString().trim()).isEqualTo("Access denied");
     }
 
     /**
