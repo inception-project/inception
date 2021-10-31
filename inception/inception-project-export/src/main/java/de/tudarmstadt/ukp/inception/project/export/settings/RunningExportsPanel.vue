@@ -101,9 +101,6 @@ module.exports = {
             console.error('Websocket server error: ' + JSON.stringify(msg.body));
           });
           that.stompClient.subscribe('/app' + that.topicChannel, function (msg) {
-            that.exports = JSON.parse(msg.body);
-          });
-          that.stompClient.subscribe('/topic' + that.topicChannel, function (msg) {
             var msgBody = JSON.parse(msg.body);
             var i = that.exports.findIndex(item => item.id === msgBody.id);
             if (i === -1) {

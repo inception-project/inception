@@ -43,6 +43,19 @@ public class MProjectExportStateUpdate
     @JsonInclude(Include.NON_EMPTY)
     private final LogMessage latestMessage;
 
+    public MProjectExportStateUpdate()
+    {
+        timestamp = System.currentTimeMillis();
+        title = null;
+        id = null;
+        progress = 0;
+        state = null;
+        url = null;
+        messageCount = 0;
+        removed = false;
+        latestMessage = null;
+    }
+
     public MProjectExportStateUpdate(ProjectExportTaskMonitor aMonitor)
     {
         this(aMonitor, false);

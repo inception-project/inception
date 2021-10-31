@@ -85,6 +85,10 @@ public class ExportServiceControllerImpl
     {
         // Should use this instead:
         // https://newbedev.com/how-to-reject-topic-subscription-based-on-user-rights-with-spring-websocket
+        if (aPrincipal == null) {
+            throw new AccessDeniedException("Access denied");
+        }
+
         Project project = projectService.getProject(aProjectId);
         User user = userService.get(aPrincipal.getName());
 
