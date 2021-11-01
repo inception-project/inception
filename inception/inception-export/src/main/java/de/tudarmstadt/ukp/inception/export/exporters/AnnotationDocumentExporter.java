@@ -222,20 +222,22 @@ public class AnnotationDocumentExporter
                 // Export per-user annotation document
                 //
 
-                // Determine which format to use for export
-                String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? srcDoc.getFormat()
-                        : aRequest.getFormat();
+                FormatSupport format = null;
+                if (aRequest.getFormat() != null) {
+                    // Determine which format to use for export
+                    String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? srcDoc.getFormat()
+                            : aRequest.getFormat();
 
-                FormatSupport format = importExportService.getWritableFormatById(formatId)
-                        .orElseGet(() -> {
-                            FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
-                            aMonitor.addMessage(LogMessage.warn(this,
-                                    "Annotation: [%s] No writer "
-                                            + "found for original format [%s] - exporting as [%s] "
-                                            + "instead.",
-                                    srcDoc.getName(), formatId, fallbackFormat.getName()));
-                            return fallbackFormat;
-                        });
+                    format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
+                        FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
+                        aMonitor.addMessage(LogMessage.warn(this,
+                                "Annotation: [%s] No writer "
+                                        + "found for original format [%s] - exporting as [%s] "
+                                        + "instead.",
+                                srcDoc.getName(), formatId, fallbackFormat.getName()));
+                        return fallbackFormat;
+                    });
+                }
 
                 // Export annotations from regular users
                 for (AnnotationDocument annDoc : srcToAnnIdx.computeIfAbsent(srcDoc,
@@ -256,18 +258,20 @@ public class AnnotationDocumentExporter
                             documentService.exportCas(srcDoc, annDoc.getUser(), os);
                         }
 
-                        File annDocDir = new File(aStage.getAbsolutePath()
-                                + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-                        File annFile = null;
-                        try {
-                            annFile = importExportService.exportAnnotationDocument(srcDoc,
-                                    annDoc.getUser(), format, annDoc.getUser(), ANNOTATION, false,
-                                    bulkOperationContext);
-                            forceMkdir(annDocDir);
-                            copyFileToDirectory(annFile, annDocDir);
-                        }
-                        finally {
-                            forceDelete(annFile);
+                        if (format != null) {
+                            File annDocDir = new File(aStage.getAbsolutePath()
+                                    + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
+                            File annFile = null;
+                            try {
+                                annFile = importExportService.exportAnnotationDocument(srcDoc,
+                                        annDoc.getUser(), format, annDoc.getUser(), ANNOTATION,
+                                        false, bulkOperationContext);
+                                forceMkdir(annDocDir);
+                                copyFileToDirectory(annFile, annDocDir);
+                            }
+                            finally {
+                                forceDelete(annFile);
+                            }
                         }
 
                         log.info("Exported annotation document content for user ["

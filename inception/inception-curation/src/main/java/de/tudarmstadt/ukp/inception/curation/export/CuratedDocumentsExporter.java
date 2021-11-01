@@ -138,34 +138,37 @@ public class CuratedDocumentsExporter
                         }
 
                         // Determine which format to use for export
-                        String formatId = FORMAT_AUTO.equals(aRequest.getFormat())
-                                ? sourceDocument.getFormat()
-                                : aRequest.getFormat();
+                        if (aRequest.getFormat() != null) {
+                            String formatId = FORMAT_AUTO.equals(aRequest.getFormat())
+                                    ? sourceDocument.getFormat()
+                                    : aRequest.getFormat();
 
-                        FormatSupport format = importExportService.getWritableFormatById(formatId)
-                                .orElseGet(() -> {
-                                    FormatSupport fallbackFormat = importExportService
-                                            .getFallbackFormat();
-                                    aMonitor.addMessage(LogMessage.warn(this,
-                                            "Curation: %s No writer found for original format [%s] "
-                                                    + "- exporting as [%s] instead.",
-                                            sourceDocument, formatId, fallbackFormat.getName()));
-                                    return fallbackFormat;
-                                });
+                            FormatSupport format = importExportService
+                                    .getWritableFormatById(formatId).orElseGet(() -> {
+                                        FormatSupport fallbackFormat = importExportService
+                                                .getFallbackFormat();
+                                        aMonitor.addMessage(LogMessage.warn(this,
+                                                "Curation: %s No writer found for original format [%s] "
+                                                        + "- exporting as [%s] instead.",
+                                                sourceDocument, formatId,
+                                                fallbackFormat.getName()));
+                                        return fallbackFormat;
+                                    });
 
-                        // Copy secondary export format for convenience - not used during import
-                        try {
-                            File curationFile = importExportService.exportAnnotationDocument(
-                                    sourceDocument, CURATION_USER, format, CURATION_USER, CURATION,
-                                    true, bulkOperationContext);
-                            copyFileToDirectory(curationFile, curationDir);
-                            forceDelete(curationFile);
-                        }
-                        catch (Exception e) {
-                            // error("Unexpected error while exporting project: " +
-                            // ExceptionUtils.getRootCauseMessage(e) );
-                            throw new ProjectExportException(
-                                    "Aborting due to unrecoverable error while exporting!");
+                            // Copy secondary export format for convenience - not used during import
+                            try {
+                                File curationFile = importExportService.exportAnnotationDocument(
+                                        sourceDocument, CURATION_USER, format, CURATION_USER,
+                                        CURATION, true, bulkOperationContext);
+                                copyFileToDirectory(curationFile, curationDir);
+                                forceDelete(curationFile);
+                            }
+                            catch (Exception e) {
+                                // error("Unexpected error while exporting project: " +
+                                // ExceptionUtils.getRootCauseMessage(e) );
+                                throw new ProjectExportException(
+                                        "Aborting due to unrecoverable error while exporting!");
+                            }
                         }
                     }
                 }
