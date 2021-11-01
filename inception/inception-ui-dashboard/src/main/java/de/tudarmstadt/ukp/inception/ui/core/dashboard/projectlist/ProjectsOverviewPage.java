@@ -72,7 +72,6 @@ import com.github.rjeschke.txtmark.Processor;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -87,6 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.AjaxProjectImportedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectImportPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectSettingsPage;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPage;
 
 @MountPath(value = "/")

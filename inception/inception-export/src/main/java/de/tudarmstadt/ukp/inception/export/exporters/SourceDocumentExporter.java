@@ -47,8 +47,8 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -83,7 +83,7 @@ public class SourceDocumentExporter
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+    public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
         throws IOException, ProjectExportException, InterruptedException
     {
@@ -112,7 +112,7 @@ public class SourceDocumentExporter
         exProject.setSourceDocuments(sourceDocuments);
     }
 
-    private void exportSourceDocumentContents(ProjectExportRequest aRequest,
+    private void exportSourceDocumentContents(FullProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
         throws IOException, ProjectExportException, InterruptedException
     {
