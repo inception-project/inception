@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskStat
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
@@ -65,9 +66,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ConcurrentReferenceHashMap;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportException;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskHandle;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -78,6 +79,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.export.model.ProjectExportTask;
+import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportTask;
+import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportRequest;
+import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportTask;
 
 /**
  * <p>
@@ -91,6 +96,9 @@ public class ProjectExportServiceImpl
     public static final String EXPORTED_PROJECT = "exportedproject";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private static final Duration CLEANUP_INTERVAL = Duration.ofMinutes(5);
+    private static final Duration STALE_EXPORT_EXPIRY = Duration.ofMinutes(30);
 
     private final Map<ProjectExportTaskHandle, TaskInfo> tasks = new ConcurrentReferenceHashMap<>();
     private final ProjectService projectService;
@@ -113,7 +121,8 @@ public class ProjectExportServiceImpl
         taskExecutorService = Executors.newFixedThreadPool(4);
 
         cleaningScheduler = Executors.newScheduledThreadPool(1);
-        cleaningScheduler.scheduleAtFixedRate(this::cleanUp, 15, 15, TimeUnit.MINUTES);
+        cleaningScheduler.scheduleAtFixedRate(this::cleanUp, CLEANUP_INTERVAL.toMillis(),
+                CLEANUP_INTERVAL.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -158,21 +167,38 @@ public class ProjectExportServiceImpl
 
     @Override
     @Transactional
-    public File exportProject(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
+    public File exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor)
+        throws ProjectExportException, IOException, InterruptedException
+    {
+        File projectZipFile = File.createTempFile(aRequest.getProject().getSlug(), ".zip");
+        boolean success = false;
+        try {
+            exportProject(aRequest, aMonitor, projectZipFile);
+            success = true;
+            return projectZipFile;
+        }
+        finally {
+            if (!success) {
+                FileUtils.forceDelete(projectZipFile);
+            }
+        }
+    }
+
+    @Override
+    @Transactional
+    public void exportProject(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+            File projectZipFile)
         throws ProjectExportException, IOException, InterruptedException
     {
         boolean success = false;
         File exportTempDir = null;
         try (var logCtx = withProjectLogger(aRequest.getProject())) {
             // Directory to store source documents and annotation documents
-            exportTempDir = File.createTempFile("webanno-project", "export");
+            exportTempDir = File.createTempFile("inception-project", "export");
             exportTempDir.delete();
             exportTempDir.mkdirs();
 
-            // Target file
-            File projectZipFile = new File(exportTempDir.getAbsolutePath() + ".zip");
-
-            ExportedProject exProjekt = exportProject(aRequest, aMonitor, exportTempDir);
+            ExportedProject exProjekt = exportProjectToPath(aRequest, aMonitor, exportTempDir);
 
             // all metadata and project settings data from the database as JSON file
             File projectSettings = File.createTempFile(EXPORTED_PROJECT, ".json");
@@ -189,8 +215,6 @@ public class ProjectExportServiceImpl
             }
 
             success = true;
-
-            return projectZipFile;
         }
         finally {
             if (!success && exportTempDir != null) {
@@ -206,38 +230,38 @@ public class ProjectExportServiceImpl
         }
     }
 
-    private ExportedProject exportProject(ProjectExportRequest aRequest,
+    private ExportedProject exportProjectToPath(FullProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, File aStage)
         throws ProjectExportException, IOException, InterruptedException
     {
         Deque<ProjectExporter> deque = new LinkedList<>(exporters);
-        Set<Class<? extends ProjectExporter>> initsSeen = new HashSet<>();
-        Set<ProjectExporter> initsDeferred = SetUtils.newIdentityHashSet();
+        Set<Class<? extends ProjectExporter>> exportersSeen = new HashSet<>();
+        Set<ProjectExporter> exportersDeferred = SetUtils.newIdentityHashSet();
 
         ExportedProject exProject = new ExportedProject();
         exProject.setName(aRequest.getProject().getName());
 
         try {
             while (!deque.isEmpty()) {
-                ProjectExporter initializer = deque.pop();
+                ProjectExporter exporter = deque.pop();
 
-                if (initsDeferred.contains(initializer)) {
-                    throw new IllegalStateException("Circular initializer dependencies in "
-                            + initsDeferred + " via " + initializer);
+                if (exportersDeferred.contains(exporter)) {
+                    throw new IllegalStateException("Circular exporter dependencies in "
+                            + exportersDeferred + " via " + exporter);
                 }
 
-                if (initsSeen.containsAll(initializer.getExportDependencies())) {
-                    log.debug("Applying project exporter: {}", initializer);
-                    initializer.exportData(aRequest, aMonitor, exProject, aStage);
-                    initsSeen.add(initializer.getClass());
-                    initsDeferred.clear();
+                if (exportersSeen.containsAll(exporter.getExportDependencies())) {
+                    log.debug("Applying project exporter: {}", exporter);
+                    exporter.exportData(aRequest, aMonitor, exProject, aStage);
+                    exportersSeen.add(exporter.getClass());
+                    exportersDeferred.clear();
                 }
                 else {
                     log.debug(
                             "Deferring project exporter as dependencies are not yet fulfilled: [{}]",
-                            initializer);
-                    deque.add(initializer);
-                    initsDeferred.add(initializer);
+                            exporter);
+                    deque.add(exporter);
+                    exportersDeferred.add(exporter);
                 }
             }
         }
@@ -343,30 +367,31 @@ public class ProjectExportServiceImpl
     }
 
     @Override
-    public ProjectExportTaskHandle startProjectExportTask(ProjectExportRequest aRequest,
+    public ProjectExportTaskHandle startProjectExportTask(FullProjectExportRequest aRequest,
             String aUsername)
     {
-        ProjectExportTaskHandle handle = new ProjectExportTaskHandle();
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        ProjectExportFullProjectTask task = new ProjectExportFullProjectTask(handle, monitor,
-                aRequest, aUsername);
+        BackupProjectExportTask task = new BackupProjectExportTask(aRequest, aUsername);
 
         return startTask(task);
     }
 
     @Override
     public ProjectExportTaskHandle startProjectExportCuratedDocumentsTask(
-            ProjectExportRequest aRequest, String aUsername)
+            FullProjectExportRequest aRequest, String aUsername)
     {
-        ProjectExportTaskHandle handle = new ProjectExportTaskHandle();
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        ProjectExportCuratedDocumentsTask task = new ProjectExportCuratedDocumentsTask(handle,
-                monitor, aRequest, aUsername);
+        var request = new CuratedDocumentsProjectExportRequest(aRequest.getProject());
+        request.setFilenameTag(aRequest.getFilenameTag());
+        request.setFormat(aRequest.getFormat());
+        request.setIncludeInProgress(aRequest.isIncludeInProgress());
+
+        CuratedDocumentsProjectExportTask task = new CuratedDocumentsProjectExportTask(request,
+                aUsername);
 
         return startTask(task);
     }
 
-    private ProjectExportTaskHandle startTask(ProjectExportTask_ImplBase aTask)
+    @Override
+    public ProjectExportTaskHandle startTask(ProjectExportTask aTask)
     {
         ProjectExportTaskHandle handle = aTask.getHandle();
 
@@ -381,7 +406,7 @@ public class ProjectExportServiceImpl
     }
 
     @Override
-    public ProjectExportRequest getExportRequest(ProjectExportTaskHandle aHandle)
+    public ProjectExportRequest_ImplBase getExportRequest(ProjectExportTaskHandle aHandle)
     {
         TaskInfo task = tasks.get(aHandle);
 
@@ -405,6 +430,16 @@ public class ProjectExportServiceImpl
     }
 
     @Override
+    public List<ProjectExportTask> listRunningExportTasks(Project aProject)
+    {
+        return tasks.values().stream() //
+                .filter(taskInfo -> aProject.equals(taskInfo.task.getRequest().getProject())) //
+                .filter(taskInfo -> !taskInfo.future.isCancelled()) //
+                .map(taskInfo -> taskInfo.task) //
+                .collect(toList());
+    }
+
+    @Override
     public boolean cancelTask(ProjectExportTaskHandle aHandle)
     {
         TaskInfo task = tasks.get(aHandle);
@@ -413,7 +448,30 @@ public class ProjectExportServiceImpl
             return false;
         }
 
-        return task.future.cancel(true);
+        boolean cancelled = task.future.cancel(true);
+
+        if (cancelled) {
+            log.debug("Cancelled running export");
+        }
+        else {
+            log.debug("Cancelled completed export");
+        }
+
+        File exportedFile = task.task.getMonitor().getExportedFile();
+        if (exportedFile != null && exportedFile.exists()) {
+            log.debug("Deleted exported file {}", exportedFile);
+            try {
+                FileUtils.forceDelete(exportedFile);
+            }
+            catch (IOException ex) {
+                log.error("Unable to clean up cancelled exported file [{}]:", exportedFile, ex);
+            }
+        }
+
+        tasks.remove(aHandle);
+        task.task.destroy();
+
+        return cancelled;
     }
 
     private void cleanUp()
@@ -428,10 +486,11 @@ public class ProjectExportServiceImpl
 
             // Remove task info from the tasks map one hour after completion/failure/etc.
             long age = System.currentTimeMillis() - monitor.getEndTime();
-            if (age > Duration.ofHours(1).toMillis()) {
+            if (age > STALE_EXPORT_EXPIRY.toMillis()) {
                 log.info("Cleaning up stale export task for project [{}]:",
                         e.getValue().task.getRequest().getProject().getName());
                 tasks.remove(e.getKey());
+                e.getValue().task.destroy();
                 File exportedFile = e.getValue().task.getMonitor().getExportedFile();
                 if (exportedFile.exists()) {
                     try {
@@ -448,9 +507,9 @@ public class ProjectExportServiceImpl
     private static class TaskInfo
     {
         private final Future<?> future;
-        private final ProjectExportTask_ImplBase task;
+        private final ProjectExportTask task;
 
-        public TaskInfo(Future<?> aFuture, ProjectExportTask_ImplBase aTask)
+        public TaskInfo(Future<?> aFuture, ProjectExportTask aTask)
         {
             future = aFuture;
             task = aTask;

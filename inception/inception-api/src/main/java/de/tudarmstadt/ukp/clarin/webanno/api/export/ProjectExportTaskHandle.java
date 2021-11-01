@@ -18,30 +18,31 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import java.io.Serializable;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.UUID;
 
-import org.apache.commons.lang3.RandomUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class ProjectExportTaskHandle
     implements Serializable
 {
     private static final long serialVersionUID = -105340488296444406L;
 
-    private static final AtomicLong NEXT_ID = new AtomicLong(1);
-    private static final long INSTANCE_ID = RandomUtils.nextLong();
-
-    // This is a random number initialized at boot time which is used whether a handle is from a
-    // previous instance run and no longer valid.
-    private final long instanceId;
-
-    // This is the id of the task within the instance.
-    private final long runId;
+    private final String runId;
 
     public ProjectExportTaskHandle()
     {
-        runId = NEXT_ID.getAndIncrement();
-        instanceId = INSTANCE_ID;
+        runId = UUID.randomUUID().toString();
+    }
+
+    public ProjectExportTaskHandle(String aRunId)
+    {
+        runId = aRunId;
+    }
+
+    public String getRunId()
+    {
+        return runId;
     }
 
     @Override
@@ -51,13 +52,12 @@ public class ProjectExportTaskHandle
             return false;
         }
         ProjectExportTaskHandle castOther = (ProjectExportTaskHandle) other;
-        return Objects.equals(instanceId, castOther.instanceId)
-                && Objects.equals(runId, castOther.runId);
+        return new EqualsBuilder().append(runId, castOther.runId).isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(instanceId, runId);
+        return new HashCodeBuilder().append(runId).toHashCode();
     }
 }

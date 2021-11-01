@@ -71,8 +71,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
+import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @SpringBootTest( //
@@ -87,8 +87,8 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
                 LiquibaseAutoConfiguration.class, //
                 SecurityAutoConfiguration.class })
 @Import({ //
+        WebsocketAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
-        DocumentImportExportServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
@@ -151,7 +151,6 @@ public class WebSocketIntegrationTest
         CountDownLatch latch = new CountDownLatch(1);
         StompSessionHandlerAdapter sessionHandler = new StompSessionHandlerAdapter()
         {
-
             @Override
             public void afterConnected(StompSession aSession, StompHeaders aConnectedHeaders)
             {
@@ -192,7 +191,7 @@ public class WebSocketIntegrationTest
         };
 
         session = webSocketClient.connect(websocketUrl, sessionHandler).get(1, TimeUnit.SECONDS);
-        latch.await(1, TimeUnit.SECONDS);
+        latch.await(10, TimeUnit.SECONDS);
         session.disconnect();
 
         assertThat(receivedMessages.size()).isEqualTo(1);
