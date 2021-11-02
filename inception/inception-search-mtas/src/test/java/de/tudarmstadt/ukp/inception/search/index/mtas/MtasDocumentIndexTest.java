@@ -177,7 +177,6 @@ public class MtasDocumentIndexTest
             }
         }
 
-
         // Avoid the compiler complaining about project not being an effectively final variable
         log.info("Waiting for uploaded documents to be indexed...");
         Project p = project;
@@ -242,8 +241,6 @@ public class MtasDocumentIndexTest
                         && searchService.getIndexProgress(aProject).isEmpty());
         log.info("Indexing complete!");
     }
-
-
 
     public void annotateDocumentAdvanced(Project aProject, User aUser,
             SourceDocument aSourceDocument)
@@ -558,7 +555,6 @@ public class MtasDocumentIndexTest
         uploadDocument(Pair.of(sourceDocument1, fileContent1));
         annotateDocument(project, user, sourceDocument1);
 
-
         SourceDocument sourceDocument2 = new SourceDocument();
 
         sourceDocument2.setName("Annotation document 2");
@@ -570,24 +566,27 @@ public class MtasDocumentIndexTest
         uploadDocument(Pair.of(sourceDocument2, fileContent2));
         annotateDocument(project, user, sourceDocument2);
 
-
         String query = "<Named_entity.value=\"LOC\"/>";
 
-        Map<String, List<SearchResult>> resultsBefore = searchService.query(user, project, query, null, null, null, 0, 10);
+        Map<String, List<SearchResult>> resultsBefore = searchService.query(user, project, query,
+                null, null, null, 0, 10);
 
         annotateDocument(project, user, sourceDocument1);
 
-        Map<String, List<SearchResult>> resultsAfter = searchService.query(user, project, query, null, null, null, 0,10);
+        Map<String, List<SearchResult>> resultsAfter = searchService.query(user, project, query,
+                null, null, null, 0, 10);
 
-        // Before the fix, the keys of resultsAfter were ["Annotation document 2", "Annotation document 1"].
+        // Before the fix, the keys of resultsAfter were ["Annotation document 2", "Annotation
+        // document 1"].
         // Document 1 moved to the back of the index because we updated its annotation
-        assertThat(new ArrayList(resultsBefore.keySet())).isEqualTo(new ArrayList(resultsAfter.keySet()));
+        assertThat(new ArrayList(resultsBefore.keySet()))
+                .isEqualTo(new ArrayList(resultsAfter.keySet()));
     }
 
     @Test
     public void testStatistics() throws Exception
     {
-        //Create sample project with two documents
+        // Create sample project with two documents
         Project project = new Project();
         project.setName("TestStatistics");
 
@@ -614,7 +613,7 @@ public class MtasDocumentIndexTest
         String otherContent = "Goodbye moon. Hello World.";
         uploadDocument(Pair.of(otherDocument, otherContent));
 
-        //Define input for the statistics methods
+        // Define input for the statistics methods
         OptionalInt minTokenPerDoc = OptionalInt.empty();
         OptionalInt maxTokenPerDoc = OptionalInt.empty();
 
@@ -626,7 +625,7 @@ public class MtasDocumentIndexTest
         Set<AnnotationFeature> features = new HashSet<AnnotationFeature>();
         features.add(value);
 
-        //Check layer-based statistics
+        // Check layer-based statistics
         StatisticsResult statsResults = searchService.getProjectStatistics(user, project,
                 minTokenPerDoc, maxTokenPerDoc, features);
 
@@ -649,7 +648,7 @@ public class MtasDocumentIndexTest
         assertThat(statsResults.getUser()).isEqualTo(user);
         assertTrue(expectedResults.equals(statsResults.getResults()));
 
-        //Check query-based statistics
+        // Check query-based statistics
         String query = "moon";
 
         StatisticsResult queryStatsResults = searchService.getQueryStatistics(user, project, query,
