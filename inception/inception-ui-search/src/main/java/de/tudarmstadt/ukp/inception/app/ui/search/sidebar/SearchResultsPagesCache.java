@@ -17,16 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
-import de.tudarmstadt.ukp.inception.search.ResultsGroup;
-
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 
 public class SearchResultsPagesCache
     implements Serializable

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 import static java.util.Collections.emptyIterator;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -79,7 +78,7 @@ public class SearchResultsProvider
         }
 
         if (pagesCacheModel.getObject().containsPage(first, count)) {
-            return pagesCacheModel.getObject().getPage(first,count).iterator();
+            return pagesCacheModel.getObject().getPage(first, count).iterator();
         }
 
         // Query if the results in the given range are not in the cache i.e. if we need to fetch
