@@ -1932,7 +1932,7 @@ const Visualizer = (function ($, window, undefined) {
         let /** @type {number} */ startPos, endPos;
         if (this.rtlmode) {
           // This rendering is much slower than the "old" version that brat uses, but it is more reliable in RTL mode.
-          [startPos, endPos] = this.calculateSubstringWidthRobust(text, firstChar, lastChar);
+          [startPos, endPos] = this.calculateSubstringWidthRobust(fragment, text, firstChar, lastChar);
           // In RTL mode, positions are negative (left to right)
           startPos = -startPos;
           endPos = -endPos;
@@ -1956,7 +1956,7 @@ const Visualizer = (function ($, window, undefined) {
       });
     }
 
-    calculateSubstringWidthRobust(text, firstChar, lastChar) {
+    calculateSubstringWidthRobust(fragment, text, firstChar, lastChar) {
       let charDirection;
       let charAttrs;
       let corrFactor = 1;
@@ -3943,13 +3943,13 @@ const Visualizer = (function ($, window, undefined) {
         const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
 
         if (this.rtlmode) {
-          const initialSpacingX = this.canvasWidth - this.sentNumMargin;
-          const initialSpacingWidth = initialSpacingX - (Configuration.visual.margin.x + this.rowPadding + 1 + firstChunkWidth);
+          const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
+          const initialSpacingX = this.canvasWidth - this.sentNumMargin - initialSpacingWidth;
           rowInitialSpacing.attr('x', initialSpacingX);
           rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
-          const finalSpacingX = lastChunkOffset + 1;
-          const finalSpacingWidth = lastChunkWidth;
+          const finalSpacingX = lastChunkOffset - lastChunkWidth;
+          const finalSpacingWidth = finalSpacingX;
           rowFinalSpacing.attr('x', finalSpacingX);
           rowFinalSpacing.attr('textLength', finalSpacingWidth);
         } else {

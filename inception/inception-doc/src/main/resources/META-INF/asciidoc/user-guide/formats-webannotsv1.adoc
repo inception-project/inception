@@ -23,7 +23,7 @@ The file format used by WebAnno version 1 and earlier.
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| WebAnno TSV 1
+| WebAnno TSV 1 (`tsv`)
 | yes
 | no
 | no

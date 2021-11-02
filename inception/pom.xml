@@ -953,6 +953,11 @@
         <version>0.21.1</version>
       </dependency>
       <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>animate.css</artifactId>
+        <version>3.2.6</version>
+      </dependency>
+      <dependency>
         <groupId>ua.kasta</groupId>
         <artifactId>jsass</artifactId>
         <version>5.10.5</version>

@@ -30,23 +30,40 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDa
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDashletExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsDashboardMenuItem;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsPageMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.LegacyProjectExportMenuItem;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.export.ProjectExportMenuItem;
 
 @Configuration
 public class DashboardAutoConfiguration
 {
     @Bean
-    @ConditionalOnProperty(prefix = "dashboard", name = "new-settings", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "dashboard", name = "legacy-settings", havingValue = "false", matchIfMissing = true)
     public ProjectSettingsDashboardMenuItem projectSettingsDashboardMenuItem()
     {
         return new ProjectSettingsDashboardMenuItem();
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "dashboard", name = "new-settings", havingValue = "false", matchIfMissing = false)
+    @ConditionalOnProperty(prefix = "dashboard", name = "legacy-settings", havingValue = "true", matchIfMissing = false)
     @Deprecated
     public ProjectSettingsPageMenuItem projectSettingsPageMenuItem()
     {
         return new ProjectSettingsPageMenuItem();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "dashboard", name = "legacy-export", havingValue = "false", matchIfMissing = true)
+    public ProjectExportMenuItem projectExportMenuItem()
+    {
+        return new ProjectExportMenuItem();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "dashboard", name = "legacy-export", havingValue = "true", matchIfMissing = false)
+    @Deprecated
+    public LegacyProjectExportMenuItem legacyProjectExportMenuItem()
+    {
+        return new LegacyProjectExportMenuItem();
     }
 
     @Bean
