@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.search;
 
 import java.io.Serializable;
 import java.util.List;
-import java.lang.Math;
 
 public class ResultsGroup
     implements Serializable
