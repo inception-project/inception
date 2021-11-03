@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.wordalignment;
 
 import javax.servlet.ServletContext;
 
-import de.tudarmstadt.ukp.inception.wordalignment.resources.WebsocketAPIReference;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
@@ -34,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.wordalignment.resources.VisualizationReference;
+import de.tudarmstadt.ukp.inception.wordalignment.resources.WebsocketAPIReference;
 import de.tudarmstadt.ukp.inception.wordalignment.resources.WordAlignmentEditorReference;
 
 public class WordAlignmentEditor

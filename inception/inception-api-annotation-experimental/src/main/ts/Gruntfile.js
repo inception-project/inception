@@ -26,11 +26,11 @@ module.exports = function (grunt) {
       esbuild: {
         cmd: './node_modules/esbuild/bin/esbuild',
         args: [
-          "main/ts/client/AnnotationExperienceAPI.ts",
+          "client/AnnotationExperienceAPI.ts",
           "--format=cjs",
           "--target=es6",
           "--bundle",
-          "--outfile=../jsAnnotationExperienceAPI.js"
+          "--outfile=dist/AnnotationExperienceAPI.js"
         ]
       }
     },

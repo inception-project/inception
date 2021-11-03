@@ -16,55 +16,52 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-app</artifactId>
-        <version>21.0-SNAPSHOT</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
-    <artifactId>inception-word-alignment-editor</artifactId>
-    <name>INCEpTION - Wordalignment - Editor</name>
-    <dependencies>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-autoconfigure</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.wicket</groupId>
-            <artifactId>wicket-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-security</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-model</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.wicket</groupId>
-            <artifactId>wicket-spring</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.wicket</groupId>
-            <artifactId>wicket-request</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-            <artifactId>inception-websocket</artifactId>
-        </dependency>
-    </dependencies>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    <artifactId>inception-app</artifactId>
+    <version>22.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <artifactId>inception-word-alignment-editor</artifactId>
+  <name>INCEpTION - Wordalignment - Editor</name>
+  <dependencies>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-annotation</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-context</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-core</artifactId>
+    </dependency>    
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-spring</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-request</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+    </dependency>
+  </dependencies>
 </project>
