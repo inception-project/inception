@@ -22,15 +22,24 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtension;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtensionPoint;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportServiceImpl;
+import de.tudarmstadt.ukp.inception.project.export.legacy.LegacyExportProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.project.export.settings.ExportProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.project.export.task.backup.BackupProjectExportExtension;
+import de.tudarmstadt.ukp.inception.project.export.task.curated.CuratedDocumentsProjectExportExtension;
 
 @Configuration
 @AutoConfigureAfter(name = {
@@ -44,5 +53,39 @@ public class ProjectExportServiceAutoConfiguration
             ProjectService aProjectService)
     {
         return new ProjectExportServiceImpl(aApplicationContext, aExporters, aProjectService);
+    }
+
+    @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "false", matchIfMissing = true)
+    @Bean
+    public ExportProjectSettingsPanelFactory exportProjectSettingsPanelFactory()
+    {
+        return new ExportProjectSettingsPanelFactory();
+    }
+
+    @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "true", matchIfMissing = false)
+    @Bean
+    public LegacyExportProjectSettingsPanelFactory legacyExportProjectSettingsPanelFactory()
+    {
+        return new LegacyExportProjectSettingsPanelFactory();
+    }
+
+    @Bean
+    public ProjectExportExtensionPoint projectExportExtensionPoint(
+            @Lazy @Autowired(required = false) List<ProjectExportExtension> aExtensions)
+    {
+        return new ProjectExportExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public BackupProjectExportExtension backupProjectExportExtension()
+    {
+        return new BackupProjectExportExtension();
+    }
+
+    @Bean
+    public CuratedDocumentsProjectExportExtension curatedDocumentsProjectExportExtension(
+            DocumentService aDocumentService)
+    {
+        return new CuratedDocumentsProjectExportExtension(aDocumentService);
     }
 }

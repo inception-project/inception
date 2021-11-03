@@ -44,7 +44,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.inception.export.exporters.ProjectPermissionsExporter;
 
 public class ProjectPermissionsExporterTest
 {
@@ -106,9 +105,8 @@ public class ProjectPermissionsExporterTest
     public void thatExportingWorks() throws Exception
     {
         // Export the project
-        ProjectExportRequest exportRequest = new ProjectExportRequest();
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor();
-        exportRequest.setProject(project);
+        FullProjectExportRequest exportRequest = new FullProjectExportRequest(project, null, false);
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
         ExportedProject exportedProject = new ExportedProject();
 
         sut.exportData(exportRequest, monitor, exportedProject, workFolder);

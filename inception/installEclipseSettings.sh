@@ -62,6 +62,7 @@ installPrefs inception-plugin-manager
 installPrefs inception-plugin-parent
 installPrefs inception-preferences
 installPrefs inception-project
+installPrefs inception-project-export
 installPrefs inception-recommendation
 installPrefs inception-recommendation-api
 installPrefs inception-remote

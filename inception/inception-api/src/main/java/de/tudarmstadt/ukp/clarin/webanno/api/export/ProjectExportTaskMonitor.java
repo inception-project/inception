@@ -24,14 +24,19 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskStat
 import static java.util.Arrays.asList;
 
 import java.io.File;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public class ProjectExportTaskMonitor
 {
-    private final Queue<LogMessage> messages = new ConcurrentLinkedQueue<>();
+    private final Deque<LogMessage> messages = new ConcurrentLinkedDeque<>();
+
+    private final ProjectExportTaskHandle handle;
+    private final long projectId;
+    private final String title;
 
     private long createTime;
     private long startTime = -1;
@@ -39,10 +44,36 @@ public class ProjectExportTaskMonitor
     private int progress = 0;
     private ProjectExportTaskState state = NOT_STARTED;
     private File exportedFile;
+    private String url;
+
+    private boolean destroyed = false;
+
+    public ProjectExportTaskMonitor(Project aProject, ProjectExportTaskHandle aHandle,
+            String aTitle)
+    {
+        projectId = aProject.getId();
+        handle = aHandle;
+        title = aTitle;
+    }
+
+    public long getProjectId()
+    {
+        return projectId;
+    }
+
+    public ProjectExportTaskHandle getHandle()
+    {
+        return handle;
+    }
 
     public synchronized ProjectExportTaskState getState()
     {
         return state;
+    }
+
+    public String getTitle()
+    {
+        return title;
     }
 
     public synchronized void setState(ProjectExportTaskState aState)
@@ -102,7 +133,7 @@ public class ProjectExportTaskMonitor
         }
     }
 
-    public Queue<LogMessage> getMessages()
+    public Deque<LogMessage> getMessages()
     {
         return messages;
     }
@@ -115,5 +146,33 @@ public class ProjectExportTaskMonitor
     public synchronized void setExportedFile(File aExportedFile)
     {
         exportedFile = aExportedFile;
+    }
+
+    public synchronized void setUrl(String aUrl)
+    {
+        url = aUrl;
+    }
+
+    public synchronized String getUrl()
+    {
+        return url;
+    }
+
+    public synchronized void destroy()
+    {
+        if (!destroyed) {
+            destroyed = true;
+            onDestroy();
+        }
+    }
+
+    protected void onDestroy()
+    {
+        // By default do nothing
+    }
+
+    protected boolean isDestroyed()
+    {
+        return destroyed;
     }
 }

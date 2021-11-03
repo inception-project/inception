@@ -54,6 +54,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-export</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-text</artifactId>
     </dependency>
     <dependency>
@@ -181,10 +185,6 @@
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.wicketstuff</groupId>
-      <artifactId>wicketstuff-progressbar</artifactId>
     </dependency>
     <dependency>
       <groupId>org.wicketstuff</groupId>

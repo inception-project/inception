@@ -43,7 +43,7 @@ public class WebsocketSecurityConfig
                 .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")
                 // authenticated users can subscribe
                 .simpTypeMatchers(SUBSCRIBE).authenticated()
-                // authenticated users can receive messages
+                // authenticated clients can send messages
                 .simpTypeMatchers(MESSAGE).authenticated()
                 // all other messages are denied (if you later want users to send messages,
                 // you need to allow it for specific channels)
