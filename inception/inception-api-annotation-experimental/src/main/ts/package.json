@@ -6,9 +6,7 @@
     "API",
     "Annotation"
   ],
-  "scripts": {
-    "build": "./node_modules/esbuild/bin/esbuild client/AnnotationExperienceAPIImpl.ts --format=cjs --target=es6 --bundle --outfile=../js/AnnotationExperienceAPI.js"
-  },
+  "scripts": {},
   "external": {},
   "devDependencies": {
     "@stomp/stompjs": "^6.1.0",

@@ -151,16 +151,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm install</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>install</arguments>
-            </configuration>
-          </execution>
-          <execution>
             <id>npm link dependency</id>
             <goals>
               <goal>npm</goal>
@@ -184,6 +174,15 @@
     </plugins>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies combine.children="append">
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-api-annotation-experimental</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
         <plugin>
           <groupId>org.apache.rat</groupId>
           <artifactId>apache-rat-plugin</artifactId>
