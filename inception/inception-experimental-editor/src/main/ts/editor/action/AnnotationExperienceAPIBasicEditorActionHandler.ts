@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-import {AnnotationExperienceAPIWordAlignmentEditor} from "../../wordalignment/AnnotationExperienceAPIWordAlignmentEditor";
 import {AnnotationExperienceAPIBasicEditor} from "../AnnotationExperienceAPIBasicEditor";
 
 export class AnnotationExperienceAPIBasicEditorActionHandler {

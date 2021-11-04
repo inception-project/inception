@@ -106,13 +106,13 @@
         <artifactId>maven-resources-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-annotation-editor-api-to-target</id>
+            <id>stage-ts-build</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>target/js/annotation-editor-api</outputDirectory>
+              <outputDirectory>target/ts</outputDirectory>
               <resources>
                 <resource>
                   <directory>src/main/ts</directory>
@@ -127,7 +127,7 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>add-pdfanno-resources</id>
+            <id>add-compiled-ts-resources</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>add-resource</goal>
@@ -135,8 +135,8 @@
             <configuration>
               <resources>
                 <resource>
-                  <directory>target/js/annotation-editor-api</directory>
-                  <targetPath>annotation-editor-api</targetPath>
+                  <directory>target/ts/dist</directory>
+                  <targetPath>js</targetPath>
                 </resource>
               </resources>
             </configuration>
@@ -147,8 +147,8 @@
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
         <configuration>
-          <workingDirectory>target/js/annotation-editor-api/</workingDirectory>
-          <installDirectory>target/frontend-maven-plugin</installDirectory>
+          <workingDirectory>target/ts</workingDirectory>
+          <installDirectory>../node</installDirectory>
           <nodeVersion>v11.15.0</nodeVersion>
           <npmVersion>6.7.0</npmVersion>
         </configuration>
@@ -161,6 +161,15 @@
             <phase>generate-resources</phase>
           </execution>
           <execution>
+            <id>npm link</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <configuration>
+              <arguments>link</arguments>
+            </configuration>
+          </execution>
+          <execution>
             <id>npm install</id>
             <goals>
               <goal>npm</goal>
@@ -170,13 +179,18 @@
               <arguments>install</arguments>
             </configuration>
           </execution>
+          <!--  
           <execution>
-            <id>grunt build</id>
+            <id>npm build</id>
             <goals>
-              <goal>grunt</goal>
+              <goal>npm</goal>
             </goals>
             <phase>generate-resources</phase>
+            <configuration>
+              <arguments>run build</arguments>
+            </configuration>
           </execution>
+          -->
         </executions>
       </plugin>
     </plugins>
@@ -190,11 +204,8 @@
               <id>default</id>
               <configuration>
                 <excludes combine.children="append">
-                  <exclude>src/main/js/AnnotationExperienceAPI.js</exclude>
-                  <exclude>src/main/ts/ExperienceAPI.js</exclude>
                   <exclude>src/main/ts/package.json</exclude>
                   <exclude>src/main/ts/package-lock.json</exclude>
-                  <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>
@@ -203,17 +214,4 @@
       </plugins>
     </pluginManagement>
   </build>
-  <profiles>
-    <profile>
-      <id>jenkins</id>
-      <activation>
-        <property>
-          <name>JENKINS_HOME</name>
-        </property>
-      </activation>
-      <properties>
-        <frontend.install.path>${WORKSPACE}/cache/maven-frontend-plugin</frontend.install.path>
-      </properties>
-    </profile>
-  </profiles>
 </project>
