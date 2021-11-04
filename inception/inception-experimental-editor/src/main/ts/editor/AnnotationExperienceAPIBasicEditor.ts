@@ -19,7 +19,7 @@
 import {AnnotationExperienceAPIBasicEditorVisualization} from "./visualization/AnnotationExperienceAPIBasicEditorVisualization";
 import {AnnotationExperienceAPIImpl} from "@experimental/experimental-annotation-API/client/AnnotationExperienceAPIImpl";
 import {AnnotationExperienceAPIBasicEditorActionHandler} from "./action/AnnotationExperienceAPIBasicEditorActionHandler";
-import {Viewport} from "@experimental/experimental-annotation-API/client/model/AnnotationExperienceAPIImpl";
+import {Viewport} from "@experimental/experimental-annotation-API/client/model/Viewport";
 
 export class AnnotationExperienceAPIBasicEditor
 {
