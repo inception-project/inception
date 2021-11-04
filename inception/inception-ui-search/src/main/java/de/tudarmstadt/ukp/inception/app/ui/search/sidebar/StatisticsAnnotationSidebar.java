@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
@@ -44,6 +45,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
+import org.apache.wicket.markup.html.basic.Label;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +54,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -92,6 +96,7 @@ public class StatisticsAnnotationSidebar
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean SearchProperties searchProperties;
+    private @SpringBean UserPreferencesService userPreferencesService;
 
     private User currentUser;
 
@@ -101,14 +106,13 @@ public class StatisticsAnnotationSidebar
     private List<IColumn> columns;
     private DefaultDataTable resultsTable;
 
-    private DocLink helpLink;
     private DropDownChoice<String> granularityChoice;
     private DropDownChoice<String> statisticChoice;
     private DropDownChoice<String> formatChoice;
-
+    private Label formatLabel;
     private AjaxDownloadLink exportButton;
+    private CheckBox nonZeroCheckBox;
 
-    private CheckBox nonNullCheckBox;
     private boolean hideNull;
     Map<String, LayerStatistics> withoutProblematicStats;
 
@@ -119,6 +123,8 @@ public class StatisticsAnnotationSidebar
 
     private List<LayerStatistics> layerStatsList;
     private List<AnnotationFeature> features;
+    private List<AnnotationLayer> layers;
+    Set<Long> hiddenLayerIds;
 
     private CompoundPropertyModel<StatisticsOptions> statisticsOptions = CompoundPropertyModel
             .of(new StatisticsOptions());
@@ -137,51 +143,54 @@ public class StatisticsAnnotationSidebar
         projectModel = new Model<Project>(aAnnotationPage.getProject());
         currentUser = userRepository.getCurrentUser();
 
+        add(new DocLink("statisticsHelpLink", "sect_statistics"));
+
+
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
 
-        selectedFormat = null;
-        selectedGranularity = null;
-        selectedStatistic = null;
+
+
+        selectedFormat = Formats.internalToUi(Formats.TXT);
+        selectedGranularity = Granularities.internalToUi(Granularities.PER_DOCUMENT);
+        selectedStatistic = Metrics.internalToUi(Metrics.MEAN);
         propertyExpressionStatistic = "";
 
         hideNull = false;
         withoutProblematicStats = null;
 
         layerStatsList = null;
-        features = annotationService.listAnnotationFeature((projectModel.getObject()));
+
+        /*
+         * //userPreferencesService.loadPreferences(aModel.getObject(), currentUser.getUsername())
+         * //layers = aModel.getObject().getAnnotationLayers(); //layers =
+         * aModel.getObject().getSelectableLayers(); hiddenLayerIds =
+         * aModel.getObject().getPreferences().getHiddenAnnotationLayerIds();
+         * //userPreferencesService.loadPreferences(projectModel,currentUser.getUsername(),)
+         * features = new ArrayList<AnnotationFeature>(); for (AnnotationFeature feature:
+         * annotationService.listAnnotationFeature(projectModel.getObject())) { if
+         * (!hiddenLayerIds.contains(feature.getLayer().getId())) { features.add(feature); } }
+         * 
+         * 
+         */
+
+        features = annotationService.listAnnotationFeature(projectModel.getObject());
 
         Form<StatisticsOptions> statisticsForm = new Form<>("settings", statisticsOptions);
 
-        statisticsForm.add(new DocLink("statisticsHelpLink", "sect_statistics"));
-
         granularityChoice = new DropDownChoice<String>(GRANULARITY,
-                new PropertyModel<String>(this, "selectedGranularity"), GRANULARITY_LEVELS)
-        {
-            @Override
-            protected String getNullKeyDisplayValue()
-            {
-                return "Granularity:";
-            }
-        };
+                new PropertyModel<String>(this, "selectedGranularity"), GRANULARITY_LEVELS);
 
         statisticsForm.add(granularityChoice);
 
         statisticChoice = new DropDownChoice<String>(STATISTIC,
-                new PropertyModel<String>(this, "selectedStatistic"), STATISTICS)
-        {
-            @Override
-            protected String getNullKeyDisplayValue()
-            {
-                return "Statistic:";
-            }
-        };
+                new PropertyModel<String>(this, "selectedStatistic"), STATISTICS);
         statisticsForm.add(statisticChoice);
 
-        nonNullCheckBox = new CheckBox("nonNull", new PropertyModel<Boolean>(this, "hideNull"));
-        nonNullCheckBox.setOutputMarkupId(true);
-        statisticsForm.add(nonNullCheckBox);
+        nonZeroCheckBox = new CheckBox("nonZero", new PropertyModel<Boolean>(this, "hideNull"));
+        nonZeroCheckBox.setOutputMarkupId(true);
+        statisticsForm.add(nonZeroCheckBox);
 
         LambdaAjaxButton<StatisticsOptions> calculateButton = new LambdaAjaxButton<StatisticsOptions>(
                 "calculate", this::actionCalculate);
@@ -200,28 +209,30 @@ public class StatisticsAnnotationSidebar
         resultsTable.add(visibleWhen(() -> columns.size() > 1));
         statisticsForm.add(resultsTable);
 
+        mainContainer.add(statisticsForm);
+        //add(statisticsForm);
+
+        formatLabel = new Label("formatLabel", "Format");
+        formatLabel.add(visibleWhen(() -> columns.size() > 1));
+        formatLabel.setOutputMarkupPlaceholderTag(true);
+
+        add(formatLabel);
+
         formatChoice = new DropDownChoice<String>(FORMAT,
-                new PropertyModel<String>(this, "selectedFormat"), FORMATS)
-        {
-            @Override
-            protected String getNullKeyDisplayValue()
-            {
-                return "Format:";
-            }
-        };
+                new PropertyModel<String>(this, "selectedFormat"), FORMATS);
         formatChoice.add(visibleWhen(() -> columns.size() > 1));
         formatChoice.setOutputMarkupPlaceholderTag(true);
-        statisticsForm.add(formatChoice);
+        add(formatChoice);
         formatChoice.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
 
         exportButton = new AjaxDownloadLink("export", () -> "searchResults" + selectedFormat,
                 this::actionExport);
         exportButton.add(visibleWhen(() -> columns.size() > 1));
-        statisticsForm.add(exportButton);
+        add(exportButton);
 
         exportButton.setOutputMarkupPlaceholderTag(true);
 
-        mainContainer.add(statisticsForm);
+
     }
 
     private void actionCalculate(AjaxRequestTarget aTarget, Form<StatisticsOptions> aForm)
@@ -244,7 +255,7 @@ public class StatisticsAnnotationSidebar
             withoutProblematicStats = hideNull
                     ? searchService.getProjectStatistics(currentUser, projectModel.getObject(),
                             OptionalInt.empty(), OptionalInt.empty(),
-                            new HashSet<AnnotationFeature>(features)).getNonNullResults()
+                            new HashSet<AnnotationFeature>(features)).getNonZeroResults()
                     : searchService.getProjectStatistics(currentUser, projectModel.getObject(),
                             OptionalInt.empty(), OptionalInt.empty(),
                             new HashSet<AnnotationFeature>(features)).getResults();
@@ -265,7 +276,7 @@ public class StatisticsAnnotationSidebar
         }
 
         if (Granularities.uiToInternal(selectedGranularity) == Granularities.PER_SENTENCE) {
-            withoutProblematicStats.remove("Raw text.sentence");
+            withoutProblematicStats.remove("Segmentation.sentence");
         }
         layerStatsList = new ArrayList<LayerStatistics>(withoutProblematicStats.values());
 
@@ -290,6 +301,7 @@ public class StatisticsAnnotationSidebar
         statsProvider.setData(layerStatsList);
 
         aTarget.add(resultsTable);
+        aTarget.add(formatLabel);
         aTarget.add(formatChoice);
         aTarget.add(exportButton);
     }

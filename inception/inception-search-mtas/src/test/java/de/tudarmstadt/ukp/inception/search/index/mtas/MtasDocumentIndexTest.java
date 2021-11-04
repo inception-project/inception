@@ -576,7 +576,7 @@ public class MtasDocumentIndexTest
         features.add(value);
 
         AnnotationLayer raw = new AnnotationLayer();
-        raw.setUiName("Raw text");
+        raw.setUiName("Segmentation");
         AnnotationFeature sent = new AnnotationFeature();
         sent.setUiName("sentence");
         sent.setLayer(raw);
@@ -601,8 +601,8 @@ public class MtasDocumentIndexTest
         expectedSentence.setFeature(sent);
 
         expectedResults.put("Named entity.value", expectedNamedEntity);
-        expectedResults.put("Raw text.token", expectedToken);
-        expectedResults.put("Raw text.sentence", expectedSentence);
+        expectedResults.put("Segmentation.token", expectedToken);
+        expectedResults.put("Segmentation.sentence", expectedSentence);
 
         assertThat(statsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
         assertThat(statsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);

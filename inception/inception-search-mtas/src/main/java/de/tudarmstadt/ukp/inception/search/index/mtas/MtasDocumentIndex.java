@@ -428,7 +428,7 @@ public class MtasDocumentIndex
             allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
         }
         AnnotationLayer rawText = new AnnotationLayer();
-        rawText.setUiName("Raw text");
+        rawText.setUiName("Segmentation");
 
         AnnotationFeature token = new AnnotationFeature();
         token.setUiName("token");
@@ -442,13 +442,13 @@ public class MtasDocumentIndex
                 fullDocSet);
 
         results.setFeature(token);
-        allStats.put("Raw text.token", results);
-        nonNullStats.put("Raw text.token", results);
+        allStats.put("Segmentation.token", results);
+        nonNullStats.put("Segmentation.token", results);
 
         results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
         results.setFeature(sentence);
-        allStats.put("Raw text.sentence", results);
-        nonNullStats.put("Raw text.sentence", results);
+        allStats.put("Segmentation.sentence", results);
+        nonNullStats.put("Segmentation.sentence", results);
 
         return new StatisticsResult(aStatisticRequest, allStats, nonNullStats, aStatisticRequest.getFeatures());
     }

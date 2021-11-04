@@ -24,7 +24,7 @@ or (Z~n/2~ + Z~(n/2)+1~)/2 if n is even
 - Standard Deviation: 1/n * ( (Y~1~ - Mean(Y))^2^ + ... + (Y~n~ - Mean(Y))^2^)
 - Sum: the total number of occurrences across all documents, i.e. Y~1~ + ... + Y~n~
 
-NOTE: The two artificial features *token* and *sentence* are contained in the artificial layer *Raw text* and statistics for them are computed. Note that *per Sentence* statistics of *Raw text.sentence* are trivial so they are omitted from the table and the downloadable file.
+NOTE: The two artificial features *token* and *sentence* are contained in the artificial layer *Segmentation* and statistics for them are computed. Note that *per Sentence* statistics of *Segmentation.sentence* are trivial so they are omitted from the table and the downloadable file.
 
 * **Hide empty layers**: Usually, a project does not use all layers. If a feature of a layer does never occur, all its statistics (except Number of Documents) will be zero. Tick this box and press the *Calculate* button again to omit them from the displayed table. If you then download the table, the generated file will not include these layers.
 

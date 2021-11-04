@@ -71,7 +71,7 @@ public class StatisticsResult
         return results;
     }
 
-    public Map<String, LayerStatistics> getNonNullResults()
+    public Map<String, LayerStatistics> getNonZeroResults()
     {
         return nonNullResults;
     }
@@ -99,14 +99,14 @@ public class StatisticsResult
 
     public LayerStatistics getTokenResult() throws ExecutionException
     {
-        featureResultExists("Raw text.token");
-        return results.get("Raw text.token");
+        featureResultExists("Segmentation.token");
+        return results.get("Segmentation.token");
     }
 
     public LayerStatistics getSentenceResult() throws ExecutionException
     {
-        featureResultExists("Raw text.sentence");
-        return results.get("Raw text.sentence");
+        featureResultExists("Segmentation.sentence");
+        return results.get("Segmentation.sentence");
     }
 
     public LayerStatistics getQueryResult() throws ExecutionException

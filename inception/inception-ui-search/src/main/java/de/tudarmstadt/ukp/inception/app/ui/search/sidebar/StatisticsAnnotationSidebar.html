@@ -17,47 +17,102 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+    <style type="text/css">
+  .page-content { overflow: auto; }
+  tr td:nth-child(1), tr th:nth-child(1) { text-align: left; }
+  tr td:nth-child(2), tr th:nth-child(2) { text-align: right; }
+
+</style>
+</wicket:head>
 <wicket:panel>
-    <div
-        class="statistics-sidebar flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-        <div wicket:id="mainContainer" class="card flex-content">
-            <div class="card-header">Statistics</div>
+    <div class="statistics-sidebar flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+            <div class="card-header">Statistics
+                <a wicket:id="statisticsHelpLink" class="right">
+                    <i class="fas fa-question-mark"></i>
+                </a>
+            </div>
+        <div wicket:id="mainContainer" class="card">
                 <div class="card-body flex-v-container">
+
                     <div class="d-flex mb-2">
-                        <div class="btn-group flex-content flex-h-container" role="group">
+                        <div class="btn-group flex-content flex-h-container flex-v-container" role="group">
                             <form wicket:id="settings">
-                                <select wicket:id="granularity" class="form-select-sm flex-static-item align-stretch" data-container="body" wicket:message="title:granularity"/>
-                                <button wicket:id="statisticsHelpLink" type="submit" class="btn flex-static-item" wicket:message="title:help">
-                                    <i class="fas fa-question-mark"></i>
-                                </button>
-                                <select wicket:id="statistic" class="form-select-sm" data-container="body" wicket:message="title:statistic"/>
-                                <div class="form-check">
-                                    <input wicket:id="nonNull"
-                                           class="form-check-input" type="checkbox" /> <label
-                                    wicket:for="nonNull"
-                                    class="form-check-label"> <wicket:label
-                                    key="nonNull" />
-                                </label>
+                                <div class="card">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <label class="col-form-label text-nowrap">
+                                                    <span class="d-none d-xl-inline">
+                                                        <wicket:message key="granularity"/>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <select wicket:id="granularity" class="form-select" data-container="body" wicket:message="title:granularity"/>
+                                            </div>
+                                        </div>
                                 </div>
-                                <button wicket:id="calculate" type="submit" class="btn btn-primary border-start flex-static-item" wicket:message="title:calculate">
-                                    <span class="d-none d-xl-inline">&nbsp;
-                                        <wicket:message key="calculate"/>
-                                    </span>
-                                </button>
-                                <table class="dataview" cellspacing="0" wicket:id="datatable" wicket:message="title:results">[table]</table>
-                                <div class="input-group">
-                                    <select class="form-select flex-content" wicket:id="format" data-container="body"/>
-                                    <a wicket:id="export" class="btn btn-primary">
-                                        <span class="d-none d-xl-inline">
-                                        <wicket:message key="export" />
-                                    </span>
-                                        <i class="fas fa-download"></i>
-                                    </a>
+                                <div class="card">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <label class="col-form-label text-nowrap">
+                                                    <span class="d-none d-xl-inline">
+                                                        <wicket:message key="statistic"/>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <select wicket:id="statistic" class="form-select" data-container="body" wicket:message="title:statistic"/>
+                                            </div>
+                                        </div>
+                                </div>
+                                <div class="card">
+                                        <div class="row">
+                                            <div class="col-sm-8">
+                                                <input wicket:id="nonZero" class="form-check-input" type="checkbox" />
+                                                <label class="label">
+                                                    <wicket:message key="nonZero" />
+                                                </label>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <button wicket:id="calculate" type="submit" class="btn btn btn-primary" wicket:message="title:calculate">
+                                                    <i class="fas fa-play"></i>
+                                                    <span class="d-none d-xl-inline">&nbsp;
+                                                        <wicket:message key="calculate"/>
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                </div>
+                                <div class="scrolling flex-content flex-content flex-h-container flex-v-container">
+                                    <table class="dataview" cellspacing="0" wicket:id="datatable" wicket:message="title:results">[table]</table>
                                 </div>
                             </form>
                         </div>
                     </div>
+
                 </div>
+            </div>
+        <div class="card-footer">
+            <div class="row">
+                <div class="col-sm-3">
+                    <label wicket:id="formatLabel" class="col-form-label text-nowrap">
+                        <span class="d-none d-xl-inline">
+                        </span>
+                    </label>
+                </div>
+                <div class="col-sm-4">
+                    <select class="form-select flex-content" wicket:id="format" data-container="body"/>
+                </div>
+                <div class="col-sm-5">
+                    <a wicket:id="export" class="btn btn-primary">
+                        <i class="fas fa-download"></i>
+                        <span class="d-none d-xl-inline">
+                            <wicket:message key="export" />
+                        </span>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </wicket:panel>
