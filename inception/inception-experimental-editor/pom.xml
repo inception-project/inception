@@ -29,6 +29,7 @@
   <name>INCEpTION - Annotation - Editor - Experimental</name>
   <dependencies>
     <dependency>
+      <!-- Make sure this module is build after the API so we can pick up the JS from npm -->
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-annotation-experimental</artifactId>
     </dependency>
