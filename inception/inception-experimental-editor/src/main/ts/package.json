@@ -7,14 +7,15 @@
     "Annotation"
   ],
   "scripts": {
-    "build": "./node_modules/esbuild/bin/esbuild editor/AnnotationExperienceAPIBasicEditor.ts --format=cjs --target=es6 --bundle --outfile=../js/AnnotationExperienceAPIBasicEditor.js"
+    "build": "./node_modules/esbuild/bin/esbuild editor/AnnotationExperienceAPIBasicEditor.ts --target=es6 --bundle --minify --sourcemap --outfile=dist/de/tudarmstadt/ukp/inception/experimental/editor/resources/AnnotationExperienceAPIBasicEditor.js"
   },
   "external": {},
   "devDependencies": {
+    "@experimental/experimental-annotation-API": "^1.0.0",
     "@stomp/stompjs": "^6.1.0",
     "@types/sockjs-client": "^1.5.0",
     "@types/stompjs": "^2.3.4",
-    "esbuild": "^0.13.2",
+    "esbuild": "^0.13.12",
     "typescript": "^4.4.2"
   }
 }

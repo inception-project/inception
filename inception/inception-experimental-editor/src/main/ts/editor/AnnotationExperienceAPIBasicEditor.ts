@@ -53,6 +53,5 @@ export class AnnotationExperienceAPIBasicEditor
         this.annotationExperienceAPI = new AnnotationExperienceAPIImpl(aProjectId, this.viewport[0].sourceDocumentId, aAnnotatorName, aUrl, this);
         this.annotationExperienceAPIVisualization = new AnnotationExperienceAPIBasicEditorVisualization(this);
         this.annotationExperienceAPIActionHandler = new AnnotationExperienceAPIBasicEditorActionHandler(this);
-
     }
 }
