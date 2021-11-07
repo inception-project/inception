@@ -170,6 +170,8 @@ public class DIAMController
 
                 JsonNode newJson = JSONUtil.getObjectMapper().valueToTree(fullRender);
 
+                vps.setJson(newJson);
+
                 JsonNode diff = JsonDiff.asJson(vps.getJson(), newJson);
 
                 msgTemplate.convertAndSend("/topic" + vpd.getTopic(),
