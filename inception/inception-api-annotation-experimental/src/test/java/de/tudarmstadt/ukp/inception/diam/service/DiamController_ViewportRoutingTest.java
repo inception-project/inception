@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.diam.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -97,7 +99,6 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.ViewportDefinition;
-import de.tudarmstadt.ukp.inception.diam.service.DiamController;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LambdaStompFrameHandler;
@@ -147,6 +148,7 @@ public class DiamController_ViewportRoutingTest
     @TempDir
     File repositoryDir;
 
+    private User user;
     private Project testProject;
     private SourceDocument testDocument;
     private AnnotationDocument testAnnotationDocument;
@@ -162,10 +164,13 @@ public class DiamController_ViewportRoutingTest
         repositoryProperties.setPath(repositoryDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        userService.create(new User(USER));
+        user = new User(USER);
+        userService.create(user);
 
         testProject = new Project("test-project");
         projectService.createProject(testProject);
+
+        projectService.setProjectPermissionLevels(user, testProject, asList(ANNOTATOR));
 
         testDocument = new SourceDocument("test", testProject, "text");
         documentService.createSourceDocument(testDocument);
