@@ -24,13 +24,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 /**
  * Support Class representing an Span annotation
  *
- * Attributes:
- * id: The ID of the span
- * begin: The character offset begin of the Span
- * end: The character offset end of the Span
- * layerId: The ID of the layer the Span belongs to
- * features: List of annotation features of the Span
- * color: Color of the Span
+ * Attributes: id: The ID of the span begin: The character offset begin of the Span end: The
+ * character offset end of the Span layerId: The ID of the layer the Span belongs to features: List
+ * of annotation features of the Span color: Color of the Span
  **/
 public class Span
 {
@@ -43,7 +39,7 @@ public class Span
 
     public Span()
     {
-        //Default required
+        // Default required
     }
 
     public Span(VID aId, int aBegin, int aEnd, long aLayerId, String aColor,

@@ -24,13 +24,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 /**
  * Support Class representing an Arc annotation
  *
- * Attributes:
- * id: The ID of the Arc
- * sourceId: The ID of the source span annotation for the Arc
- * targetId: The ID of the target span annotation for the Arc
- * layerId: The ID of the layer the Arc belongs to
- * features: List of annotation features of the Arc
- * color: Color of the Arc
+ * Attributes: id: The ID of the Arc sourceId: The ID of the source span annotation for the Arc
+ * targetId: The ID of the target span annotation for the Arc layerId: The ID of the layer the Arc
+ * belongs to features: List of annotation features of the Arc color: Color of the Arc
  **/
 public class Arc
 {
@@ -43,10 +39,11 @@ public class Arc
 
     public Arc()
     {
-        //Default required
+        // Default required
     }
 
-    public Arc(VID aId, VID aSourceId, VID aTargetId, String aColor, long aLayerId, List<FeatureX> aFeatures)
+    public Arc(VID aId, VID aSourceId, VID aTargetId, String aColor, long aLayerId,
+            List<FeatureX> aFeatures)
     {
         id = aId;
         sourceId = aSourceId;
@@ -66,7 +63,8 @@ public class Arc
         id = aId;
     }
 
-    public VID getSourceId() {
+    public VID getSourceId()
+    {
         return sourceId;
     }
 

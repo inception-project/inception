@@ -20,18 +20,15 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.request.create;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 /**
- * Class required for Messaging between Server and Client.
- * Basis for JSON
- * CreateArcRequest: Request from Client to create an Arc Annotation
- * Following parameters are required for retrieving the CAS: @annotatorName, @projectId, @sourceDocumentId
+ * Class required for Messaging between Server and Client. Basis for JSON CreateArcRequest: Request
+ * from Client to create an Arc Annotation Following parameters are required for retrieving the
+ * CAS: @annotatorName, @projectId, @sourceDocumentId
  *
- * Attributes:
- * annotatorName: String representation of the name of the annotator the annotation will belong to
- * projectId: The ID of the project the annotation will belong to
- * sourceDocumentId: The ID of the sourcedocument the annotation will belong to
- * sourceId: The ID of the source span annotation for the Arc
- * targetId: The ID of the target span annotation for the Arc
- * layerId: The ID of the layer the annotation shall belong to
+ * Attributes: annotatorName: String representation of the name of the annotator the annotation will
+ * belong to projectId: The ID of the project the annotation will belong to sourceDocumentId: The ID
+ * of the sourcedocument the annotation will belong to sourceId: The ID of the source span
+ * annotation for the Arc targetId: The ID of the target span annotation for the Arc layerId: The ID
+ * of the layer the annotation shall belong to
  **/
 public class CreateArcRequest
 {

@@ -18,27 +18,22 @@
 package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
 
 /**
- * Class required for Messaging between Server and Client.
- * Basis for JSON
- * AdviceMessage: Message published to a specific client when something unexpected happend.
- * AdviceMessage must contain of the following @TYPE (public enum)
- *  * ERROR: For error messages
- *  * HINT: When a hint shall be displayed for the annotator
- *  * VALIDATION: When an input was incorrect
- *  * INFO: Info message, e.g. for performing something successfully
+ * Class required for Messaging between Server and Client. Basis for JSON AdviceMessage: Message
+ * published to a specific client when something unexpected happend. AdviceMessage must contain of
+ * the following @TYPE (public enum) * ERROR: For error messages * HINT: When a hint shall be
+ * displayed for the annotator * VALIDATION: When an input was incorrect * INFO: Info message, e.g.
+ * for performing something successfully
  *
- * Attributes:
- * adviceMessage: String representation of the content that shall be displayed at the client-side
- * adviceMessageType: @TYPE for the message.
+ * Attributes: adviceMessage: String representation of the content that shall be displayed at the
+ * client-side adviceMessageType: @TYPE for the message.
  **/
 public class AdviceMessage
 {
-    public enum TYPE {
-        ERROR,
-        HINT,
-        VALIDATION,
-        INFO
+    public enum TYPE
+    {
+        ERROR, HINT, VALIDATION, INFO
     }
+
     private String adviceMessage;
     private TYPE adviceMessageType;
 

@@ -22,12 +22,11 @@ import java.util.List;
 import de.tudarmstadt.ukp.inception.experimental.api.model.Viewport;
 
 /**
- * Class required for Messaging between Server and Client.
- * Basis for JSON
- * DocumentMessage: Message published to a specific client containing the data for the requested document
+ * Class required for Messaging between Server and Client. Basis for JSON DocumentMessage: Message
+ * published to a specific client containing the data for the requested document
  *
  * Attributes:
-
+ * 
  * viewport: List of Viewports and their contents requested by the client
  **/
 public class DocumentMessage

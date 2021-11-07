@@ -20,12 +20,10 @@ package de.tudarmstadt.ukp.inception.experimental.api.messages.response;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 /**
- * Class required for Messaging between Server and Client.
- * Basis for JSON
- * DeleteAnnotationMessage: Message published to clients that an annotation has been delete
+ * Class required for Messaging between Server and Client. Basis for JSON DeleteAnnotationMessage:
+ * Message published to clients that an annotation has been delete
  *
- * Attributes:
- * annotationId: ID of the annotation that was deleted
+ * Attributes: annotationId: ID of the annotation that was deleted
  **/
 public class DeleteAnnotationMessage
 {

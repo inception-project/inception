@@ -53,7 +53,8 @@ public class ExperimentalAnnotationEditor
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        aResponse.render(JavaScriptHeaderItem.forReference((ExperimentalAPIBasicEditorReference.get())));
+        aResponse.render(
+                JavaScriptHeaderItem.forReference((ExperimentalAPIBasicEditorReference.get())));
         aResponse.render(OnDomReadyHeaderItem.forScript(setupExperienceAPI()));
     }
 
@@ -61,7 +62,7 @@ public class ExperimentalAnnotationEditor
     {
         AnnotatorState state = getModelObject();
         Url endPointUrl = Url.parse(String.format("%s%s", servletContext.getContextPath(),
-            WebsocketConfig.WS_ENDPOINT));
+                WebsocketConfig.WS_ENDPOINT));
         endPointUrl.setProtocol("ws");
 
         StringBuilder sb = new StringBuilder();
@@ -69,10 +70,12 @@ public class ExperimentalAnnotationEditor
         for (AnnotationLayer layer : getModelObject().getAnnotationLayers()) {
             sb.append("layers.push([" + layer.getId() + ",'" + layer.getUiName() + "']);");
         }
-        sb.append("const editor = new AnnotationExperienceAPIBasicEditor("
-            + state.getProject().getId() + "," + state.getDocument().getId() + ",\""
-            + state.getUser().getUsername() + "\",\""
-            + RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl) + "\", layers);");
+        sb.append(
+                "const editor = new AnnotationExperienceAPIBasicEditor.AnnotationExperienceAPIBasicEditor("
+                        + state.getProject().getId() + "," + state.getDocument().getId() + ",\""
+                        + state.getUser().getUsername() + "\",\""
+                        + RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl)
+                        + "\", layers);");
         sb.append("}())");
         return sb.toString();
     }

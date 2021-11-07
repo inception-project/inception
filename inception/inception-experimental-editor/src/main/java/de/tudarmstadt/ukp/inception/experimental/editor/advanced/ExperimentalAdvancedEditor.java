@@ -57,13 +57,14 @@ public class ExperimentalAdvancedEditor
     public String setupExperienceAPI()
     {
         AnnotatorState state = getModelObject();
-        return "const editor = new AnnotationExperienceAPIBasicEditor(" + state.getProject().getId()
-            + "," + state.getDocument().getId() + "," + state.getUser().getUsername() + ");";
+        return "const editor = new AnnotationExperienceAPIBasicEditor.AnnotationExperienceAPIBasicEditor("
+                + state.getProject().getId() + "," + state.getDocument().getId() + ",'"
+                + state.getUser().getUsername() + "');";
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        //Rendering should be handled by the scripting language files
+        // Rendering should be handled by the scripting language files
     }
 }

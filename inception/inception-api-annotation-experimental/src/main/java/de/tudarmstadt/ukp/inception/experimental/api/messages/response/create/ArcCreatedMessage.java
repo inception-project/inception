@@ -23,17 +23,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 
 /**
- * Class required for Messaging between Server and Client.
- * Basis for JSON
- * ArcCreatedMessage: Message published to clients that an Arc annotation has been created
+ * Class required for Messaging between Server and Client. Basis for JSON ArcCreatedMessage: Message
+ * published to clients that an Arc annotation has been created
  *
- * Attributes:
- * arcId: The ID of the new arc
- * projectId: The ID of the project to which the new Arc belongs
- * sourceId: The ID of the source annotation of the Arc
- * targetId: The ID of the target annotation of the Arc
- * color: The color of the Arc
- * layerId: The ID of the layer the Arc belongs to
+ * Attributes: arcId: The ID of the new arc projectId: The ID of the project to which the new Arc
+ * belongs sourceId: The ID of the source annotation of the Arc targetId: The ID of the target
+ * annotation of the Arc color: The color of the Arc layerId: The ID of the layer the Arc belongs to
  * features: List of AnnotationFeatures that the Arc has
  **/
 public class ArcCreatedMessage
@@ -46,9 +41,8 @@ public class ArcCreatedMessage
     private long layerId;
     private List<FeatureX> features;
 
-    public ArcCreatedMessage(VID aArcId, long aProjectId, VID aSourceId, VID aTargetId, String aColor,
-                             long aLayerId,
-                             List<FeatureX> aFeatures)
+    public ArcCreatedMessage(VID aArcId, long aProjectId, VID aSourceId, VID aTargetId,
+            String aColor, long aLayerId, List<FeatureX> aFeatures)
     {
         arcId = aArcId;
         projectId = aProjectId;

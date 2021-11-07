@@ -17,39 +17,41 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.api.model;
 
-public class FeatureX
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
+
+public abstract class MAnnotation
 {
-    private String name;
-    private String value;
+    private final VID vid;
+    private final String color;
+    private final String label;
 
-    public FeatureX()
+    public MAnnotation(VObject aObject)
     {
-        // Default
+        vid = aObject.getVid();
+        color = aObject.getColorHint();
+        label = aObject.getLabelHint();
     }
 
-    public FeatureX(String aName, String aValue)
+    public MAnnotation(VID aVid, String aColor, String aLabel)
     {
-        this.name = aName;
-        this.value = aValue;
+        vid = aVid;
+        color = aColor;
+        label = aLabel;
     }
 
-    public String getName()
+    public VID getVid()
     {
-        return name;
+        return vid;
     }
 
-    public void setName(String aName)
+    public String getColor()
     {
-        name = aName;
+        return color;
     }
 
-    public String getValue()
+    public String getLabel()
     {
-        return value;
-    }
-
-    public void setValue(String aValue)
-    {
-        value = aValue;
+        return label;
     }
 }

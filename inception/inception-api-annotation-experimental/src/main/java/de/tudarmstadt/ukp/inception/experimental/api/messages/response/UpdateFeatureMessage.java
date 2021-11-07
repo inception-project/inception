@@ -21,15 +21,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.inception.experimental.api.model.FeatureX;
 
 /**
- * Class required for Messaging between Server and Client.
- * Basis for JSON
- * UpdateFeatureMessage: Message published to clients that a feature value of a feature has been changed for
- * a specific annotation
+ * Class required for Messaging between Server and Client. Basis for JSON UpdateFeatureMessage:
+ * Message published to clients that a feature value of a feature has been changed for a specific
+ * annotation
  *
- * Attributes:
- * annotationId: The ID of the annotation for which a feature value has been changed
- * feature: The feature which has an updated @value
- * value: The new value for a @feature
+ * Attributes: annotationId: The ID of the annotation for which a feature value has been changed
+ * feature: The feature which has an updated @value value: The new value for a @feature
  **/
 public class UpdateFeatureMessage
 {

@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.Sp
  * @see AnnotationProcessAPI interface class .
  **/
 @Controller
-@ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AnnotationProcessAPIImpl
     implements AnnotationProcessAPI
 {
@@ -169,7 +169,6 @@ public class AnnotationProcessAPIImpl
         throws IOException
     {
 
-
         LOG.debug("SENDING NOW CREATE SPAN TO CLIENTS listening to: {}",
                 SERVER_SEND_CREATE_SPAN + aProjectID + "/" + aDocumentID);
         simpMessagingTemplate.convertAndSend(
@@ -201,8 +200,9 @@ public class AnnotationProcessAPIImpl
         System.out.println("TIME CREATE: " + (System.currentTimeMillis() - begin));
         if (create == 0) {
             create = (System.currentTimeMillis() - begin);
-        } else {
-            create = ( create + (System.currentTimeMillis() - begin)) / 2 ;
+        }
+        else {
+            create = (create + (System.currentTimeMillis() - begin)) / 2;
         }
         begin = 0;
     }

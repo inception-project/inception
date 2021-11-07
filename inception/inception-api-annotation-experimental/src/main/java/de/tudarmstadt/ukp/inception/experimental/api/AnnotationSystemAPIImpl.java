@@ -94,7 +94,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcess
  *      The private support methods can be found on the bottom end of this class.
  **/
 @Component
-@ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AnnotationSystemAPIImpl
     implements AnnotationSystemAPI
 {
@@ -515,7 +515,7 @@ public class AnnotationSystemAPIImpl
             // Get the adapter for the layer
             TypeAdapter adapter = annotationService.getAdapter(layer);
 
-            //Relation
+            // Relation
             if (adapter instanceof RelationAdapter) {
                 aCas.select(adapter.getAnnotationType(aCas)).coveredBy(0, aViewport.getEnd())
                         .includeAnnotationsWithEndBeyondBounds().map(fs -> (AnnotationFS) fs)
@@ -539,7 +539,7 @@ public class AnnotationSystemAPIImpl
                         });
             }
 
-            //Span
+            // Span
             if (adapter instanceof SpanAdapter) {
                 aCas.select(adapter.getAnnotationType(aCas)).coveredBy(0, aViewport.getEnd())
                         .includeAnnotationsWithEndBeyondBounds().map(fs -> (AnnotationFS) fs)

@@ -40,6 +40,16 @@ public class VDocument
     private final Map<Long, AnnotationLayer> annotationLayers = new LinkedHashMap<>();
     private final List<VMarker> markers = new ArrayList<>();
 
+    public Map<VID, VArc> getArcs()
+    {
+        return arcs;
+    }
+
+    public Map<VID, VSpan> getSpans()
+    {
+        return spans;
+    }
+
     public void add(VArc aArc)
     {
         if (arcs.containsKey(aArc.getVid()) || spans.containsKey(aArc.getVid())) {

@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.experimental.api.resources;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class ExperimentalAnnotationAPIReference extends JavaScriptResourceReference
+public class ExperimentalAnnotationAPIReference
+    extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 

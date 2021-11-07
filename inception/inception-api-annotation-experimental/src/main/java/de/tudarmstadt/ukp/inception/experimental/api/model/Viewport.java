@@ -24,13 +24,10 @@ import java.util.List;
  * lists. Each Viewport contains the @documentText for that part of the document. Each Viewport also
  * shows only specific layers, represented in @layers (contains the layerIds)
  *
- * Attributes:
- * sourceDocumentId: Id of the SourceDocument
- * documentText: String representation of the document text for a certain viewport starting with @begin up to @end
- * begin: The character offset begin of the viewport
- * end: The character offset end of the viewport
- * layers: List of layers the viewport shows. The list contains the layerIds
- * spans: All spans contained within a gives viewport
+ * Attributes: sourceDocumentId: Id of the SourceDocument documentText: String representation of the
+ * document text for a certain viewport starting with @begin up to @end begin: The character offset
+ * begin of the viewport end: The character offset end of the viewport layers: List of layers the
+ * viewport shows. The list contains the layerIds spans: All spans contained within a gives viewport
  * arcs: All arcs contained within a gives viewport
  **/
 public class Viewport
@@ -45,7 +42,7 @@ public class Viewport
 
     public Viewport()
     {
-        //Default required
+        // Default required
     }
 
     public Viewport(long aSourceDocumentId, String aDocumentText, int aBegin, int aEnd,

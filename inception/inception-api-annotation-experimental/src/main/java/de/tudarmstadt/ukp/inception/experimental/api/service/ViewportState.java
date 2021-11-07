@@ -15,41 +15,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.model;
+package de.tudarmstadt.ukp.inception.experimental.api.service;
 
-public class FeatureX
+import com.fasterxml.jackson.databind.JsonNode;
+
+public class ViewportState
 {
-    private String name;
-    private String value;
+    private final ViewportDefinition vpd;
 
-    public FeatureX()
+    private JsonNode json;
+
+    public ViewportState(ViewportDefinition aVpd)
     {
-        // Default
+        vpd = aVpd;
     }
 
-    public FeatureX(String aName, String aValue)
+    public ViewportDefinition getViewportDefinition()
     {
-        this.name = aName;
-        this.value = aValue;
+        return vpd;
     }
 
-    public String getName()
+    public synchronized void setJson(JsonNode aJson)
     {
-        return name;
+        json = aJson;
     }
 
-    public void setName(String aName)
+    public synchronized JsonNode getJson()
     {
-        name = aName;
-    }
-
-    public String getValue()
-    {
-        return value;
-    }
-
-    public void setValue(String aValue)
-    {
-        value = aValue;
+        return json;
     }
 }
