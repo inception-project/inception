@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.settings;
+package de.tudarmstadt.ukp.inception.diam.debugeditor;
 
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
@@ -25,7 +25,6 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 
-import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -33,26 +32,27 @@ import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.diam.model.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.support.axios.AxiosResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
 
-public class RunningExportsPanel
+public class DiamDebugEditorComponent
     extends VueComponent
 {
-    private static final long serialVersionUID = -9006607500867612027L;
+    private static final long serialVersionUID = -3927310514831796946L;
 
     private @SpringBean ServletContext servletContext;
 
-    private IModel<Project> project;
+    private IModel<AnnotatorState> state;
 
-    public RunningExportsPanel(String aId, IModel<Project> aProject)
+    public DiamDebugEditorComponent(String aId, IModel<AnnotatorState> aModel)
     {
-        super(aId, "RunningExportsPanel.vue");
+        super(aId, "DiamDebugEditorComponent.vue");
         setOutputMarkupPlaceholderTag(true);
-        project = aProject;
+        state = aModel;
+
     }
 
     @Override
@@ -60,10 +60,15 @@ public class RunningExportsPanel
     {
         super.onConfigure();
 
-        // model will be added as props to vue component
-        setDefaultModel(Model.ofMap(Map.of( //
+        Map<String, Object> properties = Map.of( //
                 "wsEndpoint", constructEndpointUrl(), //
-                "topicChannel", "/p/" + project.getObject().getId() + "/exports")));
+                "topicChannel",
+                new ViewportDefinition(state.getObject().getDocument(),
+                        state.getObject().getUser().getUsername(), 0, Integer.MAX_VALUE)
+                                .getTopic());
+
+        // model will be added as props to vue component
+        setDefaultModel(Model.ofMap(properties));
     }
 
     private String constructEndpointUrl()
@@ -79,10 +84,9 @@ public class RunningExportsPanel
     {
         super.renderHead(aResponse);
 
+        aResponse.render(forReference(JSONPatchResourceReference.get()));
         aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
                 "webstomp-client/current/dist/webstomp.min.js")));
-        aResponse.render(CssHeaderItem
-                .forReference(new WebjarsCssResourceReference("animate.css/current/animate.css")));
         aResponse.render(forReference(AxiosResourceReference.get()));
     }
 }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.service;
+package de.tudarmstadt.ukp.inception.diam.service;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
@@ -94,8 +94,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
-import de.tudarmstadt.ukp.inception.experimental.api.model.MViewportInit;
-import de.tudarmstadt.ukp.inception.experimental.api.model.MViewportUpdate;
+import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
+import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
+import de.tudarmstadt.ukp.inception.diam.model.ViewportDefinition;
+import de.tudarmstadt.ukp.inception.diam.service.DiamController;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LambdaStompFrameHandler;
@@ -123,7 +125,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHa
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
         "de.tudarmstadt.ukp.inception.log.model" })
-public class DIAMController_ViewportRoutingTest
+public class DiamController_ViewportRoutingTest
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -133,7 +135,7 @@ public class DIAMController_ViewportRoutingTest
     private @LocalServerPort int port;
     private String websocketUrl;
 
-    private @Autowired DIAMController sut;
+    private @Autowired DiamController sut;
 
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;

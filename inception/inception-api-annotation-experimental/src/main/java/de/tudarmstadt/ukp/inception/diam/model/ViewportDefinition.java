@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.service;
+package de.tudarmstadt.ukp.inception.diam.model;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -24,6 +24,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.uima.cas.text.AnnotationPredicates;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class ViewportDefinition
 {
@@ -38,6 +39,15 @@ public class ViewportDefinition
         projectId = aDoc.getProject().getId();
         documentId = aDoc.getDocument().getId();
         user = aDoc.getUser();
+        begin = aBegin;
+        end = aEnd;
+    }
+
+    public ViewportDefinition(SourceDocument aDoc, String aUser, int aBegin, int aEnd)
+    {
+        projectId = aDoc.getProject().getId();
+        documentId = aDoc.getId();
+        user = aUser;
         begin = aBegin;
         end = aEnd;
     }

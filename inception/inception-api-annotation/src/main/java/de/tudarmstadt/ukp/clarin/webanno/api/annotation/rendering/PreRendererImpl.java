@@ -83,6 +83,10 @@ public class PreRendererImpl
             return;
         }
 
+        int renderBegin = Math.max(0, windowBegin);
+        int renderEnd = Math.min(aCas.getDocumentText().length(), windowEnd);
+        aResponse.setText(aCas.getDocumentText().substring(renderBegin, renderEnd));
+
         // The project for all layers must be the same, so we just fetch the project from the
         // first layer
         Project project = aLayers.get(0).getProject();
@@ -105,7 +109,7 @@ public class PreRendererImpl
             // the same because otherwise the IDs of armed slots would be inconsistent
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
                     .createRenderer(layer, () -> layerAllFeatures);
-            renderer.render(aCas, layerSupportedFeatures, aResponse, windowBegin, windowEnd);
+            renderer.render(aCas, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
         }
     }
 

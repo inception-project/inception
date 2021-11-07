@@ -49,31 +49,59 @@ public final class TypeUtil
     /**
      * Construct the label text used in the user interface.
      *
-     * @param aAdapter
-     *            the adapter.
      * @param aVObject
      *            a visual object.
      * @return the label.
      */
-    public static String getUiLabelText(TypeAdapter aAdapter, VObject aVObject)
+    public static String getUiLabelText(VObject aVObject)
     {
-        if (aVObject.getLabelHint() != null) {
-            return aVObject.getLabelHint();
-        }
-
-        return getUiLabelText(aAdapter, aVObject.getFeatures());
+        return getUiLabelText(aVObject.getFeatures());
     }
 
     /**
      * Construct the label text used in the user interface.
      *
      * @param aAdapter
-     *            the adapter.
+     *            the adapter (unused).
+     * @param aVObject
+     *            a visual object.
+     * @return the label.
+     * @deprecated The adapter argument is no longer needed/used.
+     */
+    @Deprecated
+    public static String getUiLabelText(TypeAdapter aAdapter, VObject aVObject)
+    {
+        if (aVObject.getLabelHint() != null) {
+            return aVObject.getLabelHint();
+        }
+
+        return getUiLabelText(aVObject.getFeatures());
+    }
+
+    /**
+     * Construct the label text used in the user interface.
+     *
+     * @param aAdapter
+     *            the adapter (unused).
+     * @param aFeatures
+     *            the features.
+     * @return the label.
+     * @deprecated The adapter argument is no longer needed/used.
+     */
+    @Deprecated
+    public static String getUiLabelText(TypeAdapter aAdapter, Map<String, String> aFeatures)
+    {
+        return getUiLabelText(aFeatures);
+    }
+
+    /**
+     * Construct the label text used in the user interface.
+     *
      * @param aFeatures
      *            the features.
      * @return the label.
      */
-    public static String getUiLabelText(TypeAdapter aAdapter, Map<String, String> aFeatures)
+    public static String getUiLabelText(Map<String, String> aFeatures)
     {
         StringBuilder labelText = new StringBuilder();
         for (Entry<String, String> feature : aFeatures.entrySet()) {

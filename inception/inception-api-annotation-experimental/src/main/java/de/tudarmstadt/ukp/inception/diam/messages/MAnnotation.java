@@ -15,14 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.model;
+package de.tudarmstadt.ukp.inception.diam.messages;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 
 public abstract class MAnnotation
 {
     private final VID vid;
+    @JsonInclude(Include.NON_NULL)
     private final String color;
     private final String label;
 
@@ -30,7 +35,7 @@ public abstract class MAnnotation
     {
         vid = aObject.getVid();
         color = aObject.getColorHint();
-        label = aObject.getLabelHint();
+        label = TypeUtil.getUiLabelText(aObject);
     }
 
     public MAnnotation(VID aVid, String aColor, String aLabel)

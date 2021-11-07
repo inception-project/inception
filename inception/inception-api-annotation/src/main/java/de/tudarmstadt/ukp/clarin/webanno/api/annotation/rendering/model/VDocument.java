@@ -40,6 +40,23 @@ public class VDocument
     private final Map<Long, AnnotationLayer> annotationLayers = new LinkedHashMap<>();
     private final List<VMarker> markers = new ArrayList<>();
 
+    public VDocument()
+    {
+        // Nothing to do
+    }
+
+    private String text;
+
+    public void setText(String aText)
+    {
+        text = aText;
+    }
+
+    public String getText()
+    {
+        return text;
+    }
+
     public Map<VID, VArc> getArcs()
     {
         return arcs;

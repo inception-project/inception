@@ -7,7 +7,7 @@
   </Appenders>
 
   <Loggers>
-    <Logger name="de.tudarmstadt.ukp.inception.experimental" level="TRACE"/>
+    <Logger name="de.tudarmstadt.ukp.inception.diam" level="TRACE"/>
     <Logger name="org.springframework.messaging" level="TRACE"/> 
     <Logger name="org.springframework.web.socket.messaging" level="TRACE"/> 
     <Logger name="org.springframework.web.socket.messaging.StompSubProtocolHandler" level="INFO"/>

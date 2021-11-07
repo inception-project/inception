@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.model;
+package de.tudarmstadt.ukp.inception.diam.messages;
 
 import static java.util.stream.Collectors.toList;
 
@@ -34,7 +34,7 @@ public class MViewportInit
 
     public MViewportInit(VDocument aVDocument)
     {
-        text = "FIXME";
+        text = aVDocument.getText();
         arcs = aVDocument.getArcs().values().stream().map(MArc::new).collect(toList());
         spans = aVDocument.getSpans().values().stream().map(MSpan::new).collect(toList());
     }

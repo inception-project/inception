@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.api.service;
+package de.tudarmstadt.ukp.inception.diam.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
@@ -28,6 +28,8 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map.Entry;
 
+import javax.persistence.NoResultException;
+
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +37,9 @@ import org.slf4j.MDC;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.flipkart.zjsonpatch.JsonDiff;
@@ -44,22 +48,29 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.inception.experimental.api.model.MViewportInit;
-import de.tudarmstadt.ukp.inception.experimental.api.model.MViewportUpdate;
+import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
+import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
+import de.tudarmstadt.ukp.inception.diam.model.ViewportDefinition;
+import de.tudarmstadt.ukp.inception.diam.model.ViewportState;
 
 /**
  * Differential INCEpTION Annotation Messaging (DIAM) protocol controller.
  */
 @Controller
-public class DIAMController
+public class DiamController
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -68,18 +79,23 @@ public class DIAMController
     private final DocumentService documentService;
     private final RepositoryProperties repositoryProperties;
     private final AnnotationSchemaService schemaService;
+    private final ProjectService projectService;
+    private final UserDao userRepository;
 
     private final LoadingCache<ViewportDefinition, ViewportState> activeViewports;
 
-    public DIAMController(SimpMessagingTemplate aMsgTemplate, PreRenderer aPreRenderer,
+    public DiamController(SimpMessagingTemplate aMsgTemplate, PreRenderer aPreRenderer,
             DocumentService aDocumentService, RepositoryProperties aRepositoryProperties,
-            AnnotationSchemaService aSchemaService)
+            AnnotationSchemaService aSchemaService, ProjectService aProjectService,
+            UserDao aUserRepository)
     {
         msgTemplate = aMsgTemplate;
         preRenderer = aPreRenderer;
         documentService = aDocumentService;
         repositoryProperties = aRepositoryProperties;
         schemaService = aSchemaService;
+        projectService = aProjectService;
+        userRepository = aUserRepository;
 
         activeViewports = Caffeine.newBuilder().expireAfterAccess(Duration.ofMinutes(30))
                 .build(this::initState);
@@ -94,6 +110,8 @@ public class DIAMController
             @DestinationVariable("to") int aViewportEnd)
         throws IOException
     {
+        Project project = getProject(aProjectId);
+
         try (CasStorageSession session = CasStorageSession.open()) {
             MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             MDC.put(KEY_USERNAME, aPrincipal.getName());
@@ -104,7 +122,7 @@ public class DIAMController
             // Ensure that the viewport is registered
             ViewportState vps = activeViewports.get(vpd);
 
-            VDocument vdoc = render(aProjectId, aDocumentId, aUser, aViewportBegin, aViewportEnd);
+            VDocument vdoc = render(project, aDocumentId, aUser, aViewportBegin, aViewportEnd);
 
             JsonNode newJson = JSONUtil.getObjectMapper().valueToTree(new MViewportInit(vdoc));
             vps.setJson(newJson);
@@ -117,14 +135,14 @@ public class DIAMController
         }
     }
 
-    private VDocument render(long aProjectId, long aDocumentId, String aUser, int aViewportBegin,
+    private VDocument render(Project aProject, long aDocumentId, String aUser, int aViewportBegin,
             int aViewportEnd)
         throws IOException
     {
-        SourceDocument doc = documentService.getSourceDocument(aProjectId, aDocumentId);
+        SourceDocument doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
         CAS cas = documentService.readAnnotationCas(doc, aUser);
 
-        List<AnnotationLayer> layers = schemaService.listSupportedLayers(null).stream()
+        List<AnnotationLayer> layers = schemaService.listSupportedLayers(aProject).stream()
                 .filter(AnnotationLayer::isEnabled).collect(toList());
 
         VDocument vdoc = new VDocument();
@@ -162,17 +180,18 @@ public class DIAMController
 
             // MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-            try (CasStorageSession session = CasStorageSession.open()) {
-                VDocument vdoc = render(vpd.getProjectId(), vpd.getDocumentId(), vpd.getUser(),
-                        vpd.getBegin(), vpd.getEnd());
+            try (CasStorageSession session = CasStorageSession.openNested()) {
+                Project project = projectService.getProject(vpd.getProjectId());
+                VDocument vdoc = render(project, vpd.getDocumentId(), vpd.getUser(), vpd.getBegin(),
+                        vpd.getEnd());
 
                 MViewportInit fullRender = new MViewportInit(vdoc);
 
                 JsonNode newJson = JSONUtil.getObjectMapper().valueToTree(fullRender);
 
-                vps.setJson(newJson);
-
                 JsonNode diff = JsonDiff.asJson(vps.getJson(), newJson);
+
+                vps.setJson(newJson);
 
                 msgTemplate.convertAndSend("/topic" + vpd.getTopic(),
                         new MViewportUpdate(aUpdateBegin, aUpdateEnd, diff));
@@ -184,6 +203,40 @@ public class DIAMController
             // finally {
             // MDC.remove(KEY_REPOSITORY_PATH);
             // }
+        }
+    }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
+    {
+        sendUpdate(aEvent.getDocument());
+    }
+
+    private Project getProject(long aProjectId) throws AccessDeniedException
+    {
+        // Get current user - this will throw an exception if the current user does not exit
+        User user = userRepository.getCurrentUser();
+
+        // Get project
+        Project project;
+        try {
+            project = projectService.getProject(aProjectId);
+        }
+        catch (NoResultException e) {
+            throw new IllegalArgumentException("Project [" + aProjectId + "] not found.");
+        }
+
+        // Check for the access
+        assertPermission("User [" + user.getUsername() + "] is not allowed to access project ["
+                + aProjectId + "]", projectService.hasRole(user, project));
+
+        return project;
+    }
+
+    private void assertPermission(String aMessage, boolean aHasAccess) throws AccessDeniedException
+    {
+        if (!aHasAccess) {
+            throw new AccessDeniedException(aMessage);
         }
     }
 }
