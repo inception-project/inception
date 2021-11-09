@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
@@ -27,6 +28,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -35,6 +39,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
+import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtension;
+import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtensionPoint;
+import de.tudarmstadt.ukp.clarin.webanno.security.PermissionExtensionPointImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 
@@ -74,5 +82,28 @@ public class SecurityAutoConfiguration
         // Decode legacy passwords without encoder ID using the StandardPasswordEncoder
         delegatingEncoder.setDefaultPasswordEncoderForMatches(new StandardPasswordEncoder());
         return delegatingEncoder;
+    }
+
+    @Bean
+    public PermissionExtensionPoint permissionExtensionPoint(
+            @Lazy @Autowired(required = false) List<PermissionExtension<?, ?>> aExtensions)
+    {
+        return new PermissionExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public ExtensiblePermissionEvaluator extensiblePermissionEvaluator(
+            PermissionExtensionPoint aPermissionExtensionPoint)
+    {
+        return new ExtensiblePermissionEvaluator(aPermissionExtensionPoint);
+    }
+
+    @Bean
+    public MethodSecurityExpressionHandler defaultMethodSecurityExpressionHandler(
+            ExtensiblePermissionEvaluator aEvaluator)
+    {
+        DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+        expressionHandler.setPermissionEvaluator(aEvaluator);
+        return expressionHandler;
     }
 }

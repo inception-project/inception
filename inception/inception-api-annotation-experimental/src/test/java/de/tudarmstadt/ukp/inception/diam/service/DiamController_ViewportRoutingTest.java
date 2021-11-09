@@ -20,15 +20,15 @@ package de.tudarmstadt.ukp.inception.diam.service;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.io.IOUtils.toInputStream;
+import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_PASSWORD;
+import static org.apache.tomcat.websocket.Constants.WS_AUTHENTICATION_USER_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.lang.invoke.MethodHandles;
-import java.security.Principal;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -36,9 +36,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.persistence.EntityManager;
+import javax.sql.DataSource;
 
 import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.AfterEach;
@@ -53,26 +55,22 @@ import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Primary;
-import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.web.messaging.MessageSecurityMetadataSourceRegistry;
-import org.springframework.security.config.annotation.web.socket.AbstractSecurityWebSocketMessageBrokerConfigurer;
-import org.springframework.web.socket.WebSocketHandler;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.UserDetailsManager;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.messaging.WebSocketStompClient;
-import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -92,15 +90,21 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
+import de.tudarmstadt.ukp.clarin.webanno.security.InceptionDaoAuthenticationProvider;
+import de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
 import de.tudarmstadt.ukp.inception.diam.model.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
-import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
+import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LambdaStompFrameHandler;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHandlerAdapter;
 
@@ -111,10 +115,9 @@ import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHa
                 "websocket.enabled=true" })
 @SpringBootApplication( //
         exclude = { //
-                LiquibaseAutoConfiguration.class, //
-                SecurityAutoConfiguration.class })
+                LiquibaseAutoConfiguration.class })
 @Import({ //
-        de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration.class, //
+        SecurityAutoConfiguration.class, //
         WebsocketAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
@@ -131,6 +134,7 @@ public class DiamController_ViewportRoutingTest
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String USER = "user";
+    private static final String PASS = "pass";
 
     private WebSocketStompClient stompClient;
     private @LocalServerPort int port;
@@ -158,13 +162,18 @@ public class DiamController_ViewportRoutingTest
     {
         // create websocket client
         websocketUrl = "ws://localhost:" + port + "/ws-endpoint";
-        stompClient = new WebSocketStompClient(new StandardWebSocketClient());
+        StandardWebSocketClient wsClient = new StandardWebSocketClient();
+        wsClient.setUserProperties(Map.of( //
+                WS_AUTHENTICATION_USER_NAME, USER, //
+                WS_AUTHENTICATION_PASSWORD, PASS));
+        stompClient = new WebSocketStompClient(wsClient);
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 
         repositoryProperties.setPath(repositoryDir);
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        user = new User(USER);
+        user = new User(USER, Role.ROLE_USER);
+        user.setPassword(PASS);
         userService.create(user);
 
         testProject = new Project("test-project");
@@ -203,14 +212,23 @@ public class DiamController_ViewportRoutingTest
         var sessionHandler1 = new SessionHandler(subscriptionDone, initDone, vpd1);
         var sessionHandler2 = new SessionHandler(subscriptionDone, initDone, vpd2);
 
-        StompSession session1 = stompClient.connect(websocketUrl, sessionHandler1).get(1, SECONDS);
-        StompSession session2 = stompClient.connect(websocketUrl, sessionHandler2).get(1, SECONDS);
+        // try {
+        WebSocketHttpHeaders wsHeaders = new WebSocketHttpHeaders();
+        wsHeaders.setBasicAuth(USER, "pass");
+        StompSession session1 = stompClient.connect(websocketUrl, sessionHandler1).get(1000,
+                SECONDS);
+        StompSession session2 = stompClient.connect(websocketUrl, sessionHandler2).get(1000,
+                SECONDS);
+        // }
+        // catch (Exception e) {
+        // Thread.sleep(Duration.of(3, ChronoUnit.HOURS).toMillis());
+        // }
 
         try {
-            subscriptionDone.await(5, SECONDS);
+            subscriptionDone.await(5, TimeUnit.HOURS);
             assertThat(subscriptionDone.getCount()).isEqualTo(0);
 
-            initDone.await(5, SECONDS);
+            initDone.await(5, TimeUnit.HOURS);
             assertThat(initDone.getCount()).isEqualTo(0);
 
             sut.sendUpdate(testAnnotationDocument, 12, 15);
@@ -272,54 +290,48 @@ public class DiamController_ViewportRoutingTest
         }
     }
 
-    /**
-     * Test does not check correct authentication for websocket messages, instead we allow all to
-     * test communication assuming an authenticated user
-     */
+    // /**
+    // * Test does not check correct authentication for websocket messages, instead we allow all to
+    // * test communication assuming an authenticated user
+    // */
     @Configuration
     public static class WebsocketSecurityTestConfig
-        extends AbstractSecurityWebSocketMessageBrokerConfigurer
+        extends WebsocketSecurityConfig
     {
-
-        @Override
-        protected void configureInbound(MessageSecurityMetadataSourceRegistry aMessages)
+        @Autowired
+        public WebsocketSecurityTestConfig(ExtensiblePermissionEvaluator aPermissionEvaluator)
         {
-            aMessages.anyMessage().permitAll();
-        }
-
-        @Override
-        protected boolean sameOriginDisabled()
-        {
-            return true;
+            super(aPermissionEvaluator);
         }
     }
 
     @SpringBootConfiguration
     public static class WebsocketBrokerTestConfig
     {
-        @Primary
         @Bean
-        public WebSocketMessageBrokerConfigurer webSocketMessageBrokerConfigurer()
+        public ApplicationContextProvider applicationContextProvider()
         {
-            return new WebsocketConfig()
-            {
-                @Override
-                public void registerStompEndpoints(StompEndpointRegistry aRegistry)
-                {
-                    aRegistry.addEndpoint(WS_ENDPOINT)
-                            .setHandshakeHandler(new DefaultHandshakeHandler()
-                            {
-                                @Override
-                                protected Principal determineUser(ServerHttpRequest aRequest,
-                                        WebSocketHandler aWsHandler,
-                                        Map<String, Object> aAttributes)
-                                {
-                                    return new UsernamePasswordAuthenticationToken(USER, "dummyPw",
-                                            emptyList());
-                                }
-                            });
-                }
-            };
+            return new ApplicationContextProvider();
+        }
+
+        @Bean(name = "authenticationProvider")
+        public DaoAuthenticationProvider internalAuthenticationProvider(PasswordEncoder aEncoder,
+                UserDetailsManager aUserDetailsManager)
+        {
+            DaoAuthenticationProvider authProvider = new InceptionDaoAuthenticationProvider();
+            authProvider.setUserDetailsService(aUserDetailsManager);
+            authProvider.setPasswordEncoder(aEncoder);
+            return authProvider;
+        }
+
+        @Bean
+        public UserDetailsManager userDetailsService(DataSource aDataSource,
+                @Lazy AuthenticationManager aAuthenticationManager)
+        {
+            OverridableUserDetailsManager manager = new OverridableUserDetailsManager();
+            manager.setDataSource(aDataSource);
+            manager.setAuthenticationManager(aAuthenticationManager);
+            return manager;
         }
 
         @Bean

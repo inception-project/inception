@@ -17,30 +17,47 @@
  */
 package de.tudarmstadt.ukp.inception.websocket.config;
 
+import static java.util.Arrays.asList;
 import static org.springframework.messaging.simp.SimpMessageType.DISCONNECT;
 import static org.springframework.messaging.simp.SimpMessageType.MESSAGE;
 import static org.springframework.messaging.simp.SimpMessageType.SUBSCRIBE;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.messaging.MessageSecurityMetadataSourceRegistry;
 import org.springframework.security.config.annotation.web.socket.AbstractSecurityWebSocketMessageBrokerConfigurer;
+import org.springframework.security.messaging.access.expression.DefaultMessageSecurityExpressionHandler;
+
+import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 
 @Configuration
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebsocketSecurityConfig
     extends AbstractSecurityWebSocketMessageBrokerConfigurer
 {
+    private final DefaultMessageSecurityExpressionHandler handler = new DefaultMessageSecurityExpressionHandler();
+
+    @Autowired
+    public WebsocketSecurityConfig(ExtensiblePermissionEvaluator aPermissionEvaluator)
+    {
+        handler.setPermissionEvaluator(aPermissionEvaluator);
+        setMessageExpressionHandler(asList(handler));
+    }
+
     @Override
     protected void configureInbound(MessageSecurityMetadataSourceRegistry aSecurityRegistry)
     {
         aSecurityRegistry //
+                .expressionHandler(handler)
                 // allow everyone to disconnect
                 .simpTypeMatchers(DISCONNECT).permitAll()
                 // messages other than MESSAGE,SUBSCRIBE are allowed for authenticated users
                 .nullDestMatcher().authenticated() //
                 // subscribing to logged events is only for admins
                 .simpSubscribeDestMatchers("/*/loggedEvents").hasRole("ADMIN")
+                .simpSubscribeDestMatchers("/**/project/{project}/**")
+                .access("hasPermission(#project, 'Project', 'ANY')")
                 // authenticated users can subscribe
                 .simpTypeMatchers(SUBSCRIBE).authenticated()
                 // authenticated clients can send messages

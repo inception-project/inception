@@ -11,6 +11,7 @@
     <Logger name="org.springframework.messaging" level="TRACE"/> 
     <Logger name="org.springframework.web.socket.messaging" level="TRACE"/> 
     <Logger name="org.springframework.web.socket.messaging.StompSubProtocolHandler" level="INFO"/>
+    <Logger name="de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator" level="TRACE"/>
 
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />
