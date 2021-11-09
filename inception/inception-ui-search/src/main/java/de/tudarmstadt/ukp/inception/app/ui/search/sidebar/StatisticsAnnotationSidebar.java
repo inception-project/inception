@@ -34,10 +34,10 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.PropertyColumn;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -145,12 +145,9 @@ public class StatisticsAnnotationSidebar
 
         add(new DocLink("statisticsHelpLink", "sect_statistics"));
 
-
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
-
-
 
         selectedFormat = Formats.internalToUi(Formats.TXT);
         selectedGranularity = Granularities.internalToUi(Granularities.PER_DOCUMENT);
@@ -210,7 +207,7 @@ public class StatisticsAnnotationSidebar
         statisticsForm.add(resultsTable);
 
         mainContainer.add(statisticsForm);
-        //add(statisticsForm);
+        // add(statisticsForm);
 
         formatLabel = new Label("formatLabel", "Format");
         formatLabel.add(visibleWhen(() -> columns.size() > 1));
@@ -231,7 +228,6 @@ public class StatisticsAnnotationSidebar
         add(exportButton);
 
         exportButton.setOutputMarkupPlaceholderTag(true);
-
 
     }
 
