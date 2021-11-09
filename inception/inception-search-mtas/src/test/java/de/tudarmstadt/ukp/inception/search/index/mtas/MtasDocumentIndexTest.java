@@ -411,8 +411,8 @@ public class MtasDocumentIndexTest
         sourceDocument2.setFormat("text");
         String fileContent2 = "The capital of Portugal is Lissabon.";
 
-        uploadDocument(Pair.of(sourceDocument1, fileContent1),
-                Pair.of(sourceDocument2, fileContent2));
+        uploadDocument(Pair.of(sourceDocument1, fileContent1));
+        uploadDocument(Pair.of(sourceDocument2, fileContent2));
 
         User user = userRepository.get("admin");
 
