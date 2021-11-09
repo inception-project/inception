@@ -198,7 +198,6 @@ public class SearchResult
         return true;
     }
 
-
     @Override
     public String toString()
     {
