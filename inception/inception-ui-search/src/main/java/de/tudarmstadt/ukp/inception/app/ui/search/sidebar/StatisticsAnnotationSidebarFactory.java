@@ -27,6 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.app.ui.search.config.StatsServiceUIAutoConfiguration;
 
 /**
  * <p>
@@ -46,7 +47,7 @@ public class StatisticsAnnotationSidebarFactory
     @Override
     public IconType getIcon()
     {
-    return FontAwesome5IconType.clipboard_s;
+        return FontAwesome5IconType.clipboard_s;
     }
 
     @Override
@@ -59,7 +60,8 @@ public class StatisticsAnnotationSidebarFactory
     }
 
     @Override
-    public String getDescription() {
+    public String getDescription()
+    {
         return "Calculates high-level statistics.";
     }
 }
