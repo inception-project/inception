@@ -57,6 +57,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -225,10 +226,10 @@ public class DiamController_ViewportRoutingTest
         // }
 
         try {
-            subscriptionDone.await(5, TimeUnit.HOURS);
+            subscriptionDone.await(5, TimeUnit.SECONDS);
             assertThat(subscriptionDone.getCount()).isEqualTo(0);
 
-            initDone.await(5, TimeUnit.HOURS);
+            initDone.await(5, TimeUnit.SECONDS);
             assertThat(initDone.getCount()).isEqualTo(0);
 
             sut.sendUpdate(testAnnotationDocument, 12, 15);
@@ -299,9 +300,10 @@ public class DiamController_ViewportRoutingTest
         extends WebsocketSecurityConfig
     {
         @Autowired
-        public WebsocketSecurityTestConfig(ExtensiblePermissionEvaluator aPermissionEvaluator)
+        public WebsocketSecurityTestConfig(ApplicationContext aContext,
+                ExtensiblePermissionEvaluator aPermissionEvaluator)
         {
-            super(aPermissionEvaluator);
+            super(aContext, aPermissionEvaluator);
         }
     }
 

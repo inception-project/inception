@@ -19,6 +19,12 @@ package de.tudarmstadt.ukp.inception.diam.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_USER;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_DOCUMENT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.TOPIC_ELEMENT_USER;
 import static java.lang.Integer.MAX_VALUE;
 import static java.util.stream.Collectors.toList;
 
@@ -40,6 +46,7 @@ import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.util.PropertyPlaceholderHelper;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.flipkart.zjsonpatch.JsonDiff;
@@ -74,6 +81,17 @@ public class DiamController
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    public static final String PARAM_FROM = "from";
+    public static final String PARAM_TO = "to";
+
+    public static final PropertyPlaceholderHelper PLACEHOLDER_RESOLVER = new PropertyPlaceholderHelper(
+            "{", "}", null, false);
+
+    public static final String DOCUMENT_VIEWPORT_TOPIC_TEMPLATE = TOPIC_ELEMENT_PROJECT + "{"
+            + PARAM_PROJECT + "}" + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}"
+            + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}/from/{" + PARAM_FROM + "}/to/{" + PARAM_TO
+            + "}";
+
     private final SimpMessagingTemplate msgTemplate;
     private final PreRenderer preRenderer;
     private final DocumentService documentService;
@@ -101,13 +119,13 @@ public class DiamController
                 .build(this::initState);
     }
 
-    @SubscribeMapping("/project/{projectId}/document/{documentId}/user/{user}/from/{from}/to/{to}")
+    @SubscribeMapping(DOCUMENT_VIEWPORT_TOPIC_TEMPLATE)
     public JsonNode onSubscribeToAnnotationDocument(Principal aPrincipal,
-            @DestinationVariable("projectId") long aProjectId,
-            @DestinationVariable("documentId") long aDocumentId,
-            @DestinationVariable("user") String aUser,
-            @DestinationVariable("from") int aViewportBegin,
-            @DestinationVariable("to") int aViewportEnd)
+            @DestinationVariable(PARAM_PROJECT) long aProjectId,
+            @DestinationVariable(PARAM_DOCUMENT) long aDocumentId,
+            @DestinationVariable(PARAM_USER) String aUser,
+            @DestinationVariable(PARAM_FROM) int aViewportBegin,
+            @DestinationVariable(PARAM_TO) int aViewportEnd)
         throws IOException
     {
         Project project = getProject(aProjectId);

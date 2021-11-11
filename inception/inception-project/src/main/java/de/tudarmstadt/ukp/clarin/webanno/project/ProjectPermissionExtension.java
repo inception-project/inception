@@ -70,19 +70,14 @@ public class ProjectPermissionExtension
     public boolean hasPermission(Authentication aAuthentication, Project aTargetDomainObject,
             String aPermission)
     {
-        if (aTargetDomainObject instanceof Project) {
-            Project project = (Project) aTargetDomainObject;
-            User user = userService.get(aAuthentication.getName());
+        Project project = (Project) aTargetDomainObject;
+        User user = userService.get(aAuthentication.getName());
 
-            if (ANY.equals(aPermission)) {
-                return projectService.hasRole(user, project);
-            }
-
-            return projectService.hasRole(user, project,
-                    PermissionLevel.valueOf((String) aPermission));
+        if (ANY.equals(aPermission)) {
+            return projectService.hasRole(user, project);
         }
 
-        return false;
+        return projectService.hasRole(user, project, PermissionLevel.valueOf((String) aPermission));
     }
 
     @Override

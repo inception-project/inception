@@ -26,6 +26,7 @@ import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -100,9 +101,10 @@ public class SecurityAutoConfiguration
 
     @Bean
     public MethodSecurityExpressionHandler defaultMethodSecurityExpressionHandler(
-            ExtensiblePermissionEvaluator aEvaluator)
+            ApplicationContext aContext, ExtensiblePermissionEvaluator aEvaluator)
     {
         DefaultMethodSecurityExpressionHandler expressionHandler = new DefaultMethodSecurityExpressionHandler();
+        expressionHandler.setApplicationContext(aContext);
         expressionHandler.setPermissionEvaluator(aEvaluator);
         return expressionHandler;
     }

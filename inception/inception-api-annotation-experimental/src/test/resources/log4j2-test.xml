@@ -10,7 +10,8 @@
     <Logger name="de.tudarmstadt.ukp.inception.diam" level="TRACE"/>
     <Logger name="org.springframework.messaging" level="TRACE"/> 
     <Logger name="org.springframework.web.socket.messaging" level="TRACE"/> 
-    <Logger name="org.springframework.web.socket.messaging.StompSubProtocolHandler" level="INFO"/>
+    <!-- If there are exceptions during authorization, increase the StompSubProtocolHandler log level! -->
+    <Logger name="org.springframework.web.socket.messaging.StompSubProtocolHandler" level="DEBUG"/>
     <Logger name="de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator" level="TRACE"/>
 
     <Root level="WARN">

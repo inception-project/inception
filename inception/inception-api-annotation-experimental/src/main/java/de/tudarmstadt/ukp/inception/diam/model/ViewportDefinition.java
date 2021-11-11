@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model;
 
+import java.util.Properties;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -25,6 +27,8 @@ import org.apache.uima.cas.text.AnnotationPredicates;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.diam.service.DiamController;
+import de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants;
 
 public class ViewportDefinition
 {
@@ -97,8 +101,14 @@ public class ViewportDefinition
 
     public String getTopic()
     {
-        return "/project/" + projectId + "/document/" + documentId + "/user/" + user + "/from/"
-                + begin + "/to/" + end;
+        Properties properties = new Properties();
+        properties.setProperty(WebSocketConstants.PARAM_PROJECT, String.valueOf(projectId));
+        properties.setProperty(WebSocketConstants.PARAM_DOCUMENT, String.valueOf(documentId));
+        properties.setProperty(WebSocketConstants.PARAM_USER, user);
+        properties.setProperty(DiamController.PARAM_FROM, String.valueOf(begin));
+        properties.setProperty(DiamController.PARAM_TO, String.valueOf(end));
+        return DiamController.PLACEHOLDER_RESOLVER
+                .replacePlaceholders(DiamController.DOCUMENT_VIEWPORT_TOPIC_TEMPLATE, properties);
     }
 
     @Override
