@@ -202,8 +202,6 @@
                 - no actual code dependency
               -->
               <usedDependency>org.webjars.npm:webstomp-client</usedDependency>
-              <!-- Needed for websocket security config, but not detected by Maven -->
-              <usedDependency>org.springframework.security:spring-security-messaging</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

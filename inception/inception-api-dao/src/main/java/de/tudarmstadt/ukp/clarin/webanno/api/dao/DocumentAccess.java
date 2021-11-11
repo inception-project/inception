@@ -24,6 +24,7 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.security.access.AccessDeniedException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -66,21 +67,8 @@ public class DocumentAccess
             String aAnnotator)
     {
         try {
-            User user = userService.get(aUser);
-
-            // Does the user exist and is enabled?
-            if (user == null || !user.isEnabled()) {
-                return false;
-            }
-
-            // Does the project exist?
-            Project project;
-            if (StringUtils.isNumeric(aProjectId)) {
-                project = projectService.getProject(Long.valueOf(aProjectId));
-            }
-            else {
-                project = projectService.getProjectBySlug(aProjectId);
-            }
+            User user = getUser(aUser);
+            Project project = getProject(aProjectId);
 
             List<PermissionLevel> permissionLevels = projectService.getProjectPermissionLevels(user,
                     project);
@@ -106,9 +94,70 @@ public class DocumentAccess
 
             return true;
         }
-        catch (NoResultException e) {
+        catch (NoResultException | AccessDeniedException e) {
             // If any object does not exist, the user cannot view
             return false;
         }
+    }
+
+    public boolean canEditAnnotationDocument(String aUser, String aProjectId, long aDocumentId,
+            String aAnnotator)
+    {
+        try {
+            User user = getUser(aUser);
+            Project project = getProject(aProjectId);
+
+            // Does the user have the permission to access the project at all?
+            if (!projectService.hasRole(user, project, PermissionLevel.ANNOTATOR)) {
+                return false;
+            }
+
+            // Users can edit their own annotations
+            if (!aUser.equals(aAnnotator)) {
+                return false;
+            }
+
+            // Blocked documents cannot be edited
+            SourceDocument doc = documentService.getSourceDocument(project.getId(), aDocumentId);
+            if (documentService.existsAnnotationDocument(doc, aAnnotator)) {
+                AnnotationDocument aDoc = documentService.getAnnotationDocument(doc, aAnnotator);
+                if (aDoc.getState() == AnnotationDocumentState.IGNORE) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (NoResultException | AccessDeniedException e) {
+            // If any object does not exist, the user cannot edit
+            return false;
+        }
+    }
+
+    private Project getProject(String aProjectId)
+    {
+        try {
+            if (StringUtils.isNumeric(aProjectId)) {
+                return projectService.getProject(Long.valueOf(aProjectId));
+            }
+
+            return projectService.getProjectBySlug(aProjectId);
+        }
+        catch (NoResultException e) {
+            throw new AccessDeniedException("Project [" + aProjectId + "] does not exist");
+        }
+    }
+
+    private User getUser(String aUser)
+    {
+        User user = userService.get(aUser);
+
+        // Does the user exist and is enabled?
+        if (user == null || !user.isEnabled()) {
+            throw new AccessDeniedException(
+                    "User [" + aUser + "] does not exist or is not enabled");
+        }
+
+        return user;
     }
 }
