@@ -3834,51 +3834,35 @@ const Visualizer = (function ($, window, undefined) {
         y += sizes.texts.height;
         row.textY = y - this.rowPadding;
         if (row.sentence) {
-          const link = sentNumGroup;
-
           // Render sentence number as link
-          {
-            let text;
-            if (this.rtlmode) {
-              text = this.svg.text(link, this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding,
-                '' + row.sentence, {'data-sent': row.sentence});
-            } else {
-              text = this.svg.text(link, this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding,
-                '' + row.sentence, {'data-sent': row.sentence});
-            }
-            $(text).css('cursor', 'pointer');
+          let text;
+          if (this.rtlmode) {
+            text = this.svg.text(sentNumGroup, this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding,
+              '' + row.sentence, {'data-sent': row.sentence});
+          } else {
+            text = this.svg.text(sentNumGroup, this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding,
+              '' + row.sentence, {'data-sent': row.sentence});
           }
+          $(text).css('cursor', 'pointer');
 
           const sentComment = this.data.sentComment[row.sentence];
           if (sentComment) {
             const box = text.getBBox();
-            this.svg.remove(text);
             // TODO: using rectShadowSize, but this shadow should
             // probably have its own setting for shadow size
-            this.svg.rect(sentNumGroup,
+            const highlight = this.svg.rect(sentNumGroup,
               this.rtlmode ? box.x + this.rowPadding + this.rectShadowSize : box.x - this.rectShadowSize,
               box.y - this.rectShadowSize,
               box.width + 2 * this.rectShadowSize,
-              box.height + 2 * this.rectShadowSize,
-              {
+              box.height + 2 * this.rectShadowSize, {
                 'class': 'shadow_' + sentComment.type,
                 filter: 'url(#Gaussian_Blur)',
                 rx: this.rectShadowRounding,
                 ry: this.rectShadowRounding,
                 'data-sent': row.sentence,
               });
-
-            {
-              let text;
-              if (this.rtlmode) {
-                text = this.svg.text(sentNumGroup, this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding,
-                  '' + row.sentence, {'data-sent': row.sentence});
-              } else {
-                text = this.svg.text(sentNumGroup, this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding,
-                  '' + row.sentence, {'data-sent': row.sentence});
-              }
-              $(text).css('cursor', 'pointer');
-            }
+            $(text).insertAfter($(highlight));
+            $(text).css('fill', '#000');
           }
         }
 
@@ -4378,7 +4362,7 @@ const Visualizer = (function ($, window, undefined) {
      */
     onMouseOverSentence(evt) {
       const target = $(evt.target);
-      let id = target.attr('data-span-id');
+      let id = target.attr('data-sent');
       let comment = this.data.sentComment[id];
       if (comment) {
         this.dispatcher.post('displaySentComment', [evt, target, comment.text, comment.type]);
