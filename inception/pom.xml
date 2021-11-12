@@ -297,6 +297,16 @@
       <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okio</groupId>
+      <artifactId>okio</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
@@ -1933,7 +1943,7 @@
         </executions>
         <configuration>
           <failOnWarning>true</failOnWarning>
-          <ignoredDependencies combine.children="append">
+          <ignoredUnusedDeclaredDependencies combine.children="append">
             <!--
               - Logging is used via reflection and cannot be detected by Maven
             -->
@@ -1957,7 +1967,7 @@
             <dependency>com.h2database:h2</dependency>
             <dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
             <!--
-              - Basic test dependencies
+              - Common test dependencies
             -->
             <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
             <dependency>org.junit.jupiter:junit-jupiter-params</dependency>
@@ -1969,7 +1979,10 @@
             <dependency>com.squareup.okio:okio</dependency>
             <dependency>org.awaitility:awaitility</dependency>
             <dependency>org.springframework:spring-test</dependency>
-          </ignoredDependencies>
+            <dependency>org.springframework.boot:spring-boot-starter-web</dependency>
+            <dependency>org.springframework.boot:spring-boot-test-autoconfigure</dependency>
+            <dependency>org.springframework.security:spring-security-test</dependency>
+          </ignoredUnusedDeclaredDependencies>
         </configuration>
         <dependencies>
           <dependency>
