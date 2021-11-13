@@ -60,7 +60,7 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-security</artifactId>
     </dependency>
-  
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
@@ -101,7 +101,7 @@
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-crypto</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
@@ -118,17 +118,17 @@
       <groupId>de.agilecoders.wicket.webjars</groupId>
       <artifactId>wicket-webjars</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>javax.servlet-api</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -142,12 +142,12 @@
       <groupId>com.github.ben-manes.caffeine</groupId>
       <artifactId>caffeine</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
@@ -161,13 +161,13 @@
       <groupId>javax.persistence</groupId>
       <artifactId>javax.persistence-api</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>com.flipkart.zjsonpatch</groupId>
       <artifactId>zjsonpatch</artifactId>
       <version>0.4.0</version>
     </dependency>
-    
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
@@ -236,31 +236,11 @@
               <goal>copy-resources</goal>
             </goals>
             <configuration>
-              <outputDirectory>target/ts</outputDirectory>
+              <outputDirectory>src/main/ts</outputDirectory>
               <resources>
                 <resource>
-                  <directory>src/main/ts</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-compiled-ts-resources</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>add-resource</goal>
-            </goals>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>target/ts/dist</directory>
-                  <targetPath>js</targetPath>
+                  <directory>src/main/ts_template</directory>
+                  <filtering>true</filtering>
                 </resource>
               </resources>
             </configuration>
@@ -271,7 +251,8 @@
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
         <configuration>
-          <workingDirectory>target/ts</workingDirectory>
+          <!-- <workingDirectory>target/ts</workingDirectory> -->
+          <workingDirectory>src/main/ts</workingDirectory>
           <installDirectory>../../node</installDirectory>
           <nodeVersion>v16.13.0</nodeVersion>
           <npmVersion>8.1.0</npmVersion>
@@ -322,8 +303,8 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
-                  <exclude>src/main/ts/package.json</exclude>
-                  <exclude>src/main/ts/package-lock.json</exclude>
+                  <exclude>src/main/ts/*.json</exclude>
+                  <exclude>src/main/ts/node_modules/**/*</exclude>
                   <!-- MIT License -->
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/diam/debugeditor/fast-json-patch.js</exclude>
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/diam/debugeditor/fast-json-patch.min.js</exclude>

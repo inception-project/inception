@@ -1,6 +1,6 @@
 {
-  "name": "@experimental/experimental-annotation-API",
-  "version": "1.0.0",
+  "name": "@inception-project/annotation-api",
+  "version": "${project.version}",
   "description": "Front-end API for custom annotation editor",
   "keywords": [
     "API",
