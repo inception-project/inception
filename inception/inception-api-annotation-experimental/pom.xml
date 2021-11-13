@@ -224,6 +224,8 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  
+  <!--  
   <build>
     <plugins>
       <plugin>
@@ -270,7 +272,6 @@
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
         <configuration>
-          <!-- <workingDirectory>target/ts</workingDirectory> -->
           <workingDirectory>src/main/ts</workingDirectory>
           <installDirectory>../../node</installDirectory>
           <nodeVersion>v16.13.0</nodeVersion>
@@ -306,6 +307,7 @@
       </plugin>
     </plugins>
   </build>
+  -->
   <profiles>
     <profile>
       <id>rat-check</id>
@@ -322,8 +324,6 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
-                  <exclude>src/main/ts/*.json</exclude>
-                  <exclude>src/main/ts/node_modules/**/*</exclude>
                   <!-- MIT License -->
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/diam/debugeditor/fast-json-patch.js</exclude>
                   <exclude>src/main/java/de/tudarmstadt/ukp/inception/diam/debugeditor/fast-json-patch.min.js</exclude>

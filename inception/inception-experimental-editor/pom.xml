@@ -81,6 +81,8 @@
       <artifactId>javax.servlet-api</artifactId>
     </dependency>
   </dependencies>
+  
+  <!--  
   <build>
     <plugins>
       <plugin>
@@ -200,4 +202,5 @@
       </plugins>
     </pluginManagement>
   </build>
+  -->
 </project>
