@@ -1,5 +1,0 @@
-== src/main/java/de/tudarmstadt/ukp/inception/diam/debugeditor
-
-JSON-Patch
-
- * Copyright (c) 2013, 2014 Joachim Wester
