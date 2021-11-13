@@ -108,13 +108,23 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm build</id>
+            <id>npm build:AnnotationExperienceAPIBasicEditor</id>
             <goals>
               <goal>npm</goal>
             </goals>
             <phase>compile</phase>
             <configuration>
-              <arguments>run build</arguments>
+              <arguments>run build:AnnotationExperienceAPIBasicEditor</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:DiamDebugEditor</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:DiamDebugEditor</arguments>
             </configuration>
           </execution>
         </executions>
@@ -140,4 +150,5 @@
         </executions>
       </plugin>
     </plugins>
+  </build>
 </project>
