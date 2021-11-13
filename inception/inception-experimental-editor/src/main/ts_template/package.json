@@ -1,5 +1,5 @@
 {
-  "name": "@inceptionproject/experimentalannotationeditor",
+  "name": "@inception-project/${project.artifactId}",
   "version": "${project.version}",
   "description": "Custom annotation editor",
   "keywords": [
@@ -11,7 +11,7 @@
   },
   "external": {},
   "devDependencies": {
-    "@inceptionproject/annotationapi": "${project.version}",
+    "@inception-project/inception-api-annotation-experimental": "0.${project.version}",
     "@stomp/stompjs": "^6.1.0",
     "@types/sockjs-client": "^1.5.0",
     "@types/stompjs": "^2.3.4",

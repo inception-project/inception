@@ -101,6 +101,19 @@
         </executions>
       </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies combine.children="append">
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-api-annotation-experimental</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
   
   <!--  

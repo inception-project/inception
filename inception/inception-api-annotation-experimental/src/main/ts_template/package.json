@@ -1,6 +1,6 @@
 {
-  "name": "@inceptionproject/annotationapi",
-  "version": "${project.version}",
+  "name": "@inception-project/${project.artifactId}",
+  "version": "0.${project.version}",
   "description": "Front-end API for custom annotation editor",
   "keywords": [
     "API",
