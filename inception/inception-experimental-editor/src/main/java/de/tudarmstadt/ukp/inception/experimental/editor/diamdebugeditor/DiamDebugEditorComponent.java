@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.debugeditor;
+package de.tudarmstadt.ukp.inception.experimental.editor.diamdebugeditor;
 
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
@@ -84,7 +84,6 @@ public class DiamDebugEditorComponent
     {
         super.renderHead(aResponse);
 
-        aResponse.render(forReference(JSONPatchResourceReference.get()));
         aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
                 "webstomp-client/current/dist/webstomp.min.js")));
         aResponse.render(forReference(AxiosResourceReference.get()));

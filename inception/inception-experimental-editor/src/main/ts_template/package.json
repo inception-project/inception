@@ -7,7 +7,7 @@
     "Annotation"
   ],
   "scripts": {
-    "build": "./node_modules/esbuild/bin/esbuild editor/AnnotationExperienceAPIBasicEditor.ts --target=es6 --bundle --minify --sourcemap --global-name=AnnotationExperienceAPIBasicEditor --outfile=dist/de/tudarmstadt/ukp/inception/experimental/editor/resources/AnnotationExperienceAPIBasicEditor.js"
+    "build": "./node_modules/esbuild/bin/esbuild editor/AnnotationExperienceAPIBasicEditor.ts --target=es6 --bundle --minify --sourcemap --global-name=AnnotationExperienceAPIBasicEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/experimental/editor/resources/AnnotationExperienceAPIBasicEditor.js"
   },
   "external": {},
   "devDependencies": {

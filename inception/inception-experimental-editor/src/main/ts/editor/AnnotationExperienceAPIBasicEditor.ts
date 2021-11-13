@@ -17,9 +17,9 @@
  */
 
 import {AnnotationExperienceAPIBasicEditorVisualization} from "./visualization/AnnotationExperienceAPIBasicEditorVisualization";
-import {AnnotationExperienceAPIImpl} from "@experimental/experimental-annotation-API/client/AnnotationExperienceAPIImpl";
+import {AnnotationExperienceAPIImpl} from "@inception-project/inception-api-annotation-experimental/client/AnnotationExperienceAPIImpl";
 import {AnnotationExperienceAPIBasicEditorActionHandler} from "./action/AnnotationExperienceAPIBasicEditorActionHandler";
-import {Viewport} from "@experimental/experimental-annotation-API/client/model/Viewport";
+import {Viewport} from "@inception-project/inception-api-annotation-experimental/client/model/Viewport";
 
 export class AnnotationExperienceAPIBasicEditor
 {
