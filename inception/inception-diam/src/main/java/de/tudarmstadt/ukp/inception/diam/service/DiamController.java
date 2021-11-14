@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.diam.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USERNAME;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
@@ -38,13 +37,10 @@ import java.util.Map.Entry;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.security.access.AccessDeniedException;
@@ -60,8 +56,6 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
@@ -100,9 +94,9 @@ public class DiamController
     public static final String DOCUMENT_VIEWPORT_TOPIC_TEMPLATE = //
             DOCUMENT_BASE_TOPIC_TEMPLATE + "/from/{" + PARAM_FROM + "}/to/{" + PARAM_TO + "}";
 
-    public static final String ANNOTATION_COMMAND_DELETE_TOPIC_TEMPLATE = //
-            DOCUMENT_BASE_TOPIC_TEMPLATE + "/delete";
-
+    // public static final String ANNOTATION_COMMAND_DELETE_TOPIC_TEMPLATE = //
+    // DOCUMENT_BASE_TOPIC_TEMPLATE + "/delete";
+    //
     public static final String ANNOTATION_COMMAND_CREATE_SPAN_TOPIC_TEMPLATE = //
             DOCUMENT_BASE_TOPIC_TEMPLATE + "/span";
 
@@ -173,36 +167,36 @@ public class DiamController
         }
     }
 
-    @MessageMapping(ANNOTATION_COMMAND_DELETE_TOPIC_TEMPLATE)
-    public void onDeleteAnnotationRequest(Principal aPrincipal,
-            @DestinationVariable(PARAM_PROJECT) long aProjectId,
-            @DestinationVariable(PARAM_DOCUMENT) long aDocumentId,
-            @DestinationVariable(PARAM_USER) String aUser, @Header("vid") String aVid)
-        throws IOException
-    {
-        Project project = getProject(aProjectId);
-
-        try (CasStorageSession session = CasStorageSession.open()) {
-            MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
-            MDC.put(KEY_USERNAME, aPrincipal.getName());
-
-            VID vid = VID.parse(aVid);
-
-            SourceDocument doc = documentService.getSourceDocument(project.getId(), aDocumentId);
-            CAS cas = documentService.readAnnotationCas(doc, aUser);
-            AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
-            TypeAdapter adapter = schemaService.getAdapter(schemaService.findLayer(project, fs));
-
-            // FIXME Does not delete/clear up related annotations (relations, slots, etc.)
-            adapter.delete(doc, aUser, cas, vid);
-
-            documentService.writeAnnotationCas(cas, doc, aUser, true);
-        }
-        finally {
-            MDC.remove(KEY_REPOSITORY_PATH);
-            MDC.remove(KEY_USERNAME);
-        }
-    }
+    // @MessageMapping(ANNOTATION_COMMAND_DELETE_TOPIC_TEMPLATE)
+    // public void onDeleteAnnotationRequest(Principal aPrincipal,
+    // @DestinationVariable(PARAM_PROJECT) long aProjectId,
+    // @DestinationVariable(PARAM_DOCUMENT) long aDocumentId,
+    // @DestinationVariable(PARAM_USER) String aUser, @Header("vid") String aVid)
+    // throws IOException
+    // {
+    // Project project = getProject(aProjectId);
+    //
+    // try (CasStorageSession session = CasStorageSession.open()) {
+    // MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+    // MDC.put(KEY_USERNAME, aPrincipal.getName());
+    //
+    // VID vid = VID.parse(aVid);
+    //
+    // SourceDocument doc = documentService.getSourceDocument(project.getId(), aDocumentId);
+    // CAS cas = documentService.readAnnotationCas(doc, aUser);
+    // AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
+    // TypeAdapter adapter = schemaService.getAdapter(schemaService.findLayer(project, fs));
+    //
+    // // FIXME Does not delete/clear up related annotations (relations, slots, etc.)
+    // adapter.delete(doc, aUser, cas, vid);
+    //
+    // documentService.writeAnnotationCas(cas, doc, aUser, true);
+    // }
+    // finally {
+    // MDC.remove(KEY_REPOSITORY_PATH);
+    // MDC.remove(KEY_USERNAME);
+    // }
+    // }
 
     private VDocument render(Project aProject, long aDocumentId, String aUser, int aViewportBegin,
             int aViewportEnd)

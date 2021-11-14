@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
+import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 
@@ -75,13 +77,15 @@ public class PreRendererImpl
     public void render(VDocument aResponse, int windowBegin, int windowEnd, CAS aCas,
             List<AnnotationLayer> aLayers)
     {
-        log.trace("render()");
+        log.trace("Prerenderer.render()");
 
         Validate.notNull(aCas, "CAS cannot be null");
 
         if (aLayers.isEmpty()) {
             return;
         }
+
+        long start = System.currentTimeMillis();
 
         int renderBegin = Math.max(0, windowBegin);
         int renderEnd = Math.min(aCas.getDocumentText().length(), windowEnd);
@@ -111,6 +115,13 @@ public class PreRendererImpl
                     .createRenderer(layer, () -> layerAllFeatures);
             renderer.render(aCas, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
         }
+
+        long duration = currentTimeMillis() - start;
+        log.trace(
+                "Prerenderer.render() took {}ms to render {} layers [{}-{}] with {} spans and {} arcs",
+                duration, aLayers.size(), renderBegin, renderEnd, aResponse.spans().size(),
+                aResponse.arcs().size());
+        serverTiming("Prerenderer", "Pre-rendering", duration);
     }
 
     @EventListener
