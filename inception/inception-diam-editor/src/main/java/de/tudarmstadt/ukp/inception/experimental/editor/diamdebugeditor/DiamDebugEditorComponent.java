@@ -32,8 +32,8 @@ import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.model.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.support.axios.AxiosResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
@@ -46,13 +46,14 @@ public class DiamDebugEditorComponent
     private @SpringBean ServletContext servletContext;
 
     private IModel<AnnotatorState> state;
+    private DiamAjaxBehavior diamBehavior;
 
     public DiamDebugEditorComponent(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId, "DiamDebugEditorComponent.vue");
         setOutputMarkupPlaceholderTag(true);
         state = aModel;
-
+        add(diamBehavior = new DiamAjaxBehavior());
     }
 
     @Override
@@ -60,12 +61,13 @@ public class DiamDebugEditorComponent
     {
         super.onConfigure();
 
+        var viewport = new ViewportDefinition(state.getObject().getDocument(),
+                state.getObject().getUser().getUsername(), 0, Integer.MAX_VALUE);
+
         Map<String, Object> properties = Map.of( //
+                "ajaxEndpoint", diamBehavior.getCallbackUrl(), //
                 "wsEndpoint", constructEndpointUrl(), //
-                "topicChannel",
-                new ViewportDefinition(state.getObject().getDocument(),
-                        state.getObject().getUser().getUsername(), 0, Integer.MAX_VALUE)
-                                .getTopic());
+                "topicChannel", viewport.getTopic());
 
         // model will be added as props to vue component
         setDefaultModel(Model.ofMap(properties));
@@ -84,8 +86,6 @@ public class DiamDebugEditorComponent
     {
         super.renderHead(aResponse);
 
-        aResponse.render(forReference(new WebjarsJavaScriptResourceReference(
-                "webstomp-client/current/dist/webstomp.min.js")));
         aResponse.render(forReference(AxiosResourceReference.get()));
     }
 }

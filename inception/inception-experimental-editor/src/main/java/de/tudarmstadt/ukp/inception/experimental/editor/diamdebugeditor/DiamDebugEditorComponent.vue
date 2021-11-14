@@ -31,7 +31,7 @@
           <th>end</th>
         </tr>
         <tr v-for="span in data.spans" :key="span.vid">
-          <td><button v-on:click="client.select(span.vid)">{{span.vid}}</button></td>
+          <td>{{span.vid}}</td>
           <td>{{span.color}}</td>
           <td>{{span.label}}</td>
           <td>{{span.begin}}</td>
@@ -52,7 +52,7 @@
 <script>
 module.exports = {
   props: {
-    ajaxEndpoint: { type: String, required: true },
+    ajaxCommandEndpoint: { type: String, required: true },
     wsEndpoint: { type: String, required: true },   // should this be full ws://... url
     topicChannel: { type: String, required: true }
   },
@@ -67,16 +67,16 @@ module.exports = {
   },
   methods: {
   },
-  mounted() {
-    this.client = new AnnotationEditing.AnnotationEditing();
-    this.client.onConnect = () => {
-      this.client.subscribeToViewport(this.topicChannel, data => this.data = data);
-    };
-    this.client.connect(this.wsEndpoint, this.ajaxEndpoint);
-  },
-  beforeUnmount() {
-    this.client.unsubscribeFromViewport();
-  }
+    mounted() {
+      this.client = new AnnotationEditing.AnnotationEditing();
+      this.client.onConnect = () => {
+        this.client.subscribeToViewport(this.topicChannel, data => this.data = data);
+      };
+      this.client.connect(this.wsEndpoint, this.ajaxCommandEndpoint);
+    },
+    beforeUnmount() {
+      this.client.unsubscribeFromViewport();
+    }
 }
 </script>
 

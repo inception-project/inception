@@ -27,7 +27,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -58,7 +57,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.messages.response.create.Sp
  *
  * @see AnnotationProcessAPI interface class .
  **/
-@Controller
+// @Controller
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AnnotationProcessAPIImpl
     implements AnnotationProcessAPI

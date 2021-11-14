@@ -19,9 +19,8 @@ package de.tudarmstadt.ukp.inception.experimental.editor.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
+//@Configuration
 @ConditionalOnProperty(prefix = "ui.experimental", name = "enabled", havingValue = "true")
 public class ExperimentalAnnotationEditorAutoConfiguration
 {
@@ -30,6 +29,7 @@ public class ExperimentalAnnotationEditorAutoConfiguration
     {
         return new ExperimentalAnnotationEditorFactory();
     }
+
     @Bean
     public ExperimentalAnnotationAdvancedEditorFactory experimentalAnnotationAdvancedEditorFactory()
     {

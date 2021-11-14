@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -93,7 +92,7 @@ import de.tudarmstadt.ukp.inception.experimental.api.websocket.AnnotationProcess
  *      <p>
  *      The private support methods can be found on the bottom end of this class.
  **/
-@Component
+// @Component
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class AnnotationSystemAPIImpl
     implements AnnotationSystemAPI

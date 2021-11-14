@@ -15,18 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.resources;
+package de.tudarmstadt.ukp.inception.diam.editor;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class AnnotationEditingReference
+public class DiamJavaScriptApiReference
     extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 8110724056092366243L;
 
-    private static final AnnotationEditingReference INSTANCE = new AnnotationEditingReference();
+    private static final DiamJavaScriptApiReference INSTANCE = new DiamJavaScriptApiReference();
 
-    public static AnnotationEditingReference get()
+    public static DiamJavaScriptApiReference get()
     {
         return INSTANCE;
     }
@@ -34,8 +34,8 @@ public class AnnotationEditingReference
     /**
      * Private constructor
      */
-    private AnnotationEditingReference()
+    private DiamJavaScriptApiReference()
     {
-        super(AnnotationEditingReference.class, "AnnotationEditing.js");
+        super(DiamJavaScriptApiReference.class, "AnnotationEditing.js");
     }
 }

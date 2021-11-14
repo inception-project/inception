@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.experimental.editor.diamdebugeditor;
+package de.tudarmstadt.ukp.inception.diam.editor;
 
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
@@ -24,28 +24,25 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamEditorBase;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptApiReference;
 
-public class DiamDebugEditor
-    extends DiamEditorBase
+public class DiamEditorBase
+    extends AnnotationEditorBase
 {
-    private static final long serialVersionUID = -1268868680331594105L;
+    private static final long serialVersionUID = 411747862947470658L;
 
-    public DiamDebugEditor(String aId, IModel<AnnotatorState> aModel,
+    public DiamEditorBase(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-
-        add(new DiamDebugEditorComponent("vis", aModel));
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        // Nothing to do - the editor is not updated via AJAX.
+        // Nothing to do - the editor is not updated via AJAX but via DIAM / WebSocket.
     }
 
     @Override

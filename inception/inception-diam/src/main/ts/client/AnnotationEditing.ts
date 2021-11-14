@@ -20,6 +20,8 @@ import { Viewport } from './newmodel/Viewport';
 import * as jsonpatch from 'fast-json-patch';
 import { timeStamp } from 'console';
 
+declare var Wicket: any;
+
 /**
  * This callback will accept the annotation data.
  */
@@ -27,6 +29,7 @@ export declare type dataCallback = (data: Viewport) => void;
 
 export class AnnotationEditing {
 
+    private ajaxEndpoint: string;
     private stompClient: Client;
     private webSocket: WebSocket;
     private initSubscription: StompSubscription;
@@ -37,10 +40,12 @@ export class AnnotationEditing {
 
     public onConnect: frameCallbackType;
 
-    connect(aWsEndpoint: string) {
+    connect(aWsEndpoint: string, aAjaxEndpoint: string) {
         if (this.stompClient) {
             throw "Already connected";
         }
+
+        this.ajaxEndpoint = aAjaxEndpoint;
 
         this.stompClient = Stomp.over(() => this.webSocket = new WebSocket(aWsEndpoint));
         this.stompClient.reconnectDelay = 5000;
@@ -60,6 +65,22 @@ export class AnnotationEditing {
     disconnect() {
         this.stompClient.deactivate();
         this.webSocket.close();
+    }
+
+    select(vid: string) {
+        Wicket.Ajax.ajax({
+            "m": "GET",
+            // "c": dispatcher.wicketId,
+            "u": this.ajaxEndpoint,
+            "ep": {
+                "cmd": "SelectAnnotation",
+                "vid": vid
+            },
+            // success
+            "sh": [function () { }],
+            // error
+            "fh": [function () { }]
+        });
     }
 
     private handleBrokerError(receipt: IFrame) {
