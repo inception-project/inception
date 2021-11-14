@@ -25,13 +25,12 @@
     <artifactId>inception-app</artifactId>
     <version>22.0-SNAPSHOT</version>
   </parent>
-  <artifactId>inception-experimental-editor</artifactId>
-  <name>INCEpTION - Annotation - Editor - Experimental</name>
+  <artifactId>inception-diam-editor</artifactId>
+  <name>INCEpTION - DIAM - Editor</name>
   <dependencies>
     <dependency>
-      <!-- Make sure this module is build after the API so we can pick up the JS from npm -->
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-annotation-experimental</artifactId>
+      <artifactId>inception-diam</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -104,7 +103,7 @@
             </goals>
             <phase>generate-sources</phase>
             <configuration>
-              <arguments>link @inceptionproject/annotationapi</arguments>
+              <arguments>link @inception-project/inception-diam</arguments>
             </configuration>
           </execution>
           <execution>
