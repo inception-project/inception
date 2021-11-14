@@ -1,4 +1,3 @@
-
 /*
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
@@ -16,9 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { Arc } from "../newmodel/Arc";
+import { Span } from "../newmodel/Span";
 
-import { AnnotationEditing } from "@inception-project/inception-api-annotation-experimental/client/AnnotationEditing";
-
-export class DiamDebugEditor {
-
+export class Viewport
+{
+    text :string;
+    arcs :Arc[];
+    spans :Span[];
 }

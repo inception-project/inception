@@ -60,53 +60,21 @@ module.exports = {
       data: [],
       diff: null,
       socket: null,
-      stompClient: null,
+      client: null,
       connected: false
     }
   },
   methods: {
-    connect() {
-      if (this.connected){
-        return;
-      }
-
-      this.socket = new WebSocket(this.wsEndpoint);
-      this.stompClient = webstomp.over(this.socket);
-      var that = this;
-      this.stompClient.connect({}, 
-        function (frame) {
-          that.connected = true;
-          that.stompClient.subscribe('/user/queue/errors', function (msg) {
-            console.error('Websocket server error: ' + JSON.stringify(msg.body));
-          });
-          that.stompClient.subscribe('/app' + that.topicChannel, function (msg) {
-            that.data = JSON.parse(msg.body);
-            that.diff = null;
-          });
-          that.stompClient.subscribe('/topic' + that.topicChannel, function (msg) {
-            var update = JSON.parse(msg.body);
-            that.data = jsonpatch.applyPatch(that.data, update.diff).newDocument;
-            that.diff = update.diff;
-          });
-        },
-        function(error){
-          console.log("Websocket connection error: " + JSON.stringify(error));
-        }
-      );
-    },
-
-    disconnect() {
-      if (this.stompClient !== null) {
-        this.stompClient.disconnect();
-      }
-      this.connected = false;
-    },
   },
   mounted() {
-    this.connect();
+    this.client = new AnnotationEditing.AnnotationEditing();
+    this.client.onConnect = () => {
+      this.client.subscribeToViewport(this.topicChannel, data => this.data = data);
+    };
+    this.client.connect(this.wsEndpoint);
   },
   beforeUnmount() {
-    this.disconnect();
+    this.client.unsubscribeFromViewport();
   }
 }
 </script>

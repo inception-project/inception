@@ -7,8 +7,7 @@
     "Annotation"
   ],
   "scripts": {
-    "build:AnnotationExperienceAPIBasicEditor": "./node_modules/esbuild/bin/esbuild editor/AnnotationExperienceAPIBasicEditor.ts --target=es6 --bundle --minify --sourcemap --global-name=AnnotationExperienceAPIBasicEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/experimental/editor/resources/AnnotationExperienceAPIBasicEditor.js",
-    "build:DiamDebugEditor": "./node_modules/esbuild/bin/esbuild editor/DiamDebugEditor.ts --target=es6 --bundle --minify --sourcemap --global-name=DiamDebugEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/experimental/editor/diamdebugeditor/DiamDebugEditor.js"
+    "build:AnnotationExperienceAPIBasicEditor": "./node_modules/esbuild/bin/esbuild editor/AnnotationExperienceAPIBasicEditor.ts --target=es6 --bundle --sourcemap --global-name=AnnotationExperienceAPIBasicEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/experimental/editor/resources/AnnotationExperienceAPIBasicEditor.js",
   },
   "external": {},
   "devDependencies": {

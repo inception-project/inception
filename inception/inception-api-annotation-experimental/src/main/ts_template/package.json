@@ -6,7 +6,9 @@
     "API",
     "Annotation"
   ],
-  "scripts": {},
+  "scripts": {
+    "build": "./node_modules/esbuild/bin/esbuild client/AnnotationEditing.ts --target=es6 --bundle --sourcemap --global-name=AnnotationEditing --outfile=../../../target/js/de/tudarmstadt/ukp/inception/diam/resources/AnnotationEditing.js"
+  },
   "external": {},
   "devDependencies": {
     "fast-json-patch": "^3.1.0",

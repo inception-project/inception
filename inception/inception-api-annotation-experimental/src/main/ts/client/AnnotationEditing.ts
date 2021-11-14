@@ -15,51 +15,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Client, Stomp, StompSubscription, messageCallbackType, IFrame } from '@stomp/stompjs';
+import { Client, Stomp, StompSubscription, IFrame, ActivationState, frameCallbackType } from '@stomp/stompjs';
+import { Viewport } from './newmodel/Viewport';
+import * as jsonpatch from 'fast-json-patch';
+import { timeStamp } from 'console';
 
 /**
- * Implementation of the Interface AnnotationExperienceAPI within that package.
- *
- * For further details @see interface class (AnnotationExperienceAPI.ts).
- *
- **/
+ * This callback will accept the annotation data.
+ */
+export declare type dataCallback = (data: Viewport) => void;
+
 export class AnnotationEditing {
 
-    stompClient: Client;
-    webSocket: WebSocket;
-    initSubscription: StompSubscription;
-    updateSubscription: StompSubscription;
+    private stompClient: Client;
+    private webSocket: WebSocket;
+    private initSubscription: StompSubscription;
+    private updateSubscription: StompSubscription;
 
-    /**
-     * Constructor: creates the Annotation Experience API.
-     * @param aProjectId: ID of the project, required in order to subscribe to the correct channels.
-     * @param aDocumentId: ID of the document, required in order to subscribe to the correct channels.
-     * @param aAnnotatorName: String representation of the annotatorName, required in order to subscribe to the correct channels.
-     * @param aUrl: The URL required by Websocket and the stomp broker in order to establish a connection
-     * @NOTE: the connect() method will automatically be performed, there is no need to create a Websocket connection
-    * manually.
-    */
-    constructor(aUrl: string) {
-        this.connect(aUrl)
-    }
+    private data: Viewport;
+    private diff: any;
 
+    public onConnect: frameCallbackType;
 
-    /**
-     * Creates the Websocket connection with the stomp broker.
-     * @NOTE: When a connection is established, onConnect() will be called automatically so
-     * there is no need to call it. Also, all subscriptions will be handled automatically.
-     */
-    connect(aUrl: string) {
+    connect(aWsEndpoint: string) {
         if (this.stompClient) {
             throw "Already connected";
         }
 
-        this.stompClient = Stomp.over(() => this.webSocket = new WebSocket(aUrl));
+        this.stompClient = Stomp.over(() => this.webSocket = new WebSocket(aWsEndpoint));
         this.stompClient.reconnectDelay = 5000;
-        this.stompClient.onConnect = () => {
+
+        this.stompClient.onConnect = frame => {
             this.stompClient.subscribe("/user/queue/errors", this.handleProtocolError);
+            if (this.onConnect) {
+                this.onConnect(frame);
+            }
         }
+
         this.stompClient.onStompError = this.handleBrokerError;
+
         this.stompClient.activate();
     }
 
@@ -68,19 +62,28 @@ export class AnnotationEditing {
         this.webSocket.close();
     }
 
-    handleBrokerError(receipt: IFrame) {
+    private handleBrokerError(receipt: IFrame) {
         console.log('Broker reported error: ' + receipt.headers['message']);
         console.log('Additional details: ' + receipt.body);
     }
 
-    handleProtocolError(msg) {
+    private handleProtocolError(msg) {
         console.log(msg);
     }
 
-    subscribeToViewport(aViewportTopic: string, initCallback: messageCallbackType, updateCallback: messageCallbackType) {
+    subscribeToViewport(aViewportTopic: string, callback: dataCallback) {
         this.unsubscribeFromViewport();
-        this.initSubscription = this.stompClient.subscribe('/app' + aViewportTopic, initCallback);
-        this.updateSubscription = this.stompClient.subscribe('/topic' + aViewportTopic, updateCallback);
+        this.initSubscription = this.stompClient.subscribe('/app' + aViewportTopic, msg => {
+            this.data = JSON.parse(msg.body);
+            this.diff = null;
+            callback(this.data);
+        });
+        this.updateSubscription = this.stompClient.subscribe('/topic' + aViewportTopic, msg => {
+            var update = JSON.parse(msg.body);
+            this.data = jsonpatch.applyPatch(this.data, update.diff).newDocument;
+            this.diff = update.diff;
+            callback(this.data);
+        });
     }
 
     unsubscribeFromViewport() {

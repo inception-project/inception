@@ -17,13 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.experimental.editor.diamdebugeditor;
 
+import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.diam.resources.AnnotationEditingReference;
 
 public class DiamDebugEditor
     extends AnnotationEditorBase
@@ -42,5 +46,11 @@ public class DiamDebugEditor
     protected void render(AjaxRequestTarget aTarget)
     {
         // Nothing to do - the editor is not updated via AJAX.
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        aResponse.render(forReference(AnnotationEditingReference.get()));
     }
 }
