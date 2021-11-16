@@ -23,7 +23,8 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 
-public interface ProjectExportExtension extends Extension<Project>
+public interface ProjectExportExtension
+    extends Extension<Project>
 {
     Panel createExporterPanel(String aId, IModel<Project> aProject);
 }
