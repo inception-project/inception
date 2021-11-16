@@ -71,7 +71,8 @@ public class BratLazyDetailsLookupServiceImpl
 
     @Override
     public NormDataResponse actionLookupNormData(IRequestParameters request, VID paramId,
-            CasProvider aCas, SourceDocument aSourceDocument, User aUser)
+            CasProvider aCas, SourceDocument aSourceDocument, User aUser, int windowBeginOffset,
+            int windowEndOffset)
         throws AnnotationException, IOException
     {
         NormDataResponse response = new NormDataResponse();
@@ -120,7 +121,7 @@ public class BratLazyDetailsLookupServiceImpl
         if (Renderer.QUERY_LAYER_LEVEL_DETAILS.equals(database)) {
             details = layerSupportRegistry.getLayerSupport(layer)
                     .createRenderer(layer, () -> annotationService.listAnnotationFeature(layer))
-                    .renderLazyDetails(aCas.get(), paramId);
+                    .renderLazyDetails(aCas.get(), paramId, windowBeginOffset, windowEndOffset);
         }
         // Is it a feature-level lazy detail?
         else {
