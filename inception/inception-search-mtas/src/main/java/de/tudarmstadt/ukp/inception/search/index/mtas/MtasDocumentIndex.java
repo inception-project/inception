@@ -411,25 +411,46 @@ public class MtasDocumentIndex
     {
         List<Integer> fullDocSet = getUniqueDocuments(aStatisticRequest);
         Map<String, LayerStatistics> allStats = new HashMap<String, LayerStatistics>();
+        Map<String, LayerStatistics> nonNullStats = new HashMap<String, LayerStatistics>();
         Set<AnnotationFeature> features = aStatisticRequest.getFeatures();
 
         for (AnnotationFeature feature : features) {
             AnnotationLayer layer = feature.getLayer();
-            String searchString = "<" + layer.getUiName().replace(' ', '_') + "."
-                    + feature.getUiName().replace(' ', '_') + "=\"\"/>";
+            String searchString = "<" + MtasUimaParser.getIndexedName(layer.getUiName()) + "."
+                    + MtasUimaParser.getIndexedName(feature.getUiName()) + "=\"\"/>";
 
             LayerStatistics results = getLayerStatistics(aStatisticRequest, searchString,
                     fullDocSet);
+            results.setFeature(feature);
+            if (results.getMaximum() > 0) {
+                nonNullStats.put(layer.getUiName() + "." + feature.getUiName(), results);
+            }
             allStats.put(layer.getUiName() + "." + feature.getUiName(), results);
         }
+        AnnotationLayer rawText = new AnnotationLayer();
+        rawText.setUiName("Segmentation");
+
+        AnnotationFeature token = new AnnotationFeature();
+        token.setUiName("token");
+        token.setLayer(rawText);
+
+        AnnotationFeature sentence = new AnnotationFeature();
+        sentence.setUiName("sentence");
+        sentence.setLayer(rawText);
+
         LayerStatistics results = getLayerStatistics(aStatisticRequest, "<Token=\"\"/>",
                 fullDocSet);
-        allStats.put("Token Count", results);
+
+        results.setFeature(token);
+        allStats.put("Segmentation.token", results);
+        nonNullStats.put("Segmentation.token", results);
 
         results = getLayerStatistics(aStatisticRequest, "<s=\"\"/>", fullDocSet);
-        allStats.put("Sentence Count", results);
+        results.setFeature(sentence);
+        allStats.put("Segmentation.sentence", results);
+        nonNullStats.put("Segmentation.sentence", results);
 
-        return new StatisticsResult(aStatisticRequest, allStats, aStatisticRequest.getFeatures());
+        return new StatisticsResult(aStatisticRequest, allStats, nonNullStats, aStatisticRequest.getFeatures());
     }
 
     @Override
@@ -529,7 +550,7 @@ public class MtasDocumentIndex
                     FIELD_CONTENT);
             // The query is either an actual query (if the method is called from
             // getQueryStatistics in SearchService) or a mock query, e.g. "<Token=\"\"/>"
-            //  (if the method shall return statistics for a layer). The second query always
+            // (if the method shall return statistics for a layer). The second query always
             // counts the sentences for per sentence statistics.
             MtasSpanQuery[] spanQuerys = new MtasSpanQuery[2];
 
@@ -598,18 +619,17 @@ public class MtasDocumentIndex
 
             resultsMapSentence = resultsPerSentence.rewrite(true);
 
-            // We only round things which are natural numbers already
-            // so this does not change their value.
+            Long noOfDocsLong = (Long) resultsMapSentence.get("n");
             LayerStatistics layerStats = new LayerStatistics(
-                    Math.round((double) resultsMap.get("sum")),
-                    Math.round((double) resultsMap.get("max")),
-                    Math.round((double) resultsMap.get("min")), (double) resultsMap.get("mean"),
+                    (double) resultsMap.get("sum"),
+                    (double) resultsMap.get("max"),
+                    (double) resultsMap.get("min"), (double) resultsMap.get("mean"),
                     (double) resultsMap.get("median"), (double) resultsMap.get("standarddeviation"),
-                    (double) resultsMapSentence.get("max"), (double) resultsMapSentence.get("min"),
-                    (double) resultsMapSentence.get("mean"),
+                    (double) resultsMapSentence.get("sum"), (double) resultsMapSentence.get("max"),
+                    (double) resultsMapSentence.get("min"), (double) resultsMapSentence.get("mean"),
                     (double) resultsMapSentence.get("median"),
                     (double) resultsMapSentence.get("standarddeviation"),
-                    (long) resultsMapSentence.get("n"));
+                    noOfDocsLong.doubleValue());
 
             return layerStats;
         }

@@ -78,6 +78,8 @@ include::{include-dir}search-core.adoc[leveloffset=+1]
 
 include::{include-dir}search-mtas.adoc[leveloffset=+2]
 
+include::{include-dir}statistics.adoc[leveloffset=+1]
+
 include::{include-dir}annotation_recommendation.adoc[leveloffset=+2]
 
 include::{include-dir}curation-sidebar.adoc[leveloffset=+2]
