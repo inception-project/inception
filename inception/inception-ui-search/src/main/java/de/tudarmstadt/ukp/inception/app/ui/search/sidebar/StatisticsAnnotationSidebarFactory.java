@@ -47,7 +47,7 @@ public class StatisticsAnnotationSidebarFactory
     @Override
     public IconType getIcon()
     {
-        return FontAwesome5IconType.clipboard_s;
+        return FontAwesome5IconType.list_ol_s;
     }
 
     @Override
