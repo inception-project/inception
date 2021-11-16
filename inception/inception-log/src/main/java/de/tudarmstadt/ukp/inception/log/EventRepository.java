@@ -38,7 +38,8 @@ public interface EventRepository
     List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
             String aEventType, int aMaxSize, long aRecommenderId);
 
-    <E extends Throwable> void forEachLoggedEvent(Project aProject, FailableConsumer<LoggedEvent, E> aConsumer);
+    <E extends Throwable> void forEachLoggedEvent(Project aProject,
+            FailableConsumer<LoggedEvent, E> aConsumer);
 
     /**
      * Get the aMaxSize amount of logged events of the given types, user name and project for every
