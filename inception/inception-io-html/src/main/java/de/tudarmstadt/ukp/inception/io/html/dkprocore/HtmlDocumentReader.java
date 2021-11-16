@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.io.html.dkprocore;
 
 import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils.trim;
+import static org.dkpro.core.api.parameter.ComponentParameters.DEFAULT_ENCODING;
 import static org.dkpro.core.io.html.internal.JSoupUtil.appendNormalisedText;
 import static org.dkpro.core.io.html.internal.JSoupUtil.lastCharIsWhitespace;
 
@@ -66,7 +67,8 @@ import eu.openminted.share.annotations.api.DocumentationResource;
 @ResourceMetaData(name = "HTML Reader")
 @DocumentationResource("${docbase}/format-reference.html#format-${command}")
 @MimeTypeCapability({ MimeTypes.APPLICATION_XHTML, MimeTypes.TEXT_HTML })
-@TypeCapability(outputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
+@TypeCapability(outputs = { //
+        "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
         "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading",
         "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
         "org.dkpro.core.api.xml.type.XmlAttribute", "org.dkpro.core.api.xml.type.XmlDocument",
@@ -86,14 +88,14 @@ public class HtmlDocumentReader
      * Name of configuration parameter that contains the character encoding used by the input files.
      */
     public static final String PARAM_SOURCE_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
-    @ConfigurationParameter(name = PARAM_SOURCE_ENCODING, mandatory = true, defaultValue = ComponentParameters.DEFAULT_ENCODING)
+    @ConfigurationParameter(name = PARAM_SOURCE_ENCODING, defaultValue = DEFAULT_ENCODING)
     private String sourceEncoding;
 
     /**
      * Normalize whitespace.
      */
     public static final String PARAM_NORMALIZE_WHITESPACE = "normalizeWhitespace";
-    @ConfigurationParameter(name = PARAM_NORMALIZE_WHITESPACE, mandatory = true, defaultValue = "true")
+    @ConfigurationParameter(name = PARAM_NORMALIZE_WHITESPACE, defaultValue = "true")
     private boolean normalizeWhitespace;
 
     private Map<String, Integer> mappings = new HashMap<>();
