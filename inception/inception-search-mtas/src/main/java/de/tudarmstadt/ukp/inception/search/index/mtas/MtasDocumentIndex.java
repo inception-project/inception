@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IG
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
+import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
@@ -823,40 +824,35 @@ public class MtasDocumentIndex
             IndexSearcher aSearcher, MtasSpanQuery aQuery)
         throws IOException
     {
-        List<Pair<LeafReaderContext, Long>> mapToDocId = new ArrayList<Pair<LeafReaderContext, Long>>();
+        List<Pair<LeafReaderContext, Long>> mapToDocId = new ArrayList<>();
 
         SpanWeight spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
                 false, 0);
+
         for (LeafReaderContext leafReaderContext : aLeaves) {
-            List<Long> allDocIds = new ArrayList<Long>();
-            try {
-                Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
-                SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
-                if (spans != null) {
-                    while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
-                        if (segmentReader.numDocs() == segmentReader.maxDoc()
-                                || segmentReader.getLiveDocs().get(spans.docID())) {
-                            Document document = segmentReader.document(spans.docID());
+            Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+            SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
+            List<Long> allDocIds = new ArrayList<>();
+            if (spans != null) {
+                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                    if (segmentReader.numDocs() == segmentReader.maxDoc()
+                            || segmentReader.getLiveDocs().get(spans.docID())) {
+                        Document document = segmentReader.document(spans.docID());
 
-                            String user = document.get(FIELD_USER);
-
-                            String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
-                            if (rawSourceDocumentId == null) {
-                                continue;
-                            }
-                            allDocIds.add(Long.valueOf(rawSourceDocumentId));
+                        String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                        if (rawSourceDocumentId == null) {
+                            continue;
                         }
+
+                        allDocIds.add(Long.valueOf(rawSourceDocumentId));
                     }
                 }
-            }
-            catch (Exception e) {
-                log.error("Unable to process query results", e);
             }
             if (allDocIds.size() == 1) {
                 mapToDocId.add(Pair.of(leafReaderContext, allDocIds.get(0)));
             }
         }
-        mapToDocId.sort(Comparator.<Pair<LeafReaderContext, Long>> comparingLong(Pair::getValue));
+        mapToDocId.sort(comparingLong(Pair::getValue));
 
         return mapToDocId.stream().map(Pair::getKey).collect(Collectors.toList());
     }
