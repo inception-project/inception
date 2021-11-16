@@ -200,7 +200,8 @@ public class EventRepositoryImpl
 
     @Override
     @Transactional
-    public <E extends Throwable> void forEachLoggedEvent(Project aProject, FailableConsumer<LoggedEvent, E> aConsumer)
+    public <E extends Throwable> void forEachLoggedEvent(Project aProject,
+            FailableConsumer<LoggedEvent, E> aConsumer)
     {
         // Set up data source
         String query = String.join("\n", //
