@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLazyDetailsLookupService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
@@ -105,13 +106,14 @@ public abstract class BratSuggestionVisualizer
 
                     if (NormDataResponse.is(action)) {
                         AnnotatorSegment segment = getModelObject();
+                        AnnotatorState state = segment.getAnnotatorState();
                         CasProvider casProvider = () -> documentService.readAnnotationCas(
                                 segment.getAnnotatorState().getDocument(),
                                 segment.getUser().getUsername(), AUTO_CAS_UPGRADE,
                                 SHARED_READ_ONLY_ACCESS);
                         var result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
-                                casProvider, segment.getAnnotatorState().getDocument(),
-                                segment.getUser());
+                                casProvider, state.getDocument(), segment.getUser(),
+                                state.getWindowBeginOffset(), state.getWindowEndOffset());
 
                         try {
                             BratRequestUtils.attachResponse(aTarget, vis, result);
