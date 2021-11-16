@@ -26,7 +26,8 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ProjectDashboardDa
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Component
-public class ActivitiesDashletExtension implements ProjectDashboardDashletExtension
+public class ActivitiesDashletExtension
+    implements ProjectDashboardDashletExtension
 {
     private @SpringBean WorkloadManagementService workloadService;
 
