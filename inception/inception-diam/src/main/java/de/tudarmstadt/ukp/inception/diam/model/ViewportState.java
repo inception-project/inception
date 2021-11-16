@@ -17,11 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model;
 
+import static java.util.Collections.newSetFromMap;
+
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class ViewportState
 {
     private final ViewportDefinition vpd;
+
+    private final Set<String> subscriberSessionIds = newSetFromMap(new ConcurrentHashMap<>());
 
     private JsonNode json;
 
@@ -43,5 +50,20 @@ public class ViewportState
     public synchronized JsonNode getJson()
     {
         return json;
+    }
+
+    public void removeSubscriber(String aId)
+    {
+        subscriberSessionIds.remove(aId);
+    }
+
+    public void addSubscriber(String aId)
+    {
+        subscriberSessionIds.add(aId);
+    }
+
+    public boolean hasSubscribres()
+    {
+        return !subscriberSessionIds.isEmpty();
     }
 }

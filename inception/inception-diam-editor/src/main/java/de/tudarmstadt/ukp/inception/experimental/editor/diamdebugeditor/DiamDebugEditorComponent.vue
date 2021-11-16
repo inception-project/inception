@@ -76,6 +76,7 @@ module.exports = {
   },
   beforeUnmount() {
     this.client.unsubscribeFromViewport();
+    this.client.disconnect();
   }
 }
 </script>

@@ -32,7 +32,6 @@ import java.io.IOException;
 import java.security.Principal;
 import java.time.Duration;
 import java.util.List;
-import java.util.Map.Entry;
 
 import javax.persistence.NoResultException;
 
@@ -40,13 +39,16 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.PropertyPlaceholderHelper;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.flipkart.zjsonpatch.JsonDiff;
@@ -129,13 +131,60 @@ public class DiamController
         projectService = aProjectService;
         userRepository = aUserRepository;
 
-        activeViewports = Caffeine.newBuilder().expireAfterAccess(Duration.ofMinutes(30))
+        activeViewports = Caffeine.newBuilder() //
+                .expireAfterAccess(Duration.ofMinutes(30)) //
                 .build(this::initState);
     }
 
+    @EventListener
+    public void onSessionDisconnect(SessionDisconnectEvent aEvent)
+    {
+        log.trace("Unsubscribing {} from all viewports", aEvent.getSessionId());
+
+        activeViewports.asMap().entrySet().stream() //
+                .filter(e -> {
+                    e.getValue().removeSubscriber(aEvent.getSessionId());
+                    return !e.getValue().hasSubscribres();
+                }) //
+                .forEach(e -> closeViewport(e.getKey()));
+    }
+
+    // @EventListener
+    // public void onSessionUnsubscribe(SessionUnsubscribeEvent aEvent)
+    // {
+    // StompHeaderAccessor stompHeaders = StompHeaderAccessor.wrap(aEvent.getMessage());
+    // SimpMessageHeaderAccessor headers = SimpMessageHeaderAccessor.wrap(aEvent.getMessage());
+    //
+    // // FIXME Destination is null here - need to use/keep track of the subscription ID instead!
+    // String destination = stompHeaders.getDestination();
+    // String sessionId = headers.getSessionId();
+    //
+    // log.trace("Unsubscribing {} from {}", sessionId, destination);
+    //
+    // activeViewports.asMap().entrySet().stream() //
+    // .filter(e -> e.getKey().getTopic().equals(destination)) //
+    // .filter(e -> {
+    // e.getValue().removeSubscriber(sessionId);
+    // return !e.getValue().hasSubscribres();
+    // }) //
+    // .forEach(e -> closeViewport(e.getKey()));
+    // }
+
+    private void closeViewport(ViewportDefinition aVpd)
+    {
+        log.trace("Closing viewport {}", aVpd);
+        activeViewports.invalidate(aVpd);
+    }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
+    {
+        sendUpdate(aEvent.getDocument());
+    }
+
     @SubscribeMapping(DOCUMENT_VIEWPORT_TOPIC_TEMPLATE)
-    public JsonNode onSubscribeToAnnotationDocument(Principal aPrincipal,
-            @DestinationVariable(PARAM_PROJECT) long aProjectId,
+    public JsonNode onSubscribeToAnnotationDocument(SimpMessageHeaderAccessor aHeaderAccessor,
+            Principal aPrincipal, @DestinationVariable(PARAM_PROJECT) long aProjectId,
             @DestinationVariable(PARAM_DOCUMENT) long aDocumentId,
             @DestinationVariable(PARAM_USER) String aUser,
             @DestinationVariable(PARAM_FROM) int aViewportBegin,
@@ -153,6 +202,9 @@ public class DiamController
 
             // Ensure that the viewport is registered
             ViewportState vps = activeViewports.get(vpd);
+
+            log.trace("Subscribing {} to {}", aHeaderAccessor.getSessionId(), vpd.getTopic());
+            vps.addSubscriber(aHeaderAccessor.getSessionId());
 
             VDocument vdoc = render(project, aDocumentId, aUser, aViewportBegin, aViewportEnd);
 
@@ -218,61 +270,55 @@ public class DiamController
         return new ViewportState(aVpd);
     }
 
-    public void sendUpdate(AnnotationDocument aDoc)
+    private void sendUpdate(AnnotationDocument aDoc)
     {
         sendUpdate(aDoc.getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(), 0,
                 MAX_VALUE);
     }
 
-    public void sendUpdate(AnnotationDocument aDoc, int aUpdateBegin, int aUpdateEnd)
+    void sendUpdate(AnnotationDocument aDoc, int aUpdateBegin, int aUpdateEnd)
     {
         sendUpdate(aDoc.getProject().getId(), aDoc.getDocument().getId(), aDoc.getUser(),
                 aUpdateBegin, aUpdateEnd);
     }
 
-    public void sendUpdate(long aProjectId, long aDocumentId, String aUser, int aUpdateBegin,
+    private void sendUpdate(long aProjectId, long aDocumentId, String aUser, int aUpdateBegin,
             int aUpdateEnd)
     {
-        for (Entry<ViewportDefinition, ViewportState> e : activeViewports.asMap().entrySet()) {
-            var vpd = e.getKey();
-            var vps = e.getValue();
-
-            if (!vpd.matches(aDocumentId, aUser, aUpdateBegin, aUpdateEnd)) {
-                continue;
-            }
-
-            // MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
-
-            try (CasStorageSession session = CasStorageSession.openNested()) {
-                Project project = projectService.getProject(vpd.getProjectId());
-                VDocument vdoc = render(project, vpd.getDocumentId(), vpd.getUser(), vpd.getBegin(),
-                        vpd.getEnd());
-
-                MViewportInit fullRender = new MViewportInit(vdoc);
-
-                JsonNode newJson = JSONUtil.getObjectMapper().valueToTree(fullRender);
-
-                JsonNode diff = JsonDiff.asJson(vps.getJson(), newJson);
-
-                vps.setJson(newJson);
-
-                msgTemplate.convertAndSend("/topic" + vpd.getTopic(),
-                        new MViewportUpdate(aUpdateBegin, aUpdateEnd, diff));
-            }
-            catch (Exception ex) {
-                log.error("Unable to render update", ex);
-            }
-
-            // finally {
-            // MDC.remove(KEY_REPOSITORY_PATH);
-            // }
-        }
+        activeViewports.asMap().entrySet().stream() //
+                .filter(e -> e.getKey().matches(aDocumentId, aUser, aUpdateBegin, aUpdateEnd)) //
+                .forEach(e -> sendUpdate(e.getKey(), e.getValue(), aProjectId, aDocumentId, aUser,
+                        aUpdateBegin, aUpdateEnd));
     }
 
-    @TransactionalEventListener(fallbackExecution = true)
-    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
+    private void sendUpdate(ViewportDefinition vpd, ViewportState vps, long aProjectId,
+            long aDocumentId, String aUser, int aUpdateBegin, int aUpdateEnd)
     {
-        sendUpdate(aEvent.getDocument());
+        // MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
+        try (CasStorageSession session = CasStorageSession.openNested()) {
+            Project project = projectService.getProject(vpd.getProjectId());
+            VDocument vdoc = render(project, vpd.getDocumentId(), vpd.getUser(), vpd.getBegin(),
+                    vpd.getEnd());
+
+            MViewportInit fullRender = new MViewportInit(vdoc);
+
+            JsonNode newJson = JSONUtil.getObjectMapper().valueToTree(fullRender);
+
+            JsonNode diff = JsonDiff.asJson(vps.getJson(), newJson);
+
+            vps.setJson(newJson);
+
+            msgTemplate.convertAndSend("/topic" + vpd.getTopic(),
+                    new MViewportUpdate(aUpdateBegin, aUpdateEnd, diff));
+        }
+        catch (Exception ex) {
+            log.error("Unable to render update", ex);
+        }
+
+        // finally {
+        // MDC.remove(KEY_REPOSITORY_PATH);
+        // }
     }
 
     private Project getProject(long aProjectId) throws AccessDeniedException
