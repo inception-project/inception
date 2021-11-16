@@ -951,44 +951,18 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<AnnotationFeature> listSupportedFeatures(Project aProject)
     {
-        List<AnnotationFeature> supportedFeatures = new ArrayList<>();
-
-        for (AnnotationFeature f : listAnnotationFeature(aProject)) {
-            try {
-                featureSupportRegistry.findExtension(f);
-            }
-            catch (IllegalArgumentException e) {
-                // Skip unsupported features
-                continue;
-            }
-
-            // Add supported features to the result
-            supportedFeatures.add(f);
-        }
-
-        return supportedFeatures;
+        return listAnnotationFeature(aProject).stream() //
+                .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
+                .collect(toList());
     }
 
     @Override
     @Transactional
     public List<AnnotationFeature> listSupportedFeatures(AnnotationLayer aLayer)
     {
-        List<AnnotationFeature> supportedFeatures = new ArrayList<>();
-
-        for (AnnotationFeature f : listAnnotationFeature(aLayer)) {
-            try {
-                featureSupportRegistry.findExtension(f);
-            }
-            catch (IllegalArgumentException e) {
-                // Skip unsupported features
-                continue;
-            }
-
-            // Add supported features to the result
-            supportedFeatures.add(f);
-        }
-
-        return supportedFeatures;
+        return listAnnotationFeature(aLayer).stream() //
+                .filter($ -> featureSupportRegistry.findExtension($).isPresent()) //
+                .collect(toList());
     }
 
     @Override
@@ -999,7 +973,8 @@ public class AnnotationSchemaServiceImpl
 
         List<AnnotationFeature> allFeaturesInProject = listSupportedFeatures(aProject);
 
-        listSupportedLayers(aProject).stream().filter(layer -> !layer.isBuiltIn())
+        listSupportedLayers(aProject).stream() //
+                .filter(layer -> !layer.isBuiltIn()) //
                 .forEachOrdered(layer -> layerSupportRegistry.getLayerSupport(layer)
                         .generateTypes(tsd, layer, allFeaturesInProject));
 
