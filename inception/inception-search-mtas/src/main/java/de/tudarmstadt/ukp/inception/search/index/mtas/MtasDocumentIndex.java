@@ -824,36 +824,74 @@ public class MtasDocumentIndex
             IndexSearcher aSearcher, MtasSpanQuery aQuery)
         throws IOException
     {
+        // There is a map g: {LeafReaderContexts} -> P({documents}) which maps every
+        // LeafReaderContext l to a subset of the documents. This subset can consist
+        // of more than one element or be empty.
+        // The aim of this method is to find out what g exactly does
+        // and to get a subset A of {LeafReaderContexts} such that
+        // g': A -> {documents}, i.e. each LeafReaderContext from A
+        // contains exactly one document.
+        // I'm quite sure that we don't lose documents in this process, i.e. g'(A) = union_l g(l).
+        // Then we will sort the l's in A according to the document ID of their documents g'(l).
+
+        // Here we will save g'
         List<Pair<LeafReaderContext, Long>> mapToDocId = new ArrayList<>();
 
+        // Here, the query comes into play
         SpanWeight spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
                 false, 0);
 
+        // cycle through all the leaves
         for (LeafReaderContext leafReaderContext : aLeaves) {
             Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
             SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
-            List<Long> allDocIds = new ArrayList<>();
+            // dummy initialisation which is never used
+            long docId = -3;
+            // true iff g(l) contains exactly one document
+            boolean docIdExistsUnique = false;
+            // no spans -> no docs so this rules out the case g(l) = emptyset
             if (spans != null) {
+                // go through the docs in iterator span
                 while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                    // don't know why this if is needed, just copy/pasted it from method doQuery
+                    // below
                     if (segmentReader.numDocs() == segmentReader.maxDoc()
                             || segmentReader.getLiveDocs().get(spans.docID())) {
+                        // get a document
                         Document document = segmentReader.document(spans.docID());
 
                         String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                        // go to the next document if the docId is not set
                         if (rawSourceDocumentId == null) {
                             continue;
                         }
-
-                        allDocIds.add(Long.valueOf(rawSourceDocumentId));
+                        // If we have already added a docId then this is the second one.
+                        // We know that |g(l)| > 1 in this case so jump right to the next l
+                        if (docIdExistsUnique) {
+                            docIdExistsUnique = false;
+                            break;
+                        }
+                        // The docId is the first one we see
+                        else {
+                            docId = Long.valueOf(rawSourceDocumentId);
+                            // This is true unless we find another docId in the future
+                            docIdExistsUnique = true;
+                        }
                     }
                 }
             }
-            if (allDocIds.size() == 1) {
-                mapToDocId.add(Pair.of(leafReaderContext, allDocIds.get(0)));
+            // If we broke out of the while loop or never got a document in the first place
+            // this will be false
+            if (docIdExistsUnique) {
+                mapToDocId.add(Pair.of(leafReaderContext, docId));
             }
         }
+        // now we are finished with constructing A
+
+        // Sort according to docId
         mapToDocId.sort(comparingLong(Pair::getValue));
 
+        // Only return the leaves
         return mapToDocId.stream().map(Pair::getKey).collect(Collectors.toList());
     }
 
