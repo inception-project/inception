@@ -49,6 +49,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.util.PropertyPlaceholderHelper;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionUnsubscribeEvent;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.flipkart.zjsonpatch.JsonDiff;
@@ -144,31 +145,28 @@ public class DiamController
         activeViewports.asMap().entrySet().stream() //
                 .filter(e -> {
                     e.getValue().removeSubscriber(aEvent.getSessionId());
-                    return !e.getValue().hasSubscribres();
+                    return !e.getValue().hasSubscribers();
                 }) //
                 .forEach(e -> closeViewport(e.getKey()));
     }
 
-    // @EventListener
-    // public void onSessionUnsubscribe(SessionUnsubscribeEvent aEvent)
-    // {
-    // StompHeaderAccessor stompHeaders = StompHeaderAccessor.wrap(aEvent.getMessage());
-    // SimpMessageHeaderAccessor headers = SimpMessageHeaderAccessor.wrap(aEvent.getMessage());
-    //
-    // // FIXME Destination is null here - need to use/keep track of the subscription ID instead!
-    // String destination = stompHeaders.getDestination();
-    // String sessionId = headers.getSessionId();
-    //
-    // log.trace("Unsubscribing {} from {}", sessionId, destination);
-    //
-    // activeViewports.asMap().entrySet().stream() //
-    // .filter(e -> e.getKey().getTopic().equals(destination)) //
-    // .filter(e -> {
-    // e.getValue().removeSubscriber(sessionId);
-    // return !e.getValue().hasSubscribres();
-    // }) //
-    // .forEach(e -> closeViewport(e.getKey()));
-    // }
+    @EventListener
+    public void onSessionUnsubscribe(SessionUnsubscribeEvent aEvent)
+    {
+        SimpMessageHeaderAccessor headers = SimpMessageHeaderAccessor.wrap(aEvent.getMessage());
+
+        String sessionId = headers.getSessionId();
+        String subscriptionId = headers.getSubscriptionId();
+
+        log.trace("Unsubscribing {} from subscription {}", sessionId, subscriptionId);
+
+        activeViewports.asMap().entrySet().stream() //
+                .filter(e -> {
+                    e.getValue().removeSubscription(sessionId, subscriptionId);
+                    return !e.getValue().hasSubscribers();
+                }) //
+                .forEach(e -> closeViewport(e.getKey()));
+    }
 
     private void closeViewport(ViewportDefinition aVpd)
     {
@@ -204,7 +202,8 @@ public class DiamController
             ViewportState vps = activeViewports.get(vpd);
 
             log.trace("Subscribing {} to {}", aHeaderAccessor.getSessionId(), vpd.getTopic());
-            vps.addSubscriber(aHeaderAccessor.getSessionId());
+            vps.addSubscription(aHeaderAccessor.getSessionId(),
+                    aHeaderAccessor.getSubscriptionId());
 
             VDocument vdoc = render(project, aDocumentId, aUser, aViewportBegin, aViewportEnd);
 

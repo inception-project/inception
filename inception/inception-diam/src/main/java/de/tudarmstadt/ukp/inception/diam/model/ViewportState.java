@@ -22,13 +22,16 @@ import static java.util.Collections.newSetFromMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.fasterxml.jackson.databind.JsonNode;
 
 public class ViewportState
 {
     private final ViewportDefinition vpd;
 
-    private final Set<String> subscriberSessionIds = newSetFromMap(new ConcurrentHashMap<>());
+    private final Set<Pair<String, String>> subscriberSessionIds = newSetFromMap(
+            new ConcurrentHashMap<>());
 
     private JsonNode json;
 
@@ -54,16 +57,22 @@ public class ViewportState
 
     public void removeSubscriber(String aId)
     {
-        subscriberSessionIds.remove(aId);
+        subscriberSessionIds.removeIf(p -> p.getKey().equals(aId));
     }
 
-    public void addSubscriber(String aId)
+    public void addSubscription(String aSubscriberId, String aSubscriptionId)
     {
-        subscriberSessionIds.add(aId);
+        subscriberSessionIds.add(Pair.of(aSubscriberId, aSubscriptionId));
     }
 
-    public boolean hasSubscribres()
+    public boolean hasSubscribers()
     {
         return !subscriberSessionIds.isEmpty();
+    }
+
+    public void removeSubscription(String aSessionId, String aSubscriptionId)
+    {
+        subscriberSessionIds.removeIf(
+                p -> p.getKey().equals(aSessionId) && p.getValue().equals(aSubscriptionId));
     }
 }
