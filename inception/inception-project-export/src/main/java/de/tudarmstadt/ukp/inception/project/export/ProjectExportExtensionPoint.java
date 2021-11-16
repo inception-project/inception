@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.project.export;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 
-public interface ProjectExportExtensionPoint extends ExtensionPoint<Project, ProjectExportExtension>
+public interface ProjectExportExtensionPoint
+    extends ExtensionPoint<Project, ProjectExportExtension>
 {
     // No changes
 }
