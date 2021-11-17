@@ -385,7 +385,7 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-word-alignment-editor</artifactId>
+        <artifactId>inception-diam-word-alignment-editor</artifactId>
         <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1836,7 +1836,7 @@
     <module>inception-review-editor</module>
     <module>inception-diam</module>
     <module>inception-diam-editor</module>
-    <module>inception-word-alignment-editor</module>
+    <module>inception-diam-word-alignment-editor</module>
     <!-- Schema extensions -->
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>

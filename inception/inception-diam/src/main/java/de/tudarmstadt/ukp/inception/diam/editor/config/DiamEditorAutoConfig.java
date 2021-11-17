@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.diam.editor.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -30,6 +31,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 
+@ConditionalOnProperty(name = "diam.enabled", havingValue = "true", matchIfMissing = false)
 @Configuration
 public class DiamEditorAutoConfig
 {

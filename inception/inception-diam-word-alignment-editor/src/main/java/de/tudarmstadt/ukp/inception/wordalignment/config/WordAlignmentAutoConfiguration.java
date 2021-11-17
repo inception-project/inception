@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnProperty(prefix = "ui.wordalignment", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(name = "ui.wordalignment.enabled", havingValue = "true", matchIfMissing = false)
 public class WordAlignmentAutoConfiguration
 {
     @Bean
