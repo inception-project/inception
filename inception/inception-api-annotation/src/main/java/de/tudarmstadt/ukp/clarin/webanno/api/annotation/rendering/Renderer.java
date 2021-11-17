@@ -142,7 +142,8 @@ public interface Renderer
         }
     }
 
-    default List<VLazyDetailResult> renderLazyDetails(CAS aCas, VID aVid)
+    default List<VLazyDetailResult> renderLazyDetails(CAS aCas, VID aVid, int windowBeginOffset,
+            int windowEndOffset)
     {
         FeatureSupportRegistry fsr = getFeatureSupportRegistry();
 

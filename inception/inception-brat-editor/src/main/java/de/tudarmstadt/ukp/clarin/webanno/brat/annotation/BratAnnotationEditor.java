@@ -212,7 +212,8 @@ public class BratAnnotationEditor
                     if (NormDataResponse.is(action)) {
                         AnnotatorState state = getModelObject();
                         result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
-                                getCasProvider(), state.getDocument(), state.getUser());
+                                getCasProvider(), state.getDocument(), state.getUser(),
+                                state.getWindowBeginOffset(), state.getWindowEndOffset());
                     }
                     else if (DoActionResponse.is(action)) {
                         if (paramId.isSynthetic()) {
