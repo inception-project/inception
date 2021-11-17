@@ -455,6 +455,7 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional
     public Project getProject(long aId)
     {
         String query = "FROM Project " + "WHERE id = :id";

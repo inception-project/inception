@@ -1,4 +1,4 @@
-== webanno-brat/src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource
+== src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource
 
 This folder includes a modified version of the brat (http://brat.nlplab.org) JavaScript client
 and rendering engine. Additional CSS files are located in 

@@ -350,6 +350,18 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-diam</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-diam-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-diam-word-alignment-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-workload-ui</artifactId>
     </dependency>
     <dependency>
@@ -862,6 +874,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-diam-word-alignment-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
@@ -870,6 +883,8 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-annotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-agreement</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-diam</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-diam-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-dashboard-activity</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>

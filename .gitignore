@@ -20,3 +20,4 @@ inception/inception-app-webapp/src/main/resources/log4j2-dev.xml
 */.apt_generated/
 */.apt_generated_tests/
 dependency-reduced-pom.xml
+/node

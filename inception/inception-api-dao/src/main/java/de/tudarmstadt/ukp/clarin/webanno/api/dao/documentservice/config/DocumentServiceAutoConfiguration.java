@@ -29,7 +29,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentAccess;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 @Configuration
 public class DocumentServiceAutoConfiguration
@@ -43,5 +45,12 @@ public class DocumentServiceAutoConfiguration
     {
         return new DocumentServiceImpl(aRepositoryProperties, aCasStorageService,
                 aImportExportService, aProjectService, aApplicationEventPublisher, entityManager);
+    }
+
+    @Bean
+    public DocumentAccess documentAccess(ProjectService aProjectService, UserDao aUserService,
+            DocumentService aDocumentService)
+    {
+        return new DocumentAccess(aProjectService, aUserService, aDocumentService);
     }
 }
