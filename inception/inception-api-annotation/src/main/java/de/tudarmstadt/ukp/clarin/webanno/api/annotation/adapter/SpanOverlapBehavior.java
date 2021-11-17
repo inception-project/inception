@@ -192,13 +192,27 @@ public class SpanOverlapBehavior
         return messages;
     }
 
-    private void overlappingOrStackingSpans(Collection<AnnotationFS> aSpans,
+    static int overlappingOrStackingSpans(Collection<? extends AnnotationFS> aSpans,
             Collection<AnnotationFS> aStacking, Collection<AnnotationFS> aOverlapping)
     {
-        for (AnnotationFS span1 : aSpans) {
-            for (AnnotationFS span2 : aSpans) {
+        AnnotationFS[] spans = aSpans.toArray(AnnotationFS[]::new);
+
+        int n = 0;
+
+        outer: for (int o = 0; o < spans.length - 1; o++) {
+            AnnotationFS span1 = spans[o];
+
+            inner: for (int i = o + 1; i < spans.length; i++) {
+                AnnotationFS span2 = spans[i];
+
+                n++;
+
+                if (span2.getBegin() > span1.getEnd()) {
+                    continue outer;
+                }
+
                 if (span1.equals(span2)) {
-                    continue;
+                    continue inner;
                 }
 
                 if (stacking(span1, span2)) {
@@ -211,27 +225,40 @@ public class SpanOverlapBehavior
                 }
             }
         }
+
+        return n;
     }
 
-    private Set<AnnotationFS> overlappingNonStackingSpans(Collection<AnnotationFS> aSpans)
+    static Set<AnnotationFS> overlappingNonStackingSpans(Collection<? extends AnnotationFS> aSpans)
     {
         Set<AnnotationFS> overlapping = new HashSet<>();
-        for (AnnotationFS fs1 : aSpans) {
-            for (AnnotationFS fs2 : aSpans) {
-                if (fs1.equals(fs2)) {
-                    continue;
+
+        AnnotationFS[] spans = aSpans.toArray(AnnotationFS[]::new);
+
+        outer: for (int o = 0; o < spans.length - 1; o++) {
+            AnnotationFS span1 = spans[o];
+
+            inner: for (int i = o + 1; i < spans.length; i++) {
+                AnnotationFS span2 = spans[i];
+
+                if (span2.getBegin() > span1.getEnd()) {
+                    continue outer;
                 }
 
-                if (overlapping(fs1, fs2) && !stacking(fs1, fs2)) {
-                    overlapping.add(fs1);
-                    overlapping.add(fs2);
+                if (span1.equals(span2)) {
+                    continue inner;
+                }
+
+                if (overlapping(span1, span2) && !stacking(span1, span2)) {
+                    overlapping.add(span1);
+                    overlapping.add(span2);
                 }
             }
         }
         return overlapping;
     }
 
-    private Set<AnnotationFS> stackingSpans(Collection<AnnotationFS> aSpans)
+    static Set<AnnotationFS> stackingSpans(Collection<? extends AnnotationFS> aSpans)
     {
         // Since the annotations are sorted, we can easily find stacked annotation by scanning
         // through the entire list and checking if two adjacent annotations have the same
@@ -250,23 +277,23 @@ public class SpanOverlapBehavior
         return stacking;
     }
 
-    public boolean overlapping(AnnotationFS aFS1, AnnotationFS aFS2)
+    private static boolean overlapping(AnnotationFS aFS1, AnnotationFS aFS2)
     {
         return (aFS1.getBegin() <= aFS2.getBegin() && aFS2.getBegin() < aFS1.getEnd())
                 || (aFS1.getBegin() < aFS2.getEnd() && aFS2.getEnd() <= aFS1.getEnd());
     }
 
-    public boolean stacking(CreateSpanAnnotationRequest aRequest, AnnotationFS aSpan)
+    private static boolean stacking(CreateSpanAnnotationRequest aRequest, AnnotationFS aSpan)
     {
         return stacking(aRequest.getBegin(), aRequest.getEnd(), aSpan.getBegin(), aSpan.getEnd());
     }
 
-    public boolean stacking(AnnotationFS aFS1, AnnotationFS aFS2)
+    private static boolean stacking(AnnotationFS aFS1, AnnotationFS aFS2)
     {
         return stacking(aFS1.getBegin(), aFS1.getEnd(), aFS2.getBegin(), aFS2.getEnd());
     }
 
-    public boolean stacking(int aBegin1, int aEnd1, int aBegin2, int aEnd2)
+    private static boolean stacking(int aBegin1, int aEnd1, int aBegin2, int aEnd2)
     {
         return aBegin1 == aBegin2 && aEnd1 == aEnd2;
     }
