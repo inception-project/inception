@@ -111,7 +111,7 @@
     <solr.version>7.7.3</solr.version> <!-- 8.5.1 / 8.7.0 -->
     <mtas.version>7.7.1.0</mtas.version> <!-- 8.7.0.0 -->
     <elasticsearch.version>6.8.17</elasticsearch.version> <!-- 7.10.2 -->
-    <rdf4j.version>3.7.3</rdf4j.version>
+    <rdf4j.version>3.7.4</rdf4j.version>
     <jena.version>3.17.0</jena.version>
 
     <asciidoctor.plugin.version>2.2.1</asciidoctor.plugin.version>
@@ -297,6 +297,16 @@
       <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okio</groupId>
+      <artifactId>okio</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
@@ -371,6 +381,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-search</artifactId>
+        <version>22.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-diam-word-alignment-editor</artifactId>
         <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -668,6 +683,16 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-diam</artifactId>
+        <version>22.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-diam-editor</artifactId>
+        <version>22.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-tcf</artifactId>
         <version>22.0-SNAPSHOT</version>
       </dependency>
@@ -951,6 +976,11 @@
         <groupId>org.webjars.npm</groupId>
         <artifactId>axios</artifactId>
         <version>0.21.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>animate.css</artifactId>
+        <version>3.2.6</version>
       </dependency>
       <dependency>
         <groupId>ua.kasta</groupId>
@@ -1804,6 +1834,9 @@
     <module>inception-html-recogito-editor</module>
     <module>inception-pdf-editor</module>
     <module>inception-review-editor</module>
+    <module>inception-diam</module>
+    <module>inception-diam-editor</module>
+    <module>inception-diam-word-alignment-editor</module>
     <!-- Schema extensions -->
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
@@ -1910,7 +1943,8 @@
         </executions>
         <configuration>
           <failOnWarning>true</failOnWarning>
-          <ignoredDependencies combine.children="append">
+          <ignoredUnusedDeclaredDependencies
+            combine.children="append">
             <!--
               - Logging is used via reflection and cannot be detected by Maven
             -->
@@ -1934,7 +1968,7 @@
             <dependency>com.h2database:h2</dependency>
             <dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
             <!--
-              - Basic test dependencies
+              - Common test dependencies
             -->
             <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
             <dependency>org.junit.jupiter:junit-jupiter-params</dependency>
@@ -1946,7 +1980,10 @@
             <dependency>com.squareup.okio:okio</dependency>
             <dependency>org.awaitility:awaitility</dependency>
             <dependency>org.springframework:spring-test</dependency>
-          </ignoredDependencies>
+            <dependency>org.springframework.boot:spring-boot-starter-web</dependency>
+            <dependency>org.springframework.boot:spring-boot-test-autoconfigure</dependency>
+            <dependency>org.springframework.security:spring-security-test</dependency>
+          </ignoredUnusedDeclaredDependencies>
         </configuration>
         <dependencies>
           <dependency>
@@ -2318,6 +2355,112 @@
       <properties>
         <excludedTestCategories />
       </properties>
+    </profile>
+    <profile>
+      <id>typescript-module</id>
+      <activation>
+        <file>
+          <exists>src/main/ts</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <configuration>
+              <filesets>
+                <fileset>
+                  <directory>src/main/ts/node_modules</directory>
+                  <followSymlinks>false</followSymlinks>
+                </fileset>
+                <fileset>
+                  <directory>src/main/ts</directory>
+                  <includes>
+                    <include>package.json</include>
+                    <include>package-lock.json</include>
+                  </includes>
+                  <followSymlinks>false</followSymlinks>
+                </fileset>
+              </filesets>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>stage-ts-build</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>src/main/ts</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>src/main/ts_template</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <configuration>
+              <workingDirectory>src/main/ts</workingDirectory>
+              <installDirectory>../../node</installDirectory>
+              <nodeVersion>v16.13.0</nodeVersion>
+              <npmVersion>8.1.0</npmVersion>
+            </configuration>
+            <executions>
+              <execution>
+                <id>install node and npm</id>
+                <goals>
+                  <goal>install-node-and-npm</goal>
+                </goals>
+                <phase>generate-sources</phase>
+              </execution>
+              <execution>
+                <id>npm install</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <arguments>install</arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>npm link</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <phase>install</phase>
+                <configuration>
+                  <arguments>link</arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.rat</groupId>
+              <artifactId>apache-rat-plugin</artifactId>
+              <configuration>
+                <excludes combine.children="append">
+                  <exclude>src/main/ts/*.json</exclude>
+                  <exclude>src/main/ts_template/*.json</exclude>
+                  <exclude>src/main/ts/node_modules/**/*</exclude>
+                </excludes>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
     </profile>
   </profiles>
 </project>

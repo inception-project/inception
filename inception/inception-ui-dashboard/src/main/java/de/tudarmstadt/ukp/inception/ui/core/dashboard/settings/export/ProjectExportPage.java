@@ -23,10 +23,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.export.ProjectExportPanel;
+import de.tudarmstadt.ukp.inception.project.export.settings.ProjectExportPanel;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsDashboardPageBase;
 
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/settings/export")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/settings/export2")
 public class ProjectExportPage
     extends ProjectSettingsDashboardPageBase
 {

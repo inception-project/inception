@@ -46,5 +46,5 @@ In both cases, do not forget to save your changes by pressing the *Save* button.
 | *Project creator.* Can create new projects.
 
 | ROLE_REMOTE
-| *Remote API access.* Currently experimental and undocumented. Do not use.
+| *Remote API access.* Can access the remote API.
 |====

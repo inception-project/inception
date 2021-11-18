@@ -32,7 +32,7 @@ public interface BratLazyDetailsLookupService
 {
 
     NormDataResponse actionLookupNormData(IRequestParameters request, VID paramId, CasProvider aCas,
-            SourceDocument aSourceDocument, User aUser)
+            SourceDocument aSourceDocument, User aUser, int windowBeginOffset, int windowEndOffset)
         throws AnnotationException, IOException;
 
 }

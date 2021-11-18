@@ -31,20 +31,25 @@ public class LambdaAjaxFormComponentUpdatingBehavior
     private AjaxCallback action;
     private AjaxExceptionHandler exceptionHandler;
 
-    public LambdaAjaxFormComponentUpdatingBehavior(String aId)
+    public LambdaAjaxFormComponentUpdatingBehavior()
     {
-        this(aId, null, null);
+        this("change", null, null);
     }
 
-    public LambdaAjaxFormComponentUpdatingBehavior(String aId, AjaxCallback aAction)
+    public LambdaAjaxFormComponentUpdatingBehavior(String aEvent)
     {
-        this(aId, aAction, null);
+        this(aEvent, null, null);
     }
 
-    public LambdaAjaxFormComponentUpdatingBehavior(String aId, AjaxCallback aAction,
+    public LambdaAjaxFormComponentUpdatingBehavior(String aEvent, AjaxCallback aAction)
+    {
+        this(aEvent, aAction, null);
+    }
+
+    public LambdaAjaxFormComponentUpdatingBehavior(String aEvent, AjaxCallback aAction,
             AjaxExceptionHandler aExceptionHandler)
     {
-        super(aId);
+        super(aEvent);
         action = aAction;
         exceptionHandler = aExceptionHandler;
     }

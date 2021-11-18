@@ -46,115 +46,99 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph;
 public class HtmlDocumentReaderTest
 {
     @Test
-    public void testReadFileWithOnlyBody()
-        throws Exception
+    public void testReadFileWithOnlyBody() throws Exception
     {
         JCas jcas = JCasFactory.createJCas();
-        
+
         CollectionReader reader = createReader(HtmlDocumentReader.class,
                 HtmlDocumentReader.PARAM_SOURCE_LOCATION, "src/test/resources/html/test.html",
                 HtmlDocumentReader.PARAM_LANGUAGE, "en");
-        
+
         reader.getNext(jcas.getCas());
 
-        assertThat(jcas.getDocumentText())
-                .isEqualTo(" Heading  This is the first paragraph.   This is the second paragraph.   ");
+        assertThat(jcas.getDocumentText()).isEqualTo(
+                " Heading  This is the first paragraph.   This is the second paragraph.   ");
 
-        assertThat(select(jcas, Heading.class))
-                .extracting(Heading::getCoveredText)
+        assertThat(select(jcas, Heading.class)).extracting(Heading::getCoveredText)
                 .containsExactly("Heading");
 
-        assertThat(select(jcas, Paragraph.class))
-                .extracting(Paragraph::getCoveredText)
+        assertThat(select(jcas, Paragraph.class)).extracting(Paragraph::getCoveredText)
                 .containsExactly("This is the first paragraph.", "This is the second paragraph.");
     }
-    
+
     @Test
-    public void testReadFileWithOnlyBodyAndWriteAsXml()
-        throws Exception
+    public void testReadFileWithOnlyBodyAndWriteAsXml() throws Exception
     {
         testOneWay(
-                createReaderDescription(HtmlDocumentReader.class,
-                        HtmlDocumentReader.PARAM_LANGUAGE, "en",
-                        HtmlDocumentReader.PARAM_NORMALIZE_WHITESPACE, false),
-                createEngineDescription(XmlDocumentWriter.class),
-                "html/test-document.xml", 
-                "html/test.html",
-                new TestOptions().resultAssertor(this::assertXmlEquals));
+                createReaderDescription(HtmlDocumentReader.class, HtmlDocumentReader.PARAM_LANGUAGE,
+                        "en", HtmlDocumentReader.PARAM_NORMALIZE_WHITESPACE, false),
+                createEngineDescription(XmlDocumentWriter.class), "html/test-document.xml",
+                "html/test.html", new TestOptions().resultAssertor(this::assertXmlEquals));
     }
-    
+
     @Test
-    public void testReadFileWithOnlyBodyAndWriteAsXmi()
-        throws Exception
+    public void testReadFileWithOnlyBodyAndWriteAsXmi() throws Exception
     {
         testOneWay(
-                createReaderDescription(HtmlDocumentReader.class,
-                        HtmlDocumentReader.PARAM_LANGUAGE, "en"),
-                createEngineDescription(XmiWriter.class),
-                "html/test-document.xmi", 
+                createReaderDescription(HtmlDocumentReader.class, HtmlDocumentReader.PARAM_LANGUAGE,
+                        "en"),
+                createEngineDescription(XmiWriter.class), "html/test-document.xmi",
                 "html/test.html");
     }
-    
+
     @Test
-    public void testReadFileWithHead()
-        throws Exception
+    public void testReadFileWithHead() throws Exception
     {
         JCas jcas = JCasFactory.createJCas();
-        
+
         CollectionReader reader = createReader(HtmlDocumentReader.class,
-                HtmlDocumentReader.PARAM_SOURCE_LOCATION, "src/test/resources/html/test-with-head.html",
-                HtmlDocumentReader.PARAM_LANGUAGE, "en");
-        
+                HtmlDocumentReader.PARAM_SOURCE_LOCATION,
+                "src/test/resources/html/test-with-head.html", HtmlDocumentReader.PARAM_LANGUAGE,
+                "en");
+
         reader.getNext(jcas.getCas());
 
-        assertThat(jcas.getDocumentText())
-                .isEqualTo(" Heading  This is the first paragraph.   This is the second paragraph.   ");
+        assertThat(jcas.getDocumentText()).isEqualTo(
+                " Heading  This is the first paragraph.   This is the second paragraph.   ");
 
-        assertThat(select(jcas, Heading.class))
-                .extracting(Heading::getCoveredText)
+        assertThat(select(jcas, Heading.class)).extracting(Heading::getCoveredText)
                 .containsExactly("Heading");
 
-        assertThat(select(jcas, Paragraph.class))
-                .extracting(Paragraph::getCoveredText)
+        assertThat(select(jcas, Paragraph.class)).extracting(Paragraph::getCoveredText)
                 .containsExactly("This is the first paragraph.", "This is the second paragraph.");
     }
-    
+
     @Test
-    public void testReadFileWithHeadAndWriteAsXmi()
-        throws Exception
+    public void testReadFileWithHeadAndWriteAsXmi() throws Exception
     {
         testOneWay(
-                createReaderDescription(HtmlDocumentReader.class,
-                        HtmlDocumentReader.PARAM_LANGUAGE, "en"),
-                createEngineDescription(XmiWriter.class),
-                "html/test-with-head.xmi", 
+                createReaderDescription(HtmlDocumentReader.class, HtmlDocumentReader.PARAM_LANGUAGE,
+                        "en"),
+                createEngineDescription(XmiWriter.class), "html/test-with-head.xmi",
                 "html/test-with-head.html");
     }
 
     @Test
-    public void testReadFileWithHeadAndDoctypeAndWriteAsXmi()
-        throws Exception
+    public void testReadFileWithHeadAndDoctypeAndWriteAsXmi() throws Exception
     {
         testOneWay(
-                createReaderDescription(HtmlDocumentReader.class,
-                        HtmlDocumentReader.PARAM_LANGUAGE, "en"),
-                createEngineDescription(XmiWriter.class),
-                "html/test-with-head-and-doctype.xmi", 
+                createReaderDescription(HtmlDocumentReader.class, HtmlDocumentReader.PARAM_LANGUAGE,
+                        "en"),
+                createEngineDescription(XmiWriter.class), "html/test-with-head-and-doctype.xmi",
                 "html/test-with-head-and-doctype.html");
     }
 
     private void assertXmlEquals(File expected, File actual)
     {
         try {
-            XMLAssert.assertXMLEqual(
-                    new InputSource(expected.getPath()),
+            XMLAssert.assertXMLEqual(new InputSource(expected.getPath()),
                     new InputSource(actual.getPath()));
         }
         catch (SAXException | IOException e) {
             throw new RuntimeException(e);
         }
     }
-    
+
     @Rule
     public DkproTestContext testContext = new DkproTestContext();
 }

@@ -68,7 +68,7 @@ public class WorkloadSettingsPanel
         Form<Void> form = new Form<>("form");
 
         form.add(new DocLink("workloadHelpLink", "sect_workload"));
-        
+
         // Dropdown menu
         workloadStrategy = new DropDownChoice<>("workloadStrategy");
         workloadStrategy

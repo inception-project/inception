@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.io.html.dkprocore;
 
 import static de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils.trim;
+import static org.dkpro.core.api.parameter.ComponentParameters.DEFAULT_ENCODING;
 import static org.dkpro.core.io.html.internal.JSoupUtil.appendNormalisedText;
 import static org.dkpro.core.io.html.internal.JSoupUtil.lastCharIsWhitespace;
 
@@ -60,22 +61,19 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph;
 import eu.openminted.share.annotations.api.DocumentationResource;
 
 /**
- * Reads the contents of a given URL and strips the HTML. Returns the textual contents. Also 
+ * Reads the contents of a given URL and strips the HTML. Returns the textual contents. Also
  * recognizes headings and paragraphs.
  */
 @ResourceMetaData(name = "HTML Reader")
 @DocumentationResource("${docbase}/format-reference.html#format-${command}")
-@MimeTypeCapability({MimeTypes.APPLICATION_XHTML, MimeTypes.TEXT_HTML})
-@TypeCapability(
-        outputs = {
-            "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
-            "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading",
-            "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
-            "org.dkpro.core.api.xml.type.XmlAttribute",
-            "org.dkpro.core.api.xml.type.XmlDocument", 
-            "org.dkpro.core.api.xml.type.XmlElement", 
-            "org.dkpro.core.api.xml.type.XmlNode",
-            "org.dkpro.core.api.xml.type.XmlTextNode" })
+@MimeTypeCapability({ MimeTypes.APPLICATION_XHTML, MimeTypes.TEXT_HTML })
+@TypeCapability(outputs = { //
+        "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading",
+        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph",
+        "org.dkpro.core.api.xml.type.XmlAttribute", "org.dkpro.core.api.xml.type.XmlDocument",
+        "org.dkpro.core.api.xml.type.XmlElement", "org.dkpro.core.api.xml.type.XmlNode",
+        "org.dkpro.core.api.xml.type.XmlTextNode" })
 public class HtmlDocumentReader
     extends JCasResourceCollectionReader_ImplBase
 {
@@ -90,25 +88,23 @@ public class HtmlDocumentReader
      * Name of configuration parameter that contains the character encoding used by the input files.
      */
     public static final String PARAM_SOURCE_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
-    @ConfigurationParameter(name = PARAM_SOURCE_ENCODING, mandatory = true, 
-            defaultValue = ComponentParameters.DEFAULT_ENCODING)
+    @ConfigurationParameter(name = PARAM_SOURCE_ENCODING, defaultValue = DEFAULT_ENCODING)
     private String sourceEncoding;
-    
+
     /**
      * Normalize whitespace.
      */
     public static final String PARAM_NORMALIZE_WHITESPACE = "normalizeWhitespace";
-    @ConfigurationParameter(name = PARAM_NORMALIZE_WHITESPACE, mandatory = true, defaultValue = "true")
+    @ConfigurationParameter(name = PARAM_NORMALIZE_WHITESPACE, defaultValue = "true")
     private boolean normalizeWhitespace;
 
     private Map<String, Integer> mappings = new HashMap<>();
-    
+
     @Override
-    public void initialize(UimaContext aContext)
-        throws ResourceInitializationException
+    public void initialize(UimaContext aContext) throws ResourceInitializationException
     {
         super.initialize(aContext);
-        
+
         mappings.put("h1", Heading.type);
         mappings.put("h2", Heading.type);
         mappings.put("h3", Heading.type);
@@ -117,16 +113,15 @@ public class HtmlDocumentReader
         mappings.put("h6", Heading.type);
         mappings.put("p", Paragraph.type);
     }
-    
+
     @Override
-    public void getNext(JCas aJCas)
-        throws IOException, CollectionException
+    public void getNext(JCas aJCas) throws IOException, CollectionException
     {
         Resource res = nextFile();
         initCas(aJCas, res);
 
         CAS cas = aJCas.getCas();
-        
+
         String html;
         try (InputStream is = new BufferedInputStream(
                 CompressionUtils.getInputStream(res.getLocation(), res.getInputStream()))) {
@@ -139,11 +134,11 @@ public class HtmlDocumentReader
                 html = IOUtils.toString(is, sourceEncoding);
             }
         }
-        
+
         Document doc = Jsoup.parse(html);
-        
+
         CasXmlHandler handler = new CasXmlHandler(aJCas);
-        
+
         NodeVisitor visitor = new NodeVisitor()
         {
             @Override
@@ -168,28 +163,26 @@ public class HtmlDocumentReader
                     }
                     else if (node instanceof Element) {
                         Element element = (Element) node;
-                        if (
-                                handler.getText().length() > 0 && 
-                                (element.isBlock() || element.nodeName().equals("br")) && 
-                                !lastCharIsWhitespace(handler.getText())
-                        ) {
+                        if (handler.getText().length() > 0
+                                && (element.isBlock() || element.nodeName().equals("br"))
+                                && !lastCharIsWhitespace(handler.getText())) {
                             char[] text = " ".toCharArray();
                             handler.characters(text, 0, text.length);
                         }
-                        
+
                         AttributesImpl attributes = new AttributesImpl();
-                        
+
                         if (element.attributes() != null) {
                             for (Attribute attr : element.attributes()) {
                                 attributes.addAttribute("", "", attr.getKey(), "CDATA",
                                         attr.getValue());
                             }
                         }
-                        
+
                         if ("body".equals(element.tagName())) {
                             handler.captureText(true);
                         }
-                        
+
                         handler.startElement("", "", element.tagName(), attributes);
                     }
                 }
@@ -217,7 +210,7 @@ public class HtmlDocumentReader
                         if ("body".equals(element.tagName())) {
                             handler.captureText(false);
                         }
-                        
+
                         Integer type = mappings.get(node.nodeName());
                         if (type != null) {
                             int[] span = { elementFS.getBegin(), elementFS.getEnd() };
@@ -234,7 +227,7 @@ public class HtmlDocumentReader
                 }
             }
         };
-        
+
         NodeTraversor.traverse(visitor, doc);
     }
 }
