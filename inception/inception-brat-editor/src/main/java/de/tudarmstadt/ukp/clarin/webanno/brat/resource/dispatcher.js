@@ -76,12 +76,6 @@ var Dispatcher = (function ($, window, undefined) {
         console.warn('Dropped asynch error:', e);
       }
     };
-    // WEBANNO EXTENSION BEGIN
-    that.on = on;
-    that.handleAsynchError = handleAsynchError;
-    that.post = post;
-    that.proxy = proxy;
-    // WEBANNO EXTENSION END
 
     var post = function (asynch, message, args, returnType) {
       if (typeof (asynch) !== 'number') {
@@ -152,12 +146,19 @@ var Dispatcher = (function ($, window, undefined) {
       }
       return results;
     };
-
+    
     var proxy = function (destination, message) {
       this.on(message, function () {
         destination.post(message, Array.prototype.slice.call(arguments));
       });
     };
+
+    // WEBANNO EXTENSION BEGIN
+    that.on = on;
+    that.handleAsynchError = handleAsynchError;
+    that.post = post;
+    that.proxy = proxy;
+    // WEBANNO EXTENSION END
 
     var dispatcher = {
       on: on,

@@ -54,12 +54,14 @@ import { CollectionLoadedResponse } from "./CollectionLoadedResponse";
 import { RelationType } from "./RelationType";
 import { SpanType } from "./SpanType";
 import type { sourceCommentType, sourceAttributeType, sourceEntityType, sourceOffsetType } from "./SourceData";
-import type { Configuration as ConfigurationType } from "../configuration/Configuration";
-import type { Util as UtilType } from "../util/Util";
 import * as jsonpatch from 'fast-json-patch';
 
 declare var $: JQueryStatic;
+
+import type { Configuration as ConfigurationType } from "../configuration/Configuration";
 declare var Configuration: ConfigurationType;
+
+import type { Util as UtilType } from "../util/Util";
 declare var Util: UtilType;
 
 /**

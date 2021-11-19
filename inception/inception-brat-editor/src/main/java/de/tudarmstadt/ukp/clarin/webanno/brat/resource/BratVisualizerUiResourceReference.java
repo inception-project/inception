@@ -41,6 +41,6 @@ public class BratVisualizerUiResourceReference
      */
     private BratVisualizerUiResourceReference()
     {
-        super(BratVisualizerUiResourceReference.class, "visualizer_ui.js");
+        super(BratVisualizerUiResourceReference.class, "visualizer_ui2.js");
     }
 }
