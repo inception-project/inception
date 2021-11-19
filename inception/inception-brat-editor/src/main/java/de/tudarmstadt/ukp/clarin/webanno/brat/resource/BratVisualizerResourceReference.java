@@ -50,7 +50,7 @@ public class BratVisualizerResourceReference
      */
     private BratVisualizerResourceReference()
     {
-        super(BratVisualizerResourceReference.class, "visualizer.js");
+        super(BratVisualizerResourceReference.class, "visualizer2.js");
     }
 
     @Override

@@ -1,0 +1,22 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "0.${project.version}",
+  "description": "INCEpTION brat-based editor",
+  "keywords": [
+    "INCEpTION",
+    "annotation editor",
+    "brat"
+  ],
+  "scripts": {
+    "build:visualizer": "./node_modules/esbuild/bin/esbuild brat/visualizer.ts --target=esnext --bundle --sourcemap --global-name=Visualizer --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/visualizer2.js",
+    "build:configuration": "./node_modules/esbuild/bin/esbuild brat/configuration.ts --target=esnext --bundle --sourcemap --global-name=Configuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/configuration2.js",
+    "build:util": "./node_modules/esbuild/bin/esbuild brat/util.ts --target=esnext --bundle --sourcemap --global-name=Util --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/util2.js"
+  },
+  "external": {},
+  "devDependencies": {
+    "fast-json-patch": "^3.1.0",
+    "esbuild": "^0.13.13",
+    "typescript": "^4.4.2",
+    "@types/jquery": "^2.0.46"
+  }
+}

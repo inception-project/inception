@@ -1,12 +1,12 @@
 /*
-** Annotator v1.2.10-dev-inception-0.20.0-rc-3-4-gf93e13d1f8
+** Annotator v1.2.10-dev-inception-21.1-372-g7bf11522c4
 ** https://github.com/okfn/annotator/
 **
 ** Copyright 2021, the Annotator project contributors.
 ** Dual licensed under the MIT and GPLv3 licenses.
 ** https://github.com/okfn/annotator/blob/master/LICENSE
 **
-** Built at: 2021-07-01 20:16:17Z
+** Built at: 2021-11-14 15:39:33Z
  */
 
 

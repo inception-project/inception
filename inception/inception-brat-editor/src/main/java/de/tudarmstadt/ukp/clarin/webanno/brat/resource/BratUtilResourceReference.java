@@ -41,6 +41,6 @@ public class BratUtilResourceReference
      */
     private BratUtilResourceReference()
     {
-        super(BratUtilResourceReference.class, "util.js");
+        super(BratUtilResourceReference.class, "util2.js");
     }
 }

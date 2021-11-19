@@ -41,6 +41,6 @@ public class BratConfigurationResourceReference
      */
     private BratConfigurationResourceReference()
     {
-        super(BratConfigurationResourceReference.class, "configuration.js");
+        super(BratConfigurationResourceReference.class, "configuration2.js");
     }
 }
