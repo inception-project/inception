@@ -46,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceRef
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -121,7 +120,6 @@ public abstract class BratVisualizer
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
 
         // BRAT helpers
         aResponse.render(

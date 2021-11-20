@@ -7,13 +7,7 @@ webanno-brat/src/main/resources/de/tudarmstadt/ukp/clarin/webanno/brat/client/cs
  * Copyright (C) 2010-2012 The brat contributors, all rights reserved.
 
 
-It also includes the the JQuery JSON module:
-
- * Copyright 2009-2011 Brantley Harris
- * Copyright 2010–2014 Timo Tijhof
-
-
-And the JQuery SVG module:
+It also includes the JQuery SVG module:
 
  * Copyright 2007 - 2014 Keith Wood
 

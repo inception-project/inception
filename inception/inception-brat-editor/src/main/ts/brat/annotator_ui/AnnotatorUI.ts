@@ -323,7 +323,7 @@ export class AnnotatorUI {
       });
       this.dispatcher.post('ajax', [{
         action: 'doAction',
-        offsets: $.toJSON(offsets),
+        offsets: JSON.stringify(offsets),
         id: id,
         labelText: this.editedSpan.labelText,
         type: this.editedSpan.type
@@ -829,7 +829,7 @@ export class AnnotatorUI {
     if (id) {
       this.dispatcher.post('ajax', [{
         action: 'spanOpenDialog',
-        offsets: $.toJSON(offsets),
+        offsets: JSON.stringify(offsets),
         id: id,
         type: span.type,
         spanText: spanText
@@ -838,7 +838,7 @@ export class AnnotatorUI {
     else {
       this.dispatcher.post('ajax', [{
         action: 'spanOpenDialog',
-        offsets: $.toJSON(offsets),
+        offsets: JSON.stringify(offsets),
         spanText: spanText
       }, 'serverResult']);
     }
@@ -1670,7 +1670,7 @@ export class AnnotatorUI {
       });
       this.dispatcher.post('ajax', [{
         action: 'contextMenu',
-        offsets: $.toJSON(offsets),
+        offsets: JSON.stringify(offsets),
         id: id,
         type: this.data.spans[id].type,
         clientX: evt.clientX,

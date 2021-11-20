@@ -397,7 +397,7 @@ export class VisualizerUI {
     evt.preventDefault();
     this.dispatcher.post('ajax', [{
       action: 'acceptAction',
-      offsets: $.toJSON(offsets),
+      offsets: JSON.stringify(offsets),
       id: id,
       labelText: editedSpan.labelText,
       type: editedSpan.type
@@ -412,7 +412,7 @@ export class VisualizerUI {
     evt.preventDefault();
     this.dispatcher.post('ajax', [{
       action: 'rejectAction',
-      offsets: $.toJSON(offsets),
+      offsets: JSON.stringify(offsets),
       id: id,
       labelText: editedSpan.labelText,
       type: editedSpan.type
