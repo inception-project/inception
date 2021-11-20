@@ -49,22 +49,22 @@ declare class VisualizerUI extends VisualizerUIType {};
 export class Util {
   monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  cmp = function (a, b) {
+  cmp(a, b) {
     return a < b ? -1 : a > b ? 1 : 0;
   }
 
-  cmpArrayOnFirstElement = function (a, b) {
+  cmpArrayOnFirstElement(a, b) {
     a = a[0];
     b = b[0];
     return a < b ? -1 : a > b ? 1 : 0;
   }
 
-  unitAgo = function (n, unit) {
+  unitAgo(n, unit) {
     if (n == 1) return "" + n + " " + unit + " ago";
     return "" + n + " " + unit + "s ago";
   };
 
-  formatTimeAgo = function (time) {
+  formatTimeAgo(time) {
     if (time == -1000) {
       return "never"; // FIXME make the server return the server time!
     }
@@ -89,7 +89,7 @@ export class Util {
     return result;
   }
 
-  realBBox = function (span) {
+  realBBox(span) {
     var box = span.rect.getBBox();
     var chunkTranslation = span.chunk.translation;
     var rowTranslation = span.chunk.row.translation;
@@ -98,7 +98,7 @@ export class Util {
     return box;
   }
 
-  escapeHTML = function (str) {
+  escapeHTML(str) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -108,7 +108,7 @@ export class Util {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  escapeHTMLandQuotes = function (str) {
+  escapeHTMLandQuotes(str) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -118,7 +118,7 @@ export class Util {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');
   }
 
-  escapeHTMLwithNewlines = function (str) {
+  escapeHTMLwithNewlines(str) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -128,7 +128,7 @@ export class Util {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>');
   }
 
-  escapeQuotes = function (str) {
+  escapeQuotes(str) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -139,12 +139,12 @@ export class Util {
     return str.replace(/\"/g, '&quot;');
   }
 
-  getSpanLabels = function (spanTypes, spanType) {
+  getSpanLabels(spanTypes, spanType) {
     var type = spanTypes[spanType];
     return type && type.labels || [];
   }
 
-  spanDisplayForm = function (spanTypes, spanType) {
+  spanDisplayForm(spanTypes, spanType) {
     var labels = this.getSpanLabels(spanTypes, spanType);
     if (labels[0]) {
       return labels[0];
@@ -158,7 +158,7 @@ export class Util {
     return spanType;
   }
 
-  getArcLabels = function (spanTypes, spanType, arcType, relationTypesHash) {
+  getArcLabels(spanTypes, spanType, arcType, relationTypesHash) {
     var type = spanTypes[spanType];
     var arcTypes = type && type.arcs || [];
     var arcDesc = null;
@@ -168,7 +168,7 @@ export class Util {
       var splitType = arcType.match(/^(.*?)(\d*)$/);
       noNumArcType = splitType[1];
     }
-    $.each(arcTypes, function (arcno, arcDescI) {
+    $.each(arcTypes, (arcno, arcDescI) => {
       if (arcDescI.type == arcType || arcDescI.type == noNumArcType) {
         arcDesc = arcDescI;
         return false;
@@ -186,16 +186,16 @@ export class Util {
     // WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
   }
 
-  arcDisplayForm = function (spanTypes, spanType, arcType, relationTypesHash) {
+  arcDisplayForm(spanTypes, spanType, arcType, relationTypesHash) {
     var labels = this.getArcLabels(spanTypes, spanType, arcType, relationTypesHash);
     return labels[0] || arcType;
   }
 
   // TODO: switching to use of $.param(), this function should
   // be deprecated and removed.
-  objectToUrlStr = function (o) {
+  objectToUrlStr(o) {
     let a = [];
-    $.each(o, function (key, value) {
+    $.each(o, (key, value) => {
       a.push(key + "=" + encodeURIComponent(value));
     });
     return a.join("&");
@@ -365,7 +365,7 @@ export class Util {
   rgbHash6RE = /#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/;
   rgbHash3RE = /#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/;
 
-  strToRgb = function (color) {
+  strToRgb(color) {
     var result;
 
     // Check if we're already dealing with an array of colors
@@ -392,7 +392,7 @@ export class Util {
     return this.colors[$.trim(color).toLowerCase()];
   }
 
-  rgbToStr = function (rgb) {
+  rgbToStr(rgb) {
     // TODO: there has to be a better way, even in JS
     var r = Math.floor(rgb[0]).toString(16);
     var g = Math.floor(rgb[1]).toString(16);
@@ -410,7 +410,7 @@ export class Util {
   // (with slight modifications)
 
   // RGB to HSL color conversion
-  rgbToHsl = function (rgb) {
+  rgbToHsl(rgb) {
     var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
     var max = Math.max(r, g, b), min = Math.min(r, g, b);
     var h, s, l = (max + min) / 2;
@@ -431,7 +431,7 @@ export class Util {
     return [h, s, l];
   }
 
-  hue2rgb = function (p, q, t) {
+  hue2rgb(p, q, t) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
     if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -440,7 +440,7 @@ export class Util {
     return p;
   }
 
-  hslToRgb = function (hsl) {
+  hslToRgb(hsl) {
     var h = hsl[0], s = hsl[1], l = hsl[2];
 
     var r, g, b;
@@ -464,7 +464,7 @@ export class Util {
   // where lightness (in the HSL sense) is adjusted by the given
   // amount, the larger the lighter: -1 gives black, 1 white, and 0
   // the given color.
-  adjustColorLightness = function (colorstr, adjust) {
+  adjustColorLightness(colorstr, adjust) {
     if (!(colorstr in this.adjustLightnessCache)) {
       this.adjustLightnessCache[colorstr] = {}
     }
@@ -490,7 +490,7 @@ export class Util {
   // Partially stolen from: http://documentcloud.github.com/underscore/
   // MIT-License
   // TODO: Mention in LICENSE.md
-  isEqual = function (a, b) {
+  isEqual(a, b) {
     // Check object identity.
     if (a === b) return true;
     // Different types?
@@ -514,7 +514,7 @@ export class Util {
   keyValRE = /^([^=]+)=(.*)$/; // key=value
   isDigitsRE = /^[0-9]+$/;
 
-  deparam = function (str) {
+  deparam(str) {
     var args = str.split('&');
     var len = args.length;
     if (!len) return null;
@@ -550,7 +550,7 @@ export class Util {
     return result;
   };
 
-  paramArray = function (val) {
+  paramArray(val) {
     val = val || [];
     var len = val.length;
     var arr = [];
@@ -565,7 +565,7 @@ export class Util {
     return arr;
   };
 
-  param = function (args) {
+  param(args) {
     if (!args) return '';
     var vals = [];
     for (var key in args) {
@@ -592,29 +592,33 @@ export class Util {
   profiles = {};
   profileStarts: Record<string, Date> = {};
   profileOn = false;
-  profileEnable = function (on) {
+  profileEnable(on) {
     if (on === undefined) on = true;
     this.profileOn = on;
   }; // profileEnable
-  profileClear = function () {
+
+  profileClear() {
     if (!this.profileOn) return;
     this.profiles = {};
     this.profileStarts = {};
   }; // profileClear
-  profileStart = function (label) {
+
+  profileStart(label) {
     if (!this.profileOn) return;
     this.profileStarts[label] = new Date();
   }; // profileStart
-  profileEnd = function (label) {
+
+  profileEnd(label) {
     if (!this.profileOn) return;
     var profileElapsed = new Date().valueOf() - this.profileStarts[label].valueOf();
-    if (!this.profiles[label]) this.rofiles[label] = 0;
+    if (!this.profiles[label]) this.profiles[label] = 0;
     this.profiles[label] += profileElapsed;
   }; // profileEnd
-  profileReport = function () {
+
+  profileReport() {
     if (!this.profileOn) return;
     if (window.console) {
-      $.each(this.profiles, function (label, time) {
+      $.each(this.profiles, (label, time) => {
         console.log("profile " + label, time);
       });
       console.log("-------");
@@ -627,7 +631,7 @@ export class Util {
   // docData: the document data (in the format of the result of
   //   http://.../brat/ajax.cgi?action=getDocument&collection=...&document=...
   // returns the embedded visualizer's dispatcher object
-  embed = function (container, collData, docData) {
+  embed(container, collData, docData) {
     var dispatcher = new Dispatcher();
     var visualizer = new Visualizer(dispatcher, container);
     new VisualizerUI(dispatcher, visualizer.svg);
@@ -644,19 +648,19 @@ export class Util {
   //   simple `embed` instead)
   // callback: optional; the callback to call afterwards; it will be
   //   passed the embedded visualizer's dispatcher object
-  embedByURL = function (container, collDataURL: string, docDataURL: string, callback?) {
+  embedByURL(container, collDataURL: string, docDataURL: string, callback?) {
     var collData, docData;
-    var handler = function () {
+    var handler = () => {
       if (collData && docData) {
         var dispatcher = this.embed(container, collData, docData);
         if (callback) callback(dispatcher);
       }
     };
     if (typeof (container) == 'string') {
-      $.getJSON(collDataURL, function (data) { collData = data; handler(); });
+      $.getJSON(collDataURL, (data) => { collData = data; handler(); });
     } else {
       collData = collDataURL;
     }
-    $.getJSON(docDataURL, function (data) { docData = data; handler(); });
+    $.getJSON(docDataURL, (data) => { docData = data; handler(); });
   };
 }

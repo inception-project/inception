@@ -229,6 +229,16 @@
             </configuration>
           </execution>
           <execution>
+            <id>npm build:curation_ui</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:curation_ui</arguments>
+            </configuration>
+          </execution>
+          <execution>
             <id>npm build:ajax</id>
             <goals>
               <goal>npm</goal>

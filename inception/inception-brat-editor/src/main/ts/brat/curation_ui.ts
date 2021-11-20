@@ -15,32 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
+import { CurationMod } from "./curation/CurationMod";
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
-
-public class BratCurationUiResourceReference
-    extends JavaScriptResourceReference
-{
-    private static final long serialVersionUID = 1L;
-
-    private static final BratCurationUiResourceReference INSTANCE = new BratCurationUiResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static BratCurationUiResourceReference get()
-    {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private BratCurationUiResourceReference()
-    {
-        super(BratCurationUiResourceReference.class, "curation_ui2.js");
-    }
-}
+export = CurationMod;

@@ -113,7 +113,7 @@ export class Span {
     this.attributeCueFor = {};
     this.attributeMerge = {};
     this.fragments = [];
-    this.normalizations = undefined;
+    this.normalizations = [];
   }
 
   /**
