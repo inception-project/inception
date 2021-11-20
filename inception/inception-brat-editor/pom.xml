@@ -219,6 +219,26 @@
             </configuration>
           </execution>
           <execution>
+            <id>npm build:ajax</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:ajax</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:dispatcher</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:dispatcher</arguments>
+            </configuration>
+          </execution>
+          <execution>
             <id>npm build:configuration</id>
             <goals>
               <goal>npm</goal>

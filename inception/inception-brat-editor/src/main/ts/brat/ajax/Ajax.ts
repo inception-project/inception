@@ -1,0 +1,183 @@
+/*
+ * ## INCEpTION ##
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ## brat ##
+ * Copyright (C) 2010-2012 The brat contributors, all rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+// -*- Mode: JavaScript; tab-width: 2; indent-tabs-mode: nil; -*-
+
+import { isConstructorDeclaration } from "typescript";
+
+declare var Wicket;
+
+// vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
+export class Ajax {
+  pending = 0;
+  count = 0;
+  pendingList = {};
+  dispatcher = undefined;
+
+  constructor(dispatcher) {
+    this.dispatcher = dispatcher;
+    dispatcher.
+      on('isReloadOkay', this, this.isReloadOkay).
+      on('makeAjaxObsolete', this, this.makeObsolete).
+      on('ajax', this, this.ajaxCall);
+
+  }
+
+  // merge data will get merged into the response data
+  // before calling the callback
+  ajaxCall(data, callback, merge) {
+    merge = merge || {};
+    this.dispatcher.post('spin');
+    this.pending++;
+    var id = this.count++;
+
+    // special value: `merge.keep = true` prevents obsolescence
+    this.pendingList[id] = merge.keep || false;
+    delete merge.keep;
+
+    // If no protocol version is explicitly set, set it to current
+    if (data['protocol'] === undefined) {
+      // TODO: Extract the protocol version somewhere global
+      data['protocol'] = 1;
+    }
+
+    // WEBANNO EXTENSION BEGIN
+    Wicket.Ajax.ajax({
+      "m": "POST",
+      "c": this.dispatcher.wicketId,
+      "u": this.dispatcher.ajaxUrl,
+      "ep": data,
+      // success
+      "sh": [() => {
+        var response = undefined;
+        if (Wicket.$(this.dispatcher.wicketId) !== null) {
+          response = Wicket.$(this.dispatcher.wicketId).temp;
+          delete Wicket.$(this.dispatcher.wicketId).temp;
+        }
+        if (response === undefined) {
+          console.log('Server response did not contain brat data - ignoring');
+          // This is likely a wicket ajax-redirect and nothing that relates to brat.
+          // We simply ignore this.
+          return;
+        }
+        // WEBANNO EXTENSION END
+        this.pending--;
+        // If no exception is set, verify the server results
+        if (response.exception == undefined && response.action !== data.action) {
+          console.error('Action ' + data.action +
+            ' returned the results of action ' + response.action);
+          response.exception = true;
+          this.dispatcher.post('messages', [[['Protocol error: Action' + data.action + ' returned the results of action ' + response.action + ' maybe the server is unable to run, please run tools/troubleshooting.sh from your installation to diagnose it', 'error', -1]]]);
+        }
+
+        // If the request is obsolete, do nothing; if not...
+        if (this.pendingList.hasOwnProperty(id)) {
+          this.dispatcher.post('messages', [response.messages]);
+          if (response.exception == 'configurationError'
+            || response.exception == 'protocolVersionMismatch') {
+            // this is a no-rescue critical failure.
+            // Stop *everything*.
+            this.pendingList = {};
+            this.dispatcher.post('screamingHalt');
+            // If we had a protocol mismatch, prompt the user for a reload
+            if (response.exception == 'protocolVersionMismatch') {
+              if (confirm('The server is running a different version ' +
+                'from brat than your client, possibly due to a ' +
+                'server upgrade. Would you like to reload the ' +
+                'current page to update your client to the latest ' +
+                'version?')) {
+                // The boolean parameter here is supposed to trigger a force-reload in Firefox and
+                // other browsers ignore it.
+                // Cf. https://developer.mozilla.org/en-US/docs/Web/API/Location/reload
+                // @ts-ignore
+                window.location.reload(true);
+              } else {
+                this.dispatcher.post('messages', [[['Fatal Error: Protocol ' +
+                  'version mismatch, please contact the administrator',
+                  'error', -1]]]);
+              }
+            }
+            return;
+          }
+
+          delete this.pendingList[id];
+
+          // if .exception is just Boolean true, do not process
+          // the callback; if it is anything else, the
+          // callback is responsible for handling it
+          if (response.exception == true) {
+            $('#waiter').dialog('close');
+          } else if (callback) {
+            $.extend(response, merge);
+            this.dispatcher.post(0, callback, [response]);
+          }
+        }
+        this.dispatcher.post('unspin');
+        // WEBANNO EXTENSION BEGIN
+      }],
+      // error
+      "fh": [() => {
+        this.pending--;
+        this.dispatcher.post('unspin');
+        $('#waiter').dialog('close');
+        // TODO find some way or access or pass on the response, textStatus and errorThrown from BratAnnotator or Wicket.
+        // In the original ajax.js, these are parameters to the error callback.
+        //            dispatcher.post('messages', [[['Error: Action' + data.action + ' failed on error ' + response.statusText, 'error']]]);
+        //            console.error(textStatus + ':', errorThrown, response);
+      }]
+    });
+    // WEBANNO EXTENSION END
+    return id;
+  }
+
+  isReloadOkay() {
+    // do not reload while data is pending
+    this.pending == 0;
+  };
+
+  makeObsolete(all) {
+    if (all) {
+      this.pendingList = {};
+    } else {
+      $.each(this.pendingList, function (id, keep) {
+        if (!keep) delete this.pendingList[id];
+      });
+    }
+  }
+}

@@ -38,6 +38,7 @@
  * SOFTWARE.
  */
 import type { Visualizer as VisualizerType} from "../visualizer/Visualizer";
+import type { Dispatcher } from "../dispatcher/Dispatcher";
 
 declare class Visualizer extends VisualizerType {};
 
@@ -78,7 +79,7 @@ export class Util {
     if (diff < 28) return this.unitAgo(Math.floor(diff / 7), "week");
     var thenDate = new Date(time);
     var result = thenDate.getDate() + ' ' + this.monthNames[thenDate.getMonth()];
-    if (thenDate.getYear() != nowDate.getYear()) {
+    if (thenDate.getFullYear() != nowDate.getFullYear()) {
       result += ' ' + thenDate.getFullYear();
     }
     return result;

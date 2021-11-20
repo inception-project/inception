@@ -41,6 +41,6 @@ public class BratDispatcherResourceReference
      */
     private BratDispatcherResourceReference()
     {
-        super(BratDispatcherResourceReference.class, "dispatcher.js");
+        super(BratDispatcherResourceReference.class, "dispatcher2.js");
     }
 }

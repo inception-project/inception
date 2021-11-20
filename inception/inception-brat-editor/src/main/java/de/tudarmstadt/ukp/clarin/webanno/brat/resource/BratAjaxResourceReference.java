@@ -41,6 +41,6 @@ public class BratAjaxResourceReference
      */
     private BratAjaxResourceReference()
     {
-        super(BratAjaxResourceReference.class, "ajax.js");
+        super(BratAjaxResourceReference.class, "ajax2.js");
     }
 }

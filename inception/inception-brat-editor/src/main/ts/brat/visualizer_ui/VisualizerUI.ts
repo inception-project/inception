@@ -37,6 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import type { Dispatcher } from "../dispatcher/Dispatcher";
 
 import type { Util as UtilType } from "../util/Util";
 declare var Util: UtilType;
@@ -80,7 +81,7 @@ export class VisualizerUI {
   svgElement: JQuery;
   svgId: string;
 
-  constructor(dispatcher, svg) {
+  constructor(dispatcher: Dispatcher, svg) {
     this.commentPopup = $('#commentpopup');
     this.svgElement = $(svg._svg);
     this.svgId = this.svgElement.parent().attr('id');
@@ -263,22 +264,19 @@ export class VisualizerUI {
         // no DB, just attach "human-readable" text provided
         // with the annotation, if any
         if (cateogory) {
-          comment += ```
-                          <hr/>
-                          <span class="comment_id">${Util.escapeHTML(cateogory)}</span>'
-                          ```;
+          comment += `<hr/>
+                      <span class="comment_id">${Util.escapeHTML(cateogory)}</span>'
+                      `;
         }
 
         if (key) {
-          comment += ```
-                          <span class="norm_info_label">${Util.escapeHTML(key)}</span>
-                          ```;
+          comment += `<span class="norm_info_label">${Util.escapeHTML(key)}</span>
+                     `;
         }
 
-        comment += ```
-                          <span class="norm_info_value">${Util.escapeHTML(value).replace(/\n/g, "<br/>")}</span>
-                          <br/>
-                          ```;
+        comment += `<span class="norm_info_value">${Util.escapeHTML(value).replace(/\n/g, "<br/>")}</span>
+                    <br/>
+                    `;
       } else {
         // DB available, add drop-off point to HTML and store
         // query parameters

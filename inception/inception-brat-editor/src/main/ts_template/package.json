@@ -11,6 +11,8 @@
     "build:visualizer": "./node_modules/esbuild/bin/esbuild brat/visualizer.ts --target=esnext --bundle --sourcemap --global-name=Visualizer --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/visualizer2.js",
     "build:visualizer_ui": "./node_modules/esbuild/bin/esbuild brat/visualizer_ui.ts --target=esnext --bundle --sourcemap --global-name=VisualizerUI --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/visualizer_ui2.js",
     "build:configuration": "./node_modules/esbuild/bin/esbuild brat/configuration.ts --target=esnext --bundle --sourcemap --global-name=Configuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/configuration2.js",
+    "build:dispatcher": "./node_modules/esbuild/bin/esbuild brat/dispatcher.ts --target=esnext --bundle --sourcemap --global-name=Dispatcher --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/dispatcher2.js",
+    "build:ajax": "./node_modules/esbuild/bin/esbuild brat/ajax.ts --target=esnext --bundle --sourcemap --global-name=Ajax --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/ajax2.js",
     "build:util": "./node_modules/esbuild/bin/esbuild brat/util.ts --target=esnext --bundle --sourcemap --global-name=Util --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/util2.js"
   },
   "external": {},

@@ -53,6 +53,7 @@ import { AttributeType } from "./AttributeType";
 import { CollectionLoadedResponse } from "./CollectionLoadedResponse";
 import { RelationType } from "./RelationType";
 import { SpanType } from "./SpanType";
+import type { Dispatcher } from "../dispatcher/Dispatcher";
 import type { sourceCommentType, sourceAttributeType, sourceEntityType, sourceOffsetType } from "./SourceData";
 import * as jsonpatch from 'fast-json-patch';
 

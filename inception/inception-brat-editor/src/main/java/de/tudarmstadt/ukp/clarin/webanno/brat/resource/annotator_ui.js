@@ -1673,26 +1673,26 @@ var AnnotatorUI = (function ($, window, undefined) {
     };
 
     dispatcher.
-      on('init', init).
-      on('getValidArcTypesForDrag', getValidArcTypesForDrag).
-      on('dataReady', rememberData).
-      on('collectionLoaded', rememberSpanSettings).
-      on('collectionLoaded', setupTaggerUI).
-      on('collectionLoaded', setupNormalizationUI).
-      on('spanAndAttributeTypesLoaded', spanAndAttributeTypesLoaded).
-      on('newSourceData', onNewSourceData).
-      on('user', userReceived).
-      on('edited', edited).
-      on('current', gotCurrent).
-      on('isReloadOkay', isReloadOkay).
-      on('keydown', onKeyDown).
-      on('click', onClick).
-      on('dragstart', preventDefault).
-      on('mousedown', onMouseDown).
-      on('mouseup', onMouseUp).
-      on('mousemove', onMouseMove).
-      on('annotationSpeed', setAnnotationSpeed).
-      on('contextmenu', contextMenu);
+      on('init', this, init).
+      on('getValidArcTypesForDrag',  this, getValidArcTypesForDrag).
+      on('dataReady',  this, rememberData).
+      on('collectionLoaded',  this, rememberSpanSettings).
+      on('collectionLoaded',  this, setupTaggerUI).
+      on('collectionLoaded',  this, setupNormalizationUI).
+      on('spanAndAttributeTypesLoaded',  this, spanAndAttributeTypesLoaded).
+      on('newSourceData',  this, onNewSourceData).
+      on('user',  this, userReceived).
+      on('edited',  this, edited).
+      on('current',  this, gotCurrent).
+      on('isReloadOkay',  this, isReloadOkay).
+      on('keydown',  this, onKeyDown).
+      on('click',  this, onClick).
+      on('dragstart',  this, preventDefault).
+      on('mousedown',  this, onMouseDown).
+      on('mouseup',  this, onMouseUp).
+      on('mousemove',  this, onMouseMove).
+      on('annotationSpeed',  this, setAnnotationSpeed).
+      on('contextmenu', this, contextMenu);
   };
 
   return AnnotatorUI;
