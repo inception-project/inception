@@ -16,7 +16,11 @@
     "build:dispatcher": "./node_modules/esbuild/bin/esbuild brat/dispatcher.ts --target=esnext --bundle --sourcemap --global-name=Dispatcher --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/dispatcher2.js",
     "build:ajax": "./node_modules/esbuild/bin/esbuild brat/ajax.ts --target=esnext --bundle --sourcemap --global-name=Ajax --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/ajax2.js",
     "build:spinner": "./node_modules/esbuild/bin/esbuild brat/spinner.ts --target=esnext --bundle --sourcemap --global-name=Spinner --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/spinner2.js",
-    "build:util": "./node_modules/esbuild/bin/esbuild brat/util.ts --target=esnext --bundle --sourcemap --global-name=Util --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/util2.js"
+    "build:util": "./node_modules/esbuild/bin/esbuild brat/util.ts --target=esnext --bundle --sourcemap --global-name=Util --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/util2.js",
+    "build:brat": "./node_modules/esbuild/bin/esbuild brat/brat.ts --target=esnext --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.js",
+    "build:brat-minified": "./node_modules/esbuild/bin/esbuild brat/brat.ts --target=esnext --minify --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.js",
+    "build:brat-curation": "./node_modules/esbuild/bin/esbuild brat/brat_curation.ts --target=esnext --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.js",
+    "build:brat-curation-minified": "./node_modules/esbuild/bin/esbuild brat/brat_curation.ts --target=esnext --minify --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.min.js"
   },
   "external": {},
   "devDependencies": {
@@ -27,6 +31,7 @@
     "@typescript-eslint/parser": "^5.4.0",
     "typescript": "^4.4.2",
     "@types/jquery": "^2.0.46",
-    "ts-keycode-enum": "^1.0.6"
+    "ts-keycode-enum": "^1.0.6",
+    "@svgdotjs/svg.js": "^3.1.1"
   }
 }

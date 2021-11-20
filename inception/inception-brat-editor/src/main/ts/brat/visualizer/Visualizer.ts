@@ -56,16 +56,15 @@ import { SpanType } from "./SpanType";
 import type { Dispatcher } from "../dispatcher/Dispatcher";
 import type { sourceCommentType, sourceEntityType, sourceOffsetType } from "./SourceData";
 import * as jsonpatch from 'fast-json-patch';
+import { Operation } from "fast-json-patch";
+import { scrollbarWidth } from "../util/ScrollbarWidth";
+import { SVG } from '@svgdotjs/svg.js'
 
 declare const $: JQueryStatic;
 
-import type { Configuration as ConfigurationType } from "../configuration/Configuration";
-declare const Configuration: ConfigurationType;
+import { INSTANCE as Configuration } from "../configuration/Configuration";
 
-import type { Util as UtilType } from "../util/Util";
-import { Operation } from "fast-json-patch";
-import { scrollbarWidth } from "../util/ScrollbarWidth";
-declare const Util: UtilType;
+import { INSTANCE as Util } from "../util/Util";
 
 /**
  * Sets default values for a wide range of optional attributes.

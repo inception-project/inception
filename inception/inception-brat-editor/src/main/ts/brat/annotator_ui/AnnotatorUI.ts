@@ -39,11 +39,9 @@
  */
 import type Dispatcher from "../dispatcher";
 
-import type { Configuration as ConfigurationType } from "../configuration/Configuration";
-declare let Configuration: ConfigurationType;
+import { INSTANCE as Configuration } from "../configuration/Configuration";
 
-import type { Util as UtilType } from "../util/Util";
-declare let Util: UtilType;
+import { INSTANCE as Util } from "../util/Util";
 
 import { Key } from 'ts-keycode-enum';
 

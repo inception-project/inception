@@ -51,6 +51,7 @@ export class Dispatcher {
 
   // WEBANNO EXTENSION BEGIN
   ajaxUrl = 'ajax.cgi';
+  wicketId: string;
   // WEBANNO EXTENSION END
 
   constructor() {
@@ -68,7 +69,7 @@ export class Dispatcher {
     }
     this.table[message].push([host, handler]);
     return this;
-  };
+  }
 
   // Notify listeners that we encountered an error in an asynch call
   inAsynchError = false; // To avoid error avalanches
@@ -82,7 +83,7 @@ export class Dispatcher {
     } else {
       console.warn('Dropped asynch error:', e);
     }
-  };
+  }
 
   post(asynch, message?, args?, returnType?) {
     if (typeof (asynch) !== 'number') {
@@ -97,7 +98,7 @@ export class Dispatcher {
       args = [];
     }
 
-    var results = [];
+    const results = [];
     // DEBUG: if (typeof(message) != "string" || !(message.match(/mouse/) || message == "hideComment")) console.log(message, args);
 
     if (typeof (message) === 'function') {
@@ -118,7 +119,7 @@ export class Dispatcher {
     }
     else {
       // a proper message, propagate to all interested parties
-      var todo = this.table[message];
+      const todo = this.table[message];
       if (todo !== undefined) {
         $.each(todo, (itemNo, item) => {
           let result;
@@ -158,11 +159,11 @@ export class Dispatcher {
     }
     
     return results;
-  };
+  }
 
   proxy(destination, message) {
     this.on(message, this, () => {
       destination.post(message, Array.prototype.slice.call(arguments));
     });
-  };
+  }
 }

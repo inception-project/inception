@@ -39,11 +39,9 @@
  */
 import type { Dispatcher } from "../dispatcher/Dispatcher";
 
-import type { Util as UtilType } from "../util/Util";
-declare let Util: UtilType;
+import { INSTANCE as Configuration } from "../configuration/Configuration";
 
-import type { Configuration as ConfigurationType } from "../configuration/Configuration";
-declare let Configuration: ConfigurationType;
+import { INSTANCE as Util } from "../util/Util";
 
 export class VisualizerUI {
   defaultFloatFormat = '%.1f/right';
@@ -509,7 +507,7 @@ export class VisualizerUI {
       clearTimeout(this.resizerTimeout);
       this.resizerTimeout = setTimeout(this.resizeFunction, 300);
     }
-  };
+  }
 
   // WEBANNO EXTENSION BEGIN
   // Sending the whoami and getting the user is mandatory because many things in brat will not work
@@ -524,7 +522,7 @@ export class VisualizerUI {
     // /*
     this.dispatcher.post('ajax', [{ action: 'loadConf' }, (response) => {
       if (response.config != undefined) {
-        Configuration = response.config;
+        Object.assign(Configuration, response.config);
         // TODO: make whole-object assignment work
         // @amadanmath: help! This code is horrible
         // Configuration.svgWidth = storedConf.svgWidth;

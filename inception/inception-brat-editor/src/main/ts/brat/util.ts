@@ -37,8 +37,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { Util } from "./util/Util";
-
-const INSTANCE = new Util();
+import { INSTANCE } from "./util/Util";
 
 export = INSTANCE;

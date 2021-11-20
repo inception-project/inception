@@ -37,14 +37,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import type { Dispatcher as DispatcherType } from "../dispatcher/Dispatcher";
-declare class Dispatcher extends DispatcherType { };
-
-import type { Visualizer as VisualizerType } from "../visualizer/Visualizer";
-declare class Visualizer extends VisualizerType { };
-
-import type { VisualizerUI as VisualizerUIType } from "../visualizer_ui/VisualizerUI";
-declare class VisualizerUI extends VisualizerUIType { };
+import { Dispatcher } from "../dispatcher/Dispatcher";
+import { Visualizer } from "../visualizer/Visualizer";
+import { VisualizerUI } from "../visualizer_ui/VisualizerUI";
 
 export class Util {
   monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -62,16 +57,16 @@ export class Util {
   unitAgo(n, unit) {
     if (n == 1) return "" + n + " " + unit + " ago";
     return "" + n + " " + unit + "s ago";
-  };
+  }
 
   formatTimeAgo(time) {
     if (time == -1000) {
       return "never"; // FIXME make the server return the server time!
     }
 
-    var nowDate = new Date();
-    var now = nowDate.getTime();
-    var diff = Math.floor((now - time) / 1000);
+    const nowDate = new Date();
+    const now = nowDate.getTime();
+    let diff = Math.floor((now - time) / 1000);
     if (!diff) return "just now";
     if (diff < 60) return this.unitAgo(diff, "second");
     diff = Math.floor(diff / 60);
@@ -81,8 +76,8 @@ export class Util {
     diff = Math.floor(diff / 24);
     if (diff < 7) return this.unitAgo(diff, "day");
     if (diff < 28) return this.unitAgo(Math.floor(diff / 7), "week");
-    var thenDate = new Date(time);
-    var result = thenDate.getDate() + ' ' + this.monthNames[thenDate.getMonth()];
+    const thenDate = new Date(time);
+    let result = thenDate.getDate() + ' ' + this.monthNames[thenDate.getMonth()];
     if (thenDate.getFullYear() != nowDate.getFullYear()) {
       result += ' ' + thenDate.getFullYear();
     }
@@ -90,9 +85,9 @@ export class Util {
   }
 
   realBBox(span) {
-    var box = span.rect.getBBox();
-    var chunkTranslation = span.chunk.translation;
-    var rowTranslation = span.chunk.row.translation;
+    const box = span.rect.getBBox();
+    const chunkTranslation = span.chunk.translation;
+    const rowTranslation = span.chunk.row.translation;
     box.x += chunkTranslation.x + rowTranslation.x;
     box.y += chunkTranslation.y + rowTranslation.y;
     return box;
@@ -140,17 +135,17 @@ export class Util {
   }
 
   getSpanLabels(spanTypes, spanType) {
-    var type = spanTypes[spanType];
+    const type = spanTypes[spanType];
     return type && type.labels || [];
   }
 
   spanDisplayForm(spanTypes, spanType) {
-    var labels = this.getSpanLabels(spanTypes, spanType);
+    const labels = this.getSpanLabels(spanTypes, spanType);
     if (labels[0]) {
       return labels[0];
     }
 
-    var sep = spanType.indexOf('_');
+    const sep = spanType.indexOf('_');
     if (sep >= 0) {
       return spanType.substring(sep + 1)
     }
@@ -159,13 +154,13 @@ export class Util {
   }
 
   getArcLabels(spanTypes, spanType, arcType, relationTypesHash) {
-    var type = spanTypes[spanType];
-    var arcTypes = type && type.arcs || [];
-    var arcDesc = null;
+    const type = spanTypes[spanType];
+    const arcTypes = type && type.arcs || [];
+    let arcDesc = null;
     // also consider matches without suffix number, if any
-    var noNumArcType;
+    let noNumArcType;
     if (arcType) {
-      var splitType = arcType.match(/^(.*?)(\d*)$/);
+      const splitType = arcType.match(/^(.*?)(\d*)$/);
       noNumArcType = splitType[1];
     }
     $.each(arcTypes, (arcno, arcDescI) => {
@@ -187,14 +182,14 @@ export class Util {
   }
 
   arcDisplayForm(spanTypes, spanType, arcType, relationTypesHash) {
-    var labels = this.getArcLabels(spanTypes, spanType, arcType, relationTypesHash);
+    const labels = this.getArcLabels(spanTypes, spanType, arcType, relationTypesHash);
     return labels[0] || arcType;
   }
 
   // TODO: switching to use of $.param(), this function should
   // be deprecated and removed.
   objectToUrlStr(o) {
-    let a = [];
+    const a = [];
     $.each(o, (key, value) => {
       a.push(key + "=" + encodeURIComponent(value));
     });
@@ -366,7 +361,7 @@ export class Util {
   rgbHash3RE = /#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/;
 
   strToRgb(color) {
-    var result;
+    let result;
 
     // Check if we're already dealing with an array of colors
     //         if ( color && color.constructor == Array && color.length == 3 )
@@ -394,9 +389,9 @@ export class Util {
 
   rgbToStr(rgb) {
     // TODO: there has to be a better way, even in JS
-    var r = Math.floor(rgb[0]).toString(16);
-    var g = Math.floor(rgb[1]).toString(16);
-    var b = Math.floor(rgb[2]).toString(16);
+    let r = Math.floor(rgb[0]).toString(16);
+    let g = Math.floor(rgb[1]).toString(16);
+    let b = Math.floor(rgb[2]).toString(16);
     // pad
     r = r.length < 2 ? '0' + r : r;
     g = g.length < 2 ? '0' + g : g;
@@ -411,14 +406,14 @@ export class Util {
 
   // RGB to HSL color conversion
   rgbToHsl(rgb: [number, number, number]): [number, number, number] {
-    var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
-    var max = Math.max(r, g, b), min = Math.min(r, g, b);
-    var h, s, l = (max + min) / 2;
+    const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
 
     if (max == min) {
       h = s = 0; // achromatic
     } else {
-      var d = max - min;
+      const d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
       switch (max) {
         case r: h = (g - b) / d + (g < b ? 6 : 0); break;
@@ -441,15 +436,15 @@ export class Util {
   }
 
   hslToRgb(hsl: [number, number, number]) {
-    var h = hsl[0], s = hsl[1], l = hsl[2];
+    const h = hsl[0], s = hsl[1], l = hsl[2];
 
-    var r, g, b;
+    let r, g, b;
 
     if (s == 0) {
       r = g = b = l; // achromatic
     } else {
-      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      var p = 2 * l - q;
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
       r = this.hue2rgb(p, q, h + 1 / 3);
       g = this.hue2rgb(p, q, h);
       b = this.hue2rgb(p, q, h - 1 / 3);
@@ -470,18 +465,18 @@ export class Util {
       this.adjustLightnessCache[colorstr] = {}
     }
     if (!(adjust in this.adjustLightnessCache[colorstr])) {
-      var rgb = this.strToRgb(colorstr);
+      const rgb = this.strToRgb(colorstr);
       if (rgb === undefined) {
         // failed color string conversion; just return the input
         this.adjustLightnessCache[colorstr][adjust] = colorstr;
       } else {
-        var hsl = this.rgbToHsl(rgb);
+        const hsl = this.rgbToHsl(rgb);
         if (adjust > 0.0) {
           hsl[2] = 1.0 - ((1.0 - hsl[2]) * (1.0 - adjust));
         } else {
           hsl[2] = (1.0 + adjust) * hsl[2];
         }
-        var lightRgb = this.hslToRgb(hsl);
+        const lightRgb = this.hslToRgb(hsl);
         this.adjustLightnessCache[colorstr][adjust] = this.rgbToStr(lightRgb);
       }
     }
@@ -493,9 +488,9 @@ export class Util {
 
   paramArray(val) {
     val = val || [];
-    var len = val.length;
-    var arr = [];
-    for (var i = 0; i < len; i++) {
+    const len = val.length;
+    const arr = [];
+    for (let i = 0; i < len; i++) {
       if ($.isArray(val[i])) {
         arr.push(val[i].join('~'));
       } else {
@@ -504,14 +499,14 @@ export class Util {
       }
     }
     return arr;
-  };
+  }
 
   param(args) {
     if (!args) return '';
-    var vals = [];
-    for (var key in args) {
+    const vals = [];
+    for (const key in args) {
       if (args.hasOwnProperty(key)) {
-        var val = args[key];
+        const val = args[key];
         if (val == undefined) {
           console.error('Error: received argument', key, 'with value', val);
           continue;
@@ -519,7 +514,7 @@ export class Util {
         // values normally expected to be arrays, but some callers screw
         // up, so check
         if ($.isArray(val)) {
-          var arr = this.paramArray(val);
+          const arr = this.paramArray(val);
           vals.push(key + '=' + arr.join(','));
         } else {
           // non-array argument; this is an error from the caller
@@ -528,7 +523,7 @@ export class Util {
       }
     }
     return vals.join('&');
-  };
+  }
 
   profiles = {};
   profileStarts: Record<string, Date> = {};
@@ -536,25 +531,25 @@ export class Util {
   profileEnable(on) {
     if (on === undefined) on = true;
     this.profileOn = on;
-  }; // profileEnable
+  } // profileEnable
 
   profileClear() {
     if (!this.profileOn) return;
     this.profiles = {};
     this.profileStarts = {};
-  }; // profileClear
+  } // profileClear
 
   profileStart(label) {
     if (!this.profileOn) return;
     this.profileStarts[label] = new Date();
-  }; // profileStart
+  } // profileStart
 
   profileEnd(label) {
     if (!this.profileOn) return;
-    var profileElapsed = new Date().valueOf() - this.profileStarts[label].valueOf();
+    const profileElapsed = new Date().valueOf() - this.profileStarts[label].valueOf();
     if (!this.profiles[label]) this.profiles[label] = 0;
     this.profiles[label] += profileElapsed;
-  }; // profileEnd
+  } // profileEnd
 
   profileReport() {
     if (!this.profileOn) return;
@@ -564,7 +559,7 @@ export class Util {
       });
       console.log("-------");
     }
-  }; // profileReport
+  } // profileReport
 
   // container: ID or jQuery element
   // collData: the collection data (in the format of the result of
@@ -573,14 +568,14 @@ export class Util {
   //   http://.../brat/ajax.cgi?action=getDocument&collection=...&document=...
   // returns the embedded visualizer's dispatcher object
   embed(container, collData, docData) {
-    var dispatcher = new Dispatcher();
-    var visualizer = new Visualizer(dispatcher, container);
+    const dispatcher = new Dispatcher();
+    const visualizer = new Visualizer(dispatcher, container);
     new VisualizerUI(dispatcher, visualizer.svg);
     docData.collection = null;
     dispatcher.post('collectionLoaded', [collData]);
     dispatcher.post('requestRenderData', [docData]);
     return dispatcher;
-  };
+  }
 
   // container: ID or jQuery element
   // collDataURL: the URL of the collection data, or collection data
@@ -590,10 +585,10 @@ export class Util {
   // callback: optional; the callback to call afterwards; it will be
   //   passed the embedded visualizer's dispatcher object
   embedByURL(container, collDataURL: string, docDataURL: string, callback?) {
-    var collData, docData;
-    var handler = () => {
+    let collData, docData;
+    const handler = () => {
       if (collData && docData) {
-        var dispatcher = this.embed(container, collData, docData);
+        const dispatcher = this.embed(container, collData, docData);
         if (callback) callback(dispatcher);
       }
     };
@@ -603,5 +598,7 @@ export class Util {
       collData = collDataURL;
     }
     $.getJSON(docDataURL, (data) => { docData = data; handler(); });
-  };
+  }
 }
+
+export const INSTANCE = new Util();

@@ -57,3 +57,5 @@ export class Configuration {
     arcStartHeight: 19, //23; //25;
   };
 }
+
+export const INSTANCE = new Configuration();
