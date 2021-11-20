@@ -50,15 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLazyDetailsLookupSe
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationUiResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -178,42 +170,39 @@ public abstract class BratSuggestionVisualizer
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
 
-        // BRAT helpers
-        aResponse.render(
-                JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(
-        // BratAnnotationLogResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(BratSpinnerResourceReference.get()));
-
-        // BRAT modules
-        aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
-        aResponse
-                .render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratCurationUiResourceReference.get()));
+        // // BRAT helpers
         // aResponse.render(
-        // JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
+        // JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
+        // aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
+        //
+        // // BRAT modules
+        // aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
+        // aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
+        // aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
+        // aResponse
+        // .render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
+        // aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
+        // aResponse.render(JavaScriptHeaderItem.forReference(BratCurationUiResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratCurationResourceReference.get()));
 
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
         // @formatter:off
-        String script = 
-                "Util.embedByURL(" 
-                + "  '" + vis.getMarkupId() + "'," 
-                + "  '" + collProvider.getCallbackUrl() + "', " 
-                + "  '" + docProvider.getCallbackUrl() + "', " 
-                + "  function(dispatcher) {" 
-                + "    dispatcher.wicketId = '" + vis.getMarkupId() + "'; " 
-                + "    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; " 
-                + "    var ajax = new Ajax(dispatcher);"
-                + "    var curation_mod = new CurationMod(dispatcher, '" + vis.getMarkupId() + "');"
-                + "    Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;"
-                // + " dispatcher.post('clearSVG', []);"
-                + "  });";
+        String script = "BratCuration('" + vis.getMarkupId() + "', '" + controller.getCallbackUrl() +
+                "', '" + collProvider.getCallbackUrl() + "', '" + docProvider.getCallbackUrl() + "')";
+//        String script = 
+//                "Util.embedByURL(" 
+//                + "  '" + vis.getMarkupId() + "'," 
+//                + "  '" + collProvider.getCallbackUrl() + "', " 
+//                + "  '" + docProvider.getCallbackUrl() + "', " 
+//                + "  function(dispatcher) {" 
+//                + "    dispatcher.wicketId = '" + vis.getMarkupId() + "'; " 
+//                + "    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; " 
+//                + "    var ajax = new Ajax(dispatcher);"
+//                + "    var curation_mod = new CurationMod(dispatcher, '" + vis.getMarkupId() + "');"
+//                + "    Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;"
+//                // + " dispatcher.post('clearSVG', []);"
+//                + "  });";
         // @formatter:on
         aResponse.render(OnLoadHeaderItem.forScript("\n" + script));
     }
