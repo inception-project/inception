@@ -66,7 +66,6 @@ public class BratVisualizerResourceReference
         dependencies.add(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         dependencies.add(forReference(JQuerySvgResourceReference.get()));
         dependencies.add(forReference(JQuerySvgDomResourceReference.get()));
-        dependencies.add(forReference(JQueryScrollbarWidthReference.get()));
 
         // BRAT helpers
         dependencies.add(forReference(BratConfigurationResourceReference.get()));

@@ -30,25 +30,15 @@
  * ---
  * 
  * WebAnno: Changed to render test div outside screen area.
+ * INCEpTION: turned into a simple function
  */
 
 // Calculate the scrollbar width dynamically!
 
-(function($,undefined,width){
-  '$:nomunge'; // Used by YUI compressor.
-  
-  $.scrollbarWidth = function() {
-    var parent,
-      child;
-    
-    if ( width === undefined ) {
-      parent = $('<div style="position: absolute; top: -200px; width:50px;height:50px;overflow:auto"><div/></div>').appendTo('body');
-      child = parent.children();
-      width = child.innerWidth() - child.height( 99 ).innerWidth();
-      parent.remove();
-    }
-    
-    return width;
-  };
-  
-})(jQuery);
+export function scrollbarWidth(): number {
+  const parent = $('<div style="position: absolute; top: -200px; width:50px;height:50px;overflow:auto"><div/></div>').appendTo('body');
+  const child = parent.children();
+  const width = child.innerWidth() - child.height( 99 ).innerWidth();
+  parent.remove();
+  return width;
+}

@@ -64,6 +64,7 @@ declare const Configuration: ConfigurationType;
 
 import type { Util as UtilType } from "../util/Util";
 import { Operation } from "fast-json-patch";
+import { scrollbarWidth } from "../util/ScrollbarWidth";
 declare const Util: UtilType;
 
 /**
@@ -1516,7 +1517,7 @@ export class Visualizer {
     }
 
     if (noSpans) {
-      fragmentTexts.$ = true; // dummy so we can at least get the height
+      fragmentTexts['$'] = true; // dummy so we can at least get the height
     }
 
     return this.getTextMeasurements(fragmentTexts, { 'class': 'span' });
@@ -3415,7 +3416,7 @@ export class Visualizer {
 
     // establish the width according to the enclosing element
     this.baseCanvasWidth = this.forceWidth || this.$svgDiv.width();
-    this.canvasWidth = this.forceWidth || (this.$svgDiv.width() - $.scrollbarWidth());
+    this.canvasWidth = this.forceWidth || (this.$svgDiv.width() - scrollbarWidth());
 
     // Take hairline border of SVG into account
     this.canvasWidth -= 4;
