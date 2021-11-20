@@ -177,7 +177,6 @@ public abstract class BratSuggestionVisualizer
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
 
         // BRAT helpers
         aResponse.render(
@@ -195,8 +194,6 @@ public abstract class BratSuggestionVisualizer
                 .render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratCurationUiResourceReference.get()));
-        // aResponse.render(
-        // JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
 
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
         // @formatter:off
