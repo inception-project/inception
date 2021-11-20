@@ -37,11 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-// -*- Mode: JavaScript; tab-width: 2; indent-tabs-mode: nil; -*-
-
-import { isConstructorDeclaration } from "typescript";
-
-declare var Wicket;
+declare let Wicket;
 
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 export class Ajax {
@@ -65,7 +61,7 @@ export class Ajax {
     merge = merge || {};
     this.dispatcher.post('spin');
     this.pending++;
-    var id = this.count++;
+    const id = this.count++;
 
     // special value: `merge.keep = true` prevents obsolescence
     this.pendingList[id] = merge.keep || false;
@@ -85,7 +81,7 @@ export class Ajax {
       "ep": data,
       // success
       "sh": [() => {
-        var response = undefined;
+        let response = undefined;
         if (Wicket.$(this.dispatcher.wicketId) !== null) {
           response = Wicket.$(this.dispatcher.wicketId).temp;
           delete Wicket.$(this.dispatcher.wicketId).temp;
@@ -125,6 +121,7 @@ export class Ajax {
                 // The boolean parameter here is supposed to trigger a force-reload in Firefox and
                 // other browsers ignore it.
                 // Cf. https://developer.mozilla.org/en-US/docs/Web/API/Location/reload
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 window.location.reload(true);
               } else {
@@ -138,12 +135,10 @@ export class Ajax {
 
           delete this.pendingList[id];
 
-          // if .exception is just Boolean true, do not process
-          // the callback; if it is anything else, the
-          // callback is responsible for handling it
           if (response.exception == true) {
-            $('#waiter').dialog('close');
+            // if .exception is just Boolean true, do not process the callback; 
           } else if (callback) {
+            // if it is anything else, the callback is responsible for handling it
             $.extend(response, merge);
             this.dispatcher.post(0, callback, [response]);
           }
@@ -155,7 +150,6 @@ export class Ajax {
       "fh": [() => {
         this.pending--;
         this.dispatcher.post('unspin');
-        $('#waiter').dialog('close');
         // TODO find some way or access or pass on the response, textStatus and errorThrown from BratAnnotator or Wicket.
         // In the original ajax.js, these are parameters to the error callback.
         //            dispatcher.post('messages', [[['Error: Action' + data.action + ' failed on error ' + response.statusText, 'error']]]);
@@ -169,7 +163,7 @@ export class Ajax {
   isReloadOkay() {
     // do not reload while data is pending
     this.pending == 0;
-  };
+  }
 
   makeObsolete(all) {
     if (all) {

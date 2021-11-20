@@ -40,10 +40,10 @@
 import type Dispatcher from "../dispatcher";
 
 import type { Configuration as ConfigurationType } from "../configuration/Configuration";
-declare var Configuration: ConfigurationType;
+declare let Configuration: ConfigurationType;
 
 import type { Util as UtilType } from "../util/Util";
-declare var Util: UtilType;
+declare let Util: UtilType;
 
 export class AnnotatorUI {
   arcDragOrigin = null;
@@ -122,30 +122,6 @@ export class AnnotatorUI {
     this.svgElement = $(svg._svg);
     this.svgId = this.svgElement.parent().attr('id');
 
-    $('#clear_notes_button').button();
-    $('#clear_notes_button').click(this.clearSpanNotes);
-    $('#clear_norm_button').button();
-    $('#clear_norm_button').click(this.clearSpanNorm);
-    $('#span_norm_db').change(this.spanNormDbUpdate);
-    // see http://stackoverflow.com/questions/1948332/detect-all-changes-to-a-input-type-text-immediately-using-jquery
-    $('#span_norm_id').bind('propertychange keyup input paste', this.spanNormIdUpdate);
-    // nice-looking select for normalization
-    $('#span_norm_db').addClass('ui-widget ui-state-default ui-button-text');
-
-    let $waiter = $('#waiter');
-    $waiter.dialog({
-      closeOnEscape: false,
-      buttons: {},
-      modal: true,
-      open: function (evt, ui) {
-        $(evt.target).parent().find(".ui-dialog-titlebar-close").hide();
-      }
-    });
-    // hide the waiter (Sampo said it's annoying)
-    // we don't elliminate it altogether because it still provides the
-    // overlay to prevent interaction
-    $waiter.parent().css('opacity', '0');
-
     // TODO: why are these globals defined here instead of at the top?
     this.spanForm = $('#span_form');
     this.rapidSpanForm = $('#rapid_span_form');
@@ -155,8 +131,6 @@ export class AnnotatorUI {
       on('getValidArcTypesForDrag', this, this.getValidArcTypesForDrag).
       on('dataReady', this, this.rememberData).
       on('collectionLoaded', this, this.rememberSpanSettings).
-      on('collectionLoaded', this, this.setupTaggerUI).
-      on('collectionLoaded', this, this.setupNormalizationUI).
       on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded).
       on('newSourceData', this, this.onNewSourceData).
       on('user', this, this.userReceived).
@@ -180,7 +154,7 @@ export class AnnotatorUI {
     if (typeof (s) != "string") {
       return s; // can't strip
     }
-    var m = s.match(/^(.*?)(\d*)$/);
+    const m = s.match(/^(.*?)(\d*)$/);
     return m[1]; // always matches
   }
 
@@ -197,7 +171,7 @@ export class AnnotatorUI {
   clearSelection() {
     window.getSelection().removeAllRanges();
     if (this.selRect != null) {
-      for (var s = 0; s != this.selRect.length; s++) {
+      for (let s = 0; s != this.selRect.length; s++) {
         this.selRect[s].parentNode.removeChild(this.selRect[s]);
       }
       this.selRect = null;
@@ -207,17 +181,17 @@ export class AnnotatorUI {
   }
 
   makeSelRect(rx, ry, rw, rh, col?) {
-    var selRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    const selRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
     selRect.setAttributeNS(null, "width", rw);
     selRect.setAttributeNS(null, "height", rh);
     selRect.setAttributeNS(null, "x", rx);
     selRect.setAttributeNS(null, "y", ry);
     selRect.setAttributeNS(null, "fill", col == undefined ? "lightblue" : col);
     return selRect;
-  };
+  }
 
   onKeyDown(evt) {
-    var code = evt.which;
+    const code = evt.which;
 
     if (code === $.ui.keyCode.ESCAPE) {
       this.stopArcDrag();
@@ -233,8 +207,8 @@ export class AnnotatorUI {
     // ordered choices in the quick annotation dialog.
     if (Configuration.rapidModeOn && this.rapidAnnotationDialogVisible &&
       "0".charCodeAt(0) <= code && code <= "9".charCodeAt(0)) {
-      var idx = String.fromCharCode(code);
-      var $input = $('#rapid_span_' + idx);
+      const idx = String.fromCharCode(code);
+      const $input = $('#rapid_span_' + idx);
       if ($input.length) {
         $input.click();
       }
@@ -244,13 +218,13 @@ export class AnnotatorUI {
 
     // disable shortcuts when working with elements that you could
     // conceivably type in
-    var target = evt.target;
-    var nodeName = target.nodeName.toLowerCase();
-    var nodeType = target.type && target.type.toLowerCase();
+    const target = evt.target;
+    const nodeName = target.nodeName.toLowerCase();
+    const nodeType = target.type && target.type.toLowerCase();
     if (nodeName == 'input' && (nodeType == 'text' || nodeType == 'password')) return;
     if (nodeName == 'textarea' || nodeName == 'select') return;
 
-    var prefix = '';
+    let prefix = '';
     if (evt.altKey) {
       prefix = "A-";
     }
@@ -260,10 +234,10 @@ export class AnnotatorUI {
     if (evt.shiftKey) {
       prefix = "S-";
     }
-    var binding = this.keymap[prefix + code];
+    let binding = this.keymap[prefix + code];
     if (!binding) binding = this.keymap[prefix + String.fromCharCode(code)];
     if (binding) {
-      var boundInput = $('#' + binding)[0];
+      const boundInput = $('#' + binding)[0];
       if (boundInput && !boundInput.disabled) {
         boundInput.click();
         evt.preventDefault();
@@ -282,9 +256,9 @@ export class AnnotatorUI {
   onClick(evt) {
     this.clickCount++;
 
-    var singleClickAction = Configuration.singleClickEdit ?
+    const singleClickAction = Configuration.singleClickEdit ?
       this.editAnnotation : this.customJSAction;
-    var doubleClickAction = Configuration.singleClickEdit ?
+    const doubleClickAction = Configuration.singleClickEdit ?
     this.customJSAction : this.editAnnotation;
 
     if (this.clickCount === 1) {
@@ -310,14 +284,14 @@ export class AnnotatorUI {
   customJSAction(evt) {
     // must be logged in
     if (this.user === null) return;
-    var target = $(evt.target);
-    var id;
+    const target = $(evt.target);
+    let id;
     // single click actions for spans
     if (id = target.attr('data-span-id')) {
       this.preventDefault(evt);
       this.editedSpan = this.data.spans[id];
       this.editedFragment = target.attr('data-fragment-id');
-      var offsets = [];
+      const offsets = [];
       $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
         offsets.push([fragment.from, fragment.to]);
       });
@@ -331,9 +305,9 @@ export class AnnotatorUI {
     }
     // BEGIN WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
     else if (id = target.attr('data-arc-ed')) {
-      var type = target.attr('data-arc-role');
-      var originSpan = this.data.spans[target.attr('data-arc-origin')];
-      var targetSpan = this.data.spans[target.attr('data-arc-target')];
+      const type = target.attr('data-arc-role');
+      const originSpan = this.data.spans[target.attr('data-arc-origin')];
+      const targetSpan = this.data.spans[target.attr('data-arc-target')];
 
       this.dispatcher.post('ajax', [{
         action: 'doAction',
@@ -371,18 +345,18 @@ export class AnnotatorUI {
     // must not be reselecting a span or an arc
     if (this.reselectedSpan || this.arcDragOrigin) return;
 
-    var target = $(evt.target);
-    var id;
+    const target = $(evt.target);
+    let id;
 
     // do we edit an arc?
     if (id = target.attr('data-arc-role')) {
       // TODO
       this.clearSelection();
-      var originSpanId = target.attr('data-arc-origin');
-      var targetSpanId = target.attr('data-arc-target');
-      var type = target.attr('data-arc-role');
-      var originSpan = this.data.spans[originSpanId];
-      var targetSpan = this.data.spans[targetSpanId];
+      const originSpanId = target.attr('data-arc-origin');
+      const targetSpanId = target.attr('data-arc-target');
+      const type = target.attr('data-arc-role');
+      const originSpan = this.data.spans[originSpanId];
+      const targetSpan = this.data.spans[targetSpanId];
       this.arcOptions = {
         action: 'createArc',
         origin: originSpanId,
@@ -393,9 +367,9 @@ export class AnnotatorUI {
         collection: this.coll,
         'document': this.doc
       };
-      var eventDescId = target.attr('data-arc-ed');
+      const eventDescId = target.attr('data-arc-ed');
       if (eventDescId) {
-        var eventDesc = this.data.eventDescs[eventDescId];
+        const eventDesc = this.data.eventDescs[eventDescId];
         if (eventDesc.equiv) {
           this.arcOptions['left'] = eventDesc.leftSpans.join(',');
           this.arcOptions['right'] = eventDesc.rightSpans.join(',');
@@ -403,7 +377,7 @@ export class AnnotatorUI {
       }
       $('#arc_origin').text(Util.spanDisplayForm(this.spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
       $('#arc_target').text(Util.spanDisplayForm(this.spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
-      var arcId = eventDescId || [originSpanId, type, targetSpanId];
+      const arcId = eventDescId || [originSpanId, type, targetSpanId];
       // WEBANNO EXTENSION BEGIN
       this.fillArcTypesAndDisplayForm(evt, originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
       // WEBANNO EXTENSION END
@@ -415,7 +389,7 @@ export class AnnotatorUI {
       this.clearSelection();
       this.editedSpan = this.data.spans[id];
       this.editedFragment = target.attr('data-fragment-id');
-      var offsets = [];
+      const offsets = [];
       $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
         offsets.push([fragment.from, fragment.to]);
       });
@@ -432,7 +406,7 @@ export class AnnotatorUI {
       // for precise timing, log annotation display to user.
       this.dispatcher.post('logAction', ['spanEditSelected']);
     }
-  };
+  }
 
   startArcDrag(originId) {
     this.clearSelection();
@@ -455,15 +429,15 @@ export class AnnotatorUI {
     this.arcDragOriginBox.center = this.arcDragOriginBox.x + this.arcDragOriginBox.width / 2;
 
     this.arcDragJustStarted = true;
-  };
+  }
 
   getValidArcTypesForDrag(targetId, targetType) {
-    var arcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
+    const arcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
     if (!this.arcDragOrigin || targetId == this.arcDragOrigin) return null;
 
-    var originType = this.data.spans[this.arcDragOrigin].type;
-    var spanType = this.spanTypes[originType];
-    var result = [];
+    const originType = this.data.spans[this.arcDragOrigin].type;
+    const spanType = this.spanTypes[originType];
+    const result = [];
     if (spanType && spanType.arcs) {
       $.each(spanType.arcs, (arcNo, arc) => {
         if (arcType && arcType != arc.type) return;
@@ -474,7 +448,7 @@ export class AnnotatorUI {
       });
     }
     return result;
-  };
+  }
 
   onMouseDown(evt) {
     // Instead of calling startArcDrag() immediately, we defer this to onMouseMove
@@ -485,7 +459,7 @@ export class AnnotatorUI {
       this.dragStartedAt = evt; // XXX do we really need the whole evt?
       return false;
     }
-  };
+  }
 
   onMouseMove(evt) {
     // BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
@@ -495,12 +469,12 @@ export class AnnotatorUI {
       // operation is expensive because figuring out where the arc is to be drawn is requires
       // fetching bounding boxes - and this triggers a blocking/expensive reflow operation in
       // the browser.
-      var deltaX = Math.abs(this.dragStartedAt.pageX - evt.pageX);
-      var deltaY = Math.abs(this.dragStartedAt.pageY - evt.pageY);
+      const deltaX = Math.abs(this.dragStartedAt.pageX - evt.pageX);
+      const deltaY = Math.abs(this.dragStartedAt.pageY - evt.pageY);
       if (deltaX > 5 || deltaY > 5) {
         this.arcOptions = null;
-        var target = $(this.dragStartedAt.target);
-        var id = target.attr('data-span-id');
+        const target = $(this.dragStartedAt.target);
+        const id = target.attr('data-span-id');
         this.startArcDrag(id);
 
         // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
@@ -520,14 +494,14 @@ export class AnnotatorUI {
     if (this.arcDragOrigin) {
       if (this.arcDragJustStarted) {
         // show the possible targets
-        var span = this.data.spans[this.arcDragOrigin] || {};
-        var spanDesc = this.spanTypes[span.type] || {};
+        const span = this.data.spans[this.arcDragOrigin] || {};
+        const spanDesc = this.spanTypes[span.type] || {};
 
         // separate out possible numeric suffix from type for highlight
         // (instead of e.g. "Theme3", need to look for "Theme")
-        var noNumArcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
+        const noNumArcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
         // var targetClasses = [];
-        var $targets = $();
+        let $targets = $();
         $.each(spanDesc.arcs || [], (possibleArcNo, possibleArc) => {
           if ((this.arcOptions && possibleArc.type == noNumArcType) || !(this.arcOptions && this.arcOptions.old_target)) {
             $.each(possibleArc.targets || [], (possibleTargetNo, possibleTarget) => {
@@ -550,11 +524,11 @@ export class AnnotatorUI {
         // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
       }
       this.clearSelection();
-      var mx = evt.pageX - this.svgPosition.left;
-      var my = evt.pageY - this.svgPosition.top + 5; // TODO FIXME why +5?!?
-      var y = Math.min(this.arcDragOriginBox.y, my) - this.draggedArcHeight;
-      var dx = (this.arcDragOriginBox.center - mx) / 4;
-      var path = this.svg.createPath().
+      const mx = evt.pageX - this.svgPosition.left;
+      const my = evt.pageY - this.svgPosition.top + 5; // TODO FIXME why +5?!?
+      const y = Math.min(this.arcDragOriginBox.y, my) - this.draggedArcHeight;
+      const dx = (this.arcDragOriginBox.center - mx) / 4;
+      const path = this.svg.createPath().
         move(this.arcDragOriginBox.center, this.arcDragOriginBox.y).
         curveC(this.arcDragOriginBox.center - dx, y,
           mx + dx, y,
@@ -564,9 +538,9 @@ export class AnnotatorUI {
       // A. Scerri FireFox chunk
 
       // if not, then is it span selection? (ctrl key cancels)
-      var sel = window.getSelection();
-      var chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id');
-      var chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id');
+      const sel = window.getSelection();
+      let chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id');
+      let chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id');
       // fallback for firefox (at least):
       // it's unclear why, but for firefox the anchor and focus
       // node parents are always undefined, the the anchor and
@@ -574,17 +548,17 @@ export class AnnotatorUI {
       // chunk ID. However, anchor offsets are almost always
       // wrong, so we'll just make a guess at what the user might
       // be interested in tagging instead of using what's given.
-      var anchorOffset = null;
-      var focusOffset = null;
+      let anchorOffset = null;
+      let focusOffset = null;
       if (chunkIndexFrom === undefined && chunkIndexTo === undefined &&
         $(sel.anchorNode).attr('data-chunk-id') &&
         $(sel.focusNode).attr('data-chunk-id')) {
         // Lets take the actual selection range and work with that
         // Note for visual line up and more accurate positions a vertical offset of 8 and horizontal of 2 has been used!
-        var range = sel.getRangeAt(0);
-        var svgOffset = $(this.svg._svg).offset();
+        const range = sel.getRangeAt(0);
+        const svgOffset = $(this.svg._svg).offset();
         var flip = false;
-        var tries = 0;
+        let tries = 0;
         // First try and match the start offset with a position, if not try it against the other end
         while (tries < 2) {
           var sp = this.svg._svg.createSVGPoint();
@@ -603,7 +577,7 @@ export class AnnotatorUI {
         // Now grab the end offset
         sp.x = (flip ? this.dragStartedAt.pageX : evt.pageX) - svgOffset.left;
         sp.y = (flip ? this.dragStartedAt.pageY : evt.pageY) - (svgOffset.top + 8);
-        var endsAt = range.endContainer;
+        const endsAt = range.endContainer;
         focusOffset = endsAt.getCharNumAtPosition(sp);
 
         // If we cannot get a start and end offset stop here
@@ -612,7 +586,7 @@ export class AnnotatorUI {
         }
         // If we are in the same container it does the selection back to front when dragged right to left, across different containers the start is the start and the end if the end!
         if (range.startContainer == range.endContainer && anchorOffset > focusOffset) {
-          var t = anchorOffset;
+          const t = anchorOffset;
           anchorOffset = focusOffset;
           focusOffset = t;
           flip = false;
@@ -620,9 +594,9 @@ export class AnnotatorUI {
         chunkIndexTo = endsAt && $(endsAt).attr('data-chunk-id');
 
         // Now take the start and end character rectangles
-        let startRec = startsAt.getExtentOfChar(anchorOffset);
+        const startRec = startsAt.getExtentOfChar(anchorOffset);
         startRec.y += 2;
-        let endRec = endsAt.getExtentOfChar(focusOffset);
+        const endRec = endsAt.getExtentOfChar(focusOffset);
         endRec.y += 2;
 
         // If nothing has changed then stop here
@@ -631,17 +605,17 @@ export class AnnotatorUI {
         }
 
         if (this.selRect == null) {
-          var rx = startRec.x;
-          var ry = startRec.y;
-          var rw = (endRec.x + endRec.width) - startRec.x;
+          let rx = startRec.x;
+          const ry = startRec.y;
+          let rw = (endRec.x + endRec.width) - startRec.x;
           if (rw < 0) {
             rx += rw;
             rw = -rw;
           }
-          var rh = Math.max(startRec.height, endRec.height);
+          const rh = Math.max(startRec.height, endRec.height);
 
-          this.selRect = new Array();
-          var activeSelRect = this.makeSelRect(rx, ry, rw, rh);
+          this.selRect = [];
+          const activeSelRect = this.makeSelRect(rx, ry, rw, rh);
           this.selRect.push(activeSelRect);
           startsAt.parentNode.parentNode.parentNode.insertBefore(activeSelRect, startsAt.parentNode.parentNode);
         } else {
@@ -666,21 +640,21 @@ export class AnnotatorUI {
           // and whether to create new ones if we moved to a newline
           if (((endRec.y != this.lastEndRec.y)) || ((startRec.y != this.lastStartRec.y))) {
             // First check if we have to remove the first highlights because we are moving towards the end on a different line
-            var ss = 0;
+            let ss = 0;
             for (; ss != this.selRect.length; ss++) {
               if (startRec.y <= parseFloat(this.selRect[ss].getAttributeNS(null, "y"))) {
                 break;
               }
             }
             // Next check for any end highlights if we are moving towards the start on a different line
-            var es = this.selRect.length - 1;
+            let es = this.selRect.length - 1;
             for (; es != -1; es--) {
               if (endRec.y >= parseFloat(this.selRect[es].getAttributeNS(null, "y"))) {
                 break;
               }
             }
             // TODO put this in loops above, for efficiency the array slicing could be done separate still in single call
-            var trunc = false;
+            let trunc = false;
             if (ss < this.selRect.length) {
               for (var s2 = 0; s2 != ss; s2++) {
                 this.selRect[s2].parentNode.removeChild(this.selRect[s2]);
@@ -699,9 +673,9 @@ export class AnnotatorUI {
 
             // If we have truncated the highlights we need to readjust the last one
             if (trunc) {
-              let activeSelRect = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
+              const activeSelRect = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
               if (flip) {
-                var rw = 0;
+                let rw = 0;
                 if (startRec.y == endRec.y) {
                   rw = (endRec.x + endRec.width) - startRec.x;
                 } else {
@@ -713,14 +687,14 @@ export class AnnotatorUI {
                 activeSelRect.setAttributeNS(null, "y", startRec.y);
                 activeSelRect.setAttributeNS(null, "width", rw.toString());
               } else {
-                var rw = (endRec.x + endRec.width) - parseFloat(activeSelRect.getAttributeNS(null, "x"));
+                const rw = (endRec.x + endRec.width) - parseFloat(activeSelRect.getAttributeNS(null, "x"));
                 activeSelRect.setAttributeNS(null, "width", rw.toString());
               }
             } else {
               // We didnt truncate anything but we have moved to a new line so we need to create a new highlight
-              var lastSel = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
-              var startBox = startsAt.parentNode.getBBox();
-              var endBox = endsAt.parentNode.getBBox();
+              const lastSel = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
+              const startBox = startsAt.parentNode.getBBox();
+              const endBox = endsAt.parentNode.getBBox();
 
               if (flip) {
                 lastSel.setAttributeNS(null, "width",
@@ -733,10 +707,10 @@ export class AnnotatorUI {
                   (startBox.x + startBox.width)
                   - parseFloat(lastSel.getAttributeNS(null, "x")));
               }
-              var rx = 0;
-              var ry = 0;
-              var rw = 0;
-              var rh = 0;
+              let rx = 0;
+              let ry = 0;
+              let rw = 0;
+              let rh = 0;
               if (flip) {
                 rx = startRec.x;
                 ry = startRec.y;
@@ -748,7 +722,7 @@ export class AnnotatorUI {
                 rw = (endRec.x + endRec.width) - endBox.x;
                 rh = endRec.height;
               }
-              var newRect = this.makeSelRect(rx, ry, rw, rh);
+              const newRect = this.makeSelRect(rx, ry, rw, rh);
               if (flip) {
                 this.selRect.unshift(newRect);
               } else {
@@ -760,10 +734,10 @@ export class AnnotatorUI {
             }
           } else {
             // The user simply moved left or right along the same line so just adjust the current highlight
-            let activeSelRect = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
+            const activeSelRect = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
             // If the start moved shift the highlight and adjust width
             if (flip) {
-              var rw = (parseFloat(activeSelRect.getAttributeNS(null, "x"))
+              const rw = (parseFloat(activeSelRect.getAttributeNS(null, "x"))
                 + parseFloat(activeSelRect.getAttributeNS(null, "width")))
                 - startRec.x;
               activeSelRect.setAttributeNS(null, "x", startRec.x);
@@ -771,7 +745,7 @@ export class AnnotatorUI {
               activeSelRect.setAttributeNS(null, "width", rw);
             } else {
               // If the end moved then simple change the width
-              var rw = (endRec.x + endRec.width)
+              const rw = (endRec.x + endRec.width)
                 - parseFloat(activeSelRect.getAttributeNS(null, "x"));
               activeSelRect.setAttributeNS(null, "width", rw);
             }
@@ -782,16 +756,16 @@ export class AnnotatorUI {
       }
     }
     this.arcDragJustStarted = false;
-  };
+  }
 
   adjustToCursor(evt, element, centerX, centerY) {
-    var screenHeight = $(window).height() - 8; // TODO HACK - no idea why -8 is needed
-    var screenWidth = $(window).width() - 8;
-    var elementHeight = element.height();
-    var elementWidth = element.width();
-    var cssSettings = {};
-    var eLeft;
-    var eTop;
+    const screenHeight = $(window).height() - 8; // TODO HACK - no idea why -8 is needed
+    const screenWidth = $(window).width() - 8;
+    const elementHeight = element.height();
+    const elementWidth = element.width();
+    const cssSettings = {};
+    let eLeft;
+    let eTop;
     if (centerX) {
       eLeft = evt.clientX - elementWidth / 2;
     } else {
@@ -816,13 +790,13 @@ export class AnnotatorUI {
       eTop = 0;
     }
     element.css({ top: eTop, left: eLeft });
-  };
+  }
 
   updateCheckbox($input) {
-    var $widget = $input.button('widget');
-    var $textspan = $widget.find('.ui-button-text');
+    const $widget = $input.button('widget');
+    const $textspan = $widget.find('.ui-button-text');
     $textspan.html(($input[0].checked ? '&#x2611; ' : '&#x2610; ') + $widget.attr('data-bare'));
-  };
+  }
 
   fillSpanTypesAndDisplayForm(evt, offsets, spanText, span, id?) {
 
@@ -842,72 +816,13 @@ export class AnnotatorUI {
         spanText: spanText
       }, 'serverResult']);
     }
-  };
+  }
   // WEBANNO EXTENSION END
 
   submitReselect() {
     $(this.reselectedSpan.rect).removeClass('reselect');
     this.reselectedSpan = null;
     this.spanForm.submit();
-  };
-
-  clearSpanNotes(evt) {
-    $('#span_notes').val('');
-  }
-
-
-  clearSpanNorm(evt) {
-    this.clearNormalizationUI();
-  }
-
-  // invoked on response to ajax request for id lookup
-  setSpanNormText(response) {
-    if (response.exception) {
-      // TODO: better response to failure
-      this.dispatcher.post('messages', [[['Lookup error', 'warning', -1]]]);
-      return false;
-    }
-    // set input style according to whether we have a valid value
-    var $idinput = $('#span_norm_id');
-    // TODO: make sure the key echo in the response matches the
-    // current value of the $idinput
-    $idinput.removeClass('valid_value').removeClass('invalid_value');
-    if (response.value === null) {
-      $idinput.addClass('invalid_value');
-      this.hideNormalizationRefLink();
-    } else {
-      $idinput.addClass('valid_value');
-      this.updateNormalizationRefLink();
-    }
-    $('#span_norm_txt').val(response.value);
-  }
-
-  // on any change to the normalization DB, clear everything and
-  // update link
-  spanNormDbUpdate(evt) {
-    this.clearNormalizationUI();
-    this.updateNormalizationDbLink();
-  }
-
-  // on any change to the normalization ID, update the text of the
-  // reference
-  spanNormIdUpdate(evt) {
-    var key = $(this).val();
-    var db = $('#span_norm_db').val();
-    if (key != this.oldSpanNormIdValue) {
-      if (key.match(/^\s*$/)) {
-        // don't query empties, just clear instead
-        this.clearNormalizationUI();
-      } else {
-        this.dispatcher.post('ajax', [{
-          action: 'normGetName',
-          database: db,
-          key: key,
-          collection: this.coll
-        }, 'normGetNameResult']);
-      }
-      this.oldSpanNormIdValue = key;
-    }
   }
 
   // We send a request to the backend to open the dialog
@@ -934,7 +849,7 @@ export class AnnotatorUI {
         targetType: targetType
       }, 'serverResult']);
     }
-  };
+  }
 
   stopArcDrag(target?) {
     // BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
@@ -967,7 +882,7 @@ export class AnnotatorUI {
     }
     this.svgElement.removeClass('unselectable');
     $('.reselectTarget').removeClass('reselectTarget');
-  };
+  }
 
   onMouseUp(evt) {
     if (this.user === null) return;
@@ -981,12 +896,12 @@ export class AnnotatorUI {
     }
     // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
 
-    var target = $(evt.target);
+    const target = $(evt.target);
 
     // three things that are clickable in SVG
-    var targetSpanId = target.data('span-id');
-    var targetChunkId = target.data('chunk-id');
-    var targetArcRole = target.data('arc-role');
+    const targetSpanId = target.data('span-id');
+    const targetChunkId = target.data('chunk-id');
+    const targetArcRole = target.data('arc-role');
     // BEGIN WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
     /*
             if (!(targetSpanId !== undefined || targetChunkId !== undefined || targetArcRole !== undefined)) {
@@ -1003,16 +918,16 @@ export class AnnotatorUI {
 
     // is it arc drag end?
     if (this.arcDragOrigin) {
-      var origin = this.arcDragOrigin;
-      var targetValid = target.hasClass('reselectTarget');
+      const origin = this.arcDragOrigin;
+      const targetValid = target.hasClass('reselectTarget');
       this.stopArcDrag(target);
       // WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers 
       let id;
       if ((id = target.attr('data-span-id')) && targetValid && (evt.shiftKey || origin != id)) {
         //          if ((id = target.attr('data-span-id')) && origin != id && targetValid) {
         // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
-        var originSpan = this.data.spans[origin];
-        var targetSpan = this.data.spans[id];
+        const originSpan = this.data.spans[origin];
+        const targetSpan = this.data.spans[id];
         if (this.arcOptions && this.arcOptions.old_target) {
           this.arcOptions.target = targetSpan.id;
           this.dispatcher.post('ajax', [this.arcOptions, 'edited']);
@@ -1033,14 +948,14 @@ export class AnnotatorUI {
       }
     } else if (!evt.ctrlKey) {
       // if not, then is it span selection? (ctrl key cancels)
-      var sel = window.getSelection();
+      const sel = window.getSelection();
 
       // Try getting anchor and focus node via the selection itself. This works in Chrome and
       // Safari.
-      var anchorNode = sel.anchorNode && $(sel.anchorNode).closest('*[data-chunk-id]');
-      var anchorOffset = sel.anchorOffset;
-      var focusNode = sel.focusNode && $(sel.focusNode).closest('*[data-chunk-id]');
-      var focusOffset = sel.focusOffset;
+      let anchorNode = sel.anchorNode && $(sel.anchorNode).closest('*[data-chunk-id]');
+      let anchorOffset = sel.anchorOffset;
+      let focusNode = sel.focusNode && $(sel.focusNode).closest('*[data-chunk-id]');
+      let focusOffset = sel.focusOffset;
 
       // If using the selection was not successful, try using the ranges instead. This should
       // work on Firefox.
@@ -1058,8 +973,8 @@ export class AnnotatorUI {
         return;
       }
 
-      var chunkIndexFrom = anchorNode && anchorNode.attr('data-chunk-id');
-      var chunkIndexTo = focusNode && focusNode.attr('data-chunk-id');
+      let chunkIndexFrom = anchorNode && anchorNode.attr('data-chunk-id');
+      let chunkIndexTo = focusNode && focusNode.attr('data-chunk-id');
 
       // BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
       // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
@@ -1123,14 +1038,14 @@ export class AnnotatorUI {
       // END WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
 
       if (chunkIndexFrom !== undefined && chunkIndexTo !== undefined) {
-        var chunkFrom = this.data.chunks[chunkIndexFrom];
-        var chunkTo = this.data.chunks[chunkIndexTo];
-        var selectedFrom = chunkFrom.from + anchorOffset;
-        var selectedTo = chunkTo.from + focusOffset;
+        const chunkFrom = this.data.chunks[chunkIndexFrom];
+        const chunkTo = this.data.chunks[chunkIndexTo];
+        let selectedFrom = chunkFrom.from + anchorOffset;
+        let selectedTo = chunkTo.from + focusOffset;
         sel.removeAllRanges();
 
         if (selectedFrom > selectedTo) {
-          var tmp = selectedFrom; selectedFrom = selectedTo; selectedTo = tmp;
+          const tmp = selectedFrom; selectedFrom = selectedTo; selectedTo = tmp;
         }
         // trim
         while (selectedFrom < selectedTo && " \n\t".indexOf(this.data.text.substr(selectedFrom, 1)) !== -1) selectedFrom++;
@@ -1142,9 +1057,9 @@ export class AnnotatorUI {
           return;
         }
 
-        var newOffset = [selectedFrom, selectedTo];
+        const newOffset = [selectedFrom, selectedTo];
         if (this.reselectedSpan) {
-          var newOffsets = this.reselectedSpan.offsets.slice(0); // clone
+          const newOffsets = this.reselectedSpan.offsets.slice(0); // clone
           this.spanOptions.old_offsets = JSON.stringify(this.reselectedSpan.offsets);
           if (this.selectedFragment !== null) {
             if (this.selectedFragment !== false) {
@@ -1193,11 +1108,11 @@ export class AnnotatorUI {
         }
       }
     }
-  };
+  }
 
   toggleCollapsible($el, state?) {
-    var opening = state !== undefined ? state : !$el.hasClass('open');
-    var $collapsible = $el.parent().find('.collapsible:first');
+    const opening = state !== undefined ? state : !$el.hasClass('open');
+    const $collapsible = $el.parent().find('.collapsible:first');
     if (opening) {
       $collapsible.addClass('open');
       $el.addClass('open');
@@ -1205,7 +1120,7 @@ export class AnnotatorUI {
       $collapsible.removeClass('open');
       $el.removeClass('open');
     }
-  };
+  }
 
   collapseHandler(evt) {
     this.toggleCollapsible($(evt.target));
@@ -1215,7 +1130,7 @@ export class AnnotatorUI {
     if (_data && !_data.exception) {
       this.data = _data;
     }
-  };
+  }
 
   addSpanTypesToDivInner($parent, types, category?) {
     if (!types) return;
@@ -1224,17 +1139,17 @@ export class AnnotatorUI {
       if (type === null) {
         $parent.append('<hr/>');
       } else {
-        var name = type.name;
-        var $input = $('<input type="radio" name="span_type"/>').
+        const name = type.name;
+        const $input = $('<input type="radio" name="span_type"/>').
           attr('id', 'span_' + type.type).
           attr('value', type.type);
         if (category) {
           $input.attr('category', category);
         }
         // use a light version of the span color as BG
-        var spanBgColor = this.spanTypes[type.type] && this.spanTypes[type.type].bgColor || '#ffffff';
+        let spanBgColor = this.spanTypes[type.type] && this.spanTypes[type.type].bgColor || '#ffffff';
         spanBgColor = Util.adjustColorLightness(spanBgColor, this.spanBoxTextBgColorLighten);
-        var $label = $('<label class="span_type_label"/>').
+        const $label = $('<label class="span_type_label"/>').
           attr('for', 'span_' + type.type).
           text(name);
         if (type.unused) {
@@ -1246,13 +1161,13 @@ export class AnnotatorUI {
         } else {
           $label.css('background-color', spanBgColor);
         }
-        var $collapsible = $('<div class="collapsible open"/>');
-        var $content = $('<div class="item_content"/>').
+        const $collapsible = $('<div class="collapsible open"/>');
+        const $content = $('<div class="item_content"/>').
           append($input).
           append($label).
           append($collapsible);
-        var $collapser = $('<div class="collapser open"/>');
-        var $div = $('<div class="item"/>');
+        const $collapser = $('<div class="collapser open"/>');
+        const $div = $('<div class="item"/>');
         // WEBANNO EXTENSION BEGIN
         // Avoid exception when no children are set
         if (type.children && type.children.length) {
@@ -1265,12 +1180,12 @@ export class AnnotatorUI {
         if (type.hotkey) {
           this.spanKeymap[type.hotkey] = 'span_' + type.type;
           let name = $label.html();
-          var replace = true;
+          let replace = true;
           name = name.replace(new RegExp("(&[^;]*?)?(" + type.hotkey + ")", 'gi'),
             (all, entity, letter) => {
               if (replace && !entity) {
                 replace = false;
-                var hotkey = type.hotkey.toLowerCase() == letter
+                const hotkey = type.hotkey.toLowerCase() == letter
                   ? type.hotkey.toLowerCase()
                   : type.hotkey.toUpperCase();
                 return '<span class="accesskey">' + Util.escapeHTML(hotkey) + '</span>';
@@ -1281,38 +1196,38 @@ export class AnnotatorUI {
         }
       }
     });
-  };
+  }
 
   addSpanTypesToDiv($top, types, heading) {
-    let $scroller = $('<div class="scroller"/>');
-    let $legend = $('<legend/>').text(heading);
-    let $fieldset = $('<fieldset/>').append($legend).append($scroller);
+    const $scroller = $('<div class="scroller"/>');
+    const $legend = $('<legend/>').text(heading);
+    const $fieldset = $('<fieldset/>').append($legend).append($scroller);
     $top.append($fieldset);
     this.addSpanTypesToDivInner($scroller, types);
-  };
+  }
 
   addAttributeTypesToDiv($top, types, category) {
     $.each(types, (attrNo, attr) => {
-      var escapedType = Util.escapeQuotes(attr.type);
-      var attrId = category + '_attr_' + escapedType;
+      const escapedType = Util.escapeQuotes(attr.type);
+      const attrId = category + '_attr_' + escapedType;
       if (attr.unused) {
         var $input = $('<input type="hidden" id="' + attrId + '" value=""/>');
         $top.append($input);
       } else if (attr.bool) {
-        var escapedName = Util.escapeQuotes(attr.name);
+        const escapedName = Util.escapeQuotes(attr.name);
         var $input = $('<input type="checkbox" id="' + attrId +
           '" value="' + escapedType +
           '" category="' + category + '"/>');
-        var $label = $('<label class="attribute_type_label" for="' + attrId +
+        const $label = $('<label class="attribute_type_label" for="' + attrId +
           '" data-bare="' + escapedName + '">&#x2610; ' +
           escapedName + '</label>');
         $top.append($input).append($label);
         $input.button();
         $input.change(this.onBooleanAttrChange);
       } else {
-        var $div = $('<div class="ui-button ui-button-text-only attribute_type_label"/>');
-        var $select = $('<select id="' + attrId + '" class="ui-widget ui-state-default ui-button-text" category="' + category + '"/>');
-        var $option = $('<option class="ui-state-default" value=""/>').text(attr.name + ': ?');
+        const $div = $('<div class="ui-button ui-button-text-only attribute_type_label"/>');
+        const $select = $('<select id="' + attrId + '" class="ui-widget ui-state-default ui-button-text" category="' + category + '"/>');
+        let $option = $('<option class="ui-state-default" value=""/>').text(attr.name + ': ?');
         $select.append($option);
         $.each(attr.values, (valType, value) => {
           $option = $('<option class="ui-state-active" value="' + Util.escapeQuotes(valType) + '"/>').text(attr.name + ': ' + (value.name || valType));
@@ -1335,7 +1250,7 @@ export class AnnotatorUI {
     // TODO: support for entity attributes
     // TODO2: the above comment is almost certainly false, check and remove
     $('#span_form input:not([unused])').removeAttr('disabled');
-    var $toDisable;
+    let $toDisable;
     if (category == "event") {
       $toDisable = $('#span_form input[category="entity"]');
     } else if (category == "entity") {
@@ -1344,13 +1259,13 @@ export class AnnotatorUI {
       console.error('Unrecognized attribute category:', category);
       $toDisable = $();
     }
-    var $checkedToDisable = $toDisable.filter(':checked');
+    const $checkedToDisable = $toDisable.filter(':checked');
     $toDisable.attr('disabled', true);
     // the disable may leave the dialog in a state where nothing
     // is checked, which would cause error on "OK". In this case,
     // check the first valid choice.
     if ($checkedToDisable.length) {
-      var $toCheck = $('#span_form input[category="' + category + '"][disabled!="disabled"]:first');
+      const $toCheck = $('#span_form input[category="' + category + '"][disabled!="disabled"]:first');
       // so weird, attr('checked', 'checked') fails sometimes, so
       // replaced with more "metal" version
       $toCheck[0].checked = true;
@@ -1361,7 +1276,7 @@ export class AnnotatorUI {
     if ($(this).val() == '') {
       $('#span_form input:not([unused])').removeAttr('disabled');
     } else {
-      var attrCategory = evt.target.getAttribute('category');
+      const attrCategory = evt.target.getAttribute('category');
       this.setSpanTypeSelectability(attrCategory);
       if (evt.target.selectedIndex) {
         $(evt.target).addClass('ui-state-active');
@@ -1372,10 +1287,10 @@ export class AnnotatorUI {
   }
 
   onBooleanAttrChange(evt) {
-    var attrCategory = evt.target.getAttribute('category');
+    const attrCategory = evt.target.getAttribute('category');
     this.setSpanTypeSelectability(attrCategory);
     this.updateCheckbox($(evt.target));
-  };
+  }
 
   rememberSpanSettings(response) {
     this.spanKeymap = {};
@@ -1383,60 +1298,27 @@ export class AnnotatorUI {
     // TODO: check for exceptions in response
 
     // fill in entity and event types
-    var $entityScroller = $('#entity_types div.scroller').empty();
+    const $entityScroller = $('#entity_types div.scroller').empty();
     this.addSpanTypesToDivInner($entityScroller, response.entity_types, 'entity');
-    var $eventScroller = $('#event_types div.scroller').empty();
+    const $eventScroller = $('#event_types div.scroller').empty();
     this.addSpanTypesToDivInner($eventScroller, response.event_types, 'event');
 
     // fill in attributes
-    var $entattrs = $('#entity_attributes div.scroller').empty();
+    const $entattrs = $('#entity_attributes div.scroller').empty();
     this.addAttributeTypesToDiv($entattrs, this.entityAttributeTypes, 'entity');
 
-    var $eveattrs = $('#event_attributes div.scroller').empty();
+    const $eveattrs = $('#event_attributes div.scroller').empty();
     this.addAttributeTypesToDiv($eveattrs, this.eventAttributeTypes, 'event');
-  };
+  }
 
   tagCurrentDocument(taggerId) {
-    var tagOptions = {
+    const tagOptions = {
       action: 'tag',
       collection: this.coll,
       'document': this.doc,
       tagger: taggerId,
     };
     this.dispatcher.post('ajax', [tagOptions, 'edited']);
-  }
-
-  setupTaggerUI(response) {
-    var taggers = response.ner_taggers || [];
-    let $taggerButtons = $('#tagger_buttons').empty();
-    $.each(taggers, (taggerNo, tagger) => {
-      // expect a tuple with ID, name, model, and URL
-      var taggerId = tagger[0];
-      var taggerName = tagger[1];
-      var taggerModel = tagger[2];
-      if (!taggerId || !taggerName || !taggerModel) {
-        this.dispatcher.post('messages', [[['Invalid tagger specification received from server', 'error']]]);
-        return true; // continue
-      }
-      var $row = $('<div class="optionRow"/>');
-      var $label = $('<span class="optionLabel">' + Util.escapeHTML(taggerName) + '</span>');
-      var $button = $('<input id="tag_' + Util.escapeHTML(taggerId) + '_button" type="button" value="' + Util.escapeHTML(taggerModel) + '" tabindex="-1" title="Automatically tag the current document."/>');
-      $row.append($label).append($button);
-      $taggerButtons.append($row);
-      $button.click((evt) => {
-        this.tagCurrentDocument(taggerId);
-      });
-    });
-    $taggerButtons.find('input').button();
-    // if nothing was set up, hide the whole fieldset and show
-    // a message to this effect, else the other way around
-    if ($taggerButtons.find('input').length == 0) {
-      $('#auto_tagging_fieldset').hide();
-      $('#no_tagger_message').show();
-    } else {
-      $('#auto_tagging_fieldset').show();
-      $('#no_tagger_message').hide();
-    }
   }
 
   // recursively traverses type hierarchy (entity_types or
@@ -1457,98 +1339,6 @@ export class AnnotatorUI {
         }
       }
     });
-  };
-
-  setupNormalizationUI(response) {
-    var norm_resources = response.normalization_config || [];
-    var $norm_select = $('#span_norm_db');
-    // clear possible existing
-    $norm_select.empty();
-    // fill in new
-    let html = [];
-    $.each(norm_resources, (normNo, norm) => {
-      var normName = norm[0], normUrl = norm[1], normUrlBase = norm[2];
-      var serverDb = norm[3];
-      html.push('<option value="' + Util.escapeHTML(normName) + '">' +
-        Util.escapeHTML(normName) + '</option>');
-      // remember the urls for updates
-      this.normDbUrlByDbName[normName] = normUrl;
-      this.normDbUrlBaseByDbName[normName] = normUrlBase;
-    });
-    // remember per-type appropriate DBs
-    this.normDbsByType = {};
-    this.rememberNormDbsForType(response.entity_types);
-    this.rememberNormDbsForType(response.event_types);
-    // set up HTML
-    $norm_select.html(html.join(''));
-    // if we have nothing, just hide the whole thing
-    if (!norm_resources.length) {
-      $('#norm_fieldset').hide();
-    } else {
-      $('#norm_fieldset').show();
-    }
-  }
-
-  // hides the reference link in the normalization UI
-  hideNormalizationRefLink() {
-    $('#span_norm_ref_link').hide();
-  }
-
-  // updates the reference link in the normalization UI according
-  // to the current value of the normalization DB and ID.
-  updateNormalizationRefLink() {
-    var $normId = $('#span_norm_id');
-    var $normLink = $('#span_norm_ref_link');
-    var normId = $normId.val();
-    var $normDb = $('#span_norm_db');
-    var normDb = $normDb.val();
-    if (!normId || !normDb || normId.match(/^\s*$/)) {
-      $normLink.hide();
-    } else {
-      var base = this.normDbUrlBaseByDbName[normDb];
-      // assume hidden unless everything goes through
-      $normLink.hide();
-      if (!base) {
-        // base URL is now optional, just skip link generation if not set
-        ;
-      } else if (base.indexOf('%s') == -1) {
-        this.dispatcher.post('messages', [[['Base URL "' + base + '" for ' + normDb + ' does not contain "%s"', 'error']]]);
-      } else {
-        // TODO: protect against strange chars in ID
-        let link = base.replace('%s', normId);
-        $normLink.attr('href', link);
-        $normLink.show();
-      }
-    }
-  }
-
-  // updates the DB search link in the normalization UI according
-  // to the current value of the normalization DB.
-  updateNormalizationDbLink() {
-    var $dbLink = $('#span_norm_db_link');
-    var $normDb = $('#span_norm_db');
-    var normDb = $normDb.val();
-    if (!normDb) return; // no normalisation configured
-    var link = this.normDbUrlByDbName[normDb];
-    if (!link || link.match(/^\s*$/)) {
-      this.dispatcher.post('messages', [[['No URL for ' + normDb, 'error']]]);
-      $dbLink.hide();
-    } else {
-      // TODO: protect against weirdness in DB link
-      $dbLink.attr('href', link);
-      $dbLink.show();
-    }
-  }
-
-  // resets user-settable normalization-related UI elements to a
-  // blank state (does not blank #span_norm_db <select>).
-  clearNormalizationUI() {
-    var $normId = $('#span_norm_id');
-    var $normText = $('#span_norm_txt');
-    $normId.val('');
-    $normId.removeClass('valid_value').removeClass('invalid_value');
-    $normText.val('');
-    this.updateNormalizationRefLink();
   }
 
   // returns the normalizations currently filled in the span
@@ -1556,10 +1346,10 @@ export class AnnotatorUI {
   spanNormalizations() {
     // Note that only no or one normalization is supported in the
     // UI at the moment.
-    var normalizations = [];
-    var normDb = $('#span_norm_db').val();
-    var normId = $('#span_norm_id').val();
-    var normText = $('#span_norm_txt').val();
+    const normalizations = [];
+    const normDb = $('#span_norm_db').val();
+    const normId = $('#span_norm_id').val();
+    const normText = $('#span_norm_txt').val();
     // empty ID -> no normalization
     if (!normId.match(/^\s*$/)) {
       normalizations.push([normDb, normId, normText]);
@@ -1571,9 +1361,9 @@ export class AnnotatorUI {
   // the span dialog
   spanAttributes(typeRadio) {
     typeRadio = typeRadio || $('#span_form input:radio:checked');
-    var attributes = {};
-    var attributeTypes;
-    var category = typeRadio.attr('category');
+    const attributes = {};
+    let attributeTypes;
+    const category = typeRadio.attr('category');
     if (category == 'entity') {
       attributeTypes = this.entityAttributeTypes;
     } else if (category == 'event') {
@@ -1582,7 +1372,7 @@ export class AnnotatorUI {
       console.error('Unrecognized type category:', category);
     }
     $.each(attributeTypes, (attrNo, attr) => {
-      var $input = $('#' + category + '_attr_' + Util.escapeQuotes(attr.type));
+      const $input = $('#' + category + '_attr_' + Util.escapeQuotes(attr.type));
       if (attr.bool) {
         attributes[attr.type] = $input[0].checked;
       } else if ($input[0].selectedIndex) {
@@ -1599,16 +1389,16 @@ export class AnnotatorUI {
     this.relationTypesHash = _relationTypesHash;
     // for easier access
     this.allAttributeTypes = $.extend({}, this.entityAttributeTypes, this.eventAttributeTypes);
-  };
+  }
 
   gotCurrent(_coll, _doc, _args) {
     this.coll = _coll;
     this.doc = _doc;
     this.args = _args;
-  };
+  }
 
   edited(response) {
-    var x = response.exception;
+    const x = response.exception;
     if (x) {
       if (x == 'annotationIsReadOnly') {
         this.dispatcher.post('messages', [[["This document is read-only and can't be edited.", 'error']]]);
@@ -1631,7 +1421,7 @@ export class AnnotatorUI {
       } else {
         this.args.edited = response.edited;
       }
-      var sourceData = response.annotations;
+      const sourceData = response.annotations;
       sourceData.document = this.doc;
       sourceData.collection = this.coll;
       // this "prevent" is to protect against reloading (from the
@@ -1644,7 +1434,7 @@ export class AnnotatorUI {
       this.dispatcher.post('setArguments', [this.args]);
       this.dispatcher.post('renderData', [sourceData]);
     }
-  };
+  }
 
   preventDefault(evt) {
     evt.preventDefault();
@@ -1660,11 +1450,11 @@ export class AnnotatorUI {
 
     this.stopArcDrag();
 
-    var target = $(evt.target);
-    var id;
+    const target = $(evt.target);
+    let id;
     if (id = target.attr('data-span-id')) {
       this.preventDefault(evt);
-      var offsets = [];
+      const offsets = [];
       $.each(this.data.spans[id], (fragmentNo, fragment) => {
         offsets.push([fragment.from, fragment.to]);
       });
@@ -1683,7 +1473,7 @@ export class AnnotatorUI {
   isReloadOkay() {
     // do not reload while the user is in the middle of editing
     return this.arcDragOrigin == null && this.reselectedSpan == null;
-  };
+  }
 
   userReceived(_user) {
     this.user = _user;
@@ -1701,7 +1491,7 @@ export class AnnotatorUI {
       Configuration.rapidModeOn = false;
     }
     this.dispatcher.post('configurationChanged');
-  };
+  }
 
   onNewSourceData(_sourceData) {
     this.sourceData = _sourceData;
