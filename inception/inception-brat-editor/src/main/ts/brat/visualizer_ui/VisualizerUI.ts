@@ -81,6 +81,10 @@ export class VisualizerUI {
   svgElement: JQuery;
   svgId: string;
 
+  commentPopup;
+  commentDisplayed = false;
+  displayCommentTimer = null;
+
   constructor(dispatcher: Dispatcher, svg) {
     this.commentPopup = $('#commentpopup');
     this.svgElement = $(svg._svg);
@@ -140,10 +144,6 @@ export class VisualizerUI {
     element.css({ top: y, left: x });
   }
 
-  commentPopup;
-  commentDisplayed = false;
-
-  displayCommentTimer = null;
   displayComment(evt: MouseEvent, target, comment, commentText, commentType, immediately?) {
     let idtype;
     if (commentType) {
@@ -385,7 +385,7 @@ export class VisualizerUI {
   // BEGIN WEBANNO EXTENSION - #1697 - Explicit UI for accepting/recejcting recommendations
   displayButtonsTimer = null;
   buttonsShown = false;
-  acceptAction(evt, offsets, editedSpan, id) {
+  acceptAction(evt: MouseEvent, offsets, editedSpan, id) {
     // must be logged in
     if (this.user === null) return;
 
@@ -399,7 +399,7 @@ export class VisualizerUI {
     }, 'serverResult']);
   }
 
-  rejectAction(evt, offsets, editedSpan, id) {
+  rejectAction(evt: MouseEvent, offsets, editedSpan, id) {
     // must be logged in
     if (this.user === null) return;
 

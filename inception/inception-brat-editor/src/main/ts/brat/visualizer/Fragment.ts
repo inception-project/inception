@@ -53,7 +53,7 @@ export class Fragment {
   drawOrder: number = undefined;
   towerId = undefined;
   curly = undefined;
-  drawCurly: boolean = false;
+  drawCurly = false;
   labelText: string = undefined;
   glyphedLabelText = undefined;;
   group: Element = undefined;
@@ -89,7 +89,7 @@ export class Fragment {
    * @param {Fragment} b
    */
   static midpointComparator = (a: Fragment, b: Fragment) => {
-    let tmp = a.from + a.to - b.from - b.to;
+    const tmp = a.from + a.to - b.from - b.to;
     if (!tmp) {
       return 0;
     }
@@ -97,12 +97,11 @@ export class Fragment {
   };
 
   static compare(a: Fragment, b: Fragment) {
-    let tmp;
     const aSpan = a.span;
     const bSpan = b.span;
 
     // spans with more fragments go first
-    tmp = aSpan.fragments.length - bSpan.fragments.length;
+    let tmp = aSpan.fragments.length - bSpan.fragments.length;
     if (tmp) {
       return tmp < 0 ? 1 : -1;
     }

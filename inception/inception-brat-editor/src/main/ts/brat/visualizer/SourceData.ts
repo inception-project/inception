@@ -40,7 +40,7 @@
 /** 
  * id, type, comment 
  */ 
-export type sourceCommentType = [string | Array<any>, string, string];
+export type sourceCommentType = [string | Array<unknown>, string, string];
 
 export type sourceOffsetType = [number, number];
 
@@ -82,7 +82,7 @@ export class SourceData {
   sentence_number_offset: number;
   rtl_mode: boolean;
   font_zoom: number;
-  args: {};
+  args: Record<string, []>;
 
   /**
    * @deprecated INCEpTION does not use the collection name.

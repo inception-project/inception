@@ -45,7 +45,7 @@ export class EventDesc {
   id;
   triggerId;
   roles = [];
-  equiv: boolean = false;
+  equiv = false;
   equivArc: Arc = undefined;
   relation = false;
   leftSpans = undefined;

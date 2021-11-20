@@ -45,16 +45,16 @@ import { sourceOffsetType } from "./SourceData";
 export class Span {
   id: string = undefined;
   type: string = undefined;
-  totalDist: number = 0;
-  numArcs: number = 0;
+  totalDist = 0;
+  numArcs = 0;
   generalType = undefined;
   headFragment: Fragment = undefined;
   unsegmentedOffsets: Array<sourceOffsetType> = [];
   offsets: Array<sourceOffsetType> = [];
   segmentedOffsetsMap = {};
-  hidden: boolean = false;
-  clippedAtStart: boolean = false;
-  clippedAtEnd:boolean = false;
+  hidden = false;
+  clippedAtStart = false;
+  clippedAtEnd = false;
   incoming: Arc[] = [];
   outgoing: Arc[] = [];
   attributes: Record<string, string> = {};
@@ -62,7 +62,7 @@ export class Span {
   attributeCues = {};
   attributeCueFor = {};
   annotatorNotes = undefined;
-  attributeMerge = {}; // for box, cross, etc. that are span-global
+  attributeMerge: Record<string, unknown> = {}; // for box, cross, etc. that are span-global
   fragments: Fragment[] = [];
   normalized: string;
   normalizations: Array<[string, string, string]> = [];
@@ -153,7 +153,7 @@ export class Span {
    * @returns the copy.
    */
   copy(id) {
-    let span = $.extend(new Span(id, undefined, this.unsegmentedOffsets.slice(), undefined), this); // clone
+    const span = $.extend(new Span(id, undefined, this.unsegmentedOffsets.slice(), undefined), this); // clone
     // read-only; shallow copy is fine
     span.offsets = this.offsets;
     span.segmentedOffsetsMap = this.segmentedOffsetsMap;
@@ -162,9 +162,9 @@ export class Span {
 
   buildFragments() {
     $.each(this.offsets, (offsetsNo, offsets) => {
-      let from = offsets[0];
-      let to = offsets[1];
-      let fragment = new Fragment(offsetsNo, this, from, to);
+      const from = offsets[0];
+      const to = offsets[1];
+      const fragment = new Fragment(offsetsNo, this, from, to);
       this.fragments.push(fragment);
     });
 
@@ -172,6 +172,6 @@ export class Span {
     this.fragments.sort(Fragment.midpointComparator);
     this.wholeFrom = this.fragments[0].from;
     this.wholeTo = this.fragments[this.fragments.length - 1].to;
-    this.headFragment = this.fragments[true ? this.fragments.length - 1 : 0];
+    this.headFragment = this.fragments[this.fragments.length - 1];
   }
 }

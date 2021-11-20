@@ -45,11 +45,11 @@ export class Spinner {
   dispatcher: Dispatcher;
   spinElement: JQuery;
 
-  constructor(dispatcher, spinElement) {
+  constructor(dispatcher: Dispatcher, spinElement) {
     spinElement = $(spinElement);
     dispatcher.
-      on('spin', this.spin).
-      on('unspin', this.unspin);
+      on('spin', this, this.spin).
+      on('unspin', this, this.unspin);
   }
 
   spin() {

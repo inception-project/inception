@@ -328,9 +328,7 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
-                  <!-- MIT License -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource/fast-json-patch.js</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource/fast-json-patch.min.js</exclude>
+                  <exclude>**/.eslintrc.js</exclude>
                 </excludes>
               </configuration>
             </plugin>

@@ -41,9 +41,9 @@ export class Row {
   group;
   background;
   chunks = [];
-  hasAnnotations: boolean = false;
-  maxArcHeight: number = 0;
-  maxSpanHeight: number = 0;
+  hasAnnotations = false;
+  maxArcHeight = 0;
+  maxSpanHeight = 0;
   sentence;
   index;
   backgroundIndex;

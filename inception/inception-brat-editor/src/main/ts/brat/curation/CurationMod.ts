@@ -20,9 +20,9 @@ import type Dispatcher from "../dispatcher";
 export class CurationMod {
   data;
   dispatcher: Dispatcher;
-  svg: any;
+  svg;
 
-  constructor(dispatcher, svg) {
+  constructor(dispatcher: Dispatcher, svg) {
     this.dispatcher = dispatcher;
     this.svg = svg;
 
@@ -34,45 +34,44 @@ export class CurationMod {
   }
 
   // send click to server
-  onClick(evt) {
-    var target = $(evt.target);
+  onClick(evt: MouseEvent) {
+    const target = $(evt.target);
     // if clicked on a span, send ajax call to server
-    let type = target.attr('data-arc-role');
+    const type = target.attr('data-arc-role');
     if (type) {
-      var originSpanId = target.attr('data-arc-origin');
-      var targetSpanId = target.attr('data-arc-target');
-      var id = target.attr('data-arc-ed');
+      const originSpanId = target.attr('data-arc-origin');
+      const targetSpanId = target.attr('data-arc-target');
       //var originSpan = data.spans[originSpanId];
       //var targetSpan = data.spans[targetSpanId];
       this.dispatcher.post('ajax', [{
         action: 'selectArcForMerge',
         originSpanId: originSpanId,
         targetSpanId: targetSpanId,
-        id: id,
+        id: target.attr('data-arc-ed'),
         type: type
       }, 'serverResult']);
     }
-    if (id = target.attr('data-span-id')) {
-      var editedSpan = this.data.spans[id];
+    if (target.attr('data-span-id')) {
+      const id = target.attr('data-span-id');
+      const editedSpan = this.data.spans[id];
       this.dispatcher.post('ajax', [{
         action: 'selectSpanForMerge',
         id: id,
         type: editedSpan.type,
       }, 'serverResult']);
     }
-    // TODO check for arcs
-  };
+  }
 
-  contextMenu(evt) {
+  contextMenu(evt: MouseEvent) {
     // If the user shift-right-clicks, open the normal browser context menu. This is useful
     // e.g. during debugging / developing
     if (evt.shiftKey) {
       return;
     }
 
-    var target = $(evt.target);
-    var id;
-    var type;
+    const target = $(evt.target);
+    let id: string;
+    let type: string;
 
     if (target.attr('data-arc-ed')) {
       id = target.attr('data-arc-ed');
@@ -96,7 +95,9 @@ export class CurationMod {
     }
   }
 
-  // callback function which is called after ajax response has arrived
+  /**
+   * Callback function which is called after ajax response has arrived.
+   */
   serverResult(response) {
     // dummy, probably not called at all
     if (response.exception) {
@@ -105,12 +106,14 @@ export class CurationMod {
       return false;
     }
     alert(response);
-  };
+  }
 
-  // remember data at initialization
+  /**
+   * Remember data at initialization
+   */
   rememberData(_data) {
     if (_data && !_data.exception) {
       this.data = _data;
     }
-  };
+  }
 }

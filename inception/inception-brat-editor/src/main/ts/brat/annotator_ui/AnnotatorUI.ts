@@ -45,6 +45,8 @@ declare let Configuration: ConfigurationType;
 import type { Util as UtilType } from "../util/Util";
 declare let Util: UtilType;
 
+import { Key } from 'ts-keycode-enum';
+
 export class AnnotatorUI {
   arcDragOrigin = null;
   arcDragOriginBox = null;
@@ -110,31 +112,26 @@ export class AnnotatorUI {
 
   undoStack = [];
 
-  spanForm;
-  rapidSpanForm;
   svgPosition: JQueryCoordinates;
-  arcDrag: any;
 
-  constructor(dispatcher, svg) {
+  clickCount = 0;
+  clickTimer = null;
+  CLICK_DELAY = 300;
+
+  constructor(dispatcher: Dispatcher, svg) {
     this.svg = svg;
     this.dispatcher = dispatcher;
     this.user = null;
     this.svgElement = $(svg._svg);
     this.svgId = this.svgElement.parent().attr('id');
 
-    // TODO: why are these globals defined here instead of at the top?
-    this.spanForm = $('#span_form');
-    this.rapidSpanForm = $('#rapid_span_form');
-
     dispatcher.
       on('init', this, this.init).
       on('getValidArcTypesForDrag', this, this.getValidArcTypesForDrag).
       on('dataReady', this, this.rememberData).
-      on('collectionLoaded', this, this.rememberSpanSettings).
       on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded).
       on('newSourceData', this, this.onNewSourceData).
       on('user', this, this.userReceived).
-      on('edited', this, this.edited).
       on('current', this, this.gotCurrent).
       on('isReloadOkay', this, this.isReloadOkay).
       on('keydown', this, this.onKeyDown).
@@ -147,7 +144,7 @@ export class AnnotatorUI {
       on('contextmenu', this, this.contextMenu);
   }
 
-  stripNumericSuffix(s) {
+  private stripNumericSuffix(s) {
     // utility function, originally for stripping numerix suffixes
     // from arc types (e.g. "Theme2" -> "Theme"). For values
     // without suffixes (including non-strings), returns given value.
@@ -158,17 +155,7 @@ export class AnnotatorUI {
     return m[1]; // always matches
   }
 
-  // WEBANNO EXTENSION BEGIN
-  // We do not use the brat forms
-  /*
-        var hideForm = function() {
-          keymap = null;
-          rapidAnnotationDialogVisible = false;
-        };
-  */
-  // WEBANNO EXTENSIONE END
-
-  clearSelection() {
+  private clearSelection() {
     window.getSelection().removeAllRanges();
     if (this.selRect != null) {
       for (let s = 0; s != this.selRect.length; s++) {
@@ -180,20 +167,20 @@ export class AnnotatorUI {
     }
   }
 
-  makeSelRect(rx, ry, rw, rh, col?) {
+  private makeSelRect(rx: number, ry: number, rw: number, rh: number, col?) {
     const selRect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    selRect.setAttributeNS(null, "width", rw);
-    selRect.setAttributeNS(null, "height", rh);
-    selRect.setAttributeNS(null, "x", rx);
-    selRect.setAttributeNS(null, "y", ry);
+    selRect.setAttributeNS(null, "width", rw.toString());
+    selRect.setAttributeNS(null, "height", rh.toString());
+    selRect.setAttributeNS(null, "x", rx.toString());
+    selRect.setAttributeNS(null, "y", ry.toString());
     selRect.setAttributeNS(null, "fill", col == undefined ? "lightblue" : col);
     return selRect;
   }
 
-  onKeyDown(evt) {
+  private onKeyDown(evt: KeyboardEvent) {
     const code = evt.which;
 
-    if (code === $.ui.keyCode.ESCAPE) {
+    if (code === Key.Escape) {
       this.stopArcDrag();
       if (this.reselectedSpan) {
         $(this.reselectedSpan.rect).removeClass('reselect');
@@ -202,64 +189,17 @@ export class AnnotatorUI {
       }
       return;
     }
-
-    // in rapid annotation mode, prioritize the keys 0..9 for the
-    // ordered choices in the quick annotation dialog.
-    if (Configuration.rapidModeOn && this.rapidAnnotationDialogVisible &&
-      "0".charCodeAt(0) <= code && code <= "9".charCodeAt(0)) {
-      const idx = String.fromCharCode(code);
-      const $input = $('#rapid_span_' + idx);
-      if ($input.length) {
-        $input.click();
-      }
-    }
-
-    if (!this.keymap) return;
-
-    // disable shortcuts when working with elements that you could
-    // conceivably type in
-    const target = evt.target;
-    const nodeName = target.nodeName.toLowerCase();
-    const nodeType = target.type && target.type.toLowerCase();
-    if (nodeName == 'input' && (nodeType == 'text' || nodeType == 'password')) return;
-    if (nodeName == 'textarea' || nodeName == 'select') return;
-
-    let prefix = '';
-    if (evt.altKey) {
-      prefix = "A-";
-    }
-    if (evt.ctrlKey) {
-      prefix = "C-";
-    }
-    if (evt.shiftKey) {
-      prefix = "S-";
-    }
-    let binding = this.keymap[prefix + code];
-    if (!binding) binding = this.keymap[prefix + String.fromCharCode(code)];
-    if (binding) {
-      const boundInput = $('#' + binding)[0];
-      if (boundInput && !boundInput.disabled) {
-        boundInput.click();
-        evt.preventDefault();
-        return false;
-      }
-    }
   }
-
-  // WEBANNO EXTENSION BEGIN - #520 Perform javascript action on click 
-  clickCount = 0;
-  clickTimer = null;
-  CLICK_DELAY = 300;
 
   // Distinguish between double clicks and single clicks . This is relevant when clicking on 
   // annotations. For clicking on text nodes, this is not really relevant.
-  onClick(evt) {
+  private onClick(evt) {
     this.clickCount++;
 
     const singleClickAction = Configuration.singleClickEdit ?
       this.editAnnotation : this.customJSAction;
     const doubleClickAction = Configuration.singleClickEdit ?
-    this.customJSAction : this.editAnnotation;
+      this.customJSAction : this.editAnnotation;
 
     if (this.clickCount === 1) {
       this.clickTimer = setTimeout(() => {
@@ -281,134 +221,136 @@ export class AnnotatorUI {
     }
   }
 
-  customJSAction(evt) {
+  private customJSAction(evt: MouseEvent) {
     // must be logged in
     if (this.user === null) return;
-    const target = $(evt.target);
-    let id;
     // single click actions for spans
-    if (id = target.attr('data-span-id')) {
-      this.preventDefault(evt);
-      this.editedSpan = this.data.spans[id];
-      this.editedFragment = target.attr('data-fragment-id');
-      const offsets = [];
-      $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
-        offsets.push([fragment.from, fragment.to]);
-      });
-      this.dispatcher.post('ajax', [{
-        action: 'doAction',
-        offsets: JSON.stringify(offsets),
-        id: id,
-        labelText: this.editedSpan.labelText,
-        type: this.editedSpan.type
-      }, 'serverResult']);
+    const target = $(evt.target);
+    if (target.attr('data-span-id')) {
+      this.customSpanAction(evt)
     }
-    // BEGIN WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
-    else if (id = target.attr('data-arc-ed')) {
-      const type = target.attr('data-arc-role');
-      const originSpan = this.data.spans[target.attr('data-arc-origin')];
-      const targetSpan = this.data.spans[target.attr('data-arc-target')];
-
-      this.dispatcher.post('ajax', [{
-        action: 'doAction',
-        arcId: id,
-        arcType: type,
-        originSpanId: originSpan.id,
-        originType: originSpan.type,
-        targetSpanId: targetSpan.id,
-        targetType: targetSpan.type
-      }, 'serverResult']);
+    else if (target.attr('data-arc-ed')) {
+      this.customArcAction(evt);
     }
-    // END WEBANNO EXTENSION - #1579 - Send event when action-clicking on a relation
-    // WEBANNO EXTENSION BEGIN - #406 Sharable link for annotation documents
-    // single click action on sentence id
-    else if (id = target.attr('data-sent')) {
-      this.preventDefault(evt);
-      if (window.UrlUtil) {
-        window.UrlUtil.putFragmentParameter('f', id);
-        window.UrlUtil.sentParametersOnInitialPageLoad = false;
-        window.UrlUtil.sendUrlParameters();
-      }
-    }
-    // WEBANNO EXTENSION END - #406 Sharable link for annotation documents
   }
+
+  private customArcAction(evt: MouseEvent) {
+    const target = $(evt.target);
+    const id = target.attr('data-arc-ed');
+    const type = target.attr('data-arc-role');
+    const originSpan = this.data.spans[target.attr('data-arc-origin')];
+    const targetSpan = this.data.spans[target.attr('data-arc-target')];
+
+    this.dispatcher.post('ajax', [{
+      action: 'doAction',
+      arcId: id,
+      arcType: type,
+      originSpanId: originSpan.id,
+      originType: originSpan.type,
+      targetSpanId: targetSpan.id,
+      targetType: targetSpan.type
+    }, 'serverResult']);
+  }
+
+  private customSpanAction(evt: MouseEvent) {
+    const target = $(evt.target);
+    const id = target.attr('data-span-id');
+    this.preventDefault(evt);
+    this.editedSpan = this.data.spans[id];
+    this.editedFragment = target.attr('data-fragment-id');
+    const offsets = [];
+    $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
+      offsets.push([fragment.from, fragment.to]);
+    });
+    this.dispatcher.post('ajax', [{
+      action: 'doAction',
+      offsets: JSON.stringify(offsets),
+      id: id,
+      labelText: this.editedSpan.labelText,
+      type: this.editedSpan.type
+    }, 'serverResult']);
+  }
+
   // WEBANNO EXTENSION END - #520 Perform javascript action on click 
 
-  // WEBANNO EXTENSION BEGIN - #863 Allow configuration of default value for "auto-scroll" etc.
-  /*
-        var onDblClick = function(evt) {
-  */
-  editAnnotation(evt) {
-    // WEBANNO EXTENSION END - #863 Allow configuration of default value for "auto-scroll" etc.
+  private editAnnotation(evt: MouseEvent) {
     // must be logged in
     if (this.user === null) return;
     // must not be reselecting a span or an arc
     if (this.reselectedSpan || this.arcDragOrigin) return;
 
     const target = $(evt.target);
-    let id;
-
     // do we edit an arc?
-    if (id = target.attr('data-arc-role')) {
-      // TODO
-      this.clearSelection();
-      const originSpanId = target.attr('data-arc-origin');
-      const targetSpanId = target.attr('data-arc-target');
-      const type = target.attr('data-arc-role');
-      const originSpan = this.data.spans[originSpanId];
-      const targetSpan = this.data.spans[targetSpanId];
-      this.arcOptions = {
-        action: 'createArc',
-        origin: originSpanId,
-        target: targetSpanId,
-        old_target: targetSpanId,
-        type: type,
-        old_type: type,
-        collection: this.coll,
-        'document': this.doc
-      };
-      const eventDescId = target.attr('data-arc-ed');
-      if (eventDescId) {
-        const eventDesc = this.data.eventDescs[eventDescId];
-        if (eventDesc.equiv) {
-          this.arcOptions['left'] = eventDesc.leftSpans.join(',');
-          this.arcOptions['right'] = eventDesc.rightSpans.join(',');
-        }
-      }
-      $('#arc_origin').text(Util.spanDisplayForm(this.spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
-      $('#arc_target').text(Util.spanDisplayForm(this.spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
-      const arcId = eventDescId || [originSpanId, type, targetSpanId];
-      // WEBANNO EXTENSION BEGIN
-      this.fillArcTypesAndDisplayForm(evt, originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
-      // WEBANNO EXTENSION END
-      // for precise timing, log dialog display to user.
-      this.dispatcher.post('logAction', ['arcEditSelected']);
-
+    if (target.attr('data-arc-role')) {
+      this.editArc(evt);
       // if not an arc, then do we edit a span?
-    } else if (id = target.attr('data-span-id')) {
-      this.clearSelection();
-      this.editedSpan = this.data.spans[id];
-      this.editedFragment = target.attr('data-fragment-id');
-      const offsets = [];
-      $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
-        offsets.push([fragment.from, fragment.to]);
-      });
-      this.spanOptions = {
-        action: 'createSpan',
-        offsets: offsets,
-        type: this.editedSpan.type,
-        id: id,
-      };
-      // WEBANNO EXTENSION BEGIN
-      this.fillSpanTypesAndDisplayForm(evt, offsets, this.editedSpan.text, this.editedSpan, id);
-      // WEBANNO EXTENSION END
-
-      // for precise timing, log annotation display to user.
-      this.dispatcher.post('logAction', ['spanEditSelected']);
+    } else if (target.attr('data-span-id')) {
+      this.editSpan(evt);
     }
   }
 
-  startArcDrag(originId) {
+  private editArc(evt: MouseEvent) {
+    const target = $(evt.target);
+    // TODO
+    this.clearSelection();
+    const originSpanId = target.attr('data-arc-origin');
+    const targetSpanId = target.attr('data-arc-target');
+    const type = target.attr('data-arc-role');
+    const originSpan = this.data.spans[originSpanId];
+    const targetSpan = this.data.spans[targetSpanId];
+    this.arcOptions = {
+      action: 'createArc',
+      origin: originSpanId,
+      target: targetSpanId,
+      old_target: targetSpanId,
+      type: type,
+      old_type: type,
+      collection: this.coll,
+      'document': this.doc
+    };
+    const eventDescId = target.attr('data-arc-ed');
+    if (eventDescId) {
+      const eventDesc = this.data.eventDescs[eventDescId];
+      if (eventDesc.equiv) {
+        this.arcOptions['left'] = eventDesc.leftSpans.join(',');
+        this.arcOptions['right'] = eventDesc.rightSpans.join(',');
+      }
+    }
+    $('#arc_origin').text(Util.spanDisplayForm(this.spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
+    $('#arc_target').text(Util.spanDisplayForm(this.spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
+    const arcId = eventDescId || [originSpanId, type, targetSpanId];
+    // WEBANNO EXTENSION BEGIN
+    this.fillArcTypesAndDisplayForm(evt, originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
+    // WEBANNO EXTENSION END
+    // for precise timing, log dialog display to user.
+    this.dispatcher.post('logAction', ['arcEditSelected']);
+  }
+
+  private editSpan(evt: MouseEvent) {
+    const target = $(evt.target);
+    const id = target.attr('data-span-id')
+    this.clearSelection();
+    this.editedSpan = this.data.spans[id];
+    this.editedFragment = target.attr('data-fragment-id');
+    const offsets = [];
+    $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
+      offsets.push([fragment.from, fragment.to]);
+    });
+    this.spanOptions = {
+      action: 'createSpan',
+      offsets: offsets,
+      type: this.editedSpan.type,
+      id: id,
+    };
+    // WEBANNO EXTENSION BEGIN
+    this.fillSpanTypesAndDisplayForm(evt, offsets, this.editedSpan.text, this.editedSpan, id);
+    // WEBANNO EXTENSION END
+
+    // for precise timing, log annotation display to user.
+    this.dispatcher.post('logAction', ['spanEditSelected']);
+  }
+
+  private startArcDrag(originId) {
     this.clearSelection();
 
     if (!this.data.spans[originId]) {
@@ -431,7 +373,7 @@ export class AnnotatorUI {
     this.arcDragJustStarted = true;
   }
 
-  getValidArcTypesForDrag(targetId, targetType) {
+  private getValidArcTypesForDrag(targetId, targetType) {
     const arcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
     if (!this.arcDragOrigin || targetId == this.arcDragOrigin) return null;
 
@@ -450,7 +392,7 @@ export class AnnotatorUI {
     return result;
   }
 
-  onMouseDown(evt) {
+  onMouseDown(evt: MouseEvent) {
     // Instead of calling startArcDrag() immediately, we defer this to onMouseMove
     if (!this.user || this.arcDragOrigin) return;
 
@@ -550,21 +492,23 @@ export class AnnotatorUI {
       // be interested in tagging instead of using what's given.
       let anchorOffset = null;
       let focusOffset = null;
+      let sp: DOMPointInit;
+      let startsAt: SVGTextContentElement;
       if (chunkIndexFrom === undefined && chunkIndexTo === undefined &&
         $(sel.anchorNode).attr('data-chunk-id') &&
         $(sel.focusNode).attr('data-chunk-id')) {
         // Lets take the actual selection range and work with that
         // Note for visual line up and more accurate positions a vertical offset of 8 and horizontal of 2 has been used!
         const range = sel.getRangeAt(0);
-        const svgOffset = $(this.svg._svg).offset();
-        var flip = false;
+        const svgOffset = $(this.svgElement).offset();
+        let flip = false;
         let tries = 0;
         // First try and match the start offset with a position, if not try it against the other end
         while (tries < 2) {
-          var sp = this.svg._svg.createSVGPoint();
+          sp = this.svg._svg.createSVGPoint();
           sp.x = (flip ? evt.pageX : this.dragStartedAt.pageX) - svgOffset.left;
           sp.y = (flip ? evt.pageY : this.dragStartedAt.pageY) - (svgOffset.top + 8);
-          var startsAt = range.startContainer;
+          startsAt = range.startContainer as SVGTextContentElement;
           anchorOffset = startsAt.getCharNumAtPosition(sp);
           chunkIndexFrom = startsAt && $(startsAt).attr('data-chunk-id');
           if (anchorOffset != -1) {
@@ -577,7 +521,7 @@ export class AnnotatorUI {
         // Now grab the end offset
         sp.x = (flip ? this.dragStartedAt.pageX : evt.pageX) - svgOffset.left;
         sp.y = (flip ? this.dragStartedAt.pageY : evt.pageY) - (svgOffset.top + 8);
-        const endsAt = range.endContainer;
+        const endsAt = range.endContainer as SVGTextContentElement;
         focusOffset = endsAt.getCharNumAtPosition(sp);
 
         // If we cannot get a start and end offset stop here
@@ -634,7 +578,7 @@ export class AnnotatorUI {
           }
 
           // Start has moved
-          var flip = !(startRec.x == this.lastStartRec.x && startRec.y == this.lastStartRec.y);
+          const flip = !(startRec.x == this.lastStartRec.x && startRec.y == this.lastStartRec.y);
           // If the height of the start or end changed we need to check whether
           // to remove multi line highlights no longer needed if the user went back towards their start line
           // and whether to create new ones if we moved to a newline
@@ -656,7 +600,7 @@ export class AnnotatorUI {
             // TODO put this in loops above, for efficiency the array slicing could be done separate still in single call
             let trunc = false;
             if (ss < this.selRect.length) {
-              for (var s2 = 0; s2 != ss; s2++) {
+              for (let s2 = 0; s2 != ss; s2++) {
                 this.selRect[s2].parentNode.removeChild(this.selRect[s2]);
                 es--;
                 trunc = true;
@@ -664,7 +608,7 @@ export class AnnotatorUI {
               this.selRect = this.selRect.slice(ss);
             }
             if (es > -1) {
-              for (var s2 = this.selRect.length - 1; s2 != es; s2--) {
+              for (let s2 = this.selRect.length - 1; s2 != es; s2--) {
                 this.selRect[s2].parentNode.removeChild(this.selRect[s2]);
                 trunc = true;
               }
@@ -693,8 +637,8 @@ export class AnnotatorUI {
             } else {
               // We didnt truncate anything but we have moved to a new line so we need to create a new highlight
               const lastSel = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
-              const startBox = startsAt.parentNode.getBBox();
-              const endBox = endsAt.parentNode.getBBox();
+              const startBox = (startsAt.parentNode as SVGGraphicsElement).getBBox();
+              const endBox = (endsAt.parentNode as SVGGraphicsElement).getBBox();
 
               if (flip) {
                 lastSel.setAttributeNS(null, "width",
@@ -714,7 +658,7 @@ export class AnnotatorUI {
               if (flip) {
                 rx = startRec.x;
                 ry = startRec.y;
-                rw = $(this.svg._svg).width() - startRec.x;
+                rw = $(this.svgElement).width() - startRec.x;
                 rh = startRec.height;
               } else {
                 rx = endBox.x;
@@ -763,7 +707,6 @@ export class AnnotatorUI {
     const screenWidth = $(window).width() - 8;
     const elementHeight = element.height();
     const elementWidth = element.width();
-    const cssSettings = {};
     let eLeft;
     let eTop;
     if (centerX) {
@@ -819,12 +762,6 @@ export class AnnotatorUI {
   }
   // WEBANNO EXTENSION END
 
-  submitReselect() {
-    $(this.reselectedSpan.rect).removeClass('reselect');
-    this.reselectedSpan = null;
-    this.spanForm.submit();
-  }
-
   // We send a request to the backend to open the dialog
   fillArcTypesAndDisplayForm(evt, originSpanId, originType, targetSpanId, targetType, arcType?, arcId?) {
 
@@ -872,7 +809,6 @@ export class AnnotatorUI {
         catch (err) {
           // Ignore - could be spurious TypeError: null is not an object (evaluating 'a.parentNode.removeChild')
         }
-        this.arcDrag = null;
       }
       this.arcDragOrigin = null;
       if (this.arcOptions) {
@@ -1081,7 +1017,7 @@ export class AnnotatorUI {
         if (!Configuration.rapidModeOn || this.reselectedSpan != null) {
           // normal span select in standard annotation mode
           // or reselect: show selector
-          var spanText = this.data.text.substring(selectedFrom, selectedTo);
+          const spanText = this.data.text.substring(selectedFrom, selectedTo);
           // WEBANNO EXTENSION BEGIN
           this.fillSpanTypesAndDisplayForm(evt, this.spanOptions.offsets, spanText, this.reselectedSpan);
           // WEBANNO EXTENSION END
@@ -1090,7 +1026,7 @@ export class AnnotatorUI {
         } else {
           // normal span select in rapid annotation mode: call
           // server for span type candidates
-          var spanText = this.data.text.substring(selectedFrom, selectedTo);
+          const spanText = this.data.text.substring(selectedFrom, selectedTo);
           // TODO: we're currently storing the event to position the
           // span form using adjustToCursor() (which takes an event),
           // but this is clumsy and suboptimal (user may have scrolled
@@ -1130,185 +1066,6 @@ export class AnnotatorUI {
     if (_data && !_data.exception) {
       this.data = _data;
     }
-  }
-
-  addSpanTypesToDivInner($parent, types, category?) {
-    if (!types) return;
-
-    $.each(types, (typeNo, type) => {
-      if (type === null) {
-        $parent.append('<hr/>');
-      } else {
-        const name = type.name;
-        const $input = $('<input type="radio" name="span_type"/>').
-          attr('id', 'span_' + type.type).
-          attr('value', type.type);
-        if (category) {
-          $input.attr('category', category);
-        }
-        // use a light version of the span color as BG
-        let spanBgColor = this.spanTypes[type.type] && this.spanTypes[type.type].bgColor || '#ffffff';
-        spanBgColor = Util.adjustColorLightness(spanBgColor, this.spanBoxTextBgColorLighten);
-        const $label = $('<label class="span_type_label"/>').
-          attr('for', 'span_' + type.type).
-          text(name);
-        if (type.unused) {
-          $input.attr({
-            disabled: 'disabled',
-            unused: 'unused'
-          });
-          $label.css('font-weight', 'bold');
-        } else {
-          $label.css('background-color', spanBgColor);
-        }
-        const $collapsible = $('<div class="collapsible open"/>');
-        const $content = $('<div class="item_content"/>').
-          append($input).
-          append($label).
-          append($collapsible);
-        const $collapser = $('<div class="collapser open"/>');
-        const $div = $('<div class="item"/>');
-        // WEBANNO EXTENSION BEGIN
-        // Avoid exception when no children are set
-        if (type.children && type.children.length) {
-          // WEBANNO EXTENSION END
-          $div.append($collapser)
-        }
-        $div.append($content);
-        this.addSpanTypesToDivInner($collapsible, type.children, category);
-        $parent.append($div);
-        if (type.hotkey) {
-          this.spanKeymap[type.hotkey] = 'span_' + type.type;
-          let name = $label.html();
-          let replace = true;
-          name = name.replace(new RegExp("(&[^;]*?)?(" + type.hotkey + ")", 'gi'),
-            (all, entity, letter) => {
-              if (replace && !entity) {
-                replace = false;
-                const hotkey = type.hotkey.toLowerCase() == letter
-                  ? type.hotkey.toLowerCase()
-                  : type.hotkey.toUpperCase();
-                return '<span class="accesskey">' + Util.escapeHTML(hotkey) + '</span>';
-              }
-              return all;
-            });
-          $label.html(name);
-        }
-      }
-    });
-  }
-
-  addSpanTypesToDiv($top, types, heading) {
-    const $scroller = $('<div class="scroller"/>');
-    const $legend = $('<legend/>').text(heading);
-    const $fieldset = $('<fieldset/>').append($legend).append($scroller);
-    $top.append($fieldset);
-    this.addSpanTypesToDivInner($scroller, types);
-  }
-
-  addAttributeTypesToDiv($top, types, category) {
-    $.each(types, (attrNo, attr) => {
-      const escapedType = Util.escapeQuotes(attr.type);
-      const attrId = category + '_attr_' + escapedType;
-      if (attr.unused) {
-        var $input = $('<input type="hidden" id="' + attrId + '" value=""/>');
-        $top.append($input);
-      } else if (attr.bool) {
-        const escapedName = Util.escapeQuotes(attr.name);
-        var $input = $('<input type="checkbox" id="' + attrId +
-          '" value="' + escapedType +
-          '" category="' + category + '"/>');
-        const $label = $('<label class="attribute_type_label" for="' + attrId +
-          '" data-bare="' + escapedName + '">&#x2610; ' +
-          escapedName + '</label>');
-        $top.append($input).append($label);
-        $input.button();
-        $input.change(this.onBooleanAttrChange);
-      } else {
-        const $div = $('<div class="ui-button ui-button-text-only attribute_type_label"/>');
-        const $select = $('<select id="' + attrId + '" class="ui-widget ui-state-default ui-button-text" category="' + category + '"/>');
-        let $option = $('<option class="ui-state-default" value=""/>').text(attr.name + ': ?');
-        $select.append($option);
-        $.each(attr.values, (valType, value) => {
-          $option = $('<option class="ui-state-active" value="' + Util.escapeQuotes(valType) + '"/>').text(attr.name + ': ' + (value.name || valType));
-          $select.append($option);
-        });
-        $div.append($select);
-        $top.append($div);
-        $select.change(this.onMultiAttrChange);
-      }
-    });
-  }
-
-  setSpanTypeSelectability(category) {
-    // TODO: this implementation is incomplete: we should ideally
-    // disable not only categories of types (events or entities),
-    // but the specific set of types that are incompatible with
-    // the current attribute settings.
-
-    // just assume all attributes are event attributes
-    // TODO: support for entity attributes
-    // TODO2: the above comment is almost certainly false, check and remove
-    $('#span_form input:not([unused])').removeAttr('disabled');
-    let $toDisable;
-    if (category == "event") {
-      $toDisable = $('#span_form input[category="entity"]');
-    } else if (category == "entity") {
-      $toDisable = $('#span_form input[category="event"]');
-    } else {
-      console.error('Unrecognized attribute category:', category);
-      $toDisable = $();
-    }
-    const $checkedToDisable = $toDisable.filter(':checked');
-    $toDisable.attr('disabled', true);
-    // the disable may leave the dialog in a state where nothing
-    // is checked, which would cause error on "OK". In this case,
-    // check the first valid choice.
-    if ($checkedToDisable.length) {
-      const $toCheck = $('#span_form input[category="' + category + '"][disabled!="disabled"]:first');
-      // so weird, attr('checked', 'checked') fails sometimes, so
-      // replaced with more "metal" version
-      $toCheck[0].checked = true;
-    }
-  }
-
-  onMultiAttrChange(evt) {
-    if ($(this).val() == '') {
-      $('#span_form input:not([unused])').removeAttr('disabled');
-    } else {
-      const attrCategory = evt.target.getAttribute('category');
-      this.setSpanTypeSelectability(attrCategory);
-      if (evt.target.selectedIndex) {
-        $(evt.target).addClass('ui-state-active');
-      } else {
-        $(evt.target).removeClass('ui-state-active');
-      }
-    }
-  }
-
-  onBooleanAttrChange(evt) {
-    const attrCategory = evt.target.getAttribute('category');
-    this.setSpanTypeSelectability(attrCategory);
-    this.updateCheckbox($(evt.target));
-  }
-
-  rememberSpanSettings(response) {
-    this.spanKeymap = {};
-
-    // TODO: check for exceptions in response
-
-    // fill in entity and event types
-    const $entityScroller = $('#entity_types div.scroller').empty();
-    this.addSpanTypesToDivInner($entityScroller, response.entity_types, 'entity');
-    const $eventScroller = $('#event_types div.scroller').empty();
-    this.addSpanTypesToDivInner($eventScroller, response.event_types, 'event');
-
-    // fill in attributes
-    const $entattrs = $('#entity_attributes div.scroller').empty();
-    this.addAttributeTypesToDiv($entattrs, this.entityAttributeTypes, 'entity');
-
-    const $eveattrs = $('#event_attributes div.scroller').empty();
-    this.addAttributeTypesToDiv($eveattrs, this.eventAttributeTypes, 'event');
   }
 
   tagCurrentDocument(taggerId) {
@@ -1357,31 +1114,6 @@ export class AnnotatorUI {
     return normalizations;
   }
 
-  // returns attributes that are valid for the selected type in
-  // the span dialog
-  spanAttributes(typeRadio) {
-    typeRadio = typeRadio || $('#span_form input:radio:checked');
-    const attributes = {};
-    let attributeTypes;
-    const category = typeRadio.attr('category');
-    if (category == 'entity') {
-      attributeTypes = this.entityAttributeTypes;
-    } else if (category == 'event') {
-      attributeTypes = this.eventAttributeTypes;
-    } else {
-      console.error('Unrecognized type category:', category);
-    }
-    $.each(attributeTypes, (attrNo, attr) => {
-      const $input = $('#' + category + '_attr_' + Util.escapeQuotes(attr.type));
-      if (attr.bool) {
-        attributes[attr.type] = $input[0].checked;
-      } else if ($input[0].selectedIndex) {
-        attributes[attr.type] = $input.val();
-      }
-    });
-    return attributes;
-  }
-
   spanAndAttributeTypesLoaded(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
     this.spanTypes = _spanTypes;
     this.entityAttributeTypes = _entityAttributeTypes;
@@ -1397,51 +1129,12 @@ export class AnnotatorUI {
     this.args = _args;
   }
 
-  edited(response) {
-    const x = response.exception;
-    if (x) {
-      if (x == 'annotationIsReadOnly') {
-        this.dispatcher.post('messages', [[["This document is read-only and can't be edited.", 'error']]]);
-      } else if (x == 'spanOffsetOverlapError') {
-        // createSpan with overlapping frag offsets; reset offsets
-        // @amadanmath: who holds the list of offsets for a span?
-        // how to reset this?
-      } else {
-        this.dispatcher.post('messages', [[['Unknown error ' + x, 'error']]]);
-      }
-      if (this.reselectedSpan) {
-        $(this.reselectedSpan.rect).removeClass('reselect');
-        this.reselectedSpan = null;
-      }
-      this.svgElement.removeClass('reselect');
-      $('#waiter').dialog('close');
-    } else {
-      if (response.edited == undefined) {
-        console.warn('Warning: server response to edit has', response.edited, 'value for "edited"');
-      } else {
-        this.args.edited = response.edited;
-      }
-      const sourceData = response.annotations;
-      sourceData.document = this.doc;
-      sourceData.collection = this.coll;
-      // this "prevent" is to protect against reloading (from the
-      // server) the very data that we just received as part of the
-      // response to the edit.
-      if (response.undo != undefined) {
-        this.undoStack.push([this.coll, sourceData.document, response.undo]);
-      }
-      this.dispatcher.post('preventReloadByURL');
-      this.dispatcher.post('setArguments', [this.args]);
-      this.dispatcher.post('renderData', [sourceData]);
-    }
-  }
-
   preventDefault(evt) {
     evt.preventDefault();
   }
 
   // WEBANNO EXTENSION BEGIN - #1388 Support context menu
-  contextMenu(evt) {
+  contextMenu(evt: MouseEvent) {
     // If the user shift-right-clicks, open the normal browser context menu. This is useful
     // e.g. during debugging / developing
     if (evt.shiftKey) {
@@ -1451,8 +1144,8 @@ export class AnnotatorUI {
     this.stopArcDrag();
 
     const target = $(evt.target);
-    let id;
-    if (id = target.attr('data-span-id')) {
+    const id = target.attr('data-span-id');
+    if (id) {
       this.preventDefault(evt);
       const offsets = [];
       $.each(this.data.spans[id], (fragmentNo, fragment) => {

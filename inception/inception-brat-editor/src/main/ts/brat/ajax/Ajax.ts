@@ -103,7 +103,7 @@ export class Ajax {
         }
 
         // If the request is obsolete, do nothing; if not...
-        if (this.pendingList.hasOwnProperty(id)) {
+        if (Object.prototype.hasOwnProperty.call(this.pendingList, id)) {
           this.dispatcher.post('messages', [response.messages]);
           if (response.exception == 'configurationError'
             || response.exception == 'protocolVersionMismatch') {

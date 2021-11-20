@@ -40,7 +40,7 @@
 
 import { Sizes } from "./Sizes";
 import { Measurements } from "./Measurements";
-import { DocumentData } from "./DocumentData";
+import { DocumentData } from "./DocumentData";
 import { Span } from "./Span";
 import { EventDesc } from "./EventDesc";
 import { Chunk } from "./Chunk";
@@ -54,16 +54,17 @@ import { CollectionLoadedResponse } from "./CollectionLoadedResponse";
 import { RelationType } from "./RelationType";
 import { SpanType } from "./SpanType";
 import type { Dispatcher } from "../dispatcher/Dispatcher";
-import type { sourceCommentType, sourceAttributeType, sourceEntityType, sourceOffsetType } from "./SourceData";
+import type { sourceCommentType, sourceEntityType, sourceOffsetType } from "./SourceData";
 import * as jsonpatch from 'fast-json-patch';
 
-declare var $: JQueryStatic;
+declare const $: JQueryStatic;
 
 import type { Configuration as ConfigurationType } from "../configuration/Configuration";
-declare var Configuration: ConfigurationType;
+declare const Configuration: ConfigurationType;
 
 import type { Util as UtilType } from "../util/Util";
-declare var Util: UtilType;
+import { Operation } from "fast-json-patch";
+declare const Util: UtilType;
 
 /**
  * Sets default values for a wide range of optional attributes.
@@ -124,16 +125,16 @@ function setCollectionDefaults(collectionData) {
 export class Visualizer {
   dispatcher: Dispatcher;
 
-  rtlmode: boolean = false;
-  fontZoom: number = 100;
+  rtlmode = false;
+  fontZoom = 100;
 
-  svg: SVGWrapper;
+  svg;
   $svg;
   $svgDiv;
   highlightGroup;
 
-  baseCanvasWidth: number = 0;
-  canvasWidth: number = 0;
+  baseCanvasWidth = 0;
+  canvasWidth = 0;
 
   data: DocumentData = null;
   sourceData: SourceData = null;
@@ -151,16 +152,16 @@ export class Visualizer {
 
   args: Record<string, string[]> = null;
 
-  isRenderRequested: boolean = false;
-  drawing: boolean = false;
-  redraw: boolean = false;
+  isRenderRequested = false;
+  drawing = false;
+  redraw = false;
   arcDragOrigin;
 
   spanTypes: Record<string, SpanType> = {};
   relationTypesHash: Record<string, RelationType> = {};
   entityAttributeTypes: Record<string, AttributeType> = {};
   eventAttributeTypes: Record<string, AttributeType> = {};
-  isCollectionLoaded: boolean = false;
+  isCollectionLoaded = false;
 
   markedText: Array<[number, number, string]> = [];
   highlight;
@@ -170,9 +171,9 @@ export class Visualizer {
 
   // OPTIONS
   forceWidth: number = undefined;
-  collapseArcs: boolean = false;
-  collapseArcSpace: boolean = false;
-  roundCoordinates: boolean = true; // try to have exact pixel offsets
+  collapseArcs = false;
+  collapseArcSpace = false;
+  roundCoordinates = true; // try to have exact pixel offsets
   boxTextMargin = { x: 0, y: 1.5 }; // effect is inverse of "margin" for some reason
   highlightRounding = { x: 3, y: 3 }; // rx, ry for highlight boxes
   spaceWidths: Record<string, number> = {
@@ -183,43 +184,43 @@ export class Visualizer {
     '\t': 12,
     '\n': 4
   };
-  coloredCurlies: boolean = true; // color curlies by box BG
-  arcSlant: number = 15; //10;
-  minArcSlant: number = 8;
-  arcHorizontalSpacing: number = 10; // min space boxes with connecting arc
-  rowSpacing: number = -5; // for some funny reason approx. -10 gives "tight" packing.
+  coloredCurlies = true; // color curlies by box BG
+  arcSlant = 15; //10;
+  minArcSlant = 8;
+  arcHorizontalSpacing = 10; // min space boxes with connecting arc
+  rowSpacing = -5; // for some funny reason approx. -10 gives "tight" packing.
 
-  sentNumMargin: number = 40;
-  smoothArcCurves: boolean = true; // whether to use curves (vs lines) in arcs
-  smoothArcSteepness: number = 0.5; // steepness of smooth curves (control point)
-  reverseArcControlx: number = 5; // control point distance for "UFO catchers"
+  sentNumMargin = 40;
+  smoothArcCurves = true; // whether to use curves (vs lines) in arcs
+  smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
+  reverseArcControlx = 5; // control point distance for "UFO catchers"
 
   // "shadow" effect settings (note, error, incompelete)
-  rectShadowSize: number = 3;
-  rectShadowRounding: number = 2.5;
-  arcLabelShadowSize: number = 1;
-  arcLabelShadowRounding: number = 5;
-  shadowStroke: number = 2.5; // TODO XXX: this doesn't affect anything..?
+  rectShadowSize = 3;
+  rectShadowRounding = 2.5;
+  arcLabelShadowSize = 1;
+  arcLabelShadowRounding = 5;
+  shadowStroke = 2.5; // TODO XXX: this doesn't affect anything..?
 
   // "marked" effect settings (edited, focus, match)
-  markedSpanSize: number = 6;
-  markedArcSize: number = 2;
-  markedArcStroke: number = 7; // TODO XXX: this doesn't seem to do anything..?
+  markedSpanSize = 6;
+  markedArcSize = 2;
+  markedArcStroke = 7; // TODO XXX: this doesn't seem to do anything..?
 
-  rowPadding: number = 2;
-  nestingAdjustYStepSize: number = 2; // size of height adjust for nested/nesting spans
-  nestingAdjustXStepSize: number = 1; // size of height adjust for nested/nesting spans
+  rowPadding = 2;
+  nestingAdjustYStepSize = 2; // size of height adjust for nested/nesting spans
+  nestingAdjustXStepSize = 1; // size of height adjust for nested/nesting spans
 
-  shadowClassPattern: string = 'True_positive|False_positive|False_negative|AnnotationError|AnnotationWarning|AnnotatorNotes|Normalized|AnnotationIncomplete|AnnotationUnconfirmed|rectEditHighlight|EditHighlight_arc|MissingAnnotation|ChangedAnnotation';
+  shadowClassPattern = 'True_positive|False_positive|False_negative|AnnotationError|AnnotationWarning|AnnotatorNotes|Normalized|AnnotationIncomplete|AnnotationUnconfirmed|rectEditHighlight|EditHighlight_arc|MissingAnnotation|ChangedAnnotation';
 
   highlightSpanSequence: string;
   highlightArcSequence: string;
   highlightTextSequence: string;
   // different sequence for "mere" matches (as opposed to "focus" and "edited" highlights)
-  highlightMatchSequence: string = '#FFFF00'; // plain yellow
+  highlightMatchSequence = '#FFFF00'; // plain yellow
 
-  fragmentConnectorDashArray: string = '1,3,3,3';
-  fragmentConnectorColor: string = '#000000';
+  fragmentConnectorDashArray = '1,3,3,3';
+  fragmentConnectorColor = '#000000';
   // END OPTIONS
 
   commentPrioLevels: string[] = [
@@ -251,10 +252,7 @@ export class Visualizer {
     this.$svgDiv = $(this.$svgDiv).hide();
 
     this.$svgDiv.svg({
-      /**
-       * @param {SVGWrapper} _svg
-       */
-      onLoad: (_svg: SVGWrapper) => {
+      onLoad: (_svg) => {
         this.svg = _svg;
         this.$svg = $(_svg.root());
         this.triggerRender();
@@ -353,7 +351,7 @@ export class Visualizer {
                 // found it
                 len -= 3;
                 for (let n = 1; n <= len; n++) {
-                  let arc = this.data.eventDescs[equiv[0] + "*" + n].equivArc;
+                  const arc = this.data.eventDescs[equiv[0] + "*" + n].equivArc;
                   arc.marked = markedType;
                 }
                 return; // next equiv
@@ -369,7 +367,7 @@ export class Visualizer {
         return;
       }
 
-      let span = this.data.spans[marked[0]];
+      const span = this.data.spans[marked[0]];
       if (span) {
         if (marked.length === 3) { // arc
           $.each(span.outgoing, (arcNo, arc) => {
@@ -384,7 +382,7 @@ export class Visualizer {
         return;
       }
 
-      let eventDesc = this.data.eventDescs[marked[0]];
+      const eventDesc = this.data.eventDescs[marked[0]];
       if (eventDesc) { // relation
         $.each(this.data.spans[eventDesc.triggerId].outgoing, (arcNo, arc) => {
           if (arc.eventDescId === marked[0]) {
@@ -418,7 +416,7 @@ export class Visualizer {
       if (fragmentHeights[i] < height)
         fragmentHeights[i] = height;
     }
-  };
+  }
 
   applyHighlighting() {
     this.markedText = [];
@@ -444,7 +442,7 @@ export class Visualizer {
    */
   collectFragmentTextsIntoSpanTexts(spans: Span[]) {
     spans.map(span => {
-      let fragmentTexts = [];
+      const fragmentTexts = [];
       span.fragments && span.fragments.map(fragment => fragmentTexts.push(fragment.text));
       span.text = fragmentTexts.join('');
     });
@@ -454,7 +452,7 @@ export class Visualizer {
    * @returns list of span IDs in the order they should be drawn.
    */
   determineDrawOrder(spans: Record<string, Span>) {
-    let spanDrawOrderPermutation = Object.keys(spans);
+    const spanDrawOrderPermutation = Object.keys(spans);
     spanDrawOrderPermutation.sort((a, b) => {
       const spanA = spans[a];
       const spanB = spans[b];
@@ -487,14 +485,14 @@ export class Visualizer {
   }
 
   applyMarkedTextToChunks(markedText, chunks) {
-    let numChunks = chunks.length;
+    const numChunks = chunks.length;
     // note the location of marked text with respect to chunks
     let startChunk = 0;
     let currentChunk;
     $.each(markedText, (textNo, textPos) => {
       let from = textPos[0];
       let to = textPos[1];
-      let markedType = textPos[2];
+      const markedType = textPos[2];
 
       if (from < 0)
         from = 0;
@@ -506,7 +504,7 @@ export class Visualizer {
         from = to;
 
       while (startChunk < numChunks) {
-        let chunk = chunks[startChunk];
+        const chunk = chunks[startChunk];
         if (from <= chunk.to) {
           chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
           break;
@@ -521,7 +519,7 @@ export class Visualizer {
 
       currentChunk = startChunk;
       while (currentChunk < numChunks) {
-        let chunk = chunks[currentChunk];
+        const chunk = chunks[currentChunk];
         if (to <= chunk.to) {
           chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
           break;
@@ -531,7 +529,7 @@ export class Visualizer {
 
       if (currentChunk === numChunks) {
         this.dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
-        let chunk = chunks[chunks.length - 1];
+        const chunk = chunks[chunks.length - 1];
         chunk.markedTextEnd.push([textNo, false, chunk.text.length]);
       }
     }); // markedText
@@ -577,7 +575,7 @@ export class Visualizer {
       return {};
     }
 
-    let spans = {};
+    const spans = {};
     entities.map(entity => {
       const id = entity[0];
       const type = entity[1];
@@ -586,19 +584,19 @@ export class Visualizer {
 
       if (entity[3]) {
         const attributes = entity[3];
-        if (attributes.hasOwnProperty('l')) {
+        if (Object.prototype.hasOwnProperty.call(attributes, 'l')) {
           span.labelText = attributes.l;
         }
-        if (attributes.hasOwnProperty('c')) {
+        if (Object.prototype.hasOwnProperty.call(attributes, 'c')) {
           span.color = attributes.c;
         }
-        if (attributes.hasOwnProperty('h')) {
+        if (Object.prototype.hasOwnProperty.call(attributes, 'h')) {
           span.hovertext = attributes.h;
         }
-        if (attributes.hasOwnProperty('a')) {
+        if (Object.prototype.hasOwnProperty.call(attributes, 'a')) {
           span.actionButtons = !!(attributes.a);
         }
-        if (attributes.hasOwnProperty('cl') && attributes.cl) {
+        if (Object.prototype.hasOwnProperty.call(attributes, 'cl') && attributes.cl) {
           span.clippedAtStart = attributes.cl.startsWith("s");
           span.clippedAtEnd = attributes.cl.endsWith("e");
         }
@@ -612,11 +610,7 @@ export class Visualizer {
     return spans;
   }
 
-  /**
-   * @param {[][]}  triggers
-   * @return {Object<string,any[]>} values are [triggerSpan, [event, event, event, ...]]
-   */
-  buildSpansFromTriggers(triggers: Array<[string, string, [sourceOffsetType]]>): Record<string, any> {
+  buildSpansFromTriggers(triggers: Array<[string, string, [sourceOffsetType]]>): Record<string, [Span, Array<EventDesc>]> {
     if (!triggers) {
       return {};
     }
@@ -633,10 +627,7 @@ export class Visualizer {
     return triggerHash;
   }
 
-  /**
-   * @param {Object.<string,any[]>} triggerHash
-   */
-  buildEventDescsFromTriggers(triggerHash: { [s: string]: any[]; }) {
+  buildEventDescsFromTriggers(triggerHash: Record<string, [Span, Array<EventDesc>]>) {
     if (!triggerHash) {
       return;
     }
@@ -668,7 +659,7 @@ export class Visualizer {
   /**
    * @param equivs
    */
-  buildEventDescsFromEquivs(equivs, spans: Record<string, Span>, eventDesc: Record<string, EventDesc>) {
+  buildEventDescsFromEquivs(equivs, spans: Record<string, Span>, eventDescs: Record<string, EventDesc>) {
     if (!equivs) {
       return;
     }
@@ -676,8 +667,8 @@ export class Visualizer {
     $.each(equivs, (equivNo, equiv) => {
       // equiv: ['*', 'Equiv', spanId...]
       equiv[0] = "*" + equivNo;
-      let equivSpans = equiv.slice(2);
-      let okEquivSpans = [];
+      const equivSpans = equiv.slice(2);
+      const okEquivSpans = [];
 
       // collect the equiv spans in an array
       equivSpans.map(equivSpan => {
@@ -696,7 +687,7 @@ export class Visualizer {
         const id = okEquivSpans[i - 1];
         const tiggerId = okEquivSpans[i - 1];
         const roles = [[equiv[1], okEquivSpans[i]]];
-        const eventDesc = this.data.eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, 'equiv');
+        const eventDesc = eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, 'equiv');
         eventDesc.leftSpans = okEquivSpans.slice(0, i);
         eventDesc.rightSpans = okEquivSpans.slice(i);
       }
@@ -768,8 +759,8 @@ export class Visualizer {
         return;
       }
 
-      let valText = (attrValue && attrValue.name) || value;
-      let attrText = attrType
+      const valText = (attrValue && attrValue.name) || value;
+      const attrText = attrType
         ? (attrType.bool ? attrType.name : (attrType.name + ': ' + valText))
         : (value ? name : name + ': ' + value);
       span.attributeText.push(attrText);
@@ -783,7 +774,7 @@ export class Visualizer {
    * @param comments
    * @param triggerHash
    */
-  assignComments(comments: Array<sourceCommentType>, triggerHash: Record<string, any>) {
+  assignComments(comments: Array<sourceCommentType>, triggerHash: Record<string, unknown>) {
     if (!comments) {
       return;
     }
@@ -794,7 +785,7 @@ export class Visualizer {
       // sentence id: ['sent', sentId]
       if (comment[0] instanceof Array && comment[0][0] === 'sent') {
         // sentence comment
-        let sent = comment[0][1];
+        const sent = comment[0][1];
         let text = comment[2];
         if (this.data.sentComment[sent]) {
           text = this.data.sentComment[sent].text + '<br/>' + text;
@@ -803,9 +794,9 @@ export class Visualizer {
         return;
       }
 
-      let id = (comment[0] as string);
-      let trigger = triggerHash[id];
-      let commentEntities = trigger
+      const id = (comment[0] as string);
+      const trigger = triggerHash[id];
+      const commentEntities = trigger
         ? trigger[1] // trigger: [span, ...]
         : id in this.data.spans
           ? [this.data.spans[id]] // span: [span]
@@ -871,17 +862,17 @@ export class Visualizer {
 
     let currentFragmentId = 0;
     let startFragmentId = 0;
-    let numFragments = sortedFragments.length;
+    const numFragments = sortedFragments.length;
     let lastTo = 0;
     let firstFrom = null;
     let chunkNo = 0;
     let space;
     let chunk = null;
-    let chunks = [];
+    const chunks = [];
 
     tokenOffsets.map(offset => {
-      let from = offset[0];
-      let to = offset[1];
+      const from = offset[0];
+      const to = offset[1];
       if (firstFrom === null) {
         firstFrom = from;
       }
@@ -903,7 +894,7 @@ export class Visualizer {
 
       // otherwise, create the chunk found so far
       space = this.data.text.substring(lastTo, firstFrom);
-      let text = this.data.text.substring(firstFrom, to);
+      const text = this.data.text.substring(firstFrom, to);
       if (chunk) {
         chunk.nextSpace = space;
       }
@@ -923,13 +914,13 @@ export class Visualizer {
       return;
     }
 
-    let numChunks = chunks.length;
+    const numChunks = chunks.length;
     let chunkNo = 0;
     let sentenceNo = firstSentence;
 
     sentenceOffsets.map(offset => {
-      let from = offset[0];
-      let to = offset[1];
+      const from = offset[0];
+      const to = offset[1];
 
       // Skip all chunks that belonged to the previous sentence
       let chunk;
@@ -985,10 +976,10 @@ export class Visualizer {
       return [];
     }
 
-    let arcs = [];
+    const arcs = [];
 
     Object.entries(eventDescs).map(([eventNo, eventDesc]) => {
-      let origin = spans[eventDesc.id];
+      const origin = spans[eventDesc.id];
 
       if (!origin) {
         // TODO: include missing trigger ID in error message
@@ -996,17 +987,17 @@ export class Visualizer {
         return;
       }
 
-      let here = origin.headFragment.from + origin.headFragment.to;
+      const here = origin.headFragment.from + origin.headFragment.to;
       eventDesc.roles.map(role => {
-        let target = spans[role.targetId];
+        const target = spans[role.targetId];
         if (!target) {
           this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found <br/>(please correct the source data)', 'error', 5]]]);
           return;
         }
 
-        let there = target.headFragment.from + target.headFragment.to;
-        let dist = Math.abs(here - there);
-        let arc = new Arc(eventDesc, role, dist, eventNo);
+        const there = target.headFragment.from + target.headFragment.to;
+        const dist = Math.abs(here - there);
+        const arc = new Arc(eventDesc, role, dist, eventNo);
 
         origin.totalDist += dist;
         origin.numArcs++;
@@ -1253,13 +1244,13 @@ export class Visualizer {
    * @param callback
    * @return {Measurements}
    */
-  getTextMeasurements(textsHash: Record<string, []>, options, callback?): Measurements {
+  getTextMeasurements(textsHash: Record<string, Array<unknown>>, options, callback?): Measurements {
     // make some text elements, find out the dimensions
     const textMeasureGroup: SVGGElement = this.svg.group(options);
 
     // changed from $.each because of #264 ('length' can appear)
-    for (let text in textsHash) {
-      if (textsHash.hasOwnProperty(text)) {
+    for (const text in textsHash) {
+      if (Object.prototype.hasOwnProperty.call(textsHash, text)) {
         this.svg.text(textMeasureGroup, 0, 0, text);
       }
     }
@@ -1295,10 +1286,10 @@ export class Visualizer {
 
   calculateChunkTextMeasures() {
     // get the span text sizes
-    const chunkTexts: Record<string, []> = {}; // set of span texts
+    const chunkTexts: Record<string, Array<unknown>> = {}; // set of span texts
     this.data.chunks.map(chunk => {
       chunk.row = undefined; // reset
-      if (!chunkTexts.hasOwnProperty(chunk.text)) {
+      if (!Object.prototype.hasOwnProperty.call(chunkTexts, chunk.text)) {
         chunkTexts[chunk.text] = [];
       }
 
@@ -1306,10 +1297,10 @@ export class Visualizer {
       // chunks with this text, because we need to know the position
       // of the span text within the respective chunk text
       const chunkText = chunkTexts[chunk.text];
-      chunkText.push.apply(chunkText, chunk.fragments);
+      chunkText.push(...chunk.fragments);
       // and also the markedText boundaries
-      chunkText.push.apply(chunkText, chunk.markedTextStart);
-      chunkText.push.apply(chunkText, chunk.markedTextEnd);
+      chunkText.push(...chunk.markedTextStart);
+      chunkText.push(...chunk.markedTextEnd);
     });
 
     return this.getTextMeasurements(chunkTexts, undefined, (fragment, text) => {
@@ -1414,7 +1405,7 @@ export class Visualizer {
       // Re-order widths if necessary
       //var step2Start = new Date();
       if (charAttrs.length > 1) {
-        let idx = 0;
+        const idx = 0;
         let blockBegin = idx;
         let blockEnd = idx;
 
@@ -1492,13 +1483,13 @@ export class Visualizer {
   }
 
   calculateSubstringWidthFast(text, firstChar, lastChar) {
-    let startPos, endPos;
+    let startPos;
     if (firstChar < text.getNumberOfChars()) {
       startPos = text.getStartPositionOfChar(firstChar).x;
     } else {
       startPos = text.getComputedTextLength();
     }
-    endPos = (lastChar < firstChar)
+    const endPos = (lastChar < firstChar)
       ? startPos
       : text.getEndPositionOfChar(lastChar).x;
     return [startPos, endPos];
@@ -1624,8 +1615,8 @@ export class Visualizer {
    */
   calculateMaxTextWidth(sizes): number {
     let maxTextWidth = 0;
-    for (let text in sizes.texts.widths) {
-      if (sizes.texts.widths.hasOwnProperty(text)) {
+    for (const text in sizes.texts.widths) {
+      if (Object.prototype.hasOwnProperty.call(sizes.texts.widths, text)) {
         maxTextWidth = Math.max(maxTextWidth, sizes.texts.widths[text]);
       }
     }
@@ -1675,7 +1666,6 @@ export class Visualizer {
       // TODO drawCurly and height could be prettified to only check
       // actual positions of curlies
       let carpet = 0;
-      let outside = true;
       const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0;
       const height = this.data.sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
         2 * Configuration.visual.margin.y - 3;
@@ -1699,7 +1689,6 @@ export class Visualizer {
             carpet = floor;
           } else if (height + carpet <= floor) {
             // found our floor!
-            outside = false;
             return false;
           }
         } else {
@@ -1738,7 +1727,7 @@ export class Visualizer {
         return floorNo;
       };
       const ceiling = carpet + height;
-      const ceilingNo = makeNewFloorIfNeeded(ceiling);
+      makeNewFloorIfNeeded(ceiling);
       const carpetNo = makeNewFloorIfNeeded(carpet);
       // make the reservation
       let floor, floorNo;
@@ -1809,13 +1798,13 @@ export class Visualizer {
       chunk.highlightGroup = this.svg.group(chunk.group);
 
       let y = 0;
-      let hasLeftArcs, hasRightArcs, hasInternalArcs;
-      let hasAnnotations;
+      let hasLeftArcs: boolean, hasRightArcs: boolean, hasInternalArcs: boolean;
+      let hasAnnotations: boolean;
       let chunkFrom = Infinity;
       let chunkTo = 0;
       let chunkHeight = 0;
       let spacing = 0;
-      let spacingChunkId = null;
+      let spacingChunkId: number;
       let spacingRowBreak = 0;
 
       chunk.fragments.map(fragment => {
@@ -1944,7 +1933,7 @@ export class Visualizer {
           $.each(span.incoming, (arcId, arc) => {
             const leftSpan = this.data.spans[arc.origin];
             const origin = leftSpan.headFragment.chunk;
-            let border;
+            let border: number;
             if (chunk.index === origin.index) {
               hasInternalArcs = true;
             }
@@ -2180,7 +2169,7 @@ export class Visualizer {
       // close text highlights
       $.each(chunk.markedTextEnd, (textNo, textDesc) => {
         textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
-        let startDesc = openTextHighlights[textDesc[0]];
+        const startDesc = openTextHighlights[textDesc[0]];
         delete openTextHighlights[textDesc[0]];
         textMarkedRows.push([row, startDesc[3], textDesc[3], startDesc[4]]);
       });
@@ -3212,7 +3201,7 @@ export class Visualizer {
         bgClass = 'background0';
       }
 
-      let sizes = this.data.sizes;
+      const sizes = this.data.sizes;
       this.svg.rect(backgroundGroup,
         0, y + sizes.texts.y + sizes.texts.height,
         this.canvasWidth, rowBoxHeight + sizes.texts.height + 1, {
@@ -3328,7 +3317,7 @@ export class Visualizer {
     $(textGroup).children(".text-row").each((rowIndex, textRow) => {
       const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
       const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
-      const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
+      // const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
       const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
       const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
 
@@ -3441,13 +3430,12 @@ export class Visualizer {
     Util.profileStart('measures');
     this.data.sizes = this.calculateTextMeasurements();
     this.adjustTowerAnnotationSizes();
-    let maxTextWidth = this.calculateMaxTextWidth(this.data.sizes);
+    const maxTextWidth = this.calculateMaxTextWidth(this.data.sizes);
     Util.profileEnd('measures');
 
     Util.profileStart('chunks');
     this.renderLayoutFloorsAndCurlies(this.data.spanDrawOrderPermutation);
-    let rows, fragmentHeights, textMarkedRows;
-    [rows, fragmentHeights, textMarkedRows] = this.renderChunks(sourceData, this.data.chunks, maxTextWidth);
+    const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(sourceData, this.data.chunks, maxTextWidth);
     Util.profileEnd('chunks');
 
     Util.profileStart('arcsPrep');
@@ -3467,8 +3455,7 @@ export class Visualizer {
     Util.profileEnd('fragmentConnectors');
 
     Util.profileStart('rows');
-    let sentNumGroup, y;
-    [y, sentNumGroup] = this.renderRows(rows, backgroundGroup);
+    const [y, sentNumGroup] = this.renderRows(rows, backgroundGroup);
     Util.profileEnd('rows');
 
     Util.profileStart('chunkFinish');
@@ -3486,7 +3473,7 @@ export class Visualizer {
     Util.profileEnd('adjust margin');
 
     Util.profileStart('resize SVG');
-    let oversized = this.renderResizeSvg(y, textGroup, maxTextWidth);
+    const oversized = this.renderResizeSvg(y, textGroup, maxTextWidth);
     Util.profileEnd('resize SVG');
 
     if (this.rtlmode) {
@@ -3573,7 +3560,7 @@ export class Visualizer {
    *
    * @param {*} patchData
    */
-  renderDataPatch(patchData: any) {
+  renderDataPatch(patchData: ReadonlyArray<Operation>) {
     Util.profileEnd('invoke getDocument');
     this.sourceData = jsonpatch.applyPatch(this.sourceData, patchData).newDocument;
     this.rerender();
@@ -3638,7 +3625,7 @@ export class Visualizer {
    */
   onMouseOverSpan(evt: MouseEvent) {
     const target = $(evt.target);
-    let id = target.attr('data-span-id');
+    const id = target.attr('data-span-id');
     this.commentId = id;
     const span = this.data.spans[id];
     this.dispatcher.post('displaySpanComment', [
@@ -3658,7 +3645,7 @@ export class Visualizer {
       return;
 
     const spanDesc = this.spanTypes[span.type];
-    let bgColor = span.color || ((spanDesc && spanDesc.bgColor) || '#ffffff');
+    const bgColor = span.color || ((spanDesc && spanDesc.bgColor) || '#ffffff');
 
     this.highlight = [];
     $.each(span.fragments, (fragmentNo, fragment) => {
@@ -3681,7 +3668,7 @@ export class Visualizer {
       /** @type {Object.<string, boolean>} */ const spans: { [s: string]: boolean; } = {};
     spans[id] = true;
     // find all arcs, normal and equiv. Equivs need to go far (#1023)
-    const addArcAndSpan = (arc, span) => {
+    const addArcAndSpan = (arc) => {
       if (arc.equiv) {
         equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true;
         const eventDesc = this.data.eventDescs[arc.eventDescId];
@@ -3690,8 +3677,8 @@ export class Visualizer {
         spans[arc.origin] = true;
       }
     };
-    span.incoming.map(arc => addArcAndSpan(arc, arc.origin));
-    span.outgoing.map(arc => addArcAndSpan(arc, arc.target));
+    span.incoming.map(arc => addArcAndSpan(arc));
+    span.outgoing.map(arc => addArcAndSpan(arc));
 
       /** @type {string[]} */ const equivSelector: string[] = [];
     Object.keys(equivs).map(equiv => equivSelector.push('[data-arc-ed^="' + equiv + '"]'));
@@ -3725,7 +3712,7 @@ export class Visualizer {
 
     if (arcEventDescId) {
       const eventDesc = this.data.eventDescs[arcEventDescId];
-      let comment = eventDesc.comment;
+      const comment = eventDesc.comment;
       if (comment) {
         commentText = comment.text;
         commentType = comment.type;
@@ -3768,8 +3755,8 @@ export class Visualizer {
    */
   onMouseOverSentence(evt: MouseEvent) {
     const target = $(evt.target);
-    let id = target.attr('data-sent');
-    let comment = this.data.sentComment[id];
+    const id = target.attr('data-sent');
+    const comment = this.data.sentComment[id];
     if (comment) {
       this.dispatcher.post('displaySentComment', [evt, target, comment.text, comment.type]);
     }
@@ -3886,7 +3873,7 @@ export class Visualizer {
       // count the values; if only one, it's a boolean attribute
       const values = [];
       for (const i in aType.values) {
-        if (aType.values.hasOwnProperty(i)) {
+        if (Object.prototype.hasOwnProperty.call(aType.values, i)) {
           values.push(i);
         }
       }
@@ -3962,7 +3949,7 @@ export class Visualizer {
     }
   }
 
-  horizontalSpacer(svg, group, x, y, width, attrs) {
+  horizontalSpacer(svg, group, x: number, y: number, width: number, attrs) {
     if (width > 0) {
       const attributes = $.extend({
         textLength: width,
@@ -3970,7 +3957,7 @@ export class Visualizer {
         'class': 'spacing'
       }, attrs);
       // To visualize the spacing use \u2588, otherwise \u00a0
-      this.svg.text(group, x, y, this.rtlmode ? '\u200f\u00a0' : '\u00a0', attributes);
+      svg.text(group, x, y, this.rtlmode ? '\u200f\u00a0' : '\u00a0', attributes);
     }
   }
 
@@ -4065,7 +4052,7 @@ export class Visualizer {
     const span = fragment.span;
     let curlyColor = 'grey';
     if (this.coloredCurlies) {
-      let spanDesc = this.spanTypes[span.type];
+      const spanDesc = this.spanTypes[span.type];
       let bgColor;
       if (span.color) {
         bgColor = span.color;

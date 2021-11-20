@@ -38,13 +38,13 @@
  * SOFTWARE.
  */
 import type { Dispatcher as DispatcherType } from "../dispatcher/Dispatcher";
-declare class Dispatcher extends DispatcherType {};
+declare class Dispatcher extends DispatcherType { };
 
-import type { Visualizer as VisualizerType} from "../visualizer/Visualizer";
-declare class Visualizer extends VisualizerType {};
+import type { Visualizer as VisualizerType } from "../visualizer/Visualizer";
+declare class Visualizer extends VisualizerType { };
 
-import type { VisualizerUI as VisualizerUIType} from "../visualizer_ui/VisualizerUI";
-declare class VisualizerUI extends VisualizerUIType {};
+import type { VisualizerUI as VisualizerUIType } from "../visualizer_ui/VisualizerUI";
+declare class VisualizerUI extends VisualizerUIType { };
 
 export class Util {
   monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -410,7 +410,7 @@ export class Util {
   // (with slight modifications)
 
   // RGB to HSL color conversion
-  rgbToHsl(rgb) {
+  rgbToHsl(rgb: [number, number, number]): [number, number, number] {
     var r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
     var max = Math.max(r, g, b), min = Math.min(r, g, b);
     var h, s, l = (max + min) / 2;
@@ -431,7 +431,7 @@ export class Util {
     return [h, s, l];
   }
 
-  hue2rgb(p, q, t) {
+  hue2rgb(p: number, q: number, t: number) {
     if (t < 0) t += 1;
     if (t > 1) t -= 1;
     if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -440,7 +440,7 @@ export class Util {
     return p;
   }
 
-  hslToRgb(hsl) {
+  hslToRgb(hsl: [number, number, number]) {
     var h = hsl[0], s = hsl[1], l = hsl[2];
 
     var r, g, b;
@@ -460,11 +460,12 @@ export class Util {
 
   adjustLightnessCache = {};
 
-  // given color string and -1<=adjust<=1, returns color string
-  // where lightness (in the HSL sense) is adjusted by the given
-  // amount, the larger the lighter: -1 gives black, 1 white, and 0
-  // the given color.
-  adjustColorLightness(colorstr, adjust) {
+  /**
+   * Given color string and -1<=adjust<=1, returns color string where lightness (in the HSL sense)
+   * is adjusted by the given amount, the larger the lighter: -1 gives black, 1 white, and 0
+   * the given color.
+   */
+  adjustColorLightness(colorstr: string, adjust: number) {
     if (!(colorstr in this.adjustLightnessCache)) {
       this.adjustLightnessCache[colorstr] = {}
     }
@@ -487,68 +488,8 @@ export class Util {
     return this.adjustLightnessCache[colorstr][adjust];
   }
 
-  // Partially stolen from: http://documentcloud.github.com/underscore/
-  // MIT-License
-  // TODO: Mention in LICENSE.md
-  isEqual(a, b) {
-    // Check object identity.
-    if (a === b) return true;
-    // Different types?
-    var atype = typeof (a), btype = typeof (b);
-    if (atype != btype) return false;
-    // Basic equality test (watch out for coercions).
-    if (a == b) return true;
-    // One is falsy and the other truthy.
-    if ((!a && b) || (a && !b)) return false;
-    // If a is not an object by this point, we can't handle it.
-    if (atype !== 'object') return false;
-    // Check for different array lengths before comparing contents.
-    if (a.length && (a.length !== b.length)) return false;
-    // Nothing else worked, deep compare the contents.
-    for (var key in b) if (!(key in a)) return false;
-    // Recursive comparison of contents.
-    for (var key in a) if (!(key in b) || !this.isEqual(a[key], b[key])) return false;
-    return true;
-  };
-
   keyValRE = /^([^=]+)=(.*)$/; // key=value
   isDigitsRE = /^[0-9]+$/;
-
-  deparam(str) {
-    var args = str.split('&');
-    var len = args.length;
-    if (!len) return null;
-    var result = {};
-    for (var i = 0; i < len; i++) {
-      var parts = args[i].match(this.keyValRE);
-      if (!parts || parts.length != 3) break;
-      var val = [];
-      var arr = parts[2].split(',');
-      var sublen = arr.length;
-      for (var j = 0; j < sublen; j++) {
-        var innermost = [];
-        // map empty arguments ("" in URL) to empty arrays
-        // (innermost remains [])
-        if (arr[j].length) {
-          var arrsplit = arr[j].split('~');
-          var subsublen = arrsplit.length;
-          for (var k = 0; k < subsublen; k++) {
-            if (arrsplit[k].match(this.isDigitsRE)) {
-              // convert digits into ints ...
-              innermost.push(parseInt(arrsplit[k], 10));
-            }
-            else {
-              // ... anything else remains a string.
-              innermost.push(arrsplit[k]);
-            }
-          }
-        }
-        val.push(innermost);
-      }
-      result[parts[1]] = val;
-    }
-    return result;
-  };
 
   paramArray(val) {
     val = val || [];
