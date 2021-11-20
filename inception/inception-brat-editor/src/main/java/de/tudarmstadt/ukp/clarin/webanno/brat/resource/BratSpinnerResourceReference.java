@@ -41,6 +41,6 @@ public class BratSpinnerResourceReference
      */
     private BratSpinnerResourceReference()
     {
-        super(BratSpinnerResourceReference.class, "spinner.js");
+        super(BratSpinnerResourceReference.class, "spinner2.js");
     }
 }

@@ -41,6 +41,6 @@ public class BratAnnotatorUiResourceReference
      */
     private BratAnnotatorUiResourceReference()
     {
-        super(BratAnnotatorUiResourceReference.class, "annotator_ui.js");
+        super(BratAnnotatorUiResourceReference.class, "annotator_ui2.js");
     }
 }

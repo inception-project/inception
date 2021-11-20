@@ -37,10 +37,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import type { Visualizer as VisualizerType} from "../visualizer/Visualizer";
-import type { Dispatcher } from "../dispatcher/Dispatcher";
+import type { Dispatcher as DispatcherType } from "../dispatcher/Dispatcher";
+declare class Dispatcher extends DispatcherType {};
 
+import type { Visualizer as VisualizerType} from "../visualizer/Visualizer";
 declare class Visualizer extends VisualizerType {};
+
+import type { VisualizerUI as VisualizerUIType} from "../visualizer_ui/VisualizerUI";
+declare class VisualizerUI extends VisualizerUIType {};
 
 export class Util {
   monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

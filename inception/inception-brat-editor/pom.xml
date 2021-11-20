@@ -219,6 +219,16 @@
             </configuration>
           </execution>
           <execution>
+            <id>npm build:annotator_ui</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:annotator_ui</arguments>
+            </configuration>
+          </execution>
+          <execution>
             <id>npm build:ajax</id>
             <goals>
               <goal>npm</goal>
@@ -226,6 +236,16 @@
             <phase>compile</phase>
             <configuration>
               <arguments>run build:ajax</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:spinner</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:spinner</arguments>
             </configuration>
           </execution>
           <execution>
