@@ -17,15 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
-
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -34,20 +27,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 /**
@@ -105,46 +85,6 @@ public abstract class BratVisualizer
 
         add(vis);
         add(collProvider, docProvider);
-    }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        // CSS
-        aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
-        aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
-
-        // Libraries
-        aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-
-        // BRAT helpers
-        aResponse.render(
-                JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-
-        // BRAT modules
-        aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
-        aResponse
-                .render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
-
-        // BRAT call to load the BRAT JSON from our collProvider and docProvider.
-        String[] script = { //
-                "Util.embedByURL(", //
-                "  '" + vis.getMarkupId() + "',", //
-                "  '" + collProvider.getCallbackUrl() + "', ", //
-                "  '" + docProvider.getCallbackUrl() + "', ", //
-                "  null);" };
-
-        // This doesn't work with head.js because the onLoad event is fired before all the
-        // JavaScript references are loaded.
-        aResponse.render(OnLoadHeaderItem.forScript("\n" + StringUtils.join(script, "\n")));
     }
 
     public abstract String getDocumentData();
