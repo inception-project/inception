@@ -42,20 +42,13 @@ import type { Dispatcher } from "../dispatcher/Dispatcher";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 
 import { INSTANCE as Util } from "../util/Util";
+import { OffsetsList } from "../visualizer/SourceData";
+import { DocumentData } from "../visualizer/DocumentData";
 
 export class VisualizerUI {
-  defaultFloatFormat = '%.1f/right';
-
-  documentListing = null; // always documents of current collection
-  selectorData = null;    // can be search results when available
-  searchActive = false;   // whether search results received and in use
-  loadedSearchData = null;
-
   spanTypes = null;
   relationTypesHash = null;
-  // TODO: confirm unnecessary and remove
-  //       var attributeTypes = null;
-  data = null;
+  data: DocumentData = null;
   coll;
   doc;
   args;
@@ -66,12 +59,9 @@ export class VisualizerUI {
   // normalization: server-side DB by norm DB name
   normServerDbByNormDbName = {};
 
-  matchFocus = '';
-  matches = '';
-
   dispatcher: Dispatcher;
 
-  commentPopup;
+  commentPopup: JQuery;
   commentDisplayed = false;
   displayCommentTimer = null;
 
@@ -386,7 +376,7 @@ export class VisualizerUI {
     }, 'serverResult']);
   }
 
-  rejectAction(evt: MouseEvent, offsets, editedSpan, id) {
+  rejectAction(evt: MouseEvent, offsets: OffsetsList, editedSpan, id) {
     // must be logged in
     if (this.user === null) return;
 
@@ -400,7 +390,7 @@ export class VisualizerUI {
     }, 'serverResult']);
   }
 
-  displaySpanButtons(evt: Event, target, spanId) {
+  displaySpanButtons(evt: Event, target: JQuery) {
     const id = target.attr('data-span-id');
     if (!id) {
       return;
@@ -411,7 +401,7 @@ export class VisualizerUI {
     const spanWidth = target.width();
     const spanHeight = target.height();
     const editedSpan = this.data.spans[id];
-    const offsets = [];
+    const offsets: OffsetsList = [];
 
     $.each(editedSpan.fragments, (fragmentNo, fragment) => {
       offsets.push([fragment.from, fragment.to]);
@@ -516,9 +506,6 @@ export class VisualizerUI {
         this.dispatcher.post('svgWidth', [Configuration.svgWidth]);
         // Configuration.abbrevsOn = storedConf.abbrevsOn == "true";
         // Configuration.textBackgrounds = storedConf.textBackgrounds;
-        // Configuration.rapidModeOn = storedConf.rapidModeOn == "true";
-        // Configuration.confirmModeOn = storedConf.confirmModeOn == "true";
-        // Configuration.autorefreshOn = storedConf.autorefreshOn == "true";
         // Configuration.visual.margin.x = parseInt(storedConf.visual.margin.x);
         // Configuration.visual.margin.y = parseInt(storedConf.visual.margin.y);
         // Configuration.visual.boxSpacing = parseInt(storedConf.visual.boxSpacing);
@@ -544,9 +531,9 @@ export class VisualizerUI {
     return true;
   }
 
-  rememberData(_data) {
-    if (_data && !_data.exception) {
-      this.data = _data;
+  rememberData(data: DocumentData) {
+    if (data && !data.exception) {
+      this.data = data;
     }
   }
 

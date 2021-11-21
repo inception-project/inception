@@ -37,72 +37,47 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import type Dispatcher from "../dispatcher";
-
-import { INSTANCE as Configuration } from "../configuration/Configuration";
-
-import { INSTANCE as Util } from "../util/Util";
-
-import { Key } from 'ts-keycode-enum';
+import { Dispatcher } from "../dispatcher/Dispatcher";
 import { Fragment } from "../visualizer/Fragment";
 import { Element, SVG } from "@svgdotjs/svg.js";
+import { DocumentData } from "../visualizer/DocumentData";
+import { OffsetsList } from "../visualizer/SourceData";
+import { Span } from "../visualizer/Span";
+import { INSTANCE as Configuration } from "../configuration/Configuration";
+import { INSTANCE as Util } from "../util/Util";
 
 export class AnnotatorUI {
+  sourceData = null;
+  data: DocumentData = null;
+  coll = null;
+  doc = null;
+
   arcDragOrigin = null;
   arcDragOriginBox = null;
   arcDragOriginGroup = null;
   arcDragArc = null;
-  arcDragJustStarted = false;
-  spanDragJustStarted = false;
-  sourceData = null;
-  data = null;
-  searchConfig = null;
-  spanOptions = null;
-  rapidSpanOptions = null;
-  arcOptions = null;
-  spanKeymap = null;
-  keymap = null;
-  coll = null;
-  doc = null;
-  reselectedSpan = null;
-  selectedFragment = null;
-  editedSpan = null;
-  editedFragment = null;
-  repeatingArcTypes = [];
+  private arcDragJustStarted = false;
+  private spanDragJustStarted = false;
+  private dragStartedAt = null;
+
+  private spanOptions = null;
+  private arcOptions = null;
+  private reselectedSpan = null;
+  private selectedFragment = null;
+  private editedSpan: Span = null;
+  private editedFragment = null;
   spanTypes = null;
   entityAttributeTypes = null;
   eventAttributeTypes = null;
-  allAttributeTypes = null; // TODO: temp workaround, remove
   relationTypesHash = null;
-  showValidAttributes; // callback function
-  showValidNormalizations; // callback function
-  dragStartedAt = null;
   selRect = null;
-  lastStartRec = null;
-  lastEndRec = null;
+  private lastStartRec = null;
+  private lastEndRec = null;
 
-  draggedArcHeight = 30;
-  spanTypesToShowBeforeCollapse = 30;
-  maxNormSearchHistory = 10;
+  private draggedArcHeight = 30;
 
-  // TODO: this is an ugly hack, remove (see comment with assignment)
-  lastRapidAnnotationEvent = null;
-  // TODO: another avoidable global; try to work without
-  rapidAnnotationDialogVisible = false;
-
-  // amount by which to lighten (adjust "L" in HSL space) span
-  // colors for type selection box BG display. 0=no lightening,
-  // 1=white BG (no color)
-  spanBoxTextBgColorLighten = 0.4;
-
-  // for normalization: URLs bases by norm DB name
-  normDbUrlByDbName = {};
-  normDbUrlBaseByDbName = {};
   // for normalization: appropriate DBs per type
-  normDbsByType = {};
-  // for normalization
-  oldSpanNormIdValue = '';
-  lastNormSearches = [];
+  private normDbsByType = {};
 
   user: string;
   svg;
@@ -110,13 +85,11 @@ export class AnnotatorUI {
   dispatcher: Dispatcher;
   args;
 
-  undoStack = [];
+  private svgPosition: JQueryCoordinates;
 
-  svgPosition: JQueryCoordinates;
-
-  clickCount = 0;
-  clickTimer = null;
-  CLICK_DELAY = 300;
+  private clickCount = 0;
+  private clickTimer = null;
+  private CLICK_DELAY = 300;
 
   constructor(dispatcher: Dispatcher, svg) {
     this.svg = svg;
@@ -139,7 +112,6 @@ export class AnnotatorUI {
       on('mousedown', this, this.onMouseDown).
       on('mouseup', this, this.onMouseUp).
       on('mousemove', this, this.onMouseMove).
-      on('annotationSpeed', this, this.setAnnotationSpeed).
       on('contextmenu', this, this.contextMenu);
   }
 
@@ -177,9 +149,7 @@ export class AnnotatorUI {
   }
 
   private onKeyDown(evt: KeyboardEvent) {
-    const code = evt.which;
-
-    if (code === Key.Escape) {
+    if (evt.code === 'Escape') {
       this.stopArcDrag();
       if (this.reselectedSpan) {
         $(this.reselectedSpan.rect).removeClass('reselect');
@@ -319,7 +289,7 @@ export class AnnotatorUI {
     $('#arc_target').text(Util.spanDisplayForm(this.spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
     const arcId = eventDescId || [originSpanId, type, targetSpanId];
     // WEBANNO EXTENSION BEGIN
-    this.fillArcTypesAndDisplayForm(evt, originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
+    this.selectArc(originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
     // WEBANNO EXTENSION END
     // for precise timing, log dialog display to user.
     this.dispatcher.post('logAction', ['arcEditSelected']);
@@ -331,7 +301,7 @@ export class AnnotatorUI {
     this.clearSelection();
     this.editedSpan = this.data.spans[id];
     this.editedFragment = target.attr('data-fragment-id');
-    const offsets = [];
+    const offsets: OffsetsList = [];
     $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
       offsets.push([fragment.from, fragment.to]);
     });
@@ -342,7 +312,7 @@ export class AnnotatorUI {
       id: id,
     };
     // WEBANNO EXTENSION BEGIN
-    this.fillSpanTypesAndDisplayForm(evt, offsets, this.editedSpan.text, this.editedSpan, id);
+    this.selectSpanAnnotation(offsets, this.editedSpan, id);
     // WEBANNO EXTENSION END
 
     // for precise timing, log annotation display to user.
@@ -406,7 +376,7 @@ export class AnnotatorUI {
     }
   }
 
-  onMouseMove(evt) {
+  onMouseMove(evt: MouseEvent) {
     if (!this.arcDragOrigin && this.dragStartedAt) {
       // When the user has pressed the mouse button, we monitor the mouse cursor. If the cursor
       // moves more than a certain distance, we start the arc-drag operation. Starting this
@@ -738,57 +708,44 @@ export class AnnotatorUI {
     element.css({ top: eTop, left: eLeft });
   }
 
-  updateCheckbox($input) {
-    const $widget = $input.button('widget');
-    const $textspan = $widget.find('.ui-button-text');
-    $textspan.html(($input[0].checked ? '&#x2611; ' : '&#x2610; ') + $widget.attr('data-bare'));
+  private selectSpanAnnotation(offsets: OffsetsList, span: Span, id?) {
+    this.dispatcher.post('ajax', [{
+      action: 'spanOpenDialog',
+      offsets: JSON.stringify(offsets),
+      id: id,
+      type: span.type,
+      spanText: span.text
+    }, 'serverResult']);
   }
 
-  fillSpanTypesAndDisplayForm(evt, offsets, spanText, span, id?) {
-
-    if (id) {
-      this.dispatcher.post('ajax', [{
-        action: 'spanOpenDialog',
-        offsets: JSON.stringify(offsets),
-        id: id,
-        type: span.type,
-        spanText: spanText
-      }, 'serverResult']);
-    }
-    else {
-      this.dispatcher.post('ajax', [{
-        action: 'spanOpenDialog',
-        offsets: JSON.stringify(offsets),
-        spanText: spanText
-      }, 'serverResult']);
-    }
+  private createSpanAnnotation(offsets: OffsetsList, spanText: string) {
+    this.dispatcher.post('ajax', [{
+      action: 'spanOpenDialog',
+      offsets: JSON.stringify(offsets),
+      spanText: spanText
+    }, 'serverResult']);
   }
-  // WEBANNO EXTENSION END
 
-  // We send a request to the backend to open the dialog
-  fillArcTypesAndDisplayForm(evt, originSpanId, originType, targetSpanId, targetType, arcType?, arcId?) {
+  private selectArc(originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
+    this.dispatcher.post('ajax', [{
+      action: 'arcOpenDialog',
+      arcId: arcId,
+      arcType: arcType,
+      originSpanId: originSpanId,
+      originType: originType,
+      targetSpanId: targetSpanId,
+      targetType: targetType
+    }, 'serverResult']);
+  }
 
-    if (arcId) {
-      this.dispatcher.post('ajax', [{
-        action: 'arcOpenDialog',
-        arcId: arcId,
-        arcType: arcType,
-        originSpanId: originSpanId,
-        originType: originType,
-        targetSpanId: targetSpanId,
-        targetType: targetType
-
-      }, 'serverResult']);
-    }
-    else {
-      this.dispatcher.post('ajax', [{
-        action: 'arcOpenDialog',
-        originSpanId: originSpanId,
-        originType: originType,
-        targetSpanId: targetSpanId,
-        targetType: targetType
-      }, 'serverResult']);
-    }
+  private createRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
+    this.dispatcher.post('ajax', [{
+      action: 'arcOpenDialog',
+      originSpanId: originSpanId,
+      originType: originType,
+      targetSpanId: targetSpanId,
+      targetType: targetType
+    }, 'serverResult']);
   }
 
   stopArcDrag(target?) {
@@ -874,7 +831,7 @@ export class AnnotatorUI {
           };
           $('#arc_origin').text(Util.spanDisplayForm(this.spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
           $('#arc_target').text(Util.spanDisplayForm(this.spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
-          this.fillArcTypesAndDisplayForm(evt, originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);
+          this.createRelationAnnotation(originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);
           // for precise timing, log dialog display to user.
           this.dispatcher.post('logAction', ['arcSelected']);
         }
@@ -1011,34 +968,11 @@ export class AnnotatorUI {
           }
         }
 
-        if (!Configuration.rapidModeOn || this.reselectedSpan != null) {
-          // normal span select in standard annotation mode
-          // or reselect: show selector
-          const spanText = this.data.text.substring(selectedFrom, selectedTo);
-          // WEBANNO EXTENSION BEGIN
-          this.fillSpanTypesAndDisplayForm(evt, this.spanOptions.offsets, spanText, this.reselectedSpan);
-          // WEBANNO EXTENSION END
-          // for precise timing, log annotation display to user.
-          this.dispatcher.post('logAction', ['spanSelected']);
-        } else {
-          // normal span select in rapid annotation mode: call
-          // server for span type candidates
-          const spanText = this.data.text.substring(selectedFrom, selectedTo);
-          // TODO: we're currently storing the event to position the
-          // span form using adjustToCursor() (which takes an event),
-          // but this is clumsy and suboptimal (user may have scrolled
-          // during the ajax invocation); think of a better way.
-          this.lastRapidAnnotationEvent = evt;
-          this.dispatcher.post('ajax', [{
-            action: 'suggestSpanTypes',
-            collection: this.coll,
-            'document': this.doc,
-            start: selectedFrom,
-            end: selectedTo,
-            text: spanText,
-            model: $('#rapid_model').val(),
-          }, 'suggestedSpanTypes']);
-        }
+        // normal span select in standard annotation mode or reselect: show selector
+        const spanText = this.data.text.substring(selectedFrom, selectedTo);
+        this.createSpanAnnotation(this.spanOptions.offsets, spanText);
+        // for precise timing, log annotation display to user.
+        this.dispatcher.post('logAction', ['spanSelected']);
       }
     }
   }
@@ -1059,9 +993,9 @@ export class AnnotatorUI {
     this.toggleCollapsible($(evt.target));
   }
 
-  rememberData(_data) {
-    if (_data && !_data.exception) {
-      this.data = _data;
+  rememberData(data: DocumentData) {
+    if (data && !data.exception) {
+      this.data = data;
     }
   }
 
@@ -1116,8 +1050,6 @@ export class AnnotatorUI {
     this.entityAttributeTypes = _entityAttributeTypes;
     this.eventAttributeTypes = _eventAttributeTypes;
     this.relationTypesHash = _relationTypesHash;
-    // for easier access
-    this.allAttributeTypes = $.extend({}, this.entityAttributeTypes, this.eventAttributeTypes);
   }
 
   gotCurrent(_coll, _doc, _args) {
@@ -1164,20 +1096,6 @@ export class AnnotatorUI {
 
   userReceived(_user) {
     this.user = _user;
-  }
-
-  setAnnotationSpeed(speed) {
-    if (speed == 1) {
-      Configuration.confirmModeOn = true;
-    } else {
-      Configuration.confirmModeOn = false;
-    }
-    if (speed == 3) {
-      Configuration.rapidModeOn = true;
-    } else {
-      Configuration.rapidModeOn = false;
-    }
-    this.dispatcher.post('configurationChanged');
   }
 
   onNewSourceData(_sourceData) {

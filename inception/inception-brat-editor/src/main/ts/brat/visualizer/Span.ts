@@ -40,7 +40,7 @@
 
 import { Arc } from "./Arc";
 import { Fragment } from "./Fragment";
-import { sourceOffsetType } from "./SourceData";
+import { Offsets } from "./SourceData";
 
 export class Span {
   id: string = undefined;
@@ -49,8 +49,8 @@ export class Span {
   numArcs = 0;
   generalType = undefined;
   headFragment: Fragment = undefined;
-  unsegmentedOffsets: Array<sourceOffsetType> = [];
-  offsets: Array<sourceOffsetType> = [];
+  unsegmentedOffsets: Array<Offsets> = [];
+  offsets: Array<Offsets> = [];
   segmentedOffsetsMap = {};
   hidden = false;
   clippedAtStart = false;

@@ -63,6 +63,7 @@ export class DocumentData {
   towers: Record<string, Fragment[]> = {};
   spanDrawOrderPermutation: string[] = []
   sizes: Sizes = undefined;
+  exception = false;
 
   constructor(text: string) {
     this.text = text;

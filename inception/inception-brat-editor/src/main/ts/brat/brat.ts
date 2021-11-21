@@ -17,7 +17,7 @@
  */
 import { Ajax } from "./ajax/Ajax";
 import { AnnotatorUI } from "./annotator_ui/AnnotatorUI";
-import Dispatcher from "./dispatcher";
+import { Dispatcher } from "./dispatcher/Dispatcher";
 import { Visualizer } from "./visualizer/Visualizer";
 import { VisualizerUI } from "./visualizer_ui/VisualizerUI";
 

@@ -37,15 +37,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-// -*- Mode: JavaScript; tab-width: 2; indent-tabs-mode: nil; -*-
-// vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 export class Configuration {
   abbrevsOn = true;
   textBackgrounds = "striped";
   svgWidth = '100%';
-  rapidModeOn = false;
-  confirmModeOn = true;
-  autorefreshOn = false;
   singleClickEdit = false;
 
   visual = {

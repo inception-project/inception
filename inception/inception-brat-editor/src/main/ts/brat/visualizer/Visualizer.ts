@@ -54,7 +54,7 @@ import { CollectionLoadedResponse } from "./CollectionLoadedResponse";
 import { RelationType } from "./RelationType";
 import { SpanType } from "./SpanType";
 import type { Dispatcher } from "../dispatcher/Dispatcher";
-import type { sourceCommentType, sourceEntityType, sourceOffsetType } from "./SourceData";
+import type { sourceCommentType, sourceEntityType, Offsets } from "./SourceData";
 import * as jsonpatch from 'fast-json-patch';
 import { Operation } from "fast-json-patch";
 import { scrollbarWidth } from "../util/ScrollbarWidth";
@@ -609,7 +609,7 @@ export class Visualizer {
     return spans;
   }
 
-  buildSpansFromTriggers(triggers: Array<[string, string, [sourceOffsetType]]>): Record<string, [Span, Array<EventDesc>]> {
+  buildSpansFromTriggers(triggers: Array<[string, string, [Offsets]]>): Record<string, [Span, Array<EventDesc>]> {
     if (!triggers) {
       return {};
     }
@@ -3636,7 +3636,7 @@ export class Visualizer {
     ]);
 
     if (span.actionButtons) {
-      this.dispatcher.post('displaySpanButtons', [evt, target, span.id]);
+      this.dispatcher.post('displaySpanButtons', [evt, target]);
     }
 
     if (span.hidden)
