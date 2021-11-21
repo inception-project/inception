@@ -61,7 +61,6 @@ export class AnnotatorUI {
 
   private spanOptions = null;
   private arcOptions = null;
-  private reselectedSpan = null;
   private selectedFragment = null;
   private editedSpan: Span = null;
   private editedFragment = null;
@@ -150,11 +149,6 @@ export class AnnotatorUI {
   private onKeyDown(evt: KeyboardEvent) {
     if (evt.code === 'Escape') {
       this.stopArcDrag();
-      if (this.reselectedSpan) {
-        $(this.reselectedSpan.rect).removeClass('reselect');
-        this.reselectedSpan = null;
-        this.dot_svg.removeClass('reselect');
-      }
       return;
     }
   }
@@ -248,8 +242,8 @@ export class AnnotatorUI {
     // must be logged in
     if (this.user === null) return;
 
-    // must not be reselecting a span or an arc
-    if (this.reselectedSpan || this.arcDragOrigin) return;
+    // must not be creating an arc
+    if (this.arcDragOrigin) return;
 
     if (evt.target.getAttribute('data-arc-role')) {
       this.selectArc(evt);
@@ -666,39 +660,6 @@ export class AnnotatorUI {
     }
   }
 
-  adjustToCursor(evt, element, centerX, centerY) {
-    const screenHeight = $(window).height() - 8; // TODO HACK - no idea why -8 is needed
-    const screenWidth = $(window).width() - 8;
-    const elementHeight = element.height();
-    const elementWidth = element.width();
-    let eLeft;
-    let eTop;
-    if (centerX) {
-      eLeft = evt.clientX - elementWidth / 2;
-    } else {
-      eLeft = evt.clientX;
-    }
-    if (centerY) {
-      eTop = evt.clientY - elementHeight / 2;
-    } else {
-      eTop = evt.clientY;
-    }
-    // Try to make sure the element doesn't go off-screen.
-    // If this isn't possible (the element is larger than the screen),
-    // alight top-left corner of screen and dialog as a compromise.
-    if (screenWidth > elementWidth) {
-      eLeft = Math.min(Math.max(eLeft, 0), screenWidth - elementWidth);
-    } else {
-      eLeft = 0;
-    }
-    if (screenHeight > elementHeight) {
-      eTop = Math.min(Math.max(eTop, 0), screenHeight - elementHeight);
-    } else {
-      eTop = 0;
-    }
-    element.css({ top: eTop, left: eLeft });
-  }
-
   private sendSpanAnnotationSelected(offsets: OffsetsList, span: Span, id?) {
     this.dispatcher.post('ajax', [{
       action: 'spanOpenDialog',
@@ -934,25 +895,9 @@ export class AnnotatorUI {
           return;
         }
 
-        const newOffset = [selectedFrom, selectedTo];
-        if (this.reselectedSpan) {
-          const newOffsets = this.reselectedSpan.offsets.slice(0); // clone
-          this.spanOptions.old_offsets = JSON.stringify(this.reselectedSpan.offsets);
-          if (this.selectedFragment !== null) {
-            if (this.selectedFragment !== false) {
-              newOffsets.splice(this.selectedFragment, 1);
-            }
-            newOffsets.push(newOffset);
-            newOffsets.sort(Util.cmpArrayOnFirstElement);
-            this.spanOptions.offsets = newOffsets;
-          } else {
-            this.spanOptions.offsets = [newOffset];
-          }
-        } else {
-          this.spanOptions = {
-            action: 'createSpan',
-            offsets: [newOffset]
-          }
+        this.spanOptions = {
+          action: 'createSpan',
+          offsets: [[selectedFrom, selectedTo]]
         }
 
         // normal span select in standard annotation mode or reselect: show selector
@@ -1056,7 +1001,7 @@ export class AnnotatorUI {
 
   isReloadOkay() {
     // do not reload while the user is in the middle of editing
-    return this.arcDragOrigin == null && this.reselectedSpan == null;
+    return this.arcDragOrigin == null;
   }
 
   userReceived(_user) {

@@ -128,9 +128,12 @@ export class Visualizer {
   private rtlmode = false;
   private fontZoom = 100;
 
-  svg;
+  /**
+   * @deprecated SVG for JQuery is on the way out
+   */
+  private svg;
+  private svgContainer: HTMLElement; 
   private dot_svg: SVGElement;
-  private $svgDiv;
   private highlightGroup;
 
   private baseCanvasWidth = 0;
@@ -235,9 +238,9 @@ export class Visualizer {
 
   constructor(dispatcher, svgId: string) {
     this.dispatcher = dispatcher;
-    this.$svgDiv = $('#' + svgId);
 
-    if (!this.$svgDiv.length) {
+    this.svgContainer = document.getElementById(svgId);
+    if (!document.getElementById(svgId)) {
       throw Error('Could not find container with id="' + svgId + '"');
     }
 
@@ -248,17 +251,17 @@ export class Visualizer {
     this.highlightTextSequence = highlightSequence;
 
     // create the svg wrapper
-    this.$svgDiv.hide();
+    this.svgContainer.style.visibility = 'hidden';
 
-    this.$svgDiv.svg({
-      onLoad: (_svg) => { // JQuery SVGWrapper
-        this.svg = _svg;
-        this.dot_svg = SVG(_svg._svg as Node);
+    $(this.svgContainer).svg({
+      onLoad: (svg) => { // JQuery SVGWrapper
+        this.svg = svg;
+        this.dot_svg = SVG(svg._svg as Node);
         this.triggerRender();
       }
     });
 
-    this.registerHandlers(this.$svgDiv, [
+    this.registerHandlers($(this.svgContainer), [
       'mouseover', 'mouseout', 'mousemove', 'mouseup', 'mousedown',
       'dragstart', 'dblclick', 'click',
       'contextmenu'
@@ -288,7 +291,6 @@ export class Visualizer {
       .on('layoutDensity', this, this.setLayoutDensity) //
       .on('svgWidth', this, this.setSvgWidth) //
       .on('current', this, this.gotCurrent) //
-      .on('clearSVG', this, this.clearSVG) //
       .on('mouseover', this, this.onMouseOver) //
       .on('mouseout', this, this.onMouseOut);
 
@@ -321,13 +323,6 @@ export class Visualizer {
     }
 
     return 0;
-  }
-
-  clearSVG() {
-    this.data = null;
-    this.sourceData = null;
-    this.svg.clear();
-    this.$svgDiv.hide();
   }
 
   setMarked(markedType: string) {
@@ -1746,11 +1741,6 @@ export class Visualizer {
     });
   }
 
-  /**
-   * @param {SourceData} sourceData
-   * @param {Chunk[]} chunks
-   * @param {number} maxTextWidth
-   */
   renderChunks(sourceData: SourceData, chunks: Chunk[], maxTextWidth: number) {
       /** @type {number} */ let currentX: number;
     if (this.rtlmode) {
@@ -1759,8 +1749,8 @@ export class Visualizer {
       currentX = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
     }
 
-      /** @type {Row[]} */ const rows: Row[] = [];
-      /** @type {number[]} */ const fragmentHeights: number[] = [];
+    const rows: Row[] = [];
+    const fragmentHeights: number[] = [];
     const openTextHighlights = {};
 
     let sentenceToggle = 0;
@@ -3129,7 +3119,7 @@ export class Visualizer {
 
     let oversized = Math.max(width - this.canvasWidth, 0);
     if (oversized > 0) {
-      this.$svgDiv.width(this.baseCanvasWidth);
+      this.dot_svg.attr('width', `${this.baseCanvasWidth}`);
       this.canvasWidth = width;
       // Allow some extra space for arcs
       this.canvasWidth += 32;
@@ -3144,7 +3134,7 @@ export class Visualizer {
 
     // Originally, this code was within the oversized > 0 block above, but we moved it here
     // to prevent erratic jumping
-    this.$svgDiv.height(y + 4); // Need to take the hairline border into account here
+    this.dot_svg.attr('height', `${y + 4}`); // Need to take the hairline border into account here
 
     return oversized;
   }
@@ -3281,7 +3271,7 @@ export class Visualizer {
       $(this.highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
       $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
       $(sentNumGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
-      const scrollable = findClosestHorizontalScrollable(this.$svgDiv);
+      const scrollable = findClosestHorizontalScrollable($(this.dot_svg.node));
       if (scrollable) {
         scrollable.scrollLeft(oversized + 4);
       }
@@ -3389,7 +3379,7 @@ export class Visualizer {
       return;
     }
 
-    this.$svgDiv.show();
+    this.svgContainer.style.visibility = 'visible';
     if ((this.sourceData && this.sourceData.collection && (this.sourceData.document !== this.doc || this.sourceData.collection !== this.coll)) || this.drawing) {
       this.redraw = true;
       this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
@@ -3413,8 +3403,9 @@ export class Visualizer {
     this.sentNumMargin = 40 * (this.fontZoom / 100.0);
 
     // establish the width according to the enclosing element
-    this.baseCanvasWidth = this.forceWidth || this.$svgDiv.width();
-    this.canvasWidth = this.forceWidth || (this.$svgDiv.width() - scrollbarWidth());
+    const svgWidth = $(this.dot_svg.node).width();
+    this.baseCanvasWidth = this.forceWidth || svgWidth;
+    this.canvasWidth = this.forceWidth || (svgWidth - scrollbarWidth());
 
     // Take hairline border of SVG into account
     this.canvasWidth -= 4;
@@ -3852,7 +3843,7 @@ export class Visualizer {
   }
 
   setSvgWidth(_width) {
-    this.$svgDiv.width(_width);
+    this.dot_svg.attr('width', `${_width}`);
     if (Configuration.svgWidth !== _width) {
       Configuration.svgWidth = _width;
       this.dispatcher.post('configurationChanged');
@@ -4113,7 +4104,7 @@ function bgToFgColor(hexcolor) {
 
 // WEBANNO EXTENSION BEGIN - RTL - Need to find scrollable ancestor
 // https://stackoverflow.com/a/35940276/2511197
-function findClosestHorizontalScrollable(node) {
+function findClosestHorizontalScrollable(node: JQuery) {
   if (node === null || node.is('html')) {
     return null;
   }

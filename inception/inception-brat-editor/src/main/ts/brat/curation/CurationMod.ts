@@ -21,11 +21,9 @@ import { DocumentData } from "../visualizer/DocumentData";
 export class CurationMod {
   data: DocumentData;
   dispatcher: Dispatcher;
-  svg;
 
-  constructor(dispatcher: Dispatcher, svg) {
+  constructor(dispatcher: Dispatcher) {
     this.dispatcher = dispatcher;
-    this.svg = svg;
 
     dispatcher.
       on('click', this, this.onClick).
