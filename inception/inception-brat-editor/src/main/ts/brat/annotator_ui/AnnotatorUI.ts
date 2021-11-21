@@ -107,7 +107,6 @@ export class AnnotatorUI {
   user: string;
   svg;
   dot_svg: Element;
-  svgElement: JQuery;
   dispatcher: Dispatcher;
   args;
 
@@ -123,7 +122,6 @@ export class AnnotatorUI {
     this.svg = svg;
     this.dispatcher = dispatcher;
     this.user = null;
-    this.svgElement = $(svg._svg);
     this.dot_svg = SVG(svg._svg as Node);
 
     dispatcher.
@@ -359,7 +357,7 @@ export class AnnotatorUI {
     }
 
     this.dot_svg.addClass('unselectable');
-    this.svgPosition = this.svgElement.offset();
+    this.svgPosition = $(this.dot_svg.node).offset();
     this.arcDragOrigin = originId;
     this.arcDragArc = this.svg.path(this.svg.createPath(), {
       markerEnd: 'url(#drag_arrow)',
@@ -443,7 +441,7 @@ export class AnnotatorUI {
               // this function: http://www.quirksmode.org/dom/w3c_core.html#t11
               // so we get off jQuery and get down to the metal:
               // targetClasses.push('.span_' + possibleTarget);
-              $targets = $targets.add(this.svgElement[0].getElementsByClassName('span_' + possibleTarget));
+              $targets = $targets.add(this.dot_svg.node.getElementsByClassName('span_' + possibleTarget));
             });
           }
         });
@@ -506,7 +504,7 @@ export class AnnotatorUI {
       // Lets take the actual selection range and work with that
       // Note for visual line up and more accurate positions a vertical offset of 8 and horizontal of 2 has been used!
       const range = sel.getRangeAt(0);
-      const svgOffset = $(this.svgElement).offset();
+      const svgOffset = $(this.dot_svg.node).offset();
       let flip = false;
       let tries = 0;
       // First try and match the start offset with a position, if not try it against the other end
@@ -665,7 +663,7 @@ export class AnnotatorUI {
             if (flip) {
               rx = startRec.x;
               ry = startRec.y;
-              rw = $(this.svgElement).width() - startRec.x;
+              rw = $(this.dot_svg.node).width() - startRec.x;
               rh = startRec.height;
             } else {
               rx = endBox.x;
@@ -819,9 +817,9 @@ export class AnnotatorUI {
       if (this.arcOptions) {
         $('g[data-from="' + this.arcOptions.origin + '"][data-to="' + this.arcOptions.target + '"]').removeClass('reselect');
       }
-      this.svgElement.removeClass('reselect');
+      this.dot_svg.removeClass('reselect');
     }
-    this.svgElement.removeClass('unselectable');
+    this.dot_svg.removeClass('unselectable');
     $('.reselectTarget').removeClass('reselectTarget');
   }
 
