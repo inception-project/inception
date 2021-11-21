@@ -76,17 +76,13 @@ export class VisualizerUI {
   matches = '';
 
   dispatcher: Dispatcher;
-  svgElement: JQuery;
-  svgId: string;
 
   commentPopup;
   commentDisplayed = false;
   displayCommentTimer = null;
 
-  constructor(dispatcher: Dispatcher, svg) {
+  constructor(dispatcher: Dispatcher) {
     this.commentPopup = $('#commentpopup');
-    this.svgElement = $(svg._svg);
-    this.svgId = this.svgElement.parent().attr('id');
     this.dispatcher = dispatcher;
     this.dispatcher.
       on('init', this, this.init).
