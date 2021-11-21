@@ -2715,13 +2715,14 @@ export class Visualizer {
           height = this.findArcHeight(fromIndex2R, toIndex2R, fragmentHeights);
         }
 
-        const arcGroup = this.svg.group(row.arcs, {
-          'data-from': arc.origin,
-          'data-to': arc.target,
-          'data-id': arc.eventDescId
-        });
+        const arcGroup = this.dot_svg.group()
+          .attr('data-from', arc.origin)
+          .attr('data-to', arc.target)
+          .attr('data-id', arc.eventDescId)
+          .addTo(SVG(row.arcs))
+          .node;
 
-        let from;
+        let from: number;
         if (rowIndex === leftRow) {
           if (this.rtlmode) {
             from = leftBox.x + (chunkReverse ? leftBox.width : 0);
@@ -2732,7 +2733,7 @@ export class Visualizer {
           from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin;
         }
 
-        let to;
+        let to: number;
         if (rowIndex === rightRow) {
           if (this.rtlmode) {
             to = rightBox.x + (chunkReverse ? 0 : rightBox.width);
