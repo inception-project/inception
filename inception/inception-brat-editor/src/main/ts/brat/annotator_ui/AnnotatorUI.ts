@@ -53,7 +53,7 @@ export class AnnotatorUI {
 
   arcDragOrigin = null;
   arcDragOriginBox = null;
-  arcDragOriginGroup = null;
+  arcDragOriginGroup: JQuery;
   arcDragArc = null;
   private arcDragJustStarted = false;
   private spanDragJustStarted = false;
@@ -325,7 +325,7 @@ export class AnnotatorUI {
       'class': 'drag_stroke',
       fill: 'none',
     });
-    this.arcDragOriginGroup = $(this.data.spans[this.arcDragOrigin].group);
+    this.arcDragOriginGroup = $(this.data.spans[this.arcDragOrigin].headFragment.group);
     this.arcDragOriginGroup.addClass('highlight');
     this.arcDragOriginBox = Util.realBBox(this.data.spans[this.arcDragOrigin].headFragment);
     this.arcDragOriginBox.center = this.arcDragOriginBox.x + this.arcDragOriginBox.width / 2;
@@ -387,7 +387,7 @@ export class AnnotatorUI {
     if (this.arcDragOrigin) {
       if (this.arcDragJustStarted) {
         // show the possible targets
-        const span = this.data.spans[this.arcDragOrigin] || {};
+        const span = this.data.spans[this.arcDragOrigin];
         const spanDesc = this.spanTypes[span.type] || {};
 
         // separate out possible numeric suffix from type for highlight
