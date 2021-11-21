@@ -3136,9 +3136,9 @@ export class Visualizer {
       oversized += 32;
     }
 
-    this.dot_svg.css('width', `${this.canvasWidth}`);
+    this.dot_svg.attr('width', `${this.canvasWidth}`);
     Util.profileStart('height');
-    this.dot_svg.css('height', `${y}`);
+    this.dot_svg.attr('height', `${y}`);
     Util.profileEnd('height');
     this.dot_svg.attr('viewBox', `0 0 ${this.canvasWidth} ${y}`);
 
