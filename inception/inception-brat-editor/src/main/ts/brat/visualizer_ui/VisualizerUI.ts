@@ -51,22 +51,16 @@ export class VisualizerUI {
   searchActive = false;   // whether search results received and in use
   loadedSearchData = null;
 
-  currentForm;
   spanTypes = null;
   relationTypesHash = null;
   // TODO: confirm unnecessary and remove
   //       var attributeTypes = null;
   data = null;
-  mtime = null;
-  searchConfig = null;
   coll;
   doc;
   args;
-  collScroll;
-  docScroll;
   user = null;
   annotationAvailable = false;
-  currentDocumentSVGsaved = false;
   fileBrowserClosedWithSubmit = false;
 
   // normalization: server-side DB by norm DB name
@@ -95,7 +89,6 @@ export class VisualizerUI {
       on('resize', this, this.onResize).
       on('collectionLoaded', this, this.rememberNormDb).
       on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded).
-      on('isReloadOkay', this, this.isReloadOkay).
       on('doneRendering', this, this.onDoneRendering).
       on('mousemove', this, this.onMouseMove).
       on('displaySpanButtons', this, this.displaySpanButtons).
@@ -483,6 +476,8 @@ export class VisualizerUI {
 
   onDoneRendering(coll, doc, args) {
     if (args && !args.edited) {
+      // FIXME REC 2021-11-21 - Good idea but won't work in INCEpTION since there could 
+      // be multiple SVGs on screen. Should be removed or done differently.
       const $inFocus = $('#svg animate[data-type="focus"]:first').parent();
       if ($inFocus.length) {
         const svgtop = $('svg').offset().top;
@@ -546,8 +541,7 @@ export class VisualizerUI {
 
 
   isReloadOkay() {
-    // do not reload while the user is in the dialog
-    return this.currentForm == null;
+    return true;
   }
 
   rememberData(_data) {
