@@ -191,7 +191,7 @@ export class AnnotatorUI {
     }
   }
 
-  private customAction(evt: MouseEvent & { target: HTMLElement}) {
+  private customAction(evt: MouseEvent & { target: HTMLElement }) {
     // must be logged in
     if (this.user === null) return;
 
@@ -206,7 +206,7 @@ export class AnnotatorUI {
     }
   }
 
-  private customArcAction(evt: MouseEvent & { target: HTMLElement}) {
+  private customArcAction(evt: MouseEvent & { target: HTMLElement }) {
     const id = evt.target.getAttribute('data-arc-ed');
     const type = evt.target.getAttribute('data-arc-role');
     const originSpan = this.data.spans[evt.target.getAttribute('data-arc-origin')];
@@ -226,7 +226,7 @@ export class AnnotatorUI {
     }, 'serverResult']);
   }
 
-  private customSpanAction(evt: MouseEvent & { target: HTMLElement}) {
+  private customSpanAction(evt: MouseEvent & { target: HTMLElement }) {
     const id = evt.target.getAttribute('data-span-id');
     evt.preventDefault();
     this.editedSpan = this.data.spans[id];
@@ -244,7 +244,7 @@ export class AnnotatorUI {
     }, 'serverResult']);
   }
 
-  private selectAnnotation(evt: MouseEvent & { target: HTMLElement}) {
+  private selectAnnotation(evt: MouseEvent & { target: HTMLElement }) {
     // must be logged in
     if (this.user === null) return;
 
@@ -262,7 +262,7 @@ export class AnnotatorUI {
     }
   }
 
-  private selectArc(evt: MouseEvent & { target: HTMLElement) {
+  private selectArc(evt: MouseEvent & { target: HTMLElement }) {
     this.clearSelection();
     const originSpanId = evt.target.getAttribute('data-arc-origin');
     const targetSpanId = evt.target.getAttribute('data-arc-target');
