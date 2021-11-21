@@ -44,6 +44,7 @@ import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 
 import { Key } from 'ts-keycode-enum';
+import { Fragment } from "../visualizer/Fragment";
 
 export class AnnotatorUI {
   arcDragOrigin = null;
@@ -1145,10 +1146,7 @@ export class AnnotatorUI {
     const id = target.attr('data-span-id');
     if (id) {
       this.preventDefault(evt);
-      const offsets = [];
-      $.each(this.data.spans[id], (fragmentNo, fragment) => {
-        offsets.push([fragment.from, fragment.to]);
-      });
+      const offsets = this.data.spans[id].fragments.map((f: Fragment) => [f.from, f.to]);
       this.dispatcher.post('ajax', [{
         action: 'contextMenu',
         offsets: JSON.stringify(offsets),

@@ -58,7 +58,7 @@ import type { sourceCommentType, sourceEntityType, sourceOffsetType } from "./So
 import * as jsonpatch from 'fast-json-patch';
 import { Operation } from "fast-json-patch";
 import { scrollbarWidth } from "../util/ScrollbarWidth";
-import { SVG } from '@svgdotjs/svg.js'
+import { SVG, Element as SVGElement } from "@svgdotjs/svg.js";
 
 declare const $: JQueryStatic;
 
@@ -123,60 +123,59 @@ function setCollectionDefaults(collectionData) {
 }
 
 export class Visualizer {
-  dispatcher: Dispatcher;
+  private dispatcher: Dispatcher;
 
-  rtlmode = false;
-  fontZoom = 100;
+  private rtlmode = false;
+  private fontZoom = 100;
 
   svg;
-  $svg;
-  $svgDiv;
-  highlightGroup;
+  private dot_svg: SVGElement;
+  private $svgDiv;
+  private highlightGroup;
 
-  baseCanvasWidth = 0;
-  canvasWidth = 0;
+  private baseCanvasWidth = 0;
+  private canvasWidth = 0;
 
-  data: DocumentData = null;
-  sourceData: SourceData = null;
-  requestedData = null;
+  private data: DocumentData = null;
+  private sourceData: SourceData = null;
+  private requestedData = null;
 
   /**
    * @deprecated INCEpTION does not use the collection name.
    */
-  coll: string = undefined;
+  private coll: string = undefined;
 
   /**
    * @deprecated INCEpTION does not use the document name.
    */
-  doc: string = undefined;
+  private doc: string = undefined;
 
-  args: Record<string, string[]> = null;
+  private args: Record<string, string[]> = null;
 
-  isRenderRequested = false;
-  drawing = false;
-  redraw = false;
-  arcDragOrigin;
+  private isRenderRequested = false;
+  private drawing = false;
+  private redraw = false;
+  arcDragOrigin; // Seems this field is declared and checked in this file but never set!
 
-  spanTypes: Record<string, SpanType> = {};
-  relationTypesHash: Record<string, RelationType> = {};
-  entityAttributeTypes: Record<string, AttributeType> = {};
-  eventAttributeTypes: Record<string, AttributeType> = {};
-  isCollectionLoaded = false;
+  private spanTypes: Record<string, SpanType> = {};
+  private relationTypesHash: Record<string, RelationType> = {};
+  private entityAttributeTypes: Record<string, AttributeType> = {};
+  private eventAttributeTypes: Record<string, AttributeType> = {};
+  private isCollectionLoaded = false;
 
-  markedText: Array<[number, number, string]> = [];
-  highlight;
-  highlightArcs;
-  highlightSpans;
-  commentId;
+  private markedText: Array<[number, number, string]> = [];
+  private highlight;
+  private highlightArcs;
+  private highlightSpans;
 
   // OPTIONS
-  forceWidth: number = undefined;
-  collapseArcs = false;
-  collapseArcSpace = false;
-  roundCoordinates = true; // try to have exact pixel offsets
-  boxTextMargin = { x: 0, y: 1.5 }; // effect is inverse of "margin" for some reason
-  highlightRounding = { x: 3, y: 3 }; // rx, ry for highlight boxes
-  spaceWidths: Record<string, number> = {
+  private forceWidth: number = undefined;
+  private collapseArcs = false;
+  private collapseArcSpace = false;
+  private roundCoordinates = true; // try to have exact pixel offsets
+  private boxTextMargin = { x: 0, y: 1.5 }; // effect is inverse of "margin" for some reason
+  private highlightRounding = { x: 3, y: 3 }; // rx, ry for highlight boxes
+  private spaceWidths: Record<string, number> = {
     ' ': 4,
     '\u00a0': 4,
     '\u200b': 0,
@@ -184,16 +183,16 @@ export class Visualizer {
     '\t': 12,
     '\n': 4
   };
-  coloredCurlies = true; // color curlies by box BG
-  arcSlant = 15; //10;
-  minArcSlant = 8;
-  arcHorizontalSpacing = 10; // min space boxes with connecting arc
-  rowSpacing = -5; // for some funny reason approx. -10 gives "tight" packing.
+  private coloredCurlies = true; // color curlies by box BG
+  private arcSlant = 15; //10;
+  private minArcSlant = 8;
+  private arcHorizontalSpacing = 10; // min space boxes with connecting arc
+  private rowSpacing = -5; // for some funny reason approx. -10 gives "tight" packing.
 
-  sentNumMargin = 40;
-  smoothArcCurves = true; // whether to use curves (vs lines) in arcs
-  smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
-  reverseArcControlx = 5; // control point distance for "UFO catchers"
+  private sentNumMargin = 40;
+  private smoothArcCurves = true; // whether to use curves (vs lines) in arcs
+  private smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
+  private reverseArcControlx = 5; // control point distance for "UFO catchers"
 
   // "shadow" effect settings (note, error, incompelete)
   rectShadowSize = 3;
@@ -249,12 +248,12 @@ export class Visualizer {
     this.highlightTextSequence = highlightSequence;
 
     // create the svg wrapper
-    this.$svgDiv = $(this.$svgDiv).hide();
+    this.$svgDiv.hide();
 
     this.$svgDiv.svg({
-      onLoad: (_svg) => {
+      onLoad: (_svg) => { // JQuery SVGWrapper
         this.svg = _svg;
-        this.$svg = $(_svg.root());
+        this.dot_svg = SVG(_svg._svg as Element);
         this.triggerRender();
       }
     });
@@ -3137,11 +3136,11 @@ export class Visualizer {
       oversized += 32;
     }
 
-    this.$svg.width(this.canvasWidth);
+    this.dot_svg.css('width', `${this.canvasWidth}`);
     Util.profileStart('height');
-    this.$svg.height(y);
+    this.dot_svg.css('height', `${y}`);
     Util.profileEnd('height');
-    this.$svg.attr("viewBox", "0 0 " + this.canvasWidth + " " + y);
+    this.dot_svg.attr('viewBox', `0 0 ${this.canvasWidth} ${y}`);
 
     // Originally, this code was within the oversized > 0 block above, but we moved it here
     // to prevent erratic jumping
@@ -3275,7 +3274,7 @@ export class Visualizer {
   }
 
   renderAdjustLayoutForRtl(oversized, rows, glowGroup, textGroup, sentNumGroup) {
-    this.$svg.attr("direction", "rtl");
+    this.dot_svg.attr('direction', 'rtl');
     if (oversized > 0) {
       $.each(rows, (index, row) => this.translate(row, oversized, row.translation.y));
       $(glowGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
@@ -3410,7 +3409,7 @@ export class Visualizer {
       return;
     }
 
-    this.$svg.css("font-size", this.fontZoom + "%");
+    this.dot_svg.css('fontStyle', `${this.fontZoom}%`);
     this.sentNumMargin = 40 * (this.fontZoom / 100.0);
 
     // establish the width according to the enclosing element
@@ -3626,7 +3625,6 @@ export class Visualizer {
   onMouseOverSpan(evt: MouseEvent) {
     const target = $(evt.target);
     const id = target.attr('data-span-id');
-    this.commentId = id;
     const span = this.data.spans[id];
     this.dispatcher.post('displaySpanComment', [
       evt, target, id, span.type, span.attributeText,
@@ -3664,11 +3662,11 @@ export class Visualizer {
       return;
     }
 
-      /** @type {Object.<string, boolean>} */ const equivs: { [s: string]: boolean; } = {};
-      /** @type {Object.<string, boolean>} */ const spans: { [s: string]: boolean; } = {};
+    const equivs: Record<string, boolean> = {};
+    const spans: Record<string, boolean> = {};
     spans[id] = true;
     // find all arcs, normal and equiv. Equivs need to go far (#1023)
-    const addArcAndSpan = (arc) => {
+    const addArcAndSpan = (arc: Arc) => {
       if (arc.equiv) {
         equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true;
         const eventDesc = this.data.eventDescs[arc.eventDescId];
@@ -3680,15 +3678,23 @@ export class Visualizer {
     span.incoming.map(arc => addArcAndSpan(arc));
     span.outgoing.map(arc => addArcAndSpan(arc));
 
-      /** @type {string[]} */ const equivSelector: string[] = [];
-    Object.keys(equivs).map(equiv => equivSelector.push('[data-arc-ed^="' + equiv + '"]'));
-    this.highlightArcs = this.$svg.find(equivSelector.join(', ')).parent()
-      .add('g[data-from="' + id + '"], g[data-to="' + id + '"]' + equivSelector, this.$svg)
-      .addClass('highlight');
+    this.highlightArcs = this.dot_svg
+      .find(`g[data-from="${id}"], g[data-to="${id}"]`)
+      .map(e => e.addClass('highlight'));
 
-      /** @type {string[]} */ const spanIds: string[] = [];
-    Object.keys(spans).map(spanId => spanIds.push('rect[data-span-id="' + spanId + '"]'));
-    this.highlightSpans = this.$svg.find(spanIds.join(', ')).parent().addClass('highlight');
+    const equivSelector = Object.keys(equivs).map(equiv => `[data-arc-ed^="${equiv}"]`);
+    if (equivSelector.length) {
+      this.highlightArcs.push(...this.dot_svg
+        .find(equivSelector.join(', '))
+        .map(e => e.parent().addClass('highlight')));
+    }
+
+    const spanIds = Object.keys(spans).map(spanId => `[data-span-id="${spanId}"]`);
+    if (spanIds.length) {
+      this.highlightSpans = this.dot_svg
+        .find(spanIds.join(', '))
+        .map(e => e.parent().addClass('highlight'));
+    }
   }
 
   /**
@@ -3742,12 +3748,18 @@ export class Visualizer {
     ]);
 
     if (arcId) {
-      this.highlightArcs = this.$svg.find('g[data-id="' + arcId + '"]').addClass('highlight');
+      this.highlightArcs = this.dot_svg
+        .find(`g[data-id="${arcId}"]`)
+        .map(e => e.addClass('highlight'));
     } else {
-      this.highlightArcs = this.$svg.find('g[data-from="' + originSpanId + '"][data-to="' + targetSpanId + '"]').addClass('highlight');
+      this.highlightArcs = this.dot_svg
+        .find(`g[data-from="${originSpanId}"][data-to="${targetSpanId}"]`)
+        .map(e => e.addClass('highlight'));
     }
 
-    this.highlightSpans = $(this.$svg).find('rect[data-span-id="' + originSpanId + '"], rect[data-span-id="' + targetSpanId + '"]').parent().addClass('highlight');
+    this.highlightSpans = this.dot_svg
+      .find(`[data-span-id="${originSpanId}"], [data-span-id="${targetSpanId}"]`)
+      .map(e => e.parent().addClass('highlight'));
   }
 
   /**
@@ -3782,7 +3794,7 @@ export class Visualizer {
     }
   }
 
-  onMouseOut(evt) {
+  onMouseOut(evt: MouseEvent) {
     const target = $(evt.target);
     target.removeClass('badTarget');
     this.dispatcher.post('hideComment');

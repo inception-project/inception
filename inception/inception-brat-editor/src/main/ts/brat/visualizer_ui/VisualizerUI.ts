@@ -497,15 +497,11 @@ export class VisualizerUI {
     this.dispatcher.post('allowReloadByURL');
   }
 
-  resizeFunction(evt: Event) {
-    this.dispatcher.post('rerender');
-  }
-
   resizerTimeout = null;
   onResize(evt: Event) {
     if (evt.target === window) {
       clearTimeout(this.resizerTimeout);
-      this.resizerTimeout = setTimeout(this.resizeFunction, 300);
+      this.resizerTimeout = setTimeout(() => this.dispatcher.post('rerender'), 300);
     }
   }
 
