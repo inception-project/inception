@@ -45,6 +45,12 @@ export class Util {
   cmp(a, b) {
     return a < b ? -1 : a > b ? 1 : 0;
   }
+  
+  cmpArrayOnFirstElement(a, b) {
+    a = a[0];
+    b = b[0];
+    return a < b ? -1 : a > b ? 1 : 0;
+  }
 
   realBBox(span) {
     const box = span.rect.getBBox();
@@ -498,7 +504,7 @@ export class Util {
   embed(container, collData, docData) {
     const dispatcher = new Dispatcher();
     const visualizer = new Visualizer(dispatcher, container);
-    new VisualizerUI(dispatcher, visualizer.svg);
+    new VisualizerUI(dispatcher);
     docData.collection = null;
     dispatcher.post('collectionLoaded', [collData]);
     dispatcher.post('requestRenderData', [docData]);
