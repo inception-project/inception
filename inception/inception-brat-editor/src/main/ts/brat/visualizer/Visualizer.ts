@@ -58,7 +58,7 @@ import type { sourceCommentType, sourceEntityType, Offsets } from "./SourceData"
 import * as jsonpatch from 'fast-json-patch';
 import { Operation } from "fast-json-patch";
 import { scrollbarWidth } from "../util/ScrollbarWidth";
-import { SVG, Element as SVGElement, SVGTypeMapping, Svg } from "@svgdotjs/svg.js";
+import { SVG, Element as SVGElement, Svg } from "@svgdotjs/svg.js";
 
 declare const $: JQueryStatic;
 
@@ -1742,8 +1742,8 @@ export class Visualizer {
     });
   }
 
-  renderChunks(sourceData: SourceData, chunks: Chunk[], maxTextWidth: number) {
-      /** @type {number} */ let currentX: number;
+  renderChunks(sourceData: SourceData, chunks: Chunk[], maxTextWidth: number): [Row[], number[], unknown[]] {
+    let currentX: number;
     if (this.rtlmode) {
       currentX = this.canvasWidth - (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding);
     } else {
@@ -2131,7 +2131,7 @@ export class Visualizer {
         row.backgroundIndex = sentenceToggle;
         row.index = ++rowIndex;
         this.svg.add(row.group, chunk.group);
-        chunk.group = row.group.lastElementChild;
+        chunk.group = row.group.lastElementChild as SVGGElement;
         $(chunk.group).children("g[class='span']").each((index, element) => { chunk.fragments[index].group = element });
         $(chunk.group).find("rect[data-span-id]").each((index, element) => { chunk.fragments[index].rect = element });
       }
@@ -2140,7 +2140,7 @@ export class Visualizer {
       if (row.index !== lastRow.index) {
         $.each(openTextHighlights, (textId, textDesc) => {
           if (textDesc[3] !== lastX) {
-            let newDesc;
+            let newDesc: [Row, unknown, number, unknown];
             if (this.rtlmode) {
               newDesc = [lastRow, textDesc[3], lastX - boxX, textDesc[4]];
             } else {
@@ -3147,10 +3147,10 @@ export class Visualizer {
    * @param {SVGElement} backgroundGroup
    * @return {[number, SVGElement]}
    */
-  renderRows(rows, backgroundGroup: SVGElement): [number, SVGElement] {
+  renderRows(rows: Row[], backgroundGroup: SVGElement): [number, SVGGElement] {
     // position the rows
     let y = Configuration.visual.margin.y;
-    const sentNumGroup = this.svg.group({ 'class': 'sentnum unselectable' });
+    const sentNumGroup: SVGGElement = this.svg.group({ 'class': 'sentnum unselectable' });
     let currentSent;
     $.each(rows, (rowId, row) => {
       // find the maximum fragment height
@@ -3223,19 +3223,19 @@ export class Visualizer {
       row.textY = y - this.rowPadding;
       if (row.sentence) {
         // Render sentence number as link
-        let text;
+        const text = this.dot_svg.text('' + row.sentence)
+          .attr('data-sent', row.sentence)
+          .css('cursor', 'pointer');
         if (this.rtlmode) {
-          text = this.svg.text(sentNumGroup, this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding,
-            '' + row.sentence, { 'data-sent': row.sentence });
+          text.translate(this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding);
         } else {
-          text = this.svg.text(sentNumGroup, this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding,
-            '' + row.sentence, { 'data-sent': row.sentence });
+          text.translate(this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding);
         }
-        $(text).css('cursor', 'pointer');
+        SVG(sentNumGroup).add(text);
 
         const sentComment = this.data.sentComment[row.sentence];
         if (sentComment) {
-          const box = text.getBBox();
+          const box = text.rbox(SVG(sentNumGroup));
           // TODO: using rectShadowSize, but this shadow should
           // probably have its own setting for shadow size
           const highlight = this.svg.rect(sentNumGroup,
@@ -3249,8 +3249,8 @@ export class Visualizer {
             ry: this.rectShadowRounding,
             'data-sent': row.sentence,
           });
-          $(text).insertAfter($(highlight));
-          $(text).css('fill', '#000');
+          text.insertAfter(highlight);
+          text.css('fill', '#000');
         }
       }
 
@@ -3459,9 +3459,13 @@ export class Visualizer {
 
     Util.profileStart('adjust margin');
     if (this.rtlmode) {
-      this.svg.path(sentNumGroup, this.svg.createPath().move(this.canvasWidth - this.sentNumMargin, 0).line(this.canvasWidth - this.sentNumMargin, y));
+      this.svg.path(sentNumGroup, this.svg.createPath()
+        .move(this.canvasWidth - this.sentNumMargin, 0)
+        .line(this.canvasWidth - this.sentNumMargin, y));
     } else {
-      this.svg.path(sentNumGroup, this.svg.createPath().move(this.sentNumMargin, 0).line(this.sentNumMargin, y));
+      this.svg.path(sentNumGroup, this.svg.createPath()
+        .move(this.sentNumMargin, 0)
+        .line(this.sentNumMargin, y));
     }
     Util.profileEnd('adjust margin');
 

@@ -37,22 +37,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { Chunk } from "./Chunk";
+
 export class Row {
-  group;
-  background;
-  chunks = [];
+  group: SVGGElement;
+  background: SVGGElement;
+  chunks: Chunk[] = [];
   hasAnnotations = false;
   maxArcHeight = 0;
   maxSpanHeight = 0;
-  sentence;
-  index;
+  sentence: number;
+  index: number;
   backgroundIndex;
-  arcs;
-  heightsStart;
-  heightsEnd;
-  heightsAdjust;
-  textY;
-  translation;
+  arcs: SVGGElement;
+  heightsStart: number;
+  heightsEnd: number;
+  heightsAdjust: number;
+  textY: number;
+  // translation;
 
   constructor(svg) {
     this.group = svg.group({ 'class': 'row' });
