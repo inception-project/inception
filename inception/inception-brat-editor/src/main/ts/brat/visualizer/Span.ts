@@ -40,7 +40,7 @@
 
 import { Arc } from "./Arc";
 import { Fragment } from "./Fragment";
-import { Offsets } from "./SourceData";
+import { Offsets, OffsetsList } from "./SourceData";
 
 export class Span {
   id: string = undefined;
@@ -50,7 +50,7 @@ export class Span {
   generalType = undefined;
   headFragment: Fragment = undefined;
   unsegmentedOffsets: Array<Offsets> = [];
-  offsets: Array<Offsets> = [];
+  offsets: OffsetsList = [];
   segmentedOffsetsMap = {};
   hidden = false;
   clippedAtStart = false;
@@ -85,7 +85,7 @@ export class Span {
   /**
    * @param {*} id
    */
-  constructor(id, type: string, offsets: Array<[number, number]>, generalType: string) {
+  constructor(id, type: string, offsets: OffsetsList, generalType: string) {
     this.id = id;
     this.type = type;
     this.unsegmentedOffsets = offsets;
@@ -173,5 +173,9 @@ export class Span {
     this.wholeFrom = this.fragments[0].from;
     this.wholeTo = this.fragments[this.fragments.length - 1].to;
     this.headFragment = this.fragments[this.fragments.length - 1];
+  }
+
+  get fragmentOffsets(): OffsetsList {
+    return this.fragments.map(f => [f.from, f.to])
   }
 }

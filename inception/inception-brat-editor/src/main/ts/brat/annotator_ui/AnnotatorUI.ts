@@ -38,7 +38,6 @@
  * SOFTWARE.
  */
 import { Dispatcher } from "../dispatcher/Dispatcher";
-import { Fragment } from "../visualizer/Fragment";
 import { Element, SVG } from "@svgdotjs/svg.js";
 import { DocumentData } from "../visualizer/DocumentData";
 import { OffsetsList } from "../visualizer/SourceData";
@@ -108,7 +107,7 @@ export class AnnotatorUI {
       on('isReloadOkay', this, this.isReloadOkay).
       on('keydown', this, this.onKeyDown).
       on('click', this, this.onClick).
-      on('dragstart', this, this.preventDefault).
+      on('dragstart', this, (evt: MouseEvent) => evt.preventDefault()).
       on('mousedown', this, this.onMouseDown).
       on('mouseup', this, this.onMouseUp).
       on('mousemove', this, this.onMouseMove).
@@ -160,15 +159,17 @@ export class AnnotatorUI {
     }
   }
 
-  // Distinguish between double clicks and single clicks . This is relevant when clicking on 
-  // annotations. For clicking on text nodes, this is not really relevant.
-  private onClick(evt) {
+  /**
+   * Distinguish between double clicks and single clicks . This is relevant when clicking on 
+   * annotations. For clicking on text nodes, this is not really relevant.
+   */
+  private onClick(evt: MouseEvent) {
     this.clickCount++;
 
     const singleClickAction = Configuration.singleClickEdit ?
-      this.editAnnotation : this.customJSAction;
+      this.selectAnnotation : this.customAction;
     const doubleClickAction = Configuration.singleClickEdit ?
-      this.customJSAction : this.editAnnotation;
+      this.customAction : this.selectAnnotation;
 
     if (this.clickCount === 1) {
       this.clickTimer = setTimeout(() => {
@@ -190,26 +191,30 @@ export class AnnotatorUI {
     }
   }
 
-  private customJSAction(evt: MouseEvent) {
+  private customAction(evt: MouseEvent & { target: HTMLElement}) {
     // must be logged in
     if (this.user === null) return;
-    // single click actions for spans
-    const target = $(evt.target);
-    if (target.attr('data-span-id')) {
+
+    if (evt.target.getAttribute('data-span-id')) {
       this.customSpanAction(evt)
+      return;
     }
-    else if (target.attr('data-arc-ed')) {
+
+    if (evt.target.getAttribute('data-arc-ed')) {
       this.customArcAction(evt);
+      return;
     }
   }
 
-  private customArcAction(evt: MouseEvent) {
-    const target = $(evt.target);
-    const id = target.attr('data-arc-ed');
-    const type = target.attr('data-arc-role');
-    const originSpan = this.data.spans[target.attr('data-arc-origin')];
-    const targetSpan = this.data.spans[target.attr('data-arc-target')];
+  private customArcAction(evt: MouseEvent & { target: HTMLElement}) {
+    const id = evt.target.getAttribute('data-arc-ed');
+    const type = evt.target.getAttribute('data-arc-role');
+    const originSpan = this.data.spans[evt.target.getAttribute('data-arc-origin')];
+    const targetSpan = this.data.spans[evt.target.getAttribute('data-arc-target')];
+    this.sendTriggerCustomArcAction(id, type, originSpan, targetSpan);
+  }
 
+  private sendTriggerCustomArcAction(id: string, type: string, originSpan: Span, targetSpan: Span) {
     this.dispatcher.post('ajax', [{
       action: 'doAction',
       arcId: id,
@@ -221,16 +226,15 @@ export class AnnotatorUI {
     }, 'serverResult']);
   }
 
-  private customSpanAction(evt: MouseEvent) {
-    const target = $(evt.target);
-    const id = target.attr('data-span-id');
-    this.preventDefault(evt);
+  private customSpanAction(evt: MouseEvent & { target: HTMLElement}) {
+    const id = evt.target.getAttribute('data-span-id');
+    evt.preventDefault();
     this.editedSpan = this.data.spans[id];
-    this.editedFragment = target.attr('data-fragment-id');
-    const offsets = [];
-    $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
-      offsets.push([fragment.from, fragment.to]);
-    });
+    this.editedFragment = evt.target.getAttribute('data-fragment-id');
+    this.sendTriggerCustomSpanAction(id, this.editedSpan.fragmentOffsets);
+  }
+
+  private sendTriggerCustomSpanAction(id: string, offsets: OffsetsList) {
     this.dispatcher.post('ajax', [{
       action: 'doAction',
       offsets: JSON.stringify(offsets),
@@ -240,31 +244,29 @@ export class AnnotatorUI {
     }, 'serverResult']);
   }
 
-  // WEBANNO EXTENSION END - #520 Perform javascript action on click 
-
-  private editAnnotation(evt: MouseEvent) {
+  private selectAnnotation(evt: MouseEvent & { target: HTMLElement}) {
     // must be logged in
     if (this.user === null) return;
+
     // must not be reselecting a span or an arc
     if (this.reselectedSpan || this.arcDragOrigin) return;
 
-    const target = $(evt.target);
-    // do we edit an arc?
-    if (target.attr('data-arc-role')) {
-      this.editArc(evt);
-      // if not an arc, then do we edit a span?
-    } else if (target.attr('data-span-id')) {
-      this.editSpan(evt);
+    if (evt.target.getAttribute('data-arc-role')) {
+      this.selectArc(evt);
+      return;
+    }
+
+    if (evt.target.getAttribute('data-span-id')) {
+      this.selectSpanAnnotation(evt);
+      return;
     }
   }
 
-  private editArc(evt: MouseEvent) {
-    const target = $(evt.target);
-    // TODO
+  private selectArc(evt: MouseEvent & { target: HTMLElement) {
     this.clearSelection();
-    const originSpanId = target.attr('data-arc-origin');
-    const targetSpanId = target.attr('data-arc-target');
-    const type = target.attr('data-arc-role');
+    const originSpanId = evt.target.getAttribute('data-arc-origin');
+    const targetSpanId = evt.target.getAttribute('data-arc-target');
+    const type = evt.target.getAttribute('data-arc-role');
     const originSpan = this.data.spans[originSpanId];
     const targetSpan = this.data.spans[targetSpanId];
     this.arcOptions = {
@@ -277,7 +279,7 @@ export class AnnotatorUI {
       collection: this.coll,
       'document': this.doc
     };
-    const eventDescId = target.attr('data-arc-ed');
+    const eventDescId = evt.target.getAttribute('data-arc-ed');
     if (eventDescId) {
       const eventDesc = this.data.eventDescs[eventDescId];
       if (eventDesc.equiv) {
@@ -285,38 +287,27 @@ export class AnnotatorUI {
         this.arcOptions['right'] = eventDesc.rightSpans.join(',');
       }
     }
-    $('#arc_origin').text(Util.spanDisplayForm(this.spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
-    $('#arc_target').text(Util.spanDisplayForm(this.spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
     const arcId = eventDescId || [originSpanId, type, targetSpanId];
-    // WEBANNO EXTENSION BEGIN
-    this.selectArc(originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
-    // WEBANNO EXTENSION END
-    // for precise timing, log dialog display to user.
-    this.dispatcher.post('logAction', ['arcEditSelected']);
+
+    this.sendArcSelected(originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
   }
 
-  private editSpan(evt: MouseEvent) {
+  private selectSpanAnnotation(evt: MouseEvent) {
     const target = $(evt.target);
     const id = target.attr('data-span-id')
     this.clearSelection();
     this.editedSpan = this.data.spans[id];
     this.editedFragment = target.attr('data-fragment-id');
-    const offsets: OffsetsList = [];
-    $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
-      offsets.push([fragment.from, fragment.to]);
-    });
+    const offsets: OffsetsList = this.editedSpan.fragmentOffsets;
+
     this.spanOptions = {
       action: 'createSpan',
       offsets: offsets,
       type: this.editedSpan.type,
       id: id,
     };
-    // WEBANNO EXTENSION BEGIN
-    this.selectSpanAnnotation(offsets, this.editedSpan, id);
-    // WEBANNO EXTENSION END
 
-    // for precise timing, log annotation display to user.
-    this.dispatcher.post('logAction', ['spanEditSelected']);
+    this.sendSpanAnnotationSelected(offsets, this.editedSpan, id);
   }
 
   private startArcDrag(originId) {
@@ -708,7 +699,7 @@ export class AnnotatorUI {
     element.css({ top: eTop, left: eLeft });
   }
 
-  private selectSpanAnnotation(offsets: OffsetsList, span: Span, id?) {
+  private sendSpanAnnotationSelected(offsets: OffsetsList, span: Span, id?) {
     this.dispatcher.post('ajax', [{
       action: 'spanOpenDialog',
       offsets: JSON.stringify(offsets),
@@ -718,7 +709,7 @@ export class AnnotatorUI {
     }, 'serverResult']);
   }
 
-  private createSpanAnnotation(offsets: OffsetsList, spanText: string) {
+  private sendCreateSpanAnnotation(offsets: OffsetsList, spanText: string) {
     this.dispatcher.post('ajax', [{
       action: 'spanOpenDialog',
       offsets: JSON.stringify(offsets),
@@ -726,7 +717,7 @@ export class AnnotatorUI {
     }, 'serverResult']);
   }
 
-  private selectArc(originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
+  private sendArcSelected(originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
     this.dispatcher.post('ajax', [{
       action: 'arcOpenDialog',
       arcId: arcId,
@@ -738,7 +729,7 @@ export class AnnotatorUI {
     }, 'serverResult']);
   }
 
-  private createRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
+  private sendCreateRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
     this.dispatcher.post('ajax', [{
       action: 'arcOpenDialog',
       originSpanId: originSpanId,
@@ -829,11 +820,7 @@ export class AnnotatorUI {
             collection: this.coll,
             'document': this.doc
           };
-          $('#arc_origin').text(Util.spanDisplayForm(this.spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
-          $('#arc_target').text(Util.spanDisplayForm(this.spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
-          this.createRelationAnnotation(originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);
-          // for precise timing, log dialog display to user.
-          this.dispatcher.post('logAction', ['arcSelected']);
+          this.sendCreateRelationAnnotation(originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);
         }
       }
     } else if (!evt.ctrlKey) {
@@ -970,9 +957,7 @@ export class AnnotatorUI {
 
         // normal span select in standard annotation mode or reselect: show selector
         const spanText = this.data.text.substring(selectedFrom, selectedTo);
-        this.createSpanAnnotation(this.spanOptions.offsets, spanText);
-        // for precise timing, log annotation display to user.
-        this.dispatcher.post('logAction', ['spanSelected']);
+        this.sendCreateSpanAnnotation(this.spanOptions.offsets, spanText);
       }
     }
   }
@@ -1029,22 +1014,6 @@ export class AnnotatorUI {
     });
   }
 
-  // returns the normalizations currently filled in the span
-  // dialog, or empty list if there are none
-  spanNormalizations() {
-    // Note that only no or one normalization is supported in the
-    // UI at the moment.
-    const normalizations = [];
-    const normDb = $('#span_norm_db').val();
-    const normId = $('#span_norm_id').val();
-    const normText = $('#span_norm_txt').val();
-    // empty ID -> no normalization
-    if (!normId.match(/^\s*$/)) {
-      normalizations.push([normDb, normId, normText]);
-    }
-    return normalizations;
-  }
-
   spanAndAttributeTypesLoaded(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
     this.spanTypes = _spanTypes;
     this.entityAttributeTypes = _entityAttributeTypes;
@@ -1056,10 +1025,6 @@ export class AnnotatorUI {
     this.coll = _coll;
     this.doc = _doc;
     this.args = _args;
-  }
-
-  preventDefault(evt) {
-    evt.preventDefault();
   }
 
   // WEBANNO EXTENSION BEGIN - #1388 Support context menu
@@ -1075,8 +1040,8 @@ export class AnnotatorUI {
     const target = $(evt.target);
     const id = target.attr('data-span-id');
     if (id) {
-      this.preventDefault(evt);
-      const offsets = this.data.spans[id].fragments.map((f: Fragment) => [f.from, f.to]);
+      evt.preventDefault();
+      const offsets = this.data.spans[id].fragmentOffsets;
       this.dispatcher.post('ajax', [{
         action: 'contextMenu',
         offsets: JSON.stringify(offsets),
