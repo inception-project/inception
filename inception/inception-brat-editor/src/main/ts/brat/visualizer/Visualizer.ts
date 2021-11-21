@@ -58,7 +58,7 @@ import type { sourceCommentType, sourceEntityType, Offsets } from "./SourceData"
 import * as jsonpatch from 'fast-json-patch';
 import { Operation } from "fast-json-patch";
 import { scrollbarWidth } from "../util/ScrollbarWidth";
-import { SVG, Element as SVGElement } from "@svgdotjs/svg.js";
+import { SVG, Element as SVGElement, SVGTypeMapping, Svg } from "@svgdotjs/svg.js";
 
 declare const $: JQueryStatic;
 
@@ -133,7 +133,7 @@ export class Visualizer {
    */
   private svg;
   private svgContainer: HTMLElement; 
-  private dot_svg: SVGElement;
+  private dot_svg: Svg;
   private highlightGroup;
 
   private baseCanvasWidth = 0;
@@ -256,7 +256,7 @@ export class Visualizer {
     $(this.svgContainer).svg({
       onLoad: (svg) => { // JQuery SVGWrapper
         this.svg = svg;
-        this.dot_svg = SVG(svg._svg as Node);
+        this.dot_svg = SVG(svg._svg as SVGSVGElement);
         this.triggerRender();
       }
     });
@@ -1135,7 +1135,7 @@ export class Visualizer {
         if (fragment.span.labelText) {
           fragment.labelText = fragment.span.labelText;
         }
-        const svgtext = this.svg.createText(); // one "text" element per row
+        const svgtext = this.dot_svg.text("").build(true); // one "text" element per row
         const postfixArray = [];
         let prefix = '';
         let postfix = '';
@@ -1163,11 +1163,12 @@ export class Visualizer {
           if (val.glyph) {
             if (val.position === "left") {
               prefix = val.glyph + prefix;
-              const tspan_attrs = { 'class': 'glyph' };
+
+              const t = svgtext.tspan(val.glyph);
+              t.addClass('glyph');
               if (val.glyphColor) {
-                tspan_attrs['fill'] = val.glyphColor;
+                t.fill(val.glyphColor);
               }
-              svgtext.span(val.glyph, tspan_attrs);
             } else { // XXX right is implied - maybe change
               postfixArray.push([attr, val]);
               postfix += val.glyph;
@@ -1177,22 +1178,22 @@ export class Visualizer {
         let text = fragment.labelText;
         if (prefix !== '') {
           text = prefix + ' ' + text;
-          svgtext.string(' ');
+          svgtext.plain(' ');
         }
-        svgtext.string(fragment.labelText);
+        svgtext.plain(fragment.labelText);
         if (postfixArray.length) {
           text += ' ' + postfix;
-          svgtext.string(' ');
+          svgtext.plain(' ');
           $.each(postfixArray, function (elNo, el) {
-            const tspan_attrs = { 'class': 'glyph' };
+            const t = svgtext.tspan(el[1].glyph);
+            t.addClass('glyph');
             if (el[1].glyphColor) {
-              tspan_attrs['fill'] = el[1].glyphColor;
+              t.fill(el[1].glyphColor);
             }
-            svgtext.span(el[1].glyph, tspan_attrs);
           });
         }
         if (warning) {
-          svgtext.span("#", { 'class': 'glyph attribute_warning' });
+          svgtext.tspan("#").addClass('glyph').addClass('attribute_warning');
           text += ' #';
         }
         fragment.glyphedLabelText = text;
@@ -1906,7 +1907,9 @@ export class Visualizer {
           this.renderFragmentCrossOut(xx, yy, hh, fragment);
         }
 
-        this.svg.text(fragment.group, x, y - span.floor, this.data.spanAnnTexts[fragment.glyphedLabelText], { fill: fgColor });
+        SVG(fragment.group).add(this.data.spanAnnTexts[fragment.glyphedLabelText].clone()
+          .translate(x, y - span.floor)
+          .fill(fgColor));
 
         // Make curlies to show the fragment
         if (fragment.drawCurly) {
