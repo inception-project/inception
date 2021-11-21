@@ -134,7 +134,7 @@ export class Visualizer {
   private svg;
   private svgContainer: HTMLElement; 
   private dot_svg: Svg;
-  private highlightGroup;
+  private highlightGroup: SVGGElement;
 
   private baseCanvasWidth = 0;
   private canvasWidth = 0;
@@ -3099,7 +3099,7 @@ export class Visualizer {
    * @param {number} maxTextWidth
    * @return {number} how much the actual horizontal space required extends over the allocated space
    */
-  renderResizeSvg(y: number, textGroup: SVGElement, maxTextWidth: number): number {
+  renderResizeSvg(y: number, textGroup: SVGGElement, maxTextWidth: number): number {
     // resize the SVG
     let width = maxTextWidth + this.sentNumMargin + 2 * Configuration.visual.margin.x + 1;
 
@@ -3144,10 +3144,9 @@ export class Visualizer {
 
   /**
    * @param rows
-   * @param {SVGElement} backgroundGroup
    * @return {[number, SVGElement]}
    */
-  renderRows(rows: Row[], backgroundGroup: SVGElement): [number, SVGGElement] {
+  renderRows(rows: Row[], backgroundGroup: SVGGElement): [number, SVGGElement] {
     // position the rows
     let y = Configuration.visual.margin.y;
     const sentNumGroup: SVGGElement = this.svg.group({ 'class': 'sentnum unselectable' });
@@ -3396,7 +3395,7 @@ export class Visualizer {
       this.setData(sourceData);
     }
 
-    this.svg.clear(true);
+    this.dot_svg.clear();
 
     if (!this.data) {
       return;
@@ -3414,10 +3413,10 @@ export class Visualizer {
     this.canvasWidth -= 4;
 
     const defs = this.addHeaderAndDefs();
-    const backgroundGroup = this.svg.group({ 'class': 'background', 'pointer-events': 'none' });
-    const glowGroup = this.svg.group({ 'class': 'glow' });
-    this.highlightGroup = this.svg.group({ 'class': 'highlight' });
-    const textGroup = this.svg.group({ 'class': 'text' });
+    const backgroundGroup = this.dot_svg.group().addClass('background').attr('pointer-events', 'none').node;
+    const glowGroup = this.dot_svg.group().addClass('glow').node;
+    this.highlightGroup = this.dot_svg.group().addClass('highlight').node;
+    const textGroup = this.dot_svg.group().addClass('text').node;
     Util.profileEnd('init');
 
     Util.profileStart('measures');
