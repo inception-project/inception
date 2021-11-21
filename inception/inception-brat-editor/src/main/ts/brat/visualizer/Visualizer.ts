@@ -253,7 +253,7 @@ export class Visualizer {
     this.$svgDiv.svg({
       onLoad: (_svg) => { // JQuery SVGWrapper
         this.svg = _svg;
-        this.dot_svg = SVG(_svg._svg as Element);
+        this.dot_svg = SVG(_svg._svg as Node);
         this.triggerRender();
       }
     });
