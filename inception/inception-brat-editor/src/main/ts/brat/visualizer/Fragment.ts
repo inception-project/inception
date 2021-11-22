@@ -56,7 +56,7 @@ export class Fragment {
   drawCurly = false;
   labelText: string = undefined;
   glyphedLabelText = undefined;;
-  group: Element = undefined;
+  group: SVGGElement = undefined;
   rect = undefined;
   left = undefined;
   right = undefined;

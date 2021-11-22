@@ -37,6 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { SVG, Svg } from "@svgdotjs/svg.js";
 import { Chunk } from "./Chunk";
 
 export class Row {
@@ -46,19 +47,19 @@ export class Row {
   hasAnnotations = false;
   maxArcHeight = 0;
   maxSpanHeight = 0;
-  sentence: number;
-  index: number;
-  backgroundIndex;
-  arcs: SVGGElement;
-  heightsStart: number;
-  heightsEnd: number;
-  heightsAdjust: number;
-  textY: number;
+  sentence: number = undefined;
+  index: number = undefined;
+  backgroundIndex: number = undefined;
+  arcs: SVGGElement = undefined;
+  heightsStart: number = undefined;
+  heightsEnd: number = undefined;
+  heightsAdjust: number = undefined;
+  textY: number = undefined;
   // translation;
 
-  constructor(svg) {
-    this.group = svg.group({ 'class': 'row' });
-    this.background = svg.group(this.group);
+  constructor(svg: Svg) {
+    this.group = svg.group().addClass('row').node;
+    this.background = svg.group().addTo(SVG(this.group)).node;
     // Object.seal(this);
   }
 }

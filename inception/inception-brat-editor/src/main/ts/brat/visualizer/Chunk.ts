@@ -50,8 +50,8 @@ export class Chunk {
   lastSpace = undefined;
   nextSpace = undefined;
   sentence: number = undefined;
-  group: SVGElement = undefined;
-  highlightGroup: SVGElement = undefined;
+  group: SVGGElement = undefined;
+  highlightGroup: SVGGElement = undefined;
   markedTextStart = undefined;
   markedTextEnd = undefined;
   right = undefined;

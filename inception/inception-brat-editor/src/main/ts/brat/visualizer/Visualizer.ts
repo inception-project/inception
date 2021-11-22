@@ -58,7 +58,7 @@ import type { sourceCommentType, sourceEntityType, Offsets } from "./SourceData"
 import * as jsonpatch from 'fast-json-patch';
 import { Operation } from "fast-json-patch";
 import { scrollbarWidth } from "../util/ScrollbarWidth";
-import { SVG, Element as SVGElement, Svg } from "@svgdotjs/svg.js";
+import { SVG, Element as SVGElement, Svg, Container, Text as SVGText } from "@svgdotjs/svg.js";
 
 declare const $: JQueryStatic;
 
@@ -132,7 +132,7 @@ export class Visualizer {
    * @deprecated SVG for JQuery is on the way out
    */
   private svg;
-  private svgContainer: HTMLElement; 
+  private svgContainer: HTMLElement;
   private dot_svg: Svg;
   private highlightGroup: SVGGElement;
 
@@ -1234,36 +1234,35 @@ export class Visualizer {
   }
 
   /**
-   * @param textsHash
-   * @param options arguments to the {@link SVGWrapper.group}} call creating the temporary group used for measurement
-   * @param callback
-   * @return {Measurements}
+   * @param cssClass arguments to the {@link SVGWrapper.group}} call creating the temporary group used for measurement
    */
-  getTextMeasurements(textsHash: Record<string, Array<unknown>>, options, callback?): Measurements {
+  getTextMeasurements(textsHash: Record<string, Array<unknown>>, cssClass, callback?): Measurements {
     // make some text elements, find out the dimensions
-    const textMeasureGroup: SVGGElement = this.svg.group(options);
+    const textMeasureGroup: Container = this.dot_svg.group().addTo(this.dot_svg);
+    if (cssClass) {
+      textMeasureGroup.addClass(cssClass);
+    }
 
     // changed from $.each because of #264 ('length' can appear)
     for (const text in textsHash) {
       if (Object.prototype.hasOwnProperty.call(textsHash, text)) {
-        this.svg.text(textMeasureGroup, 0, 0, text);
+        this.dot_svg.text(text).addTo(textMeasureGroup);
       }
     }
 
     // measuring goes on here
     const widths: Record<string, number> = {};
-    $(textMeasureGroup).find('text').each(function (svgTextNo, svgText) {
-      const text = $(svgText).text();
-      widths[text] = this.getComputedTextLength();
+    textMeasureGroup.children().map(svgText => {
+      const text = (svgText as SVGText).text();
+      widths[text] = (svgText.node as SVGTextContentElement).getComputedTextLength();
 
       if (callback) {
-        $.each(textsHash[text], function (text, object) {
-          callback(object, svgText);
-        });
+        textsHash[text].map(object => callback(object, svgText.node));
       }
     });
-    const bbox = textMeasureGroup.getBBox();
-    this.svg.remove(textMeasureGroup);
+
+    const bbox = textMeasureGroup.bbox();
+    textMeasureGroup.remove();
 
     return new Measurements(widths, bbox.height, bbox.y);
   }
@@ -1514,7 +1513,7 @@ export class Visualizer {
       fragmentTexts['$'] = true; // dummy so we can at least get the height
     }
 
-    return this.getTextMeasurements(fragmentTexts, { 'class': 'span' });
+    return this.getTextMeasurements(fragmentTexts, 'span');
   }
 
   /**
@@ -1543,7 +1542,7 @@ export class Visualizer {
       });
     }
 
-    return this.getTextMeasurements(arcTexts, { 'class': 'arcs' });
+    return this.getTextMeasurements(arcTexts, 'arcs');
   }
 
   /**
@@ -1757,7 +1756,7 @@ export class Visualizer {
     let sentenceToggle = 0;
     let sentenceNumber = sourceData.sentence_number_offset;
 
-    let row = new Row(this.svg);
+    let row = new Row(this.dot_svg);
     row.sentence = sentenceNumber;
     row.backgroundIndex = sentenceToggle;
     row.index = 0;
@@ -1784,8 +1783,8 @@ export class Visualizer {
         currentX += this.rtlmode ? -spaceWidth : spaceWidth;
       }
 
-      chunk.group = this.svg.group(row.group);
-      chunk.highlightGroup = this.svg.group(chunk.group);
+      chunk.group = this.dot_svg.group().addTo(SVG(row.group)).node;
+      chunk.highlightGroup = this.dot_svg.group().addTo(SVG(chunk.group)).node;
 
       let y = 0;
       let hasLeftArcs: boolean, hasRightArcs: boolean, hasInternalArcs: boolean;
@@ -1821,7 +1820,7 @@ export class Visualizer {
           borderColor = Util.adjustColorLightness(bgColor, -0.6);
         }
 
-        fragment.group = this.svg.group(chunk.group, { 'class': 'span' });
+        fragment.group = this.dot_svg.group().addTo(SVG(chunk.group)).addClass('span').node;
 
         if (!y) {
           y = -this.data.sizes.texts.height;
@@ -2053,10 +2052,10 @@ export class Visualizer {
       if (chunk.sentence) {
         while (sentenceNumber < chunk.sentence - 1) {
           sentenceNumber++;
-          row.arcs = this.svg.group(row.group, { 'class': 'arcs' });
+          row.arcs = this.dot_svg.group().addTo(SVG(row.group)).addClass('arcs').node;
           rows.push(row);
 
-          row = new Row(this.svg);
+          row = new Row(this.dot_svg);
           row.sentence = sentenceNumber;
           sentenceToggle = 1 - sentenceToggle;
           row.backgroundIndex = sentenceToggle;
@@ -2077,7 +2076,7 @@ export class Visualizer {
 
       if (chunk.sentence > sourceData.sentence_number_offset || chunkDoesNotFit) {
         // the chunk does not fit
-        row.arcs = this.svg.group(row.group, { 'class': 'arcs' });
+        row.arcs = this.dot_svg.group().addTo(SVG(row.group)).addClass('arcs').node;
         let indent = 0;
         if (chunk.lastSpace) {
           const spaceLen = chunk.lastSpace.length || 0;
@@ -2123,7 +2122,7 @@ export class Visualizer {
         rows.push(row);
 
         this.svg.remove(chunk.group);
-        row = new Row(this.svg);
+        row = new Row(this.dot_svg);
         // Change row background color if a new sentence is starting
         if (chunk.sentence) {
           sentenceToggle = 1 - sentenceToggle;
@@ -2204,9 +2203,9 @@ export class Visualizer {
     // Add trailing empty rows
     while (sentenceNumber < (sourceData.sentence_offsets.length + sourceData.sentence_number_offset - 1)) {
       sentenceNumber++;
-      row.arcs = this.svg.group(row.group, { 'class': 'arcs' });
+      row.arcs = this.dot_svg.group().addTo(SVG(row.group)).addClass('arcs').node;
       rows.push(row);
-      row = new Row(this.svg);
+      row = new Row(this.dot_svg);
       row.sentence = sentenceNumber;
       sentenceToggle = 1 - sentenceToggle;
       row.backgroundIndex = sentenceToggle;
@@ -2214,7 +2213,7 @@ export class Visualizer {
     }
 
     // finish the last row
-    row.arcs = this.svg.group(row.group, { 'class': 'arcs' });
+    row.arcs = this.dot_svg.group().addTo(SVG(row.group)).addClass('arcs').node;
     rows.push(row);
 
     return [rows, fragmentHeights, textMarkedRows];
@@ -2255,7 +2254,7 @@ export class Visualizer {
             'class': 'row-final spacing'
           });
         }
-        rowTextGroup = this.svg.group(textGroup, { 'class': 'text-row' });
+        rowTextGroup = this.dot_svg.group().addTo(SVG(textGroup)).addClass('text-row').node;
       }
       prevChunk = chunk;
 
@@ -2792,9 +2791,9 @@ export class Visualizer {
           }
         }
 
-        let shadowGroup;
+        let shadowGroup: SVGGElement;
         if (arc.shadowClass || arc.marked) {
-          shadowGroup = this.svg.group(arcGroup);
+          shadowGroup = this.dot_svg.group().addTo(SVG(arcGroup)).node;
         }
 
         const options = {
@@ -3146,8 +3145,8 @@ export class Visualizer {
   renderRows(rows: Row[], backgroundGroup: SVGGElement): [number, SVGGElement] {
     // position the rows
     let y = Configuration.visual.margin.y;
-    const sentNumGroup: SVGGElement = this.svg.group({ 'class': 'sentnum unselectable' });
-    let currentSent;
+    const sentNumGroup: SVGGElement = this.dot_svg.group().addClass('sentnum').addClass('unselectable').node;
+    let currentSent: number;
     $.each(rows, (rowId, row) => {
       // find the maximum fragment height
       $.each(row.chunks, function (chunkId, chunk) {
