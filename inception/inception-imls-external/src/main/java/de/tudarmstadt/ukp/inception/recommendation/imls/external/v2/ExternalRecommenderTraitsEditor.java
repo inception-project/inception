@@ -27,6 +27,7 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -37,7 +38,6 @@ import org.apache.wicket.validation.validator.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
@@ -62,7 +62,7 @@ public class ExternalRecommenderTraitsEditor
     private final ExternalRecommenderTraits traits;
     private final LambdaAjaxButton<?> checkServerConnectionButton;
     private final LambdaAjaxButton<?> checkClassifierButton;
-    private final BootstrapSelect<ClassifierInfo> classifierInfoSelect;
+    private final DropDownChoice<ClassifierInfo> classifierInfoSelect;
 
     public ExternalRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
@@ -93,7 +93,7 @@ public class ExternalRecommenderTraitsEditor
         form.add(checkServerConnectionButton);
 
         // TODO: Make combo box
-        classifierInfoSelect = new BootstrapSelect<>("classifierInfo");
+        classifierInfoSelect = new DropDownChoice<>("classifierInfo");
         classifierInfoSelect.setChoiceRenderer(new LambdaChoiceRenderer<>(ClassifierInfo::getName));
         classifierInfoSelect.setOutputMarkupId(true);
         form.add(classifierInfoSelect);
