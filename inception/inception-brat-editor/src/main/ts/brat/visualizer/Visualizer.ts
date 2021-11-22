@@ -3143,10 +3143,6 @@ export class Visualizer {
     return oversized;
   }
 
-  /**
-   * @param rows
-   * @return {[number, SVGElement]}
-   */
   renderRows(rows: Row[], backgroundGroup: SVGGElement): [number, SVGGElement] {
     // position the rows
     let y = Configuration.visual.margin.y;
@@ -3184,7 +3180,7 @@ export class Visualizer {
 
       rowBoxHeight += this.rowPadding;
 
-      let bgClass;
+      let bgClass: string;
       if (Configuration.textBackgrounds === "striped") {
         // give every other sentence a different bg class
         bgClass = 'background' + row.backgroundIndex;
