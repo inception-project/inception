@@ -172,7 +172,7 @@ export class Visualizer {
   private isCollectionLoaded = false;
 
   private markedText: Array<[number, number, string]> = [];
-  private highlight;
+  private highlight: Array<SVGGElement> | undefined;
   private highlightArcs;
   private highlightSpans;
 
@@ -1563,11 +1563,9 @@ export class Visualizer {
   }
 
   /**
-   * @param {SVGElement} defs
-   * @param spec
    * @return {string|undefined}
    */
-  makeArrow(defs: SVGElement, spec): string | undefined {
+  makeArrow(defs: SVGElement, spec: string): string | undefined {
     const parsedSpec = spec.split(',');
     const type = parsedSpec[0];
     if (type === 'none') {
@@ -1580,12 +1578,12 @@ export class Visualizer {
     if ($.isNumeric(parsedSpec[1]) && parsedSpec[2]) {
       if ($.isNumeric(parsedSpec[2]) && parsedSpec[3]) {
         // 3 args, 2 numeric: assume width, height, color
-        width = parsedSpec[1];
-        height = parsedSpec[2];
+        width = parseFloat(parsedSpec[1]);
+        height = parseFloat(parsedSpec[2]);
         color = parsedSpec[3] || 'black';
       } else {
         // 2 args, 1 numeric: assume width/height, color
-        width = height = parsedSpec[1];
+        width = height = parseFloat(parsedSpec[1]);
         color = parsedSpec[2] || 'black';
       }
     } else {
@@ -1596,23 +1594,31 @@ export class Visualizer {
     // hash needs to be replaced as IDs don't permit it.
     const arrowId = 'arrow_' + spec.replace(/#/g, '').replace(/,/g, '_');
 
-    let arrow;
+    // FIXME Looks like we create a new arrow definition for every arc, overriding previous defs
+    // if necessary - maybe we should remember if an arrow type has already been declared and if
+    // so not re-declare it.
     if (type === 'triangle') {
-      arrow = this.svg.marker(defs, arrowId,
-        width, height / 2, width, height, 'auto',
-        {
+      const arrow = this.dot_svg.marker(width, height)
+        .id(arrowId)
+        .ref(width, height / 2)
+        .orient('auto')
+        .attr({
           markerUnits: 'strokeWidth',
           'fill': color,
-        });
-      this.svg.polyline(arrow, [[0, 0], [width, height / 2], [0, height], [width / 12, height / 2]]);
+        })
+        .addTo(SVG(defs));
+
+      this.dot_svg.polygon([[0, 0], [width, height / 2], [0, height], [width / 12, height / 2]])
+        .addTo(arrow);
     }
+
     return arrowId;
   }
 
   /**
    * @return {number}
    */
-  calculateMaxTextWidth(sizes): number {
+  calculateMaxTextWidth(sizes: Sizes): number {
     let maxTextWidth = 0;
     for (const text in sizes.texts.widths) {
       if (Object.prototype.hasOwnProperty.call(sizes.texts.widths, text)) {
@@ -1622,7 +1628,7 @@ export class Visualizer {
     return maxTextWidth;
   }
 
-  renderLayoutFloorsAndCurlies(spanDrawOrderPermutation) {
+  renderLayoutFloorsAndCurlies(spanDrawOrderPermutation: string) {
     // reserve places for spans
     const floors = [];
     const reservations = []; // reservations[chunk][floor] = [[from, to, headroom]...]
@@ -2568,19 +2574,23 @@ export class Visualizer {
 
   renderDragArcMarker(defs: SVGElement) {
     // draw the drag arc marker
-    const arrowhead = this.svg.marker(defs, 'drag_arrow',
-      5, 2.5, 5, 5, 'auto',
-      {
-        markerUnits: 'strokeWidth',
-        'class': 'drag_fill',
-      });
-    this.svg.polyline(arrowhead, [[0, 0], [5, 2.5], [0, 5], [0.2, 2.5]]);
+    const arrowhead = this.dot_svg.marker(5, 5)
+      .id('drag_arrow')
+      .ref(5, 2.5)
+      .orient('auto')
+      .addClass('drag_fill')
+      .attr('markerUnits', 'strokeWidth')
+      .addTo(defs);
+
+    this.dot_svg.polyline([[0, 0], [5, 2.5], [0, 5], [0.2, 2.5]]).addTo(arrowhead);
+
     const arcDragArc = this.svg.path(this.svg.createPath(), {
       markerEnd: 'url(#drag_arrow)',
       'class': 'drag_stroke',
       fill: 'none',
       visibility: 'hidden',
     });
+    
     this.dispatcher.post('arcDragArcDrawn', [arcDragArc]);
   }
 
@@ -2810,14 +2820,18 @@ export class Visualizer {
         };
 
         if (arc.marked) {
-          this.svg.rect(shadowGroup,
-            textBox.x - this.markedArcSize, textBox.y - this.markedArcSize,
-            textBox.width + 2 * this.markedArcSize, textBox.height + 2 * this.markedArcSize, {
-            filter: 'url(#Gaussian_Blur)',
-            'class': "shadow_EditHighlight",
-            rx: this.markedArcSize,
-            ry: this.markedArcSize,
-          });
+          this.dot_svg.rect()
+            .x(textBox.x - this.markedArcSize)
+            .y(textBox.y - this.markedArcSize)
+            .width(textBox.width + 2 * this.markedArcSize)
+            .height(textBox.height + 2 * this.markedArcSize)
+            .attr({
+              filter: 'url(#Gaussian_Blur)',
+              'class': "shadow_EditHighlight",
+              rx: this.markedArcSize,
+              ry: this.markedArcSize,
+            })
+            .addTo(SVG(shadowGroup));
         }
 
         if (arc.shadowClass) {
@@ -3546,7 +3560,7 @@ export class Visualizer {
   }
 
   triggerRender() {
-    if (this.svg && ((this.isRenderRequested && this.isCollectionLoaded) || this.requestedData)) {
+    if (this.dot_svg && ((this.isRenderRequested && this.isCollectionLoaded) || this.requestedData)) {
       this.isRenderRequested = false;
 
       if (this.requestedData) {
@@ -3768,7 +3782,7 @@ export class Visualizer {
     this.dispatcher.post('hideComment');
 
     if (this.highlight) {
-      this.highlight.map((h) => this.svg.remove(h));
+      this.highlight.map(h => SVG(h).remove());
       this.highlight = undefined;
     }
 
@@ -3909,7 +3923,7 @@ export class Visualizer {
     return !this.drawing;
   }
 
-  verticalSpacer(y, height) {
+  verticalSpacer(y: number, height: number) {
     if (height > 0) {
       const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
       const spacer = document.createElement('span');
@@ -3929,7 +3943,7 @@ export class Visualizer {
     }
   }
 
-  horizontalSpacer(svg, group, x: number, y: number, width: number, attrs) {
+  horizontalSpacer(svg, group: SVGGElement, x: number, y: number, width: number, attrs) {
     if (width > 0) {
       const attributes = $.extend({
         textLength: width,
@@ -3941,40 +3955,49 @@ export class Visualizer {
     }
   }
 
-  renderArcShadow(arc, shadowGroup, textBox) {
-    this.svg.rect(shadowGroup,
-      textBox.x - this.arcLabelShadowSize,
-      textBox.y - this.arcLabelShadowSize,
-      textBox.width + 2 * this.arcLabelShadowSize,
-      textBox.height + 2 * this.arcLabelShadowSize, {
-      'class': 'shadow_' + arc.shadowClass,
-      filter: 'url(#Gaussian_Blur)',
-      rx: this.arcLabelShadowRounding,
-      ry: this.arcLabelShadowRounding,
-    });
+  renderArcShadow(arc: Arc, shadowGroup: SVGGElement, textBox: { x: number; y: number; width: number; height: number; }) {
+    return this.dot_svg.rect()
+      .x(textBox.x - this.arcLabelShadowSize)
+      .y(textBox.y - this.arcLabelShadowSize)
+      .width(textBox.width + 2 * this.arcLabelShadowSize)
+      .height(textBox.height + 2 * this.arcLabelShadowSize)
+      .attr({
+        'class': 'shadow_' + arc.shadowClass,
+        filter: 'url(#Gaussian_Blur)',
+        rx: this.arcLabelShadowRounding,
+        ry: this.arcLabelShadowRounding,
+      })
+      .addTo(SVG(shadowGroup));
   }
 
   renderSpanMarkedRect(bx: number, by: number, bw: number, bh: number, chunk: Chunk): SVGElement {
-    return this.svg.rect(chunk.highlightGroup,
-      bx - this.markedSpanSize, by - this.markedSpanSize,
-      bw + 2 * this.markedSpanSize, bh + 2 * this.markedSpanSize, {
-      filter: 'url(#Gaussian_Blur)',
-      'class': "shadow_EditHighlight",
-      rx: this.markedSpanSize,
-      ry: this.markedSpanSize,
-    });
+    return this.dot_svg.rect()
+      .x(bx - this.markedSpanSize)
+      .y(by - this.markedSpanSize)
+      .width(bw + 2 * this.markedSpanSize)
+      .height(bh + 2 * this.markedSpanSize)
+      .attr({
+        filter: 'url(#Gaussian_Blur)',
+        'class': "shadow_EditHighlight",
+        rx: this.markedSpanSize,
+        ry: this.markedSpanSize,
+      })
+      .addTo(SVG(chunk.highlightGroup));
   }
 
   renderFragmentShadowRect(bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGElement {
-    const span = fragment.span;
-    return this.svg.rect(fragment.group,
-      bx - this.rectShadowSize, by - this.rectShadowSize,
-      bw + 2 * this.rectShadowSize, bh + 2 * this.rectShadowSize, {
-      'class': 'shadow_' + span.shadowClass,
-      filter: 'url(#Gaussian_Blur)',
-      rx: this.rectShadowRounding,
-      ry: this.rectShadowRounding,
-    });
+    return this.dot_svg.rect()
+      .x(bx - this.rectShadowSize)
+      .y(by - this.rectShadowSize)
+      .width(bw + 2 * this.rectShadowSize)
+      .height(bh + 2 * this.rectShadowSize)
+      .attr({
+        'class': 'shadow_' + fragment.span.shadowClass,
+        filter: 'url(#Gaussian_Blur)',
+        rx: this.rectShadowRounding,
+        ry: this.rectShadowRounding,
+      })
+      .addTo(SVG(fragment.group));
   }
 
   renderFragmentRect(bx: number, by: number, bw: number, bh: number, yy: number, fragment: Fragment, rectClass: string, bgColor: string, borderColor: string): SVGElement {
