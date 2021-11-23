@@ -221,8 +221,11 @@ public class AnnotatorStateImpl
     @Override
     public void setProject(Project aProject)
     {
+        if (project == null || !project.equals(aProject)) {
+            setScriptDirection(aProject.getScriptDirection());
+        }
+
         project = aProject;
-        setScriptDirection(project.getScriptDirection());
     }
 
     @Override
