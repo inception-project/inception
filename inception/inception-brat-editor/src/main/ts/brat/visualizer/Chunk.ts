@@ -37,6 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { SVG, Svg } from "@svgdotjs/svg.js";
 import { Fragment } from "./Fragment";
 import { Row } from "./Row";
 
@@ -69,5 +70,12 @@ export class Chunk {
     this.to = to;
     this.space = space;
     Object.seal(this);
+  }
+
+  renderText(svg: Svg, rowTextGroup: SVGGElement ) {
+    svg.text(this.text)
+      .translate(this.textX, this.row.textY)
+      .attr('data-chunk-id', this.index)
+      .addTo(SVG(rowTextGroup));
   }
 }

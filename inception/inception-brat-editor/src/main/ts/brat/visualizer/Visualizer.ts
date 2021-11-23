@@ -141,7 +141,7 @@ export class Visualizer {
 
   private data: DocumentData = null;
   private sourceData: SourceData = null;
-  private requestedData = null;
+  private requestedData: SourceData = null; // FIXME Do we really need requestedData AND sourceData?
 
   /**
    * @deprecated INCEpTION does not use the collection name.
@@ -2121,7 +2121,7 @@ export class Visualizer {
         // new row
         rows.push(row);
 
-        this.svg.remove(chunk.group);
+        SVG(chunk.group).remove();
         row = new Row(this.dot_svg);
         // Change row background color if a new sentence is starting
         if (chunk.sentence) {
@@ -2129,10 +2129,14 @@ export class Visualizer {
         }
         row.backgroundIndex = sentenceToggle;
         row.index = ++rowIndex;
-        this.svg.add(row.group, chunk.group);
+        SVG(chunk.group).addTo(SVG(row.group));
         chunk.group = row.group.lastElementChild as SVGGElement;
-        $(chunk.group).children("g[class='span']").each((index, element) => { chunk.fragments[index].group = element });
-        $(chunk.group).find("rect[data-span-id]").each((index, element) => { chunk.fragments[index].rect = element });
+        $(chunk.group).children("g[class='span']").each((index, element) => { 
+          chunk.fragments[index].group = element as SVGGElement; 
+        });
+        $(chunk.group).find("rect[data-span-id]").each((index, element) => { 
+          chunk.fragments[index].rect = element;
+        });
       }
 
       // break the text highlights when the row breaks
@@ -2224,24 +2228,24 @@ export class Visualizer {
     // algorithm; first for left-to-right pass, sorting primarily
     // by start offset, second for right-to-left pass by end
     // offset. Secondary sort by fragment length in both cases.
-    let currentChunk;
+    let currentChunk: Chunk;
 
-    const lrChunkComp = (a, b) => {
+    const lrChunkComp = (a: number, b: number) => {
       const ac = currentChunk.fragments[a];
       const bc = currentChunk.fragments[b];
       const startDiff = Util.cmp(ac.from, bc.from);
       return startDiff !== 0 ? startDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
     };
 
-    const rlChunkComp = (a, b) => {
+    const rlChunkComp = (a: number, b: number) => {
       const ac = currentChunk.fragments[a];
       const bc = currentChunk.fragments[b];
       const endDiff = Util.cmp(bc.to, ac.to);
       return endDiff !== 0 ? endDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
     };
 
-    let prevChunk = null;
-    let rowTextGroup = null;
+    let prevChunk: Chunk = null;
+    let rowTextGroup: SVGGElement = null;
     $.each(this.data.chunks, (chunkNo, chunk) => {
       // context for sort
       currentChunk = chunk;
@@ -2271,9 +2275,7 @@ export class Visualizer {
           });
         }
 
-        this.svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
-          'data-chunk-id': chunk.index
-        });
+        chunk.renderText(this.dot_svg, rowTextGroup);
 
         // If there needs to be space between this chunk and the next one, add a spacer
         // item that stretches across the entire inter-chunk space. This ensures a
@@ -2294,9 +2296,7 @@ export class Visualizer {
           });
         }
 
-        this.svg.text(rowTextGroup, chunk.textX, chunk.row.textY, chunk.text, {
-          'data-chunk-id': chunk.index
-        });
+        chunk.renderText(this.dot_svg, rowTextGroup);
 
         // If there needs to be space between this chunk and the next one, add a spacer
         // item that stretches across the entire inter-chunk space. This ensures a
@@ -2427,14 +2427,14 @@ export class Visualizer {
           }
 
           // Render highlight
-          this.svg.rect(this.highlightGroup,
-            fragment.highlightPos.x, fragment.highlightPos.y,
-            fragment.highlightPos.w, fragment.highlightPos.h,
-            {
+          this.dot_svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
+            .translate(fragment.highlightPos.x, fragment.highlightPos.y)
+            .attr({
               fill: lightBgColor,
               rx: this.highlightRounding.x,
-              ry: this.highlightRounding.y,
-            });
+              ry: this.highlightRounding.y
+            })
+            .addTo(SVG(this.highlightGroup));
         }
       }
     });
@@ -3110,7 +3110,7 @@ export class Visualizer {
       // const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
       const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
       const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
-      const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
+      const lastChunkOffset = SVG(rowFinalSpacing.prev()[0]).x().valueOf() as number;
       if (this.rtlmode) {
         // Not sure what to calculate here
       } else {
@@ -3306,7 +3306,7 @@ export class Visualizer {
       const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
       // const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
       const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
-      const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
+      const lastChunkOffset = SVG(rowFinalSpacing.prev()[0]).x().valueOf() as number;
 
       if (this.rtlmode) {
         const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
