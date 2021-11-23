@@ -66,6 +66,11 @@ import { INSTANCE as Configuration } from "../configuration/Configuration";
 
 import { INSTANCE as Util } from "../util/Util";
 
+/** 
+ * [lastRow, textDesc[3], lastX - boxX, textDesc[4]] 
+ */
+type MarkedRow = [Row, unknown, number, unknown];
+
 /**
  * Sets default values for a wide range of optional attributes.
  *
@@ -1761,7 +1766,7 @@ export class Visualizer {
     row.backgroundIndex = sentenceToggle;
     row.index = 0;
 
-    const textMarkedRows = [];
+    const textMarkedRows: Array<MarkedRow> = [];
     let rowIndex = 0;
 
     chunks.map((chunk: Chunk) => {
@@ -2143,7 +2148,7 @@ export class Visualizer {
       if (row.index !== lastRow.index) {
         $.each(openTextHighlights, (textId, textDesc) => {
           if (textDesc[3] !== lastX) {
-            let newDesc: [Row, unknown, number, unknown];
+            let newDesc: MarkedRow;
             if (this.rtlmode) {
               newDesc = [lastRow, textDesc[3], lastX - boxX, textDesc[4]];
             } else {
@@ -2449,11 +2454,16 @@ export class Visualizer {
 
     // draw the markedText
     $.each(textMarkedRows, (textRowNo, textRowDesc) => {
-      this.svg.rect(this.highlightGroup,
-        textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height,
-        textRowDesc[2] - textRowDesc[1] + 4, this.data.sizes.fragments.height + 4,
-        { 'class': textRowDesc[3] }
-      );
+      this.dot_svg.rect(textRowDesc[2] - textRowDesc[1] + 4, this.data.sizes.fragments.height + 4)
+        .translate(textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height)
+        .addClass(textRowDesc[3])
+        .addTo(SVG(this.highlightGroup));
+
+      // this.svg.rect(this.highlightGroup,
+      //   textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height,
+      //   textRowDesc[2] - textRowDesc[1] + 4, this.data.sizes.fragments.height + 4,
+      //   { 'class': textRowDesc[3] }
+      // );
     });
   }
 
@@ -3110,7 +3120,7 @@ export class Visualizer {
       // const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
       const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
       const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
-      const lastChunkOffset = SVG(rowFinalSpacing.prev()[0]).x().valueOf() as number;
+      const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
       if (this.rtlmode) {
         // Not sure what to calculate here
       } else {
@@ -3155,9 +3165,11 @@ export class Visualizer {
             row.maxSpanHeight = fragment.height;
         });
       });
+
       if (row.sentence) {
         currentSent = row.sentence;
       }
+      
       // SLOW (#724) and replaced with calculations:
       //
       // var rowBox = row.group.getBBox();
@@ -3179,36 +3191,19 @@ export class Visualizer {
 
       rowBoxHeight += this.rowPadding;
 
-      let bgClass: string;
-      if (Configuration.textBackgrounds === "striped") {
-        // give every other sentence a different bg class
-        bgClass = 'background' + row.backgroundIndex;
-      } else {
-        // plain "standard" bg
-        bgClass = 'background0';
-      }
+      this.renderRowBackground(backgroundGroup, row, y, rowBoxHeight);
 
       const sizes = this.data.sizes;
-      this.svg.rect(backgroundGroup,
-        0, y + sizes.texts.y + sizes.texts.height,
-        this.canvasWidth, rowBoxHeight + sizes.texts.height + 1, {
-        'class': bgClass,
-      });
-
       if (row.sentence && this.data.markedSent[currentSent]) {
         if (this.rtlmode) {
           this.svg.rect(backgroundGroup,
-            this.canvasWidth - this.sentNumMargin,
-            y + sizes.texts.y + sizes.texts.height,
-            this.sentNumMargin,
-            rowBoxHeight + sizes.texts.height + 1,
+            this.canvasWidth - this.sentNumMargin, y + sizes.texts.y + sizes.texts.height,
+            this.sentNumMargin, rowBoxHeight + sizes.texts.height + 1,
             { 'class': 'backgroundHighlight' });
         } else {
           this.svg.rect(backgroundGroup,
-            0,
-            y + sizes.texts.y + sizes.texts.height,
-            this.sentNumMargin,
-            rowBoxHeight + sizes.texts.height + 1,
+            0, y + sizes.texts.y + sizes.texts.height,
+            this.sentNumMargin, rowBoxHeight + sizes.texts.height + 1,
             { 'class': 'backgroundHighlight' });
         }
       }
@@ -3216,38 +3211,8 @@ export class Visualizer {
       y += rowBoxHeight;
       y += sizes.texts.height;
       row.textY = y - this.rowPadding;
-      if (row.sentence) {
-        // Render sentence number as link
-        const text = this.dot_svg.text('' + row.sentence)
-          .attr('data-sent', row.sentence)
-          .css('cursor', 'pointer');
-        if (this.rtlmode) {
-          text.translate(this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x, y - this.rowPadding);
-        } else {
-          text.translate(this.sentNumMargin - Configuration.visual.margin.x, y - this.rowPadding);
-        }
-        SVG(sentNumGroup).add(text);
 
-        const sentComment = this.data.sentComment[row.sentence];
-        if (sentComment) {
-          const box = text.rbox(SVG(sentNumGroup));
-          // TODO: using rectShadowSize, but this shadow should
-          // probably have its own setting for shadow size
-          const highlight = this.svg.rect(sentNumGroup,
-            this.rtlmode ? box.x + this.rowPadding + this.rectShadowSize : box.x - this.rectShadowSize,
-            box.y - this.rectShadowSize,
-            box.width + 2 * this.rectShadowSize,
-            box.height + 2 * this.rectShadowSize, {
-            'class': 'shadow_' + sentComment.type,
-            filter: 'url(#Gaussian_Blur)',
-            rx: this.rectShadowRounding,
-            ry: this.rectShadowRounding,
-            'data-sent': row.sentence,
-          });
-          text.insertAfter(highlight);
-          text.css('fill', '#000');
-        }
-      }
+      this.renderRowNumber(sentNumGroup, row, y);
 
       let rowY = y - this.rowPadding;
       if (this.roundCoordinates) {
@@ -3261,10 +3226,66 @@ export class Visualizer {
     return [y, sentNumGroup];
   }
 
+  renderRowBackground(backgroundGroup: SVGGElement, row: Row, y: number, rowBoxHeight: number) {
+    let bgClass: string;
+    if (Configuration.textBackgrounds === "striped") {
+      // give every other sentence a different bg class
+      bgClass = 'background' + row.backgroundIndex;
+    } else {
+      // plain "standard" bg
+      bgClass = 'background0';
+    }
+
+    const sizes = this.data.sizes;
+    this.dot_svg.rect(this.canvasWidth, rowBoxHeight + sizes.texts.height + 1)
+      .translate(0, y + sizes.texts.y + sizes.texts.height)
+      .addClass(bgClass)
+      .addTo(SVG(backgroundGroup));
+  }
+
+  renderRowNumber(sentNumGroup: SVGGElement, row: Row, y: number) {
+    if (row.sentence) {
+      // Render sentence number as link
+      let textX: number;
+      if (this.rtlmode) {
+        textX = (this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x);
+      } else {
+        textX = (this.sentNumMargin - Configuration.visual.margin.x);
+      }
+      const text = this.dot_svg.text(`${row.sentence}`)
+        .amove(textX, y - this.rowPadding)
+        .attr('data-sent', row.sentence)
+        .css('cursor', 'pointer');
+      text.addTo(SVG(sentNumGroup));
+
+      const sentComment = this.data.sentComment[row.sentence];
+      if (sentComment) {
+        const box = text.rbox(SVG(sentNumGroup));
+        // TODO: using rectShadowSize, but this shadow should probably have its own setting for shadow size
+        const highlight = this.dot_svg.rect()
+          .translate(
+            this.rtlmode ? box.x - this.rectShadowSize : box.x - this.rectShadowSize,
+            box.y - this.rectShadowSize)
+          .width(box.width + 2 * this.rectShadowSize)
+          .height(box.height + 2 * this.rectShadowSize)
+          .attr({
+            'class': 'shadow_' + sentComment.type,
+            filter: 'url(#Gaussian_Blur)',
+            rx: this.rectShadowRounding,
+            ry: this.rectShadowRounding,
+            'data-sent': row.sentence,
+          })
+          .addTo(SVG(sentNumGroup));
+
+        text.insertAfter(highlight);
+        text.css('fill', '#000');
+      }
+    }
+  }
+
   renderAdjustLayoutForRtl(oversized, rows, glowGroup, textGroup, sentNumGroup) {
-    this.dot_svg.attr('direction', 'rtl');
     if (oversized > 0) {
-      $.each(rows, (index, row) => this.translate(row, oversized, row.translation.y));
+      rows.map(row => this.translate(row, oversized, row.translation.y));
       $(glowGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
       $(this.highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
       $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
@@ -3306,7 +3327,7 @@ export class Visualizer {
       const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
       // const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
       const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
-      const lastChunkOffset = SVG(rowFinalSpacing.prev()[0]).x().valueOf() as number;
+      const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
 
       if (this.rtlmode) {
         const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
@@ -3314,7 +3335,7 @@ export class Visualizer {
         rowInitialSpacing.attr('x', initialSpacingX);
         rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
-        const finalSpacingX = lastChunkOffset - lastChunkWidth;
+        const finalSpacingX = Math.max(lastChunkOffset - lastChunkWidth, 0);
         const finalSpacingWidth = finalSpacingX;
         rowFinalSpacing.attr('x', finalSpacingX);
         rowFinalSpacing.attr('textLength', finalSpacingWidth);
@@ -3392,9 +3413,14 @@ export class Visualizer {
     }
 
     this.dot_svg.clear();
+    this.dot_svg.attr('direction', null);
 
     if (!this.data) {
       return;
+    }
+
+    if (this.rtlmode) {
+      this.dot_svg.attr('direction', 'rtl');
     }
 
     this.dot_svg.css('fontStyle', `${this.fontZoom}%`);

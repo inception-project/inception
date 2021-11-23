@@ -42,19 +42,21 @@ import { Fragment } from "./Fragment";
 import { Row } from "./Row";
 
 export class Chunk {
-  index = undefined;
-  text = undefined;
-  from = undefined;
-  to = undefined;
-  space = undefined;
+  index: number = undefined;
+  text: string = undefined;
+  from: number = undefined;
+  to: number = undefined;
+  space: string = undefined;
   fragments: Fragment[] = [];
   lastSpace = undefined;
   nextSpace = undefined;
   sentence: number = undefined;
   group: SVGGElement = undefined;
   highlightGroup: SVGGElement = undefined;
-  markedTextStart = undefined;
-  markedTextEnd = undefined;
+  // chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
+  markedTextStart: Array<unknown> = undefined;
+  // chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
+  markedTextEnd: Array<unknown> = undefined;
   right = undefined;
   row: Row = undefined;
   textX = undefined;
@@ -63,7 +65,7 @@ export class Chunk {
   lastFragmentIndex = undefined;
   rtlsizes = undefined;
 
-  constructor(index, text, from, to, space) {
+  constructor(index: number, text: string, from: number, to: number, space: string) {
     this.index = index;
     this.text = text;
     this.from = from;
@@ -73,9 +75,15 @@ export class Chunk {
   }
 
   renderText(svg: Svg, rowTextGroup: SVGGElement ) {
-    svg.text(this.text)
-      .translate(this.textX, this.row.textY)
-      .attr('data-chunk-id', this.index)
+    svg.plain(this.text)
+      .attr({
+        // Storing the exact position in the attributs here is an optimization because that
+        // allows us to obtain the position direcly later without the browser having to actually
+        // layout stuff
+        x: this.textX,
+        y: this.row.textY,
+        'data-chunk-id': this.index
+      })
       .addTo(SVG(rowTextGroup));
   }
 }
