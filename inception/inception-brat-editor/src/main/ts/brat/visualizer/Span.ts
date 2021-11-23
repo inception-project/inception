@@ -47,7 +47,7 @@ export class Span {
   type: string = undefined;
   totalDist = 0;
   numArcs = 0;
-  generalType = undefined;
+  generalType: string = undefined;
   headFragment: Fragment = undefined;
   unsegmentedOffsets: Array<Offsets> = [];
   offsets: OffsetsList = [];

@@ -39,7 +39,6 @@ $background_color_10: #ffcccc;
 
 
 .brat {
-  
   @-webkit-keyframes pulse {
     0% {
       color: #9999ff;
@@ -53,11 +52,6 @@ $background_color_10: #ffcccc;
       color: #9999ff;
       margin-top: 0;
     }
-  }
-  
-  #svg {
-    margin: 34px auto 100px;
-    padding-top: 15px;
   }
   
   .center_wrapper {
@@ -85,18 +79,9 @@ $background_color_10: #ffcccc;
     }
   }
   
-  #no_svg_wrapper {
-    display: none;
-  }
-  
   svg {
-    width: 100%;
     border: 1px solid #7fa2ff;
     font-size: 15px;
-  }
-  
-  svg.reselect {
-    border: 1px solid #ff3333;
   }
   
   text {

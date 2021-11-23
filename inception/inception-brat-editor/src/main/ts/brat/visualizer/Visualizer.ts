@@ -2136,10 +2136,10 @@ export class Visualizer {
         row.index = ++rowIndex;
         SVG(chunk.group).addTo(SVG(row.group));
         chunk.group = row.group.lastElementChild as SVGGElement;
-        $(chunk.group).children("g[class='span']").each((index, element) => { 
-          chunk.fragments[index].group = element as SVGGElement; 
+        $(chunk.group).children("g[class='span']").each((index, element) => {
+          chunk.fragments[index].group = element as SVGGElement;
         });
-        $(chunk.group).find("rect[data-span-id]").each((index, element) => { 
+        $(chunk.group).find("rect[data-span-id]").each((index, element) => {
           chunk.fragments[index].rect = element;
         });
       }
@@ -2599,14 +2599,6 @@ export class Visualizer {
         return;
       }
 
-      // separate out possible numeric suffix from type
-      let noNumArcType;
-      let splitArcType;
-      if (arc.type) {
-        splitArcType = arc.type.match(/^(.*)(\d*)$/);
-        noNumArcType = splitArcType[1];
-      }
-
       const originSpan = this.data.spans[arc.origin];
       const targetSpan = this.data.spans[arc.target];
 
@@ -2622,7 +2614,7 @@ export class Visualizer {
 
       // fall back on relation types in case we still don't have
       // an arc description, with final fallback to unnumbered relation
-      let arcDesc = this.relationTypesHash[arc.type] || this.relationTypesHash[noNumArcType];
+      let arcDesc = this.relationTypesHash[arc.type];
 
       // if it's not a relationship, see if we can find it in span descriptions
       // TODO: might make more sense to reformat this as dict instead of searching through the list every type
@@ -2633,20 +2625,6 @@ export class Visualizer {
             arcDesc = arcDescIter;
           }
         });
-      }
-
-      // last fall back on unnumbered type if not found in full
-      if (!arcDesc && noNumArcType && noNumArcType !== arc.type && spanDesc && spanDesc.arcs) {
-        $.each(spanDesc.arcs, (arcDescNo, arcDescIter) => {
-          if (arcDescIter.type === noNumArcType) {
-            arcDesc = arcDescIter;
-          }
-        });
-      }
-
-      // empty default
-      if (!arcDesc) {
-        arcDesc = new RelationType();
       }
 
       let color = ((arcDesc && arcDesc.color) || '#000000');
@@ -2684,8 +2662,8 @@ export class Visualizer {
       }
 
       // find the next height
-      let height;
-      let fromIndex2, toIndex2;
+      let height: number;
+      let fromIndex2: number, toIndex2: number;
       if (left.chunk.index === right.chunk.index) {
         fromIndex2 = left.towerId * 2 + left.chunk.row.heightsAdjust;
         toIndex2 = right.towerId * 2 + right.chunk.row.heightsAdjust;
@@ -2806,51 +2784,22 @@ export class Visualizer {
           shadowGroup = this.dot_svg.group().addTo(SVG(arcGroup)).node;
         }
 
-        const options = {
-          //'fill': color,
-          'fill': '#000000',
-          'data-arc-role': arc.type,
-          'data-arc-origin': arc.origin,
-          'data-arc-target': arc.target,
-          // TODO: confirm this is unused and remove.
-          //'data-arc-id': arc.id,
-          'data-arc-ed': arc.eventDescId,
-        };
-
-        // construct SVG text, showing possible trailing index
-        // numbers (as in e.g. "Theme2") as subscripts
-        let svgText;
-        if (!splitArcType[2]) {
-          // no subscript, simple string suffices
-          svgText = labelText;
-        } else {
-          // Need to parse out possible numeric suffixes to avoid
-          // duplicating number in label and its subscript
-          const splitLabelText = labelText.match(/^(.*?)(\d*)$/);
-          const noNumLabelText = splitLabelText[1];
-
-          svgText = this.svg.createText();
-          // TODO: to address issue #453, attaching options also
-          // to spans, not only primary text. Make sure there
-          // are no problems with this.
-          svgText.span(noNumLabelText, options);
-          const subscriptSettings = {
-            'dy': '0.3em',
-            'font-size': '80%'
-          };
-          // alternate possibility
-          //                 var subscriptSettings = {
-          //                   'baseline-shift': 'sub',
-          //                   'font-size': '80%'
-          //                 };
-          $.extend(subscriptSettings, options);
-          svgText.span(splitArcType[2], subscriptSettings);
-        }
-
         // guess at the correct baseline shift to get vertical centering.
         // (CSS dominant-baseline can't be used as not all SVG renders support it.)
         const baseline_shift = this.data.sizes.arcs.height / 4;
-        this.svg.text(arcGroup, (from + to) / 2, -height + baseline_shift, svgText, options);
+        this.dot_svg.plain(labelText)
+          .translate((from + to) / 2, -height + baseline_shift)
+          .attr({
+            //'fill': color,
+            'fill': '#000000',
+            'data-arc-role': arc.type,
+            'data-arc-origin': arc.origin,
+            'data-arc-target': arc.target,
+            // TODO: confirm this is unused and remove.
+            //'data-arc-id': arc.id,
+            'data-arc-ed': arc.eventDescId,
+          })
+          .addTo(SVG(arcGroup));
 
         const width = this.data.sizes.arcs.widths[labelText];
         const textBox = {
@@ -3153,23 +3102,21 @@ export class Visualizer {
   }
 
   renderRows(rows: Row[], backgroundGroup: SVGGElement): [number, SVGGElement] {
+    const sentNumGroup: SVGGElement = this.dot_svg.group().addClass('sentnum').addClass('unselectable').node;
+
     // position the rows
     let y = Configuration.visual.margin.y;
-    const sentNumGroup: SVGGElement = this.dot_svg.group().addClass('sentnum').addClass('unselectable').node;
     let currentSent: number;
-    $.each(rows, (rowId, row) => {
+    rows.map(row => {
       // find the maximum fragment height
-      $.each(row.chunks, function (chunkId, chunk) {
-        $.each(chunk.fragments, function (fragmentId, fragment) {
-          if (row.maxSpanHeight < fragment.height)
+      row.chunks.map(chunk => {
+        chunk.fragments.map(fragment => {
+          if (row.maxSpanHeight < fragment.height) {
             row.maxSpanHeight = fragment.height;
+          }
         });
       });
 
-      if (row.sentence) {
-        currentSent = row.sentence;
-      }
-      
       // SLOW (#724) and replaced with calculations:
       //
       // var rowBox = row.group.getBBox();
@@ -3191,25 +3138,14 @@ export class Visualizer {
 
       rowBoxHeight += this.rowPadding;
 
-      this.renderRowBackground(backgroundGroup, row, y, rowBoxHeight);
-
-      const sizes = this.data.sizes;
-      if (row.sentence && this.data.markedSent[currentSent]) {
-        if (this.rtlmode) {
-          this.svg.rect(backgroundGroup,
-            this.canvasWidth - this.sentNumMargin, y + sizes.texts.y + sizes.texts.height,
-            this.sentNumMargin, rowBoxHeight + sizes.texts.height + 1,
-            { 'class': 'backgroundHighlight' });
-        } else {
-          this.svg.rect(backgroundGroup,
-            0, y + sizes.texts.y + sizes.texts.height,
-            this.sentNumMargin, rowBoxHeight + sizes.texts.height + 1,
-            { 'class': 'backgroundHighlight' });
-        }
+      if (row.sentence) {
+        currentSent = row.sentence;
       }
 
+      this.renderRowBackground(backgroundGroup, row, y, rowBoxHeight, currentSent);
+
       y += rowBoxHeight;
-      y += sizes.texts.height;
+      y += this.data.sizes.texts.height;
       row.textY = y - this.rowPadding;
 
       this.renderRowNumber(sentNumGroup, row, y);
@@ -3219,14 +3155,16 @@ export class Visualizer {
         rowY = rowY | 0;
       }
       this.translate(row, 0, rowY);
+
       y += Configuration.visual.margin.y;
     });
+
     y += Configuration.visual.margin.y;
 
     return [y, sentNumGroup];
   }
 
-  renderRowBackground(backgroundGroup: SVGGElement, row: Row, y: number, rowBoxHeight: number) {
+  renderRowBackground(backgroundGroup: SVGGElement, row: Row, y: number, rowBoxHeight: number, currentSent: number) {
     let bgClass: string;
     if (Configuration.textBackgrounds === "striped") {
       // give every other sentence a different bg class
@@ -3236,11 +3174,21 @@ export class Visualizer {
       bgClass = 'background0';
     }
 
-    const sizes = this.data.sizes;
-    this.dot_svg.rect(this.canvasWidth, rowBoxHeight + sizes.texts.height + 1)
-      .translate(0, y + sizes.texts.y + sizes.texts.height)
+    const textSizes = this.data.sizes.texts;
+    this.dot_svg.rect(this.canvasWidth, rowBoxHeight + textSizes.height + 1)
+      .translate(0, y + textSizes.y + textSizes.height)
       .addClass(bgClass)
       .addTo(SVG(backgroundGroup));
+
+    if (row.sentence && this.data.markedSent[currentSent]) {
+      this.dot_svg.rect()
+        .x(this.rtlmode ? this.canvasWidth - this.sentNumMargin : 0)
+        .y(y + textSizes.y + textSizes.height)
+        .width(this.sentNumMargin)
+        .height(rowBoxHeight + textSizes.height + 1)
+        .addClass('backgroundHighlight')
+        .addTo(SVG(backgroundGroup));
+    }
   }
 
   renderRowNumber(sentNumGroup: SVGGElement, row: Row, y: number) {
@@ -3413,6 +3361,7 @@ export class Visualizer {
     }
 
     this.dot_svg.clear();
+    this.dot_svg.height(0); // Ensure we do not have a scrollbar when starting to render
     this.dot_svg.attr('direction', null);
 
     if (!this.data) {
@@ -3427,7 +3376,7 @@ export class Visualizer {
     this.sentNumMargin = 40 * (this.fontZoom / 100.0);
 
     // establish the width according to the enclosing element
-    const svgWidth = $(this.dot_svg.node).width();
+    const svgWidth = $(this.svgContainer).width();
     this.baseCanvasWidth = this.forceWidth || svgWidth;
     this.canvasWidth = this.forceWidth || (svgWidth - scrollbarWidth());
 
