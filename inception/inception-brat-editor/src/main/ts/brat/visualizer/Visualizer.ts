@@ -1231,11 +1231,11 @@ export class Visualizer {
   /**
    * @return {SVGElement} The definitions node.
    */
-  addHeaderAndDefs(): SVGElement {
-    const defs = this.svg.defs();
+  addHeaderAndDefs(): SVGGElement {
+    const defs = this.dot_svg.defs();
     const $blurFilter = $($.parseXML(('<filter id="Gaussian_Blur"><feGaussianBlur in="SourceGraphic" stdDeviation="2" /></filter>')));
-    this.svg.add(defs, $blurFilter.children());
-    return defs;
+    $blurFilter.children().each((index, element) => { defs.add(SVG(element)); });
+    return defs.node;
   }
 
   /**
