@@ -58,13 +58,10 @@ import type { sourceCommentType, sourceEntityType, Offsets } from "./SourceData"
 import * as jsonpatch from 'fast-json-patch';
 import { Operation } from "fast-json-patch";
 import { scrollbarWidth } from "../util/ScrollbarWidth";
-import { SVG, Element as SVGElement, Svg, Container, Text as SVGText } from "@svgdotjs/svg.js";
-
-declare const $: JQueryStatic;
-
+import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText } from "@svgdotjs/svg.js";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
-
 import { INSTANCE as Util } from "../util/Util";
+declare const $: JQueryStatic;
 
 /** 
  * [lastRow, textDesc[3], lastX - boxX, textDesc[4]] 
@@ -1229,13 +1226,14 @@ export class Visualizer {
   }
 
   /**
-   * @return {SVGElement} The definitions node.
+   * @return {SVGJSElement} The definitions node.
    */
   addHeaderAndDefs(): SVGGElement {
-    const defs = this.dot_svg.defs();
+    const defs = this.dot_svg.defs().node;
     const $blurFilter = $($.parseXML(('<filter id="Gaussian_Blur"><feGaussianBlur in="SourceGraphic" stdDeviation="2" /></filter>')));
-    $blurFilter.children().each((index, element) => { defs.add(SVG(element)); });
-    return defs.node;
+    this.svg.add(defs, $blurFilter.children());
+    $blurFilter.children().each((index, element) => { defs.appendChild(element); });
+    return defs;
   }
 
   /**
@@ -1871,7 +1869,7 @@ export class Visualizer {
           bx = (bx | 0) + 0.5;
         }
 
-        let markedRect;
+        let markedRect: SVGJSElement;
         if (span.marked) {
           markedRect = this.renderSpanMarkedRect(bx, by, bw, bh, chunk);
         }
@@ -1881,7 +1879,7 @@ export class Visualizer {
         chunkFrom = Math.min(bx - this.markedSpanSize, chunkFrom);
         chunkTo = Math.max(bx + bw + this.markedSpanSize, chunkTo);
         let fragmentHeight = bh + 2 * this.markedSpanSize;
-        let shadowRect;
+        let shadowRect: SVGJSElement;
         if (span.shadowClass && span.shadowClass.match(this.shadowClassPattern)) {
           shadowRect = this.renderFragmentShadowRect(bx, by, bw, bh, fragment);
           chunkFrom = Math.min(bx - this.rectShadowSize, chunkFrom);
@@ -1905,12 +1903,12 @@ export class Visualizer {
           fragmentHeights[spacedTowerId] = fragment.height;
         }
 
-        $(fragment.rect).attr('y', yy - Configuration.visual.margin.y - span.floor);
+        SVG(fragment.rect).y(yy - Configuration.visual.margin.y - span.floor);
         if (shadowRect) {
-          $(shadowRect).attr('y', yy - this.rectShadowSize - Configuration.visual.margin.y - span.floor);
+          SVG(shadowRect).y(yy - this.rectShadowSize - Configuration.visual.margin.y - span.floor);
         }
         if (markedRect) {
-          $(markedRect).attr('y', yy - this.markedSpanSize - Configuration.visual.margin.y - span.floor);
+          SVG(markedRect).y(yy - this.markedSpanSize - Configuration.visual.margin.y - span.floor);
         }
 
         if (span.attributeMerge.box === "crossed") {
@@ -2146,7 +2144,7 @@ export class Visualizer {
           chunk.fragments[index].group = element as SVGGElement;
         });
         $(chunk.group).find("rect[data-span-id]").each((index, element) => {
-          chunk.fragments[index].rect = element;
+          chunk.fragments[index].rect = element as SVGElement;
         });
       }
 
@@ -2264,7 +2262,7 @@ export class Visualizer {
       // Add spacers to reduce jumpyness of selection
       if (!rowTextGroup || prevChunk.row !== chunk.row) {
         if (rowTextGroup) {
-          this.horizontalSpacer(this.svg, rowTextGroup, 0, prevChunk.row.textY, 1, {
+          this.horizontalSpacer(rowTextGroup, 0, prevChunk.row.textY, 1, {
             'data-chunk-id': prevChunk.index,
             'class': 'row-final spacing'
           });
@@ -2280,7 +2278,7 @@ export class Visualizer {
         // rendering as a SVG span (as brat does), then the browser changes the layout on the
         // X-axis as it likes in RTL mode.
         if (!rowTextGroup.firstChild) {
-          this.horizontalSpacer(this.svg, rowTextGroup, 0, chunk.row.textY, 1, {
+          this.horizontalSpacer(rowTextGroup, 0, chunk.row.textY, 1, {
             'class': 'row-initial spacing',
             'data-chunk-id': chunk.index
           });
@@ -2294,14 +2292,14 @@ export class Visualizer {
         if (nextChunk) {
           const spaceX = chunk.textX - this.data.sizes.texts.widths[chunk.text];
           const spaceWidth = chunk.textX - this.data.sizes.texts.widths[chunk.text] - nextChunk.textX;
-          this.horizontalSpacer(this.svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+          this.horizontalSpacer(rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
             'data-chunk-id': chunk.index
           });
         }
       } else {
         // Original rendering using tspan in ltr mode as it play nicer with selection
         if (!rowTextGroup.firstChild) {
-          this.horizontalSpacer(this.svg, rowTextGroup, 0, chunk.row.textY, 1, {
+          this.horizontalSpacer(rowTextGroup, 0, chunk.row.textY, 1, {
             'class': 'row-initial spacing',
             'data-chunk-id': chunk.index
           });
@@ -2315,7 +2313,7 @@ export class Visualizer {
         if (nextChunk) {
           const spaceX = chunk.textX + this.data.sizes.texts.widths[chunk.text];
           const spaceWidth = nextChunk.textX - spaceX;
-          this.horizontalSpacer(this.svg, rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+          this.horizontalSpacer(rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
             'data-chunk-id': chunk.index
           });
         }
@@ -2452,24 +2450,18 @@ export class Visualizer {
 
     // Prevent text selection from being jumpy
     if (rowTextGroup) {
-      this.horizontalSpacer(this.svg, rowTextGroup, 0, currentChunk.row.textY, 1, {
+      this.horizontalSpacer(rowTextGroup, 0, currentChunk.row.textY, 1, {
         'data-chunk-id': currentChunk.index,
         'class': 'row-final spacing'
       });
     }
 
     // draw the markedText
-    $.each(textMarkedRows, (textRowNo, textRowDesc) => {
+    textMarkedRows.map(textRowDesc => {
       this.dot_svg.rect(textRowDesc[2] - textRowDesc[1] + 4, this.data.sizes.fragments.height + 4)
         .translate(textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height)
         .addClass(textRowDesc[3])
         .addTo(SVG(this.highlightGroup));
-
-      // this.svg.rect(this.highlightGroup,
-      //   textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height,
-      //   textRowDesc[2] - textRowDesc[1] + 4, this.data.sizes.fragments.height + 4,
-      //   { 'class': textRowDesc[3] }
-      // );
     });
   }
 
@@ -2870,6 +2862,38 @@ export class Visualizer {
             arrowAtLabelAdjust = -arrowAtLabelAdjust;
           }
         }
+
+        const renderCurlyPath = (path) => {
+          this.dot_svg.path(path.path())
+            .css('stroke', color)
+            .stroke({ dasharray: dashArray })
+            .attr({
+              markerStart: labelArrowDecl,
+              markerEnd: arrowDecl
+            })
+            .addTo(SVG(arcGroup));
+
+          if (arc.marked) {
+            this.dot_svg.path(path.path())
+              .addClass('shadow_EditHighlight_arc')
+              .stroke({
+                width: this.markedArcStroke,
+                dasharray: dashArray
+              })
+              .addTo(SVG(shadowGroup));
+          }
+
+          if (arc.shadowClass) {
+            this.dot_svg.path(path.path())
+              .addClass(`shadow_${arc.shadowClass}`)
+              .stroke({
+                width: this.shadowStroke,
+                dasharray: dashArray
+              })
+              .addTo(SVG(shadowGroup));
+          }
+        }
+
         const arrowStart = textStart - arrowAtLabelAdjust;
         path = this.svg.createPath().move(arrowStart, -height);
         if (rowIndex === leftRow) {
@@ -2885,8 +2909,8 @@ export class Visualizer {
           }
 
           if (this.smoothArcCurves) {
-            let controlx;
-            let endy;
+            let controlx: number;
+            let endy: number;
             if (this.rtlmode) {
               controlx = ufoCatcher ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx;
               endy = leftBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : leftBox.height / 2);
@@ -2909,28 +2933,7 @@ export class Visualizer {
           path.line(from, -height);
         }
 
-        this.svg.path(arcGroup, path, {
-          markerEnd: arrowDecl,
-          markerStart: labelArrowDecl,
-          style: 'stroke: ' + color,
-          'strokeDashArray': dashArray,
-        });
-
-        if (arc.marked) {
-          this.svg.path(shadowGroup, path, {
-            'class': 'shadow_EditHighlight_arc',
-            strokeWidth: this.markedArcStroke,
-            'strokeDashArray': dashArray,
-          });
-        }
-
-        if (arc.shadowClass) {
-          this.svg.path(shadowGroup, path, {
-            'class': 'shadow_' + arc.shadowClass,
-            strokeWidth: this.shadowStroke,
-            'strokeDashArray': dashArray,
-          });
-        }
+        renderCurlyPath(path);
 
         if (!symmetric) {
           myArrowHead = (arcDesc && arcDesc.arrowHead);
@@ -2962,10 +2965,14 @@ export class Visualizer {
             let controlx;
             let endy;
             if (this.rtlmode) {
-              controlx = ufoCatcher ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
+              controlx = ufoCatcher ?
+                cornerx - 2 * ufoCatcherMod * this.reverseArcControlx :
+                this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
               endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
             } else {
-              controlx = ufoCatcher ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
+              controlx = ufoCatcher ?
+                cornerx - 2 * ufoCatcherMod * this.reverseArcControlx :
+                this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
               endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
             }
 
@@ -2983,28 +2990,7 @@ export class Visualizer {
           path.line(to, -height);
         }
 
-        this.svg.path(arcGroup, path, {
-          markerEnd: arrowDecl,
-          markerStart: labelArrowDecl,
-          style: 'stroke: ' + color,
-          'strokeDashArray': dashArray,
-        });
-
-        if (arc.marked) {
-          this.svg.path(shadowGroup, path, {
-            'class': 'shadow_EditHighlight_arc',
-            strokeWidth: this.markedArcStroke,
-            'strokeDashArray': dashArray,
-          });
-        }
-
-        if (shadowGroup) {
-          this.svg.path(shadowGroup, path, {
-            'class': 'shadow_' + arc.shadowClass,
-            strokeWidth: this.shadowStroke,
-            'strokeDashArray': dashArray,
-          });
-        }
+        renderCurlyPath(path);
       } // arc rows
     }); // arcs
   }
@@ -3047,10 +3033,10 @@ export class Visualizer {
             }
 
             const path = this.svg.createPath().move(from, height).line(to, height);
-            this.svg.path(row.arcs, path, {
-              style: 'stroke: ' + this.fragmentConnectorColor,
-              'strokeDashArray': this.fragmentConnectorDashArray
-            });
+            this.dot_svg.path(path.path())
+              .css('stroke', this.fragmentConnectorColor)
+              .stroke({ dasharray: this.fragmentConnectorDashArray })
+              .addTo(SVG(row.arcs));
           }
         } // rowIndex
       } // connectorNo
@@ -3059,7 +3045,7 @@ export class Visualizer {
 
   /**
    * @param {number} y
-   * @param {SVGElement} textGroup
+   * @param {SVGJSElement} textGroup
    * @param {number} maxTextWidth
    * @return {number} how much the actual horizontal space required extends over the allocated space
    */
@@ -3236,10 +3222,9 @@ export class Visualizer {
     }
   }
 
-  renderAdjustLayoutForRtl(oversized, rows, glowGroup, textGroup, sentNumGroup) {
+  renderAdjustLayoutForRtl(oversized, rows, textGroup, sentNumGroup) {
     if (oversized > 0) {
       rows.map(row => this.translate(row, oversized, row.translation.y));
-      $(glowGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
       $(this.highlightGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
       $(textGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
       $(sentNumGroup).attr('transform', 'translate(' + oversized + ', ' + 0 + ')');
@@ -3390,7 +3375,6 @@ export class Visualizer {
 
     const defs = this.addHeaderAndDefs();
     const backgroundGroup = this.dot_svg.group().addClass('background').attr('pointer-events', 'none').node;
-    const glowGroup = this.dot_svg.group().addClass('glow').node;
     this.highlightGroup = this.dot_svg.group().addClass('highlight').node;
     const textGroup = this.dot_svg.group().addClass('text').node;
     Util.profileEnd('init');
@@ -3433,14 +3417,18 @@ export class Visualizer {
     Util.profileStart('finish');
 
     Util.profileStart('adjust margin');
-    if (this.rtlmode) {
-      this.svg.path(sentNumGroup, this.svg.createPath()
-        .move(this.canvasWidth - this.sentNumMargin, 0)
-        .line(this.canvasWidth - this.sentNumMargin, y));
-    } else {
-      this.svg.path(sentNumGroup, this.svg.createPath()
-        .move(this.sentNumMargin, 0)
-        .line(this.sentNumMargin, y));
+    {
+      let path;
+      if (this.rtlmode) {
+        path = this.svg.createPath()
+          .move(this.canvasWidth - this.sentNumMargin, 0)
+          .line(this.canvasWidth - this.sentNumMargin, y);
+      } else {
+        path = this.svg.createPath()
+          .move(this.sentNumMargin, 0)
+          .line(this.sentNumMargin, y);
+      }
+      this.dot_svg.path(path.path()).addTo(SVG(sentNumGroup));
     }
     Util.profileEnd('adjust margin');
 
@@ -3450,7 +3438,7 @@ export class Visualizer {
 
     if (this.rtlmode) {
       Util.profileStart('set up RTL');
-      this.renderAdjustLayoutForRtl(oversized, rows, glowGroup, textGroup, sentNumGroup);
+      this.renderAdjustLayoutForRtl(oversized, rows, textGroup, sentNumGroup);
       Util.profileEnd('set up RTL');
     }
 
@@ -3619,15 +3607,17 @@ export class Visualizer {
     const bgColor = span.color || ((spanDesc && spanDesc.bgColor) || '#ffffff');
 
     this.highlight = [];
-    $.each(span.fragments, (fragmentNo, fragment) => {
-      this.highlight.push(this.svg.rect(this.highlightGroup,
-        fragment.highlightPos.x, fragment.highlightPos.y,
-        fragment.highlightPos.w, fragment.highlightPos.h,
-        {
-          'fill': bgColor, opacity: 0.75,
+    span.fragments.map(fragment => {
+      const highlightBox = this.dot_svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
+        .translate(fragment.highlightPos.x, fragment.highlightPos.y)
+        .fill(bgColor)
+        .opacity(0.75)
+        .attr({
           rx: this.highlightRounding.x,
           ry: this.highlightRounding.y,
-        }));
+        })
+        .addTo(SVG(this.highlightGroup));
+      this.highlight.push(highlightBox.node);
     });
 
     if (this.arcDragOrigin) {
@@ -3934,16 +3924,21 @@ export class Visualizer {
     }
   }
 
-  horizontalSpacer(svg, group: SVGGElement, x: number, y: number, width: number, attrs) {
-    if (width > 0) {
-      const attributes = $.extend({
+  horizontalSpacer(group: SVGGElement, x: number, y: number, width: number, attrs: Record<string, unknown>) {
+    if (width <= 0) {
+      return
+    }
+
+    // To visualize the spacing use \u2588, otherwise \u00a0
+    this.dot_svg.plain(this.rtlmode ? '\u200f\u00a0' : '\u00a0')
+      .translate(x, y)
+      .addClass('spacing')
+      .attr({
         textLength: width,
         lengthAdjust: 'spacingAndGlyphs',
-        'class': 'spacing'
-      }, attrs);
-      // To visualize the spacing use \u2588, otherwise \u00a0
-      svg.text(group, x, y, this.rtlmode ? '\u200f\u00a0' : '\u00a0', attributes);
-    }
+      })
+      .attr(attrs)
+      .addTo(SVG(group));
   }
 
   renderArcShadow(arc: Arc, shadowGroup: SVGGElement, textBox: { x: number; y: number; width: number; height: number; }) {
@@ -3961,12 +3956,9 @@ export class Visualizer {
       .addTo(SVG(shadowGroup));
   }
 
-  renderSpanMarkedRect(bx: number, by: number, bw: number, bh: number, chunk: Chunk): SVGElement {
-    return this.dot_svg.rect()
-      .x(bx - this.markedSpanSize)
-      .y(by - this.markedSpanSize)
-      .width(bw + 2 * this.markedSpanSize)
-      .height(bh + 2 * this.markedSpanSize)
+  renderSpanMarkedRect(bx: number, by: number, bw: number, bh: number, chunk: Chunk): SVGJSElement {
+    return this.dot_svg.rect(bw + 2 * this.markedSpanSize, bh + 2 * this.markedSpanSize)
+      .move(bx - this.markedSpanSize, by - this.markedSpanSize)
       .attr({
         filter: 'url(#Gaussian_Blur)',
         'class': "shadow_EditHighlight",
@@ -3976,7 +3968,7 @@ export class Visualizer {
       .addTo(SVG(chunk.highlightGroup));
   }
 
-  renderFragmentShadowRect(bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGElement {
+  renderFragmentShadowRect(bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
     return this.dot_svg.rect()
       .x(bx - this.rectShadowSize)
       .y(by - this.rectShadowSize)
@@ -4029,25 +4021,33 @@ export class Visualizer {
     });
   }
 
-  renderFragmentCrossOut(xx, yy, hh, fragment) {
+  renderFragmentCrossOut(xx: number, yy: number, hh: number, fragment: Fragment) {
     const span = fragment.span;
-    this.svg.path(fragment.group, this.svg.createPath()
-      .move(xx, yy - Configuration.visual.margin.y - span.floor)
-      .line(xx + fragment.width, yy + hh + Configuration.visual.margin.y - span.floor),
-      { 'class': 'boxcross' });
-    this.svg.path(fragment.group, this.svg.createPath()
-      .move(xx + fragment.width, yy - Configuration.visual.margin.y - span.floor)
-      .line(xx, yy + hh + Configuration.visual.margin.y - span.floor),
-      { 'class': 'boxcross' });
 
+    const criss = this.svg.createPath()
+      .move(xx, yy - Configuration.visual.margin.y - span.floor)
+      .line(xx + fragment.width, yy + hh + Configuration.visual.margin.y - span.floor);
+
+    this.dot_svg.path(criss.path())
+      .addClass('boxcross')
+      .addTo(SVG(fragment.group));
+
+    const cross = this.svg.createPath()
+      .move(xx + fragment.width, yy - Configuration.visual.margin.y - span.floor)
+      .line(xx, yy + hh + Configuration.visual.margin.y - span.floor);
+
+    this.dot_svg.path(cross.path())
+      .addClass('boxcross')
+      .addTo(SVG(fragment.group));
   }
 
   renderCurly(fragment, x, yy, hh) {
     const span = fragment.span;
+
     let curlyColor = 'grey';
     if (this.coloredCurlies) {
       const spanDesc = this.spanTypes[span.type];
-      let bgColor;
+      let bgColor: string;
       if (span.color) {
         bgColor = span.color;
       }
@@ -4059,18 +4059,20 @@ export class Visualizer {
     }
 
     const bottom = yy + hh + Configuration.visual.margin.y - span.floor + 1;
-    this.svg.path(fragment.group, this.svg.createPath()
-      .move(fragment.curly.from, bottom + Configuration.visual.curlyHeight)
-      .curveC(fragment.curly.from, bottom,
-        x, bottom + Configuration.visual.curlyHeight,
-        x, bottom)
-      .curveC(x, bottom + Configuration.visual.curlyHeight,
+    const curlyHeight = Configuration.visual.curlyHeight;
+    this.dot_svg.path([
+      ['M', fragment.curly.from, bottom + curlyHeight],
+      ['C', fragment.curly.from, bottom,
+        x, bottom + curlyHeight,
+        x, bottom],
+      ['C', x, bottom + curlyHeight,
         fragment.curly.to, bottom,
-        fragment.curly.to, bottom + Configuration.visual.curlyHeight),
-      {
+        fragment.curly.to, bottom + curlyHeight]])
+      .attr({
         'class': 'curly',
         'stroke': curlyColor,
-      });
+      })
+      .addTo(SVG(fragment.group));
   }
 }
 

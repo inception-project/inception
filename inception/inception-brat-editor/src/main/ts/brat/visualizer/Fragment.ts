@@ -57,7 +57,7 @@ export class Fragment {
   labelText: string = undefined;
   glyphedLabelText = undefined;;
   group: SVGGElement = undefined;
-  rect = undefined;
+  rect: SVGElement = undefined;
   left = undefined;
   right = undefined;
   width: number = undefined;
