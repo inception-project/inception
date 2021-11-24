@@ -1565,7 +1565,7 @@ export class Visualizer {
   /**
    * @return {string|undefined}
    */
-  makeArrow(defs: SVGElement, spec: string): string | undefined {
+  makeArrow(defs: SVGGElement, spec: string): string | undefined {
     const parsedSpec = spec.split(',');
     const type = parsedSpec[0];
     if (type === 'none') {
@@ -1628,7 +1628,7 @@ export class Visualizer {
     return maxTextWidth;
   }
 
-  renderLayoutFloorsAndCurlies(spanDrawOrderPermutation: string) {
+  renderLayoutFloorsAndCurlies(spanDrawOrderPermutation: string[]) {
     // reserve places for spans
     const floors = [];
     const reservations = []; // reservations[chunk][floor] = [[from, to, headroom]...]
@@ -2572,7 +2572,7 @@ export class Visualizer {
     });
   }
 
-  renderDragArcMarker(defs: SVGElement) {
+  renderDragArcMarker(defs: SVGGElement) {
     // draw the drag arc marker
     const arrowhead = this.dot_svg.marker(5, 5)
       .id('drag_arrow')
@@ -2580,21 +2580,12 @@ export class Visualizer {
       .orient('auto')
       .addClass('drag_fill')
       .attr('markerUnits', 'strokeWidth')
-      .addTo(defs);
+      .addTo(SVG(defs));
 
     this.dot_svg.polyline([[0, 0], [5, 2.5], [0, 5], [0.2, 2.5]]).addTo(arrowhead);
-
-    const arcDragArc = this.svg.path(this.svg.createPath(), {
-      markerEnd: 'url(#drag_arrow)',
-      'class': 'drag_stroke',
-      fill: 'none',
-      visibility: 'hidden',
-    });
-    
-    this.dispatcher.post('arcDragArcDrawn', [arcDragArc]);
   }
 
-  renderArcs(rows: Row[], fragmentHeights: number[], defs: SVGElement) {
+  renderArcs(rows: Row[], fragmentHeights: number[], defs: SVGGElement) {
     const arrows = {};
     const arrow = this.makeArrow(defs, 'none');
     if (arrow) {
