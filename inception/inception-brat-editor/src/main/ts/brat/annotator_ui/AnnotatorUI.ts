@@ -77,9 +77,8 @@ export class AnnotatorUI {
   private normDbsByType = {};
 
   private user: string;
-  private dot_svg: Svg;
+  private svg: Svg;
   private dispatcher: Dispatcher;
-  private args;
 
   private svgPosition: JQueryCoordinates;
 
@@ -87,10 +86,10 @@ export class AnnotatorUI {
   private clickTimer = null;
   private CLICK_DELAY = 300;
 
-  constructor(dispatcher: Dispatcher, svg) {
+  constructor(dispatcher: Dispatcher, svg: Svg) {
     this.dispatcher = dispatcher;
     this.user = null;
-    this.dot_svg = SVG(svg._svg as SVGSVGElement);
+    this.svg = svg;
 
     dispatcher.
       on('init', this, this.init).
@@ -308,10 +307,10 @@ export class AnnotatorUI {
       return;
     }
 
-    this.dot_svg.addClass('unselectable');
-    this.svgPosition = $(this.dot_svg.node).offset();
+    this.svg.addClass('unselectable');
+    this.svgPosition = $(this.svg.node).offset();
     this.arcDragOrigin = originId;
-    this.arcDragArc = this.dot_svg.path()
+    this.arcDragArc = this.svg.path()
       .fill('none')
       .attr('markerEnd', 'url(#drag_arrow)')
       .addClass('drag_stroke')
@@ -393,7 +392,7 @@ export class AnnotatorUI {
               // this function: http://www.quirksmode.org/dom/w3c_core.html#t11
               // so we get off jQuery and get down to the metal:
               // targetClasses.push('.span_' + possibleTarget);
-              $targets = $targets.add(this.dot_svg.node.getElementsByClassName('span_' + possibleTarget));
+              $targets = $targets.add(this.svg.node.getElementsByClassName('span_' + possibleTarget));
             });
           }
         });
@@ -420,7 +419,7 @@ export class AnnotatorUI {
         // If user starts selecting text, suppress all pointer events on annotations to
         // avoid the selection jumping around. During selection, we don't need the annotations
         // to react on mouse events anyway.
-        this.dot_svg.find('.row, .sentnum').map(e => e.attr('pointer-events', 'none'));
+        this.svg.find('.row, .sentnum').map(e => e.attr('pointer-events', 'none'));
       }
 
       this.onMouseMoveSpanSelection(evt);
@@ -453,12 +452,12 @@ export class AnnotatorUI {
       // Lets take the actual selection range and work with that
       // Note for visual line up and more accurate positions a vertical offset of 8 and horizontal of 2 has been used!
       const range = sel.getRangeAt(0);
-      const svgOffset = $(this.dot_svg.node).offset();
+      const svgOffset = $(this.svg.node).offset();
       let flip = false;
       let tries = 0;
       // First try and match the start offset with a position, if not try it against the other end
       while (tries < 2) {
-        sp = this.dot_svg.point((flip ? evt.pageX : this.dragStartedAt.pageX) - svgOffset.left,
+        sp = this.svg.point((flip ? evt.pageX : this.dragStartedAt.pageX) - svgOffset.left,
           (flip ? evt.pageY : this.dragStartedAt.pageY) - (svgOffset.top + 8));
         startsAt = range.startContainer as SVGTextContentElement;
         anchorOffset = startsAt.getCharNumAtPosition(sp);
@@ -611,7 +610,7 @@ export class AnnotatorUI {
             if (flip) {
               rx = startRec.x;
               ry = startRec.y;
-              rw = $(this.dot_svg.node).width() - startRec.x;
+              rw = $(this.svg.node).width() - startRec.x;
               rh = startRec.height;
             } else {
               rx = endBox.x;
@@ -719,9 +718,9 @@ export class AnnotatorUI {
       if (this.arcOptions) {
         $('g[data-from="' + this.arcOptions.origin + '"][data-to="' + this.arcOptions.target + '"]').removeClass('reselect');
       }
-      this.dot_svg.removeClass('reselect');
+      this.svg.removeClass('reselect');
     }
-    this.dot_svg.removeClass('unselectable');
+    this.svg.removeClass('unselectable');
     $('.reselectTarget').removeClass('reselectTarget');
   }
 
@@ -729,7 +728,7 @@ export class AnnotatorUI {
     if (this.user === null) return;
 
     // Restore pointer events on annotations
-    this.dot_svg.find('.row, .sentnum').map(e => e.attr('pointer-events', null));
+    this.svg.find('.row, .sentnum').map(e => e.attr('pointer-events', null));
 
     const target = $(evt.target);
 
@@ -962,7 +961,6 @@ export class AnnotatorUI {
   gotCurrent(_coll, _doc, _args) {
     this.coll = _coll;
     this.doc = _doc;
-    this.args = _args;
   }
 
   // WEBANNO EXTENSION BEGIN - #1388 Support context menu

@@ -51,8 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
@@ -166,44 +164,13 @@ public abstract class BratSuggestionVisualizer
         // MUST NOT CALL super.renderHead here because that would call Util.embedByUrl again!
         // super.renderHead(aResponse);
 
-        // Libraries
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-
-        // // BRAT helpers
-        // aResponse.render(
-        // JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-        //
-        // // BRAT modules
-        // aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
-        // aResponse
-        // .render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(BratCurationUiResourceReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratCurationResourceReference.get()));
 
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
-        // @formatter:off
-        String script = "BratCuration('" + vis.getMarkupId() + "', '" + controller.getCallbackUrl() +
-                "', '" + collProvider.getCallbackUrl() + "', '" + docProvider.getCallbackUrl() + "')";
-//        String script = 
-//                "Util.embedByURL(" 
-//                + "  '" + vis.getMarkupId() + "'," 
-//                + "  '" + collProvider.getCallbackUrl() + "', " 
-//                + "  '" + docProvider.getCallbackUrl() + "', " 
-//                + "  function(dispatcher) {" 
-//                + "    dispatcher.wicketId = '" + vis.getMarkupId() + "'; " 
-//                + "    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; " 
-//                + "    var ajax = new Ajax(dispatcher);"
-//                + "    var curation_mod = new CurationMod(dispatcher, '" + vis.getMarkupId() + "');"
-//                + "    Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;"
-//                // + " dispatcher.post('clearSVG', []);"
-//                + "  });";
-        // @formatter:on
+        String script = "BratCuration('" + vis.getMarkupId() + "', '" + controller.getCallbackUrl()
+                + "', '" + collProvider.getCallbackUrl() + "', '" + docProvider.getCallbackUrl()
+                + "')";
         aResponse.render(OnLoadHeaderItem.forScript("\n" + script));
     }
 
