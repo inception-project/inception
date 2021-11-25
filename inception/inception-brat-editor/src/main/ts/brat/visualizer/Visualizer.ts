@@ -58,9 +58,11 @@ import type { sourceCommentType, sourceEntityType, Offsets } from "./SourceData"
 import * as jsonpatch from 'fast-json-patch';
 import { Operation } from "fast-json-patch";
 import { scrollbarWidth } from "../util/ScrollbarWidth";
-import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText } from "@svgdotjs/svg.js";
+import "@svgdotjs/svg.filter.js";
+import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand } from "@svgdotjs/svg.js";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
+import { ArrayXY } from "@svgdotjs/svg.js";
 declare const $: JQueryStatic;
 
 /** 
@@ -1225,15 +1227,15 @@ export class Visualizer {
     element.translation = { x: x, y: y };
   }
 
-  /**
-   * @return {SVGJSElement} The definitions node.
-   */
   addHeaderAndDefs(): SVGGElement {
-    const defs = this.dot_svg.defs().node;
-    const $blurFilter = $($.parseXML(('<filter id="Gaussian_Blur"><feGaussianBlur in="SourceGraphic" stdDeviation="2" /></filter>')));
-    this.svg.add(defs, $blurFilter.children());
-    $blurFilter.children().each((index, element) => { defs.appendChild(element); });
-    return defs;
+    const defs = this.dot_svg.defs();
+
+    const filter = defs.filter();
+    filter.id('Gaussian_Blur')
+    filter.gaussianBlur(2, 2);
+    filter.addTo(defs);
+
+    return defs.node;
   }
 
   /**
@@ -2833,7 +2835,6 @@ export class Visualizer {
           textEnd = tmp;
         }
 
-        let path;
 
         if (this.roundCoordinates) {
           // don't ask
@@ -2863,8 +2864,8 @@ export class Visualizer {
           }
         }
 
-        const renderCurlyPath = (path) => {
-          this.dot_svg.path(path.path())
+        const renderCurlyPath = (path: PathCommand[]) => {
+          this.dot_svg.path(path)
             .css('stroke', color)
             .stroke({ dasharray: dashArray })
             .attr({
@@ -2874,7 +2875,7 @@ export class Visualizer {
             .addTo(SVG(arcGroup));
 
           if (arc.marked) {
-            this.dot_svg.path(path.path())
+            this.dot_svg.path(path)
               .addClass('shadow_EditHighlight_arc')
               .stroke({
                 width: this.markedArcStroke,
@@ -2884,7 +2885,7 @@ export class Visualizer {
           }
 
           if (arc.shadowClass) {
-            this.dot_svg.path(path.path())
+            this.dot_svg.path(path)
               .addClass(`shadow_${arc.shadowClass}`)
               .stroke({
                 width: this.shadowStroke,
@@ -2895,7 +2896,7 @@ export class Visualizer {
         }
 
         const arrowStart = textStart - arrowAtLabelAdjust;
-        path = this.svg.createPath().move(arrowStart, -height);
+        let path: PathCommand[] = [['M', arrowStart, -height]];
         if (rowIndex === leftRow) {
           let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant;
           if (this.rtlmode) {
@@ -2925,12 +2926,14 @@ export class Visualizer {
               Math.abs(cornerx - from) < 5) {
               endy = -height;
             }
-            path.line(cornerx, -height).curveQ(controlx, -height, from, endy);
+            path.push(['L', cornerx, -height]);
+            path.push(['Q', controlx, -height, from, endy]);
           } else {
-            path.line(cornerx, -height).line(from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y));
+            path.push(['L', cornerx, -height]);
+            path.push(['L', from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y)]);
           }
         } else {
-          path.line(from, -height);
+          path.push(['L', from, -height]);
         }
 
         renderCurlyPath(path);
@@ -2946,7 +2949,7 @@ export class Visualizer {
         arrowDecl = arrowType && ('url(#' + arrowType + ')');
 
         const arrowEnd = textEnd + arrowAtLabelAdjust;
-        path = this.svg.createPath().move(arrowEnd, -height);
+        path = [['M', arrowEnd, -height]];
         if (rowIndex === rightRow) {
           let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant;
 
@@ -2962,8 +2965,8 @@ export class Visualizer {
             }
           }
           if (this.smoothArcCurves) {
-            let controlx;
-            let endy;
+            let controlx: number;
+            let endy: number;
             if (this.rtlmode) {
               controlx = ufoCatcher ?
                 cornerx - 2 * ufoCatcherMod * this.reverseArcControlx :
@@ -2982,12 +2985,14 @@ export class Visualizer {
               Math.abs(cornerx - to) < 5) {
               endy = -height;
             }
-            path.line(cornerx, -height).curveQ(controlx, -height, to, endy);
+            path.push(['L', cornerx, -height]);
+            path.push(['Q', controlx, -height, to, endy]);
           } else {
-            path.line(cornerx, -height).line(to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2));
+            path.push(['L', cornerx, -height]);
+            path.push(['L', to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2)]);
           }
         } else {
-          path.line(to, -height);
+          path.push(['L', to, -height]);
         }
 
         renderCurlyPath(path);
@@ -3032,8 +3037,7 @@ export class Visualizer {
               height = (height | 0) + 0.5;
             }
 
-            const path = this.svg.createPath().move(from, height).line(to, height);
-            this.dot_svg.path(path.path())
+            this.dot_svg.path([['M', from, height], ['L', to, height]])
               .css('stroke', this.fragmentConnectorColor)
               .stroke({ dasharray: this.fragmentConnectorDashArray })
               .addTo(SVG(row.arcs));
@@ -3418,17 +3422,15 @@ export class Visualizer {
 
     Util.profileStart('adjust margin');
     {
-      let path;
+      let path: PathCommand[];
       if (this.rtlmode) {
-        path = this.svg.createPath()
-          .move(this.canvasWidth - this.sentNumMargin, 0)
-          .line(this.canvasWidth - this.sentNumMargin, y);
+        path = [['M', this.canvasWidth - this.sentNumMargin, 0],
+          ['L', this.canvasWidth - this.sentNumMargin, y]];
       } else {
-        path = this.svg.createPath()
-          .move(this.sentNumMargin, 0)
-          .line(this.sentNumMargin, y);
+        path = [['M', this.sentNumMargin, 0],
+          ['L', this.sentNumMargin, y]];
       }
-      this.dot_svg.path(path.path()).addTo(SVG(sentNumGroup));
+      this.dot_svg.path(path).addTo(SVG(sentNumGroup));
     }
     Util.profileEnd('adjust margin');
 
@@ -3989,7 +3991,7 @@ export class Visualizer {
     const bx2 = bx1 + bw;
     const by1 = yy - Configuration.visual.margin.y - span.floor;
     const by2 = by1 + bh;
-    const poly = [];
+    const poly: ArrayXY[] = [];
 
     if (span.clippedAtStart && span.fragments[0] === fragment) {
       poly.push([bx1, by2]);
@@ -4009,34 +4011,31 @@ export class Visualizer {
       poly.push([bx2, by2]);
     }
 
-    return this.svg.polygon(fragment.group, poly, {
-      'class': rectClass,
-      fill: bgColor,
-      stroke: borderColor,
-      rx: Configuration.visual.margin.x,
-      ry: Configuration.visual.margin.y,
-      'data-span-id': span.id,
-      'data-fragment-id': span.segmentedOffsetsMap[fragment.id],
-      'strokeDashArray': span.attributeMerge.dashArray,
-    });
+    return this.dot_svg.polygon(poly)
+      .addClass('rectClass')
+      .fill(bgColor)
+      .stroke({
+        color: borderColor, 
+        dasharray: span.attributeMerge.dashArray as string})
+      .attr({
+        rx: Configuration.visual.margin.x,
+        ry: Configuration.visual.margin.y,
+        'data-span-id': span.id,
+        'data-fragment-id': span.segmentedOffsetsMap[fragment.id] })
+      .addTo(SVG(fragment.group))
+      .node;
   }
 
   renderFragmentCrossOut(xx: number, yy: number, hh: number, fragment: Fragment) {
     const span = fragment.span;
 
-    const criss = this.svg.createPath()
-      .move(xx, yy - Configuration.visual.margin.y - span.floor)
-      .line(xx + fragment.width, yy + hh + Configuration.visual.margin.y - span.floor);
-
-    this.dot_svg.path(criss.path())
+    this.dot_svg.path([['M', xx, yy - Configuration.visual.margin.y - span.floor],
+      ['L', xx + fragment.width, yy + hh + Configuration.visual.margin.y - span.floor]])
       .addClass('boxcross')
       .addTo(SVG(fragment.group));
 
-    const cross = this.svg.createPath()
-      .move(xx + fragment.width, yy - Configuration.visual.margin.y - span.floor)
-      .line(xx, yy + hh + Configuration.visual.margin.y - span.floor);
-
-    this.dot_svg.path(cross.path())
+    this.dot_svg.path([['M', xx + fragment.width, yy - Configuration.visual.margin.y - span.floor],
+      ['L', xx, yy + hh + Configuration.visual.margin.y - span.floor]])
       .addClass('boxcross')
       .addTo(SVG(fragment.group));
   }

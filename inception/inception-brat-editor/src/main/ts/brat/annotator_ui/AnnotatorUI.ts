@@ -38,7 +38,7 @@
  * SOFTWARE.
  */
 import { Dispatcher } from "../dispatcher/Dispatcher";
-import { Element, SVG } from "@svgdotjs/svg.js";
+import { Svg, SVG } from "@svgdotjs/svg.js";
 import { DocumentData } from "../visualizer/DocumentData";
 import { OffsetsList } from "../visualizer/SourceData";
 import { Span } from "../visualizer/Span";
@@ -46,15 +46,14 @@ import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 
 export class AnnotatorUI {
-  sourceData = null;
-  data: DocumentData = null;
-  coll = null;
-  doc = null;
+  private data: DocumentData = null;
+  private coll = null;
+  private doc = null;
 
-  arcDragOrigin = null;
-  arcDragOriginBox = null;
-  arcDragOriginGroup: JQuery;
-  arcDragArc = null;
+  private arcDragOrigin = null;
+  private arcDragOriginBox = null;
+  private arcDragOriginGroup: JQuery;
+  private arcDragArc: SVGPathElement = null;
   private arcDragJustStarted = false;
   private spanDragJustStarted = false;
   private dragStartedAt = null;
@@ -64,11 +63,11 @@ export class AnnotatorUI {
   private selectedFragment = null;
   private editedSpan: Span = null;
   private editedFragment = null;
-  spanTypes = null;
-  entityAttributeTypes = null;
-  eventAttributeTypes = null;
-  relationTypesHash = null;
-  selRect = null;
+  private spanTypes = null;
+  private entityAttributeTypes = null;
+  private eventAttributeTypes = null;
+  private relationTypesHash = null;
+  private selRect = null;
   private lastStartRec = null;
   private lastEndRec = null;
 
@@ -77,11 +76,10 @@ export class AnnotatorUI {
   // for normalization: appropriate DBs per type
   private normDbsByType = {};
 
-  user: string;
-  svg;
-  dot_svg: Element;
-  dispatcher: Dispatcher;
-  args;
+  private user: string;
+  private dot_svg: Svg;
+  private dispatcher: Dispatcher;
+  private args;
 
   private svgPosition: JQueryCoordinates;
 
@@ -90,10 +88,9 @@ export class AnnotatorUI {
   private CLICK_DELAY = 300;
 
   constructor(dispatcher: Dispatcher, svg) {
-    this.svg = svg;
     this.dispatcher = dispatcher;
     this.user = null;
-    this.dot_svg = SVG(svg._svg as Node);
+    this.dot_svg = SVG(svg._svg as SVGSVGElement);
 
     dispatcher.
       on('init', this, this.init).
@@ -314,11 +311,11 @@ export class AnnotatorUI {
     this.dot_svg.addClass('unselectable');
     this.svgPosition = $(this.dot_svg.node).offset();
     this.arcDragOrigin = originId;
-    this.arcDragArc = this.svg.path(this.svg.createPath(), {
-      markerEnd: 'url(#drag_arrow)',
-      'class': 'drag_stroke',
-      fill: 'none',
-    });
+    this.arcDragArc = this.dot_svg.path()
+      .fill('none')
+      .attr('markerEnd', 'url(#drag_arrow)')
+      .addClass('drag_stroke')
+      .node;
     this.arcDragOriginGroup = $(this.data.spans[this.arcDragOrigin].headFragment.group);
     this.arcDragOriginGroup.addClass('highlight');
     this.arcDragOriginBox = Util.realBBox(this.data.spans[this.arcDragOrigin].headFragment);
@@ -415,12 +412,9 @@ export class AnnotatorUI {
       const my = evt.pageY - this.svgPosition.top + 5; // TODO FIXME why +5?!?
       const y = Math.min(this.arcDragOriginBox.y, my) - this.draggedArcHeight;
       const dx = (this.arcDragOriginBox.center - mx) / 4;
-      const path = this.svg.createPath().
-        move(this.arcDragOriginBox.center, this.arcDragOriginBox.y).
-        curveC(this.arcDragOriginBox.center - dx, y,
-          mx + dx, y,
-          mx, my);
-      this.arcDragArc.setAttribute('d', path.path());
+      SVG(this.arcDragArc).plot([
+        ['M', this.arcDragOriginBox.center, this.arcDragOriginBox.y],
+        ['C', this.arcDragOriginBox.center - dx, y, mx + dx, y, mx, my]]);
     } else {
       if (this.spanDragJustStarted) {
         // If user starts selecting text, suppress all pointer events on annotations to
@@ -464,9 +458,8 @@ export class AnnotatorUI {
       let tries = 0;
       // First try and match the start offset with a position, if not try it against the other end
       while (tries < 2) {
-        sp = this.svg._svg.createSVGPoint();
-        sp.x = (flip ? evt.pageX : this.dragStartedAt.pageX) - svgOffset.left;
-        sp.y = (flip ? evt.pageY : this.dragStartedAt.pageY) - (svgOffset.top + 8);
+        sp = this.dot_svg.point((flip ? evt.pageX : this.dragStartedAt.pageX) - svgOffset.left,
+          (flip ? evt.pageY : this.dragStartedAt.pageY) - (svgOffset.top + 8));
         startsAt = range.startContainer as SVGTextContentElement;
         anchorOffset = startsAt.getCharNumAtPosition(sp);
         chunkIndexFrom = startsAt && $(startsAt).attr('data-chunk-id');
@@ -716,7 +709,7 @@ export class AnnotatorUI {
       }
       if (this.arcDragArc) {
         try {
-          this.svg.remove(this.arcDragArc);
+          SVG(this.arcDragArc).remove();
         }
         catch (err) {
           // Ignore - could be spurious TypeError: null is not an object (evaluating 'a.parentNode.removeChild')
