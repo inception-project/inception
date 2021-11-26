@@ -37,6 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { SVGTypeMapping } from "@svgdotjs/svg.js";
 import { SVG, Svg } from "@svgdotjs/svg.js";
 import { Fragment } from "./Fragment";
 import { Row } from "./Row";
@@ -51,8 +52,8 @@ export class Chunk {
   lastSpace = undefined;
   nextSpace = undefined;
   sentence: number = undefined;
-  group: SVGGElement = undefined;
-  highlightGroup: SVGGElement = undefined;
+  group: SVGTypeMapping<SVGGElement> = undefined;
+  highlightGroup: SVGTypeMapping<SVGGElement> = undefined;
   // chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
   markedTextStart: Array<unknown> = undefined;
   // chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
@@ -60,7 +61,7 @@ export class Chunk {
   right = undefined;
   row: Row = undefined;
   textX = undefined;
-  translation = undefined;
+  translation: { x: number, y: number } = {x: 0, y: 0};
   firstFragmentIndex = undefined;
   lastFragmentIndex = undefined;
   rtlsizes = undefined;
@@ -74,7 +75,7 @@ export class Chunk {
     Object.seal(this);
   }
 
-  renderText(svg: Svg, rowTextGroup: SVGGElement ) {
+  renderText(svg: Svg, rowTextGroup: SVGTypeMapping<SVGGElement> ) {
     svg.plain(this.text)
       .attr({
         // Storing the exact position in the attributs here is an optimization because that
@@ -84,6 +85,6 @@ export class Chunk {
         y: this.row.textY,
         'data-chunk-id': this.index
       })
-      .addTo(SVG(rowTextGroup));
+      .addTo(rowTextGroup);
   }
 }

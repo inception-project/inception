@@ -44,6 +44,7 @@ import { OffsetsList } from "../visualizer/SourceData";
 import { Span } from "../visualizer/Span";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
+import { SVGTypeMapping } from "@svgdotjs/svg.js";
 
 export class AnnotatorUI {
   private data: DocumentData = null;
@@ -52,21 +53,17 @@ export class AnnotatorUI {
 
   private arcDragOrigin = null;
   private arcDragOriginBox = null;
-  private arcDragOriginGroup: JQuery;
-  private arcDragArc: SVGPathElement = null;
+  private arcDragOriginGroup: SVGTypeMapping<SVGGElement>;
+  private arcDragArc: SVGTypeMapping<SVGPathElement> = null;
   private arcDragJustStarted = false;
   private spanDragJustStarted = false;
   private dragStartedAt = null;
 
   private spanOptions = null;
   private arcOptions = null;
-  private selectedFragment = null;
   private editedSpan: Span = null;
   private editedFragment = null;
   private spanTypes = null;
-  private entityAttributeTypes = null;
-  private eventAttributeTypes = null;
-  private relationTypesHash = null;
   private selRect = null;
   private lastStartRec = null;
   private lastEndRec = null;
@@ -96,7 +93,6 @@ export class AnnotatorUI {
       on('getValidArcTypesForDrag', this, this.getValidArcTypesForDrag).
       on('dataReady', this, this.rememberData).
       on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded).
-      on('newSourceData', this, this.onNewSourceData).
       on('user', this, this.userReceived).
       on('current', this, this.gotCurrent).
       on('isReloadOkay', this, this.isReloadOkay).
@@ -313,9 +309,8 @@ export class AnnotatorUI {
     this.arcDragArc = this.svg.path()
       .fill('none')
       .attr('markerEnd', 'url(#drag_arrow)')
-      .addClass('drag_stroke')
-      .node;
-    this.arcDragOriginGroup = $(this.data.spans[this.arcDragOrigin].headFragment.group);
+      .addClass('drag_stroke');
+    this.arcDragOriginGroup = this.data.spans[this.arcDragOrigin].headFragment.group;
     this.arcDragOriginGroup.addClass('highlight');
     this.arcDragOriginBox = Util.realBBox(this.data.spans[this.arcDragOrigin].headFragment);
     this.arcDragOriginBox.center = this.arcDragOriginBox.x + this.arcDragOriginBox.width / 2;
@@ -411,7 +406,7 @@ export class AnnotatorUI {
       const my = evt.pageY - this.svgPosition.top + 5; // TODO FIXME why +5?!?
       const y = Math.min(this.arcDragOriginBox.y, my) - this.draggedArcHeight;
       const dx = (this.arcDragOriginBox.center - mx) / 4;
-      SVG(this.arcDragArc).plot([
+      this.arcDragArc.plot([
         ['M', this.arcDragOriginBox.center, this.arcDragOriginBox.y],
         ['C', this.arcDragOriginBox.center - dx, y, mx + dx, y, mx, my]]);
     } else {
@@ -708,7 +703,7 @@ export class AnnotatorUI {
       }
       if (this.arcDragArc) {
         try {
-          SVG(this.arcDragArc).remove();
+          this.arcDragArc.remove();
         }
         catch (err) {
           // Ignore - could be spurious TypeError: null is not an object (evaluating 'a.parentNode.removeChild')
@@ -953,9 +948,6 @@ export class AnnotatorUI {
 
   spanAndAttributeTypesLoaded(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
     this.spanTypes = _spanTypes;
-    this.entityAttributeTypes = _entityAttributeTypes;
-    this.eventAttributeTypes = _eventAttributeTypes;
-    this.relationTypesHash = _relationTypesHash;
   }
 
   gotCurrent(_coll, _doc, _args) {
@@ -997,10 +989,6 @@ export class AnnotatorUI {
 
   userReceived(_user) {
     this.user = _user;
-  }
-
-  onNewSourceData(_sourceData) {
-    this.sourceData = _sourceData;
   }
 
   init() {

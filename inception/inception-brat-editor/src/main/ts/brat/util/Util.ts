@@ -38,22 +38,24 @@
  * SOFTWARE.
  */
 import { Dispatcher } from "../dispatcher/Dispatcher";
+import { Fragment } from "../visualizer/Fragment";
+import { Span } from "../visualizer/Span";
 import { Visualizer } from "../visualizer/Visualizer";
 import { VisualizerUI } from "../visualizer_ui/VisualizerUI";
 
 export class Util {
-  cmp(a, b) {
+  cmp(a: number, b: number) {
     return a < b ? -1 : a > b ? 1 : 0;
   }
   
-  cmpArrayOnFirstElement(a, b) {
-    a = a[0];
-    b = b[0];
-    return a < b ? -1 : a > b ? 1 : 0;
+  cmpArrayOnFirstElement(a: unknown[], b: unknown[]) {
+    const _a = a[0];
+    const _b = b[0];
+    return _a < _b ? -1 : _a > _b ? 1 : 0;
   }
 
-  realBBox(span) {
-    const box = span.rect.getBBox();
+  realBBox(span: Fragment) {
+    const box = span.rect.bbox();
     const chunkTranslation = span.chunk.translation;
     const rowTranslation = span.chunk.row.translation;
     box.x += chunkTranslation.x + rowTranslation.x;
@@ -61,7 +63,7 @@ export class Util {
     return box;
   }
 
-  escapeHTML(str) {
+  escapeHTML(str: string) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -71,7 +73,7 @@ export class Util {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  escapeHTMLandQuotes(str) {
+  escapeHTMLandQuotes(str: string) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -81,7 +83,7 @@ export class Util {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  escapeHTMLwithNewlines(str) {
+  escapeHTMLwithNewlines(str: string) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -91,7 +93,7 @@ export class Util {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>');
   }
 
-  escapeQuotes(str) {
+  escapeQuotes(str: string) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -156,7 +158,7 @@ export class Util {
 
   // TODO: switching to use of $.param(), this function should
   // be deprecated and removed.
-  objectToUrlStr(o) {
+  objectToUrlStr(o: unknown) {
     const a = [];
     $.each(o, (key, value) => {
       a.push(key + "=" + encodeURIComponent(value));

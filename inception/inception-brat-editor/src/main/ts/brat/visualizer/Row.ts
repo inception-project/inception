@@ -37,12 +37,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SVG, Svg } from "@svgdotjs/svg.js";
+import { SVGTypeMapping, Svg } from "@svgdotjs/svg.js";
 import { Chunk } from "./Chunk";
 
 export class Row {
-  group: SVGGElement;
-  background: SVGGElement;
+  group: SVGTypeMapping<SVGGElement>;
+  background: SVGTypeMapping<SVGGElement>;
+  arcs: SVGTypeMapping<SVGGElement> = undefined;
   chunks: Chunk[] = [];
   hasAnnotations = false;
   maxArcHeight = 0;
@@ -50,16 +51,15 @@ export class Row {
   sentence: number = undefined;
   index: number = undefined;
   backgroundIndex: number = undefined;
-  arcs: SVGGElement = undefined;
   heightsStart: number = undefined;
   heightsEnd: number = undefined;
   heightsAdjust: number = undefined;
   textY: number = undefined;
-  // translation;
+  translation: { x: number, y: number } = {x: 0, y: 0};
 
   constructor(svg: Svg) {
-    this.group = svg.group().addClass('row').node;
-    this.background = svg.group().addTo(SVG(this.group)).node;
-    // Object.seal(this);
+    this.group = svg.group().addClass('row');
+    this.background = svg.group().addTo(this.group);
+    Object.seal(this);
   }
 }
