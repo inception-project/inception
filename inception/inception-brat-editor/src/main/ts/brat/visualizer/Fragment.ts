@@ -53,7 +53,7 @@ export class Fragment {
   indexNumber = undefined;
   drawOrder: number = undefined;
   towerId = undefined;
-  curly = undefined;
+  curly: { from: number, to: number } = undefined;
   drawCurly = false;
   labelText: string = undefined;
   glyphedLabelText = undefined;;

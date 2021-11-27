@@ -38,10 +38,13 @@
  * SOFTWARE.
  */
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
-import { SVG, Svg } from "@svgdotjs/svg.js";
+import { Svg } from "@svgdotjs/svg.js";
 import { Fragment } from "./Fragment";
 import { Row } from "./Row";
 
+/**
+ * Chunk of text generated from the token offsets and representing one or more tokens.
+ */
 export class Chunk {
   index: number = undefined;
   text: string = undefined;
@@ -64,7 +67,7 @@ export class Chunk {
   translation: { x: number, y: number } = {x: 0, y: 0};
   firstFragmentIndex = undefined;
   lastFragmentIndex = undefined;
-  rtlsizes = undefined;
+  rtlsizes: { charDirection: Array<"rtl" | "ltr">, charAttrs: Array<{order: number, width: number, direction: "rtl" | "ltr"}>, corrFactor: number } = undefined;
 
   constructor(index: number, text: string, from: number, to: number, space: string) {
     this.index = index;

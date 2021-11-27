@@ -1237,7 +1237,7 @@ export class Visualizer {
   /**
    * @param cssClass arguments to the {@link SVGWrapper.group}} call creating the temporary group used for measurement
    */
-  getTextMeasurements(textsHash: Record<string, Array<unknown>>, cssClass, callback?): Measurements {
+  getTextMeasurements(textsHash: Record<string, Array<unknown>>, cssClass: string, callback?): Measurements {
     // make some text elements, find out the dimensions
     const textMeasureGroup: Container = this.svg.group().addTo(this.svg);
     if (cssClass) {
@@ -1279,7 +1279,7 @@ export class Visualizer {
     return new Sizes(textSizes, arcSizes, fragmentSizes);
   }
 
-  calculateChunkTextMeasures() {
+  calculateChunkTextMeasures(): Measurements {
     // get the span text sizes
     const chunkTexts: Record<string, Array<unknown>> = {}; // set of span texts
     this.data.chunks.map(chunk => {
@@ -1288,9 +1288,8 @@ export class Visualizer {
         chunkTexts[chunk.text] = [];
       }
 
-      // here we also need all the spans that are contained in
-      // chunks with this text, because we need to know the position
-      // of the span text within the respective chunk text
+      // here we also need all the spans that are contained in chunks with this text, because we
+      // need to know the position of the span text within the respective chunk text
       const chunkText = chunkTexts[chunk.text];
       chunkText.push(...chunk.fragments);
       // and also the markedText boundaries
@@ -1298,74 +1297,76 @@ export class Visualizer {
       chunkText.push(...chunk.markedTextEnd);
     });
 
-    return this.getTextMeasurements(chunkTexts, undefined, (fragment, text) => {
-      if (!(fragment instanceof Fragment)) {
-        // it's markedText [id, start?, char#, offset]
-        if (fragment[2] < 0)
-          fragment[2] = 0;
-        if (!fragment[2]) { // start
-          fragment[3] = text.getStartPositionOfChar(fragment[2]).x;
-        } else {
-          fragment[3] = text.getEndPositionOfChar(fragment[2] - 1).x + 1;
-        }
-        return;
-      }
-
-      // measure the fragment text position in pixels
-      let firstChar = fragment.from - fragment.chunk.from;
-      if (firstChar < 0) {
-        firstChar = 0;
-        this.dispatcher.post('messages', [[['<strong>WARNING</strong>' +
-          '<br/> ' +
-          'The fragment [' + fragment.from + ', ' + fragment.to + '] (' + fragment.text + ') is not ' +
-          'contained in its designated chunk [' +
-          fragment.chunk.from + ', ' + fragment.chunk.to + '] most likely ' +
-          'due to the fragment starting or ending with a space, please ' +
-          'verify the sanity of your data since we are unable to ' +
-          'visualise this fragment correctly and will drop leading ' +
-          'space characters',
-          'warning', 15]]]);
-      }
-      let lastChar = fragment.to - fragment.chunk.from - 1;
-
-      // Adjust for XML whitespace (#832, #1009)
-      const textUpToFirstChar = fragment.chunk.text.substring(0, firstChar);
-      const textUpToLastChar = fragment.chunk.text.substring(0, lastChar);
-      const textUpToFirstCharUnspaced = textUpToFirstChar.replace(/\s\s+/g, ' ');
-      const textUpToLastCharUnspaced = textUpToLastChar.replace(/\s\s+/g, ' ');
-      firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
-      lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
-
-      let /** @type {number} */ startPos: number, endPos;
-      if (this.rtlmode) {
-        // This rendering is much slower than the "old" version that brat uses, but it is more reliable in RTL mode.
-        [startPos, endPos] = this.calculateSubstringWidthRobust(fragment, text, firstChar, lastChar);
-        // In RTL mode, positions are negative (left to right)
-        startPos = -startPos;
-        endPos = -endPos;
-      } else {
-        // Using the old faster method in LTR mode. YES, this means that subtoken
-        // annotations of RTL tokens in LTR mode will render incorrectly. If somebody
-        // needs that, we should do a smarter selection of the rendering mode.
-        // This is the old measurement code which doesn't work properly because browsers
-        // treat the x coordinate very differently. Our width-based measurement is more
-        // reliable.
-        // Cannot use fragment.chunk.text.length here because invisible
-        // characters do not count. Using text.getNumberOfChars() instead.
-        [startPos, endPos] = this.calculateSubstringWidthFast(text, firstChar, lastChar);
-      }
-
-      // Make sure that startPos and endPos are properly ordered on the X axis
-      fragment.curly = {
-        from: Math.min(startPos, endPos),
-        to: Math.max(startPos, endPos)
-      };
-    });
+    return this.getTextMeasurements(chunkTexts, undefined, (fragment, text) => 
+      this.calculateChunkTextElementMeasure(fragment, text));
   }
 
-  calculateSubstringWidthRobust(fragment, text, firstChar, lastChar) {
-    let charDirection;
-    let charAttrs;
+  calculateChunkTextElementMeasure(fragment: Fragment | number[], text: SVGTextElement) {
+    if (!(fragment instanceof Fragment)) {
+      // it's markedText [id, start?, char#, offset]
+      if (fragment[2] < 0)
+        fragment[2] = 0;
+      if (!fragment[2]) { // start
+        fragment[3] = text.getStartPositionOfChar(fragment[2]).x;
+      } else {
+        fragment[3] = text.getEndPositionOfChar(fragment[2] - 1).x + 1;
+      }
+      return;
+    }
+
+    // measure the fragment text position in pixels
+    let firstChar = fragment.from - fragment.chunk.from;
+    if (firstChar < 0) {
+      firstChar = 0;
+      this.dispatcher.post('messages', [[['<strong>WARNING</strong>' +
+        '<br/> ' +
+        'The fragment [' + fragment.from + ', ' + fragment.to + '] (' + fragment.text + ') is not ' +
+        'contained in its designated chunk [' +
+        fragment.chunk.from + ', ' + fragment.chunk.to + '] most likely ' +
+        'due to the fragment starting or ending with a space, please ' +
+        'verify the sanity of your data since we are unable to ' +
+        'visualise this fragment correctly and will drop leading ' +
+        'space characters',
+        'warning', 15]]]);
+    }
+    let lastChar = fragment.to - fragment.chunk.from - 1;
+
+    // Adjust for XML whitespace (#832, #1009)
+    const textUpToFirstChar = fragment.chunk.text.substring(0, firstChar);
+    const textUpToLastChar = fragment.chunk.text.substring(0, lastChar);
+    const textUpToFirstCharUnspaced = textUpToFirstChar.replace(/\s\s+/g, ' ');
+    const textUpToLastCharUnspaced = textUpToLastChar.replace(/\s\s+/g, ' ');
+    firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
+    lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
+
+    let startPos: number, endPos: number;
+    if (this.rtlmode) {
+      // This rendering is much slower than the "old" version that brat uses, but it is more reliable in RTL mode.
+      [startPos, endPos] = this.calculateSubstringWidthRobust(fragment, text, firstChar, lastChar);
+      // In RTL mode, positions are negative (left to right)
+      startPos = -startPos;
+      endPos = -endPos;
+    } else {
+      // Using the old faster method in LTR mode. YES, this means that subtoken annotations of RTL 
+      // tokens in LTR mode will render incorrectly. If somebody needs that, we should do a smarter
+      // selection of the rendering mode. This is the old measurement code which doesn't work
+      // properly because browsers treat the x coordinate very differently. Our width-based
+      // measurement is more reliable.
+      // Cannot use fragment.chunk.text.length here because invisible
+      // characters do not count. Using text.getNumberOfChars() instead.
+      [startPos, endPos] = this.calculateSubstringWidthFast(text, firstChar, lastChar);
+    }
+
+    // Make sure that startPos and endPos are properly ordered on the X axis
+    fragment.curly = {
+      from: Math.min(startPos, endPos),
+      to: Math.max(startPos, endPos)
+    };
+  }
+
+  calculateSubstringWidthRobust(fragment: Fragment, text: SVGTextElement, firstChar: number, lastChar: number) {
+    let charDirection: Array<"rtl" | "ltr">;
+    let charAttrs: Array<{order: number, width: number, direction: "rtl" | "ltr"}>;
     let corrFactor = 1;
 
     if (fragment.chunk.rtlsizes) {
@@ -1378,9 +1379,8 @@ export class Visualizer {
       charDirection = [];
       charAttrs = [];
 
-      // Cannot use fragment.chunk.text.length here because invisible
-      // characters do not count. Using text.getNumberOfChars() instead.
-      //var step1Start = new Date();
+      // Cannot use fragment.chunk.text.length here because invisible characters do not count. 
+      // Using text.getNumberOfChars() instead.
       for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
         const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x;
         const dir = isRTL(text.textContent.charCodeAt(idx)) ? "rtl" : "ltr";
@@ -1396,9 +1396,7 @@ export class Visualizer {
         //		            	  		" width:" + Math.abs(cw) +
         //		            	  		" dir:" + charDirection[charDirection.length-1]);
       }
-      //console.log("Collected widths in " + (new Date() - step1Start));
       // Re-order widths if necessary
-      //var step2Start = new Date();
       if (charAttrs.length > 1) {
         const idx = 0;
         let blockBegin = idx;
@@ -1420,8 +1418,6 @@ export class Visualizer {
         }
       }
       //	          console.log("order: " + charOrder);
-      //console.log("Established character order in " + (new Date() - step2Start));
-      //var step3Start = new Date();
       // The actual character width on screen is not necessarily the width that can be
       // obtained by subtracting start from end position. In particular Arabic connects
       // characters quite a bit such that the width on screen may be less. Here we
@@ -1431,7 +1427,6 @@ export class Visualizer {
         widthsSum += charAttrs[idx].width;
       }
       corrFactor = text.getComputedTextLength() / widthsSum;
-      //console.log("Final calculations in " + (new Date() - step3Start));
       //	          	  console.log("width sums: " + widthsSum);
       //	          	  console.log("computed length: " + text.getComputedTextLength());
       //	          	  console.log("corrFactor: " + corrFactor);
@@ -1440,24 +1435,21 @@ export class Visualizer {
         charAttrs: charAttrs,
         corrFactor: corrFactor
       };
-
-      //console.log("Completed calculating static RTL metrics in " + (new Date() -
-      //		  start) + " for " + text.getNumberOfChars() + " characters.");
     }
 
     // startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
     let startPos = 0;
     // console.log("startPos[initial]: " + startPos);
-    for (let i = 0; charAttrs[i].order !== firstChar && i < charAttrs.length; i++) {
-      startPos += charAttrs[i].width;
+    for (let i = 0; i < charAttrs.length; i++) {
+      // In RTL mode on RTL chars, for some reason we should not add the width of the first char.
+      // But if we are in RTL mode and hit an LTR char (i.e. displaying normal LTR text in RTL mode)
+      // when we need to include it... don't ask me why... REC 2021-11-27
+      if (charDirection[i] === "ltr" || charAttrs[i].order !== firstChar) {
+        startPos += charAttrs[i].width;
+      }
       // console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
     }
-    /* REC: Not sure if this served a purpose or ever worked...
-    if (charDirection[i] === (this.rtlmode ? "ltr" : "rtl")) {
-      startPos += charAttrs[i].width;
-      // console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
-    }
-    */
+
     startPos = startPos * corrFactor;
     // console.log("startPos: " + startPos);
     // endPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
@@ -1775,7 +1767,7 @@ export class Visualizer {
       let spaceWidth = 0;
       if (chunk.lastSpace) {
         const spaceLen = chunk.lastSpace.length || 0;
-        let spacePos;
+        let spacePos: number;
         if (chunk.sentence) {
           // If this is line-initial spacing, fetch the sentence to which the chunk belongs
           // so we can determine where it begins
@@ -1995,7 +1987,7 @@ export class Visualizer {
         if (fragmentHeight > chunkHeight) {
           chunkHeight = fragmentHeight;
         }
-        
+
         hasAnnotations = true;
       }); // fragments
 
@@ -4021,7 +4013,7 @@ export class Visualizer {
   }
 }
 
-function isRTL(charCode) {
+function isRTL(charCode: number): boolean {
   const t1 = (0x0591 <= charCode && charCode <= 0x07FF);
   const t2 = (charCode === 0x200F);
   const t3 = (charCode === 0x202E);
