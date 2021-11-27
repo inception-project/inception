@@ -3870,7 +3870,7 @@ export class Visualizer {
 
     // To visualize the spacing use \u2588, otherwise \u00a0
     this.svg.plain(this.rtlmode ? '\u200f\u00a0' : '\u00a0')
-      .move(x, y)
+      .amove(x, y)
       .addClass('spacing')
       .attr({
         textLength: width,
