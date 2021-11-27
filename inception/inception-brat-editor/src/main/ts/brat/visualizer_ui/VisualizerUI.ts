@@ -42,51 +42,31 @@ import type { Dispatcher } from "../dispatcher/Dispatcher";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 
 import { INSTANCE as Util } from "../util/Util";
+import { OffsetsList } from "../visualizer/SourceData";
+import { DocumentData } from "../visualizer/DocumentData";
 
 export class VisualizerUI {
-  defaultFloatFormat = '%.1f/right';
-
-  documentListing = null; // always documents of current collection
-  selectorData = null;    // can be search results when available
-  searchActive = false;   // whether search results received and in use
-  loadedSearchData = null;
-
-  currentForm;
   spanTypes = null;
   relationTypesHash = null;
-  // TODO: confirm unnecessary and remove
-  //       var attributeTypes = null;
-  data = null;
-  mtime = null;
-  searchConfig = null;
+  data: DocumentData = null;
   coll;
   doc;
   args;
-  collScroll;
-  docScroll;
   user = null;
   annotationAvailable = false;
-  currentDocumentSVGsaved = false;
   fileBrowserClosedWithSubmit = false;
 
   // normalization: server-side DB by norm DB name
   normServerDbByNormDbName = {};
 
-  matchFocus = '';
-  matches = '';
-
   dispatcher: Dispatcher;
-  svgElement: JQuery;
-  svgId: string;
 
-  commentPopup;
+  commentPopup: JQuery;
   commentDisplayed = false;
   displayCommentTimer = null;
 
-  constructor(dispatcher: Dispatcher, svg) {
+  constructor(dispatcher: Dispatcher) {
     this.commentPopup = $('#commentpopup');
-    this.svgElement = $(svg._svg);
-    this.svgId = this.svgElement.parent().attr('id');
     this.dispatcher = dispatcher;
     this.dispatcher.
       on('init', this, this.init).
@@ -99,7 +79,6 @@ export class VisualizerUI {
       on('resize', this, this.onResize).
       on('collectionLoaded', this, this.rememberNormDb).
       on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded).
-      on('isReloadOkay', this, this.isReloadOkay).
       on('doneRendering', this, this.onDoneRendering).
       on('mousemove', this, this.onMouseMove).
       on('displaySpanButtons', this, this.displaySpanButtons).
@@ -397,7 +376,7 @@ export class VisualizerUI {
     }, 'serverResult']);
   }
 
-  rejectAction(evt: MouseEvent, offsets, editedSpan, id) {
+  rejectAction(evt: MouseEvent, offsets: OffsetsList, editedSpan, id) {
     // must be logged in
     if (this.user === null) return;
 
@@ -411,7 +390,7 @@ export class VisualizerUI {
     }, 'serverResult']);
   }
 
-  displaySpanButtons(evt: Event, target, spanId) {
+  displaySpanButtons(evt: Event, target: JQuery) {
     const id = target.attr('data-span-id');
     if (!id) {
       return;
@@ -422,7 +401,7 @@ export class VisualizerUI {
     const spanWidth = target.width();
     const spanHeight = target.height();
     const editedSpan = this.data.spans[id];
-    const offsets = [];
+    const offsets: OffsetsList = [];
 
     $.each(editedSpan.fragments, (fragmentNo, fragment) => {
       offsets.push([fragment.from, fragment.to]);
@@ -487,6 +466,8 @@ export class VisualizerUI {
 
   onDoneRendering(coll, doc, args) {
     if (args && !args.edited) {
+      // FIXME REC 2021-11-21 - Good idea but won't work in INCEpTION since there could 
+      // be multiple SVGs on screen. Should be removed or done differently.
       const $inFocus = $('#svg animate[data-type="focus"]:first').parent();
       if ($inFocus.length) {
         const svgtop = $('svg').offset().top;
@@ -497,15 +478,11 @@ export class VisualizerUI {
     this.dispatcher.post('allowReloadByURL');
   }
 
-  resizeFunction(evt: Event) {
-    this.dispatcher.post('rerender');
-  }
-
   resizerTimeout = null;
   onResize(evt: Event) {
     if (evt.target === window) {
       clearTimeout(this.resizerTimeout);
-      this.resizerTimeout = setTimeout(this.resizeFunction, 300);
+      this.resizerTimeout = setTimeout(() => this.dispatcher.post('rerender'), 300);
     }
   }
 
@@ -529,9 +506,6 @@ export class VisualizerUI {
         this.dispatcher.post('svgWidth', [Configuration.svgWidth]);
         // Configuration.abbrevsOn = storedConf.abbrevsOn == "true";
         // Configuration.textBackgrounds = storedConf.textBackgrounds;
-        // Configuration.rapidModeOn = storedConf.rapidModeOn == "true";
-        // Configuration.confirmModeOn = storedConf.confirmModeOn == "true";
-        // Configuration.autorefreshOn = storedConf.autorefreshOn == "true";
         // Configuration.visual.margin.x = parseInt(storedConf.visual.margin.x);
         // Configuration.visual.margin.y = parseInt(storedConf.visual.margin.y);
         // Configuration.visual.boxSpacing = parseInt(storedConf.visual.boxSpacing);
@@ -554,13 +528,12 @@ export class VisualizerUI {
 
 
   isReloadOkay() {
-    // do not reload while the user is in the dialog
-    return this.currentForm == null;
+    return true;
   }
 
-  rememberData(_data) {
-    if (_data && !_data.exception) {
-      this.data = _data;
+  rememberData(data: DocumentData) {
+    if (data && !data.exception) {
+      this.data = data;
     }
   }
 

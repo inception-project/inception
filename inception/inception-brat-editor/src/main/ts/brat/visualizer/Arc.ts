@@ -38,31 +38,26 @@
  * SOFTWARE.
  */
 
+import { EventDesc } from "./EventDesc";
+
 export class Arc {
   annotatorNotes = undefined;
   comment = undefined;
-    /** @type {string} ID */ origin;
-    /** @type {string} ID */ target;
-  dist;
-  type;
-    /** @type {string} */ shadowClass;
-    /** @type {number} */ jumpHeight = 0;
-    /** @type {boolean} */ equiv = false;
-  eventDescId;
-    /** @type {boolean} */ relation = false;
-    /** @type {[[string, string, string]]} */ normalizations = [];
-  marked;
-    /** @type {string} */ normalized;
-    /** @type {boolean} */ hidden = false;
+  origin: string;
+  target: string;
+  dist: number;
+  type: string;
+  shadowClass: string;
+  jumpHeight = 0;
+  equiv = false;
+  eventDescId: string;
+  relation = false;
+  normalizations: Array<[string, string, string]> = [];
+  marked: string;
+  normalized: string;
+  hidden = false;
 
-  /**
-   *
-   * @param {EventDesc} eventDesc
-   * @param role
-   * @param dist
-   * @param eventNo
-   */
-  constructor(eventDesc, role, dist, eventNo) {
+  constructor(eventDesc: EventDesc, role, dist: number, eventNo: string) {
     this.origin = eventDesc.id;
     this.target = role.targetId;
     this.dist = dist;

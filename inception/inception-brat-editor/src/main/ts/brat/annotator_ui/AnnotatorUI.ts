@@ -37,108 +37,71 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import type Dispatcher from "../dispatcher";
-
+import { Dispatcher } from "../dispatcher/Dispatcher";
+import { Svg, SVG } from "@svgdotjs/svg.js";
+import { DocumentData } from "../visualizer/DocumentData";
+import { OffsetsList } from "../visualizer/SourceData";
+import { Span } from "../visualizer/Span";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
-
 import { INSTANCE as Util } from "../util/Util";
-
-import { Key } from 'ts-keycode-enum';
+import { SVGTypeMapping } from "@svgdotjs/svg.js";
 
 export class AnnotatorUI {
-  arcDragOrigin = null;
-  arcDragOriginBox = null;
-  arcDragOriginGroup = null;
-  arcDragArc = null;
-  arcDragJustStarted = false;
-  sourceData = null;
-  data = null;
-  searchConfig = null;
-  spanOptions = null;
-  rapidSpanOptions = null;
-  arcOptions = null;
-  spanKeymap = null;
-  keymap = null;
-  coll = null;
-  doc = null;
-  reselectedSpan = null;
-  selectedFragment = null;
-  editedSpan = null;
-  editedFragment = null;
-  repeatingArcTypes = [];
-  spanTypes = null;
-  entityAttributeTypes = null;
-  eventAttributeTypes = null;
-  allAttributeTypes = null; // TODO: temp workaround, remove
-  relationTypesHash = null;
-  showValidAttributes; // callback function
-  showValidNormalizations; // callback function
-  dragStartedAt = null;
-  selRect = null;
-  lastStartRec = null;
-  lastEndRec = null;
+  private data: DocumentData = null;
+  private coll = null;
+  private doc = null;
 
-  draggedArcHeight = 30;
-  spanTypesToShowBeforeCollapse = 30;
-  maxNormSearchHistory = 10;
+  private arcDragOrigin = null;
+  private arcDragOriginBox = null;
+  private arcDragOriginGroup: SVGTypeMapping<SVGGElement>;
+  private arcDragArc: SVGTypeMapping<SVGPathElement> = null;
+  private arcDragJustStarted = false;
+  private spanDragJustStarted = false;
+  private dragStartedAt = null;
 
-  // TODO: this is an ugly hack, remove (see comment with assignment)
-  lastRapidAnnotationEvent = null;
-  // TODO: another avoidable global; try to work without
-  rapidAnnotationDialogVisible = false;
+  private spanOptions = null;
+  private arcOptions = null;
+  private editedSpan: Span = null;
+  private editedFragment = null;
+  private spanTypes = null;
+  private selRect = null;
+  private lastStartRec = null;
+  private lastEndRec = null;
 
-  // amount by which to lighten (adjust "L" in HSL space) span
-  // colors for type selection box BG display. 0=no lightening,
-  // 1=white BG (no color)
-  spanBoxTextBgColorLighten = 0.4;
+  private draggedArcHeight = 30;
 
-  // for normalization: URLs bases by norm DB name
-  normDbUrlByDbName = {};
-  normDbUrlBaseByDbName = {};
   // for normalization: appropriate DBs per type
-  normDbsByType = {};
-  // for normalization
-  oldSpanNormIdValue = '';
-  lastNormSearches = [];
+  private normDbsByType = {};
 
-  user: string;
-  svg;
-  svgElement: JQuery;
-  svgId: string;
-  dispatcher: Dispatcher;
-  args;
+  private user: string;
+  private svg: Svg;
+  private dispatcher: Dispatcher;
 
-  undoStack = [];
+  private svgPosition: JQueryCoordinates;
 
-  svgPosition: JQueryCoordinates;
+  private clickCount = 0;
+  private clickTimer = null;
+  private CLICK_DELAY = 300;
 
-  clickCount = 0;
-  clickTimer = null;
-  CLICK_DELAY = 300;
-
-  constructor(dispatcher: Dispatcher, svg) {
-    this.svg = svg;
+  constructor(dispatcher: Dispatcher, svg: Svg) {
     this.dispatcher = dispatcher;
     this.user = null;
-    this.svgElement = $(svg._svg);
-    this.svgId = this.svgElement.parent().attr('id');
+    this.svg = svg;
 
     dispatcher.
       on('init', this, this.init).
       on('getValidArcTypesForDrag', this, this.getValidArcTypesForDrag).
       on('dataReady', this, this.rememberData).
       on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded).
-      on('newSourceData', this, this.onNewSourceData).
       on('user', this, this.userReceived).
       on('current', this, this.gotCurrent).
       on('isReloadOkay', this, this.isReloadOkay).
       on('keydown', this, this.onKeyDown).
       on('click', this, this.onClick).
-      on('dragstart', this, this.preventDefault).
+      on('dragstart', this, (evt: MouseEvent) => evt.preventDefault()).
       on('mousedown', this, this.onMouseDown).
       on('mouseup', this, this.onMouseUp).
       on('mousemove', this, this.onMouseMove).
-      on('annotationSpeed', this, this.setAnnotationSpeed).
       on('contextmenu', this, this.contextMenu);
   }
 
@@ -176,28 +139,23 @@ export class AnnotatorUI {
   }
 
   private onKeyDown(evt: KeyboardEvent) {
-    const code = evt.which;
-
-    if (code === Key.Escape) {
+    if (evt.code === 'Escape') {
       this.stopArcDrag();
-      if (this.reselectedSpan) {
-        $(this.reselectedSpan.rect).removeClass('reselect');
-        this.reselectedSpan = null;
-        this.svgElement.removeClass('reselect');
-      }
       return;
     }
   }
 
-  // Distinguish between double clicks and single clicks . This is relevant when clicking on 
-  // annotations. For clicking on text nodes, this is not really relevant.
-  private onClick(evt) {
+  /**
+   * Distinguish between double clicks and single clicks . This is relevant when clicking on 
+   * annotations. For clicking on text nodes, this is not really relevant.
+   */
+  private onClick(evt: MouseEvent) {
     this.clickCount++;
 
     const singleClickAction = Configuration.singleClickEdit ?
-      this.editAnnotation : this.customJSAction;
+      this.selectAnnotation : this.customAction;
     const doubleClickAction = Configuration.singleClickEdit ?
-      this.customJSAction : this.editAnnotation;
+      this.customAction : this.selectAnnotation;
 
     if (this.clickCount === 1) {
       this.clickTimer = setTimeout(() => {
@@ -219,26 +177,30 @@ export class AnnotatorUI {
     }
   }
 
-  private customJSAction(evt: MouseEvent) {
+  private customAction(evt: MouseEvent & { target: HTMLElement }) {
     // must be logged in
     if (this.user === null) return;
-    // single click actions for spans
-    const target = $(evt.target);
-    if (target.attr('data-span-id')) {
+
+    if (evt.target.getAttribute('data-span-id')) {
       this.customSpanAction(evt)
+      return;
     }
-    else if (target.attr('data-arc-ed')) {
+
+    if (evt.target.getAttribute('data-arc-ed')) {
       this.customArcAction(evt);
+      return;
     }
   }
 
-  private customArcAction(evt: MouseEvent) {
-    const target = $(evt.target);
-    const id = target.attr('data-arc-ed');
-    const type = target.attr('data-arc-role');
-    const originSpan = this.data.spans[target.attr('data-arc-origin')];
-    const targetSpan = this.data.spans[target.attr('data-arc-target')];
+  private customArcAction(evt: MouseEvent & { target: HTMLElement }) {
+    const id = evt.target.getAttribute('data-arc-ed');
+    const type = evt.target.getAttribute('data-arc-role');
+    const originSpan = this.data.spans[evt.target.getAttribute('data-arc-origin')];
+    const targetSpan = this.data.spans[evt.target.getAttribute('data-arc-target')];
+    this.sendTriggerCustomArcAction(id, type, originSpan, targetSpan);
+  }
 
+  private sendTriggerCustomArcAction(id: string, type: string, originSpan: Span, targetSpan: Span) {
     this.dispatcher.post('ajax', [{
       action: 'doAction',
       arcId: id,
@@ -250,16 +212,15 @@ export class AnnotatorUI {
     }, 'serverResult']);
   }
 
-  private customSpanAction(evt: MouseEvent) {
-    const target = $(evt.target);
-    const id = target.attr('data-span-id');
-    this.preventDefault(evt);
+  private customSpanAction(evt: MouseEvent & { target: HTMLElement }) {
+    const id = evt.target.getAttribute('data-span-id');
+    evt.preventDefault();
     this.editedSpan = this.data.spans[id];
-    this.editedFragment = target.attr('data-fragment-id');
-    const offsets = [];
-    $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
-      offsets.push([fragment.from, fragment.to]);
-    });
+    this.editedFragment = evt.target.getAttribute('data-fragment-id');
+    this.sendTriggerCustomSpanAction(id, this.editedSpan.fragmentOffsets);
+  }
+
+  private sendTriggerCustomSpanAction(id: string, offsets: OffsetsList) {
     this.dispatcher.post('ajax', [{
       action: 'doAction',
       offsets: JSON.stringify(offsets),
@@ -269,31 +230,29 @@ export class AnnotatorUI {
     }, 'serverResult']);
   }
 
-  // WEBANNO EXTENSION END - #520 Perform javascript action on click 
-
-  private editAnnotation(evt: MouseEvent) {
+  private selectAnnotation(evt: MouseEvent & { target: HTMLElement }) {
     // must be logged in
     if (this.user === null) return;
-    // must not be reselecting a span or an arc
-    if (this.reselectedSpan || this.arcDragOrigin) return;
 
-    const target = $(evt.target);
-    // do we edit an arc?
-    if (target.attr('data-arc-role')) {
-      this.editArc(evt);
-      // if not an arc, then do we edit a span?
-    } else if (target.attr('data-span-id')) {
-      this.editSpan(evt);
+    // must not be creating an arc
+    if (this.arcDragOrigin) return;
+
+    if (evt.target.getAttribute('data-arc-role')) {
+      this.selectArc(evt);
+      return;
+    }
+
+    if (evt.target.getAttribute('data-span-id')) {
+      this.selectSpanAnnotation(evt);
+      return;
     }
   }
 
-  private editArc(evt: MouseEvent) {
-    const target = $(evt.target);
-    // TODO
+  private selectArc(evt: MouseEvent & { target: HTMLElement }) {
     this.clearSelection();
-    const originSpanId = target.attr('data-arc-origin');
-    const targetSpanId = target.attr('data-arc-target');
-    const type = target.attr('data-arc-role');
+    const originSpanId = evt.target.getAttribute('data-arc-origin');
+    const targetSpanId = evt.target.getAttribute('data-arc-target');
+    const type = evt.target.getAttribute('data-arc-role');
     const originSpan = this.data.spans[originSpanId];
     const targetSpan = this.data.spans[targetSpanId];
     this.arcOptions = {
@@ -306,7 +265,7 @@ export class AnnotatorUI {
       collection: this.coll,
       'document': this.doc
     };
-    const eventDescId = target.attr('data-arc-ed');
+    const eventDescId = evt.target.getAttribute('data-arc-ed');
     if (eventDescId) {
       const eventDesc = this.data.eventDescs[eventDescId];
       if (eventDesc.equiv) {
@@ -314,38 +273,27 @@ export class AnnotatorUI {
         this.arcOptions['right'] = eventDesc.rightSpans.join(',');
       }
     }
-    $('#arc_origin').text(Util.spanDisplayForm(this.spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
-    $('#arc_target').text(Util.spanDisplayForm(this.spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
     const arcId = eventDescId || [originSpanId, type, targetSpanId];
-    // WEBANNO EXTENSION BEGIN
-    this.fillArcTypesAndDisplayForm(evt, originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
-    // WEBANNO EXTENSION END
-    // for precise timing, log dialog display to user.
-    this.dispatcher.post('logAction', ['arcEditSelected']);
+
+    this.sendArcSelected(originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
   }
 
-  private editSpan(evt: MouseEvent) {
+  private selectSpanAnnotation(evt: MouseEvent) {
     const target = $(evt.target);
     const id = target.attr('data-span-id')
     this.clearSelection();
     this.editedSpan = this.data.spans[id];
     this.editedFragment = target.attr('data-fragment-id');
-    const offsets = [];
-    $.each(this.editedSpan.fragments, (fragmentNo, fragment) => {
-      offsets.push([fragment.from, fragment.to]);
-    });
+    const offsets: OffsetsList = this.editedSpan.fragmentOffsets;
+
     this.spanOptions = {
       action: 'createSpan',
       offsets: offsets,
       type: this.editedSpan.type,
       id: id,
     };
-    // WEBANNO EXTENSION BEGIN
-    this.fillSpanTypesAndDisplayForm(evt, offsets, this.editedSpan.text, this.editedSpan, id);
-    // WEBANNO EXTENSION END
 
-    // for precise timing, log annotation display to user.
-    this.dispatcher.post('logAction', ['spanEditSelected']);
+    this.sendSpanAnnotationSelected(offsets, this.editedSpan, id);
   }
 
   private startArcDrag(originId) {
@@ -355,15 +303,14 @@ export class AnnotatorUI {
       return;
     }
 
-    this.svgElement.addClass('unselectable');
-    this.svgPosition = this.svgElement.offset();
+    this.svg.addClass('unselectable');
+    this.svgPosition = $(this.svg.node).offset();
     this.arcDragOrigin = originId;
-    this.arcDragArc = this.svg.path(this.svg.createPath(), {
-      markerEnd: 'url(#drag_arrow)',
-      'class': 'drag_stroke',
-      fill: 'none',
-    });
-    this.arcDragOriginGroup = $(this.data.spans[this.arcDragOrigin].group);
+    this.arcDragArc = this.svg.path()
+      .fill('none')
+      .attr('markerEnd', 'url(#drag_arrow)')
+      .addClass('drag_stroke');
+    this.arcDragOriginGroup = this.data.spans[this.arcDragOrigin].headFragment.group;
     this.arcDragOriginGroup.addClass('highlight');
     this.arcDragOriginBox = Util.realBBox(this.data.spans[this.arcDragOrigin].headFragment);
     this.arcDragOriginBox.center = this.arcDragOriginBox.x + this.arcDragOriginBox.width / 2;
@@ -399,10 +346,13 @@ export class AnnotatorUI {
       this.dragStartedAt = evt; // XXX do we really need the whole evt?
       return false;
     }
+
+    if ($(evt.target).attr('data-chunk-id')) {
+      this.spanDragJustStarted = true;
+    }
   }
 
-  onMouseMove(evt) {
-    // BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
+  onMouseMove(evt: MouseEvent) {
     if (!this.arcDragOrigin && this.dragStartedAt) {
       // When the user has pressed the mouse button, we monitor the mouse cursor. If the cursor
       // moves more than a certain distance, we start the arc-drag operation. Starting this
@@ -416,25 +366,13 @@ export class AnnotatorUI {
         const target = $(this.dragStartedAt.target);
         const id = target.attr('data-span-id');
         this.startArcDrag(id);
-
-        // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-        // If user starts selecting text, suppress all pointer events on annotations to
-        // avoid the selection jumping around. During selection, we don't need the annotations
-        // to react on mouse events anyway.
-        if (target.attr('data-chunk-id')) {
-          $(this.svgElement).children('.row, .sentnum').each((index, row) => {
-            $(row).css('pointer-events', 'none');
-          });
-        }
-        // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
       }
     }
-    // END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
 
     if (this.arcDragOrigin) {
       if (this.arcDragJustStarted) {
         // show the possible targets
-        const span = this.data.spans[this.arcDragOrigin] || {};
+        const span = this.data.spans[this.arcDragOrigin];
         const spanDesc = this.spanTypes[span.type] || {};
 
         // separate out possible numeric suffix from type for highlight
@@ -449,7 +387,7 @@ export class AnnotatorUI {
               // this function: http://www.quirksmode.org/dom/w3c_core.html#t11
               // so we get off jQuery and get down to the metal:
               // targetClasses.push('.span_' + possibleTarget);
-              $targets = $targets.add(this.svgElement[0].getElementsByClassName('span_' + possibleTarget));
+              $targets = $targets.add(this.svg.node.getElementsByClassName('span_' + possibleTarget));
             });
           }
         });
@@ -468,322 +406,285 @@ export class AnnotatorUI {
       const my = evt.pageY - this.svgPosition.top + 5; // TODO FIXME why +5?!?
       const y = Math.min(this.arcDragOriginBox.y, my) - this.draggedArcHeight;
       const dx = (this.arcDragOriginBox.center - mx) / 4;
-      const path = this.svg.createPath().
-        move(this.arcDragOriginBox.center, this.arcDragOriginBox.y).
-        curveC(this.arcDragOriginBox.center - dx, y,
-          mx + dx, y,
-          mx, my);
-      this.arcDragArc.setAttribute('d', path.path());
+      this.arcDragArc.plot([
+        ['M', this.arcDragOriginBox.center, this.arcDragOriginBox.y],
+        ['C', this.arcDragOriginBox.center - dx, y, mx + dx, y, mx, my]]);
     } else {
-      // A. Scerri FireFox chunk
-
-      // if not, then is it span selection? (ctrl key cancels)
-      const sel = window.getSelection();
-      let chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id');
-      let chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id');
-      // fallback for firefox (at least):
-      // it's unclear why, but for firefox the anchor and focus
-      // node parents are always undefined, the the anchor and
-      // focus nodes themselves do (often) have the necessary
-      // chunk ID. However, anchor offsets are almost always
-      // wrong, so we'll just make a guess at what the user might
-      // be interested in tagging instead of using what's given.
-      let anchorOffset = null;
-      let focusOffset = null;
-      let sp: DOMPointInit;
-      let startsAt: SVGTextContentElement;
-      if (chunkIndexFrom === undefined && chunkIndexTo === undefined &&
-        $(sel.anchorNode).attr('data-chunk-id') &&
-        $(sel.focusNode).attr('data-chunk-id')) {
-        // Lets take the actual selection range and work with that
-        // Note for visual line up and more accurate positions a vertical offset of 8 and horizontal of 2 has been used!
-        const range = sel.getRangeAt(0);
-        const svgOffset = $(this.svgElement).offset();
-        let flip = false;
-        let tries = 0;
-        // First try and match the start offset with a position, if not try it against the other end
-        while (tries < 2) {
-          sp = this.svg._svg.createSVGPoint();
-          sp.x = (flip ? evt.pageX : this.dragStartedAt.pageX) - svgOffset.left;
-          sp.y = (flip ? evt.pageY : this.dragStartedAt.pageY) - (svgOffset.top + 8);
-          startsAt = range.startContainer as SVGTextContentElement;
-          anchorOffset = startsAt.getCharNumAtPosition(sp);
-          chunkIndexFrom = startsAt && $(startsAt).attr('data-chunk-id');
-          if (anchorOffset != -1) {
-            break;
-          }
-          flip = true;
-          tries++;
-        }
-
-        // Now grab the end offset
-        sp.x = (flip ? this.dragStartedAt.pageX : evt.pageX) - svgOffset.left;
-        sp.y = (flip ? this.dragStartedAt.pageY : evt.pageY) - (svgOffset.top + 8);
-        const endsAt = range.endContainer as SVGTextContentElement;
-        focusOffset = endsAt.getCharNumAtPosition(sp);
-
-        // If we cannot get a start and end offset stop here
-        if (anchorOffset == -1 || focusOffset == -1) {
-          return;
-        }
-        // If we are in the same container it does the selection back to front when dragged right to left, across different containers the start is the start and the end if the end!
-        if (range.startContainer == range.endContainer && anchorOffset > focusOffset) {
-          const t = anchorOffset;
-          anchorOffset = focusOffset;
-          focusOffset = t;
-          flip = false;
-        }
-        chunkIndexTo = endsAt && $(endsAt).attr('data-chunk-id');
-
-        // Now take the start and end character rectangles
-        const startRec = startsAt.getExtentOfChar(anchorOffset);
-        startRec.y += 2;
-        const endRec = endsAt.getExtentOfChar(focusOffset);
-        endRec.y += 2;
-
-        // If nothing has changed then stop here
-        if (this.lastStartRec != null && this.lastStartRec.x == startRec.x && this.lastStartRec.y == startRec.y && this.lastEndRec != null && this.lastEndRec.x == endRec.x && this.lastEndRec.y == endRec.y) {
-          return;
-        }
-
-        if (this.selRect == null) {
-          let rx = startRec.x;
-          const ry = startRec.y;
-          let rw = (endRec.x + endRec.width) - startRec.x;
-          if (rw < 0) {
-            rx += rw;
-            rw = -rw;
-          }
-          const rh = Math.max(startRec.height, endRec.height);
-
-          this.selRect = [];
-          const activeSelRect = this.makeSelRect(rx, ry, rw, rh);
-          this.selRect.push(activeSelRect);
-          startsAt.parentNode.parentNode.parentNode.insertBefore(activeSelRect, startsAt.parentNode.parentNode);
-        } else {
-          if (startRec.x != this.lastStartRec.x && endRec.x != this.lastEndRec.x && (startRec.y != this.lastStartRec.y || endRec.y != this.lastEndRec.y)) {
-            if (startRec.y < this.lastStartRec.y) {
-              this.selRect[0].setAttributeNS(null, "width", this.lastStartRec.width);
-              this.lastEndRec = this.lastStartRec;
-            } else if (endRec.y > this.lastEndRec.y) {
-              this.selRect[this.selRect.length - 1].setAttributeNS(null, "x",
-                parseFloat(this.selRect[this.selRect.length - 1].getAttributeNS(null, "x"))
-                + parseFloat(this.selRect[this.selRect.length - 1].getAttributeNS(null, "width"))
-                - this.lastEndRec.width);
-              this.selRect[this.selRect.length - 1].setAttributeNS(null, "width", 0);
-              this.lastStartRec = this.lastEndRec;
-            }
-          }
-
-          // Start has moved
-          const flip = !(startRec.x == this.lastStartRec.x && startRec.y == this.lastStartRec.y);
-          // If the height of the start or end changed we need to check whether
-          // to remove multi line highlights no longer needed if the user went back towards their start line
-          // and whether to create new ones if we moved to a newline
-          if (((endRec.y != this.lastEndRec.y)) || ((startRec.y != this.lastStartRec.y))) {
-            // First check if we have to remove the first highlights because we are moving towards the end on a different line
-            let ss = 0;
-            for (; ss != this.selRect.length; ss++) {
-              if (startRec.y <= parseFloat(this.selRect[ss].getAttributeNS(null, "y"))) {
-                break;
-              }
-            }
-            // Next check for any end highlights if we are moving towards the start on a different line
-            let es = this.selRect.length - 1;
-            for (; es != -1; es--) {
-              if (endRec.y >= parseFloat(this.selRect[es].getAttributeNS(null, "y"))) {
-                break;
-              }
-            }
-            // TODO put this in loops above, for efficiency the array slicing could be done separate still in single call
-            let trunc = false;
-            if (ss < this.selRect.length) {
-              for (let s2 = 0; s2 != ss; s2++) {
-                this.selRect[s2].parentNode.removeChild(this.selRect[s2]);
-                es--;
-                trunc = true;
-              }
-              this.selRect = this.selRect.slice(ss);
-            }
-            if (es > -1) {
-              for (let s2 = this.selRect.length - 1; s2 != es; s2--) {
-                this.selRect[s2].parentNode.removeChild(this.selRect[s2]);
-                trunc = true;
-              }
-              this.selRect = this.selRect.slice(0, es + 1);
-            }
-
-            // If we have truncated the highlights we need to readjust the last one
-            if (trunc) {
-              const activeSelRect = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
-              if (flip) {
-                let rw = 0;
-                if (startRec.y == endRec.y) {
-                  rw = (endRec.x + endRec.width) - startRec.x;
-                } else {
-                  rw = (parseFloat(activeSelRect.getAttributeNS(null, "x"))
-                    + parseFloat(activeSelRect.getAttributeNS(null, "width")))
-                    - startRec.x;
-                }
-                activeSelRect.setAttributeNS(null, "x", startRec.x);
-                activeSelRect.setAttributeNS(null, "y", startRec.y);
-                activeSelRect.setAttributeNS(null, "width", rw.toString());
-              } else {
-                const rw = (endRec.x + endRec.width) - parseFloat(activeSelRect.getAttributeNS(null, "x"));
-                activeSelRect.setAttributeNS(null, "width", rw.toString());
-              }
-            } else {
-              // We didnt truncate anything but we have moved to a new line so we need to create a new highlight
-              const lastSel = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
-              const startBox = (startsAt.parentNode as SVGGraphicsElement).getBBox();
-              const endBox = (endsAt.parentNode as SVGGraphicsElement).getBBox();
-
-              if (flip) {
-                lastSel.setAttributeNS(null, "width",
-                  (parseFloat(lastSel.getAttributeNS(null, "x"))
-                    + parseFloat(lastSel.getAttributeNS(null, "width")))
-                  - endBox.x);
-                lastSel.setAttributeNS(null, "x", endBox.x);
-              } else {
-                lastSel.setAttributeNS(null, "width",
-                  (startBox.x + startBox.width)
-                  - parseFloat(lastSel.getAttributeNS(null, "x")));
-              }
-              let rx = 0;
-              let ry = 0;
-              let rw = 0;
-              let rh = 0;
-              if (flip) {
-                rx = startRec.x;
-                ry = startRec.y;
-                rw = $(this.svgElement).width() - startRec.x;
-                rh = startRec.height;
-              } else {
-                rx = endBox.x;
-                ry = endRec.y;
-                rw = (endRec.x + endRec.width) - endBox.x;
-                rh = endRec.height;
-              }
-              const newRect = this.makeSelRect(rx, ry, rw, rh);
-              if (flip) {
-                this.selRect.unshift(newRect);
-              } else {
-                this.selRect.push(newRect);
-              }
-
-              // Place new highlight in appropriate slot in SVG graph
-              startsAt.parentNode.parentNode.parentNode.insertBefore(newRect, startsAt.parentNode.parentNode);
-            }
-          } else {
-            // The user simply moved left or right along the same line so just adjust the current highlight
-            const activeSelRect = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
-            // If the start moved shift the highlight and adjust width
-            if (flip) {
-              const rw = (parseFloat(activeSelRect.getAttributeNS(null, "x"))
-                + parseFloat(activeSelRect.getAttributeNS(null, "width")))
-                - startRec.x;
-              activeSelRect.setAttributeNS(null, "x", startRec.x);
-              activeSelRect.setAttributeNS(null, "y", startRec.y);
-              activeSelRect.setAttributeNS(null, "width", rw);
-            } else {
-              // If the end moved then simple change the width
-              const rw = (endRec.x + endRec.width)
-                - parseFloat(activeSelRect.getAttributeNS(null, "x"));
-              activeSelRect.setAttributeNS(null, "width", rw);
-            }
-          }
-        }
-        this.lastStartRec = startRec;
-        this.lastEndRec = endRec;
+      if (this.spanDragJustStarted) {
+        // If user starts selecting text, suppress all pointer events on annotations to
+        // avoid the selection jumping around. During selection, we don't need the annotations
+        // to react on mouse events anyway.
+        this.svg.find('.row, .sentnum').map(e => e.attr('pointer-events', 'none'));
       }
+
+      this.onMouseMoveSpanSelection(evt);
     }
     this.arcDragJustStarted = false;
+    this.spanDragJustStarted = false;
   }
 
-  adjustToCursor(evt, element, centerX, centerY) {
-    const screenHeight = $(window).height() - 8; // TODO HACK - no idea why -8 is needed
-    const screenWidth = $(window).width() - 8;
-    const elementHeight = element.height();
-    const elementWidth = element.width();
-    let eLeft;
-    let eTop;
-    if (centerX) {
-      eLeft = evt.clientX - elementWidth / 2;
-    } else {
-      eLeft = evt.clientX;
+  private onMouseMoveSpanSelection(evt: MouseEvent) {
+    // A. Scerri FireFox chunk
+
+    // if not, then is it span selection? (ctrl key cancels)
+    const sel = window.getSelection();
+    let chunkIndexFrom = sel.anchorNode && $(sel.anchorNode.parentNode).attr('data-chunk-id');
+    let chunkIndexTo = sel.focusNode && $(sel.focusNode.parentNode).attr('data-chunk-id');
+    // fallback for firefox (at least):
+    // it's unclear why, but for firefox the anchor and focus
+    // node parents are always undefined, the the anchor and
+    // focus nodes themselves do (often) have the necessary
+    // chunk ID. However, anchor offsets are almost always
+    // wrong, so we'll just make a guess at what the user might
+    // be interested in tagging instead of using what's given.
+    let anchorOffset = null;
+    let focusOffset = null;
+    let sp: DOMPointInit;
+    let startsAt: SVGTextContentElement;
+    if (chunkIndexFrom === undefined && chunkIndexTo === undefined &&
+      $(sel.anchorNode).attr('data-chunk-id') &&
+      $(sel.focusNode).attr('data-chunk-id')) {
+      // Lets take the actual selection range and work with that
+      // Note for visual line up and more accurate positions a vertical offset of 8 and horizontal of 2 has been used!
+      const range = sel.getRangeAt(0);
+      const svgOffset = $(this.svg.node).offset();
+      let flip = false;
+      let tries = 0;
+      // First try and match the start offset with a position, if not try it against the other end
+      while (tries < 2) {
+        sp = this.svg.point((flip ? evt.pageX : this.dragStartedAt.pageX) - svgOffset.left,
+          (flip ? evt.pageY : this.dragStartedAt.pageY) - (svgOffset.top + 8));
+        startsAt = range.startContainer as SVGTextContentElement;
+        anchorOffset = startsAt.getCharNumAtPosition(sp);
+        chunkIndexFrom = startsAt && $(startsAt).attr('data-chunk-id');
+        if (anchorOffset != -1) {
+          break;
+        }
+        flip = true;
+        tries++;
+      }
+
+      // Now grab the end offset
+      sp.x = (flip ? this.dragStartedAt.pageX : evt.pageX) - svgOffset.left;
+      sp.y = (flip ? this.dragStartedAt.pageY : evt.pageY) - (svgOffset.top + 8);
+      const endsAt = range.endContainer as SVGTextContentElement;
+      focusOffset = endsAt.getCharNumAtPosition(sp);
+
+      // If we cannot get a start and end offset stop here
+      if (anchorOffset == -1 || focusOffset == -1) {
+        return;
+      }
+
+      // If we are in the same container it does the selection back to front when dragged right to left, across different containers the start is the start and the end if the end!
+      if (range.startContainer == range.endContainer && anchorOffset > focusOffset) {
+        const t = anchorOffset;
+        anchorOffset = focusOffset;
+        focusOffset = t;
+        flip = false;
+      }
+      chunkIndexTo = endsAt && $(endsAt).attr('data-chunk-id');
+
+      // Now take the start and end character rectangles
+      const startRec = startsAt.getExtentOfChar(anchorOffset);
+      startRec.y += 2;
+      const endRec = endsAt.getExtentOfChar(focusOffset);
+      endRec.y += 2;
+
+      // If nothing has changed then stop here
+      if (this.lastStartRec != null && this.lastStartRec.x == startRec.x && this.lastStartRec.y == startRec.y && this.lastEndRec != null && this.lastEndRec.x == endRec.x && this.lastEndRec.y == endRec.y) {
+        return;
+      }
+
+      if (this.selRect == null) {
+        let rx = startRec.x;
+        const ry = startRec.y;
+        let rw = (endRec.x + endRec.width) - startRec.x;
+        if (rw < 0) {
+          rx += rw;
+          rw = -rw;
+        }
+        const rh = Math.max(startRec.height, endRec.height);
+
+        this.selRect = [];
+        const activeSelRect = this.makeSelRect(rx, ry, rw, rh);
+        this.selRect.push(activeSelRect);
+        startsAt.parentNode.parentNode.parentNode.insertBefore(activeSelRect, startsAt.parentNode.parentNode);
+      } else {
+        if (startRec.x != this.lastStartRec.x && endRec.x != this.lastEndRec.x && (startRec.y != this.lastStartRec.y || endRec.y != this.lastEndRec.y)) {
+          if (startRec.y < this.lastStartRec.y) {
+            this.selRect[0].setAttributeNS(null, "width", this.lastStartRec.width);
+            this.lastEndRec = this.lastStartRec;
+          } else if (endRec.y > this.lastEndRec.y) {
+            this.selRect[this.selRect.length - 1].setAttributeNS(null, "x",
+              parseFloat(this.selRect[this.selRect.length - 1].getAttributeNS(null, "x"))
+              + parseFloat(this.selRect[this.selRect.length - 1].getAttributeNS(null, "width"))
+              - this.lastEndRec.width);
+            this.selRect[this.selRect.length - 1].setAttributeNS(null, "width", 0);
+            this.lastStartRec = this.lastEndRec;
+          }
+        }
+
+        // Start has moved
+        const flip = !(startRec.x == this.lastStartRec.x && startRec.y == this.lastStartRec.y);
+        // If the height of the start or end changed we need to check whether
+        // to remove multi line highlights no longer needed if the user went back towards their start line
+        // and whether to create new ones if we moved to a newline
+        if (((endRec.y != this.lastEndRec.y)) || ((startRec.y != this.lastStartRec.y))) {
+          // First check if we have to remove the first highlights because we are moving towards the end on a different line
+          let ss = 0;
+          for (; ss != this.selRect.length; ss++) {
+            if (startRec.y <= parseFloat(this.selRect[ss].getAttributeNS(null, "y"))) {
+              break;
+            }
+          }
+          // Next check for any end highlights if we are moving towards the start on a different line
+          let es = this.selRect.length - 1;
+          for (; es != -1; es--) {
+            if (endRec.y >= parseFloat(this.selRect[es].getAttributeNS(null, "y"))) {
+              break;
+            }
+          }
+          // TODO put this in loops above, for efficiency the array slicing could be done separate still in single call
+          let trunc = false;
+          if (ss < this.selRect.length) {
+            for (let s2 = 0; s2 != ss; s2++) {
+              this.selRect[s2].parentNode.removeChild(this.selRect[s2]);
+              es--;
+              trunc = true;
+            }
+            this.selRect = this.selRect.slice(ss);
+          }
+          if (es > -1) {
+            for (let s2 = this.selRect.length - 1; s2 != es; s2--) {
+              this.selRect[s2].parentNode.removeChild(this.selRect[s2]);
+              trunc = true;
+            }
+            this.selRect = this.selRect.slice(0, es + 1);
+          }
+
+          // If we have truncated the highlights we need to readjust the last one
+          if (trunc) {
+            const activeSelRect = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
+            if (flip) {
+              let rw = 0;
+              if (startRec.y == endRec.y) {
+                rw = (endRec.x + endRec.width) - startRec.x;
+              } else {
+                rw = (parseFloat(activeSelRect.getAttributeNS(null, "x"))
+                  + parseFloat(activeSelRect.getAttributeNS(null, "width")))
+                  - startRec.x;
+              }
+              activeSelRect.setAttributeNS(null, "x", startRec.x);
+              activeSelRect.setAttributeNS(null, "y", startRec.y);
+              activeSelRect.setAttributeNS(null, "width", rw.toString());
+            } else {
+              const rw = (endRec.x + endRec.width) - parseFloat(activeSelRect.getAttributeNS(null, "x"));
+              activeSelRect.setAttributeNS(null, "width", rw.toString());
+            }
+          } else {
+            // We didnt truncate anything but we have moved to a new line so we need to create a new highlight
+            const lastSel = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
+            const startBox = (startsAt.parentNode as SVGGraphicsElement).getBBox();
+            const endBox = (endsAt.parentNode as SVGGraphicsElement).getBBox();
+
+            if (flip) {
+              lastSel.setAttributeNS(null, "width",
+                (parseFloat(lastSel.getAttributeNS(null, "x"))
+                  + parseFloat(lastSel.getAttributeNS(null, "width")))
+                - endBox.x);
+              lastSel.setAttributeNS(null, "x", endBox.x);
+            } else {
+              lastSel.setAttributeNS(null, "width",
+                (startBox.x + startBox.width)
+                - parseFloat(lastSel.getAttributeNS(null, "x")));
+            }
+            let rx = 0;
+            let ry = 0;
+            let rw = 0;
+            let rh = 0;
+            if (flip) {
+              rx = startRec.x;
+              ry = startRec.y;
+              rw = $(this.svg.node).width() - startRec.x;
+              rh = startRec.height;
+            } else {
+              rx = endBox.x;
+              ry = endRec.y;
+              rw = (endRec.x + endRec.width) - endBox.x;
+              rh = endRec.height;
+            }
+            const newRect = this.makeSelRect(rx, ry, rw, rh);
+            if (flip) {
+              this.selRect.unshift(newRect);
+            } else {
+              this.selRect.push(newRect);
+            }
+
+            // Place new highlight in appropriate slot in SVG graph
+            startsAt.parentNode.parentNode.parentNode.insertBefore(newRect, startsAt.parentNode.parentNode);
+          }
+        } else {
+          // The user simply moved left or right along the same line so just adjust the current highlight
+          const activeSelRect = flip ? this.selRect[0] : this.selRect[this.selRect.length - 1];
+          // If the start moved shift the highlight and adjust width
+          if (flip) {
+            const rw = (parseFloat(activeSelRect.getAttributeNS(null, "x"))
+              + parseFloat(activeSelRect.getAttributeNS(null, "width")))
+              - startRec.x;
+            activeSelRect.setAttributeNS(null, "x", startRec.x);
+            activeSelRect.setAttributeNS(null, "y", startRec.y);
+            activeSelRect.setAttributeNS(null, "width", rw);
+          } else {
+            // If the end moved then simple change the width
+            const rw = (endRec.x + endRec.width)
+              - parseFloat(activeSelRect.getAttributeNS(null, "x"));
+            activeSelRect.setAttributeNS(null, "width", rw);
+          }
+        }
+      }
+      this.lastStartRec = startRec;
+      this.lastEndRec = endRec;
     }
-    if (centerY) {
-      eTop = evt.clientY - elementHeight / 2;
-    } else {
-      eTop = evt.clientY;
-    }
-    // Try to make sure the element doesn't go off-screen.
-    // If this isn't possible (the element is larger than the screen),
-    // alight top-left corner of screen and dialog as a compromise.
-    if (screenWidth > elementWidth) {
-      eLeft = Math.min(Math.max(eLeft, 0), screenWidth - elementWidth);
-    } else {
-      eLeft = 0;
-    }
-    if (screenHeight > elementHeight) {
-      eTop = Math.min(Math.max(eTop, 0), screenHeight - elementHeight);
-    } else {
-      eTop = 0;
-    }
-    element.css({ top: eTop, left: eLeft });
   }
 
-  updateCheckbox($input) {
-    const $widget = $input.button('widget');
-    const $textspan = $widget.find('.ui-button-text');
-    $textspan.html(($input[0].checked ? '&#x2611; ' : '&#x2610; ') + $widget.attr('data-bare'));
+  private sendSpanAnnotationSelected(offsets: OffsetsList, span: Span, id?) {
+    this.dispatcher.post('ajax', [{
+      action: 'spanOpenDialog',
+      offsets: JSON.stringify(offsets),
+      id: id,
+      type: span.type,
+      spanText: span.text
+    }, 'serverResult']);
   }
 
-  fillSpanTypesAndDisplayForm(evt, offsets, spanText, span, id?) {
-
-    if (id) {
-      this.dispatcher.post('ajax', [{
-        action: 'spanOpenDialog',
-        offsets: JSON.stringify(offsets),
-        id: id,
-        type: span.type,
-        spanText: spanText
-      }, 'serverResult']);
-    }
-    else {
-      this.dispatcher.post('ajax', [{
-        action: 'spanOpenDialog',
-        offsets: JSON.stringify(offsets),
-        spanText: spanText
-      }, 'serverResult']);
-    }
+  private sendCreateSpanAnnotation(offsets: OffsetsList, spanText: string) {
+    this.dispatcher.post('ajax', [{
+      action: 'spanOpenDialog',
+      offsets: JSON.stringify(offsets),
+      spanText: spanText
+    }, 'serverResult']);
   }
-  // WEBANNO EXTENSION END
 
-  // We send a request to the backend to open the dialog
-  fillArcTypesAndDisplayForm(evt, originSpanId, originType, targetSpanId, targetType, arcType?, arcId?) {
+  private sendArcSelected(originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
+    this.dispatcher.post('ajax', [{
+      action: 'arcOpenDialog',
+      arcId: arcId,
+      arcType: arcType,
+      originSpanId: originSpanId,
+      originType: originType,
+      targetSpanId: targetSpanId,
+      targetType: targetType
+    }, 'serverResult']);
+  }
 
-    if (arcId) {
-      this.dispatcher.post('ajax', [{
-        action: 'arcOpenDialog',
-        arcId: arcId,
-        arcType: arcType,
-        originSpanId: originSpanId,
-        originType: originType,
-        targetSpanId: targetSpanId,
-        targetType: targetType
-
-      }, 'serverResult']);
-    }
-    else {
-      this.dispatcher.post('ajax', [{
-        action: 'arcOpenDialog',
-        originSpanId: originSpanId,
-        originType: originType,
-        targetSpanId: targetSpanId,
-        targetType: targetType
-      }, 'serverResult']);
-    }
+  private sendCreateRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
+    this.dispatcher.post('ajax', [{
+      action: 'arcOpenDialog',
+      originSpanId: originSpanId,
+      originType: originType,
+      targetSpanId: targetSpanId,
+      targetType: targetType
+    }, 'serverResult']);
   }
 
   stopArcDrag(target?) {
@@ -802,7 +703,7 @@ export class AnnotatorUI {
       }
       if (this.arcDragArc) {
         try {
-          this.svg.remove(this.arcDragArc);
+          this.arcDragArc.remove();
         }
         catch (err) {
           // Ignore - could be spurious TypeError: null is not an object (evaluating 'a.parentNode.removeChild')
@@ -812,23 +713,17 @@ export class AnnotatorUI {
       if (this.arcOptions) {
         $('g[data-from="' + this.arcOptions.origin + '"][data-to="' + this.arcOptions.target + '"]').removeClass('reselect');
       }
-      this.svgElement.removeClass('reselect');
+      this.svg.removeClass('reselect');
     }
-    this.svgElement.removeClass('unselectable');
+    this.svg.removeClass('unselectable');
     $('.reselectTarget').removeClass('reselectTarget');
   }
 
   onMouseUp(evt) {
     if (this.user === null) return;
 
-    // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
     // Restore pointer events on annotations
-    if (this.dragStartedAt && $(this.dragStartedAt.target).attr('data-chunk-id')) {
-      $(this.svgElement).children('.row, .sentnum').each((index, row) => {
-        $(row).css('pointer-events', 'auto');
-      });
-    }
-    // END WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
+    this.svg.find('.row, .sentnum').map(e => e.attr('pointer-events', null));
 
     const target = $(evt.target);
 
@@ -873,11 +768,7 @@ export class AnnotatorUI {
             collection: this.coll,
             'document': this.doc
           };
-          $('#arc_origin').text(Util.spanDisplayForm(this.spanTypes, originSpan.type) + ' ("' + originSpan.text + '")');
-          $('#arc_target').text(Util.spanDisplayForm(this.spanTypes, targetSpan.type) + ' ("' + targetSpan.text + '")');
-          this.fillArcTypesAndDisplayForm(evt, originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);
-          // for precise timing, log dialog display to user.
-          this.dispatcher.post('logAction', ['arcSelected']);
+          this.sendCreateRelationAnnotation(originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);
         }
       }
     } else if (!evt.ctrlKey) {
@@ -991,55 +882,14 @@ export class AnnotatorUI {
           return;
         }
 
-        const newOffset = [selectedFrom, selectedTo];
-        if (this.reselectedSpan) {
-          const newOffsets = this.reselectedSpan.offsets.slice(0); // clone
-          this.spanOptions.old_offsets = JSON.stringify(this.reselectedSpan.offsets);
-          if (this.selectedFragment !== null) {
-            if (this.selectedFragment !== false) {
-              newOffsets.splice(this.selectedFragment, 1);
-            }
-            newOffsets.push(newOffset);
-            newOffsets.sort(Util.cmpArrayOnFirstElement);
-            this.spanOptions.offsets = newOffsets;
-          } else {
-            this.spanOptions.offsets = [newOffset];
-          }
-        } else {
-          this.spanOptions = {
-            action: 'createSpan',
-            offsets: [newOffset]
-          }
+        this.spanOptions = {
+          action: 'createSpan',
+          offsets: [[selectedFrom, selectedTo]]
         }
 
-        if (!Configuration.rapidModeOn || this.reselectedSpan != null) {
-          // normal span select in standard annotation mode
-          // or reselect: show selector
-          const spanText = this.data.text.substring(selectedFrom, selectedTo);
-          // WEBANNO EXTENSION BEGIN
-          this.fillSpanTypesAndDisplayForm(evt, this.spanOptions.offsets, spanText, this.reselectedSpan);
-          // WEBANNO EXTENSION END
-          // for precise timing, log annotation display to user.
-          this.dispatcher.post('logAction', ['spanSelected']);
-        } else {
-          // normal span select in rapid annotation mode: call
-          // server for span type candidates
-          const spanText = this.data.text.substring(selectedFrom, selectedTo);
-          // TODO: we're currently storing the event to position the
-          // span form using adjustToCursor() (which takes an event),
-          // but this is clumsy and suboptimal (user may have scrolled
-          // during the ajax invocation); think of a better way.
-          this.lastRapidAnnotationEvent = evt;
-          this.dispatcher.post('ajax', [{
-            action: 'suggestSpanTypes',
-            collection: this.coll,
-            'document': this.doc,
-            start: selectedFrom,
-            end: selectedTo,
-            text: spanText,
-            model: $('#rapid_model').val(),
-          }, 'suggestedSpanTypes']);
-        }
+        // normal span select in standard annotation mode or reselect: show selector
+        const spanText = this.data.text.substring(selectedFrom, selectedTo);
+        this.sendCreateSpanAnnotation(this.spanOptions.offsets, spanText);
       }
     }
   }
@@ -1060,9 +910,9 @@ export class AnnotatorUI {
     this.toggleCollapsible($(evt.target));
   }
 
-  rememberData(_data) {
-    if (_data && !_data.exception) {
-      this.data = _data;
+  rememberData(data: DocumentData) {
+    if (data && !data.exception) {
+      this.data = data;
     }
   }
 
@@ -1096,39 +946,13 @@ export class AnnotatorUI {
     });
   }
 
-  // returns the normalizations currently filled in the span
-  // dialog, or empty list if there are none
-  spanNormalizations() {
-    // Note that only no or one normalization is supported in the
-    // UI at the moment.
-    const normalizations = [];
-    const normDb = $('#span_norm_db').val();
-    const normId = $('#span_norm_id').val();
-    const normText = $('#span_norm_txt').val();
-    // empty ID -> no normalization
-    if (!normId.match(/^\s*$/)) {
-      normalizations.push([normDb, normId, normText]);
-    }
-    return normalizations;
-  }
-
   spanAndAttributeTypesLoaded(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
     this.spanTypes = _spanTypes;
-    this.entityAttributeTypes = _entityAttributeTypes;
-    this.eventAttributeTypes = _eventAttributeTypes;
-    this.relationTypesHash = _relationTypesHash;
-    // for easier access
-    this.allAttributeTypes = $.extend({}, this.entityAttributeTypes, this.eventAttributeTypes);
   }
 
   gotCurrent(_coll, _doc, _args) {
     this.coll = _coll;
     this.doc = _doc;
-    this.args = _args;
-  }
-
-  preventDefault(evt) {
-    evt.preventDefault();
   }
 
   // WEBANNO EXTENSION BEGIN - #1388 Support context menu
@@ -1144,11 +968,8 @@ export class AnnotatorUI {
     const target = $(evt.target);
     const id = target.attr('data-span-id');
     if (id) {
-      this.preventDefault(evt);
-      const offsets = [];
-      $.each(this.data.spans[id], (fragmentNo, fragment) => {
-        offsets.push([fragment.from, fragment.to]);
-      });
+      evt.preventDefault();
+      const offsets = this.data.spans[id].fragmentOffsets;
       this.dispatcher.post('ajax', [{
         action: 'contextMenu',
         offsets: JSON.stringify(offsets),
@@ -1163,29 +984,11 @@ export class AnnotatorUI {
 
   isReloadOkay() {
     // do not reload while the user is in the middle of editing
-    return this.arcDragOrigin == null && this.reselectedSpan == null;
+    return this.arcDragOrigin == null;
   }
 
   userReceived(_user) {
     this.user = _user;
-  }
-
-  setAnnotationSpeed(speed) {
-    if (speed == 1) {
-      Configuration.confirmModeOn = true;
-    } else {
-      Configuration.confirmModeOn = false;
-    }
-    if (speed == 3) {
-      Configuration.rapidModeOn = true;
-    } else {
-      Configuration.rapidModeOn = false;
-    }
-    this.dispatcher.post('configurationChanged');
-  }
-
-  onNewSourceData(_sourceData) {
-    this.sourceData = _sourceData;
   }
 
   init() {

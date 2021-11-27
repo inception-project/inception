@@ -37,26 +37,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { SVGTypeMapping, Svg } from "@svgdotjs/svg.js";
+import { Chunk } from "./Chunk";
+
 export class Row {
-  group;
-  background;
-  chunks = [];
+  group: SVGTypeMapping<SVGGElement>;
+  background: SVGTypeMapping<SVGGElement>;
+  arcs: SVGTypeMapping<SVGGElement> = undefined;
+  chunks: Chunk[] = [];
   hasAnnotations = false;
   maxArcHeight = 0;
   maxSpanHeight = 0;
-  sentence;
-  index;
-  backgroundIndex;
-  arcs;
-  heightsStart;
-  heightsEnd;
-  heightsAdjust;
-  textY;
-  translation;
+  boxHeight = 0;
+  sentence: number = undefined;
+  index: number = undefined;
+  backgroundIndex: number = undefined;
+  heightsStart: number = undefined;
+  heightsEnd: number = undefined;
+  heightsAdjust: number = undefined;
+  textY: number = undefined;
+  translation: { x: number, y: number } = {x: 0, y: 0};
 
-  constructor(svg) {
-    this.group = svg.group({ 'class': 'row' });
-    this.background = svg.group(this.group);
-    // Object.seal(this);
+  constructor(svg: Svg) {
+    this.group = svg.group().addClass('row');
+    this.background = svg.group().addTo(this.group);
+    Object.seal(this);
+  }
+
+  updateFragmentHeight() {
+    this.chunks.map(chunk => {
+      chunk.fragments.map(fragment => {
+        if (this.maxSpanHeight < fragment.height) {
+          this.maxSpanHeight = fragment.height;
+        }
+      });
+    });
+  }
+
+  updateRowBoxHeight(rowSpacing: number, rowPadding: number) {
+      // This is the fix for brat #724, but the numbers are guessed.
+      this.boxHeight = Math.max(this.maxArcHeight + 5, this.maxSpanHeight + 1.5); // XXX TODO HACK: why 5, 1.5?
+      if (this.hasAnnotations) {
+        this.boxHeight += rowSpacing + 1.5; // XXX TODO HACK: why 1.5?
+      } else {
+        this.boxHeight -= 5; // XXX TODO HACK: why -5?
+      }
+
+      this.boxHeight += rowPadding;
   }
 }

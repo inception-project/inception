@@ -37,37 +37,57 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { SVGTypeMapping } from "@svgdotjs/svg.js";
+import { Svg } from "@svgdotjs/svg.js";
 import { Fragment } from "./Fragment";
 import { Row } from "./Row";
 
+/**
+ * Chunk of text generated from the token offsets and representing one or more tokens.
+ */
 export class Chunk {
-  index = undefined;
-  text = undefined;
-  from = undefined;
-  to = undefined;
-  space = undefined;
+  index: number = undefined;
+  text: string = undefined;
+  from: number = undefined;
+  to: number = undefined;
+  space: string = undefined;
   fragments: Fragment[] = [];
   lastSpace = undefined;
   nextSpace = undefined;
   sentence: number = undefined;
-  group: SVGElement = undefined;
-  highlightGroup: SVGElement = undefined;
-  markedTextStart = undefined;
-  markedTextEnd = undefined;
+  group: SVGTypeMapping<SVGGElement> = undefined;
+  highlightGroup: SVGTypeMapping<SVGGElement> = undefined;
+  // chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
+  markedTextStart: Array<unknown> = undefined;
+  // chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
+  markedTextEnd: Array<unknown> = undefined;
   right = undefined;
   row: Row = undefined;
   textX = undefined;
-  translation = undefined;
+  translation: { x: number, y: number } = {x: 0, y: 0};
   firstFragmentIndex = undefined;
   lastFragmentIndex = undefined;
-  rtlsizes = undefined;
+  rtlsizes: { charDirection: Array<"rtl" | "ltr">, charAttrs: Array<{order: number, width: number, direction: "rtl" | "ltr"}>, corrFactor: number } = undefined;
 
-  constructor(index, text, from, to, space) {
+  constructor(index: number, text: string, from: number, to: number, space: string) {
     this.index = index;
     this.text = text;
     this.from = from;
     this.to = to;
     this.space = space;
     Object.seal(this);
+  }
+
+  renderText(svg: Svg, rowTextGroup: SVGTypeMapping<SVGGElement> ) {
+    svg.plain(this.text)
+      .attr({
+        // Storing the exact position in the attributs here is an optimization because that
+        // allows us to obtain the position direcly later without the browser having to actually
+        // layout stuff
+        x: this.textX,
+        y: this.row.textY,
+        'data-chunk-id': this.index
+      })
+      .addTo(rowTextGroup);
   }
 }

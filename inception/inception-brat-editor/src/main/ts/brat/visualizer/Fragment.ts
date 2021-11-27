@@ -38,6 +38,7 @@
  * SOFTWARE.
  */
 
+import { SVGTypeMapping } from "@svgdotjs/svg.js";
 import { Chunk } from "./Chunk";
 import { Span } from "./Span";
 
@@ -52,12 +53,12 @@ export class Fragment {
   indexNumber = undefined;
   drawOrder: number = undefined;
   towerId = undefined;
-  curly = undefined;
+  curly: { from: number, to: number } = undefined;
   drawCurly = false;
   labelText: string = undefined;
   glyphedLabelText = undefined;;
-  group: Element = undefined;
-  rect = undefined;
+  group: SVGTypeMapping<SVGGElement> = undefined;
+  rect: SVGTypeMapping<SVGElement> = undefined;
   left = undefined;
   right = undefined;
   width: number = undefined;

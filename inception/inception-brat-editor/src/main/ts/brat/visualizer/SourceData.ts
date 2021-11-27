@@ -42,7 +42,9 @@
  */ 
 export type sourceCommentType = [string | Array<unknown>, string, string];
 
-export type sourceOffsetType = [number, number];
+export type OffsetsList = Array<Offsets>;
+
+export type Offsets = [number, number];
 
 export type sourceEntityAttributesType = {
   l: string;
@@ -55,7 +57,7 @@ export type sourceEntityAttributesType = {
 /** 
  * id, type, offsets, attributes 
  */ 
-export type sourceEntityType = [string, string, [sourceOffsetType], sourceEntityAttributesType];
+export type sourceEntityType = [string, string, [Offsets], sourceEntityAttributesType];
 
 /** 
  * id, name, spanId, value 

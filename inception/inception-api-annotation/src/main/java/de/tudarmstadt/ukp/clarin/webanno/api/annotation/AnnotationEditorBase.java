@@ -65,7 +65,6 @@ public abstract class AnnotationEditorBase
 
     private final AnnotationActionHandler actionHandler;
     private final CasProvider casProvider;
-    private boolean enableHighlight = true;
 
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
@@ -174,17 +173,14 @@ public abstract class AnnotationEditorBase
                         RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aCas,
                         getModelObject(), vdoc));
 
-        if (isHighlightEnabled()) {
-            // Disabling for 3.3.0 by default per #406
-            // FIXME: should be enabled by default and made optional per #606
-            // if (state.getFocusUnitIndex() > 0) {
-            // response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
-            // }
+        // Disabling for 3.3.0 by default per #406
+        // FIXME: should be enabled by default and made optional per #606
+        // if (state.getFocusUnitIndex() > 0) {
+        // response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
+        // }
 
-            if (state.getSelection().getAnnotation().isSet()) {
-                vdoc.add(
-                        new VAnnotationMarker(VMarker.FOCUS, state.getSelection().getAnnotation()));
-            }
+        if (state.getSelection().getAnnotation().isSet()) {
+            vdoc.add(new VAnnotationMarker(VMarker.FOCUS, state.getSelection().getAnnotation()));
         }
 
         return vdoc;
@@ -217,15 +213,4 @@ public abstract class AnnotationEditorBase
         }
         return layersToRender;
     }
-
-    public void setHighlightEnabled(boolean aValue)
-    {
-        enableHighlight = aValue;
-    }
-
-    public boolean isHighlightEnabled()
-    {
-        return enableHighlight;
-    }
-
 }

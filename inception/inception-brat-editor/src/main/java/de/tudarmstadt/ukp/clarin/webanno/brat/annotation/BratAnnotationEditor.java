@@ -103,8 +103,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -513,20 +511,6 @@ public class BratAnnotationEditor
 
         // Libraries
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
-        aResponse.render(forReference(JQuerySvgResourceReference.get()));
-        aResponse.render(forReference(JQuerySvgDomResourceReference.get()));
-
-        // // BRAT helpers
-        // aResponse.render(forReference(BratConfigurationResourceReference.get()));
-        // aResponse.render(forReference(BratUtilResourceReference.get()));
-        //
-        // // BRAT modules
-        // aResponse.render(forReference(BratDispatcherResourceReference.get()));
-        // aResponse.render(forReference(BratAjaxResourceReference.get()));
-        // aResponse.render(forReference(BratVisualizerResourceReference.get()));
-        // aResponse.render(forReference(BratVisualizerUiResourceReference.get()));
-        // aResponse.render(forReference(BratAnnotatorUiResourceReference.get()));
-
         aResponse.render(forReference(BratResourceReference.get()));
 
         // When the page is re-loaded or when the component is added to the page, we need to
@@ -661,20 +645,6 @@ public class BratAnnotationEditor
             js.append("  console.log('Initializing (" + vis.getMarkupId() + ")...');");
         }
         js.append("  Brat('" + vis.getMarkupId() + "', '" + requestHandler.getCallbackUrl() + "')");
-        // js.append(" var dispatcher = new Dispatcher();");
-        // // Each visualizer talks to its own Wicket component instance
-        // js.append(" dispatcher.ajaxUrl = '" + requestHandler.getCallbackUrl() + "'; ");
-        // // We attach the JSON send back from the server to this HTML element
-        // // because we cannot directly pass it from Wicket to the caller in ajax.js.
-        // js.append(" dispatcher.wicketId = '" + vis.getMarkupId() + "'; ");
-        // js.append(" var ajax = new Ajax(dispatcher);");
-        // js.append(" var visualizer = new Visualizer(dispatcher, '" + vis.getMarkupId() + "');");
-        // js.append(" var visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);");
-        // js.append(" var annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);");
-        // // js.append(("var logger = new AnnotationLog(dispatcher);");
-        // js.append(" dispatcher.post('init');");
-        // js.append(" Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;");
-        // js.append(" Wicket.$('" + vis.getMarkupId() + "').visualizer = visualizer;");
         js.append("})();");
 
         return js.toString();

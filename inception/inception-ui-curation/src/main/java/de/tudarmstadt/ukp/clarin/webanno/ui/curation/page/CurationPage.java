@@ -240,7 +240,6 @@ public class CurationPage
 
         annotationEditor = new BratAnnotationEditor("annotationEditor", getModel(), detailPanel,
                 this::getEditorCas);
-        annotationEditor.setHighlightEnabled(false);
         annotationEditor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         annotationEditor.setOutputMarkupPlaceholderTag(true);
         splitter.add(annotationEditor);

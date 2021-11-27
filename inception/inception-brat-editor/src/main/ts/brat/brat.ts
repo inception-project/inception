@@ -17,7 +17,7 @@
  */
 import { Ajax } from "./ajax/Ajax";
 import { AnnotatorUI } from "./annotator_ui/AnnotatorUI";
-import Dispatcher from "./dispatcher";
+import { Dispatcher } from "./dispatcher/Dispatcher";
 import { Visualizer } from "./visualizer/Visualizer";
 import { VisualizerUI } from "./visualizer_ui/VisualizerUI";
 
@@ -32,7 +32,7 @@ function brat(markupId: string, callbackUrl: string) {
   dispatcher.wicketId = markupId;
   const ajax = new Ajax(dispatcher);
   const visualizer = new Visualizer(dispatcher, markupId);
-  const visualizerUI = new VisualizerUI(dispatcher, visualizer.svg);
+  const visualizerUI = new VisualizerUI(dispatcher);
   const annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);
   // js.append(("var logger = new AnnotationLog(dispatcher);");
   dispatcher.post('init');

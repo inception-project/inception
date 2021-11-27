@@ -90,9 +90,9 @@
     <hibernate.version>5.5.7.Final</hibernate.version>
     <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
 
-    <wicket.version>9.5.0</wicket.version>
-    <wicketstuff.version>9.5.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.5.0</wicket-jquery-ui.version>
+    <wicket.version>9.6.0</wicket.version>
+    <wicketstuff.version>9.6.0</wicketstuff.version>
+    <wicket-jquery-ui.version>9.6.0-SNAPSHOT</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.0-M4</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.3</wicket-webjars.version>
@@ -150,11 +150,10 @@
       </snapshots>
     </repository>
     -->
-    <!-- For Wicket Boostrap 6.0.0-SNAPSHOT -->
-    <!--
+    <!-- For Wicket Bootstrap 6.0.0-SNAPSHOT -->
     <repository>
       <id>oss.sonatype.org-snapshot</id>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -162,7 +161,6 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
-    -->
     <!-- For Apache UIMA release candidates -->
     <!--
     <repository>

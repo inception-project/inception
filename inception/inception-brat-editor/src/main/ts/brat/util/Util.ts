@@ -38,54 +38,24 @@
  * SOFTWARE.
  */
 import { Dispatcher } from "../dispatcher/Dispatcher";
+import { Fragment } from "../visualizer/Fragment";
+import { Span } from "../visualizer/Span";
 import { Visualizer } from "../visualizer/Visualizer";
 import { VisualizerUI } from "../visualizer_ui/VisualizerUI";
 
 export class Util {
-  monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-  cmp(a, b) {
+  cmp(a: number, b: number) {
     return a < b ? -1 : a > b ? 1 : 0;
   }
-
-  cmpArrayOnFirstElement(a, b) {
-    a = a[0];
-    b = b[0];
-    return a < b ? -1 : a > b ? 1 : 0;
+  
+  cmpArrayOnFirstElement(a: unknown[], b: unknown[]) {
+    const _a = a[0];
+    const _b = b[0];
+    return _a < _b ? -1 : _a > _b ? 1 : 0;
   }
 
-  unitAgo(n, unit) {
-    if (n == 1) return "" + n + " " + unit + " ago";
-    return "" + n + " " + unit + "s ago";
-  }
-
-  formatTimeAgo(time) {
-    if (time == -1000) {
-      return "never"; // FIXME make the server return the server time!
-    }
-
-    const nowDate = new Date();
-    const now = nowDate.getTime();
-    let diff = Math.floor((now - time) / 1000);
-    if (!diff) return "just now";
-    if (diff < 60) return this.unitAgo(diff, "second");
-    diff = Math.floor(diff / 60);
-    if (diff < 60) return this.unitAgo(diff, "minute");
-    diff = Math.floor(diff / 60);
-    if (diff < 24) return this.unitAgo(diff, "hour");
-    diff = Math.floor(diff / 24);
-    if (diff < 7) return this.unitAgo(diff, "day");
-    if (diff < 28) return this.unitAgo(Math.floor(diff / 7), "week");
-    const thenDate = new Date(time);
-    let result = thenDate.getDate() + ' ' + this.monthNames[thenDate.getMonth()];
-    if (thenDate.getFullYear() != nowDate.getFullYear()) {
-      result += ' ' + thenDate.getFullYear();
-    }
-    return result;
-  }
-
-  realBBox(span) {
-    const box = span.rect.getBBox();
+  realBBox(span: Fragment) {
+    const box = span.rect.bbox();
     const chunkTranslation = span.chunk.translation;
     const rowTranslation = span.chunk.row.translation;
     box.x += chunkTranslation.x + rowTranslation.x;
@@ -93,7 +63,7 @@ export class Util {
     return box;
   }
 
-  escapeHTML(str) {
+  escapeHTML(str: string) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -103,17 +73,17 @@ export class Util {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
 
-  escapeHTMLandQuotes(str) {
+  escapeHTMLandQuotes(str: string) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
     }
     // WEBANNO EXTENSION END - No issue - More robust escaping 
 
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
-  escapeHTMLwithNewlines(str) {
+  escapeHTMLwithNewlines(str: string) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -123,7 +93,7 @@ export class Util {
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\n/g, '<br/>');
   }
 
-  escapeQuotes(str) {
+  escapeQuotes(str: string) {
     // WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
     if (str === null) {
       return null;
@@ -131,7 +101,7 @@ export class Util {
     // WEBANNO EXTENSION END - No issue - More robust escaping 
 
     // we only use double quotes for HTML attributes
-    return str.replace(/\"/g, '&quot;');
+    return str.replace(/"/g, '&quot;');
   }
 
   getSpanLabels(spanTypes, spanType) {
@@ -188,7 +158,7 @@ export class Util {
 
   // TODO: switching to use of $.param(), this function should
   // be deprecated and removed.
-  objectToUrlStr(o) {
+  objectToUrlStr(o: unknown) {
     const a = [];
     $.each(o, (key, value) => {
       a.push(key + "=" + encodeURIComponent(value));
@@ -356,31 +326,35 @@ export class Util {
 
   // Parse strings looking for color tuples [255,255,255]
   rgbNumRE = /rgb\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*\)/;
-  rgbPercRE = /rgb\(\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*,\s*([0-9]+(?:\.[0-9]+)?)\%\s*\)/;
+  rgbPercRE = /rgb\(\s*([0-9]+(?:\.[0-9]+)?)%\s*,\s*([0-9]+(?:\.[0-9]+)?)%\s*,\s*([0-9]+(?:\.[0-9]+)?)%\s*\)/;
   rgbHash6RE = /#([a-fA-F0-9]{2})([a-fA-F0-9]{2})([a-fA-F0-9]{2})/;
   rgbHash3RE = /#([a-fA-F0-9])([a-fA-F0-9])([a-fA-F0-9])/;
 
   strToRgb(color) {
-    let result;
+    let result: string[] | number[];
 
     // Check if we're already dealing with an array of colors
     //         if ( color && color.constructor == Array && color.length == 3 )
     //             return color;
 
     // Look for rgb(num,num,num)
-    if (result = this.rgbNumRE.exec(color))
+    result = this.rgbNumRE.exec(color);
+    if (result)
       return [parseInt(result[1]), parseInt(result[2]), parseInt(result[3])];
 
     // Look for rgb(num%,num%,num%)
-    if (result = this.rgbPercRE.exec(color))
+    result = this.rgbPercRE.exec(color);
+    if (result)
       return [parseFloat(result[1]) * 2.55, parseFloat(result[2]) * 2.55, parseFloat(result[3]) * 2.55];
 
     // Look for #a0b1c2
-    if (result = this.rgbHash6RE.exec(color))
+    result = this.rgbHash6RE.exec(color);
+    if (result)
       return [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)];
 
     // Look for #fff
-    if (result = this.rgbHash3RE.exec(color))
+    result = this.rgbHash3RE.exec(color);
+    if (result)
       return [parseInt(result[1] + result[1], 16), parseInt(result[2] + result[2], 16), parseInt(result[3] + result[3], 16)];
 
     // Otherwise, we're most likely dealing with a named color
@@ -408,7 +382,8 @@ export class Util {
   rgbToHsl(rgb: [number, number, number]): [number, number, number] {
     const r = rgb[0] / 255, g = rgb[1] / 255, b = rgb[2] / 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
+    const l = (max + min) / 2;
+    let h: number, s: number;
 
     if (max == min) {
       h = s = 0; // achromatic
@@ -486,45 +461,6 @@ export class Util {
   keyValRE = /^([^=]+)=(.*)$/; // key=value
   isDigitsRE = /^[0-9]+$/;
 
-  paramArray(val) {
-    val = val || [];
-    const len = val.length;
-    const arr = [];
-    for (let i = 0; i < len; i++) {
-      if ($.isArray(val[i])) {
-        arr.push(val[i].join('~'));
-      } else {
-        // non-array argument; this is an error from the caller
-        console.error('param: Error: received non-array-in-array argument [', i, ']', ':', val[i], '(fix caller)');
-      }
-    }
-    return arr;
-  }
-
-  param(args) {
-    if (!args) return '';
-    const vals = [];
-    for (const key in args) {
-      if (args.hasOwnProperty(key)) {
-        const val = args[key];
-        if (val == undefined) {
-          console.error('Error: received argument', key, 'with value', val);
-          continue;
-        }
-        // values normally expected to be arrays, but some callers screw
-        // up, so check
-        if ($.isArray(val)) {
-          const arr = this.paramArray(val);
-          vals.push(key + '=' + arr.join(','));
-        } else {
-          // non-array argument; this is an error from the caller
-          console.error('param: Error: received non-array argument', key, ':', val, '(fix caller)');
-        }
-      }
-    }
-    return vals.join('&');
-  }
-
   profiles = {};
   profileStarts: Record<string, Date> = {};
   profileOn = false;
@@ -539,12 +475,12 @@ export class Util {
     this.profileStarts = {};
   } // profileClear
 
-  profileStart(label) {
+  profileStart(label: string) {
     if (!this.profileOn) return;
     this.profileStarts[label] = new Date();
   } // profileStart
 
-  profileEnd(label) {
+  profileEnd(label: string) {
     if (!this.profileOn) return;
     const profileElapsed = new Date().valueOf() - this.profileStarts[label].valueOf();
     if (!this.profiles[label]) this.profiles[label] = 0;
@@ -570,7 +506,7 @@ export class Util {
   embed(container, collData, docData) {
     const dispatcher = new Dispatcher();
     const visualizer = new Visualizer(dispatcher, container);
-    new VisualizerUI(dispatcher, visualizer.svg);
+    new VisualizerUI(dispatcher);
     docData.collection = null;
     dispatcher.post('collectionLoaded', [collData]);
     dispatcher.post('requestRenderData', [docData]);

@@ -27,7 +27,7 @@ function brat(markupId: string, controllerCallbackUrl: string, collCallbackUrl: 
       dispatcher.wicketId = markupId;
       dispatcher.ajaxUrl = controllerCallbackUrl;
       new Ajax(dispatcher);
-      new CurationMod(dispatcher, markupId);
+      new CurationMod(dispatcher);
       Wicket.$(markupId).dispatcher = dispatcher;
     });
 }

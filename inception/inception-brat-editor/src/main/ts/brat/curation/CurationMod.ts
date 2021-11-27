@@ -15,16 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import type Dispatcher from "../dispatcher";
+import { Dispatcher } from "../dispatcher/Dispatcher";
+import { DocumentData } from "../visualizer/DocumentData";
 
 export class CurationMod {
-  data;
+  data: DocumentData;
   dispatcher: Dispatcher;
-  svg;
 
-  constructor(dispatcher: Dispatcher, svg) {
+  constructor(dispatcher: Dispatcher) {
     this.dispatcher = dispatcher;
-    this.svg = svg;
 
     dispatcher.
       on('click', this, this.onClick).
@@ -111,9 +110,9 @@ export class CurationMod {
   /**
    * Remember data at initialization
    */
-  rememberData(_data) {
-    if (_data && !_data.exception) {
-      this.data = _data;
+  rememberData(data: DocumentData) {
+    if (data && !data.exception) {
+      this.data = data;
     }
   }
 }
