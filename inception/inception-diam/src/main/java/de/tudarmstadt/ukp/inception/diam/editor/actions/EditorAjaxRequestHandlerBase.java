@@ -53,33 +53,7 @@ public abstract class EditorAjaxRequestHandlerBase
     {
         IRequestParameters requestParameters = aRequest.getRequestParameters();
 
-        String action = getAction(aRequest);
-        final VID paramId;
-        if (!requestParameters.getParameterValue(PARAM_ID).isEmpty()
-                && !requestParameters.getParameterValue(PARAM_ARC_ID).isEmpty()) {
-            throw new IllegalStateException(
-                    "[id] and [arcId] cannot be both set at the same time!");
-        }
-
-        if (!requestParameters.getParameterValue(PARAM_ID).isEmpty()) {
-            paramId = VID.parseOptional(requestParameters.getParameterValue(PARAM_ID).toString());
-        }
-        else {
-            VID arcId = VID
-                    .parseOptional(requestParameters.getParameterValue(PARAM_ARC_ID).toString());
-            // HACK: If an arc was clicked that represents a link feature, then
-            // open the associated span annotation instead.
-            // FIXME This should check for SelectAnnotationHandler.COMMAND instead!
-            if (arcId.isSlotSet() && CreateRelationAnnotationHandler.COMMAND.equals(action)) {
-                action = CreateSpanAnnotationHandler.COMMAND;
-                paramId = new VID(arcId.getId());
-            }
-            else {
-                paramId = arcId;
-            }
-        }
-
-        return paramId;
+        return VID.parseOptional(requestParameters.getParameterValue(PARAM_ID).toString());
     }
 
     protected DefaultAjaxResponse handleError(AjaxRequestTarget aTarget, String aMessage,

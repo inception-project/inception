@@ -52,6 +52,12 @@ public class ExtensionActionHandler
     }
 
     @Override
+    public boolean accepts(Request aRequest)
+    {
+        return getVid(aRequest).isSynthetic();
+    }
+
+    @Override
     public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {

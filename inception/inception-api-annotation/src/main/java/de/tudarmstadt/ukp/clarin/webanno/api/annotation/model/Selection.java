@@ -81,6 +81,11 @@ public class Selection
         selectArc(new VID(aFS), originFS, targetFS);
     }
 
+    public void selectArc(AnnotationFS aOriginFs, AnnotationFS aTargetFs)
+    {
+        selectArc(VID.NONE_ID, aOriginFs, aTargetFs);
+    }
+
     public void selectArc(VID aVid, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
         selectedAnnotationId = aVid;

@@ -47,7 +47,7 @@ public class SelectAnnotationHandler
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    public static final String COMMAND = "SelectAnnotation";
+    public static final String COMMAND = "selectAnnotation";
 
     private final AnnotationSchemaService schemaService;
 
@@ -68,8 +68,8 @@ public class SelectAnnotationHandler
         try {
             AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
 
-            VID vid = VID.parseOptional(aRequest.getRequestParameters().getParameterValue(PARAM_VID)
-                    .toOptionalString());
+            VID vid = VID.parseOptional(
+                    aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
 
             if (vid.isNotSet() || vid.isSynthetic()) {
                 return new DefaultAjaxResponse(getAction(aRequest));
@@ -82,6 +82,8 @@ public class SelectAnnotationHandler
 
             TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
             adapter.select(state, fs);
+
+            page.getAnnotationActionHandler().actionSelect(aTarget);
 
             return new DefaultAjaxResponse(getAction(aRequest));
         }

@@ -28,8 +28,6 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 public interface EditorAjaxRequestHandler
     extends Extension<Request>
 {
-    public static final String PARAM_VID = "vid";
-
     public static final String PARAM_ACTION = "action";
     public static final String PARAM_ARC_ID = "arcId";
     public static final String PARAM_ID = "id";

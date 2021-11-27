@@ -77,7 +77,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
@@ -125,6 +124,9 @@ public class BratAnnotationEditor
 
     @SpringBean(name = "createRelationAnnotationHandler")
     private EditorAjaxRequestHandler createRelationAnnotationHandler;
+
+    @SpringBean(name = "selectAnnotationHandler")
+    private EditorAjaxRequestHandler selectAnnotationHandler;
 
     @SpringBean(name = "lazyDetailHandler")
     private EditorAjaxRequestHandler lazyDetailHandler;
@@ -179,15 +181,15 @@ public class BratAnnotationEditor
                     if (lazyDetailHandler.accepts(getRequest())) {
                         result = lazyDetailHandler.handle(aTarget, getRequest());
                     }
-                    else if (paramId.isSynthetic()) {
+                    else if (extensionActionHandler.accepts(getRequest())) {
                         extensionActionHandler.handle(aTarget, getRequest());
                     }
-                    else if (DoActionResponse.is(action)) {
+                    else if (customActionHandler.accepts(getRequest())) {
                         customActionHandler.handle(aTarget, getRequest());
                     }
                     else {
                         // Doing anything but selecting or creating a span annotation when a
-                        // slot is armed will unarm it
+                        // slot is armed will un-arm it
                         if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
                             getModelObject().clearArmedSlot();
                         }
@@ -196,11 +198,14 @@ public class BratAnnotationEditor
                             final CAS cas = getCasProvider().get();
                             actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
                         }
-                        else if (SpanAnnotationResponse.is(action)) {
+                        else if (selectAnnotationHandler.accepts(getRequest())) {
+                            selectAnnotationHandler.handle(aTarget, getRequest());
+                        }
+                        else if (createSpanAnnotationHandler.accepts(getRequest())) {
                             createSpanAnnotationHandler.handle(aTarget, getRequest());
                             result = new SpanAnnotationResponse();
                         }
-                        else if (ArcAnnotationResponse.is(action)) {
+                        else if (createRelationAnnotationHandler.accepts(getRequest())) {
                             result = createRelationAnnotationHandler.handle(aTarget, getRequest());
                             result = new ArcAnnotationResponse();
                         }

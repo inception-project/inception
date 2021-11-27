@@ -59,7 +59,7 @@ public class CreateRelationAnnotationHandler
         try {
             AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
             CAS cas = page.getEditorCas();
-            actionArc(aTarget, aRequest.getRequestParameters(), cas, getVid(aRequest));
+            actionArc(aTarget, aRequest.getRequestParameters(), cas);
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
@@ -67,8 +67,7 @@ public class CreateRelationAnnotationHandler
         }
     }
 
-    private void actionArc(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas,
-            VID paramId)
+    private void actionArc(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas)
         throws IOException, AnnotationException
     {
         AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
@@ -87,14 +86,8 @@ public class CreateRelationAnnotationHandler
 
         AnnotatorState state = page.getModelObject();
         Selection selection = state.getSelection();
-        selection.selectArc(paramId, originFs, targetFs);
+        selection.selectArc(VID.NONE_ID, originFs, targetFs);
 
-        if (selection.getAnnotation().isNotSet()) {
-            // Create new annotation
-            page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
-        }
-        else {
-            page.getAnnotationActionHandler().actionSelect(aTarget);
-        }
+        page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
     }
 }

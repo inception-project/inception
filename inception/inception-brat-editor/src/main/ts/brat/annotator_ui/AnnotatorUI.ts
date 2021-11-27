@@ -282,7 +282,7 @@ export class AnnotatorUI {
     }
     const arcId = eventDescId || [originSpanId, type, targetSpanId];
 
-    this.sendArcSelected(originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
+    this.sendArcSelected(arcId);
   }
 
   private selectSpanAnnotation(evt: MouseEvent) {
@@ -300,7 +300,7 @@ export class AnnotatorUI {
       id: id,
     };
 
-    this.sendSpanAnnotationSelected(offsets, this.editedSpan, id);
+    this.sendSpanAnnotationSelected(id);
   }
 
   private startArcDrag(originId) {
@@ -658,52 +658,20 @@ export class AnnotatorUI {
     }
   }
 
-  private sendSpanAnnotationSelected(offsets: OffsetsList, span: Span, id?: string) {
-    this.ajax.selectSpanAnnotation(offsets, span, id)
+  private sendSpanAnnotationSelected(id: string) {
+    this.ajax.selectAnnotation(id)
+  }
 
-    // this.dispatcher.post('ajax', [{
-    //   action: 'spanOpenDialog',
-    //   offsets: JSON.stringify(offsets),
-    //   id: id,
-    //   type: span.type,
-    //   spanText: span.text
-    // }]);
+  private sendArcSelected(id: string) {
+    this.ajax.selectAnnotation(id);
   }
 
   private sendCreateSpanAnnotation(offsets: OffsetsList, spanText: string) {
     this.ajax.createSpanAnnotation(offsets, spanText);
-
-    // this.dispatcher.post('ajax', [{
-    //   action: 'spanOpenDialog',
-    //   offsets: JSON.stringify(offsets),
-    //   spanText: spanText
-    // }]);
-  }
-
-  private sendArcSelected(originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
-    this.ajax.selectArcAnnotation(originSpanId, originType, targetSpanId, targetType, arcType, arcId);
-
-    // this.dispatcher.post('ajax', [{
-    //   action: 'arcOpenDialog',
-    //   arcId: arcId,
-    //   arcType: arcType,
-    //   originSpanId: originSpanId,
-    //   originType: originType,
-    //   targetSpanId: targetSpanId,
-    //   targetType: targetType
-    // }]);
   }
 
   private sendCreateRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
     this.ajax.createRelationAnnotation(originSpanId, originType, targetSpanId, targetType);
-
-    // this.dispatcher.post('ajax', [{
-    //   action: 'arcOpenDialog',
-    //   originSpanId: originSpanId,
-    //   originType: originType,
-    //   targetSpanId: targetSpanId,
-    //   targetType: targetType
-    // }]);
   }
 
   stopArcDrag(target?) {

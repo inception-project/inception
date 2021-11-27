@@ -74,7 +74,7 @@ export class AnnotationEditing {
             "u": this.ajaxEndpoint,
             "ep": {
                 "action": "SelectAnnotation",
-                "vid": vid
+                "id": vid
             },
             // success
             "sh": [function () { }],

@@ -27,32 +27,13 @@ export class DiamAjax {
     this.ajaxEndpoint = ajaxEndpoint;
   }
 
-  selectSpanAnnotation(offsets: OffsetsList, span: Span, id?: string) {
+  selectAnnotation(id: string) {
     Wicket.Ajax.ajax({
       "m": "POST",
       "u": this.ajaxEndpoint,
       "ep": {
-        action: 'spanOpenDialog',
-        offsets: JSON.stringify(offsets),
-        id: id,
-        type: span.type,
-        spanText: span.text
-      }
-    });
-  }
-
-  selectArcAnnotation(originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
-    Wicket.Ajax.ajax({
-      "m": "POST",
-      "u": this.ajaxEndpoint,
-      "ep": {
-        action: 'arcOpenDialog',
-        arcId: arcId,
-        arcType: arcType,
-        originSpanId: originSpanId,
-        originType: originType,
-        targetSpanId: targetSpanId,
-        targetType: targetType
+        action: 'selectAnnotation',
+        id: id
       }
     });
   }
@@ -83,4 +64,3 @@ export class DiamAjax {
     });
   }
 }
-
