@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.ACTION_CONTEXT_MENU;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_OFFSETS;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_ORIGIN_SPAN_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_TARGET_SPAN_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
@@ -78,7 +77,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
@@ -93,8 +91,6 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
@@ -126,6 +122,7 @@ public class BratAnnotationEditor
 
     private @SpringBean(name = "extensionActionHandler") EditorAjaxRequestHandler extensionActionHandler;
     private @SpringBean(name = "customActionHandler") EditorAjaxRequestHandler customActionHandler;
+    private @SpringBean(name = "createSpanAnnotationHandler") EditorAjaxRequestHandler createSpanAnnotationHandler;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -225,7 +222,8 @@ public class BratAnnotationEditor
                                 actionOpenContextMenu(aTarget, request, cas, paramId);
                             }
                             else if (SpanAnnotationResponse.is(action)) {
-                                result = actionSpan(aTarget, request, cas, paramId);
+                                createSpanAnnotationHandler.handle(aTarget, getRequest());
+                                result = new SpanAnnotationResponse();
                             }
                             else if (ArcAnnotationResponse.is(action)) {
                                 result = actionArc(aTarget, request, cas, paramId);
@@ -285,43 +283,6 @@ public class BratAnnotationEditor
         if (!items.isEmpty()) {
             contextMenu.onOpen(aTarget);
         }
-    }
-
-    private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,
-            CAS aCas, VID aSelectedAnnotation)
-        throws IOException, AnnotationException
-    {
-        // This is the span the user has marked in the browser in order to create a new slot-filler
-        // annotation OR the span of an existing annotation which the user has selected.
-        Offsets optUserSelectedSpan = getOffsetsFromRequest(request, aCas, aSelectedAnnotation);
-
-        Offsets userSelectedSpan = optUserSelectedSpan;
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
-
-        if (state.isSlotArmed()) {
-            // When filling a slot, the current selection is *NOT* changed. The
-            // Span annotation which owns the slot that is being filled remains
-            // selected!
-            getActionHandler().actionFillSlot(aTarget, aCas, userSelectedSpan.getBegin(),
-                    userSelectedSpan.getEnd(), aSelectedAnnotation);
-        }
-        else {
-            if (!aSelectedAnnotation.isSynthetic()) {
-                selection.selectSpan(aSelectedAnnotation, aCas, userSelectedSpan.getBegin(),
-                        userSelectedSpan.getEnd());
-
-                if (selection.getAnnotation().isNotSet()) {
-                    // Create new annotation
-                    getActionHandler().actionCreateOrUpdate(aTarget, aCas);
-                }
-                else {
-                    getActionHandler().actionSelect(aTarget);
-                }
-            }
-        }
-
-        return new SpanAnnotationResponse();
     }
 
     private ArcAnnotationResponse actionArc(AjaxRequestTarget aTarget, IRequestParameters request,
@@ -422,36 +383,6 @@ public class BratAnnotationEditor
         serverTiming("Brat-JSON", "Brat JSON generation (FULL)", timer.getTime());
 
         return json;
-    }
-
-    /**
-     * Extract offset information from the current request. These are either offsets of an existing
-     * selected annotations or offsets contained in the request for the creation of a new
-     * annotation.
-     */
-    private Offsets getOffsetsFromRequest(IRequestParameters request, CAS aCas, VID aVid)
-        throws IOException
-    {
-        if (aVid.isNotSet() || aVid.isSynthetic()) {
-            // Create new span annotation - in this case we get the offset information from the
-            // request
-            String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-
-            OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
-                    OffsetsList.class);
-
-            int annotationBegin = getModelObject().getWindowBeginOffset()
-                    + offsetLists.get(0).getBegin();
-            int annotationEnd = getModelObject().getWindowBeginOffset()
-                    + offsetLists.get(offsetLists.size() - 1).getEnd();
-            return new Offsets(annotationBegin, annotationEnd);
-        }
-        else {
-            // Edit existing span annotation - in this case we look up the offsets in the CAS
-            // Let's not trust the client in this case.
-            AnnotationFS fs = WebAnnoCasUtil.selectAnnotationByAddr(aCas, aVid.getId());
-            return new Offsets(fs.getBegin(), fs.getEnd());
-        }
     }
 
     @Override

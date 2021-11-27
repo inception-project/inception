@@ -17,10 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
+import java.io.IOException;
+
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.Offsets;
+import de.tudarmstadt.ukp.inception.diam.model.OffsetsList;
 
 /**
  * <p>
@@ -42,7 +56,83 @@ public class CreateSpanAnnotationHandler
     @Override
     public void handle(AjaxRequestTarget aTarget, Request aRequest)
     {
-        // TODO Auto-generated method stub
+        try {
+            AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+            CAS cas = page.getEditorCas();
+            actionSpan(aTarget, aRequest.getRequestParameters(), cas, getVid(aRequest));
+        }
+        catch (Exception e) {
+            handleError(aTarget, "Unable to load data", e);
+        }
+    }
 
+    private void actionSpan(AjaxRequestTarget aTarget, IRequestParameters aRequestParameters,
+            CAS aCas, VID aSelectedAnnotation)
+        throws IOException, AnnotationException
+    {
+        AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+
+        // This is the span the user has marked in the browser in order to create a new slot-filler
+        // annotation OR the span of an existing annotation which the user has selected.
+        Offsets optUserSelectedSpan = getOffsetsFromRequest(aTarget, aRequestParameters, aCas,
+                aSelectedAnnotation);
+
+        Offsets userSelectedSpan = optUserSelectedSpan;
+        AnnotatorState state = page.getModelObject();
+        Selection selection = state.getSelection();
+
+        if (state.isSlotArmed()) {
+            // When filling a slot, the current selection is *NOT* changed. The
+            // Span annotation which owns the slot that is being filled remains
+            // selected!
+            page.getAnnotationActionHandler().actionFillSlot(aTarget, aCas,
+                    userSelectedSpan.getBegin(), userSelectedSpan.getEnd(), aSelectedAnnotation);
+        }
+        else {
+            if (!aSelectedAnnotation.isSynthetic()) {
+                selection.selectSpan(aSelectedAnnotation, aCas, userSelectedSpan.getBegin(),
+                        userSelectedSpan.getEnd());
+
+                if (selection.getAnnotation().isNotSet()) {
+                    // Create new annotation
+                    page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
+                }
+                else {
+                    page.getAnnotationActionHandler().actionSelect(aTarget);
+                }
+            }
+        }
+    }
+
+    /**
+     * Extract offset information from the current request. These are either offsets of an existing
+     * selected annotations or offsets contained in the request for the creation of a new
+     * annotation.
+     */
+    private Offsets getOffsetsFromRequest(AjaxRequestTarget aTarget, IRequestParameters request,
+            CAS aCas, VID aVid)
+        throws IOException
+    {
+        if (aVid.isNotSet() || aVid.isSynthetic()) {
+            // Create new span annotation - in this case we get the offset information from the
+            // request
+            String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
+
+            OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
+                    OffsetsList.class);
+
+            AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+            int annotationBegin = page.getModelObject().getWindowBeginOffset()
+                    + offsetLists.get(0).getBegin();
+            int annotationEnd = page.getModelObject().getWindowBeginOffset()
+                    + offsetLists.get(offsetLists.size() - 1).getEnd();
+            return new Offsets(annotationBegin, annotationEnd);
+        }
+        else {
+            // Edit existing span annotation - in this case we look up the offsets in the CAS
+            // Let's not trust the client in this case.
+            AnnotationFS fs = WebAnnoCasUtil.selectAnnotationByAddr(aCas, aVid.getId());
+            return new Offsets(fs.getBegin(), fs.getEnd());
+        }
     }
 }
