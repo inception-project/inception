@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model;
+package de.tudarmstadt.ukp.inception.diam.model.ajax;
 
 import java.util.ArrayList;
 

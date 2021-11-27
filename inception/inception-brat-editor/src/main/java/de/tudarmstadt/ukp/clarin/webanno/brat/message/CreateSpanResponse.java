@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+
 /**
  * Response for the {@code createSpan} command.
  */

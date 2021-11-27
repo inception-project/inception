@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model;
+package de.tudarmstadt.ukp.inception.diam.model.ajax;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -40,7 +40,8 @@ import com.fasterxml.jackson.databind.ser.std.AsArraySerializerBase;
  * specializer serializer exists (such as index-accessible List). If so, we will just construct an
  * {@link java.util.Iterator} to iterate over elements.
  * 
- * @deprecated Need to check if we want to keep this for DIAM
+ * @deprecated Need to check if we want to keep this for DIAM. Maybe replace with
+ *             {@link com.fasterxml.jackson.databind.deser.impl.BeanAsArrayDeserializer}?
  */
 @Deprecated
 public class BeanAsArraySerializer

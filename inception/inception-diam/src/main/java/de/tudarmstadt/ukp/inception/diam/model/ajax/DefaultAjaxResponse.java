@@ -15,27 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.message;
+package de.tudarmstadt.ukp.inception.diam.model.ajax;
 
-import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import java.util.List;
 
-/**
- * Response for the {@code spanOpenDialog} command.
- *
- * This command is part of WebAnno and not contained in the original brat.
- */
-public class SpanAnnotationResponse
+public class DefaultAjaxResponse
     extends AjaxResponse
 {
-    public static final String COMMAND = "spanOpenDialog";
-
-    public SpanAnnotationResponse()
+    public DefaultAjaxResponse()
     {
-        super(COMMAND);
+        // Nothing to do
     }
 
-    public static boolean is(String aCommand)
+    public DefaultAjaxResponse(String aAction)
     {
-        return COMMAND.equals(aCommand);
+        super(aAction);
+    }
+
+    public DefaultAjaxResponse(String aAction, List<String> aMessages)
+    {
+        super(aAction, aMessages);
     }
 }

@@ -15,47 +15,41 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.message;
+package de.tudarmstadt.ukp.inception.diam.model.ajax;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.NormalizationQueryResult;
 
 /**
  * Response for the {@code normData} command.
  * 
  * This is essentially present in brat, but there {@code results} would be a member of an array
  * called {@code value}. We simplified this a bit here and in {@code visualizer_ui.js}.
+ * 
+ * @deprecated Need to check if we want to keep this for DIAM
  */
-public class NormDataResponse
+@Deprecated
+public class LazyDetailsResponse
     extends AjaxResponse
 {
-    public static final String COMMAND = "normData";
+    private List<LazyDetail> results = new ArrayList<>();
 
-    private List<NormalizationQueryResult> results = new ArrayList<>();
-
-    public NormDataResponse()
+    public LazyDetailsResponse(String aAction)
     {
-        super(COMMAND);
+        super(aAction);
     }
 
-    public static boolean is(String aCommand)
-    {
-        return COMMAND.equals(aCommand);
-    }
-
-    public List<NormalizationQueryResult> getResults()
+    public List<LazyDetail> getResults()
     {
         return results;
     }
 
-    public void setResults(List<NormalizationQueryResult> aResult)
+    public void setResults(List<LazyDetail> aResult)
     {
         results = aResult;
     }
 
-    public void addResult(NormalizationQueryResult aResult)
+    public void addResult(LazyDetail aResult)
     {
         results.add(aResult);
     }

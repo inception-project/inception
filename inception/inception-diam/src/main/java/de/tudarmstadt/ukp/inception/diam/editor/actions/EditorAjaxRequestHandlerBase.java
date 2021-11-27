@@ -17,17 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
+import static java.util.Arrays.asList;
+
 import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 public abstract class EditorAjaxRequestHandlerBase
     implements EditorAjaxRequestHandler
@@ -78,23 +82,28 @@ public abstract class EditorAjaxRequestHandlerBase
         return paramId;
     }
 
-    protected void handleError(AjaxRequestTarget aTarget, String aMessage, Exception e)
+    protected DefaultAjaxResponse handleError(AjaxRequestTarget aTarget, String aMessage,
+            Exception e)
     {
         aTarget.addChildren(aTarget.getPage(), IFeedback.class);
 
         if (e instanceof AnnotationException) {
+            String fullMessage = aMessage + ": " + e.getMessage();
             // These are common exceptions happening as part of the user interaction. We do
             // not really need to log their stack trace to the log.
-            aTarget.getPage().error(aMessage + ": " + e.getMessage());
+            aTarget.getPage().error(fullMessage);
             // If debug is enabled, we'll also write the error to the log just in case.
             if (LOG.isDebugEnabled()) {
-                LOG.error("{}: {}", aMessage, e.getMessage(), e);
+                LOG.error(fullMessage, e);
             }
-            return;
+            return new DefaultAjaxResponse(getAction(RequestCycle.get().getRequest()),
+                    asList(fullMessage));
         }
 
         LOG.error("{}", aMessage, e);
         aTarget.getPage().error(aMessage);
+        return new DefaultAjaxResponse(getAction(RequestCycle.get().getRequest()),
+                asList(aMessage));
     }
 
 }

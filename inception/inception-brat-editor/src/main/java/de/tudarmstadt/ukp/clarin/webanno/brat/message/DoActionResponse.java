@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+
 /**
  * Response for the {@code doAction} command.
  *

@@ -23,11 +23,11 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
 public interface EditorAjaxRequestHandler
     extends Extension<Request>
 {
-    public static final String PARAM_COMMAND = "cmd";
     public static final String PARAM_VID = "vid";
 
     public static final String PARAM_ACTION = "action";
@@ -58,9 +58,9 @@ public interface EditorAjaxRequestHandler
     @Override
     default boolean accepts(Request aRequest)
     {
-        return getCommand().equals(aRequest.getRequestParameters().getParameterValue(PARAM_COMMAND)
-                .toOptionalString());
+        return getCommand().equals(
+                aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString());
     }
 
-    void handle(AjaxRequestTarget aTarget, Request aRequest);
+    AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest);
 }

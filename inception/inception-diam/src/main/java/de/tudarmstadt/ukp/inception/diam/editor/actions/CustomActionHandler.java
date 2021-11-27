@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
@@ -69,13 +70,14 @@ public class CustomActionHandler
     }
 
     @Override
-    public void handle(AjaxRequestTarget aTarget, Request aRequest)
+    public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
             actionDoAction(aTarget, aRequest, getVid(aRequest));
+            return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            handleError(aTarget, "Unable to load data", e);
+            return handleError(aTarget, "Unable to load data", e);
         }
     }
 

@@ -17,32 +17,32 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
-import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#extensionActionHandler}.
+ * This class is exposed as a Spring Component via {@link DiamEditorAutoConfig#lazyDetailHandler}.
  * </p>
  */
-public class ExtensionActionHandler
+public class LazyDetailsHandler
     extends EditorAjaxRequestHandlerBase
 {
-    public static final String COMMAND = "doAction";
+    public static final String COMMAND = "normData";
 
-    private final AnnotationEditorExtensionRegistry extensionRegistry;
+    private final LazyDetailsLookupService lazyDetailsLookupService;
 
-    public ExtensionActionHandler(AnnotationEditorExtensionRegistry aExtensionRegistry)
+    public LazyDetailsHandler(LazyDetailsLookupService aLazyDetailsLookupService)
     {
-        extensionRegistry = aExtensionRegistry;
+        lazyDetailsLookupService = aLazyDetailsLookupService;
     }
 
     @Override
@@ -52,18 +52,20 @@ public class ExtensionActionHandler
     }
 
     @Override
-    public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
             AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
-            String action = getAction(aRequest);
-            VID paramId = getVid(aRequest);
-            CAS cas = page.getEditorCas();
 
-            extensionRegistry.fireAction(page.getAnnotationActionHandler(), page.getModelObject(),
-                    aTarget, cas, paramId, action);
+            CasProvider casProvider = () -> page.getEditorCas();
 
-            return new DefaultAjaxResponse(action);
+            // Parse annotation ID if present in request
+            final VID paramId = getVid(aRequest);
+
+            AnnotatorState state = page.getModelObject();
+            return lazyDetailsLookupService.actionLookupNormData(aRequest.getRequestParameters(),
+                    paramId, casProvider, state.getDocument(), state.getUser(),
+                    state.getWindowBeginOffset(), state.getWindowEndOffset());
         }
         catch (Exception e) {
             return handleError(aTarget, "Unable to load data", e);

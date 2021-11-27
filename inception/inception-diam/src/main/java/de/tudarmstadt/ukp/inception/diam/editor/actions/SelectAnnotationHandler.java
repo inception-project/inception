@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
@@ -62,18 +63,18 @@ public class SelectAnnotationHandler
     }
 
     @Override
-    public void handle(AjaxRequestTarget aTarget, Request aRequest)
+    public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
-        AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
-
-        VID vid = VID.parseOptional(
-                aRequest.getRequestParameters().getParameterValue(PARAM_VID).toOptionalString());
-
-        if (vid.isNotSet() || vid.isSynthetic()) {
-            return;
-        }
-
         try {
+            AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+
+            VID vid = VID.parseOptional(aRequest.getRequestParameters().getParameterValue(PARAM_VID)
+                    .toOptionalString());
+
+            if (vid.isNotSet() || vid.isSynthetic()) {
+                return new DefaultAjaxResponse(getAction(aRequest));
+            }
+
             CAS cas = page.getEditorCas();
             AnnotatorState state = page.getModelObject();
 
@@ -81,9 +82,11 @@ public class SelectAnnotationHandler
 
             TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
             adapter.select(state, fs);
+
+            return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            handleError(aTarget, "Unable to load data", e);
+            return handleError(aTarget, "Unable to load data", e);
         }
     }
 }

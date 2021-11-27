@@ -15,21 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
+package de.tudarmstadt.ukp.inception.diam.model.ajax;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
-
+/**
+ * @deprecated Need to check if we want to keep this for DIAM
+ */
+@Deprecated
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "label", "value" })
-public class NormalizationQueryResult
+public class LazyDetail
 {
     private String label;
     private String value;
 
-    public NormalizationQueryResult(String aLabel, String aValue)
+    public LazyDetail(String aLabel, String aValue)
     {
         label = aLabel;
         value = aValue;

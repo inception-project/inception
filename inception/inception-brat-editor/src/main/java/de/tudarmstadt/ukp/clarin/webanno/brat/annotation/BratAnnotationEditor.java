@@ -76,14 +76,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.RejectActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
@@ -116,7 +113,6 @@ public class BratAnnotationEditor
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
-    private @SpringBean BratLazyDetailsLookupService lazyDetailsLookupService;
 
     @SpringBean(name = "extensionActionHandler")
     private EditorAjaxRequestHandler extensionActionHandler;
@@ -129,6 +125,9 @@ public class BratAnnotationEditor
 
     @SpringBean(name = "createRelationAnnotationHandler")
     private EditorAjaxRequestHandler createRelationAnnotationHandler;
+
+    @SpringBean(name = "lazyDetailHandler")
+    private EditorAjaxRequestHandler lazyDetailHandler;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -164,44 +163,21 @@ public class BratAnnotationEditor
 
                 long timerStart = System.currentTimeMillis();
 
-                final IRequestParameters request = getRequest().getPostParameters();
+                final IRequestParameters requestParameters = getRequest().getPostParameters();
 
                 // Get action from the request
-                String action = BratRequestUtils.getActionFromRequest(request);
+                String action = BratRequestUtils.getActionFromRequest(requestParameters);
                 LOG.trace("AJAX-RPC CALLED: [{}]", action);
 
                 // Parse annotation ID if present in request
-                final VID paramId = BratRequestUtils.getVidFromRequest(request);
-
-                // Load the CAS if necessary
-                // Make sure we load the CAS only once here in case of an annotation action.
-                boolean requiresCasLoading = SpanAnnotationResponse.is(action)
-                        || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action)
-                        || DoActionResponse.is(action) || AcceptActionResponse.is(action)
-                        || RejectActionResponse.is(action);
-                final CAS cas;
-                if (requiresCasLoading) {
-                    try {
-                        cas = getCasProvider().get();
-                    }
-                    catch (Exception e) {
-                        handleError("Unable to load data: " + getRootCauseMessage(e), e);
-                        return;
-                    }
-                }
-                else {
-                    cas = null;
-                }
+                final VID paramId = BratRequestUtils.getVidFromRequest(requestParameters);
 
                 Object result = null;
                 try {
                     // Whenever an action should be performed, do ONLY perform this action and
                     // nothing else, and only if the item actually is an action item
-                    if (NormDataResponse.is(action)) {
-                        AnnotatorState state = getModelObject();
-                        result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
-                                getCasProvider(), state.getDocument(), state.getUser(),
-                                state.getWindowBeginOffset(), state.getWindowEndOffset());
+                    if (lazyDetailHandler.accepts(getRequest())) {
+                        result = lazyDetailHandler.handle(aTarget, getRequest());
                     }
                     else if (DoActionResponse.is(action)) {
                         if (paramId.isSynthetic()) {
@@ -225,7 +201,8 @@ public class BratAnnotationEditor
 
                             if (ACTION_CONTEXT_MENU.equals(action.toString())
                                     && !paramId.isSlotSet()) {
-                                actionOpenContextMenu(aTarget, request, cas, paramId);
+                                final CAS cas = getCasProvider().get();
+                                actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
                             }
                             else if (SpanAnnotationResponse.is(action)) {
                                 createSpanAnnotationHandler.handle(aTarget, getRequest());
@@ -242,6 +219,7 @@ public class BratAnnotationEditor
                                 result = actionGetCollectionInformation();
                             }
                             else if (GetDocumentResponse.is(action)) {
+                                final CAS cas = getCasProvider().get();
                                 result = actionGetDocument(cas);
                             }
                         }

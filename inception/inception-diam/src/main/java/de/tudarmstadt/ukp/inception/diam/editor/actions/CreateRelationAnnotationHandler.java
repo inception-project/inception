@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
@@ -53,15 +54,16 @@ public class CreateRelationAnnotationHandler
     }
 
     @Override
-    public void handle(AjaxRequestTarget aTarget, Request aRequest)
+    public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
             AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
             CAS cas = page.getEditorCas();
             actionArc(aTarget, aRequest.getRequestParameters(), cas, getVid(aRequest));
+            return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            handleError(aTarget, "Unable to load data", e);
+            return handleError(aTarget, "Unable to load data", e);
         }
     }
 
