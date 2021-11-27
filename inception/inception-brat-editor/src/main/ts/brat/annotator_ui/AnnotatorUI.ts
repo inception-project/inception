@@ -417,7 +417,7 @@ export class AnnotatorUI {
     const noNumArcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
 
     spanDesc.arcs.map(possibleArc => {
-      if (!(this.arcOptions && possibleArc.type == noNumArcType) || !(this.arcOptions && this.arcOptions.old_target)) {
+      if (!(this.arcOptions && possibleArc.type == noNumArcType || !(this.arcOptions && this.arcOptions.old_target))) {
         return;
       }
 
@@ -658,44 +658,52 @@ export class AnnotatorUI {
     }
   }
 
-  private sendSpanAnnotationSelected(offsets: OffsetsList, span: Span, id?) {
-    this.dispatcher.post('ajax', [{
-      action: 'spanOpenDialog',
-      offsets: JSON.stringify(offsets),
-      id: id,
-      type: span.type,
-      spanText: span.text
-    }]);
+  private sendSpanAnnotationSelected(offsets: OffsetsList, span: Span, id?: string) {
+    this.ajax.selectSpanAnnotation(offsets, span, id)
+
+    // this.dispatcher.post('ajax', [{
+    //   action: 'spanOpenDialog',
+    //   offsets: JSON.stringify(offsets),
+    //   id: id,
+    //   type: span.type,
+    //   spanText: span.text
+    // }]);
   }
 
   private sendCreateSpanAnnotation(offsets: OffsetsList, spanText: string) {
-    this.dispatcher.post('ajax', [{
-      action: 'spanOpenDialog',
-      offsets: JSON.stringify(offsets),
-      spanText: spanText
-    }]);
+    this.ajax.createSpanAnnotation(offsets, spanText);
+
+    // this.dispatcher.post('ajax', [{
+    //   action: 'spanOpenDialog',
+    //   offsets: JSON.stringify(offsets),
+    //   spanText: spanText
+    // }]);
   }
 
   private sendArcSelected(originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
-    this.dispatcher.post('ajax', [{
-      action: 'arcOpenDialog',
-      arcId: arcId,
-      arcType: arcType,
-      originSpanId: originSpanId,
-      originType: originType,
-      targetSpanId: targetSpanId,
-      targetType: targetType
-    }]);
+    this.ajax.selectArcAnnotation(originSpanId, originType, targetSpanId, targetType, arcType, arcId);
+
+    // this.dispatcher.post('ajax', [{
+    //   action: 'arcOpenDialog',
+    //   arcId: arcId,
+    //   arcType: arcType,
+    //   originSpanId: originSpanId,
+    //   originType: originType,
+    //   targetSpanId: targetSpanId,
+    //   targetType: targetType
+    // }]);
   }
 
   private sendCreateRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
-    this.dispatcher.post('ajax', [{
-      action: 'arcOpenDialog',
-      originSpanId: originSpanId,
-      originType: originType,
-      targetSpanId: targetSpanId,
-      targetType: targetType
-    }]);
+    this.ajax.createRelationAnnotation(originSpanId, originType, targetSpanId, targetType);
+
+    // this.dispatcher.post('ajax', [{
+    //   action: 'arcOpenDialog',
+    //   originSpanId: originSpanId,
+    //   originType: originType,
+    //   targetSpanId: targetSpanId,
+    //   targetType: targetType
+    // }]);
   }
 
   stopArcDrag(target?) {

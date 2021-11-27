@@ -27,7 +27,7 @@ export class DiamAjax {
     this.ajaxEndpoint = ajaxEndpoint;
   }
 
-  selectSpanAnnotation(offsets: OffsetsList, span: Span, id?) {
+  selectSpanAnnotation(offsets: OffsetsList, span: Span, id?: string) {
     Wicket.Ajax.ajax({
       "m": "POST",
       "u": this.ajaxEndpoint,
