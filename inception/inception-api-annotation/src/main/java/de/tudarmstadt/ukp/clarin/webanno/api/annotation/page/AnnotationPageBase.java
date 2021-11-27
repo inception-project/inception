@@ -54,6 +54,7 @@ import org.wicketstuff.urlfragment.UrlFragment;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
@@ -267,6 +268,8 @@ public abstract class AnnotationPageBase
     public abstract List<SourceDocument> getListOfDocs();
 
     public abstract CAS getEditorCas() throws IOException;
+
+    public abstract AnnotationActionHandler getAnnotationActionHandler();
 
     public abstract void writeEditorCas(CAS aCas) throws IOException, AnnotationException;
 

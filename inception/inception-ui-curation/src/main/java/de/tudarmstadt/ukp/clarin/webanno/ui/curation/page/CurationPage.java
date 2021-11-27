@@ -83,6 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -478,6 +479,12 @@ public class CurationPage
         Optional<Long> diskTimestamp = curationDocumentService
                 .getCurationCasTimestamp(state.getDocument());
         AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
+    }
+
+    @Override
+    public AnnotationActionHandler getAnnotationActionHandler()
+    {
+        return detailPanel;
     }
 
     @Override

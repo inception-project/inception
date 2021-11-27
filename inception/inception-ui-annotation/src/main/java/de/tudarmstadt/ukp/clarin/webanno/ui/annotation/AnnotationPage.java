@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BeforeDocumentOpenedEvent;
@@ -369,6 +370,12 @@ public class AnnotationPage
         Optional<Long> diskTimestamp = documentService
                 .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
         AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
+    }
+
+    @Override
+    public AnnotationActionHandler getAnnotationActionHandler()
+    {
+        return detailEditor;
     }
 
     @Override

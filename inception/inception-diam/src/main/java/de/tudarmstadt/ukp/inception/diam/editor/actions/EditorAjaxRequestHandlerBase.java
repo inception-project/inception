@@ -21,10 +21,13 @@ import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public abstract class EditorAjaxRequestHandlerBase
     implements EditorAjaxRequestHandler
@@ -35,6 +38,44 @@ public abstract class EditorAjaxRequestHandlerBase
     public String getId()
     {
         return getCommand();
+    }
+
+    protected String getAction(Request aRequest)
+    {
+        return aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toString();
+    }
+
+    public VID getVid(Request aRequest)
+    {
+        IRequestParameters requestParameters = aRequest.getRequestParameters();
+
+        String action = getAction(aRequest);
+        final VID paramId;
+        if (!requestParameters.getParameterValue(PARAM_ID).isEmpty()
+                && !requestParameters.getParameterValue(PARAM_ARC_ID).isEmpty()) {
+            throw new IllegalStateException(
+                    "[id] and [arcId] cannot be both set at the same time!");
+        }
+
+        if (!requestParameters.getParameterValue(PARAM_ID).isEmpty()) {
+            paramId = VID.parseOptional(requestParameters.getParameterValue(PARAM_ID).toString());
+        }
+        else {
+            VID arcId = VID
+                    .parseOptional(requestParameters.getParameterValue(PARAM_ARC_ID).toString());
+            // HACK: If an arc was clicked that represents a link feature, then
+            // open the associated span annotation instead.
+            // FIXME This should check for SelectAnnotationHandler.COMMAND instead!
+            if (arcId.isSlotSet() && CreateRelationAnnotationHandler.COMMAND.equals(action)) {
+                action = CreateSpanAnnotationHandler.COMMAND;
+                paramId = new VID(arcId.getId());
+            }
+            else {
+                paramId = arcId;
+            }
+        }
+
+        return paramId;
     }
 
     protected void handleError(AjaxRequestTarget aTarget, String aMessage, Exception e)

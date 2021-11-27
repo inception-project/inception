@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter.decodeTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.ACTION_CONTEXT_MENU;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_OFFSETS;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_ORIGIN_SPAN_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_TARGET_SPAN_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
@@ -35,11 +33,9 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -57,7 +53,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,12 +98,10 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 
 /**
  * Brat annotator component.
@@ -130,6 +123,9 @@ public class BratAnnotationEditor
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
     private @SpringBean BratLazyDetailsLookupService lazyDetailsLookupService;
+
+    private @SpringBean(name = "extensionActionHandler") EditorAjaxRequestHandler extensionActionHandler;
+    private @SpringBean(name = "customActionHandler") EditorAjaxRequestHandler customActionHandler;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -206,17 +202,15 @@ public class BratAnnotationEditor
                     }
                     else if (DoActionResponse.is(action)) {
                         if (paramId.isSynthetic()) {
-                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, cas, paramId, action);
+                            extensionActionHandler.handle(aTarget, getRequest());
                         }
                         else {
-                            actionDoAction(aTarget, request, cas, paramId);
+                            customActionHandler.handle(aTarget, getRequest());
                         }
                     }
                     else {
                         if (paramId.isSynthetic()) {
-                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, cas, paramId, action);
+                            extensionActionHandler.handle(aTarget, getRequest());
                         }
                         else {
                             // Doing anything but selecting or creating a span annotation when a
@@ -291,36 +285,6 @@ public class BratAnnotationEditor
         if (!items.isEmpty()) {
             contextMenu.onOpen(aTarget);
         }
-    }
-
-    private Object actionDoAction(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas,
-            VID paramId)
-        throws AnnotationException, IOException
-    {
-        StringValue layerParam = request.getParameterValue(PARAM_TYPE);
-
-        if (!layerParam.isEmpty()) {
-            long layerId = decodeTypeName(layerParam.toString());
-            AnnotatorState state = getModelObject();
-            AnnotationLayer layer = annotationService.getLayer(state.getProject(), layerId)
-                    .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
-                            + "] does not exist in project [" + state.getProject().getName() + "]("
-                            + state.getProject().getId() + ")"));
-            if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
-                // parse the action
-                List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
-                AnnotationFS anno = selectAnnotationByAddr(aCas, paramId.getId());
-                Map<String, Object> functionParams = OnClickActionParser.parse(layer, features,
-                        getModelObject().getDocument(), anno);
-                // define anonymous function, fill the body and immediately execute
-                String js = String.format("(function ($PARAM){ %s })(%s)",
-                        WicketUtil.wrapInTryCatch(layer.getOnClickJavascriptAction()),
-                        JSONUtil.toJsonString(functionParams));
-                aTarget.appendJavaScript(js);
-            }
-        }
-
-        return null;
     }
 
     private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,

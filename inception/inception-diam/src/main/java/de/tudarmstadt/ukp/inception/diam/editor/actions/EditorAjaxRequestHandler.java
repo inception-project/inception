@@ -30,6 +30,18 @@ public interface EditorAjaxRequestHandler
     public static final String PARAM_COMMAND = "cmd";
     public static final String PARAM_VID = "vid";
 
+    public static final String PARAM_ACTION = "action";
+    public static final String PARAM_ARC_ID = "arcId";
+    public static final String PARAM_ID = "id";
+    public static final String PARAM_OFFSETS = "offsets";
+    public static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
+    public static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
+    public static final String PARAM_TYPE = "type";
+    public static final String PARAM_LAZY_DETAIL_DATABASE = "database";
+    public static final String PARAM_LAZY_DETAIL_KEY = "key";
+
+    String ACTION_CONTEXT_MENU = "contextMenu";
+
     default String getRequestMethod(Request aRequest)
     {
         if (!(aRequest.getContainerRequest() instanceof HttpServletRequest)) {
