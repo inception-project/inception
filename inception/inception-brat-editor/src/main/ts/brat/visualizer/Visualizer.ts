@@ -3052,7 +3052,7 @@ export class Visualizer {
     // wrapping within the annotation (aka oversizing).
     textGroup.children().filter(e => e.hasClass('text-row')).map(textRow => {
       // const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
-      const rowFinalSpacing =  textRow.children().filter(e => e.hasClass('row-final'))[0];
+      const rowFinalSpacing = textRow.children().filter(e => e.hasClass('row-final'))[0];
       const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev().node.textContent];
       const lastChunkOffset = parseFloat(rowFinalSpacing.prev().node.getAttribute('x'));
       if (this.rtlmode) {
@@ -3219,7 +3219,7 @@ export class Visualizer {
 
   renderAdjustLayoutForRtl(oversized, rows: Row[], textGroup: SVGTypeMapping<SVGGElement>, sentNumGroup: SVGTypeMapping<SVGGElement>) {
     if (oversized > 0) {
-      rows.map(row => this.translate(row, oversized, row.translation.y));
+      rows.map(row => this.translate(row, oversized, 0));
       this.highlightGroup.translate(oversized, 0);
       textGroup.translate(oversized, 0);
       sentNumGroup.translate(oversized, 0);
@@ -3244,7 +3244,7 @@ export class Visualizer {
     backgroundGroup.children().map(element => {
       // We render the backgroundHighlight only in the margin, so we have to translate
       // it instead of transforming it.
-      
+
       if (element.hasClass('backgroundHighlight')) {
         if (this.rtlmode) {
           element.translate(oversized, 0);
@@ -3257,12 +3257,12 @@ export class Visualizer {
 
   renderAdjustLayoutRowSpacing(textGroup: SVGTypeMapping<SVGGElement>) {
     // Go through each row and adjust the row-initial and row-final spacing
-    $(textGroup.node).children(".text-row").map(textRow => {
-      const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
-      const rowFinalSpacing = $($(textRow).children('.row-final')[0]);
+    textGroup.children().filter(c => c.hasClass('text-row')).map(textRow => {
+      const rowInitialSpacing = textRow.children().filter(e => e.hasClass('row-initial'))[0];
+      const rowFinalSpacing = textRow.children().filter(e => e.hasClass('row-final'))[0];
       // const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
-      const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev()[0].textContent];
-      const lastChunkOffset = parseFloat(rowFinalSpacing.prev()[0].getAttribute('x'));
+      const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev().node.textContent];
+      const lastChunkOffset = parseFloat(rowFinalSpacing.prev().node.getAttribute('x'));
 
       if (this.rtlmode) {
         const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
@@ -3389,44 +3389,44 @@ export class Visualizer {
     const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(sourceData, this.data.chunks, maxTextWidth);
     Util.profileEnd('chunks');
 
-    Util.profileStart('arcsPrep');
-    this.renderBumpFragmentHeightsMinimumToArcStartHeight(fragmentHeights);
-    this.renderCalculateArcJumpHeight(fragmentHeights);
-    this.renderSortArcs();
-    this.renderAssignFragmentsToRows(rows, fragmentHeights);
-    this.renderDragArcMarker(defs);
-    Util.profileEnd('arcsPrep');
+    const steps = new Array<{ name: string, call: VoidFunction }>();
+    steps.push({
+      name: 'arcsPrep',
+      call: () => {
+        this.renderBumpFragmentHeightsMinimumToArcStartHeight(fragmentHeights);
+        this.renderCalculateArcJumpHeight(fragmentHeights);
+        this.renderSortArcs();
+        this.renderAssignFragmentsToRows(rows, fragmentHeights);
+        this.renderDragArcMarker(defs);
+      }
+    });
 
-    Util.profileStart('arcs');
-    this.renderArcs(rows, fragmentHeights, defs);
-    Util.profileEnd('arcs');
+    steps.push({
+      name: 'arcs',
+      call: () => this.renderArcs(rows, fragmentHeights, defs)
+    });
 
-    Util.profileStart('fragmentConnectors');
-    this.renderFragmentConnectors(rows);
-    Util.profileEnd('fragmentConnectors');
+    steps.push({
+      name: 'fragmentConnectors',
+      call: () => this.renderFragmentConnectors(rows)
+    });
+    this.renderSteps(steps);
 
     Util.profileStart('rows');
     const [y, sentNumGroup] = this.renderRows(rows, backgroundGroup);
     Util.profileEnd('rows');
 
-    Util.profileStart('chunkFinish');
-    this.renderChunksPass2(textGroup, textMarkedRows);
-    Util.profileEnd('chunkFinish');
-
+    const steps2 = new Array<{ name: string, call: VoidFunction }>();
+    steps2.push({
+      name: 'chunkFinish',
+      call: () => this.renderChunksPass2(textGroup, textMarkedRows)
+    });
+    this.renderSteps(steps2);
+    
     Util.profileStart('finish');
 
     Util.profileStart('adjust margin');
-    {
-      let path: PathCommand[];
-      if (this.rtlmode) {
-        path = [['M', this.canvasWidth - this.sentNumMargin, 0],
-          ['L', this.canvasWidth - this.sentNumMargin, y]];
-      } else {
-        path = [['M', this.sentNumMargin, 0],
-          ['L', this.sentNumMargin, y]];
-      }
-      this.svg.path(path).addTo(sentNumGroup);
-    }
+    this.renderAdjustMargin(y, sentNumGroup);
     Util.profileEnd('adjust margin');
 
     Util.profileStart('resize SVG');
@@ -3462,6 +3462,35 @@ export class Visualizer {
 
     this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
   }
+
+  private renderSteps(steps: Array<{ name: string, call: VoidFunction }>) {
+    steps.forEach(step => {
+      Util.profileStart(step.name);
+
+      if (true) {
+        step.call();
+//        (async () => await new Promise(resolve => setTimeout(resolve, 5000)))();
+      }
+      else {
+//        requestAnimationFrame(step.call);
+      }
+
+      Util.profileEnd(step.name);
+    });
+  }
+
+  private renderAdjustMargin(y: number, sentNumGroup: SVGTypeMapping<SVGGElement>) {
+    let path: PathCommand[];
+    if (this.rtlmode) {
+      path = [['M', this.canvasWidth - this.sentNumMargin, 0],
+      ['L', this.canvasWidth - this.sentNumMargin, y]];
+    } else {
+      path = [['M', this.sentNumMargin, 0],
+      ['L', this.sentNumMargin, y]];
+    }
+    this.svg.path(path).addTo(sentNumGroup);
+  }
+
 
   /**
    * @param {SourceData} sourceData
@@ -4010,13 +4039,15 @@ export class Visualizer {
       .addClass(rectClass)
       .fill(bgColor)
       .stroke({
-        color: borderColor, 
-        dasharray: span.attributeMerge.dashArray as string})
+        color: borderColor,
+        dasharray: span.attributeMerge.dashArray as string
+      })
       .attr({
         rx: Configuration.visual.margin.x,
         ry: Configuration.visual.margin.y,
         'data-span-id': span.id,
-        'data-fragment-id': span.segmentedOffsetsMap[fragment.id] })
+        'data-fragment-id': span.segmentedOffsetsMap[fragment.id]
+      })
       .addTo(fragment.group);
   }
 
@@ -4024,12 +4055,12 @@ export class Visualizer {
     const span = fragment.span;
 
     this.svg.path([['M', xx, yy - Configuration.visual.margin.y - span.floor],
-      ['L', xx + fragment.width, yy + hh + Configuration.visual.margin.y - span.floor]])
+    ['L', xx + fragment.width, yy + hh + Configuration.visual.margin.y - span.floor]])
       .addClass('boxcross')
       .addTo(fragment.group);
 
     this.svg.path([['M', xx + fragment.width, yy - Configuration.visual.margin.y - span.floor],
-      ['L', xx, yy + hh + Configuration.visual.margin.y - span.floor]])
+    ['L', xx, yy + hh + Configuration.visual.margin.y - span.floor]])
       .addClass('boxcross')
       .addTo(fragment.group);
   }
