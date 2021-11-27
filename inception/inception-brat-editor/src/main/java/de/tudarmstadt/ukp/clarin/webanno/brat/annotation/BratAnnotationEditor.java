@@ -132,7 +132,7 @@ public class BratAnnotationEditor
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
 
-    private transient JsonNode lastRenederedJsonParsed;
+    private transient JsonNode lastRenderedJsonParsed;
     private String lastRenderedJson;
     private int lastRenderedWindowStart = -1;
 
@@ -209,7 +209,8 @@ public class BratAnnotationEditor
                                 result = new SpanAnnotationResponse();
                             }
                             else if (ArcAnnotationResponse.is(action)) {
-                                createRelationAnnotationHandler.handle(aTarget, getRequest());
+                                result = createRelationAnnotationHandler.handle(aTarget,
+                                        getRequest());
                                 result = new ArcAnnotationResponse();
                             }
                             else if (LoadConfResponse.is(action)) {
@@ -326,7 +327,7 @@ public class BratAnnotationEditor
             render(response, aCas);
             json = toJson(response);
             lastRenderedJson = json;
-            lastRenederedJsonParsed = null;
+            lastRenderedJsonParsed = null;
         }
         else {
             json = toJson(response);
@@ -417,8 +418,8 @@ public class BratAnnotationEditor
             // ... try to render diff
             JsonNode previous = null;
             try {
-                if (lastRenederedJsonParsed != null) {
-                    previous = lastRenederedJsonParsed;
+                if (lastRenderedJsonParsed != null) {
+                    previous = lastRenderedJsonParsed;
                 }
                 else {
                     previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
@@ -454,7 +455,7 @@ public class BratAnnotationEditor
 
         // Storing the last rendered JSON as string because JsonNodes are not serializable.
         lastRenderedJson = json;
-        lastRenederedJsonParsed = current;
+        lastRenderedJsonParsed = current;
         lastRenderedWindowStart = aState.getWindowBeginOffset();
 
         timer.stop();

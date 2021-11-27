@@ -27,7 +27,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
+import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 /**
  * An Entity is a span annotation with id, type and offsets of the span annotation of the format

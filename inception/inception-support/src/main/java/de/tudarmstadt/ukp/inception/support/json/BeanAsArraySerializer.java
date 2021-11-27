@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.message;
+package de.tudarmstadt.ukp.inception.support.json;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -37,12 +37,14 @@ import com.fasterxml.jackson.databind.ser.std.AsArraySerializerBase;
 
 /**
  * Fallback serializer for cases where Collection is not known to be of type for which more
- * specializer serializer exists (such as index-accessible List). If so, we will just construct an
+ * specialized serializer exists (such as index-accessible List). If so, we will just construct an
  * {@link java.util.Iterator} to iterate over elements.
  */
 public class BeanAsArraySerializer
     extends AsArraySerializerBase<Object>
 {
+    private static final long serialVersionUID = -127555258771436639L;
+
     public BeanAsArraySerializer()
     {
         this(null, false, null, null, null);

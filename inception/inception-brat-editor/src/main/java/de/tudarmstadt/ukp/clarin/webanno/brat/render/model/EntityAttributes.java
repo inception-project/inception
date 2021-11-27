@@ -25,7 +25,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.NumericBooleanSerializer;
+import de.tudarmstadt.ukp.inception.support.json.NumericBooleanSerializer;
 
 /**
  * This is not part of the original brat data model.

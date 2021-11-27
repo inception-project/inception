@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.diam.model.ajax;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
+
 /**
  * @deprecated Need to check if we want to keep this for DIAM
  */
