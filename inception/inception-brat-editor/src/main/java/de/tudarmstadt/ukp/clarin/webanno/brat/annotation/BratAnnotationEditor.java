@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.ACTION_CONTEXT_MENU;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_ORIGIN_SPAN_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_TARGET_SPAN_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
@@ -120,9 +118,17 @@ public class BratAnnotationEditor
     private @SpringBean BratAnnotationEditorProperties bratProperties;
     private @SpringBean BratLazyDetailsLookupService lazyDetailsLookupService;
 
-    private @SpringBean(name = "extensionActionHandler") EditorAjaxRequestHandler extensionActionHandler;
-    private @SpringBean(name = "customActionHandler") EditorAjaxRequestHandler customActionHandler;
-    private @SpringBean(name = "createSpanAnnotationHandler") EditorAjaxRequestHandler createSpanAnnotationHandler;
+    @SpringBean(name = "extensionActionHandler")
+    private EditorAjaxRequestHandler extensionActionHandler;
+
+    @SpringBean(name = "customActionHandler")
+    private EditorAjaxRequestHandler customActionHandler;
+
+    @SpringBean(name = "createSpanAnnotationHandler")
+    private EditorAjaxRequestHandler createSpanAnnotationHandler;
+
+    @SpringBean(name = "createRelationAnnotationHandler")
+    private EditorAjaxRequestHandler createRelationAnnotationHandler;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -226,7 +232,8 @@ public class BratAnnotationEditor
                                 result = new SpanAnnotationResponse();
                             }
                             else if (ArcAnnotationResponse.is(action)) {
-                                result = actionArc(aTarget, request, cas, paramId);
+                                createRelationAnnotationHandler.handle(aTarget, getRequest());
+                                result = new ArcAnnotationResponse();
                             }
                             else if (LoadConfResponse.is(action)) {
                                 result = new LoadConfResponse(bratProperties);
@@ -283,37 +290,6 @@ public class BratAnnotationEditor
         if (!items.isEmpty()) {
             contextMenu.onOpen(aTarget);
         }
-    }
-
-    private ArcAnnotationResponse actionArc(AjaxRequestTarget aTarget, IRequestParameters request,
-            CAS aCas, VID paramId)
-        throws IOException, AnnotationException
-    {
-        VID origin = VID.parse(request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
-        VID target = VID.parse(request.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
-
-        if (origin.isSynthetic() || target.isSynthetic()) {
-            error("Relations cannot be created from/to synthetic annotations");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return null;
-        }
-
-        AnnotationFS originFs = selectAnnotationByAddr(aCas, origin.getId());
-        AnnotationFS targetFs = selectAnnotationByAddr(aCas, target.getId());
-
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
-        selection.selectArc(paramId, originFs, targetFs);
-
-        if (selection.getAnnotation().isNotSet()) {
-            // Create new annotation
-            getActionHandler().actionCreateOrUpdate(aTarget, aCas);
-        }
-        else {
-            getActionHandler().actionSelect(aTarget);
-        }
-
-        return new ArcAnnotationResponse();
     }
 
     private void actionArcRightClick(AjaxRequestTarget aTarget, VID paramId)

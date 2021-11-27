@@ -17,9 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+
+import java.io.IOException;
+
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
 
 /**
@@ -42,7 +55,44 @@ public class CreateRelationAnnotationHandler
     @Override
     public void handle(AjaxRequestTarget aTarget, Request aRequest)
     {
-        // TODO Auto-generated method stub
+        try {
+            AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+            CAS cas = page.getEditorCas();
+            actionArc(aTarget, aRequest.getRequestParameters(), cas, getVid(aRequest));
+        }
+        catch (Exception e) {
+            handleError(aTarget, "Unable to load data", e);
+        }
+    }
 
+    private void actionArc(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas,
+            VID paramId)
+        throws IOException, AnnotationException
+    {
+        AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+
+        VID origin = VID.parse(request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
+        VID target = VID.parse(request.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
+
+        if (origin.isSynthetic() || target.isSynthetic()) {
+            page.error("Relations cannot be created from/to synthetic annotations");
+            aTarget.addChildren(page, IFeedback.class);
+            return;
+        }
+
+        AnnotationFS originFs = selectAnnotationByAddr(aCas, origin.getId());
+        AnnotationFS targetFs = selectAnnotationByAddr(aCas, target.getId());
+
+        AnnotatorState state = page.getModelObject();
+        Selection selection = state.getSelection();
+        selection.selectArc(paramId, originFs, targetFs);
+
+        if (selection.getAnnotation().isNotSet()) {
+            // Create new annotation
+            page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
+        }
+        else {
+            page.getAnnotationActionHandler().actionSelect(aTarget);
+        }
     }
 }

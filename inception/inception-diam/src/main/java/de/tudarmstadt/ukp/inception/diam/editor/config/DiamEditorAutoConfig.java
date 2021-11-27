@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CustomActionHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
@@ -68,5 +69,11 @@ public class DiamEditorAutoConfig
     public CreateSpanAnnotationHandler createSpanAnnotationHandler()
     {
         return new CreateSpanAnnotationHandler();
+    }
+
+    @Bean
+    public CreateRelationAnnotationHandler createRelationAnnotationHandler()
+    {
+        return new CreateRelationAnnotationHandler();
     }
 }
