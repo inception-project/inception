@@ -179,50 +179,40 @@ public class BratAnnotationEditor
                     if (lazyDetailHandler.accepts(getRequest())) {
                         result = lazyDetailHandler.handle(aTarget, getRequest());
                     }
+                    else if (paramId.isSynthetic()) {
+                        extensionActionHandler.handle(aTarget, getRequest());
+                    }
                     else if (DoActionResponse.is(action)) {
-                        if (paramId.isSynthetic()) {
-                            extensionActionHandler.handle(aTarget, getRequest());
-                        }
-                        else {
-                            customActionHandler.handle(aTarget, getRequest());
-                        }
+                        customActionHandler.handle(aTarget, getRequest());
                     }
                     else {
-                        if (paramId.isSynthetic()) {
-                            extensionActionHandler.handle(aTarget, getRequest());
+                        // Doing anything but selecting or creating a span annotation when a
+                        // slot is armed will unarm it
+                        if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
+                            getModelObject().clearArmedSlot();
                         }
-                        else {
-                            // Doing anything but selecting or creating a span annotation when a
-                            // slot is armed will unarm it
-                            if (getModelObject().isSlotArmed()
-                                    && !SpanAnnotationResponse.is(action)) {
-                                getModelObject().clearArmedSlot();
-                            }
 
-                            if (ACTION_CONTEXT_MENU.equals(action.toString())
-                                    && !paramId.isSlotSet()) {
-                                final CAS cas = getCasProvider().get();
-                                actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
-                            }
-                            else if (SpanAnnotationResponse.is(action)) {
-                                createSpanAnnotationHandler.handle(aTarget, getRequest());
-                                result = new SpanAnnotationResponse();
-                            }
-                            else if (ArcAnnotationResponse.is(action)) {
-                                result = createRelationAnnotationHandler.handle(aTarget,
-                                        getRequest());
-                                result = new ArcAnnotationResponse();
-                            }
-                            else if (LoadConfResponse.is(action)) {
-                                result = new LoadConfResponse(bratProperties);
-                            }
-                            else if (GetCollectionInformationResponse.is(action)) {
-                                result = actionGetCollectionInformation();
-                            }
-                            else if (GetDocumentResponse.is(action)) {
-                                final CAS cas = getCasProvider().get();
-                                result = actionGetDocument(cas);
-                            }
+                        if (ACTION_CONTEXT_MENU.equals(action.toString()) && !paramId.isSlotSet()) {
+                            final CAS cas = getCasProvider().get();
+                            actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
+                        }
+                        else if (SpanAnnotationResponse.is(action)) {
+                            createSpanAnnotationHandler.handle(aTarget, getRequest());
+                            result = new SpanAnnotationResponse();
+                        }
+                        else if (ArcAnnotationResponse.is(action)) {
+                            result = createRelationAnnotationHandler.handle(aTarget, getRequest());
+                            result = new ArcAnnotationResponse();
+                        }
+                        else if (LoadConfResponse.is(action)) {
+                            result = new LoadConfResponse(bratProperties);
+                        }
+                        else if (GetCollectionInformationResponse.is(action)) {
+                            result = actionGetCollectionInformation();
+                        }
+                        else if (GetDocumentResponse.is(action)) {
+                            final CAS cas = getCasProvider().get();
+                            result = actionGetDocument(cas);
                         }
                     }
                 }
