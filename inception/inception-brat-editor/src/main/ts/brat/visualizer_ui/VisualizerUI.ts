@@ -373,7 +373,7 @@ export class VisualizerUI {
       id: id,
       labelText: editedSpan.labelText,
       type: editedSpan.type
-    }, 'serverResult']);
+    }]);
   }
 
   rejectAction(evt: MouseEvent, offsets: OffsetsList, editedSpan, id) {
@@ -387,7 +387,7 @@ export class VisualizerUI {
       id: id,
       labelText: editedSpan.labelText,
       type: editedSpan.type
-    }, 'serverResult']);
+    }]);
   }
 
   displaySpanButtons(evt: Event, target: JQuery) {
@@ -566,7 +566,7 @@ export class VisualizerUI {
         type: type,
         clientX: evt.clientX,
         clientY: evt.clientY
-      }, 'serverResult']);
+      }]);
     }
   }
 }

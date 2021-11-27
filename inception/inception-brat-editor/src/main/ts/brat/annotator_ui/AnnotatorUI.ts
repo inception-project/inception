@@ -38,13 +38,14 @@
  * SOFTWARE.
  */
 import { Dispatcher } from "../dispatcher/Dispatcher";
-import { Svg, SVG } from "@svgdotjs/svg.js";
+import { Svg } from "@svgdotjs/svg.js";
 import { DocumentData } from "../visualizer/DocumentData";
 import { OffsetsList } from "../visualizer/SourceData";
 import { Span } from "../visualizer/Span";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
+import { DiamAjax } from "../ajax/DiamAjax";
 
 export class AnnotatorUI {
   private data: DocumentData = null;
@@ -83,10 +84,13 @@ export class AnnotatorUI {
   private clickTimer = null;
   private CLICK_DELAY = 300;
 
-  constructor(dispatcher: Dispatcher, svg: Svg) {
+  private ajax: DiamAjax;
+
+  constructor(dispatcher: Dispatcher, svg: Svg, ajax: DiamAjax) {
     this.dispatcher = dispatcher;
     this.user = null;
     this.svg = svg;
+    this.ajax = ajax
 
     dispatcher.
       on('init', this, this.init).
@@ -209,7 +213,7 @@ export class AnnotatorUI {
       originType: originSpan.type,
       targetSpanId: targetSpan.id,
       targetType: targetSpan.type
-    }, 'serverResult']);
+    }]);
   }
 
   private customSpanAction(evt: MouseEvent & { target: HTMLElement }) {
@@ -227,7 +231,7 @@ export class AnnotatorUI {
       id: id,
       labelText: this.editedSpan.labelText,
       type: this.editedSpan.type
-    }, 'serverResult']);
+    }]);
   }
 
   private selectAnnotation(evt: MouseEvent & { target: HTMLElement }) {
@@ -654,7 +658,7 @@ export class AnnotatorUI {
       id: id,
       type: span.type,
       spanText: span.text
-    }, 'serverResult']);
+    }]);
   }
 
   private sendCreateSpanAnnotation(offsets: OffsetsList, spanText: string) {
@@ -662,7 +666,7 @@ export class AnnotatorUI {
       action: 'spanOpenDialog',
       offsets: JSON.stringify(offsets),
       spanText: spanText
-    }, 'serverResult']);
+    }]);
   }
 
   private sendArcSelected(originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
@@ -674,7 +678,7 @@ export class AnnotatorUI {
       originType: originType,
       targetSpanId: targetSpanId,
       targetType: targetType
-    }, 'serverResult']);
+    }]);
   }
 
   private sendCreateRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
@@ -684,7 +688,7 @@ export class AnnotatorUI {
       originType: originType,
       targetSpanId: targetSpanId,
       targetType: targetType
-    }, 'serverResult']);
+    }]);
   }
 
   stopArcDrag(target?) {
@@ -977,7 +981,7 @@ export class AnnotatorUI {
         type: this.data.spans[id].type,
         clientX: evt.clientX,
         clientY: evt.clientY
-      }, 'serverResult']);
+      }]);
     }
   }
   // WEBANNO EXTENSION END - #1388 Support context menu

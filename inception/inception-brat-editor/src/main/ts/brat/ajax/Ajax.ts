@@ -1,3 +1,5 @@
+import { Dispatcher } from "../dispatcher/Dispatcher";
+
 /*
  * ## INCEpTION ##
  * Licensed to the Technische Universität Darmstadt under one
@@ -41,18 +43,23 @@ declare let Wicket;
 
 // vim:set ft=javascript ts=2 sw=2 sts=2 cindent:
 export class Ajax {
-  pending = 0;
-  count = 0;
-  pendingList = {};
-  dispatcher = undefined;
+  private pending = 0;
+  private count = 0;
+  private pendingList = {};
+  private dispatcher: Dispatcher;
+  private ajaxUrl: string;
 
-  constructor(dispatcher) {
+  // We attach the JSON send back from the server to this HTML element
+  // because we cannot directly pass it from Wicket to the caller in ajax.js.
+  private wicketId: string;
+
+  constructor(dispatcher: Dispatcher, wicketId: string, ajaxUrl: string) {
     this.dispatcher = dispatcher;
+    this.ajaxUrl = ajaxUrl;
+    this.wicketId = wicketId;
     dispatcher.
       on('isReloadOkay', this, this.isReloadOkay).
-      on('makeAjaxObsolete', this, this.makeObsolete).
       on('ajax', this, this.ajaxCall);
-
   }
 
   // merge data will get merged into the response data
@@ -76,15 +83,15 @@ export class Ajax {
     // WEBANNO EXTENSION BEGIN
     Wicket.Ajax.ajax({
       "m": "POST",
-      "c": this.dispatcher.wicketId,
-      "u": this.dispatcher.ajaxUrl,
+      "c": this.wicketId,
+      "u": this.ajaxUrl,
       "ep": data,
       // success
       "sh": [() => {
         let response = undefined;
-        if (Wicket.$(this.dispatcher.wicketId) !== null) {
-          response = Wicket.$(this.dispatcher.wicketId).temp;
-          delete Wicket.$(this.dispatcher.wicketId).temp;
+        if (Wicket.$(this.wicketId) !== null) {
+          response = Wicket.$(this.wicketId).temp;
+          delete Wicket.$(this.wicketId).temp;
         }
         if (response === undefined) {
           console.log('Server response did not contain brat data - ignoring');
@@ -163,15 +170,5 @@ export class Ajax {
   isReloadOkay() {
     // do not reload while data is pending
     this.pending == 0;
-  }
-
-  makeObsolete(all) {
-    if (all) {
-      this.pendingList = {};
-    } else {
-      $.each(this.pendingList, function (id, keep) {
-        if (!keep) delete this.pendingList[id];
-      });
-    }
   }
 }

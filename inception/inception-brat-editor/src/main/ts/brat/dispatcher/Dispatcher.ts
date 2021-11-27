@@ -49,20 +49,6 @@
 export class Dispatcher {
   table = {};
 
-  // WEBANNO EXTENSION BEGIN
-  ajaxUrl = 'ajax.cgi';
-  wicketId: string;
-  // WEBANNO EXTENSION END
-
-  constructor() {
-    // var dispatcher = {
-    //   on: this.on,
-    //   post:this. post,
-    //   proxy: this.proxy,
-    // };
-    // dispatchers.push(dispatcher);
-  }
-
   on(message, host, handler) {
     if (this.table[message] === undefined) {
       this.table[message] = [];
@@ -144,7 +130,7 @@ export class Dispatcher {
     }
 
     if (returnType == 'any') {
-      var i = results.length;
+      let i = results.length;
       while (i--) {
         if (results[i] !== false) return results[i];
       }
@@ -152,18 +138,12 @@ export class Dispatcher {
     }
 
     if (returnType == 'all') {
-      var i = results.length;
+      let i = results.length;
       while (i--) {
         if (results[i] === false) return results[i];
       }
     }
     
     return results;
-  }
-
-  proxy(destination, message) {
-    this.on(message, this, () => {
-      destination.post(message, Array.prototype.slice.call(arguments));
-    });
   }
 }

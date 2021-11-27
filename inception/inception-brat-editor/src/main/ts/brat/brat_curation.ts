@@ -24,9 +24,7 @@ declare let Wicket;
 function brat(markupId: string, controllerCallbackUrl: string, collCallbackUrl: string, docCallbackUrl: string) {
   Util.embedByURL(markupId, collCallbackUrl, docCallbackUrl,
     function (dispatcher) {
-      dispatcher.wicketId = markupId;
-      dispatcher.ajaxUrl = controllerCallbackUrl;
-      new Ajax(dispatcher);
+      new Ajax(dispatcher, markupId, controllerCallbackUrl);
       new CurationMod(dispatcher);
       Wicket.$(markupId).dispatcher = dispatcher;
     });
