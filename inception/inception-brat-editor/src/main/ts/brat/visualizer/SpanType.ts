@@ -38,6 +38,8 @@
  * SOFTWARE.
  */
 
+import { RelationType } from "./RelationType";
+
 /**
  * Class currently defined only for documentation purposes
  */
@@ -45,5 +47,5 @@ export class SpanType {
   bgColor: string;
   borderColor: string;
   fgColor: string;
-  arcs;
+  arcs: Array<RelationType>;
 }

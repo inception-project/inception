@@ -46,6 +46,7 @@ import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
 import { DiamAjax } from "../ajax/DiamAjax";
+import { SpanType } from "../visualizer/SpanType";
 
 export class AnnotatorUI {
   private data: DocumentData = null;
@@ -64,7 +65,7 @@ export class AnnotatorUI {
   private arcOptions = null;
   private editedSpan: Span = null;
   private editedFragment = null;
-  private spanTypes = null;
+  private spanTypes: Record<string, SpanType> = null;
   private selRect = null;
   private lastStartRec = null;
   private lastEndRec = null;
@@ -109,6 +110,8 @@ export class AnnotatorUI {
       on('contextmenu', this, this.contextMenu);
   }
 
+  // FIXME I think we don't need this anymore because we don't work with these numerical suffixes
+  // REC 2021-11-27
   private stripNumericSuffix(s) {
     // utility function, originally for stripping numerix suffixes
     // from arc types (e.g. "Theme2" -> "Theme"). For values
@@ -375,36 +378,9 @@ export class AnnotatorUI {
 
     if (this.arcDragOrigin) {
       if (this.arcDragJustStarted) {
-        // show the possible targets
-        const span = this.data.spans[this.arcDragOrigin];
-        const spanDesc = this.spanTypes[span.type] || {};
-
-        // separate out possible numeric suffix from type for highlight
-        // (instead of e.g. "Theme3", need to look for "Theme")
-        const noNumArcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
-        // var targetClasses = [];
-        let $targets = $();
-        $.each(spanDesc.arcs || [], (possibleArcNo, possibleArc) => {
-          if ((this.arcOptions && possibleArc.type == noNumArcType) || !(this.arcOptions && this.arcOptions.old_target)) {
-            $.each(possibleArc.targets || [], (possibleTargetNo, possibleTarget) => {
-              // speedup for #642: relevant browsers should support
-              // this function: http://www.quirksmode.org/dom/w3c_core.html#t11
-              // so we get off jQuery and get down to the metal:
-              // targetClasses.push('.span_' + possibleTarget);
-              $targets = $targets.add(this.svg.node.getElementsByClassName('span_' + possibleTarget));
-            });
-          }
-        });
-        // $(targetClasses.join(',')).not('[data-span-id="' + arcDragOrigin + '"]').addClass('reselectTarget');
-        // WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers
-        if (evt.shiftKey) {
-          $targets.addClass('reselectTarget');
-        }
-        else {
-          $targets.not('[data-span-id="' + this.arcDragOrigin + '"]').addClass('reselectTarget');
-        }
-        // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
+        this.initializeArcDragTargets(evt);
       }
+
       this.clearSelection();
       const mx = evt.pageX - this.svgPosition.left;
       const my = evt.pageY - this.svgPosition.top + 5; // TODO FIXME why +5?!?
@@ -425,6 +401,37 @@ export class AnnotatorUI {
     }
     this.arcDragJustStarted = false;
     this.spanDragJustStarted = false;
+  }
+
+  private initializeArcDragTargets(evt: MouseEvent) {
+    // show the possible targets
+    const span = this.data.spans[this.arcDragOrigin];
+    const spanDesc = this.spanTypes[span.type];
+
+    if (!spanDesc || !spanDesc.arcs || spanDesc.arcs.length == 0) {
+      return;
+    }
+
+    // separate out possible numeric suffix from type for highlight
+    // (instead of e.g. "Theme3", need to look for "Theme")
+    const noNumArcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
+
+    spanDesc.arcs.map(possibleArc => {
+      if (!(this.arcOptions && possibleArc.type == noNumArcType) || !(this.arcOptions && this.arcOptions.old_target)) {
+        return;
+      }
+
+      if (!possibleArc.targets || possibleArc.targets.length == 0) {
+        return;
+      }
+  
+      possibleArc.targets.map(possibleTarget => {
+        this.svg.find('.span_' + possibleTarget)
+          // When shift is pressed when the drag starts, then a self-referencing edge is allowed
+          .filter(e => evt.shiftKey || !e.hasClass(`[data-span-id="${this.arcDragOrigin}"]`))
+          .map(e => e.addClass('reselectTarget'));
+      });
+    });
   }
 
   private onMouseMoveSpanSelection(evt: MouseEvent) {

@@ -39,7 +39,6 @@
  */
 import { Dispatcher } from "../dispatcher/Dispatcher";
 import { Fragment } from "../visualizer/Fragment";
-import { Span } from "../visualizer/Span";
 import { Visualizer } from "../visualizer/Visualizer";
 import { VisualizerUI } from "../visualizer_ui/VisualizerUI";
 

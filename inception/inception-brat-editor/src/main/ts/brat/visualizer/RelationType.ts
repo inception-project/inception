@@ -44,10 +44,13 @@ import { PropertyDefinition} from "./PropertyDefinition";
  * Class currently defined only for documentation purposes
  */
 export class RelationType {
-  properties: Record<string, PropertyDefinition>;
-  arrowHead;
+  type: string;
+  color: string = undefined;
+  arrowHead: string;
+  labels: string[];
+  targets: string[];
+  dashArray: string;
   labelArrow;
   args;
-  dashArray;
-  color: string = undefined;
+  properties: Record<string, PropertyDefinition>;
 }

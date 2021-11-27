@@ -44,26 +44,27 @@ import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { OffsetsList } from "../visualizer/SourceData";
 import { DocumentData } from "../visualizer/DocumentData";
+import { RelationType } from "../visualizer/RelationType";
+import { SpanType } from "../visualizer/SpanType";
 
 export class VisualizerUI {
-  spanTypes = null;
-  relationTypesHash = null;
-  data: DocumentData = null;
-  coll;
-  doc;
-  args;
-  user = null;
-  annotationAvailable = false;
-  fileBrowserClosedWithSubmit = false;
+  private spanTypes: Record<string, SpanType> = null;
+  private relationTypesHash:Record<string, RelationType> = null;
+  private data: DocumentData = null;
+  private coll;
+  private doc;
+  private args;
+  private user = null;
+  private annotationAvailable = false;
 
   // normalization: server-side DB by norm DB name
-  normServerDbByNormDbName = {};
+  private normServerDbByNormDbName = {};
 
-  dispatcher: Dispatcher;
+  private dispatcher: Dispatcher;
 
-  commentPopup: JQuery;
-  commentDisplayed = false;
-  displayCommentTimer = null;
+  private commentPopup: JQuery;
+  private commentDisplayed = false;
+  private displayCommentTimer = null;
 
   constructor(dispatcher: Dispatcher) {
     this.commentPopup = $('#commentpopup');

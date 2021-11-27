@@ -3192,8 +3192,8 @@ export class Visualizer {
   renderAdjustLayoutRowSpacing(textGroup: SVGTypeMapping<SVGGElement>) {
     // Go through each row and adjust the row-initial and row-final spacing
     textGroup.children().filter(c => c.hasClass('text-row')).map(textRow => {
-      const rowInitialSpacing = textRow.children().filter(e => e.hasClass('row-initial'))[0];
-      const rowFinalSpacing = textRow.children().filter(e => e.hasClass('row-final'))[0];
+      const rowInitialSpacing = textRow.children().filter(c => c.hasClass('row-initial'))[0];
+      const rowFinalSpacing = textRow.children().filter(c => c.hasClass('row-final'))[0];
       // const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
       const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev().node.textContent];
       const lastChunkOffset = parseFloat(rowFinalSpacing.prev().node.getAttribute('x'));
@@ -3201,22 +3201,22 @@ export class Visualizer {
       if (this.rtlmode) {
         const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
         const initialSpacingX = this.canvasWidth - this.sentNumMargin - initialSpacingWidth;
-        rowInitialSpacing.attr('x', initialSpacingX);
+        rowInitialSpacing.x(initialSpacingX);
         rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
         const finalSpacingX = Math.max(lastChunkOffset - lastChunkWidth, 0);
         const finalSpacingWidth = finalSpacingX;
-        rowFinalSpacing.attr('x', finalSpacingX);
+        rowFinalSpacing.x(finalSpacingX);
         rowFinalSpacing.attr('textLength', finalSpacingWidth);
       } else {
         const initialSpacingX = this.sentNumMargin;
         const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
-        rowInitialSpacing.attr('x', initialSpacingX);
+        rowInitialSpacing.x(initialSpacingX);
         rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
         const finalSpacingX = lastChunkOffset + lastChunkWidth + 1;
         const finalSpacingWidth = this.canvasWidth - finalSpacingX;
-        rowFinalSpacing.attr('x', finalSpacingX);
+        rowFinalSpacing.x(finalSpacingX);
         rowFinalSpacing.attr('textLength', finalSpacingWidth);
       }
     });
