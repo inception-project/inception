@@ -1229,6 +1229,8 @@ export class Visualizer {
     filter.gaussianBlur(2, 2);
     filter.addTo(defs);
 
+    this.renderDragArcMarker(defs);
+
     return defs;
   }
 
@@ -1559,7 +1561,7 @@ export class Visualizer {
   /**
    * @return {string|undefined}
    */
-  makeArrow(defs: Defs, spec: string): string | undefined {
+  makeArrow(spec: string): string | undefined {
     const parsedSpec = spec.split(',');
     const type = parsedSpec[0];
     if (type === 'none') {
@@ -1600,7 +1602,7 @@ export class Visualizer {
           markerUnits: 'strokeWidth',
           'fill': color,
         })
-        .addTo(defs);
+        .addTo(this.svg.defs());
 
       this.svg.polygon([[0, 0], [width, height / 2], [0, height], [width / 12, height / 2]])
         .addTo(arrow);
@@ -1924,107 +1926,76 @@ export class Visualizer {
         }
 
         if (fragment === span.headFragment) {
+          const checkLeftRightArcs = (arc: Arc, refSpan: Span, leftSpan: Span) => {
+            const refChunk = leftSpan.headFragment.chunk;
+            if (!refChunk.row) {
+              hasRightArcs = true;
+              return;
+            }
+
+            let border: number;
+            if (refChunk.row.index === rowIndex) {
+              border = refChunk.translation.x + leftSpan.fragments[refSpan.fragments.length - 1].right;
+            } else {
+              if (this.rtlmode) {
+                border = 0;
+              } else {
+                border = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
+              }
+            }
+
+            let labels = Util.getArcLabels(this.spanTypes, refSpan.type, arc.type, this.relationTypesHash);
+            if (!labels.length)
+              labels = [arc.type];
+
+            if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
+              if (this.data.eventDescs[arc.eventDescId].labelText) {
+                labels = [this.data.eventDescs[arc.eventDescId].labelText];
+              }
+            }
+
+            const labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
+            const smallestLabelWidth = this.data.sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
+
+            const gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border);
+
+            let arcSpacing = smallestLabelWidth - gap;
+            if (!hasLeftArcs || spacing < arcSpacing) {
+              spacing = arcSpacing;
+              spacingChunkId = refChunk.index + 1;
+            }
+            arcSpacing = smallestLabelWidth - bx;
+            if (!hasLeftArcs || spacingRowBreak < arcSpacing) {
+              spacingRowBreak = arcSpacing;
+            }
+            hasLeftArcs = true;
+          }
+
           // find the gap to fit the backwards arcs, but only on
           // head fragment - other fragments don't have arcs
-          $.each(span.incoming, (arcId, arc) => {
+          span.incoming.map(arc => {
             const leftSpan = this.data.spans[arc.origin];
-            const origin = leftSpan.headFragment.chunk;
-            let border: number;
+            checkLeftRightArcs(arc, leftSpan, leftSpan);
+          });
+
+          span.outgoing.map(arc => {
+            const leftSpan = this.data.spans[arc.target];
+            checkLeftRightArcs(arc, span, leftSpan);
+          });
+
+          span.incoming.map(arc => {
+            const origin = this.data.spans[arc.origin].headFragment.chunk;
             if (chunk.index === origin.index) {
               hasInternalArcs = true;
             }
-            if (origin.row) {
-              let labels = Util.getArcLabels(this.spanTypes, leftSpan.type, arc.type, this.relationTypesHash);
-              if (!labels.length) {
-                labels = [arc.type];
-              }
-
-              if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
-                if (this.data.eventDescs[arc.eventDescId].labelText) {
-                  labels = [this.data.eventDescs[arc.eventDescId].labelText];
-                }
-              }
-
-              if (origin.row.index === rowIndex) {
-                border = origin.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
-              } else {
-                if (this.rtlmode) {
-                  border = 0;
-                } else {
-                  border = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
-                }
-              }
-
-              const labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
-              const smallestLabelWidth = this.data.sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
-
-              const gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border);
-
-              let arcSpacing = smallestLabelWidth - gap;
-              if (!hasLeftArcs || spacing < arcSpacing) {
-                spacing = arcSpacing;
-                spacingChunkId = origin.index + 1;
-              }
-              arcSpacing = smallestLabelWidth - bx;
-              if (!hasLeftArcs || spacingRowBreak < arcSpacing) {
-                spacingRowBreak = arcSpacing;
-              }
-              hasLeftArcs = true;
-            } else {
-              hasRightArcs = true;
-            }
-          });
-
-          $.each(span.outgoing, (arcId, arc) => {
-            const leftSpan = this.data.spans[arc.target];
-            const target = leftSpan.headFragment.chunk;
-            let border;
-            if (target.row) {
-              let labels = Util.getArcLabels(this.spanTypes, span.type, arc.type, this.relationTypesHash);
-              if (!labels.length)
-                labels = [arc.type];
-
-              if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
-                if (this.data.eventDescs[arc.eventDescId].labelText) {
-                  labels = [this.data.eventDescs[arc.eventDescId].labelText];
-                }
-              }
-
-              if (target.row.index === rowIndex) {
-                // same row, but before this
-                border = target.translation.x + leftSpan.fragments[leftSpan.fragments.length - 1].right;
-              } else {
-                if (this.rtlmode) {
-                  border = 0;
-                } else {
-                  border = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
-                }
-              }
-
-              const labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
-              const smallestLabelWidth = this.data.sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
-
-              const gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border);
-
-              let arcSpacing = smallestLabelWidth - gap;
-              if (!hasLeftArcs || spacing < arcSpacing) {
-                spacing = arcSpacing;
-                spacingChunkId = target.index + 1;
-              }
-              arcSpacing = smallestLabelWidth - bx;
-              if (!hasLeftArcs || spacingRowBreak < arcSpacing) {
-                spacingRowBreak = arcSpacing;
-              }
-              hasLeftArcs = true;
-            } else {
-              hasRightArcs = true;
-            }
           });
         }
+
         fragmentHeight += span.floor || Configuration.visual.curlyHeight;
         if (fragmentHeight > chunkHeight) {
           chunkHeight = fragmentHeight;
         }
+        
         hasAnnotations = true;
       }); // fragments
 
@@ -2573,9 +2544,9 @@ export class Visualizer {
     this.svg.polyline([[0, 0], [5, 2.5], [0, 5], [0.2, 2.5]]).addTo(arrowhead);
   }
 
-  renderArcs(rows: Row[], fragmentHeights: number[], defs: Defs) {
+  renderArcs(rows: Row[], fragmentHeights: number[]) {
     const arrows = {};
-    const arrow = this.makeArrow(defs, 'none');
+    const arrow = this.makeArrow('none');
     if (arrow) {
       arrows['none'] = arrow;
     }
@@ -2638,13 +2609,13 @@ export class Visualizer {
       const rightRow = right.chunk.row.index;
 
       if (!arrows[arrowHead]) {
-        const arrow = this.makeArrow(defs, arrowHead);
+        const arrow = this.makeArrow(arrowHead);
         if (arrow) {
           arrows[arrowHead] = arrow;
         }
       }
       if (!arrows[labelArrowHead]) {
-        const arrow = this.makeArrow(defs, labelArrowHead);
+        const arrow = this.makeArrow(labelArrowHead);
         if (arrow) {
           arrows[labelArrowHead] = arrow;
         }
@@ -3086,51 +3057,22 @@ export class Visualizer {
     return oversized;
   }
 
-  renderRows(rows: Row[], backgroundGroup: SVGTypeMapping<SVGGElement>): [number, SVGTypeMapping<SVGGElement>] {
-    const sentNumGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
-      .addClass('sentnum').addClass('unselectable');
-
+  renderRows(rows: Row[], sentNumGroup: SVGTypeMapping<SVGGElement>, backgroundGroup: SVGTypeMapping<SVGGElement>): number {
     // position the rows
     let y = Configuration.visual.margin.y;
     let currentSent: number;
     rows.map(row => {
       // find the maximum fragment height
-      row.chunks.map(chunk => {
-        chunk.fragments.map(fragment => {
-          if (row.maxSpanHeight < fragment.height) {
-            row.maxSpanHeight = fragment.height;
-          }
-        });
-      });
-
-      // SLOW (#724) and replaced with calculations:
-      //
-      // var rowBox = row.group.getBBox();
-      // // Make it work on IE
-      // rowBox = { x: rowBox.x, y: rowBox.y, height: rowBox.height, width: rowBox.width };
-      // // Make it work on Firefox and Opera
-      // if (rowBox.height == -Infinity) {
-      //   rowBox = { x: 0, y: 0, height: 0, width: 0 };
-      // }
-      // XXX TODO HACK: find out where 5 and 1.5 come from!
-      // This is the fix for #724, but the numbers are guessed.
-      let rowBoxHeight = Math.max(row.maxArcHeight + 5, row.maxSpanHeight + 1.5); // XXX TODO HACK: why 5, 1.5?
-      if (row.hasAnnotations) {
-        // rowBox.height = -rowBox.y + rowSpacing;
-        rowBoxHeight += this.rowSpacing + 1.5; // XXX TODO HACK: why 1.5?
-      } else {
-        rowBoxHeight -= 5; // XXX TODO HACK: why -5?
-      }
-
-      rowBoxHeight += this.rowPadding;
+      row.updateFragmentHeight();
+      row.updateRowBoxHeight(this.rowSpacing, this.rowPadding);
 
       if (row.sentence) {
         currentSent = row.sentence;
       }
 
-      this.renderRowBackground(backgroundGroup, row, y, rowBoxHeight, currentSent);
+      this.renderRowBackground(backgroundGroup, row, y, currentSent);
 
-      y += rowBoxHeight;
+      y += row.boxHeight;
       y += this.data.sizes.texts.height;
       row.textY = y - this.rowPadding;
 
@@ -3147,10 +3089,10 @@ export class Visualizer {
 
     y += Configuration.visual.margin.y;
 
-    return [y, sentNumGroup];
+    return y;
   }
 
-  renderRowBackground(backgroundGroup: SVGTypeMapping<SVGGElement>, row: Row, y: number, rowBoxHeight: number, currentSent: number) {
+  renderRowBackground(backgroundGroup: SVGTypeMapping<SVGGElement>, row: Row, y: number, currentSent: number) {
     let bgClass: string;
     if (Configuration.textBackgrounds === "striped") {
       // give every other sentence a different bg class
@@ -3161,7 +3103,7 @@ export class Visualizer {
     }
 
     const textSizes = this.data.sizes.texts;
-    this.svg.rect(this.canvasWidth, rowBoxHeight + textSizes.height + 1)
+    this.svg.rect(this.canvasWidth, row.boxHeight + textSizes.height + 1)
       .translate(0, y + textSizes.y + textSizes.height)
       .addClass(bgClass)
       .addTo(backgroundGroup);
@@ -3171,7 +3113,7 @@ export class Visualizer {
         .x(this.rtlmode ? this.canvasWidth - this.sentNumMargin : 0)
         .y(y + textSizes.y + textSizes.height)
         .width(this.sentNumMargin)
-        .height(rowBoxHeight + textSizes.height + 1)
+        .height(row.boxHeight + textSizes.height + 1)
         .addClass('backgroundHighlight')
         .addTo(backgroundGroup);
     }
@@ -3327,7 +3269,6 @@ export class Visualizer {
     Util.profileEnd('before render');
     Util.profileStart('render');
 
-    Util.profileStart('init');
     if (!sourceData && !this.data) {
       this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
       return;
@@ -3355,6 +3296,7 @@ export class Visualizer {
       return;
     }
 
+    Util.profileStart('init');
     if (this.rtlmode) {
       this.svg.attr('direction', 'rtl');
     }
@@ -3370,11 +3312,17 @@ export class Visualizer {
     // Take hairline border of SVG into account
     this.canvasWidth -= 4;
 
-    const defs = this.addHeaderAndDefs();
+    this.addHeaderAndDefs();
+
     const backgroundGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
       .addClass('background')
       .attr('pointer-events', 'none');
+
+    const sentNumGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
+      .addClass('sentnum').addClass('unselectable');
+
     this.highlightGroup = this.svg.group().addClass('highlight');
+
     const textGroup: SVGTypeMapping<SVGGElement> = this.svg.group().addClass('text');
     Util.profileEnd('init');
 
@@ -3389,40 +3337,29 @@ export class Visualizer {
     const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(sourceData, this.data.chunks, maxTextWidth);
     Util.profileEnd('chunks');
 
-    const steps = new Array<{ name: string, call: VoidFunction }>();
-    steps.push({
-      name: 'arcsPrep',
-      call: () => {
-        this.renderBumpFragmentHeightsMinimumToArcStartHeight(fragmentHeights);
-        this.renderCalculateArcJumpHeight(fragmentHeights);
-        this.renderSortArcs();
-        this.renderAssignFragmentsToRows(rows, fragmentHeights);
-        this.renderDragArcMarker(defs);
-      }
-    });
+    Util.profileStart('arcsPrep');
+    this.renderBumpFragmentHeightsMinimumToArcStartHeight(fragmentHeights);
+    this.renderCalculateArcJumpHeight(fragmentHeights);
+    this.renderSortArcs();
+    this.renderAssignFragmentsToRows(rows, fragmentHeights);
+    Util.profileEnd('arcsPrep');
 
-    steps.push({
-      name: 'arcs',
-      call: () => this.renderArcs(rows, fragmentHeights, defs)
-    });
+    Util.profileStart('arcsPrep');
+    this.renderArcs(rows, fragmentHeights);
+    Util.profileEnd('arcs');
 
-    steps.push({
-      name: 'fragmentConnectors',
-      call: () => this.renderFragmentConnectors(rows)
-    });
-    this.renderSteps(steps);
+    Util.profileStart('fragmentConnectors');
+    this.renderFragmentConnectors(rows);
+    Util.profileEnd('fragmentConnectors');
 
     Util.profileStart('rows');
-    const [y, sentNumGroup] = this.renderRows(rows, backgroundGroup);
+    const y = this.renderRows(rows, sentNumGroup, backgroundGroup);
     Util.profileEnd('rows');
 
-    const steps2 = new Array<{ name: string, call: VoidFunction }>();
-    steps2.push({
-      name: 'chunkFinish',
-      call: () => this.renderChunksPass2(textGroup, textMarkedRows)
-    });
-    this.renderSteps(steps2);
-    
+    Util.profileStart('chunkFinish');
+    this.renderChunksPass2(textGroup, textMarkedRows);
+    Util.profileEnd('chunkFinish');
+
     Util.profileStart('finish');
 
     Util.profileStart('adjust margin');
@@ -3461,22 +3398,6 @@ export class Visualizer {
     }
 
     this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
-  }
-
-  private renderSteps(steps: Array<{ name: string, call: VoidFunction }>) {
-    steps.forEach(step => {
-      Util.profileStart(step.name);
-
-      if (true) {
-        step.call();
-//        (async () => await new Promise(resolve => setTimeout(resolve, 5000)))();
-      }
-      else {
-//        requestAnimationFrame(step.call);
-      }
-
-      Util.profileEnd(step.name);
-    });
   }
 
   private renderAdjustMargin(y: number, sentNumGroup: SVGTypeMapping<SVGGElement>) {
