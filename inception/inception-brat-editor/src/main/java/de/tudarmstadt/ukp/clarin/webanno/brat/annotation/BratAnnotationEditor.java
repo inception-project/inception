@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.ACTION_CONTEXT_MENU;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getActionFromRequest;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getVidFromRequest;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
@@ -131,6 +133,12 @@ public class BratAnnotationEditor
     @SpringBean(name = "lazyDetailHandler")
     private EditorAjaxRequestHandler lazyDetailHandler;
 
+    @SpringBean(name = "fillSlotWithNewAnnotationHandler")
+    private EditorAjaxRequestHandler fillSlotWithNewAnnotationHandler;
+
+    @SpringBean(name = "fillSlotWithExistingAnnotationHandler")
+    private EditorAjaxRequestHandler fillSlotWithExistingAnnotationHandler;
+
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
 
@@ -165,61 +173,13 @@ public class BratAnnotationEditor
 
                 long timerStart = System.currentTimeMillis();
 
-                final IRequestParameters requestParameters = getRequest().getPostParameters();
-
                 // Get action from the request
-                String action = BratRequestUtils.getActionFromRequest(requestParameters);
+                String action = getActionFromRequest(getRequest().getPostParameters());
                 LOG.trace("AJAX-RPC CALLED: [{}]", action);
-
-                // Parse annotation ID if present in request
-                final VID paramId = BratRequestUtils.getVidFromRequest(requestParameters);
 
                 Object result = null;
                 try {
-                    // Whenever an action should be performed, do ONLY perform this action and
-                    // nothing else, and only if the item actually is an action item
-                    if (lazyDetailHandler.accepts(getRequest())) {
-                        result = lazyDetailHandler.handle(aTarget, getRequest());
-                    }
-                    else if (extensionActionHandler.accepts(getRequest())) {
-                        extensionActionHandler.handle(aTarget, getRequest());
-                    }
-                    else if (customActionHandler.accepts(getRequest())) {
-                        customActionHandler.handle(aTarget, getRequest());
-                    }
-                    else {
-                        // Doing anything but selecting or creating a span annotation when a
-                        // slot is armed will un-arm it
-                        if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
-                            getModelObject().clearArmedSlot();
-                        }
-
-                        if (ACTION_CONTEXT_MENU.equals(action.toString()) && !paramId.isSlotSet()) {
-                            final CAS cas = getCasProvider().get();
-                            actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
-                        }
-                        else if (selectAnnotationHandler.accepts(getRequest())) {
-                            selectAnnotationHandler.handle(aTarget, getRequest());
-                        }
-                        else if (createSpanAnnotationHandler.accepts(getRequest())) {
-                            createSpanAnnotationHandler.handle(aTarget, getRequest());
-                            result = new SpanAnnotationResponse();
-                        }
-                        else if (createRelationAnnotationHandler.accepts(getRequest())) {
-                            result = createRelationAnnotationHandler.handle(aTarget, getRequest());
-                            result = new ArcAnnotationResponse();
-                        }
-                        else if (LoadConfResponse.is(action)) {
-                            result = new LoadConfResponse(bratProperties);
-                        }
-                        else if (GetCollectionInformationResponse.is(action)) {
-                            result = actionGetCollectionInformation();
-                        }
-                        else if (GetDocumentResponse.is(action)) {
-                            final CAS cas = getCasProvider().get();
-                            result = actionGetDocument(cas);
-                        }
-                    }
+                    result = handleRequest(aTarget);
                 }
                 catch (Exception e) {
                     handleError("Error: " + getRootCauseMessage(e), e);
@@ -242,6 +202,84 @@ public class BratAnnotationEditor
                 LOG.trace("AJAX-RPC DONE: [{}] completed in {}ms", action, duration);
 
                 serverTiming("Brat-AJAX", "Brat-AJAX (" + action + ")", duration);
+            }
+
+            private Object handleRequest(AjaxRequestTarget aTarget) throws IOException
+            {
+                IRequestParameters requestParameters = getRequest().getPostParameters();
+                String action = getActionFromRequest(requestParameters);
+
+                // RENDERING REQUEST HANDLERS
+
+                if (LoadConfResponse.is(action)) {
+                    return new LoadConfResponse(bratProperties);
+                }
+
+                if (GetCollectionInformationResponse.is(action)) {
+                    return actionGetCollectionInformation();
+                }
+
+                if (GetDocumentResponse.is(action)) {
+                    return actionGetDocument();
+                }
+
+                // Whenever an action should be performed, do ONLY perform this action and
+                // nothing else, and only if the item actually is an action item
+                if (lazyDetailHandler.accepts(getRequest())) {
+                    return lazyDetailHandler.handle(aTarget, getRequest());
+                }
+
+                // SLOT FILLER ACTION HANDLERS
+
+                if (fillSlotWithNewAnnotationHandler.accepts(getRequest())) {
+                    return fillSlotWithNewAnnotationHandler.handle(aTarget, getRequest());
+                }
+
+                if (fillSlotWithExistingAnnotationHandler.accepts(getRequest())) {
+                    return fillSlotWithExistingAnnotationHandler.handle(aTarget, getRequest());
+                }
+
+                // If the action is not a slot filler action, then we clear the armed slot
+                if (getModelObject().isSlotArmed()) {
+                    getModelObject().clearArmedSlot();
+                }
+
+                // ANNOTATION ACTION HANDLERS
+                if (extensionActionHandler.accepts(getRequest())) {
+                    extensionActionHandler.handle(aTarget, getRequest());
+                    return null;
+                }
+
+                if (customActionHandler.accepts(getRequest())) {
+                    customActionHandler.handle(aTarget, getRequest());
+                    return null;
+                }
+
+                // Parse annotation ID if present in request
+                // FIXME Should we really un-arm the active slot when the context menu is opened?
+                final VID paramId = getVidFromRequest(requestParameters);
+                if (ACTION_CONTEXT_MENU.equals(action.toString()) && !paramId.isSlotSet()) {
+                    final CAS cas = getCasProvider().get();
+                    actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
+                    return null;
+                }
+
+                if (selectAnnotationHandler.accepts(getRequest())) {
+                    selectAnnotationHandler.handle(aTarget, getRequest());
+                    return null;
+                }
+
+                if (createSpanAnnotationHandler.accepts(getRequest())) {
+                    createSpanAnnotationHandler.handle(aTarget, getRequest());
+                    return new SpanAnnotationResponse();
+                }
+
+                if (createRelationAnnotationHandler.accepts(getRequest())) {
+                    createRelationAnnotationHandler.handle(aTarget, getRequest());
+                    return new ArcAnnotationResponse();
+                }
+
+                return null;
             }
         };
 
@@ -311,15 +349,17 @@ public class BratAnnotationEditor
         return info;
     }
 
-    private String actionGetDocument(CAS aCas)
+    private String actionGetDocument() throws IOException
     {
         StopWatch timer = new StopWatch();
         timer.start();
 
+        final CAS cas = getCasProvider().get();
+
         GetDocumentResponse response = new GetDocumentResponse();
         String json;
         if (getModelObject().getProject() != null) {
-            render(response, aCas);
+            render(response, cas);
             json = toJson(response);
             lastRenderedJson = json;
             lastRenderedJsonParsed = null;

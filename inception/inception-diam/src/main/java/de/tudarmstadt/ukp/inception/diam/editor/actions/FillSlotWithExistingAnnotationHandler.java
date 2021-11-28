@@ -22,8 +22,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -31,21 +29,14 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#extensionActionHandler}.
+ * {@link DiamEditorAutoConfig#fillSlotWithExistingAnnotationHandler}.
  * </p>
  */
-@Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)
-public class ExtensionActionHandler
+@Order(EditorAjaxRequestHandler.PRIO_SLOT_FILLER_HANDLER)
+public class FillSlotWithExistingAnnotationHandler
     extends EditorAjaxRequestHandlerBase
 {
-    public static final String COMMAND = "doAction";
-
-    private final AnnotationEditorExtensionRegistry extensionRegistry;
-
-    public ExtensionActionHandler(AnnotationEditorExtensionRegistry aExtensionRegistry)
-    {
-        extensionRegistry = aExtensionRegistry;
-    }
+    public static final String COMMAND = SelectAnnotationHandler.COMMAND;
 
     @Override
     public String getCommand()
@@ -54,27 +45,27 @@ public class ExtensionActionHandler
     }
 
     @Override
-    public boolean accepts(Request aRequest)
-    {
-        return getVid(aRequest).isSynthetic();
-    }
-
-    @Override
     public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
             AnnotationPageBase page = getPage();
-            String action = getAction(aRequest);
-            VID paramId = getVid(aRequest);
             CAS cas = page.getEditorCas();
 
-            extensionRegistry.fireAction(page.getAnnotationActionHandler(), page.getModelObject(),
-                    aTarget, cas, paramId, action);
+            // When filling a slot, the current selection is *NOT* changed. The
+            // Span annotation which owns the slot that is being filled remains
+            // selected!
+            page.getAnnotationActionHandler().actionFillSlot(aTarget, cas, 0, 0, getVid(aRequest));
 
-            return new DefaultAjaxResponse(action);
+            return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
             return handleError("Unable to load data", e);
         }
+    }
+
+    @Override
+    public boolean accepts(Request aRequest)
+    {
+        return super.accepts(aRequest) && getAnnotatorState().isSlotArmed();
     }
 }

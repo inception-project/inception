@@ -31,6 +31,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.util.string.StringValue;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
  * This class is exposed as a Spring Component via {@link DiamEditorAutoConfig#customActionHandler}.
  * </p>
  */
+@Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)
 public class CustomActionHandler
     extends EditorAjaxRequestHandlerBase
 {
@@ -77,7 +79,7 @@ public class CustomActionHandler
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError(aTarget, "Unable to load data", e);
+            return handleError("Unable to load data", e);
         }
     }
 

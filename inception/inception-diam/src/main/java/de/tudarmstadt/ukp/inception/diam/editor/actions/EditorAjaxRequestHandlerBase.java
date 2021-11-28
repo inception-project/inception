@@ -30,7 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 public abstract class EditorAjaxRequestHandlerBase
@@ -42,6 +44,23 @@ public abstract class EditorAjaxRequestHandlerBase
     public String getId()
     {
         return getCommand();
+    }
+
+    protected AjaxRequestTarget getAjaxRequestTarget()
+    {
+        return RequestCycle.get() //
+                .find(AjaxRequestTarget.class) //
+                .get();
+    }
+
+    protected AnnotationPageBase getPage()
+    {
+        return (AnnotationPageBase) getAjaxRequestTarget().getPage();
+    }
+
+    protected AnnotatorState getAnnotatorState()
+    {
+        return getPage().getModelObject();
     }
 
     protected String getAction(Request aRequest)
@@ -56,16 +75,17 @@ public abstract class EditorAjaxRequestHandlerBase
         return VID.parseOptional(requestParameters.getParameterValue(PARAM_ID).toString());
     }
 
-    protected DefaultAjaxResponse handleError(AjaxRequestTarget aTarget, String aMessage,
-            Exception e)
+    protected DefaultAjaxResponse handleError(String aMessage, Exception e)
     {
-        aTarget.addChildren(aTarget.getPage(), IFeedback.class);
+        AjaxRequestTarget target = getAjaxRequestTarget();
+
+        target.addChildren(target.getPage(), IFeedback.class);
 
         if (e instanceof AnnotationException) {
             String fullMessage = aMessage + ": " + e.getMessage();
             // These are common exceptions happening as part of the user interaction. We do
             // not really need to log their stack trace to the log.
-            aTarget.getPage().error(fullMessage);
+            target.getPage().error(fullMessage);
             // If debug is enabled, we'll also write the error to the log just in case.
             if (LOG.isDebugEnabled()) {
                 LOG.error(fullMessage, e);
@@ -75,7 +95,7 @@ public abstract class EditorAjaxRequestHandlerBase
         }
 
         LOG.error("{}", aMessage, e);
-        aTarget.getPage().error(aMessage);
+        target.getPage().error(aMessage);
         return new DefaultAjaxResponse(getAction(RequestCycle.get().getRequest()),
                 asList(aMessage));
     }
