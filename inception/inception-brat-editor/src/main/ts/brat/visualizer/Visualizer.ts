@@ -3105,9 +3105,12 @@ export class Visualizer {
         textX = (this.sentNumMargin - Configuration.visual.margin.x);
       }
       const text = this.svg.plain(`${row.sentence}`)
-        .amove(textX, y - this.rowPadding)
         .attr('data-sent', row.sentence)
         .css('cursor', 'pointer');
+      // Setting the attributes directly is faster than calling amove() since the latter internally
+      // triggers a relayout
+      text.node.setAttribute('x', `${textX}`);
+      text.node.setAttribute('y', `${y - this.rowPadding}`);
       text.addTo(sentNumGroup);
 
       const sentComment = this.data.sentComment[row.sentence];
