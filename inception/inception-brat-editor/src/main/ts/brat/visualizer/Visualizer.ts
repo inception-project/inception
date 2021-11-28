@@ -1132,7 +1132,7 @@ export class Visualizer {
         if (fragment.span.labelText) {
           fragment.labelText = fragment.span.labelText;
         }
-        const svgtext = this.svg.text("").build(true); // one "text" element per row
+        const svgtext = this.svg.plain("").build(true); // one "text" element per row
         const postfixArray = [];
         let prefix = '';
         let postfix = '';
@@ -1247,7 +1247,7 @@ export class Visualizer {
     // changed from $.each because of #264 ('length' can appear)
     for (const text in textsHash) {
       if (Object.prototype.hasOwnProperty.call(textsHash, text)) {
-        this.svg.text(text).addTo(textMeasureGroup);
+        this.svg.plain(text).addTo(textMeasureGroup);
       }
     }
 
@@ -1906,7 +1906,7 @@ export class Visualizer {
         }
 
         fragment.group.add(this.data.spanAnnTexts[fragment.glyphedLabelText].clone()
-          .translate(x, y - span.floor)
+          .amove(x, y - span.floor)
           .fill(fgColor));
 
         // Make curlies to show the fragment
@@ -2762,8 +2762,7 @@ export class Visualizer {
 
         if (arc.marked) {
           this.svg.rect()
-            .x(textBox.x - this.markedArcSize)
-            .y(textBox.y - this.markedArcSize)
+            .move(textBox.x - this.markedArcSize, textBox.y - this.markedArcSize)
             .width(textBox.width + 2 * this.markedArcSize)
             .height(textBox.height + 2 * this.markedArcSize)
             .attr({
@@ -3096,14 +3095,13 @@ export class Visualizer {
 
     const textSizes = this.data.sizes.texts;
     this.svg.rect(this.canvasWidth, row.boxHeight + textSizes.height + 1)
-      .translate(0, y + textSizes.y + textSizes.height)
+      .move(0, y + textSizes.y + textSizes.height)
       .addClass(bgClass)
       .addTo(backgroundGroup);
 
     if (row.sentence && this.data.markedSent[currentSent]) {
       this.svg.rect()
-        .x(this.rtlmode ? this.canvasWidth - this.sentNumMargin : 0)
-        .y(y + textSizes.y + textSizes.height)
+        .move(this.rtlmode ? this.canvasWidth - this.sentNumMargin : 0, y + textSizes.y + textSizes.height)
         .width(this.sentNumMargin)
         .height(row.boxHeight + textSizes.height + 1)
         .addClass('backgroundHighlight')
@@ -3885,8 +3883,7 @@ export class Visualizer {
 
   renderArcShadow(arc: Arc, shadowGroup: SVGTypeMapping<SVGGElement>, textBox: { x: number; y: number; width: number; height: number; }) {
     return this.svg.rect()
-      .x(textBox.x - this.arcLabelShadowSize)
-      .y(textBox.y - this.arcLabelShadowSize)
+      .move(textBox.x - this.arcLabelShadowSize, textBox.y - this.arcLabelShadowSize)
       .width(textBox.width + 2 * this.arcLabelShadowSize)
       .height(textBox.height + 2 * this.arcLabelShadowSize)
       .attr({
@@ -3912,8 +3909,7 @@ export class Visualizer {
 
   renderFragmentShadowRect(bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
     return this.svg.rect()
-      .x(bx - this.rectShadowSize)
-      .y(by - this.rectShadowSize)
+      .move(bx - this.rectShadowSize, by - this.rectShadowSize)
       .width(bw + 2 * this.rectShadowSize)
       .height(bh + 2 * this.rectShadowSize)
       .attr({
