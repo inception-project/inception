@@ -86,7 +86,7 @@ public class CreateRelationAnnotationHandler
 
         AnnotatorState state = page.getModelObject();
         Selection selection = state.getSelection();
-        selection.selectArc(VID.NONE_ID, originFs, targetFs);
+        selection.selectArc(originFs, targetFs);
 
         page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
     }

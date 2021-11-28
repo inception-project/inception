@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.util.string.StringValue;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -43,10 +42,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.LazyDetail;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.LazyDetailsResponse;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DiamEditorAutoConfig#lazyDetailsLookupService}.
+ * </p>
+ */
 public class LazyDetailsLookupServiceImpl
     implements LazyDetailsLookupService
 {
@@ -60,7 +65,6 @@ public class LazyDetailsLookupServiceImpl
             LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        super();
         annotationService = aAnnotationService;
         extensionRegistry = aExtensionRegistry;
         layerSupportRegistry = aLayerSupportRegistry;

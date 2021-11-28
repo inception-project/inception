@@ -26,6 +26,8 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CustomActionHandler;
@@ -36,6 +38,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.ExtensionActionHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
+import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
 
 // @ConditionalOnProperty(name = "diam.enabled", havingValue = "true", matchIfMissing = false)
 @Configuration
@@ -80,9 +83,19 @@ public class DiamEditorAutoConfig
     }
 
     @Bean
-    public LazyDetailsHandler lazyDetailHandler(
-            LazyDetailsLookupService aLazyDetailsLookupService)
+    public LazyDetailsHandler lazyDetailHandler(LazyDetailsLookupService aLazyDetailsLookupService)
     {
         return new LazyDetailsHandler(aLazyDetailsLookupService);
+    }
+
+    @Bean
+    public LazyDetailsLookupService lazyDetailsLookupService(
+            AnnotationSchemaService aAnnotationService,
+            AnnotationEditorExtensionRegistry aExtensionRegistry,
+            LayerSupportRegistry aLayerSupportRegistry,
+            FeatureSupportRegistry aFeatureSupportRegistry)
+    {
+        return new LazyDetailsLookupServiceImpl(aAnnotationService, aExtensionRegistry,
+                aLayerSupportRegistry, aFeatureSupportRegistry);
     }
 }
