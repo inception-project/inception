@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
+import java.util.Optional;
+
 import org.apache.wicket.request.Request;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
@@ -24,5 +26,5 @@ import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 public interface EditorAjaxRequestHandlerExtensionPoint
     extends ExtensionPoint<Request, EditorAjaxRequestHandler>
 {
-    // No additional methods
+    Optional<EditorAjaxRequestHandler> getHandler(Request aRequest);
 }

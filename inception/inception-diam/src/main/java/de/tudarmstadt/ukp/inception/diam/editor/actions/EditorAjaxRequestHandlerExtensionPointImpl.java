@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.request.Request;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,5 +41,13 @@ public class EditorAjaxRequestHandlerExtensionPointImpl
             @Lazy @Autowired(required = false) List<EditorAjaxRequestHandler> aExtensions)
     {
         super(aExtensions);
+    }
+
+    @Override
+    public Optional<EditorAjaxRequestHandler> getHandler(Request aRequest)
+    {
+        return getExtensions().stream() //
+                .filter(handler -> handler.accepts(aRequest)) //
+                .findFirst();
     }
 }

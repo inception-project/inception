@@ -71,18 +71,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRendered
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
@@ -93,7 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 
 /**
  * Brat annotator component.
@@ -110,34 +106,9 @@ public class BratAnnotationEditor
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
-    private @SpringBean LayerSupportRegistry layerSupportRegistry;
-    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
-
-    @SpringBean(name = "extensionActionHandler")
-    private EditorAjaxRequestHandler extensionActionHandler;
-
-    @SpringBean(name = "customActionHandler")
-    private EditorAjaxRequestHandler customActionHandler;
-
-    @SpringBean(name = "createSpanAnnotationHandler")
-    private EditorAjaxRequestHandler createSpanAnnotationHandler;
-
-    @SpringBean(name = "createRelationAnnotationHandler")
-    private EditorAjaxRequestHandler createRelationAnnotationHandler;
-
-    @SpringBean(name = "selectAnnotationHandler")
-    private EditorAjaxRequestHandler selectAnnotationHandler;
-
-    @SpringBean(name = "lazyDetailHandler")
-    private EditorAjaxRequestHandler lazyDetailHandler;
-
-    @SpringBean(name = "fillSlotWithNewAnnotationHandler")
-    private EditorAjaxRequestHandler fillSlotWithNewAnnotationHandler;
-
-    @SpringBean(name = "fillSlotWithExistingAnnotationHandler")
-    private EditorAjaxRequestHandler fillSlotWithExistingAnnotationHandler;
+    private @SpringBean EditorAjaxRequestHandlerExtensionPoint handlers;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -209,8 +180,6 @@ public class BratAnnotationEditor
                 IRequestParameters requestParameters = getRequest().getPostParameters();
                 String action = getActionFromRequest(requestParameters);
 
-                // RENDERING REQUEST HANDLERS
-
                 if (LoadConfResponse.is(action)) {
                     return new LoadConfResponse(bratProperties);
                 }
@@ -223,40 +192,7 @@ public class BratAnnotationEditor
                     return actionGetDocument();
                 }
 
-                // Whenever an action should be performed, do ONLY perform this action and
-                // nothing else, and only if the item actually is an action item
-                if (lazyDetailHandler.accepts(getRequest())) {
-                    return lazyDetailHandler.handle(aTarget, getRequest());
-                }
-
-                // SLOT FILLER ACTION HANDLERS
-
-                if (fillSlotWithNewAnnotationHandler.accepts(getRequest())) {
-                    return fillSlotWithNewAnnotationHandler.handle(aTarget, getRequest());
-                }
-
-                if (fillSlotWithExistingAnnotationHandler.accepts(getRequest())) {
-                    return fillSlotWithExistingAnnotationHandler.handle(aTarget, getRequest());
-                }
-
-                // If the action is not a slot filler action, then we clear the armed slot
-                if (getModelObject().isSlotArmed()) {
-                    getModelObject().clearArmedSlot();
-                }
-
-                // ANNOTATION ACTION HANDLERS
-                if (extensionActionHandler.accepts(getRequest())) {
-                    extensionActionHandler.handle(aTarget, getRequest());
-                    return null;
-                }
-
-                if (customActionHandler.accepts(getRequest())) {
-                    customActionHandler.handle(aTarget, getRequest());
-                    return null;
-                }
-
-                // Parse annotation ID if present in request
-                // FIXME Should we really un-arm the active slot when the context menu is opened?
+                // FIXME Should we un-arm the active slot when the context menu is opened?
                 final VID paramId = getVidFromRequest(requestParameters);
                 if (ACTION_CONTEXT_MENU.equals(action.toString()) && !paramId.isSlotSet()) {
                     final CAS cas = getCasProvider().get();
@@ -264,22 +200,9 @@ public class BratAnnotationEditor
                     return null;
                 }
 
-                if (selectAnnotationHandler.accepts(getRequest())) {
-                    selectAnnotationHandler.handle(aTarget, getRequest());
-                    return null;
-                }
-
-                if (createSpanAnnotationHandler.accepts(getRequest())) {
-                    createSpanAnnotationHandler.handle(aTarget, getRequest());
-                    return new SpanAnnotationResponse();
-                }
-
-                if (createRelationAnnotationHandler.accepts(getRequest())) {
-                    createRelationAnnotationHandler.handle(aTarget, getRequest());
-                    return new ArcAnnotationResponse();
-                }
-
-                return null;
+                return handlers.getHandler(getRequest()) //
+                        .map(handler -> handler.handle(aTarget, getRequest())) //
+                        .orElse(null);
             }
         };
 
