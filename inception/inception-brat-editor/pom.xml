@@ -24,10 +24,6 @@
   </parent>
   <artifactId>inception-brat-editor</artifactId>
   <name>INCEpTION - Editor - brat</name>
-  <packaging>jar</packaging>
-  <properties>
-    <maven.surefire.argLine>-Djdk.attach.allowAttachSelf</maven.surefire.argLine>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -194,6 +190,16 @@
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
+          <execution>
+            <id>npm link dependency</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <arguments>link @inception-project/inception-diam</arguments>
+            </configuration>
+          </execution>
           <execution>
             <id>npm build:brat</id>
             <goals>

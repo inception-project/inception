@@ -45,7 +45,7 @@ import { Span } from "../visualizer/Span";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
-import { DiamAjax } from "../ajax/DiamAjax";
+import { DiamAjax } from "@inception-project/inception-diam/client/DiamAjax";
 import { SpanType } from "../visualizer/SpanType";
 
 export class AnnotatorUI {
@@ -260,8 +260,6 @@ export class AnnotatorUI {
     const originSpanId = evt.target.getAttribute('data-arc-origin');
     const targetSpanId = evt.target.getAttribute('data-arc-target');
     const type = evt.target.getAttribute('data-arc-role');
-    const originSpan = this.data.spans[originSpanId];
-    const targetSpan = this.data.spans[targetSpanId];
     this.arcOptions = {
       action: 'createArc',
       origin: originSpanId,
@@ -272,6 +270,7 @@ export class AnnotatorUI {
       collection: this.coll,
       'document': this.doc
     };
+
     const eventDescId = evt.target.getAttribute('data-arc-ed');
     if (eventDescId) {
       const eventDesc = this.data.eventDescs[eventDescId];
@@ -280,9 +279,8 @@ export class AnnotatorUI {
         this.arcOptions['right'] = eventDesc.rightSpans.join(',');
       }
     }
-    const arcId = eventDescId || [originSpanId, type, targetSpanId];
 
-    this.sendArcSelected(arcId);
+    this.ajax.selectAnnotation(eventDescId);
   }
 
   private selectSpanAnnotation(evt: MouseEvent) {
@@ -300,7 +298,7 @@ export class AnnotatorUI {
       id: id,
     };
 
-    this.sendSpanAnnotationSelected(id);
+    this.ajax.selectAnnotation(id)
   }
 
   private startArcDrag(originId) {
@@ -424,7 +422,7 @@ export class AnnotatorUI {
       if (!possibleArc.targets || possibleArc.targets.length == 0) {
         return;
       }
-  
+
       possibleArc.targets.map(possibleTarget => {
         this.svg.find('.span_' + possibleTarget)
           // When shift is pressed when the drag starts, then a self-referencing edge is allowed
@@ -658,22 +656,6 @@ export class AnnotatorUI {
     }
   }
 
-  private sendSpanAnnotationSelected(id: string) {
-    this.ajax.selectAnnotation(id)
-  }
-
-  private sendArcSelected(id: string) {
-    this.ajax.selectAnnotation(id);
-  }
-
-  private sendCreateSpanAnnotation(offsets: OffsetsList, spanText: string) {
-    this.ajax.createSpanAnnotation(offsets, spanText);
-  }
-
-  private sendCreateRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
-    this.ajax.createRelationAnnotation(originSpanId, originType, targetSpanId, targetType);
-  }
-
   stopArcDrag(target?) {
     // BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
     // Clear the dragStartAt saved event
@@ -744,6 +726,7 @@ export class AnnotatorUI {
         // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
         const originSpan = this.data.spans[origin];
         const targetSpan = this.data.spans[id];
+        
         if (this.arcOptions && this.arcOptions.old_target) {
           this.arcOptions.target = targetSpan.id;
           this.dispatcher.post('ajax', [this.arcOptions, 'edited']);
@@ -755,7 +738,8 @@ export class AnnotatorUI {
             collection: this.coll,
             'document': this.doc
           };
-          this.sendCreateRelationAnnotation(originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);
+
+          this.ajax.createRelationAnnotation(originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);        
         }
       }
     } else if (!evt.ctrlKey) {
@@ -876,7 +860,7 @@ export class AnnotatorUI {
 
         // normal span select in standard annotation mode or reselect: show selector
         const spanText = this.data.text.substring(selectedFrom, selectedTo);
-        this.sendCreateSpanAnnotation(this.spanOptions.offsets, spanText);
+        this.ajax.createSpanAnnotation(this.spanOptions.offsets, spanText);
       }
     }
   }

@@ -17,12 +17,14 @@
  */
 import { Dispatcher } from "../dispatcher/Dispatcher";
 import { DocumentData } from "../visualizer/DocumentData";
+import { DiamAjax } from "@inception-project/inception-diam/client/DiamAjax";
 
 export class CurationMod {
-  data: DocumentData;
-  dispatcher: Dispatcher;
+  private data: DocumentData;
+  private dispatcher: Dispatcher;
+  private ajax: DiamAjax;
 
-  constructor(dispatcher: Dispatcher) {
+  constructor(dispatcher: Dispatcher, ajax: DiamAjax) {
     this.dispatcher = dispatcher;
 
     dispatcher.
