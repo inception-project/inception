@@ -1207,9 +1207,13 @@ export class Visualizer {
     this.renderData(undefined);
   }
 
+  fastTranslateGroup(element: SVGTypeMapping<SVGGElement>, x: number, y: number) {
+    element.attr('transform', 'translate(' + x + ', ' + y + ')');
+    // element.translate(x, y);
+  }
+
   fastTranslate(element: Row | Chunk, x: number, y: number) {
-    // element.group.attr('transform', 'translate(' + x + ', ' + y + ')');
-    element.group.translate(x, y);
+    this.fastTranslateGroup(element.group, x, y);
     element.translation = { x: x, y: y };
   }
 
@@ -2721,7 +2725,7 @@ export class Visualizer {
         // (CSS dominant-baseline can't be used as not all SVG renders support it.)
         const baseline_shift = this.data.sizes.arcs.height / 4;
         this.svg.plain(labelText)
-          .translate((from + to) / 2, -height + baseline_shift)
+          .amove((from + to) / 2, -height + baseline_shift)
           .attr({
             //'fill': color,
             'fill': '#000000',
@@ -3131,15 +3135,26 @@ export class Visualizer {
     }
   }
 
-  renderAdjustLayoutForRtl(oversized, rows: Row[], textGroup: SVGTypeMapping<SVGGElement>, sentNumGroup: SVGTypeMapping<SVGGElement>) {
-    if (oversized > 0) {
-      rows.map(row => this.fastTranslate(row, oversized, 0));
-      this.highlightGroup.translate(oversized, 0);
-      textGroup.translate(oversized, 0);
-      sentNumGroup.translate(oversized, 0);
-      const scrollable = findClosestHorizontalScrollable($(this.svg.node));
+  renderAdjustLayoutForScriptDirection(oversized, rows: Row[], textGroup: SVGTypeMapping<SVGGElement>, sentNumGroup: SVGTypeMapping<SVGGElement>) {
+    if (oversized <= 0) {
+      return;
+    }
+
+    const scrollable = findClosestHorizontalScrollable($(this.svg.node));
+    if (this.rtlmode) {
+      rows.map(row => this.fastTranslate(row, oversized, row.translation.y));
+
+      this.fastTranslateGroup(this.highlightGroup, oversized, 0);
+      this.fastTranslateGroup(textGroup, oversized, 0);
+      this.fastTranslateGroup(sentNumGroup, oversized, 0);
+
       if (scrollable) {
         scrollable.scrollLeft(oversized + 4);
+      }
+    }
+    else {
+      if (scrollable) {
+        scrollable.scrollLeft(0);
       }
     }
   }
@@ -3147,7 +3162,7 @@ export class Visualizer {
   /**
    * @param backgroundGroup
    */
-  renderAdjustLayoutForOversize(oversized: number, backgroundGroup: SVGTypeMapping<SVGGElement>) {
+  renderAdjustBackgroundsForOversize(oversized: number, backgroundGroup: SVGTypeMapping<SVGGElement>) {
     if (oversized <= 0) {
       return;
     }
@@ -3181,22 +3196,22 @@ export class Visualizer {
       if (this.rtlmode) {
         const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
         const initialSpacingX = this.canvasWidth - this.sentNumMargin - initialSpacingWidth;
-        rowInitialSpacing.x(initialSpacingX);
+        rowInitialSpacing.attr('x', initialSpacingX); // Faster than x() which calls bbox()
         rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
         const finalSpacingX = Math.max(lastChunkOffset - lastChunkWidth, 0);
         const finalSpacingWidth = finalSpacingX;
-        rowFinalSpacing.x(finalSpacingX);
+        rowFinalSpacing.attr('x', finalSpacingX); // Faster than x() which calls bbox()
         rowFinalSpacing.attr('textLength', finalSpacingWidth);
       } else {
         const initialSpacingX = this.sentNumMargin;
         const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
-        rowInitialSpacing.x(initialSpacingX);
+        rowInitialSpacing.attr('x', initialSpacingX); // Faster than x() which calls bbox()
         rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
         const finalSpacingX = lastChunkOffset + lastChunkWidth + 1;
         const finalSpacingWidth = this.canvasWidth - finalSpacingX;
-        rowFinalSpacing.x(finalSpacingX);
+        rowFinalSpacing.attr('x', finalSpacingX); // Faster than x() which calls bbox()
         rowFinalSpacing.attr('textLength', finalSpacingWidth);
       }
     });
@@ -3345,14 +3360,12 @@ export class Visualizer {
     const oversized = this.renderResizeSvg(y, textGroup, maxTextWidth);
     Util.profileEnd('resize SVG');
 
-    if (this.rtlmode) {
-      Util.profileStart('set up RTL');
-      this.renderAdjustLayoutForRtl(oversized, rows, textGroup, sentNumGroup);
-      Util.profileEnd('set up RTL');
-    }
+    Util.profileStart('adjust for oversize depending on script');
+    this.renderAdjustLayoutForScriptDirection(oversized, rows, textGroup, sentNumGroup);
+    Util.profileEnd('adjust for oversize depending on script');
 
     Util.profileStart('adjust backgrounds');
-    this.renderAdjustLayoutForOversize(oversized, backgroundGroup);
+    this.renderAdjustBackgroundsForOversize(oversized, backgroundGroup);
     Util.profileEnd('adjust backgrounds');
 
     Util.profileStart('row-spacing-adjust');
