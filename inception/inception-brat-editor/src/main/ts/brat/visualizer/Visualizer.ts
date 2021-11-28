@@ -294,14 +294,6 @@ export class Visualizer {
     // Object.seal(this);
   }
 
-  rowBBox(fragment) {
-    const box = $.extend({}, fragment.rectBox); // clone
-    const chunkTranslation = fragment.chunk.translation;
-    box.x += chunkTranslation.x;
-    box.y += chunkTranslation.y;
-    return box;
-  }
-
   /**
    * Get the priority of the given comment class.
    *
@@ -1215,7 +1207,7 @@ export class Visualizer {
     this.renderData(undefined);
   }
 
-  translate(element: Row | Chunk, x: number, y: number) {
+  fastTranslate(element: Row | Chunk, x: number, y: number) {
     // element.group.attr('transform', 'translate(' + x + ', ' + y + ')');
     element.group.translate(x, y);
     element.translation = { x: x, y: y };
@@ -1859,9 +1851,8 @@ export class Visualizer {
           bx = (bx | 0) + 0.5;
         }
 
-        let markedRect: SVGJSElement;
         if (span.marked) {
-          markedRect = this.renderSpanMarkedRect(bx, by, bw, bh, chunk);
+          this.renderSpanMarkedRect(yy, bx, by, bw, bh, fragment);
         }
 
         // Nicely spread out labels/text and leave space for mark highlight such that adding
@@ -1869,9 +1860,8 @@ export class Visualizer {
         chunkFrom = Math.min(bx - this.markedSpanSize, chunkFrom);
         chunkTo = Math.max(bx + bw + this.markedSpanSize, chunkTo);
         let fragmentHeight = bh + 2 * this.markedSpanSize;
-        let shadowRect: SVGJSElement;
         if (span.shadowClass && span.shadowClass.match(this.shadowClassPattern)) {
-          shadowRect = this.renderFragmentShadowRect(bx, by, bw, bh, fragment);
+          this.renderFragmentShadowRect(yy, bx, by, bw, bh, fragment);
           chunkFrom = Math.min(bx - this.rectShadowSize, chunkFrom);
           chunkTo = Math.max(bx + bw + this.rectShadowSize, chunkTo);
           fragmentHeight = Math.max(bh + 2 * this.rectShadowSize, fragmentHeight);
@@ -1891,14 +1881,6 @@ export class Visualizer {
         const spacedTowerId = fragment.towerId * 2;
         if (!fragmentHeights[spacedTowerId] || fragmentHeights[spacedTowerId] < fragment.height) {
           fragmentHeights[spacedTowerId] = fragment.height;
-        }
-
-        fragment.rect.y(yy - Configuration.visual.margin.y - span.floor);
-        if (shadowRect) {
-          shadowRect.y(yy - this.rectShadowSize - Configuration.visual.margin.y - span.floor);
-        }
-        if (markedRect) {
-          markedRect.y(yy - this.markedSpanSize - Configuration.visual.margin.y - span.floor);
         }
 
         if (span.attributeMerge.box === "crossed") {
@@ -2158,7 +2140,7 @@ export class Visualizer {
           }
           for (let chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
             const movedChunk = this.data.chunks[chunkIndex];
-            this.translate(movedChunk, movedChunk.translation.x + spacing, 0);
+            this.fastTranslate(movedChunk, movedChunk.translation.x + spacing, 0);
             movedChunk.textX += spacing;
           }
         }
@@ -2167,7 +2149,7 @@ export class Visualizer {
       row.chunks.push(chunk);
       chunk.row = row;
 
-      this.translate(chunk, currentX + (this.rtlmode ? -boxX : boxX), 0);
+      this.fastTranslate(chunk, currentX + (this.rtlmode ? -boxX : boxX), 0);
       chunk.textX = currentX + (this.rtlmode ? -boxX : boxX);
       currentX += this.rtlmode ? -boxWidth : boxWidth;
     }); // chunks
@@ -2396,7 +2378,7 @@ export class Visualizer {
 
           // Render highlight
           this.svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
-            .translate(fragment.highlightPos.x, fragment.highlightPos.y)
+            .move(fragment.highlightPos.x, fragment.highlightPos.y)
             .attr({
               fill: lightBgColor,
               rx: this.highlightRounding.x,
@@ -2595,8 +2577,8 @@ export class Visualizer {
       const arrowHead = ((arcDesc && arcDesc.arrowHead) || 'triangle,5') + ',' + color;
       const labelArrowHead = ((arcDesc && arcDesc.labelArrow) || 'triangle,5') + ',' + color;
 
-      const leftBox = this.rowBBox(left);
-      const rightBox = this.rowBBox(right);
+      const leftBox = left.rowBBox();
+      const rightBox = right.rowBBox();
       const leftRow = left.chunk.row.index;
       const rightRow = right.chunk.row.index;
 
@@ -2962,8 +2944,8 @@ export class Visualizer {
         const left = span.fragments[connectorNo];
         const right = span.fragments[connectorNo + 1];
 
-        const leftBox = this.rowBBox(left);
-        const rightBox = this.rowBBox(right);
+        const leftBox = left.rowBBox();
+        const rightBox = right.rowBBox();
         const leftRow = left.chunk.row.index;
         const rightRow = right.chunk.row.index;
 
@@ -3073,7 +3055,7 @@ export class Visualizer {
       if (this.roundCoordinates) {
         rowY = rowY | 0;
       }
-      this.translate(row, 0, rowY);
+      this.fastTranslate(row, 0, rowY);
 
       y += Configuration.visual.margin.y;
     });
@@ -3129,7 +3111,7 @@ export class Visualizer {
         const box = text.rbox(sentNumGroup);
         // TODO: using rectShadowSize, but this shadow should probably have its own setting for shadow size
         const highlight = this.svg.rect()
-          .translate(
+          .move(
             this.rtlmode ? box.x - this.rectShadowSize : box.x - this.rectShadowSize,
             box.y - this.rectShadowSize)
           .width(box.width + 2 * this.rectShadowSize)
@@ -3151,7 +3133,7 @@ export class Visualizer {
 
   renderAdjustLayoutForRtl(oversized, rows: Row[], textGroup: SVGTypeMapping<SVGGElement>, sentNumGroup: SVGTypeMapping<SVGGElement>) {
     if (oversized > 0) {
-      rows.map(row => this.translate(row, oversized, 0));
+      rows.map(row => this.fastTranslate(row, oversized, 0));
       this.highlightGroup.translate(oversized, 0);
       textGroup.translate(oversized, 0);
       sentNumGroup.translate(oversized, 0);
@@ -3895,21 +3877,21 @@ export class Visualizer {
       .addTo(shadowGroup);
   }
 
-  renderSpanMarkedRect(bx: number, by: number, bw: number, bh: number, chunk: Chunk): SVGJSElement {
+  renderSpanMarkedRect(yy: number, bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
     return this.svg.rect(bw + 2 * this.markedSpanSize, bh + 2 * this.markedSpanSize)
-      .move(bx - this.markedSpanSize, by - this.markedSpanSize)
+      .move(bx - this.markedSpanSize, yy - this.markedSpanSize - Configuration.visual.margin.y - fragment.span.floor)
       .attr({
         filter: 'url(#Gaussian_Blur)',
         'class': "shadow_EditHighlight",
         rx: this.markedSpanSize,
         ry: this.markedSpanSize,
       })
-      .addTo(chunk.highlightGroup);
+      .addTo(fragment.chunk.highlightGroup);
   }
 
-  renderFragmentShadowRect(bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
+  renderFragmentShadowRect(yy: number, bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
     return this.svg.rect()
-      .move(bx - this.rectShadowSize, by - this.rectShadowSize)
+      .move(bx - this.rectShadowSize, yy - this.rectShadowSize - Configuration.visual.margin.y - fragment.span.floor)
       .width(bw + 2 * this.rectShadowSize)
       .height(bh + 2 * this.rectShadowSize)
       .attr({
