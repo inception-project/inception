@@ -114,11 +114,8 @@ public interface AnnotationActionHandler
      *            the AJAX request target.
      * @param aCas
      *            the CAS in which the slot is going to be filled.
-     * @param aSlotFillerBegin
-     *            the begin of the span selected by the user to create a new annotation or the begin
-     *            of the span of the selected existing annotation.
-     * @param aSlotFillerEnd
-     *            the corresponding end.
+     * @param aExistingSlotFillerId
+     *            ID of the existing span annotation to be filled into the armed slot
      */
     void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, VID aExistingSlotFillerId)
         throws IOException, AnnotationException;
