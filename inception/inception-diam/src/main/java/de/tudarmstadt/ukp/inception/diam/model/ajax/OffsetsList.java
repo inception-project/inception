@@ -15,35 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.message;
+package de.tudarmstadt.ukp.inception.diam.model.ajax;
+
+import java.util.ArrayList;
 
 /**
- * Response for the {@code importDocument} command.
+ * List of {@link Offsets}. Required so Jackson knows the generic type of the list when converting
+ * an array of offsets from JSON to Java.
+ * 
+ * @deprecated Need to check if we want to keep this for DIAM
  */
-public class ImportDocumentResponse
-    extends AjaxResponse
+@Deprecated
+public class OffsetsList
+    extends ArrayList<Offsets>
 {
-    public static final String COMMAND = "importDocument";
+    // See
+    // http://stackoverflow.com/questions/6173182/spring-json-convert-a-typed-collection-like-listmypojo
 
-    private String document;
-
-    public ImportDocumentResponse()
-    {
-        super(COMMAND);
-    }
-
-    public String getDocument()
-    {
-        return document;
-    }
-
-    public void setDocument(String aDocument)
-    {
-        document = aDocument;
-    }
-
-    public static boolean is(String aCommand)
-    {
-        return COMMAND.equals(aCommand);
-    }
+    private static final long serialVersionUID = 1441338116416225186L;
 }

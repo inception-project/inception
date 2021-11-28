@@ -23,12 +23,22 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
 public interface EditorAjaxRequestHandler
     extends Extension<Request>
 {
-    public static final String PARAM_COMMAND = "cmd";
-    public static final String PARAM_VID = "vid";
+    public static final String PARAM_ACTION = "action";
+    public static final String PARAM_ARC_ID = "arcId";
+    public static final String PARAM_ID = "id";
+    public static final String PARAM_OFFSETS = "offsets";
+    public static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
+    public static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
+    public static final String PARAM_TYPE = "type";
+    public static final String PARAM_LAZY_DETAIL_DATABASE = "database";
+    public static final String PARAM_LAZY_DETAIL_KEY = "key";
+
+    String ACTION_CONTEXT_MENU = "contextMenu";
 
     default String getRequestMethod(Request aRequest)
     {
@@ -46,9 +56,9 @@ public interface EditorAjaxRequestHandler
     @Override
     default boolean accepts(Request aRequest)
     {
-        return getCommand().equals(aRequest.getRequestParameters().getParameterValue(PARAM_COMMAND)
-                .toOptionalString());
+        return getCommand().equals(
+                aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString());
     }
 
-    void handle(AjaxRequestTarget aTarget, Request aRequest);
+    AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest);
 }

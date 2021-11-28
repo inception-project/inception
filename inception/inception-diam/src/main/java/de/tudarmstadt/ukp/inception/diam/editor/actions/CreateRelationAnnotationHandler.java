@@ -19,18 +19,18 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 
-import java.lang.invoke.MethodHandles;
+import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
@@ -39,22 +39,13 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#selectAnnotationHandler}.
+ * {@link DiamEditorAutoConfig#createRelationAnnotationHandler}.
  * </p>
  */
-public class SelectAnnotationHandler
+public class CreateRelationAnnotationHandler
     extends EditorAjaxRequestHandlerBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-    public static final String COMMAND = "selectAnnotation";
-
-    private final AnnotationSchemaService schemaService;
-
-    public SelectAnnotationHandler(AnnotationSchemaService aSchemaService)
-    {
-        schemaService = aSchemaService;
-    }
+    public static final String COMMAND = "arcOpenDialog";
 
     @Override
     public String getCommand()
@@ -67,28 +58,36 @@ public class SelectAnnotationHandler
     {
         try {
             AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
-
-            VID vid = VID.parseOptional(
-                    aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
-
-            if (vid.isNotSet() || vid.isSynthetic()) {
-                return new DefaultAjaxResponse(getAction(aRequest));
-            }
-
             CAS cas = page.getEditorCas();
-            AnnotatorState state = page.getModelObject();
-
-            AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
-
-            TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
-            adapter.select(state, fs);
-
-            page.getAnnotationActionHandler().actionSelect(aTarget);
-
+            actionArc(aTarget, aRequest.getRequestParameters(), cas);
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
             return handleError(aTarget, "Unable to load data", e);
         }
+    }
+
+    private void actionArc(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas)
+        throws IOException, AnnotationException
+    {
+        AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+
+        VID origin = VID.parse(request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
+        VID target = VID.parse(request.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
+
+        if (origin.isSynthetic() || target.isSynthetic()) {
+            page.error("Relations cannot be created from/to synthetic annotations");
+            aTarget.addChildren(page, IFeedback.class);
+            return;
+        }
+
+        AnnotationFS originFs = selectAnnotationByAddr(aCas, origin.getId());
+        AnnotationFS targetFs = selectAnnotationByAddr(aCas, target.getId());
+
+        AnnotatorState state = page.getModelObject();
+        Selection selection = state.getSelection();
+        selection.selectArc(originFs, targetFs);
+
+        page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
     }
 }

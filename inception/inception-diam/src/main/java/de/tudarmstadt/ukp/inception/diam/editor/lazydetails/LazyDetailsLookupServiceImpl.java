@@ -15,12 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
+package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter.decodeTypeName;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_LAZY_DETAIL_DATABASE;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_LAZY_DETAIL_KEY;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_TYPE;
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
@@ -29,7 +26,6 @@ import java.util.stream.Collectors;
 
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.util.string.StringValue;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -40,29 +36,35 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.NormalizationQueryResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.LazyDetail;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.LazyDetailsResponse;
 
-@Component
-public class BratLazyDetailsLookupServiceImpl
-    implements BratLazyDetailsLookupService
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DiamEditorAutoConfig#lazyDetailsLookupService}.
+ * </p>
+ */
+public class LazyDetailsLookupServiceImpl
+    implements LazyDetailsLookupService
 {
     private final AnnotationSchemaService annotationService;
     private final AnnotationEditorExtensionRegistry extensionRegistry;
     private final LayerSupportRegistry layerSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
 
-    public BratLazyDetailsLookupServiceImpl(AnnotationSchemaService aAnnotationService,
+    public LazyDetailsLookupServiceImpl(AnnotationSchemaService aAnnotationService,
             AnnotationEditorExtensionRegistry aExtensionRegistry,
             LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        super();
         annotationService = aAnnotationService;
         extensionRegistry = aExtensionRegistry;
         layerSupportRegistry = aLayerSupportRegistry;
@@ -70,22 +72,23 @@ public class BratLazyDetailsLookupServiceImpl
     }
 
     @Override
-    public NormDataResponse actionLookupNormData(IRequestParameters request, VID paramId,
+    public LazyDetailsResponse actionLookupNormData(IRequestParameters request, VID paramId,
             CasProvider aCas, SourceDocument aSourceDocument, User aUser, int windowBeginOffset,
             int windowEndOffset)
         throws AnnotationException, IOException
     {
-        NormDataResponse response = new NormDataResponse();
+        LazyDetailsResponse response = new LazyDetailsResponse(LazyDetailsHandler.COMMAND);
 
         // We interpret the databaseParam as the feature which we need to look up the feature
         // support
-        StringValue databaseParam = request.getParameterValue(PARAM_LAZY_DETAIL_DATABASE);
+        StringValue databaseParam = request
+                .getParameterValue(LazyDetailsHandler.PARAM_LAZY_DETAIL_DATABASE);
 
         // We interpret the key as the feature value or as a kind of query to be handled by the
         // feature support
-        StringValue keyParam = request.getParameterValue(PARAM_LAZY_DETAIL_KEY);
+        StringValue keyParam = request.getParameterValue(LazyDetailsHandler.PARAM_LAZY_DETAIL_KEY);
 
-        StringValue layerParam = request.getParameterValue(PARAM_TYPE);
+        StringValue layerParam = request.getParameterValue(LazyDetailsHandler.PARAM_TYPE);
 
         if (layerParam.isEmpty() || databaseParam.isEmpty()) {
             return response;
@@ -110,7 +113,7 @@ public class BratLazyDetailsLookupServiceImpl
             response.setResults(extensionRegistry.getExtension(extensionId)
                     .renderLazyDetails(aSourceDocument, aUser, paramId, feature,
                             keyParam.toString())
-                    .stream().map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
+                    .stream().map(d -> new LazyDetail(d.getLabel(), d.getValue()))
                     .collect(Collectors.toList()));
             return response;
         }
@@ -130,9 +133,8 @@ public class BratLazyDetailsLookupServiceImpl
                     .renderLazyDetails(feature, keyParam.toString());
         }
 
-        response.setResults(
-                details.stream().map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
-                        .collect(toList()));
+        response.setResults(details.stream().map(d -> new LazyDetail(d.getLabel(), d.getValue()))
+                .collect(toList()));
 
         return response;
     }

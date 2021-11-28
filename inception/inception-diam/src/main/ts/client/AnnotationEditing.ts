@@ -73,8 +73,8 @@ export class AnnotationEditing {
             // "c": dispatcher.wicketId,
             "u": this.ajaxEndpoint,
             "ep": {
-                "cmd": "SelectAnnotation",
-                "vid": vid
+                "action": "selectAnnotation",
+                "id": vid
             },
             // success
             "sh": [function () { }],

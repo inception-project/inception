@@ -15,46 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.message;
+package de.tudarmstadt.ukp.inception.support.json;
 
-/**
- * Response to the {@code getDocumentTimestamp} command.
- */
-public class GetDocumentTimestampResponse
-    extends AjaxResponse
+import java.io.IOException;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+
+public class NumericBooleanSerializer
+    extends JsonSerializer<Boolean>
 {
-    public static final String COMMAND = "getDocumentTimestamp";
-
-    private long mtime;
-
-    public GetDocumentTimestampResponse()
+    @Override
+    public void serialize(Boolean aValue, JsonGenerator aGenerator,
+            SerializerProvider aSerializerProvider)
+        throws IOException
     {
-        super(COMMAND);
-    }
-
-    /**
-     * Get last modification time.
-     *
-     * @return last modification time.
-     */
-    public long getMtime()
-    {
-        return mtime;
-    }
-
-    /**
-     * Set last modification time.
-     *
-     * @param aMtime
-     *            last modfication time.
-     */
-    public void setMtime(long aMtime)
-    {
-        mtime = aMtime;
-    }
-
-    public static boolean is(String aCommand)
-    {
-        return COMMAND.equals(aCommand);
+        aGenerator.writeNumber(aValue ? 1 : 0);
     }
 }

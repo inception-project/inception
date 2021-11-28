@@ -17,20 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-
-import java.lang.invoke.MethodHandles;
-
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
@@ -39,21 +30,19 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#selectAnnotationHandler}.
+ * {@link DiamEditorAutoConfig#extensionActionHandler}.
  * </p>
  */
-public class SelectAnnotationHandler
+public class ExtensionActionHandler
     extends EditorAjaxRequestHandlerBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    public static final String COMMAND = "doAction";
 
-    public static final String COMMAND = "selectAnnotation";
+    private final AnnotationEditorExtensionRegistry extensionRegistry;
 
-    private final AnnotationSchemaService schemaService;
-
-    public SelectAnnotationHandler(AnnotationSchemaService aSchemaService)
+    public ExtensionActionHandler(AnnotationEditorExtensionRegistry aExtensionRegistry)
     {
-        schemaService = aSchemaService;
+        extensionRegistry = aExtensionRegistry;
     }
 
     @Override
@@ -63,29 +52,24 @@ public class SelectAnnotationHandler
     }
 
     @Override
+    public boolean accepts(Request aRequest)
+    {
+        return getVid(aRequest).isSynthetic();
+    }
+
+    @Override
     public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
             AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
-
-            VID vid = VID.parseOptional(
-                    aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
-
-            if (vid.isNotSet() || vid.isSynthetic()) {
-                return new DefaultAjaxResponse(getAction(aRequest));
-            }
-
+            String action = getAction(aRequest);
+            VID paramId = getVid(aRequest);
             CAS cas = page.getEditorCas();
-            AnnotatorState state = page.getModelObject();
 
-            AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
+            extensionRegistry.fireAction(page.getAnnotationActionHandler(), page.getModelObject(),
+                    aTarget, cas, paramId, action);
 
-            TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
-            adapter.select(state, fs);
-
-            page.getAnnotationActionHandler().actionSelect(aTarget);
-
-            return new DefaultAjaxResponse(getAction(aRequest));
+            return new DefaultAjaxResponse(action);
         }
         catch (Exception e) {
             return handleError(aTarget, "Unable to load data", e);

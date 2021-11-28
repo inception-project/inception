@@ -86,6 +86,18 @@ export class Fragment {
   }
 
   /**
+   * Helper method to calculate the bounding box from known values instead of asking the browser
+   * which would then force a slow re-layout.
+   */
+  rowBBox() {
+    const box = $.extend({}, this.rectBox); // clone
+    const chunkTranslation = this.chunk.translation;
+    box.x += chunkTranslation.x;
+    box.y += chunkTranslation.y;
+    return box;
+  }
+
+  /**
    * @param {Fragment} a
    * @param {Fragment} b
    */

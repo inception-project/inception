@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 import { Ajax } from "./ajax/Ajax";
+import { DiamAjax } from "./ajax/DiamAjax";
 import { AnnotatorUI } from "./annotator_ui/AnnotatorUI";
 import { Dispatcher } from "./dispatcher/Dispatcher";
 import { Visualizer } from "./visualizer/Visualizer";
@@ -25,16 +26,11 @@ declare let Wicket;
 
 function brat(markupId: string, callbackUrl: string) {
   const dispatcher = new Dispatcher();
-  // Each visualizer talks to its own Wicket component instance
-  dispatcher.ajaxUrl = callbackUrl;
-  // We attach the JSON send back from the server to this HTML element
-  // because we cannot directly pass it from Wicket to the caller in ajax.js.
-  dispatcher.wicketId = markupId;
-  const ajax = new Ajax(dispatcher);
+  const diamAjax = new DiamAjax(callbackUrl);
+  new Ajax(dispatcher, markupId, callbackUrl);
   const visualizer = new Visualizer(dispatcher, markupId);
-  const visualizerUI = new VisualizerUI(dispatcher);
-  const annotatorUI = new AnnotatorUI(dispatcher, visualizer.svg);
-  // js.append(("var logger = new AnnotationLog(dispatcher);");
+  new VisualizerUI(dispatcher);
+  new AnnotatorUI(dispatcher, visualizer.svg, diamAjax);
   dispatcher.post('init');
   Wicket.$(markupId).dispatcher = dispatcher;
   Wicket.$(markupId).visualizer = visualizer;

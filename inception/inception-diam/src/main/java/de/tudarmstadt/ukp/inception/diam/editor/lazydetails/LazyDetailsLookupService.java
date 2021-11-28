@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
+package de.tudarmstadt.ukp.inception.diam.editor.lazydetails;
 
 import java.io.IOException;
 
@@ -24,15 +24,15 @@ import org.apache.wicket.request.IRequestParameters;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.LazyDetailsResponse;
 
-public interface BratLazyDetailsLookupService
+public interface LazyDetailsLookupService
 {
-
-    NormDataResponse actionLookupNormData(IRequestParameters request, VID paramId, CasProvider aCas,
-            SourceDocument aSourceDocument, User aUser, int windowBeginOffset, int windowEndOffset)
+    LazyDetailsResponse actionLookupNormData(IRequestParameters request, VID paramId,
+            CasProvider aCas, SourceDocument aSourceDocument, User aUser, int windowBeginOffset,
+            int windowEndOffset)
         throws AnnotationException, IOException;
 
 }

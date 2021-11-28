@@ -28,7 +28,6 @@ export class CurationMod {
     dispatcher.
       on('click', this, this.onClick).
       on('dataReady', this, this.rememberData).
-      on('serverResult', this, this.serverResult).
       on('contextmenu', this, this.contextMenu);
   }
 
@@ -48,7 +47,7 @@ export class CurationMod {
         targetSpanId: targetSpanId,
         id: target.attr('data-arc-ed'),
         type: type
-      }, 'serverResult']);
+      }]);
     }
     if (target.attr('data-span-id')) {
       const id = target.attr('data-span-id');
@@ -57,7 +56,7 @@ export class CurationMod {
         action: 'selectSpanForMerge',
         id: id,
         type: editedSpan.type,
-      }, 'serverResult']);
+      }]);
     }
   }
 
@@ -90,21 +89,8 @@ export class CurationMod {
         type: type,
         clientX: evt.clientX,
         clientY: evt.clientY
-      }, 'serverResult']);
+      }]);
     }
-  }
-
-  /**
-   * Callback function which is called after ajax response has arrived.
-   */
-  serverResult(response) {
-    // dummy, probably not called at all
-    if (response.exception) {
-      // TODO: better response to failure
-      this.dispatcher.post('messages', [[['Lookup error', 'warning', -1]]]);
-      return false;
-    }
-    alert(response);
   }
 
   /**

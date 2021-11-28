@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Marker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Normalization;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
 /**
  * Response for the {@code getDocument} command.

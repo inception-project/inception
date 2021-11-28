@@ -38,13 +38,15 @@
  * SOFTWARE.
  */
 import { Dispatcher } from "../dispatcher/Dispatcher";
-import { Svg, SVG } from "@svgdotjs/svg.js";
+import { Svg } from "@svgdotjs/svg.js";
 import { DocumentData } from "../visualizer/DocumentData";
 import { OffsetsList } from "../visualizer/SourceData";
 import { Span } from "../visualizer/Span";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
+import { DiamAjax } from "../ajax/DiamAjax";
+import { SpanType } from "../visualizer/SpanType";
 
 export class AnnotatorUI {
   private data: DocumentData = null;
@@ -63,7 +65,7 @@ export class AnnotatorUI {
   private arcOptions = null;
   private editedSpan: Span = null;
   private editedFragment = null;
-  private spanTypes = null;
+  private spanTypes: Record<string, SpanType> = null;
   private selRect = null;
   private lastStartRec = null;
   private lastEndRec = null;
@@ -83,10 +85,13 @@ export class AnnotatorUI {
   private clickTimer = null;
   private CLICK_DELAY = 300;
 
-  constructor(dispatcher: Dispatcher, svg: Svg) {
+  private ajax: DiamAjax;
+
+  constructor(dispatcher: Dispatcher, svg: Svg, ajax: DiamAjax) {
     this.dispatcher = dispatcher;
     this.user = null;
     this.svg = svg;
+    this.ajax = ajax
 
     dispatcher.
       on('init', this, this.init).
@@ -105,6 +110,8 @@ export class AnnotatorUI {
       on('contextmenu', this, this.contextMenu);
   }
 
+  // FIXME I think we don't need this anymore because we don't work with these numerical suffixes
+  // REC 2021-11-27
   private stripNumericSuffix(s) {
     // utility function, originally for stripping numerix suffixes
     // from arc types (e.g. "Theme2" -> "Theme"). For values
@@ -209,7 +216,7 @@ export class AnnotatorUI {
       originType: originSpan.type,
       targetSpanId: targetSpan.id,
       targetType: targetSpan.type
-    }, 'serverResult']);
+    }]);
   }
 
   private customSpanAction(evt: MouseEvent & { target: HTMLElement }) {
@@ -227,7 +234,7 @@ export class AnnotatorUI {
       id: id,
       labelText: this.editedSpan.labelText,
       type: this.editedSpan.type
-    }, 'serverResult']);
+    }]);
   }
 
   private selectAnnotation(evt: MouseEvent & { target: HTMLElement }) {
@@ -275,7 +282,7 @@ export class AnnotatorUI {
     }
     const arcId = eventDescId || [originSpanId, type, targetSpanId];
 
-    this.sendArcSelected(originSpanId, originSpan.type, targetSpanId, targetSpan.type, type, arcId);
+    this.sendArcSelected(arcId);
   }
 
   private selectSpanAnnotation(evt: MouseEvent) {
@@ -293,7 +300,7 @@ export class AnnotatorUI {
       id: id,
     };
 
-    this.sendSpanAnnotationSelected(offsets, this.editedSpan, id);
+    this.sendSpanAnnotationSelected(id);
   }
 
   private startArcDrag(originId) {
@@ -371,36 +378,9 @@ export class AnnotatorUI {
 
     if (this.arcDragOrigin) {
       if (this.arcDragJustStarted) {
-        // show the possible targets
-        const span = this.data.spans[this.arcDragOrigin];
-        const spanDesc = this.spanTypes[span.type] || {};
-
-        // separate out possible numeric suffix from type for highlight
-        // (instead of e.g. "Theme3", need to look for "Theme")
-        const noNumArcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
-        // var targetClasses = [];
-        let $targets = $();
-        $.each(spanDesc.arcs || [], (possibleArcNo, possibleArc) => {
-          if ((this.arcOptions && possibleArc.type == noNumArcType) || !(this.arcOptions && this.arcOptions.old_target)) {
-            $.each(possibleArc.targets || [], (possibleTargetNo, possibleTarget) => {
-              // speedup for #642: relevant browsers should support
-              // this function: http://www.quirksmode.org/dom/w3c_core.html#t11
-              // so we get off jQuery and get down to the metal:
-              // targetClasses.push('.span_' + possibleTarget);
-              $targets = $targets.add(this.svg.node.getElementsByClassName('span_' + possibleTarget));
-            });
-          }
-        });
-        // $(targetClasses.join(',')).not('[data-span-id="' + arcDragOrigin + '"]').addClass('reselectTarget');
-        // WEBANNO EXTENSION BEGIN - #277 - self-referencing arcs for custom layers
-        if (evt.shiftKey) {
-          $targets.addClass('reselectTarget');
-        }
-        else {
-          $targets.not('[data-span-id="' + this.arcDragOrigin + '"]').addClass('reselectTarget');
-        }
-        // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
+        this.initializeArcDragTargets(evt);
       }
+
       this.clearSelection();
       const mx = evt.pageX - this.svgPosition.left;
       const my = evt.pageY - this.svgPosition.top + 5; // TODO FIXME why +5?!?
@@ -421,6 +401,37 @@ export class AnnotatorUI {
     }
     this.arcDragJustStarted = false;
     this.spanDragJustStarted = false;
+  }
+
+  private initializeArcDragTargets(evt: MouseEvent) {
+    // show the possible targets
+    const span = this.data.spans[this.arcDragOrigin];
+    const spanDesc = this.spanTypes[span.type];
+
+    if (!spanDesc || !spanDesc.arcs || spanDesc.arcs.length == 0) {
+      return;
+    }
+
+    // separate out possible numeric suffix from type for highlight
+    // (instead of e.g. "Theme3", need to look for "Theme")
+    const noNumArcType = this.stripNumericSuffix(this.arcOptions && this.arcOptions.type);
+
+    spanDesc.arcs.map(possibleArc => {
+      if (!(this.arcOptions && possibleArc.type == noNumArcType || !(this.arcOptions && this.arcOptions.old_target))) {
+        return;
+      }
+
+      if (!possibleArc.targets || possibleArc.targets.length == 0) {
+        return;
+      }
+  
+      possibleArc.targets.map(possibleTarget => {
+        this.svg.find('.span_' + possibleTarget)
+          // When shift is pressed when the drag starts, then a self-referencing edge is allowed
+          .filter(e => evt.shiftKey || !e.hasClass(`[data-span-id="${this.arcDragOrigin}"]`))
+          .map(e => e.addClass('reselectTarget'));
+      });
+    });
   }
 
   private onMouseMoveSpanSelection(evt: MouseEvent) {
@@ -647,44 +658,20 @@ export class AnnotatorUI {
     }
   }
 
-  private sendSpanAnnotationSelected(offsets: OffsetsList, span: Span, id?) {
-    this.dispatcher.post('ajax', [{
-      action: 'spanOpenDialog',
-      offsets: JSON.stringify(offsets),
-      id: id,
-      type: span.type,
-      spanText: span.text
-    }, 'serverResult']);
+  private sendSpanAnnotationSelected(id: string) {
+    this.ajax.selectAnnotation(id)
+  }
+
+  private sendArcSelected(id: string) {
+    this.ajax.selectAnnotation(id);
   }
 
   private sendCreateSpanAnnotation(offsets: OffsetsList, spanText: string) {
-    this.dispatcher.post('ajax', [{
-      action: 'spanOpenDialog',
-      offsets: JSON.stringify(offsets),
-      spanText: spanText
-    }, 'serverResult']);
-  }
-
-  private sendArcSelected(originSpanId, originType, targetSpanId, targetType, arcType, arcId) {
-    this.dispatcher.post('ajax', [{
-      action: 'arcOpenDialog',
-      arcId: arcId,
-      arcType: arcType,
-      originSpanId: originSpanId,
-      originType: originType,
-      targetSpanId: targetSpanId,
-      targetType: targetType
-    }, 'serverResult']);
+    this.ajax.createSpanAnnotation(offsets, spanText);
   }
 
   private sendCreateRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
-    this.dispatcher.post('ajax', [{
-      action: 'arcOpenDialog',
-      originSpanId: originSpanId,
-      originType: originType,
-      targetSpanId: targetSpanId,
-      targetType: targetType
-    }, 'serverResult']);
+    this.ajax.createRelationAnnotation(originSpanId, originType, targetSpanId, targetType);
   }
 
   stopArcDrag(target?) {
@@ -977,7 +964,7 @@ export class AnnotatorUI {
         type: this.data.spans[id].type,
         clientX: evt.clientX,
         clientY: evt.clientY
-      }, 'serverResult']);
+      }]);
     }
   }
   // WEBANNO EXTENSION END - #1388 Support context menu

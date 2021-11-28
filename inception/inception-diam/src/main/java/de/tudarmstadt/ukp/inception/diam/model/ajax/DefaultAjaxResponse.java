@@ -15,53 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.message;
+package de.tudarmstadt.ukp.inception.diam.model.ajax;
 
-import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Response for the {@code deleteArc} command.
- */
-public class DeleteArcResponse
+public class DefaultAjaxResponse
     extends AjaxResponse
 {
-    public static final String COMMAND = "deleteArc";
-
-    private GetDocumentResponse annotations;
-
-    public DeleteArcResponse()
+    public DefaultAjaxResponse()
     {
-        super(COMMAND);
+        // Nothing to do
     }
 
-    /**
-     * [[ "T1"],["T2"]]
-     */
-    private List<String[]> edited = new ArrayList<>();
-
-    public GetDocumentResponse getAnnotations()
+    public DefaultAjaxResponse(String aAction)
     {
-        return annotations;
+        super(aAction);
     }
 
-    public void setAnnotations(GetDocumentResponse aAnnotations)
+    public DefaultAjaxResponse(String aAction, List<String> aMessages)
     {
-        annotations = aAnnotations;
-    }
-
-    public List<String[]> getEdited()
-    {
-        return edited;
-    }
-
-    public void setEdited(List<String[]> aEdited)
-    {
-        edited = aEdited;
-    }
-
-    public static boolean is(String aCommand)
-    {
-        return COMMAND.equals(aCommand);
+        super(aAction, aMessages);
     }
 }

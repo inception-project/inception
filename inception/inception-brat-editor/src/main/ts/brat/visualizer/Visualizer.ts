@@ -294,14 +294,6 @@ export class Visualizer {
     // Object.seal(this);
   }
 
-  rowBBox(fragment) {
-    const box = $.extend({}, fragment.rectBox); // clone
-    const chunkTranslation = fragment.chunk.translation;
-    box.x += chunkTranslation.x;
-    box.y += chunkTranslation.y;
-    return box;
-  }
-
   /**
    * Get the priority of the given comment class.
    *
@@ -1132,7 +1124,7 @@ export class Visualizer {
         if (fragment.span.labelText) {
           fragment.labelText = fragment.span.labelText;
         }
-        const svgtext = this.svg.text("").build(true); // one "text" element per row
+        const svgtext = this.svg.plain("").build(true); // one "text" element per row
         const postfixArray = [];
         let prefix = '';
         let postfix = '';
@@ -1215,9 +1207,13 @@ export class Visualizer {
     this.renderData(undefined);
   }
 
-  translate(element: Row | Chunk, x: number, y: number) {
-    // element.group.attr('transform', 'translate(' + x + ', ' + y + ')');
-    element.group.translate(x, y);
+  fastTranslateGroup(element: SVGTypeMapping<SVGGElement>, x: number, y: number) {
+    element.attr('transform', 'translate(' + x + ', ' + y + ')');
+    // element.translate(x, y);
+  }
+
+  fastTranslate(element: Row | Chunk, x: number, y: number) {
+    this.fastTranslateGroup(element.group, x, y);
     element.translation = { x: x, y: y };
   }
 
@@ -1247,7 +1243,7 @@ export class Visualizer {
     // changed from $.each because of #264 ('length' can appear)
     for (const text in textsHash) {
       if (Object.prototype.hasOwnProperty.call(textsHash, text)) {
-        this.svg.text(text).addTo(textMeasureGroup);
+        this.svg.plain(text).addTo(textMeasureGroup);
       }
     }
 
@@ -1859,9 +1855,8 @@ export class Visualizer {
           bx = (bx | 0) + 0.5;
         }
 
-        let markedRect: SVGJSElement;
         if (span.marked) {
-          markedRect = this.renderSpanMarkedRect(bx, by, bw, bh, chunk);
+          this.renderSpanMarkedRect(yy, bx, by, bw, bh, fragment);
         }
 
         // Nicely spread out labels/text and leave space for mark highlight such that adding
@@ -1869,9 +1864,8 @@ export class Visualizer {
         chunkFrom = Math.min(bx - this.markedSpanSize, chunkFrom);
         chunkTo = Math.max(bx + bw + this.markedSpanSize, chunkTo);
         let fragmentHeight = bh + 2 * this.markedSpanSize;
-        let shadowRect: SVGJSElement;
         if (span.shadowClass && span.shadowClass.match(this.shadowClassPattern)) {
-          shadowRect = this.renderFragmentShadowRect(bx, by, bw, bh, fragment);
+          this.renderFragmentShadowRect(yy, bx, by, bw, bh, fragment);
           chunkFrom = Math.min(bx - this.rectShadowSize, chunkFrom);
           chunkTo = Math.max(bx + bw + this.rectShadowSize, chunkTo);
           fragmentHeight = Math.max(bh + 2 * this.rectShadowSize, fragmentHeight);
@@ -1893,20 +1887,12 @@ export class Visualizer {
           fragmentHeights[spacedTowerId] = fragment.height;
         }
 
-        fragment.rect.y(yy - Configuration.visual.margin.y - span.floor);
-        if (shadowRect) {
-          shadowRect.y(yy - this.rectShadowSize - Configuration.visual.margin.y - span.floor);
-        }
-        if (markedRect) {
-          markedRect.y(yy - this.markedSpanSize - Configuration.visual.margin.y - span.floor);
-        }
-
         if (span.attributeMerge.box === "crossed") {
           this.renderFragmentCrossOut(xx, yy, hh, fragment);
         }
 
         fragment.group.add(this.data.spanAnnTexts[fragment.glyphedLabelText].clone()
-          .translate(x, y - span.floor)
+          .amove(x, y - span.floor)
           .fill(fgColor));
 
         // Make curlies to show the fragment
@@ -2158,7 +2144,7 @@ export class Visualizer {
           }
           for (let chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
             const movedChunk = this.data.chunks[chunkIndex];
-            this.translate(movedChunk, movedChunk.translation.x + spacing, 0);
+            this.fastTranslate(movedChunk, movedChunk.translation.x + spacing, 0);
             movedChunk.textX += spacing;
           }
         }
@@ -2167,7 +2153,7 @@ export class Visualizer {
       row.chunks.push(chunk);
       chunk.row = row;
 
-      this.translate(chunk, currentX + (this.rtlmode ? -boxX : boxX), 0);
+      this.fastTranslate(chunk, currentX + (this.rtlmode ? -boxX : boxX), 0);
       chunk.textX = currentX + (this.rtlmode ? -boxX : boxX);
       currentX += this.rtlmode ? -boxWidth : boxWidth;
     }); // chunks
@@ -2396,7 +2382,7 @@ export class Visualizer {
 
           // Render highlight
           this.svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
-            .translate(fragment.highlightPos.x, fragment.highlightPos.y)
+            .move(fragment.highlightPos.x, fragment.highlightPos.y)
             .attr({
               fill: lightBgColor,
               rx: this.highlightRounding.x,
@@ -2595,8 +2581,8 @@ export class Visualizer {
       const arrowHead = ((arcDesc && arcDesc.arrowHead) || 'triangle,5') + ',' + color;
       const labelArrowHead = ((arcDesc && arcDesc.labelArrow) || 'triangle,5') + ',' + color;
 
-      const leftBox = this.rowBBox(left);
-      const rightBox = this.rowBBox(right);
+      const leftBox = left.rowBBox();
+      const rightBox = right.rowBBox();
       const leftRow = left.chunk.row.index;
       const rightRow = right.chunk.row.index;
 
@@ -2739,7 +2725,7 @@ export class Visualizer {
         // (CSS dominant-baseline can't be used as not all SVG renders support it.)
         const baseline_shift = this.data.sizes.arcs.height / 4;
         this.svg.plain(labelText)
-          .translate((from + to) / 2, -height + baseline_shift)
+          .amove((from + to) / 2, -height + baseline_shift)
           .attr({
             //'fill': color,
             'fill': '#000000',
@@ -2762,8 +2748,7 @@ export class Visualizer {
 
         if (arc.marked) {
           this.svg.rect()
-            .x(textBox.x - this.markedArcSize)
-            .y(textBox.y - this.markedArcSize)
+            .move(textBox.x - this.markedArcSize, textBox.y - this.markedArcSize)
             .width(textBox.width + 2 * this.markedArcSize)
             .height(textBox.height + 2 * this.markedArcSize)
             .attr({
@@ -2963,8 +2948,8 @@ export class Visualizer {
         const left = span.fragments[connectorNo];
         const right = span.fragments[connectorNo + 1];
 
-        const leftBox = this.rowBBox(left);
-        const rightBox = this.rowBBox(right);
+        const leftBox = left.rowBBox();
+        const rightBox = right.rowBBox();
         const leftRow = left.chunk.row.index;
         const rightRow = right.chunk.row.index;
 
@@ -3074,7 +3059,7 @@ export class Visualizer {
       if (this.roundCoordinates) {
         rowY = rowY | 0;
       }
-      this.translate(row, 0, rowY);
+      this.fastTranslate(row, 0, rowY);
 
       y += Configuration.visual.margin.y;
     });
@@ -3096,14 +3081,13 @@ export class Visualizer {
 
     const textSizes = this.data.sizes.texts;
     this.svg.rect(this.canvasWidth, row.boxHeight + textSizes.height + 1)
-      .translate(0, y + textSizes.y + textSizes.height)
+      .move(0, y + textSizes.y + textSizes.height)
       .addClass(bgClass)
       .addTo(backgroundGroup);
 
     if (row.sentence && this.data.markedSent[currentSent]) {
       this.svg.rect()
-        .x(this.rtlmode ? this.canvasWidth - this.sentNumMargin : 0)
-        .y(y + textSizes.y + textSizes.height)
+        .move(this.rtlmode ? this.canvasWidth - this.sentNumMargin : 0, y + textSizes.y + textSizes.height)
         .width(this.sentNumMargin)
         .height(row.boxHeight + textSizes.height + 1)
         .addClass('backgroundHighlight')
@@ -3120,10 +3104,13 @@ export class Visualizer {
       } else {
         textX = (this.sentNumMargin - Configuration.visual.margin.x);
       }
-      const text = this.svg.text(`${row.sentence}`)
-        .amove(textX, y - this.rowPadding)
+      const text = this.svg.plain(`${row.sentence}`)
         .attr('data-sent', row.sentence)
         .css('cursor', 'pointer');
+      // Setting the attributes directly is faster than calling amove() since the latter internally
+      // triggers a relayout
+      text.node.setAttribute('x', `${textX}`);
+      text.node.setAttribute('y', `${y - this.rowPadding}`);
       text.addTo(sentNumGroup);
 
       const sentComment = this.data.sentComment[row.sentence];
@@ -3131,7 +3118,7 @@ export class Visualizer {
         const box = text.rbox(sentNumGroup);
         // TODO: using rectShadowSize, but this shadow should probably have its own setting for shadow size
         const highlight = this.svg.rect()
-          .translate(
+          .move(
             this.rtlmode ? box.x - this.rectShadowSize : box.x - this.rectShadowSize,
             box.y - this.rectShadowSize)
           .width(box.width + 2 * this.rectShadowSize)
@@ -3151,15 +3138,26 @@ export class Visualizer {
     }
   }
 
-  renderAdjustLayoutForRtl(oversized, rows: Row[], textGroup: SVGTypeMapping<SVGGElement>, sentNumGroup: SVGTypeMapping<SVGGElement>) {
-    if (oversized > 0) {
-      rows.map(row => this.translate(row, oversized, 0));
-      this.highlightGroup.translate(oversized, 0);
-      textGroup.translate(oversized, 0);
-      sentNumGroup.translate(oversized, 0);
-      const scrollable = findClosestHorizontalScrollable($(this.svg.node));
+  renderAdjustLayoutForScriptDirection(oversized, rows: Row[], textGroup: SVGTypeMapping<SVGGElement>, sentNumGroup: SVGTypeMapping<SVGGElement>) {
+    if (oversized <= 0) {
+      return;
+    }
+
+    const scrollable = findClosestHorizontalScrollable($(this.svg.node));
+    if (this.rtlmode) {
+      rows.map(row => this.fastTranslate(row, oversized, row.translation.y));
+
+      this.fastTranslateGroup(this.highlightGroup, oversized, 0);
+      this.fastTranslateGroup(textGroup, oversized, 0);
+      this.fastTranslateGroup(sentNumGroup, oversized, 0);
+
       if (scrollable) {
         scrollable.scrollLeft(oversized + 4);
+      }
+    }
+    else {
+      if (scrollable) {
+        scrollable.scrollLeft(0);
       }
     }
   }
@@ -3167,7 +3165,7 @@ export class Visualizer {
   /**
    * @param backgroundGroup
    */
-  renderAdjustLayoutForOversize(oversized: number, backgroundGroup: SVGTypeMapping<SVGGElement>) {
+  renderAdjustBackgroundsForOversize(oversized: number, backgroundGroup: SVGTypeMapping<SVGGElement>) {
     if (oversized <= 0) {
       return;
     }
@@ -3192,8 +3190,8 @@ export class Visualizer {
   renderAdjustLayoutRowSpacing(textGroup: SVGTypeMapping<SVGGElement>) {
     // Go through each row and adjust the row-initial and row-final spacing
     textGroup.children().filter(c => c.hasClass('text-row')).map(textRow => {
-      const rowInitialSpacing = textRow.children().filter(e => e.hasClass('row-initial'))[0];
-      const rowFinalSpacing = textRow.children().filter(e => e.hasClass('row-final'))[0];
+      const rowInitialSpacing = textRow.children().filter(c => c.hasClass('row-initial'))[0];
+      const rowFinalSpacing = textRow.children().filter(c => c.hasClass('row-final'))[0];
       // const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
       const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev().node.textContent];
       const lastChunkOffset = parseFloat(rowFinalSpacing.prev().node.getAttribute('x'));
@@ -3201,22 +3199,22 @@ export class Visualizer {
       if (this.rtlmode) {
         const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
         const initialSpacingX = this.canvasWidth - this.sentNumMargin - initialSpacingWidth;
-        rowInitialSpacing.attr('x', initialSpacingX);
+        rowInitialSpacing.attr('x', initialSpacingX); // Faster than x() which calls bbox()
         rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
         const finalSpacingX = Math.max(lastChunkOffset - lastChunkWidth, 0);
         const finalSpacingWidth = finalSpacingX;
-        rowFinalSpacing.attr('x', finalSpacingX);
+        rowFinalSpacing.attr('x', finalSpacingX); // Faster than x() which calls bbox()
         rowFinalSpacing.attr('textLength', finalSpacingWidth);
       } else {
         const initialSpacingX = this.sentNumMargin;
         const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
-        rowInitialSpacing.attr('x', initialSpacingX);
+        rowInitialSpacing.attr('x', initialSpacingX); // Faster than x() which calls bbox()
         rowInitialSpacing.attr('textLength', initialSpacingWidth);
 
         const finalSpacingX = lastChunkOffset + lastChunkWidth + 1;
         const finalSpacingWidth = this.canvasWidth - finalSpacingX;
-        rowFinalSpacing.attr('x', finalSpacingX);
+        rowFinalSpacing.attr('x', finalSpacingX); // Faster than x() which calls bbox()
         rowFinalSpacing.attr('textLength', finalSpacingWidth);
       }
     });
@@ -3281,7 +3279,10 @@ export class Visualizer {
     }
 
     this.svg.clear();
-    this.svg.height(0); // Ensure we do not have a scrollbar when starting to render
+    // Ensure we do have a scrollbar when starting with the calculations - this avoid the SVG 
+    // resizing on the first action (if we actually have a scrollbar when the whole rendering is
+    // over).
+    this.svg.height(window.innerHeight + 300); 
     this.svg.attr('direction', null);
 
     if (!this.data) {
@@ -3362,14 +3363,12 @@ export class Visualizer {
     const oversized = this.renderResizeSvg(y, textGroup, maxTextWidth);
     Util.profileEnd('resize SVG');
 
-    if (this.rtlmode) {
-      Util.profileStart('set up RTL');
-      this.renderAdjustLayoutForRtl(oversized, rows, textGroup, sentNumGroup);
-      Util.profileEnd('set up RTL');
-    }
+    Util.profileStart('adjust for oversize depending on script');
+    this.renderAdjustLayoutForScriptDirection(oversized, rows, textGroup, sentNumGroup);
+    Util.profileEnd('adjust for oversize depending on script');
 
     Util.profileStart('adjust backgrounds');
-    this.renderAdjustLayoutForOversize(oversized, backgroundGroup);
+    this.renderAdjustBackgroundsForOversize(oversized, backgroundGroup);
     Util.profileEnd('adjust backgrounds');
 
     Util.profileStart('row-spacing-adjust');
@@ -3870,7 +3869,7 @@ export class Visualizer {
 
     // To visualize the spacing use \u2588, otherwise \u00a0
     this.svg.plain(this.rtlmode ? '\u200f\u00a0' : '\u00a0')
-      .move(x, y)
+      .amove(x, y)
       .addClass('spacing')
       .attr({
         textLength: width,
@@ -3882,8 +3881,7 @@ export class Visualizer {
 
   renderArcShadow(arc: Arc, shadowGroup: SVGTypeMapping<SVGGElement>, textBox: { x: number; y: number; width: number; height: number; }) {
     return this.svg.rect()
-      .x(textBox.x - this.arcLabelShadowSize)
-      .y(textBox.y - this.arcLabelShadowSize)
+      .move(textBox.x - this.arcLabelShadowSize, textBox.y - this.arcLabelShadowSize)
       .width(textBox.width + 2 * this.arcLabelShadowSize)
       .height(textBox.height + 2 * this.arcLabelShadowSize)
       .attr({
@@ -3895,22 +3893,21 @@ export class Visualizer {
       .addTo(shadowGroup);
   }
 
-  renderSpanMarkedRect(bx: number, by: number, bw: number, bh: number, chunk: Chunk): SVGJSElement {
+  renderSpanMarkedRect(yy: number, bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
     return this.svg.rect(bw + 2 * this.markedSpanSize, bh + 2 * this.markedSpanSize)
-      .move(bx - this.markedSpanSize, by - this.markedSpanSize)
+      .move(bx - this.markedSpanSize, yy - this.markedSpanSize - Configuration.visual.margin.y - fragment.span.floor)
       .attr({
         filter: 'url(#Gaussian_Blur)',
         'class': "shadow_EditHighlight",
         rx: this.markedSpanSize,
         ry: this.markedSpanSize,
       })
-      .addTo(chunk.highlightGroup);
+      .addTo(fragment.chunk.highlightGroup);
   }
 
-  renderFragmentShadowRect(bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
+  renderFragmentShadowRect(yy: number, bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
     return this.svg.rect()
-      .x(bx - this.rectShadowSize)
-      .y(by - this.rectShadowSize)
+      .move(bx - this.rectShadowSize, yy - this.rectShadowSize - Configuration.visual.margin.y - fragment.span.floor)
       .width(bw + 2 * this.rectShadowSize)
       .height(bh + 2 * this.rectShadowSize)
       .attr({

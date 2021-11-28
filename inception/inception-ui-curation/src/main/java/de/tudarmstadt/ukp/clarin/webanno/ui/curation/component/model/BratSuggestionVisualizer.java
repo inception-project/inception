@@ -46,13 +46,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLazyDetailsLookupService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 
 /**
  * Wicket panel for visualizing an annotated sentence in brat. When a user clicks on a span or an
@@ -68,8 +68,8 @@ public abstract class BratSuggestionVisualizer
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
-    private @SpringBean BratLazyDetailsLookupService lazyDetailsLookupService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean LazyDetailsLookupService lazyDetailsLookupService;
 
     private AbstractDefaultAjaxBehavior controller;
     private final int position;
@@ -94,7 +94,7 @@ public abstract class BratSuggestionVisualizer
                     String action = BratRequestUtils.getActionFromRequest(request);
                     final VID paramId = BratRequestUtils.getVidFromRequest(request);
 
-                    if (NormDataResponse.is(action)) {
+                    if (LazyDetailsHandler.COMMAND.equals(action)) {
                         AnnotatorSegment segment = getModelObject();
                         AnnotatorState state = segment.getAnnotatorState();
                         CasProvider casProvider = () -> documentService.readAnnotationCas(

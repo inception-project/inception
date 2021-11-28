@@ -73,8 +73,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
-import de.tudarmstadt.ukp.inception.diam.model.ViewportDefinition;
-import de.tudarmstadt.ukp.inception.diam.model.ViewportState;
+import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
+import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportState;
 
 /**
  * Differential INCEpTION Annotation Messaging (DIAM) protocol controller.

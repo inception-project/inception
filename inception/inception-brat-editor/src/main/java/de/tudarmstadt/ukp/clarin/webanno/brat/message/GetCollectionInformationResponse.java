@@ -25,6 +25,7 @@ import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
 /**
  * Response for the {@code getCollectionInformation} command.

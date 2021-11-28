@@ -17,13 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter.decodeTypeName;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.ACTION_CONTEXT_MENU;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_OFFSETS;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_ORIGIN_SPAN_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_TARGET_SPAN_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
@@ -35,11 +30,9 @@ import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -57,7 +50,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,32 +75,23 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.RejectActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 
 /**
  * Brat annotator component.
@@ -129,12 +112,29 @@ public class BratAnnotationEditor
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
-    private @SpringBean BratLazyDetailsLookupService lazyDetailsLookupService;
+
+    @SpringBean(name = "extensionActionHandler")
+    private EditorAjaxRequestHandler extensionActionHandler;
+
+    @SpringBean(name = "customActionHandler")
+    private EditorAjaxRequestHandler customActionHandler;
+
+    @SpringBean(name = "createSpanAnnotationHandler")
+    private EditorAjaxRequestHandler createSpanAnnotationHandler;
+
+    @SpringBean(name = "createRelationAnnotationHandler")
+    private EditorAjaxRequestHandler createRelationAnnotationHandler;
+
+    @SpringBean(name = "selectAnnotationHandler")
+    private EditorAjaxRequestHandler selectAnnotationHandler;
+
+    @SpringBean(name = "lazyDetailHandler")
+    private EditorAjaxRequestHandler lazyDetailHandler;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
 
-    private transient JsonNode lastRenederedJsonParsed;
+    private transient JsonNode lastRenderedJsonParsed;
     private String lastRenderedJson;
     private int lastRenderedWindowStart = -1;
 
@@ -165,86 +165,59 @@ public class BratAnnotationEditor
 
                 long timerStart = System.currentTimeMillis();
 
-                final IRequestParameters request = getRequest().getPostParameters();
+                final IRequestParameters requestParameters = getRequest().getPostParameters();
 
                 // Get action from the request
-                String action = BratRequestUtils.getActionFromRequest(request);
+                String action = BratRequestUtils.getActionFromRequest(requestParameters);
                 LOG.trace("AJAX-RPC CALLED: [{}]", action);
 
                 // Parse annotation ID if present in request
-                final VID paramId = BratRequestUtils.getVidFromRequest(request);
-
-                // Load the CAS if necessary
-                // Make sure we load the CAS only once here in case of an annotation action.
-                boolean requiresCasLoading = SpanAnnotationResponse.is(action)
-                        || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action)
-                        || DoActionResponse.is(action) || AcceptActionResponse.is(action)
-                        || RejectActionResponse.is(action);
-                final CAS cas;
-                if (requiresCasLoading) {
-                    try {
-                        cas = getCasProvider().get();
-                    }
-                    catch (Exception e) {
-                        handleError("Unable to load data: " + getRootCauseMessage(e), e);
-                        return;
-                    }
-                }
-                else {
-                    cas = null;
-                }
+                final VID paramId = BratRequestUtils.getVidFromRequest(requestParameters);
 
                 Object result = null;
                 try {
                     // Whenever an action should be performed, do ONLY perform this action and
                     // nothing else, and only if the item actually is an action item
-                    if (NormDataResponse.is(action)) {
-                        AnnotatorState state = getModelObject();
-                        result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
-                                getCasProvider(), state.getDocument(), state.getUser(),
-                                state.getWindowBeginOffset(), state.getWindowEndOffset());
+                    if (lazyDetailHandler.accepts(getRequest())) {
+                        result = lazyDetailHandler.handle(aTarget, getRequest());
                     }
-                    else if (DoActionResponse.is(action)) {
-                        if (paramId.isSynthetic()) {
-                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, cas, paramId, action);
-                        }
-                        else {
-                            actionDoAction(aTarget, request, cas, paramId);
-                        }
+                    else if (extensionActionHandler.accepts(getRequest())) {
+                        extensionActionHandler.handle(aTarget, getRequest());
+                    }
+                    else if (customActionHandler.accepts(getRequest())) {
+                        customActionHandler.handle(aTarget, getRequest());
                     }
                     else {
-                        if (paramId.isSynthetic()) {
-                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, cas, paramId, action);
+                        // Doing anything but selecting or creating a span annotation when a
+                        // slot is armed will un-arm it
+                        if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
+                            getModelObject().clearArmedSlot();
                         }
-                        else {
-                            // Doing anything but selecting or creating a span annotation when a
-                            // slot is armed will unarm it
-                            if (getModelObject().isSlotArmed()
-                                    && !SpanAnnotationResponse.is(action)) {
-                                getModelObject().clearArmedSlot();
-                            }
 
-                            if (ACTION_CONTEXT_MENU.equals(action.toString())
-                                    && !paramId.isSlotSet()) {
-                                actionOpenContextMenu(aTarget, request, cas, paramId);
-                            }
-                            else if (SpanAnnotationResponse.is(action)) {
-                                result = actionSpan(aTarget, request, cas, paramId);
-                            }
-                            else if (ArcAnnotationResponse.is(action)) {
-                                result = actionArc(aTarget, request, cas, paramId);
-                            }
-                            else if (LoadConfResponse.is(action)) {
-                                result = new LoadConfResponse(bratProperties);
-                            }
-                            else if (GetCollectionInformationResponse.is(action)) {
-                                result = actionGetCollectionInformation();
-                            }
-                            else if (GetDocumentResponse.is(action)) {
-                                result = actionGetDocument(cas);
-                            }
+                        if (ACTION_CONTEXT_MENU.equals(action.toString()) && !paramId.isSlotSet()) {
+                            final CAS cas = getCasProvider().get();
+                            actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
+                        }
+                        else if (selectAnnotationHandler.accepts(getRequest())) {
+                            selectAnnotationHandler.handle(aTarget, getRequest());
+                        }
+                        else if (createSpanAnnotationHandler.accepts(getRequest())) {
+                            createSpanAnnotationHandler.handle(aTarget, getRequest());
+                            result = new SpanAnnotationResponse();
+                        }
+                        else if (createRelationAnnotationHandler.accepts(getRequest())) {
+                            result = createRelationAnnotationHandler.handle(aTarget, getRequest());
+                            result = new ArcAnnotationResponse();
+                        }
+                        else if (LoadConfResponse.is(action)) {
+                            result = new LoadConfResponse(bratProperties);
+                        }
+                        else if (GetCollectionInformationResponse.is(action)) {
+                            result = actionGetCollectionInformation();
+                        }
+                        else if (GetDocumentResponse.is(action)) {
+                            final CAS cas = getCasProvider().get();
+                            result = actionGetDocument(cas);
                         }
                     }
                 }
@@ -291,104 +264,6 @@ public class BratAnnotationEditor
         if (!items.isEmpty()) {
             contextMenu.onOpen(aTarget);
         }
-    }
-
-    private Object actionDoAction(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas,
-            VID paramId)
-        throws AnnotationException, IOException
-    {
-        StringValue layerParam = request.getParameterValue(PARAM_TYPE);
-
-        if (!layerParam.isEmpty()) {
-            long layerId = decodeTypeName(layerParam.toString());
-            AnnotatorState state = getModelObject();
-            AnnotationLayer layer = annotationService.getLayer(state.getProject(), layerId)
-                    .orElseThrow(() -> new AnnotationException("Layer with ID [" + layerId
-                            + "] does not exist in project [" + state.getProject().getName() + "]("
-                            + state.getProject().getId() + ")"));
-            if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
-                // parse the action
-                List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
-                AnnotationFS anno = selectAnnotationByAddr(aCas, paramId.getId());
-                Map<String, Object> functionParams = OnClickActionParser.parse(layer, features,
-                        getModelObject().getDocument(), anno);
-                // define anonymous function, fill the body and immediately execute
-                String js = String.format("(function ($PARAM){ %s })(%s)",
-                        WicketUtil.wrapInTryCatch(layer.getOnClickJavascriptAction()),
-                        JSONUtil.toJsonString(functionParams));
-                aTarget.appendJavaScript(js);
-            }
-        }
-
-        return null;
-    }
-
-    private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,
-            CAS aCas, VID aSelectedAnnotation)
-        throws IOException, AnnotationException
-    {
-        // This is the span the user has marked in the browser in order to create a new slot-filler
-        // annotation OR the span of an existing annotation which the user has selected.
-        Offsets optUserSelectedSpan = getOffsetsFromRequest(request, aCas, aSelectedAnnotation);
-
-        Offsets userSelectedSpan = optUserSelectedSpan;
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
-
-        if (state.isSlotArmed()) {
-            // When filling a slot, the current selection is *NOT* changed. The
-            // Span annotation which owns the slot that is being filled remains
-            // selected!
-            getActionHandler().actionFillSlot(aTarget, aCas, userSelectedSpan.getBegin(),
-                    userSelectedSpan.getEnd(), aSelectedAnnotation);
-        }
-        else {
-            if (!aSelectedAnnotation.isSynthetic()) {
-                selection.selectSpan(aSelectedAnnotation, aCas, userSelectedSpan.getBegin(),
-                        userSelectedSpan.getEnd());
-
-                if (selection.getAnnotation().isNotSet()) {
-                    // Create new annotation
-                    getActionHandler().actionCreateOrUpdate(aTarget, aCas);
-                }
-                else {
-                    getActionHandler().actionSelect(aTarget);
-                }
-            }
-        }
-
-        return new SpanAnnotationResponse();
-    }
-
-    private ArcAnnotationResponse actionArc(AjaxRequestTarget aTarget, IRequestParameters request,
-            CAS aCas, VID paramId)
-        throws IOException, AnnotationException
-    {
-        VID origin = VID.parse(request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
-        VID target = VID.parse(request.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
-
-        if (origin.isSynthetic() || target.isSynthetic()) {
-            error("Relations cannot be created from/to synthetic annotations");
-            aTarget.addChildren(getPage(), IFeedback.class);
-            return null;
-        }
-
-        AnnotationFS originFs = selectAnnotationByAddr(aCas, origin.getId());
-        AnnotationFS targetFs = selectAnnotationByAddr(aCas, target.getId());
-
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
-        selection.selectArc(paramId, originFs, targetFs);
-
-        if (selection.getAnnotation().isNotSet()) {
-            // Create new annotation
-            getActionHandler().actionCreateOrUpdate(aTarget, aCas);
-        }
-        else {
-            getActionHandler().actionSelect(aTarget);
-        }
-
-        return new ArcAnnotationResponse();
     }
 
     private void actionArcRightClick(AjaxRequestTarget aTarget, VID paramId)
@@ -447,7 +322,7 @@ public class BratAnnotationEditor
             render(response, aCas);
             json = toJson(response);
             lastRenderedJson = json;
-            lastRenederedJsonParsed = null;
+            lastRenderedJsonParsed = null;
         }
         else {
             json = toJson(response);
@@ -458,36 +333,6 @@ public class BratAnnotationEditor
         serverTiming("Brat-JSON", "Brat JSON generation (FULL)", timer.getTime());
 
         return json;
-    }
-
-    /**
-     * Extract offset information from the current request. These are either offsets of an existing
-     * selected annotations or offsets contained in the request for the creation of a new
-     * annotation.
-     */
-    private Offsets getOffsetsFromRequest(IRequestParameters request, CAS aCas, VID aVid)
-        throws IOException
-    {
-        if (aVid.isNotSet() || aVid.isSynthetic()) {
-            // Create new span annotation - in this case we get the offset information from the
-            // request
-            String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-
-            OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
-                    OffsetsList.class);
-
-            int annotationBegin = getModelObject().getWindowBeginOffset()
-                    + offsetLists.get(0).getBegin();
-            int annotationEnd = getModelObject().getWindowBeginOffset()
-                    + offsetLists.get(offsetLists.size() - 1).getEnd();
-            return new Offsets(annotationBegin, annotationEnd);
-        }
-        else {
-            // Edit existing span annotation - in this case we look up the offsets in the CAS
-            // Let's not trust the client in this case.
-            AnnotationFS fs = WebAnnoCasUtil.selectAnnotationByAddr(aCas, aVid.getId());
-            return new Offsets(fs.getBegin(), fs.getEnd());
-        }
     }
 
     @Override
@@ -568,8 +413,8 @@ public class BratAnnotationEditor
             // ... try to render diff
             JsonNode previous = null;
             try {
-                if (lastRenederedJsonParsed != null) {
-                    previous = lastRenederedJsonParsed;
+                if (lastRenderedJsonParsed != null) {
+                    previous = lastRenderedJsonParsed;
                 }
                 else {
                     previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
@@ -605,7 +450,7 @@ public class BratAnnotationEditor
 
         // Storing the last rendered JSON as string because JsonNodes are not serializable.
         lastRenderedJson = json;
-        lastRenederedJsonParsed = current;
+        lastRenderedJsonParsed = current;
         lastRenderedWindowStart = aState.getWindowBeginOffset();
 
         timer.stop();

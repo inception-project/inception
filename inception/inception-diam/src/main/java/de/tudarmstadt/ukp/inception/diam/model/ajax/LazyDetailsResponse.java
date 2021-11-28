@@ -15,53 +15,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.message;
+package de.tudarmstadt.ukp.inception.diam.model.ajax;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Response for the {@code reverseArc} command.
+ * Response for the {@code normData} command.
+ * 
+ * This is essentially present in brat, but there {@code results} would be a member of an array
+ * called {@code value}. We simplified this a bit here and in {@code visualizer_ui.js}.
+ * 
+ * @deprecated Need to check if we want to keep this for DIAM
  */
-public class ReverseArcResponse
+@Deprecated
+public class LazyDetailsResponse
     extends AjaxResponse
 {
-    public static final String COMMAND = "reverseArc";
+    private List<LazyDetail> results = new ArrayList<>();
 
-    private GetDocumentResponse annotations;
-
-    public ReverseArcResponse()
+    public LazyDetailsResponse(String aAction)
     {
-        super(COMMAND);
+        super(aAction);
     }
 
-    /**
-     * [[ "T1"],["T2"]]
-     */
-    private List<String[]> edited = new ArrayList<>();
-
-    public GetDocumentResponse getAnnotations()
+    public List<LazyDetail> getResults()
     {
-        return annotations;
+        return results;
     }
 
-    public void setAnnotations(GetDocumentResponse aAnnotations)
+    public void setResults(List<LazyDetail> aResult)
     {
-        annotations = aAnnotations;
+        results = aResult;
     }
 
-    public List<String[]> getEdited()
+    public void addResult(LazyDetail aResult)
     {
-        return edited;
-    }
-
-    public void setEdited(List<String[]> aEdited)
-    {
-        edited = aEdited;
-    }
-
-    public static boolean is(String aCommand)
-    {
-        return COMMAND.equals(aCommand);
+        results.add(aResult);
     }
 }
