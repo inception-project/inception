@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -33,6 +34,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
  * This class is exposed as a Spring Component via {@link DiamEditorAutoConfig#lazyDetailHandler}.
  * </p>
  */
+@Order(EditorAjaxRequestHandler.PRIO_RENDER_HANDLER)
 public class LazyDetailsHandler
     extends EditorAjaxRequestHandlerBase
 {
@@ -68,7 +70,7 @@ public class LazyDetailsHandler
                     state.getWindowBeginOffset(), state.getWindowEndOffset());
         }
         catch (Exception e) {
-            return handleError(aTarget, "Unable to load data", e);
+            return handleError("Unable to load data", e);
         }
     }
 }

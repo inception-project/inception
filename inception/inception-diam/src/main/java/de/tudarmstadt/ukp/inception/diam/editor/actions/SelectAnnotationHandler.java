@@ -27,6 +27,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
@@ -42,6 +43,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
  * {@link DiamEditorAutoConfig#selectAnnotationHandler}.
  * </p>
  */
+@Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)
 public class SelectAnnotationHandler
     extends EditorAjaxRequestHandlerBase
 {
@@ -63,10 +65,16 @@ public class SelectAnnotationHandler
     }
 
     @Override
+    public boolean accepts(Request aRequest)
+    {
+        return super.accepts(aRequest) && !getAnnotatorState().isSlotArmed();
+    }
+
+    @Override
     public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+            AnnotationPageBase page = getPage();
 
             VID vid = VID.parseOptional(
                     aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
@@ -88,7 +96,7 @@ public class SelectAnnotationHandler
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError(aTarget, "Unable to load data", e);
+            return handleError("Unable to load data", e);
         }
     }
 }

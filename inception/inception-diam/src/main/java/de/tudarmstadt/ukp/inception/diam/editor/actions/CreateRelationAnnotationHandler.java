@@ -27,6 +27,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -42,6 +43,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
  * {@link DiamEditorAutoConfig#createRelationAnnotationHandler}.
  * </p>
  */
+@Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)
 public class CreateRelationAnnotationHandler
     extends EditorAjaxRequestHandlerBase
 {
@@ -57,20 +59,20 @@ public class CreateRelationAnnotationHandler
     public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+            AnnotationPageBase page = getPage();
             CAS cas = page.getEditorCas();
             actionArc(aTarget, aRequest.getRequestParameters(), cas);
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError(aTarget, "Unable to load data", e);
+            return handleError("Unable to load data", e);
         }
     }
 
     private void actionArc(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas)
         throws IOException, AnnotationException
     {
-        AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+        AnnotationPageBase page = getPage();
 
         VID origin = VID.parse(request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
         VID target = VID.parse(request.getParameterValue(PARAM_TARGET_SPAN_ID).toString());

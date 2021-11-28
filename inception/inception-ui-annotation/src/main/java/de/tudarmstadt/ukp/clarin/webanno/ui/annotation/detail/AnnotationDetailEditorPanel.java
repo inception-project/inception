@@ -539,7 +539,28 @@ public abstract class AnnotationDetailEditorPanel
 
     @Override
     public void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
-            int aSlotFillerEnd, VID aExistingSlotFillerId)
+            int aSlotFillerEnd)
+        throws AnnotationException, IOException
+    {
+        AnnotatorState state = getModelObject();
+
+        if (CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().feature.getType())) {
+            throw new IllegalPlacementException(
+                    "Unable to create annotation of type [" + CAS.TYPE_NAME_ANNOTATION
+                            + "]. Please click an annotation in stead of selecting new text.");
+        }
+
+        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
+                .findLayer(state.getProject(), state.getArmedFeature().feature.getType()));
+
+        VID slotFillerVid = new VID(adapter.add(state.getDocument(), state.getUser().getUsername(),
+                aCas, aSlotFillerBegin, aSlotFillerEnd));
+
+        actionFillSlot(aTarget, aCas, slotFillerVid);
+    }
+
+    @Override
+    public void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, VID aExistingSlotFillerId)
         throws AnnotationException, IOException
     {
         assert aCas != null;
@@ -559,24 +580,7 @@ public abstract class AnnotationDetailEditorPanel
         // concrete span type defined in the project, not if the user simply defined
         // CAS.TYPE_NAME_ANNOTATION to allow for arbitrary slot fillers. In the latter case, we
         // abort the operation with an IllegalPlacementException.
-        int slotFillerAddr;
-        if (aExistingSlotFillerId.isNotSet()) {
-            if (!CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().feature.getType())) {
-                SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
-                        .findLayer(state.getProject(), state.getArmedFeature().feature.getType()));
-
-                slotFillerAddr = getAddr(adapter.add(state.getDocument(),
-                        state.getUser().getUsername(), aCas, aSlotFillerBegin, aSlotFillerEnd));
-            }
-            else {
-                throw new IllegalPlacementException(
-                        "Unable to create annotation of type [" + CAS.TYPE_NAME_ANNOTATION
-                                + "]. Please click an annotation in stead of selecting new text.");
-            }
-        }
-        else {
-            slotFillerAddr = aExistingSlotFillerId.getId();
-        }
+        int slotFillerAddr = aExistingSlotFillerId.getId();
 
         // Inject the slot filler into the respective slot
         FeatureStructure slotHostFS = selectFsByAddr(aCas, state.getArmedFeature().vid.getId());

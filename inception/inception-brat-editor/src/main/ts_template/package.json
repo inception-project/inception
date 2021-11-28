@@ -15,6 +15,7 @@
   },
   "external": {},
   "devDependencies": {
+    "@inception-project/inception-diam": "0.${project.version}",
     "fast-json-patch": "^3.1.0",
     "esbuild": "^0.13.13",
     "eslint": "^7.32.0",

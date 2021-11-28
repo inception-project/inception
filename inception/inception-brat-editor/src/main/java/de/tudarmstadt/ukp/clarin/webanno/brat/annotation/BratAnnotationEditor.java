@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.ACTION_CONTEXT_MENU;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getActionFromRequest;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getVidFromRequest;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
@@ -69,18 +71,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRendered
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
@@ -91,7 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 
 /**
  * Brat annotator component.
@@ -108,28 +106,9 @@ public class BratAnnotationEditor
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
-    private @SpringBean LayerSupportRegistry layerSupportRegistry;
-    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
-
-    @SpringBean(name = "extensionActionHandler")
-    private EditorAjaxRequestHandler extensionActionHandler;
-
-    @SpringBean(name = "customActionHandler")
-    private EditorAjaxRequestHandler customActionHandler;
-
-    @SpringBean(name = "createSpanAnnotationHandler")
-    private EditorAjaxRequestHandler createSpanAnnotationHandler;
-
-    @SpringBean(name = "createRelationAnnotationHandler")
-    private EditorAjaxRequestHandler createRelationAnnotationHandler;
-
-    @SpringBean(name = "selectAnnotationHandler")
-    private EditorAjaxRequestHandler selectAnnotationHandler;
-
-    @SpringBean(name = "lazyDetailHandler")
-    private EditorAjaxRequestHandler lazyDetailHandler;
+    private @SpringBean EditorAjaxRequestHandlerExtensionPoint handlers;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -165,61 +144,13 @@ public class BratAnnotationEditor
 
                 long timerStart = System.currentTimeMillis();
 
-                final IRequestParameters requestParameters = getRequest().getPostParameters();
-
                 // Get action from the request
-                String action = BratRequestUtils.getActionFromRequest(requestParameters);
+                String action = getActionFromRequest(getRequest().getPostParameters());
                 LOG.trace("AJAX-RPC CALLED: [{}]", action);
-
-                // Parse annotation ID if present in request
-                final VID paramId = BratRequestUtils.getVidFromRequest(requestParameters);
 
                 Object result = null;
                 try {
-                    // Whenever an action should be performed, do ONLY perform this action and
-                    // nothing else, and only if the item actually is an action item
-                    if (lazyDetailHandler.accepts(getRequest())) {
-                        result = lazyDetailHandler.handle(aTarget, getRequest());
-                    }
-                    else if (extensionActionHandler.accepts(getRequest())) {
-                        extensionActionHandler.handle(aTarget, getRequest());
-                    }
-                    else if (customActionHandler.accepts(getRequest())) {
-                        customActionHandler.handle(aTarget, getRequest());
-                    }
-                    else {
-                        // Doing anything but selecting or creating a span annotation when a
-                        // slot is armed will un-arm it
-                        if (getModelObject().isSlotArmed() && !SpanAnnotationResponse.is(action)) {
-                            getModelObject().clearArmedSlot();
-                        }
-
-                        if (ACTION_CONTEXT_MENU.equals(action.toString()) && !paramId.isSlotSet()) {
-                            final CAS cas = getCasProvider().get();
-                            actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
-                        }
-                        else if (selectAnnotationHandler.accepts(getRequest())) {
-                            selectAnnotationHandler.handle(aTarget, getRequest());
-                        }
-                        else if (createSpanAnnotationHandler.accepts(getRequest())) {
-                            createSpanAnnotationHandler.handle(aTarget, getRequest());
-                            result = new SpanAnnotationResponse();
-                        }
-                        else if (createRelationAnnotationHandler.accepts(getRequest())) {
-                            result = createRelationAnnotationHandler.handle(aTarget, getRequest());
-                            result = new ArcAnnotationResponse();
-                        }
-                        else if (LoadConfResponse.is(action)) {
-                            result = new LoadConfResponse(bratProperties);
-                        }
-                        else if (GetCollectionInformationResponse.is(action)) {
-                            result = actionGetCollectionInformation();
-                        }
-                        else if (GetDocumentResponse.is(action)) {
-                            final CAS cas = getCasProvider().get();
-                            result = actionGetDocument(cas);
-                        }
-                    }
+                    result = handleRequest(aTarget);
                 }
                 catch (Exception e) {
                     handleError("Error: " + getRootCauseMessage(e), e);
@@ -242,6 +173,36 @@ public class BratAnnotationEditor
                 LOG.trace("AJAX-RPC DONE: [{}] completed in {}ms", action, duration);
 
                 serverTiming("Brat-AJAX", "Brat-AJAX (" + action + ")", duration);
+            }
+
+            private Object handleRequest(AjaxRequestTarget aTarget) throws IOException
+            {
+                IRequestParameters requestParameters = getRequest().getPostParameters();
+                String action = getActionFromRequest(requestParameters);
+
+                if (LoadConfResponse.is(action)) {
+                    return new LoadConfResponse(bratProperties);
+                }
+
+                if (GetCollectionInformationResponse.is(action)) {
+                    return actionGetCollectionInformation();
+                }
+
+                if (GetDocumentResponse.is(action)) {
+                    return actionGetDocument();
+                }
+
+                // FIXME Should we un-arm the active slot when the context menu is opened?
+                final VID paramId = getVidFromRequest(requestParameters);
+                if (ACTION_CONTEXT_MENU.equals(action.toString()) && !paramId.isSlotSet()) {
+                    final CAS cas = getCasProvider().get();
+                    actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
+                    return null;
+                }
+
+                return handlers.getHandler(getRequest()) //
+                        .map(handler -> handler.handle(aTarget, getRequest())) //
+                        .orElse(null);
             }
         };
 
@@ -311,15 +272,17 @@ public class BratAnnotationEditor
         return info;
     }
 
-    private String actionGetDocument(CAS aCas)
+    private String actionGetDocument() throws IOException
     {
         StopWatch timer = new StopWatch();
         timer.start();
 
+        final CAS cas = getCasProvider().get();
+
         GetDocumentResponse response = new GetDocumentResponse();
         String json;
         if (getModelObject().getProject() != null) {
-            render(response, aCas);
+            render(response, cas);
             json = toJson(response);
             lastRenderedJson = json;
             lastRenderedJsonParsed = null;

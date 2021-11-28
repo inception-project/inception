@@ -28,15 +28,20 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 public interface EditorAjaxRequestHandler
     extends Extension<Request>
 {
-    public static final String PARAM_ACTION = "action";
-    public static final String PARAM_ARC_ID = "arcId";
-    public static final String PARAM_ID = "id";
-    public static final String PARAM_OFFSETS = "offsets";
-    public static final String PARAM_TARGET_SPAN_ID = "targetSpanId";
-    public static final String PARAM_ORIGIN_SPAN_ID = "originSpanId";
-    public static final String PARAM_TYPE = "type";
-    public static final String PARAM_LAZY_DETAIL_DATABASE = "database";
-    public static final String PARAM_LAZY_DETAIL_KEY = "key";
+    int PRIO_RENDER_HANDLER = 0;
+    int PRIO_SLOT_FILLER_HANDLER = 100;
+    int PRIO_UNARM_SLOT_HANDLER = 199;
+    int PRIO_ANNOTATION_HANDLER = 200;
+
+    String PARAM_ACTION = "action";
+    String PARAM_ARC_ID = "arcId";
+    String PARAM_ID = "id";
+    String PARAM_OFFSETS = "offsets";
+    String PARAM_TARGET_SPAN_ID = "targetSpanId";
+    String PARAM_ORIGIN_SPAN_ID = "originSpanId";
+    String PARAM_TYPE = "type";
+    String PARAM_LAZY_DETAIL_DATABASE = "database";
+    String PARAM_LAZY_DETAIL_KEY = "key";
 
     String ACTION_CONTEXT_MENU = "contextMenu";
 
@@ -56,6 +61,7 @@ public interface EditorAjaxRequestHandler
     @Override
     default boolean accepts(Request aRequest)
     {
+        System.out.println(getClass());
         return getCommand().equals(
                 aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString());
     }

@@ -27,7 +27,6 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -39,14 +38,14 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.OffsetsList;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#createSpanAnnotationHandler}.
+ * {@link DiamEditorAutoConfig#fillSlotWithNewAnnotationHandler}.
  * </p>
  */
-@Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)
-public class CreateSpanAnnotationHandler
+@Order(EditorAjaxRequestHandler.PRIO_SLOT_FILLER_HANDLER)
+public class FillSlotWithNewAnnotationHandler
     extends EditorAjaxRequestHandlerBase
 {
-    public static final String COMMAND = "spanOpenDialog";
+    public static final String COMMAND = CreateSpanAnnotationHandler.COMMAND;
 
     @Override
     public String getCommand()
@@ -68,6 +67,12 @@ public class CreateSpanAnnotationHandler
         }
     }
 
+    @Override
+    public boolean accepts(Request aRequest)
+    {
+        return super.accepts(aRequest) && getAnnotatorState().isSlotArmed();
+    }
+
     private void actionSpan(AjaxRequestTarget aTarget, IRequestParameters aRequestParameters,
             CAS aCas)
         throws IOException, AnnotationException
@@ -78,21 +83,11 @@ public class CreateSpanAnnotationHandler
         // annotation OR the span of an existing annotation which the user has selected.
         Offsets userSelectedSpan = getOffsetsFromRequest(aTarget, aRequestParameters, aCas);
 
-        AnnotatorState state = page.getModelObject();
-        Selection selection = state.getSelection();
-
-        if (state.isSlotArmed()) {
-            // When filling a slot, the current selection is *NOT* changed. The
-            // Span annotation which owns the slot that is being filled remains
-            // selected!
-            page.getAnnotationActionHandler().actionFillSlot(aTarget, aCas,
-                    userSelectedSpan.getBegin(), userSelectedSpan.getEnd(), VID.NONE_ID);
-        }
-        else {
-            selection.selectSpan(aCas, userSelectedSpan.getBegin(), userSelectedSpan.getEnd());
-
-            page.getAnnotationActionHandler().actionCreateOrUpdate(aTarget, aCas);
-        }
+        // When filling a slot, the current selection is *NOT* changed. The
+        // Span annotation which owns the slot that is being filled remains
+        // selected!
+        page.getAnnotationActionHandler().actionFillSlot(aTarget, aCas, userSelectedSpan.getBegin(),
+                userSelectedSpan.getEnd(), VID.NONE_ID);
     }
 
     /**
@@ -110,10 +105,9 @@ public class CreateSpanAnnotationHandler
 
         OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets, OffsetsList.class);
 
-        AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
-        int annotationBegin = page.getModelObject().getWindowBeginOffset()
-                + offsetLists.get(0).getBegin();
-        int annotationEnd = page.getModelObject().getWindowBeginOffset()
+        AnnotatorState state = getAnnotatorState();
+        int annotationBegin = state.getWindowBeginOffset() + offsetLists.get(0).getBegin();
+        int annotationEnd = state.getWindowBeginOffset()
                 + offsetLists.get(offsetLists.size() - 1).getEnd();
         return new Offsets(annotationBegin, annotationEnd);
     }

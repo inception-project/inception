@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { Ajax } from "./ajax/Ajax";
-import { DiamAjax } from "./ajax/DiamAjax";
+import { DiamAjax } from "@inception-project/inception-diam/client/DiamAjax";
 import { AnnotatorUI } from "./annotator_ui/AnnotatorUI";
 import { Dispatcher } from "./dispatcher/Dispatcher";
 import { Visualizer } from "./visualizer/Visualizer";
