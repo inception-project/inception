@@ -3281,7 +3281,10 @@ export class Visualizer {
     }
 
     this.svg.clear();
-    this.svg.height(0); // Ensure we do not have a scrollbar when starting to render
+    // Ensure we do have a scrollbar when starting with the calculations - this avoid the SVG 
+    // resizing on the first action (if we actually have a scrollbar when the whole rendering is
+    // over).
+    this.svg.height(window.innerHeight + 300); 
     this.svg.attr('direction', null);
 
     if (!this.data) {
