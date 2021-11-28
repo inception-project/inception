@@ -3104,7 +3104,7 @@ export class Visualizer {
       } else {
         textX = (this.sentNumMargin - Configuration.visual.margin.x);
       }
-      const text = this.svg.text(`${row.sentence}`)
+      const text = this.svg.plain(`${row.sentence}`)
         .amove(textX, y - this.rowPadding)
         .attr('data-sent', row.sentence)
         .css('cursor', 'pointer');
