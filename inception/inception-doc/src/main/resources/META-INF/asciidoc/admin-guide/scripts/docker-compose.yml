@@ -43,8 +43,6 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    mem_limit: 1g
-    memswap_limit: 1g
     restart: unless-stopped
     networks:
       inception-net:
