@@ -434,6 +434,8 @@ public class DynamicWorkloadManagementPage
 
         settingsForm.add(new DocLink("workflowHelpLink", "sect_dynamic_workload"));
 
+        settingsForm.add(new CheckBox("confirmFinishingDocuments"));
+
         settingsForm.add(new NumberTextField<>("defaultNumberOfAnnotations", Integer.class) //
                 .setMinimum(1) //
                 .setConvertEmptyInputStringToNull(false) //
