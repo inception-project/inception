@@ -886,8 +886,10 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryBuilder withLabelMatchingAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::trimQueryString)
-                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+        String[] values = Arrays.stream(aValues) //
+                .map(SPARQLQueryBuilder::trimQueryString) //
+                .filter(StringUtils::isNotBlank) //
+                .toArray(String[]::new);
 
         if (values.length == 0) {
             returnEmptyResult = true;
@@ -2045,14 +2047,16 @@ public class SPARQLQueryBuilder
     public static String convertToFuzzyMatchingQuery(String aQuery)
     {
         StringJoiner joiner = new StringJoiner(" ");
-        for (String term : aQuery.split(" ")) {
-            if (term.length() > 4) {
+        String[] terms = aQuery.split("\\s");
+        for (String term : terms) {
+            // We only do the fuzzy search if there are few terms because if there are many terms,
+            // the search becomes too slow if we do a fuzzy match for each of them.
+            if (term.length() > 4 && terms.length <= 3) {
                 joiner.add(term + "~");
             }
             // REC: excluding terms of 3 or less characters helps reducing the problem that a
             // mention of "Counties of Catherlagh" matches "Anne of Austria", but actually
-            // this should be handled by stopwords and not be excluding any short words...
-            // I think
+            // I think this should be handled by stopwords and not be excluding any short words...
             else if (term.length() >= 3) {
                 joiner.add(term);
             }
