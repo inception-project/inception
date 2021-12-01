@@ -58,7 +58,7 @@ public class TagSet
     @Column(length = 64000)
     private String description;
 
-    private boolean createTag = true;
+    private boolean createTag = false;
 
     public TagSet()
     {
