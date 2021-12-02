@@ -25,9 +25,6 @@
   <artifactId>inception-ui-curation</artifactId>
   <name>INCEpTION - UI - Curation</name>
   <packaging>jar</packaging>
-  <properties>
-    <maven.surefire.argLine>-Djdk.attach.allowAttachSelf</maven.surefire.argLine>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>

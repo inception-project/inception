@@ -19,12 +19,27 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="flex-h-container flex-gutter">
-      <div class="flex-v-container flex-content flex-gutter">
-        <div wicket:id="annotationSidebar"/>
-        <div wicket:id="annotationEditor"/>
+    <form wicket:id="form" class="card">
+      <div class="card-header">
+        <wicket:message key="defaultAnnotationEditorState"/>
       </div>
-    </div>
+      <div class="card-body">
+        <div class="row form-row">
+          <label wicket:for="defaultEditor" class="col-sm-4 col-form-label">
+            <wicket:label key="defaultEditor" />
+          </label>
+          <div class="col-sm-8">
+            <select wicket:id="defaultEditor" class="form-select" data-container="body"/>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer text-end">
+        <button wicket:id="save" class="btn btn-primary">
+          <i class="fas fa-save"></i>&nbsp;
+          <wicket:message key="save"/>
+        </button>
+      </div>
+    </form>
   </wicket:panel>
 </body>
 </html>

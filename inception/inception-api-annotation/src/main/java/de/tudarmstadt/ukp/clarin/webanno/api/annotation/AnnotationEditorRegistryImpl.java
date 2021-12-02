@@ -31,9 +31,15 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
-@Component
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationAutoConfiguration#annotationEditorRegistry}.
+ * </p>
+ */
 public class AnnotationEditorRegistryImpl
     implements AnnotationEditorRegistry
 {
@@ -86,10 +92,11 @@ public class AnnotationEditorRegistryImpl
         if (aId == null) {
             return null;
         }
-        else {
-            return extensions.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
-                    .orElse(null);
-        }
+
+        return extensions.stream() //
+                .filter(f -> aId.equals(f.getBeanName())) //
+                .findFirst() //
+                .orElse(null);
     }
 
     @Override

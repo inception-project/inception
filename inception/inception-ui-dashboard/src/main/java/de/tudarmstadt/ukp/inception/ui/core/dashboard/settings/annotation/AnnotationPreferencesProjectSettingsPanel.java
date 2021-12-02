@@ -28,6 +28,7 @@ public class AnnotationPreferencesProjectSettingsPanel
     private static final long serialVersionUID = 4618192360418016955L;
 
     private static final String CID_ANNOTATION_SIDEBAR = "annotationSidebar";
+    private static final String CID_ANNOTATION_EDITOR = "annotationEditor";
 
     public AnnotationPreferencesProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
@@ -35,5 +36,6 @@ public class AnnotationPreferencesProjectSettingsPanel
         setOutputMarkupPlaceholderTag(true);
 
         add(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProjectModel));
+        add(new DefaultAnnotationEditorStatePanel(CID_ANNOTATION_EDITOR, aProjectModel));
     }
 }

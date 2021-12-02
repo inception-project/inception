@@ -27,6 +27,9 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistryImpl;
 
 @Configuration
 public class AnnotationAutoConfiguration
@@ -36,5 +39,12 @@ public class AnnotationAutoConfiguration
             @Lazy @Autowired(required = false) List<AnnotationEditorExtension> aExtensions)
     {
         return new AnnotationEditorExtensionRegistryImpl(aExtensions);
+    }
+
+    @Bean
+    public AnnotationEditorRegistry annotationEditorRegistry(
+            @Lazy @Autowired(required = false) List<AnnotationEditorFactory> aExtensions)
+    {
+        return new AnnotationEditorRegistryImpl(aExtensions);
     }
 }

@@ -15,7 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/**
- * Provides wicket components for Brat Annotation page
- */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
+
+import java.io.Serializable;
+
+public class AnnotationEditorState
+    implements Serializable
+{
+    private static final long serialVersionUID = -1637731874872789592L;
+
+    private String editorId;
+
+    public String getEditorId()
+    {
+        return editorId;
+    }
+
+    public void setEditorId(String aEditorId)
+    {
+        editorId = aEditorId;
+    }
+}

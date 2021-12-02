@@ -24,6 +24,7 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -115,6 +116,8 @@ public class DefaultAnnotationSidebarStatePanel
         preferencesService.saveDefaultTraitsForProject(SidebarTabbedPanel.KEY_SIDEBAR_STATE,
                 getModel().getObject(), state);
 
+        success("Settings updated");
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private List<SidebarHandle> listAvailableSidebars()
