@@ -37,9 +37,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationEditorState;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 public class DefaultAnnotationEditorStatePanel
@@ -96,11 +96,11 @@ public class DefaultAnnotationEditorStatePanel
                 .loadDefaultTraitsForProject(KEY_EDITOR_STATE, getModel().getObject());
 
         AnnotationEditorFactory factory = annotationEditorRegistry
-                .getEditorFactory(state.getEditorId());
+                .getEditorFactory(state.getDefaultEditor());
 
         if (factory != null) {
             defaultEditor.setObject(listAvailableEditors().stream() //
-                    .filter(e -> Objects.equals(state.getEditorId(), e.getKey())) //
+                    .filter(e -> Objects.equals(state.getDefaultEditor(), e.getKey())) //
                     .findFirst() //
                     .orElse(null));
         }
@@ -114,7 +114,7 @@ public class DefaultAnnotationEditorStatePanel
         AnnotationEditorState state = preferencesService
                 .loadDefaultTraitsForProject(KEY_EDITOR_STATE, getModel().getObject());
 
-        state.setEditorId(defaultEditor.map(Pair::getKey).orElse(null).getObject());
+        state.setDefaultEditor(defaultEditor.map(Pair::getKey).orElse(null).getObject());
 
         preferencesService.saveDefaultTraitsForProject(KEY_EDITOR_STATE, getModel().getObject(),
                 state);

@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreferen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
@@ -96,16 +97,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
-import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/annotate/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class AnnotationPage
     extends AnnotationPageBase
 {
-    public static final Key<AnnotationEditorState> KEY_EDITOR_STATE = new Key<>(
-            AnnotationEditorState.class, "annotation/editor");
-
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationPage.class);
@@ -287,7 +284,7 @@ public class AnnotationPage
         AnnotationEditorState editorState = preferencesService
                 .loadDefaultTraitsForProject(KEY_EDITOR_STATE, getProject());
 
-        String editorId = editorState.getEditorId();
+        String editorId = editorState.getDefaultEditor();
 
         if (editorId == null) {
             editorId = getModelObject().getPreferences().getEditor();

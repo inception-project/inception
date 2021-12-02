@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import java.io.Serializable;
 
@@ -24,15 +24,15 @@ public class AnnotationEditorState
 {
     private static final long serialVersionUID = -1637731874872789592L;
 
-    private String editorId;
+    private String defaultEditor;
 
-    public String getEditorId()
+    public String getDefaultEditor()
     {
-        return editorId;
+        return defaultEditor;
     }
 
-    public void setEditorId(String aEditorId)
+    public void setDefaultEditor(String aEditorId)
     {
-        editorId = aEditorId;
+        defaultEditor = aEditorId;
     }
 }
