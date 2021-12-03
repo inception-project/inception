@@ -24,7 +24,6 @@ import java.io.Serializable;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -36,8 +35,8 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaForm;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarState;
@@ -61,7 +60,7 @@ public class DefaultAnnotationSidebarStatePanel
 
         defaultTab = Model.of();
 
-        Form<Void> form = new Form<>("form");
+        LambdaForm<Void> form = new LambdaForm<>("form");
 
         Label description = new Label("description", defaultTab.map(SidebarHandle::getDescription));
         description.setOutputMarkupPlaceholderTag(true);
@@ -76,7 +75,7 @@ public class DefaultAnnotationSidebarStatePanel
                 _target -> _target.add(description)));
         form.add(defaultTabSelect);
 
-        form.add(new LambdaAjaxButton<>("save", this::actionSave));
+        form.onSubmit(this::actionSave);
 
         add(form);
 
@@ -115,9 +114,6 @@ public class DefaultAnnotationSidebarStatePanel
 
         preferencesService.saveDefaultTraitsForProject(SidebarTabbedPanel.KEY_SIDEBAR_STATE,
                 getModel().getObject(), state);
-
-        success("Settings updated");
-        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private List<SidebarHandle> listAvailableSidebars()

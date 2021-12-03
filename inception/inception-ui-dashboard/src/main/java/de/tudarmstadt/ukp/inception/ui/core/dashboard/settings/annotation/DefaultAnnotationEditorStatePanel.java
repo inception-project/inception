@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.KEY_EDITOR_STATE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage.KEY_EDITOR_STATE;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -39,7 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaForm;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 public class DefaultAnnotationEditorStatePanel
@@ -59,7 +58,7 @@ public class DefaultAnnotationEditorStatePanel
 
         defaultEditor = Model.of();
 
-        Form<Void> form = new Form<>("form");
+        LambdaForm<Void> form = new LambdaForm<>("form");
 
         DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("defaultEditor");
         editor.setModel(defaultEditor);
@@ -69,7 +68,7 @@ public class DefaultAnnotationEditorStatePanel
         editor.add(visibleWhen(() -> editor.getChoices().size() > 1));
         form.add(editor);
 
-        form.add(new LambdaAjaxButton<>("save", this::actionSave));
+        form.onSubmit(this::actionSave);
 
         add(form);
 
@@ -118,8 +117,5 @@ public class DefaultAnnotationEditorStatePanel
 
         preferencesService.saveDefaultTraitsForProject(KEY_EDITOR_STATE, getModel().getObject(),
                 state);
-
-        success("Settings updated");
-        aTarget.addChildren(getPage(), IFeedback.class);
     }
 }

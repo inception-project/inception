@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.annotation;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaForm;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 public class AnnotationPreferencesProjectSettingsPanel
@@ -35,7 +40,19 @@ public class AnnotationPreferencesProjectSettingsPanel
         super(aId, aProjectModel);
         setOutputMarkupPlaceholderTag(true);
 
-        add(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProjectModel));
-        add(new DefaultAnnotationEditorStatePanel(CID_ANNOTATION_EDITOR, aProjectModel));
+        LambdaForm<Void> form = new LambdaForm<>("form");
+
+        form.add(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProjectModel));
+        form.add(new DefaultAnnotationEditorStatePanel(CID_ANNOTATION_EDITOR, aProjectModel));
+
+        form.add(new LambdaAjaxButton<>("save", this::actionSave));
+
+        add(form);
+    }
+
+    private void actionSave(AjaxRequestTarget aTarget, Form<Void> aDummy)
+    {
+        success("Settings updated");
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 }
