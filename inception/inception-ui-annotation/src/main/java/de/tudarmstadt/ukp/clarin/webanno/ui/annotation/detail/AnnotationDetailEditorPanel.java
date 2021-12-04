@@ -1070,9 +1070,14 @@ public abstract class AnnotationDetailEditorPanel
     @Override
     public void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException
     {
-        CAS cas = getEditorCas();
-
         AnnotatorState state = getModelObject();
+        if (state.getSelection().getAnnotation().isNotSet()) {
+            error("No annotation selected.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        CAS cas = getEditorCas();
 
         int addr = state.getSelection().getAnnotation().getId();
         AnnotationFS fs = selectAnnotationByAddr(cas, addr);
