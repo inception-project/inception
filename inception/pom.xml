@@ -92,7 +92,7 @@
 
     <wicket.version>9.6.0</wicket.version>
     <wicketstuff.version>9.6.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.6.0-SNAPSHOT</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>9.5.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.0-M4</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.3</wicket-webjars.version>
