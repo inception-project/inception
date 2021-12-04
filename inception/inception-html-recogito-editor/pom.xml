@@ -41,10 +41,13 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
-
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-html-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-diam</artifactId>
     </dependency>
     
     <dependency>
@@ -114,21 +117,37 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>copy-recogito-to-target</id>
-            <phase>generate-resources</phase>
+            <id>npm link dependency</id>
             <goals>
-              <goal>copy-resources</goal>
+              <goal>npm</goal>
             </goals>
+            <phase>generate-sources</phase>
             <configuration>
-              <outputDirectory>target/js/recogito-js</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/js/recogito-js</directory>
-                </resource>
-              </resources>
+              <arguments>link @inception-project/inception-diam</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:recogito</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:recogito</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:recogito-minified</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:recogito-minified</arguments>
             </configuration>
           </execution>
         </executions>
@@ -138,7 +157,7 @@
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>add-recogito-resources</id>
+            <id>add-js-resources</id>
             <phase>generate-resources</phase>
             <goals>
               <goal>add-resource</goal>
@@ -146,49 +165,9 @@
             <configuration>
               <resources>
                 <resource>
-                  <directory>target/js/recogito-js/dist</directory>
-                  <targetPath>de/tudarmstadt/ukp/inception/recogitojseditor/resources</targetPath>
+                  <directory>target/js</directory>
                 </resource>
               </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>com.github.eirslett</groupId>
-        <artifactId>frontend-maven-plugin</artifactId>
-        <configuration>
-          <workingDirectory>target/js/recogito-js/</workingDirectory>
-          <installDirectory>target/frontend-maven-plugin</installDirectory>
-          <nodeVersion>v13.14.0</nodeVersion>
-          <npmVersion>6.14.4</npmVersion>
-        </configuration>
-        <executions>
-          <execution>
-            <id>install node and npm</id>
-            <goals>
-              <goal>install-node-and-npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-          </execution>
-          <execution>
-            <id>npm install</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>install</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm run</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>run build</arguments>
             </configuration>
           </execution>
         </executions>
