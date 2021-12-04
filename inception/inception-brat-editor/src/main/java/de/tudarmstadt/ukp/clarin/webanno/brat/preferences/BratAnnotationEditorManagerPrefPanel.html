@@ -24,6 +24,14 @@
         <wicket:message key="title"/>
       </div>
       <div class="card-body">
+        <div class="row form-row" wicket:enclosure="scriptDirection">
+          <label wicket:for="scriptDirection" class="col-sm-4 col-form-label">
+            <wicket:label key="scriptDirection"/>
+          </label>
+          <div class="col-sm-8">
+            <select wicket:id="scriptDirection" class="form-select" data-container="body"></select>
+          </div>
+        </div>
         <div class="row form-row">
           <div class="offset-sm-4 col-sm-8">
             <div class="form-check">

@@ -18,18 +18,24 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.preferences;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditorManagerPrefs.KEY_BRAT_EDITOR_MANAGER_PREFS;
+import static java.util.Arrays.asList;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditorManagerPrefs;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaForm;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
@@ -40,6 +46,7 @@ public class BratAnnotationEditorManagerPrefPanel
 
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean PreferencesService preferencesService;
+    private @SpringBean ProjectService projectService;
 
     private IModel<BratAnnotationEditorManagerPrefs> bratPreferences;
 
@@ -54,6 +61,14 @@ public class BratAnnotationEditorManagerPrefPanel
                 bratPreferences);
 
         form.add(new CheckBox("changingScriptDirectionAllowed"));
+
+        // Historically, the script direction setting is on the project entity - maybe move it
+        // one day...
+        DropDownChoice<ScriptDirection> scriptDirection = new DropDownChoice<>("scriptDirection");
+        scriptDirection.setModel(PropertyModel.of(aProjectModel, "scriptDirection"));
+        scriptDirection.setChoiceRenderer(new EnumChoiceRenderer<>(this));
+        scriptDirection.setChoices(asList(ScriptDirection.values()));
+        form.add(scriptDirection);
 
         form.onSubmit(this::actionSave);
 
@@ -76,5 +91,6 @@ public class BratAnnotationEditorManagerPrefPanel
     {
         preferencesService.saveDefaultTraitsForProject(KEY_BRAT_EDITOR_MANAGER_PREFS,
                 getModel().getObject(), aForm.getModelObject());
+        projectService.updateProject(getModel().getObject());
     }
 }
