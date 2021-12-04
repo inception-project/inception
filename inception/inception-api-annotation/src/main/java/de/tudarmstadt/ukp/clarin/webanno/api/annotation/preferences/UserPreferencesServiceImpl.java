@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,6 +47,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType;
@@ -56,6 +59,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 @Component
 public class UserPreferencesServiceImpl
@@ -71,18 +76,21 @@ public class UserPreferencesServiceImpl
     private final RepositoryProperties repositoryProperties;
     private final ColoringService coloringService;
     private final AnnotationEditorProperties annotationEditorProperties;
+    private final PreferencesService preferencesService;
 
     public UserPreferencesServiceImpl(
             AnnotationEditorDefaultPreferencesProperties aDefaultPreferences,
             AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties,
             ColoringService aColoringService,
-            AnnotationEditorProperties aAnnotationEditorProperties)
+            AnnotationEditorProperties aAnnotationEditorProperties,
+            PreferencesService aPreferencesService)
     {
         defaultPreferences = aDefaultPreferences;
         annotationService = aAnnotationService;
         repositoryProperties = aRepositoryProperties;
         coloringService = aColoringService;
         annotationEditorProperties = aAnnotationEditorProperties;
+        preferencesService = aPreferencesService;
     }
 
     @Override
@@ -255,7 +263,9 @@ public class UserPreferencesServiceImpl
         // no preference found
         catch (Exception e) {
             preference.setHiddenAnnotationLayerIds(new HashSet<>());
-            preference.setWindowSize(defaultPreferences.getPageSize());
+            preference.setWindowSize(preferencesService
+                    .loadDefaultTraitsForProject(KEY_BRAT_EDITOR_MANAGER_PREFS, aProject)
+                    .getDefaultPageSize());
             preference.setScrollPage(defaultPreferences.isAutoScroll());
             preference.setRememberLayer(defaultPreferences.isRememberLayer());
         }
@@ -301,5 +311,33 @@ public class UserPreferencesServiceImpl
                 + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/"
                 + aUsername + "/" + ANNOTATION_PREFERENCE_PROPERTIES_FILE)));
         return property;
+    }
+
+    /**
+     * @deprecated We have this only so we can read the default page size here...
+     */
+    @Deprecated
+    public static final Key<BratAnnotationEditorManagerPrefs> KEY_BRAT_EDITOR_MANAGER_PREFS = new Key<>(
+            BratAnnotationEditorManagerPrefs.class, "annotation/editor/brat/manager");
+
+    /**
+     * @deprecated We have this only so we can read the default page size here...
+     */
+    @Deprecated
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class BratAnnotationEditorManagerPrefs
+        implements Serializable
+    {
+        private int defaultPageSize = 10;
+
+        public int getDefaultPageSize()
+        {
+            return defaultPageSize;
+        }
+
+        public void setDefaultPageSize(int aDefaultPageSize)
+        {
+            defaultPageSize = aDefaultPageSize;
+        }
     }
 }

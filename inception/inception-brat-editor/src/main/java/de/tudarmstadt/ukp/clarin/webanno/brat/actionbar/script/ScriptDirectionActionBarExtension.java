@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.actionbar.script;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditorManagerPrefs.KEY_BRAT_EDITOR_MANAGER_PREFS;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.preferences.BratAnnotationEditorManagerPrefs.KEY_BRAT_EDITOR_MANAGER_PREFS;
 import static java.util.Locale.ROOT;
 
 import org.apache.wicket.markup.html.panel.Panel;
