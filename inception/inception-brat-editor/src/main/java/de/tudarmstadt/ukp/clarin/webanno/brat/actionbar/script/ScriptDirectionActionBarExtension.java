@@ -15,20 +15,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script;
+package de.tudarmstadt.ukp.clarin.webanno.brat.actionbar.script;
+
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditorManagerPrefs.KEY_BRAT_EDITOR_MANAGER_PREFS;
+import static java.util.Locale.ROOT;
 
 import org.apache.wicket.markup.html.panel.Panel;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 @Order(900)
 @Component
 public class ScriptDirectionActionBarExtension
     implements ActionBarExtension
 {
+    private final PreferencesService preferencesService;
+
+    @Autowired
+    public ScriptDirectionActionBarExtension(PreferencesService aPreferencesService)
+    {
+        preferencesService = aPreferencesService;
+    }
+
+    @Override
+    public boolean accepts(AnnotationPageBase aPage)
+    {
+        AnnotatorState state = aPage.getModelObject();
+
+        if (state == null) {
+            return false;
+        }
+
+        if (state.getEditorFactoryId() == null) {
+            return false;
+        }
+
+        if (!state.getEditorFactoryId().toLowerCase(ROOT).endsWith("brateditor")) {
+            return false;
+        }
+
+        return preferencesService
+                .loadDefaultTraitsForProject(KEY_BRAT_EDITOR_MANAGER_PREFS, state.getProject())
+                .isChangingScriptDirectionAllowed();
+    }
+
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
     {
