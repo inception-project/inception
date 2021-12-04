@@ -51,6 +51,8 @@ function recogito(markupId: string, callbackUrl: string) {
   });
 
   r.loadAnnotations(callbackUrl);
+
+  document.getElementById(markupId)['recogito'] = r;
 }
 
 export = recogito;

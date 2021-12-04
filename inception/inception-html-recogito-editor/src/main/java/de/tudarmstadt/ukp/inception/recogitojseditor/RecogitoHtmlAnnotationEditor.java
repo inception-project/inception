@@ -27,11 +27,11 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
-import org.apache.wicket.markup.html.WebComponent;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.request.resource.ContentDisposition;
@@ -89,14 +89,31 @@ public class RecogitoHtmlAnnotationEditor
                 JavaScriptHeaderItem.forReference(RecogitoJsJavascriptResourceReference.get()));
 
         if (getModelObject().getDocument() != null) {
-            aResponse.render(OnDomReadyHeaderItem.forScript(initRecogitoJs(vis, storeAdapter)));
+            aResponse.render(OnDomReadyHeaderItem.forScript(initScript()));
         }
     }
 
-    private String initRecogitoJs(WebComponent aContainer, StoreAdapter aAdapter)
+    @Override
+    protected void onRemove()
     {
-        String markupId = aContainer.getMarkupId();
-        String callbackUrl = aAdapter.getCallbackUrl().toString();
+        super.onRemove();
+
+        getRequestCycle().find(IPartialPageRequestHandler.class)
+                .ifPresent(target -> target.prependJavaScript(destroyScript()));
+    }
+
+    private CharSequence destroyScript()
+    {
+        String markupId = vis.getMarkupId();
+        
+        return WicketUtil.wrapInTryCatch("document.getElementById('" + markupId
+                + "')['recogito'].destroy(); console.log('Destroyed RecogitoJS');");
+    }
+
+    private String initScript()
+    {
+        String markupId = vis.getMarkupId();
+        String callbackUrl = storeAdapter.getCallbackUrl().toString();
 
         StringBuilder js = new StringBuilder();
         js.append("(function() {");
@@ -108,11 +125,14 @@ public class RecogitoHtmlAnnotationEditor
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        // REC: I didn't find a good way of clearing the annotations, so we do it the hard way:
-        // - re-render the entire document
-        // - re-add all the annotations
-        aTarget.add(vis);
-        aTarget.appendJavaScript(initRecogitoJs(vis, storeAdapter));
+        String markupId = vis.getMarkupId();
+        
+        StringBuilder js = new StringBuilder();
+        js.append("(function() {");
+        js.append("  document.getElementById('" + markupId + "')['recogito'].loadAnnotations('"
+                + storeAdapter.getCallbackUrl() + "')");
+        js.append("})();");
+        aTarget.appendJavaScript(js);
     }
 
     private class StoreAdapter
@@ -136,7 +156,7 @@ public class RecogitoHtmlAnnotationEditor
                     read(aTarget);
                     return;
                 }
-                
+
                 handlers.getHandler(getRequest()) //
                         .map(handler -> handler.handle(aTarget, getRequest())) //
                         .orElse(null);
@@ -167,7 +187,7 @@ public class RecogitoHtmlAnnotationEditor
             handler.setContentDisposition(ContentDisposition.INLINE);
 
             LOG.info("Sending back RecogitoJS JSON data");
-            
+
             getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
         }
     }
