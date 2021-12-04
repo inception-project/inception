@@ -22,6 +22,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.preferences.BratAnnotationEditorManagerPrefPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaForm;
@@ -34,6 +35,7 @@ public class AnnotationPreferencesProjectSettingsPanel
 
     private static final String CID_ANNOTATION_SIDEBAR = "annotationSidebar";
     private static final String CID_ANNOTATION_EDITOR = "annotationEditor";
+    private static final String CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS = "bratAnnotationEditorManagerPrefs";
 
     public AnnotationPreferencesProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
@@ -44,6 +46,8 @@ public class AnnotationPreferencesProjectSettingsPanel
 
         form.add(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProjectModel));
         form.add(new DefaultAnnotationEditorStatePanel(CID_ANNOTATION_EDITOR, aProjectModel));
+        form.add(new BratAnnotationEditorManagerPrefPanel(CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS,
+                aProjectModel));
 
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
 
