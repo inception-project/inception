@@ -300,14 +300,15 @@ public class AnnotationPage
             }
         }
 
+        state.setEditorFactoryId(factory.getBeanName());
         annotationEditor = factory.create("editor", getModel(), detailEditor, this::getEditorCas);
         annotationEditor.setOutputMarkupPlaceholderTag(true);
 
         centerArea.addOrReplace(annotationEditor);
 
-        // Give the new editor an opportunity to configure the current paging strategy,
-        // this does not configure the paging for a document yet
-        // this would require loading the cas which might not have been upgraded yet
+        // Give the new editor an opportunity to configure the current paging strategy, this does
+        // not configure the paging for a document yet this would require loading the CAS which
+        // might not have been upgraded yet
         factory.initState(state);
         // Use the proper position labels for the current paging strategy
         centerArea.addOrReplace(

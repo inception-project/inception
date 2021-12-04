@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script;
 
+import static java.util.Locale.ROOT;
+
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
 @Order(900)
@@ -29,6 +32,22 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 public class ScriptDirectionActionBarExtension
     implements ActionBarExtension
 {
+    @Override
+    public boolean accepts(AnnotationPageBase aPage)
+    {
+        AnnotatorState state = aPage.getModelObject();
+
+        if (state == null) {
+            return false;
+        }
+
+        if (state.getEditorFactoryId() == null) {
+            return false;
+        }
+
+        return state.getEditorFactoryId().toLowerCase(ROOT).endsWith("brateditor");
+    }
+
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
     {
