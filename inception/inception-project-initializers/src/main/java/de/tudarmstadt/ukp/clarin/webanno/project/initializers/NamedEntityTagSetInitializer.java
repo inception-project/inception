@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil.importTagSetFromJson;
+import static de.tudarmstadt.ukp.clarin.webanno.project.initializers.JsonImportUtil.importTagSetFromJson;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -34,19 +34,19 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInit
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectInitializersAutoConfiguration#coreferenceRelationTagSetInitializer}.
+ * {@link ProjectInitializersAutoConfiguration#namedEntityTagSetInitializer}.
  * </p>
  */
-public class CoreferenceRelationTagSetInitializer
+public class NamedEntityTagSetInitializer
     implements TagSetInitializer
 {
     // Name must match the name in the tag set file loaded by this initializer!
-    public static final String TAG_SET_NAME = "Coreference relations";
+    public static final String TAG_SET_NAME = "Named Entity tags";
 
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
-    public CoreferenceRelationTagSetInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public NamedEntityTagSetInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
@@ -73,7 +73,7 @@ public class CoreferenceRelationTagSetInitializer
     public void configure(Project aProject) throws IOException
     {
         importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/de-coref-rel-tuebadz.json").getInputStream(),
+                new ClassPathResource("/tagsets/de-ne-webanno.json").getInputStream(),
                 annotationSchemaService);
     }
 }

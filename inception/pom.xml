@@ -671,6 +671,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-project-initializers</artifactId>
+        <version>22.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-project-export</artifactId>
         <version>22.0-SNAPSHOT</version>
       </dependency>
@@ -1776,6 +1781,7 @@
     <module>inception-model</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
+    <module>inception-project-initializers</module>
     <module>inception-project-export</module>
     <module>inception-remote</module>
     <module>inception-security</module>

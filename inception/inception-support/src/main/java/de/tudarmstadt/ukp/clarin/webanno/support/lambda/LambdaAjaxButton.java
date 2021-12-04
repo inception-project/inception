@@ -32,6 +32,11 @@ public class LambdaAjaxButton<T>
     private AjaxExceptionHandler exceptionHandler;
     private boolean triggerAfterSubmit;
 
+    public LambdaAjaxButton(String aId)
+    {
+        this(aId, null, null);
+    }
+
     public LambdaAjaxButton(String aId, AjaxFormCallback<T> aAction)
     {
         this(aId, aAction, null);
@@ -70,6 +75,10 @@ public class LambdaAjaxButton<T>
     @SuppressWarnings("unchecked")
     private void action(AjaxRequestTarget aTarget)
     {
+        if (action == null) {
+            return;
+        }
+
         try {
             action.accept(aTarget, (Form<T>) getForm());
         }

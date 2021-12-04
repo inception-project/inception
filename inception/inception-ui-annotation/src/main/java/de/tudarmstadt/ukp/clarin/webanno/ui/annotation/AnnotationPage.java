@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreferen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
@@ -96,11 +97,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
-/**
- * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
- * annotation layer configuration, and Exporting document
- */
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/annotate/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class AnnotationPage
     extends AnnotationPageBase
@@ -120,6 +118,7 @@ public class AnnotationPage
     private @SpringBean AnnotationEditorRegistry editorRegistry;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
+    private @SpringBean PreferencesService preferencesService;
 
     private long currentprojectId;
 
@@ -282,7 +281,14 @@ public class AnnotationPage
     {
         AnnotatorState state = getModelObject();
 
-        String editorId = getModelObject().getPreferences().getEditor();
+        AnnotationEditorState editorState = preferencesService
+                .loadDefaultTraitsForProject(KEY_EDITOR_STATE, getProject());
+
+        String editorId = editorState.getDefaultEditor();
+
+        if (editorId == null) {
+            editorId = getModelObject().getPreferences().getEditor();
+        }
 
         AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil.importTagSetFromJson;
+import static de.tudarmstadt.ukp.clarin.webanno.project.initializers.JsonImportUtil.importTagSetFromJson;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -34,19 +34,19 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInit
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectInitializersAutoConfiguration#partOfSpeechTagSetInitializer}.
+ * {@link ProjectInitializersAutoConfiguration#coreferenceTypeTagSetInitializer}.
  * </p>
  */
-public class PartOfSpeechTagSetInitializer
+public class CoreferenceTypeTagSetInitializer
     implements TagSetInitializer
 {
     // Name must match the name in the tag set file loaded by this initializer!
-    public static final String TAG_SET_NAME = "UD Universal POS tags (v2)";
+    public static final String TAG_SET_NAME = "Coreference mentions";
 
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
-    public PartOfSpeechTagSetInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public CoreferenceTypeTagSetInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
@@ -73,7 +73,7 @@ public class PartOfSpeechTagSetInitializer
     public void configure(Project aProject) throws IOException
     {
         importTagSetFromJson(aProject,
-                new ClassPathResource("/tagsets/mul-pos-ud2.json").getInputStream(),
+                new ClassPathResource("/tagsets/de-coref-type-bart.json").getInputStream(),
                 annotationSchemaService);
     }
 }
