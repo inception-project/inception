@@ -15,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
+package de.tudarmstadt.ukp.clarin.webanno.brat.preferences;
 
 import java.io.Serializable;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.AnnotationEditorDefaultPreferencesProperties;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 
 public class BratAnnotationEditorManagerPrefs
@@ -28,8 +30,18 @@ public class BratAnnotationEditorManagerPrefs
 
     private boolean changingScriptDirectionAllowed = false;
 
+    private int defaultPageSize;
+
     public static final Key<BratAnnotationEditorManagerPrefs> KEY_BRAT_EDITOR_MANAGER_PREFS = new Key<>(
             BratAnnotationEditorManagerPrefs.class, "annotation/editor/brat/manager");
+
+    public BratAnnotationEditorManagerPrefs()
+    {
+        AnnotationEditorDefaultPreferencesProperties defaults = ApplicationContextProvider
+                .getApplicationContext()
+                .getBean(AnnotationEditorDefaultPreferencesProperties.class);
+        defaultPageSize = defaults.getPageSize();
+    }
 
     public boolean isChangingScriptDirectionAllowed()
     {
@@ -39,5 +51,15 @@ public class BratAnnotationEditorManagerPrefs
     public void setChangingScriptDirectionAllowed(boolean aChangingScriptDirectionAllowed)
     {
         changingScriptDirectionAllowed = aChangingScriptDirectionAllowed;
+    }
+
+    public int getDefaultPageSize()
+    {
+        return defaultPageSize;
+    }
+
+    public void setDefaultPageSize(int aDefaultPageSize)
+    {
+        defaultPageSize = aDefaultPageSize;
     }
 }

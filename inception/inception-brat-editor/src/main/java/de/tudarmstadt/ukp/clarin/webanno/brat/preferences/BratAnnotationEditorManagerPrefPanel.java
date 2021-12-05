@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.preferences;
 
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditorManagerPrefs.KEY_BRAT_EDITOR_MANAGER_PREFS;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.preferences.BratAnnotationEditorManagerPrefs.KEY_BRAT_EDITOR_MANAGER_PREFS;
 import static java.util.Arrays.asList;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -25,6 +25,7 @@ import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -33,7 +34,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditorManagerPrefs;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaForm;
@@ -59,6 +59,11 @@ public class BratAnnotationEditorManagerPrefPanel
 
         LambdaForm<BratAnnotationEditorManagerPrefs> form = new LambdaForm<>("form",
                 bratPreferences);
+
+        NumberTextField<Integer> defaultPageSize = new NumberTextField<>("defaultPageSize",
+                Integer.class);
+        defaultPageSize.setMinimum(1);
+        form.add(defaultPageSize);
 
         form.add(new CheckBox("changingScriptDirectionAllowed"));
 

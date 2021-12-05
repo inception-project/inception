@@ -24,6 +24,14 @@
         <wicket:message key="title"/>
       </div>
       <div class="card-body">
+        <div class="row form-row">
+          <label wicket:for="defaultPageSize" class="col-sm-4 col-form-label">
+            <wicket:label key="defaultPageSize"/>
+          </label>
+          <div class="col-sm-8">
+            <input type="number" class="form-control" wicket:id="defaultPageSize"/>
+          </div>
+        </div>
         <div class="row form-row" wicket:enclosure="scriptDirection">
           <label wicket:for="scriptDirection" class="col-sm-4 col-form-label">
             <wicket:label key="scriptDirection"/>
