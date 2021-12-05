@@ -95,8 +95,6 @@ module.exports = {
       let wsEndpoint = new URL(this.wsEndpoint)
       wsEndpoint.protocol = protocol;
 
-      console.log("Endpoint URL:", wsEndpoint);
-
       this.socket = new WebSocket(wsEndpoint.toString());
       this.stompClient = webstomp.over(this.socket);
       var that = this;

@@ -70,11 +70,14 @@ export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
      * @NOTE: When a connection is established, onConnect() will be called automatically so
      * there is no need to call it. Also, all subscriptions will be handled automatically.
      */
-    connect(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aUrl: string)
+    connect(aProjectId: number, aDocumentId: number, aAnnotatorName: string, aWsEndpoint: string)
     {
-        console.log(aUrl)
+        let protocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:');
+        let wsEndpoint = new URL(aWsEndpoint)
+        wsEndpoint.protocol = protocol;
+        
         this.stompClient = Stomp.over(function () {
-            return new WebSocket(aUrl);
+            return new WebSocket(wsEndpoint.toString());
         });
 
         const that = this;

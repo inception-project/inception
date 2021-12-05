@@ -47,7 +47,11 @@ export class AnnotationEditing {
 
         this.ajaxEndpoint = aAjaxEndpoint;
 
-        this.stompClient = Stomp.over(() => this.webSocket = new WebSocket(aWsEndpoint));
+        let protocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:');
+        let wsEndpoint = new URL(aWsEndpoint)
+        wsEndpoint.protocol = protocol;
+
+        this.stompClient = Stomp.over(() => this.webSocket = new WebSocket(wsEndpoint.toString()));
         this.stompClient.reconnectDelay = 5000;
 
         this.stompClient.onConnect = frame => {

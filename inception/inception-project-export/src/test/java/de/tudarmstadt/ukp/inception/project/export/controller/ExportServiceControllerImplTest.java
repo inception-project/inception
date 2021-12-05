@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.project.export.controller;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -137,7 +138,7 @@ public class ExportServiceControllerImplTest
     public void setup() throws IOException
     {
         // create websocket client
-        websocketUrl = "ws://localhost:" + port + "/ws-endpoint";
+        websocketUrl = "ws://localhost:" + port + WS_ENDPOINT;
         webSocketClient = new WebSocketStompClient(new StandardWebSocketClient());
         // webSocketClient.setMessageConverter(new MappingJackson2MessageConverter());
         webSocketClient.setMessageConverter(new GenericMessageConverter());

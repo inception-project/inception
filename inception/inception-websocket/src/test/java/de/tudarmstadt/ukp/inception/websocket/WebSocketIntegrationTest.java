@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.websocket;
 
+import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
@@ -120,7 +121,7 @@ public class WebSocketIntegrationTest
     public void setup() throws IOException
     {
         // create websocket client
-        websocketUrl = "ws://localhost:" + port + "/ws-endpoint";
+        websocketUrl = "ws://localhost:" + port + WS_ENDPOINT;
         webSocketClient = new WebSocketStompClient(new StandardWebSocketClient());
         webSocketClient.setMessageConverter(new MappingJackson2MessageConverter());
         createTestdata();

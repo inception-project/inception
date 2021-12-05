@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.diam.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -162,7 +163,8 @@ public class DiamController_ViewportRoutingTest
     public void setup() throws Exception
     {
         // create websocket client
-        websocketUrl = "ws://localhost:" + port + "/ws-endpoint";
+        websocketUrl = "ws://localhost:" + port + WS_ENDPOINT;
+
         StandardWebSocketClient wsClient = new StandardWebSocketClient();
         wsClient.setUserProperties(Map.of( //
                 WS_AUTHENTICATION_USER_NAME, USER, //

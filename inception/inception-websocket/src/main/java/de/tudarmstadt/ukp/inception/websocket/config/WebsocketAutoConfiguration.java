@@ -24,6 +24,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 
+import com.giffing.wicket.spring.boot.starter.configuration.extensions.core.csrf.CsrfAttacksPreventionProperties;
+
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageController;
 import de.tudarmstadt.ukp.inception.websocket.footer.LoggedEventFooterItem;
@@ -43,8 +45,8 @@ public class WebsocketAutoConfiguration
     }
 
     @Bean
-    public WebsocketConfig websocketConfig()
+    public WebsocketConfig websocketConfig(CsrfAttacksPreventionProperties aCsrfProperties)
     {
-        return new WebsocketConfig();
+        return new WebsocketConfig(aCsrfProperties);
     }
 }
