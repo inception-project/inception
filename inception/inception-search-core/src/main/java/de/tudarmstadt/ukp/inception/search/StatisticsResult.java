@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
@@ -29,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public class StatisticsResult
+    implements Serializable
 {
     private final OptionalInt minTokenPerDoc;
     private final OptionalInt maxTokenPerDoc;
@@ -36,16 +38,25 @@ public class StatisticsResult
     private final Project project;
     private final String query;
     private final Map<String, LayerStatistics> results;
+    private final Map<String, LayerStatistics> nonNullResults;
     private final Set<AnnotationFeature> features;
 
     public StatisticsResult(StatisticRequest aStatisticRequest,
             Map<String, LayerStatistics> aResults, Set<AnnotationFeature> aFeatures)
+    {
+        this(aStatisticRequest, aResults, null, aFeatures);
+    }
+
+    public StatisticsResult(StatisticRequest aStatisticRequest,
+            Map<String, LayerStatistics> aResults, Map<String, LayerStatistics> aNonNullResults,
+            Set<AnnotationFeature> aFeatures)
     {
         maxTokenPerDoc = aStatisticRequest.getMaxTokenPerDoc();
         minTokenPerDoc = aStatisticRequest.getMinTokenPerDoc();
         user = aStatisticRequest.getUser();
         project = aStatisticRequest.getProject();
         results = aResults;
+        nonNullResults = aNonNullResults;
         query = aStatisticRequest.getQuery();
         features = aFeatures;
     }
@@ -58,6 +69,11 @@ public class StatisticsResult
     public Map<String, LayerStatistics> getResults()
     {
         return results;
+    }
+
+    public Map<String, LayerStatistics> getNonZeroResults()
+    {
+        return nonNullResults;
     }
 
     public void featureResultExists(AnnotationLayer aLayer, AnnotationFeature aFeature)
@@ -83,14 +99,14 @@ public class StatisticsResult
 
     public LayerStatistics getTokenResult() throws ExecutionException
     {
-        featureResultExists("Token Count");
-        return results.get("Token Count");
+        featureResultExists("Segmentation.token");
+        return results.get("Segmentation.token");
     }
 
     public LayerStatistics getSentenceResult() throws ExecutionException
     {
-        featureResultExists("Sentence Count");
-        return results.get("Sentence Count");
+        featureResultExists("Segmentation.sentence");
+        return results.get("Segmentation.sentence");
     }
 
     public LayerStatistics getQueryResult() throws ExecutionException
@@ -98,7 +114,7 @@ public class StatisticsResult
         if (query == null) {
             throw new ExecutionException("No query was given!");
         }
-        return results.get(query);
+        return results.get("query." + query);
     }
 
     public Project getProject()
@@ -135,19 +151,19 @@ public class StatisticsResult
         return layers;
     }
 
-    public long getTotal(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public double getSum(AnnotationLayer aLayer, AnnotationFeature aFeature)
         throws ExecutionException
     {
-        return getLayerResult(aLayer, aFeature).getTotal();
+        return getLayerResult(aLayer, aFeature).getSum();
     }
 
-    public long getMinimum(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public double getMinimum(AnnotationLayer aLayer, AnnotationFeature aFeature)
         throws ExecutionException
     {
         return getLayerResult(aLayer, aFeature).getMinimum();
     }
 
-    public long getMaximum(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public double getMaximum(AnnotationLayer aLayer, AnnotationFeature aFeature)
         throws ExecutionException
     {
         return getLayerResult(aLayer, aFeature).getMaximum();

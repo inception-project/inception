@@ -54,6 +54,7 @@ import org.wicketstuff.urlfragment.UrlFragment;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
@@ -71,11 +72,15 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.preferences.Key;
 
 public abstract class AnnotationPageBase
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -1133219266479577443L;
+
+    public static final Key<AnnotationEditorState> KEY_EDITOR_STATE = new Key<>(
+            AnnotationEditorState.class, "annotation/editor");
 
     public static final String PAGE_PARAM_DOCUMENT = "d";
     public static final String PAGE_PARAM_USER = "u";
@@ -267,6 +272,8 @@ public abstract class AnnotationPageBase
     public abstract List<SourceDocument> getListOfDocs();
 
     public abstract CAS getEditorCas() throws IOException;
+
+    public abstract AnnotationActionHandler getAnnotationActionHandler();
 
     public abstract void writeEditorCas(CAS aCas) throws IOException, AnnotationException;
 

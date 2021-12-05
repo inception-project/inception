@@ -17,11 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+
 /**
  * Response for the {@code spanOpenDialog} command.
  *
  * This command is part of WebAnno and not contained in the original brat.
+ * 
+ * @deprecated Should not be needed anymore since the DIAM Ajax requests do not verify the action in
+ *             the result.
  */
+@Deprecated
 public class SpanAnnotationResponse
     extends AjaxResponse
 {

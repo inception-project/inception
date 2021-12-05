@@ -539,7 +539,28 @@ public abstract class AnnotationDetailEditorPanel
 
     @Override
     public void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
-            int aSlotFillerEnd, VID aExistingSlotFillerId)
+            int aSlotFillerEnd)
+        throws AnnotationException, IOException
+    {
+        AnnotatorState state = getModelObject();
+
+        if (CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().feature.getType())) {
+            throw new IllegalPlacementException(
+                    "Unable to create annotation of type [" + CAS.TYPE_NAME_ANNOTATION
+                            + "]. Please click an annotation in stead of selecting new text.");
+        }
+
+        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
+                .findLayer(state.getProject(), state.getArmedFeature().feature.getType()));
+
+        VID slotFillerVid = new VID(adapter.add(state.getDocument(), state.getUser().getUsername(),
+                aCas, aSlotFillerBegin, aSlotFillerEnd));
+
+        actionFillSlot(aTarget, aCas, slotFillerVid);
+    }
+
+    @Override
+    public void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, VID aExistingSlotFillerId)
         throws AnnotationException, IOException
     {
         assert aCas != null;
@@ -559,24 +580,7 @@ public abstract class AnnotationDetailEditorPanel
         // concrete span type defined in the project, not if the user simply defined
         // CAS.TYPE_NAME_ANNOTATION to allow for arbitrary slot fillers. In the latter case, we
         // abort the operation with an IllegalPlacementException.
-        int slotFillerAddr;
-        if (aExistingSlotFillerId.isNotSet()) {
-            if (!CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().feature.getType())) {
-                SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
-                        .findLayer(state.getProject(), state.getArmedFeature().feature.getType()));
-
-                slotFillerAddr = getAddr(adapter.add(state.getDocument(),
-                        state.getUser().getUsername(), aCas, aSlotFillerBegin, aSlotFillerEnd));
-            }
-            else {
-                throw new IllegalPlacementException(
-                        "Unable to create annotation of type [" + CAS.TYPE_NAME_ANNOTATION
-                                + "]. Please click an annotation in stead of selecting new text.");
-            }
-        }
-        else {
-            slotFillerAddr = aExistingSlotFillerId.getId();
-        }
+        int slotFillerAddr = aExistingSlotFillerId.getId();
 
         // Inject the slot filler into the respective slot
         FeatureStructure slotHostFS = selectFsByAddr(aCas, state.getArmedFeature().vid.getId());
@@ -691,80 +695,100 @@ public abstract class AnnotationDetailEditorPanel
             return;
         }
 
+        // Creating or updating an annotation should not change the current default layer - even
+        // though it might temporarily do so as e.g. a relation is created.
+        AnnotationLayer savedDefaultLayer = state.getDefaultAnnotationLayer();
+
         // Note that refresh changes the selected layer if a relation is created. Then the layer
         // switches from the selected span layer to the relation layer that is attached to the span
-        if (state.getSelection().isArc()) {
-            LOG.trace("actionAnnotate() relation annotation - looking for attached layer");
+        try {
+            if (state.getSelection().isArc()) {
+                LOG.trace("actionAnnotate() relation annotation - looking for attached layer");
 
-            // FIXME REC I think this whole section which meddles around with the selected
-            // annotation layer should be moved out of there to the place where we originally set
-            // the annotation layer...!
+                // FIXME REC I think this whole section which meddles around with the selected
+                // annotation layer should be moved out of there to the place where we originally
+                // set
+                // the annotation layer...!
 
-            // Fetch the annotation representing the origin endpoint of the relation
-            AnnotationFS originFS = selectAnnotationByAddr(aCas, state.getSelection().getOrigin());
-            AnnotationFS targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
+                // Fetch the annotation representing the origin endpoint of the relation
+                AnnotationFS originFS = selectAnnotationByAddr(aCas,
+                        state.getSelection().getOrigin());
+                AnnotationFS targetFS = selectAnnotationByAddr(aCas,
+                        state.getSelection().getTarget());
 
-            if (!originFS.getType().equals(targetFS.getType())) {
-                reset(aTarget);
-                throw new IllegalPlacementException(
-                        "Cannot create relation between spans on different layers");
+                if (!originFS.getType().equals(targetFS.getType())) {
+                    reset(aTarget);
+                    throw new IllegalPlacementException(
+                            "Cannot create relation between spans on different layers");
+                }
+
+                // Fetch the annotation layer for the origin annotation
+                AnnotationLayer originLayer = annotationService.findLayer(state.getProject(),
+                        originFS);
+
+                AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
+
+                // If we are creating a relation annotation, we have to set the current layer
+                // depending
+                // on the type of relation that is permitted between the source/target span. This is
+                // necessary because we have no separate UI control to set the relation annotation
+                // type.
+                // It is possible because currently only a single relation layer is allowed to
+                // attach to
+                // any given span layer.
+
+                // If we drag an arc in a chain layer, then the arc is of the same layer as the span
+                // Chain layers consist of arcs and spans
+                if (originLayer.getType().equals(CHAIN_TYPE)) {
+                    // one layer both for the span and arc annotation
+                    state.setSelectedAnnotationLayer(originLayer);
+                }
+                // Otherwise, look up the possible relation layer(s) in the database.
+                else {
+                    state.setSelectedAnnotationLayer(getRelationLayerFor(originLayer)
+                            .orElseThrow(() -> new IllegalPlacementException(
+                                    "No relation annotation allowed on layer ["
+                                            + state.getDefaultAnnotationLayer().getUiName()
+                                            + "]")));
+                }
+
+                state.setDefaultAnnotationLayer(originLayer);
+
+                // If we switched layers, we need to initialize the feature editors for the new
+                // layer
+                if (!Objects.equals(previousLayer, state.getSelectedAnnotationLayer())) {
+                    LOG.trace("Layer changed from {} to {} - need to reload feature editors",
+                            previousLayer, state.getSelectedAnnotationLayer());
+                    loadFeatureEditorModels(aTarget);
+                }
             }
-
-            // Fetch the annotation layer for the origin annotation
-            AnnotationLayer originLayer = annotationService.findLayer(state.getProject(), originFS);
-
-            AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
-
-            // If we are creating a relation annotation, we have to set the current layer depending
-            // on the type of relation that is permitted between the source/target span. This is
-            // necessary because we have no separate UI control to set the relation annotation type.
-            // It is possible because currently only a single relation layer is allowed to attach to
-            // any given span layer.
-
-            // If we drag an arc in a chain layer, then the arc is of the same layer as the span
-            // Chain layers consist of arcs and spans
-            if (originLayer.getType().equals(CHAIN_TYPE)) {
-                // one layer both for the span and arc annotation
-                state.setSelectedAnnotationLayer(originLayer);
-            }
-            // Otherwise, look up the possible relation layer(s) in the database.
             else {
-                state.setSelectedAnnotationLayer(getRelationLayerFor(originLayer)
-                        .orElseThrow(() -> new IllegalPlacementException(
-                                "No relation annotation allowed on layer ["
-                                        + state.getDefaultAnnotationLayer().getUiName() + "]")));
+                // Re-set the selected layer from the drop-down since it might have changed if we
+                // have previously created a relation annotation
+                state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
             }
 
-            state.setDefaultAnnotationLayer(originLayer);
+            internalCommitAnnotation(aTarget, aCas);
 
-            // If we switched layers, we need to initialize the feature editors for the new layer
-            if (!Objects.equals(previousLayer, state.getSelectedAnnotationLayer())) {
-                LOG.trace("Layer changed from {} to {} - need to reload feature editors",
-                        previousLayer, state.getSelectedAnnotationLayer());
-                loadFeatureEditorModels(aTarget);
+            internalCompleteAnnotation(aTarget, aCas);
+
+            if (aTarget != null) {
+                refresh(aTarget);
+                // // After the annotation has been created, we need to re-render the button
+                // container
+                // e.g.
+                // // to make the buttons show up if previously no annotation was selected
+                // aTarget.add(buttonContainer);
+                // // Also update the features and selected annotation info
+                // aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel,
+                // relationListPanel);
             }
+
+            state.clearArmedSlot();
         }
-        else {
-            // Re-set the selected layer from the drop-down since it might have changed if we
-            // have previously created a relation annotation
-            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
+        finally {
+            state.setDefaultAnnotationLayer(savedDefaultLayer);
         }
-
-        internalCommitAnnotation(aTarget, aCas);
-
-        internalCompleteAnnotation(aTarget, aCas);
-
-        if (aTarget != null) {
-            refresh(aTarget);
-            // // After the annotation has been created, we need to re-render the button container
-            // e.g.
-            // // to make the buttons show up if previously no annotation was selected
-            // aTarget.add(buttonContainer);
-            // // Also update the features and selected annotation info
-            // aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel, relationListPanel);
-        }
-
-        state.clearArmedSlot();
     }
 
     private Optional<AnnotationLayer> getRelationLayerFor(AnnotationLayer aSpanLayer)
@@ -1046,9 +1070,14 @@ public abstract class AnnotationDetailEditorPanel
     @Override
     public void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException
     {
-        CAS cas = getEditorCas();
-
         AnnotatorState state = getModelObject();
+        if (state.getSelection().getAnnotation().isNotSet()) {
+            error("No annotation selected.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
+        CAS cas = getEditorCas();
 
         int addr = state.getSelection().getAnnotation().getId();
         AnnotationFS fs = selectAnnotationByAddr(cas, addr);

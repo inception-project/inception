@@ -566,6 +566,7 @@ public class SearchServiceImpl
             LayerStatistics statistics = physicalIndex.getLayerStatistics(statRequest,
                     statRequest.getQuery(), physicalIndex.getUniqueDocuments(statRequest));
 
+            statistics.setQuery(aQuery);
             Map<String, LayerStatistics> statisticsMap = new HashMap<String, LayerStatistics>();
             statisticsMap.put("query." + aQuery, statistics);
 

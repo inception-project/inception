@@ -22,13 +22,5 @@ public interface BratProtocolNames
     String PARAM_ACTION = "action";
     String PARAM_ARC_ID = "arcId";
     String PARAM_ID = "id";
-    String PARAM_OFFSETS = "offsets";
-    String PARAM_TARGET_SPAN_ID = "targetSpanId";
-    String PARAM_ORIGIN_SPAN_ID = "originSpanId";
-    String PARAM_TYPE = "type";
-    String PARAM_LAZY_DETAIL_DATABASE = "database";
-    String PARAM_LAZY_DETAIL_KEY = "key";
-
     String ACTION_CONTEXT_MENU = "contextMenu";
-
 }

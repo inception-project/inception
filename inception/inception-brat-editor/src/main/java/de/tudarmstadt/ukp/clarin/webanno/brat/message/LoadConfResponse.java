@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
 /**
  * Response for the {@code loadConf} command.

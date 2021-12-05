@@ -33,6 +33,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public interface AnnotatorViewState
     extends Serializable
 {
+    String getEditorFactoryId();
+
+    void setEditorFactoryId(String aId);
+
     // ---------------------------------------------------------------------------------------------
     // Window of visible annotations
     // ---------------------------------------------------------------------------------------------

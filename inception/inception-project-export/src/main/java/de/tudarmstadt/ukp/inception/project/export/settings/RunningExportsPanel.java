@@ -25,8 +25,6 @@ import java.util.Map;
 
 import javax.servlet.ServletContext;
 
-import org.apache.wicket.authorization.Action;
-import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeAction;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
@@ -41,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.axios.AxiosResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
 
-@AuthorizeAction(action = Action.RENDER, roles = "ROLE_ADMIN")
 public class RunningExportsPanel
     extends VueComponent
 {

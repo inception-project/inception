@@ -24,10 +24,6 @@
   </parent>
   <artifactId>inception-brat-editor</artifactId>
   <name>INCEpTION - Editor - brat</name>
-  <packaging>jar</packaging>
-  <properties>
-    <maven.surefire.argLine>-Djdk.attach.allowAttachSelf</maven.surefire.argLine>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -47,11 +43,15 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-preferences</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-security</artifactId>
+      <artifactId>inception-diam</artifactId>
     </dependency>
 
     <dependency>
@@ -110,6 +110,10 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
@@ -192,6 +196,85 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    
+    <plugins>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>npm link dependency</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <arguments>link @inception-project/inception-diam</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:brat</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-minified</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:brat-minified</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-curation</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:brat-curation</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-curation-minified</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:brat-curation-minified</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-js-resources</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>add-resource</goal>
+            </goals>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>target/js</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
   <profiles>
     <profile>
@@ -209,9 +292,7 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
-                  <!-- MIT License -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource/fast-json-patch.js</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource/fast-json-patch.min.js</exclude>
+                  <exclude>**/.eslintrc.js</exclude>
                 </excludes>
               </configuration>
             </plugin>

@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.ProjectPermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
@@ -47,5 +48,12 @@ public class ProjectServiceAutoConfiguration
     {
         return new ProjectServiceImpl(aUserRepository, aApplicationEventPublisher,
                 aRepositoryProperties, aInitializerProxy, entityManager);
+    }
+
+    @Bean
+    public ProjectPermissionExtension projectPermissionExtension(UserDao aUserService,
+            ProjectService aProjectService)
+    {
+        return new ProjectPermissionExtension(aUserService, aProjectService);
     }
 }
