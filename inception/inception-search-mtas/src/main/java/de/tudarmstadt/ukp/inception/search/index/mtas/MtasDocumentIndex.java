@@ -68,6 +68,7 @@ import org.apache.lucene.codecs.Codec;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.SortedNumericDocValuesField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexReader;
@@ -823,19 +824,12 @@ public class MtasDocumentIndex
     private List<LeafReaderContext> sortLeaves(List<LeafReaderContext> aLeaves,
             IndexSearcher aSearcher, MtasSpanQuery aQuery)
         throws IOException
-    {
-        // There is a map g: {LeafReaderContexts} -> P({documents}) which maps every
-        // LeafReaderContext l to a subset of the documents. This subset can consist
-        // of more than one element or be empty.
-        // The aim of this method is to find out what g exactly does
-        // and to get a subset A of {LeafReaderContexts} such that
-        // g': A -> {documents}, i.e. each LeafReaderContext from A
-        // contains exactly one document.
-        // I'm quite sure that we don't lose documents in this process, i.e. g'(A) = union_l g(l).
-        // Then we will sort the l's in A according to the document ID of their documents g'(l).
+    {   // This method sorts the LeafReaderContexts according to the document ids
+        // they contain. If one does not contain a document for this search, then
+        // it is discarded. If one contains multiple document ids the smallest
+        // is used for comparison.
 
-        // Here we will save g'
-        List<Pair<LeafReaderContext, Long>> mapToDocId = new ArrayList<>();
+        List<Pair<LeafReaderContext, List<Long>>> mapToDocIds = new ArrayList<>();
 
         // Here, the query comes into play
         SpanWeight spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
@@ -845,11 +839,8 @@ public class MtasDocumentIndex
         for (LeafReaderContext leafReaderContext : aLeaves) {
             Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
             SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
-            // dummy initialisation which is never used
-            long docId = -3;
-            // true iff g(l) contains exactly one document
-            boolean docIdExistsUnique = false;
-            // no spans -> no docs so this rules out the case g(l) = emptyset
+            List<Long> IdList = new ArrayList<Long>();
+            // no spans -> no docs
             if (spans != null) {
                 // go through the docs in iterator span
                 while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
@@ -865,34 +856,21 @@ public class MtasDocumentIndex
                         if (rawSourceDocumentId == null) {
                             continue;
                         }
-                        // If we have already added a docId then this is the second one.
-                        // We know that |g(l)| > 1 in this case so jump right to the next l
-                        if (docIdExistsUnique) {
-                            docIdExistsUnique = false;
-                            break;
-                        }
-                        // The docId is the first one we see
-                        else {
-                            docId = Long.valueOf(rawSourceDocumentId);
-                            // This is true unless we find another docId in the future
-                            docIdExistsUnique = true;
-                        }
+                        // add id to the list of ids for this leafReaderContext
+                        IdList.add(Long.valueOf(rawSourceDocumentId));
                     }
                 }
             }
-            // If we broke out of the while loop or never got a document in the first place
-            // this will be false
-            if (docIdExistsUnique) {
-                mapToDocId.add(Pair.of(leafReaderContext, docId));
+            IdList.sort(Long::compareTo);
+            if (IdList.size() > 0) {
+                mapToDocIds.add(Pair.of(leafReaderContext, IdList));
             }
         }
-        // now we are finished with constructing A
-
-        // Sort according to docId
-        mapToDocId.sort(comparingLong(Pair::getValue));
+        // Sort according to docId; take the smallest value in the list
+        mapToDocIds.sort(comparingLong(s -> s.getValue().get(0)));
 
         // Only return the leaves
-        return mapToDocId.stream().map(Pair::getKey).collect(Collectors.toList());
+        return mapToDocIds.stream().map(Pair::getKey).collect(Collectors.toList());
     }
 
     private Map<String, List<SearchResult>> doQuery(IndexSearcher searcher,
@@ -920,6 +898,7 @@ public class MtasDocumentIndex
 
         resultIteration: while (leafReaderContextIterator.hasNext()) {
             LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
+
             try {
                 Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
                 SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
@@ -1217,8 +1196,8 @@ public class MtasDocumentIndex
         doc.add(new StringField(FIELD_ID,
                 String.valueOf(aSourceDocumentId) + "/" + String.valueOf(aAnnotationDocumentId),
                 Field.Store.YES));
-        doc.add(new StringField(FIELD_SOURCE_DOCUMENT_ID, String.valueOf(aSourceDocumentId),
-                Field.Store.YES));
+        doc.add(new StringField(FIELD_SOURCE_DOCUMENT_ID, String.valueOf(aSourceDocumentId), Field.Store.YES
+                ));
         doc.add(new StringField(FIELD_ANNOTATION_DOCUMENT_ID, String.valueOf(aAnnotationDocumentId),
                 Field.Store.YES));
         doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));

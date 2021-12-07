@@ -568,6 +568,8 @@ public class MtasDocumentIndexTest
 
         String query = "<Named_entity.value=\"LOC\"/>";
 
+        annotateDocument(project, user, sourceDocument1);
+
         Map<String, List<SearchResult>> resultsBefore = searchService.query(user, project, query,
                 null, null, null, 0, 10);
 
