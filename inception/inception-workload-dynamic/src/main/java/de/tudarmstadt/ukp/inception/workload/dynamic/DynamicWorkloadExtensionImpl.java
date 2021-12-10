@@ -308,6 +308,12 @@ public class DynamicWorkloadExtensionImpl
     @Transactional
     public void updateDocumentState(SourceDocument aDocument, int aRequiredAnnotatorCount)
     {
+        // If the SOURCE document is already in curation, we do not touch the state anymore
+        if (aDocument.getState() == CURATION_FINISHED
+                || aDocument.getState() == CURATION_IN_PROGRESS) {
+            return;
+        }
+
         Map<AnnotationDocumentState, Long> stats = documentService
                 .getAnnotationDocumentStats(aDocument);
         long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
