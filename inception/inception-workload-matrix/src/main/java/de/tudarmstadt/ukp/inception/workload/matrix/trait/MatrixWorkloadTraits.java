@@ -22,7 +22,7 @@ import java.io.Serializable;
 /**
  * Trait class for default matrix workload
  */
-public class MatrixWorkloadTrait
+public class MatrixWorkloadTraits
     implements Serializable
 {
     private static final long serialVersionUID = 6984531953353384507L;
@@ -30,7 +30,7 @@ public class MatrixWorkloadTrait
 
     private int defaultNumberOfAnnotations;
 
-    public MatrixWorkloadTrait()
+    public MatrixWorkloadTraits()
     {
     }
 

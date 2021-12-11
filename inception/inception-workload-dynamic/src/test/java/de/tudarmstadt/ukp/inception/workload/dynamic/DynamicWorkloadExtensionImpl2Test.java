@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
@@ -74,7 +75,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
         properties = { //
                 "spring.main.banner-mode=off", //
                 "workload.dynamic.enabled=true", //
-                "repository.path=" + DefaultWorkflowExtensionTest.TEST_OUTPUT_FOLDER })
+                "repository.path=" + DynamicWorkloadExtensionImpl2Test.TEST_OUTPUT_FOLDER })
 @EntityScan({ //
         "de.tudarmstadt.ukp.inception", //
         "de.tudarmstadt.ukp.clarin.webanno" })
@@ -89,7 +90,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
         SchedulingServiceAutoConfiguration.class, //
         WorkloadManagementAutoConfiguration.class, //
         DynamicWorkloadManagerAutoConfiguration.class })
-public class DefaultWorkflowExtensionTest
+public class DynamicWorkloadExtensionImpl2Test
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/DefaultWorkflowExtensionTest";
 
@@ -102,6 +103,7 @@ public class DefaultWorkflowExtensionTest
 
     private User annotator;
     private Project project;
+    private SourceDocument sourceDocument;
     private AnnotationDocument annotationDocument;
     private DynamicWorkloadTraits traits;
 
@@ -117,20 +119,16 @@ public class DefaultWorkflowExtensionTest
         annotator = userService.create(new User("anno1"));
         project = projectService.createProject(new Project("test"));
 
-        SourceDocument doc = documentService
+        sourceDocument = documentService
                 .createSourceDocument(new SourceDocument("doc.txt", project, TextFormatSupport.ID));
-        annotationDocument = documentService
-                .createAnnotationDocument(new AnnotationDocument(annotator.getUsername(), doc));
+        annotationDocument = documentService.createAnnotationDocument(
+                new AnnotationDocument(annotator.getUsername(), sourceDocument));
 
         Fixtures.importTestSourceDocumentAndAddNamedEntity(documentService, annotationDocument);
 
         WorkloadManager workloadManager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         workloadManager.setType(DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID);
-        traits = new DynamicWorkloadTraits();
-        traits.setAbandonationTimeout(Duration.of(1, SECONDS));
-        traits.setAbandonationState(AnnotationDocumentState.NEW);
-        dynamicWorkloadExtension.writeTraits(traits, project);
     }
 
     @AfterEach
@@ -140,8 +138,26 @@ public class DefaultWorkflowExtensionTest
     }
 
     @Test
+    public void thatRecalculatingStateDoesNotFallBacKBehindCuration() throws Exception
+    {
+        documentService.setSourceDocumentState(sourceDocument,
+                SourceDocumentState.CURATION_IN_PROGRESS);
+
+        dynamicWorkloadExtension.recalculate(project);
+
+        sourceDocument = documentService.getSourceDocument(project.getId(), sourceDocument.getId());
+
+        assertThat(sourceDocument.getState()).isEqualTo(SourceDocumentState.CURATION_IN_PROGRESS);
+    }
+
+    @Test
     public void thatAbandonedDocumentsAreReset() throws Exception
     {
+        traits = new DynamicWorkloadTraits();
+        traits.setAbandonationTimeout(Duration.of(1, SECONDS));
+        traits.setAbandonationState(AnnotationDocumentState.NEW);
+        dynamicWorkloadExtension.writeTraits(traits, project);
+
         var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
                 annotationDocument.getUser());
         assertThat(ann.getState()) //
@@ -168,6 +184,11 @@ public class DefaultWorkflowExtensionTest
     @Test
     public void thatDocumentsForUsersLoggedInAreExemptFromAbandonation() throws Exception
     {
+        traits = new DynamicWorkloadTraits();
+        traits.setAbandonationTimeout(Duration.of(1, SECONDS));
+        traits.setAbandonationState(AnnotationDocumentState.NEW);
+        dynamicWorkloadExtension.writeTraits(traits, project);
+
         var ann = documentService.getAnnotationDocument(annotationDocument.getDocument(),
                 annotationDocument.getUser());
         assertThat(ann.getState()) //
