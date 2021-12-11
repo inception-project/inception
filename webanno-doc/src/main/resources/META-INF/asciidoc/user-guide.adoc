@@ -19,6 +19,8 @@ The {product-name} Team
 
 This guide summarizes the functionality of {product-name} from the user's perspective.
 
+IMPORTANT: **Switch to the new annotation tool link:https://inception-project.github.io[INCEpTION]!** It is like WebAnno but way more modern and with a ton of additional features and improvements. WebAnno has grown old and does not even run anymore on Java versions 16 and higher. In most cases you can simply export your projects from WebAnno, import them into INCEpTION and continue to work. So, don't hesitate and give it a try!
+
 NOTE: It is assumed that you plan to test the {product-name} standalone version or an already existing server installation of {product-name}. For information on how to set up {product-name} for a group of users on a server, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
 
 All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].

@@ -19,6 +19,8 @@ The {product-name} Team
 
 This document targets developers working on {product-name}.
 
+IMPORTANT: **Switch to the new annotation tool link:https://inception-project.github.io[INCEpTION]!** It is like WebAnno but way more modern and with a ton of additional features and improvements. WebAnno has grown old and does not even run anymore on Java versions 16 and higher. In most cases you can simply export your projects from WebAnno, import them into INCEpTION and continue to work. So, don't hesitate and give it a try!
+
 = Introduction
 
 include::{include-dir}setup.adoc[leveloffset=+1]
