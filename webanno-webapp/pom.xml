@@ -89,6 +89,12 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-security</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>cglib</groupId>
+          <artifactId>cglib-nodep</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -112,7 +118,7 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
-
+   
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
@@ -361,11 +367,11 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <delete includeemptydirs="true" failonerror="false">
                   <fileset dir="src/main/resources/public/doc" includes="**/*" />
                 </delete>
-              </tasks>
+              </target>
             </configuration>
           </execution>
           <execution>
@@ -375,7 +381,7 @@
               <goal>run</goal>
             </goals>
             <configuration>
-              <tasks>
+              <target>
                 <mkdir dir="src/main/resources/public/doc" />
                 <!-- 
                 It is important that we SYNC here instead of delete/copy, otherwise we may run into
@@ -388,7 +394,7 @@
                     <include name="**/*.jpg" />
                   </fileset>
                 </sync>
-              </tasks>
+              </target>
             </configuration>
           </execution>
         </executions>

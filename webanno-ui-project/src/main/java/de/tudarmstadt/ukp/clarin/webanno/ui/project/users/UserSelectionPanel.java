@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
 import static java.util.stream.Collectors.joining;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +34,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.core.utils.RequestCycleUtils;
 import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
@@ -59,16 +60,16 @@ class UserSelectionPanel
 
     private IModel<Project> projectModel;
     private IModel<User> userModel;
-    
+
     private OverviewListChoice<User> overviewList;
     private MultiSelect<User> usersToAdd;
 
     public UserSelectionPanel(String id, IModel<Project> aProject, IModel<User> aUser)
     {
         super(id);
-        
+
         setOutputMarkupId(true);
-        
+
         projectModel = aProject;
         userModel = aUser;
 
@@ -78,11 +79,12 @@ class UserSelectionPanel
         overviewList.setChoices(this::listUsersWithPermissions);
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
-        
+
         IModel<Collection<User>> usersToAddModel = new CollectionModel<>(new ArrayList<>());
         Form<Collection<User>> form = new Form<>("form", usersToAddModel);
         add(form);
-        usersToAdd = new MultiSelect<User>("usersToAdd", new ChoiceRenderer<>("username")) {
+        usersToAdd = new MultiSelect<User>("usersToAdd", new ChoiceRenderer<>("username"))
+        {
             private static final long serialVersionUID = 8231304829756188352L;
 
             @Override
@@ -91,7 +93,7 @@ class UserSelectionPanel
                 // This ensures that we get the user input in getChoices
                 aDataSource.set("serverFiltering", true);
             }
-            
+
             @Override
             public void onConfigure(JQueryBehavior aBehavior)
             {
@@ -102,39 +104,61 @@ class UserSelectionPanel
             }
 
             @Override
-            public List<User> getChoices()
+            public List<User> getChoices(String aInput)
             {
-                final String input = RequestCycleUtils
-                        .getQueryParameterValue("filter[filters][0][value]").toString();
-
                 List<User> result = new ArrayList<>();
-                
+
                 if (config.isHideUsers()) {
                     // only offer the user matching what the input entered into the field
-                    User user = userRepository.get(input);
-                    if (user != null) {
-                        result.add(user);
+                    if (isNotBlank(aInput)) {
+                        User user = userRepository.get(aInput);
+                        if (user != null) {
+                            result.add(user);
+                        }
                     }
                 }
                 else {
                     // offer all enabled users matching the input
                     userRepository.listEnabledUsers().stream()
-                            .filter(user -> input == null || user.getUsername().contains(input))
+                            .filter(user -> aInput == null || user.getUsername().contains(aInput))
                             .forEach(result::add);
                 }
-                
+
                 if (!result.isEmpty()) {
                     result.removeAll(listUsersWithPermissions());
                 }
-                
+
                 return result;
+            }
+
+            @Override
+            public void convertInput()
+            {
+                if (!config.isHideUsers()) {
+                    super.convertInput();
+                    return;
+                }
+
+                final String[] values = this.getInputAsArray();
+                List<User> result = new ArrayList<>();
+                for (String value : values) {
+                    if (isBlank(value)) {
+                        continue;
+                    }
+
+                    User user = userRepository.get(value);
+                    if (user != null) {
+                        result.add(user);
+                    }
+                }
+                this.setConvertedInput(result);
             }
         };
         usersToAdd.setModel(usersToAddModel);
         form.add(usersToAdd);
         form.add(new LambdaAjaxButton<>("add", this::actionAdd));
     }
-    
+
     private IChoiceRenderer<User> makeUserChoiceRenderer()
     {
         return new org.apache.wicket.markup.html.form.ChoiceRenderer<User>()
@@ -147,7 +171,7 @@ class UserSelectionPanel
                 String permissionLevels = projectRepository
                         .getProjectPermissionLevels(aUser, projectModel.getObject()).stream()
                         .map(PermissionLevel::getName).collect(joining(", ", "[", "]"));
-                
+
                 return aUser.getUsername() + " " + permissionLevels
                         + (aUser.isEnabled() ? "" : " (login disabled)");
             }
@@ -165,9 +189,9 @@ class UserSelectionPanel
             projectRepository.createProjectPermission(new ProjectPermission(
                     projectModel.getObject(), user.getUsername(), PermissionLevel.ANNOTATOR));
         }
-        
+
         aForm.getModelObject().clear();
-        
+
         aTarget.add(this);
     }
 }
