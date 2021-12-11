@@ -1,14 +1,14 @@
 ############################################################
 #
-# Dockerfile to build webanno container images
+# Dockerfile to build WebAnno container images
 #
 ############################################################
 
-FROM openjdk:8
+FROM openjdk:11
 
 MAINTAINER WebAnno Team
 
-# make sure webanno is running in en_US.UTF-8 locale
+# make sure WebAnno is running in en_US.UTF-8 locale
 RUN set -ex \
       && DEBIAN_FRONTEND=noninteractive \
       && apt-get update \
@@ -31,4 +31,4 @@ EXPOSE 8080
 
 ENV JAVA_OPTS="-Xmx750m"
 
-CMD java ${JAVA_OPTS} -Djava.awt.headless=true -XX:+UseConcMarkSweepGC -Dwebanno.home=/export -jar webanno-standalone.jar
+CMD java ${JAVA_OPTS} -Djava.awt.headless=true -Dwebanno.home=/export -jar webanno-standalone.jar

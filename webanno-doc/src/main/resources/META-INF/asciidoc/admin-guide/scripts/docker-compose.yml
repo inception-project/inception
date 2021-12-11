@@ -28,7 +28,7 @@ services:
       webanno-net:
 
   webserver:
-    image: "webanno/webanno-snapshots:{revnumber}"
+    image: "${WEBANNO_IMAGE:-webanno/webanno}:${WEBANNO_VERSION:-{revnumber}}"
     ports:
       - "${WEBANNO_PORT}:8080"
     environment:
@@ -42,8 +42,6 @@ services:
     depends_on:
       mysqlserver:
         condition: service_healthy
-    mem_limit: 1g
-    memswap_limit: 1g
     restart: unless-stopped
     networks:
       webanno-net:

@@ -25,9 +25,6 @@
   <artifactId>webanno-webapp</artifactId>
   <name>WebAnno - Application</name>
   <packaging>war</packaging>
-  <properties>
-    <docker.image.name>webanno/webanno-snapshots</docker.image.name>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -572,14 +569,20 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
             <version>${spring.boot.version}</version>
-            <configuration>
-              <executable>true</executable>
-            </configuration>
             <executions>
               <execution>
                 <goals>
                   <goal>repackage</goal>
                 </goals>
+                <configuration>
+                  <executable>true</executable>
+                  <!--
+                    We want the original file to be the WAR and the repackaged all-inclusive runnable
+                    thing with the embedded Tomcat to be the JAR.
+                  -->
+                  <attach>false</attach>
+                  <classifier>standalone</classifier>
+                </configuration>
               </execution>
             </executions>
           </plugin>
@@ -588,10 +591,6 @@
             <artifactId>maven-antrun-plugin</artifactId>
             <executions>
               <execution>
-                <!--
-                  We want the original file to be the WAR and the repackaged all-inclusive runnable
-                  thing with the embedded Tomcat to be the JAR.
-                 -->
                 <id>copy-war-to-jar</id>
                 <phase>package</phase>
                 <goals>
@@ -599,9 +598,30 @@
                 </goals>
                 <configuration>
                   <target>
-                    <move file="target/${project.artifactId}-${project.version}.war" tofile="target/webanno-standalone-${project.version}.jar" />
-                    <move file="target/${project.artifactId}-${project.version}.war.original" tofile="target/${project.artifactId}-${project.version}.war" />
+                    <move file="target/${project.artifactId}-${project.version}-standalone.war" tofile="target/${project.artifactId}-${project.version}-standalone.jar" />
                   </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-artifacts</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>attach-artifact</goal>
+                </goals>
+                <configuration>
+                  <artifacts>
+                    <artifact>
+                      <file>target/${project.artifactId}-${project.version}-standalone.jar</file>
+                      <type>jar</type>
+                      <classifier>standalone</classifier>
+                    </artifact>
+                  </artifacts>
                 </configuration>
               </execution>
             </executions>

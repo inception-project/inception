@@ -339,6 +339,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-docker</artifactId>
+        <version>3.6.8-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-automation</artifactId>
         <version>3.6.8-SNAPSHOT</version>
       </dependency>
@@ -967,6 +972,7 @@
     <!-- Documentation -->
     <module>webanno-doc</module>
     <module>webanno-automation</module>
+    <module>webanno-docker</module>
   </modules>
   <build>
     <plugins>
