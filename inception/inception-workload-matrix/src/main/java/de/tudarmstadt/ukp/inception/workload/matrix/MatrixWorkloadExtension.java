@@ -21,10 +21,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
-import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTrait;
+import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 
 public interface MatrixWorkloadExtension
-    extends WorkloadManagerExtension<MatrixWorkloadTrait>
+    extends WorkloadManagerExtension<MatrixWorkloadTraits>
 {
     static final String MATRIX_WORKLOAD_MANAGER_EXTENSION_ID = "matrix";
 
