@@ -114,6 +114,9 @@ import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongComparators;
+import it.unimi.dsi.fastutil.longs.LongList;
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasTokenizerFactory;
 import mtas.codec.util.CodecComponent;
@@ -823,10 +826,10 @@ public class MtasDocumentIndex
     private List<LeafReaderContext> sortLeaves(List<LeafReaderContext> aLeaves,
             IndexSearcher aSearcher, MtasSpanQuery aQuery)
         throws IOException
-    {   // This method sorts the LeafReaderContexts according to the document ids
-        // they contain. If one does not contain a document for this search, then
-        // it is discarded. If one contains multiple document ids the smallest
-        // is used for comparison.
+    { // This method sorts the LeafReaderContexts according to the document ids
+      // they contain. If one does not contain a document for this search, then
+      // it is discarded. If one contains multiple document ids the smallest
+      // is used for comparison.
 
         List<Pair<LeafReaderContext, List<Long>>> mapToDocIds = new ArrayList<>();
 
@@ -838,7 +841,7 @@ public class MtasDocumentIndex
         for (LeafReaderContext leafReaderContext : aLeaves) {
             Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
             SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
-            List<Long> IdList = new ArrayList<Long>();
+            LongList idList = new LongArrayList();
             // no spans -> no docs
             if (spans != null) {
                 // go through the docs in iterator span
@@ -856,13 +859,13 @@ public class MtasDocumentIndex
                             continue;
                         }
                         // add id to the list of ids for this leafReaderContext
-                        IdList.add(Long.valueOf(rawSourceDocumentId));
+                        idList.add(Long.parseLong(rawSourceDocumentId));
                     }
                 }
             }
-            IdList.sort(Long::compareTo);
-            if (IdList.size() > 0) {
-                mapToDocIds.add(Pair.of(leafReaderContext, IdList));
+            idList.sort(LongComparators.NATURAL_COMPARATOR);
+            if (!idList.isEmpty()) {
+                mapToDocIds.add(Pair.of(leafReaderContext, idList));
             }
         }
         // Sort according to docId; take the smallest value in the list
@@ -1195,8 +1198,8 @@ public class MtasDocumentIndex
         doc.add(new StringField(FIELD_ID,
                 String.valueOf(aSourceDocumentId) + "/" + String.valueOf(aAnnotationDocumentId),
                 Field.Store.YES));
-        doc.add(new StringField(FIELD_SOURCE_DOCUMENT_ID, String.valueOf(aSourceDocumentId), Field.Store.YES
-                ));
+        doc.add(new StringField(FIELD_SOURCE_DOCUMENT_ID, String.valueOf(aSourceDocumentId),
+                Field.Store.YES));
         doc.add(new StringField(FIELD_ANNOTATION_DOCUMENT_ID, String.valueOf(aAnnotationDocumentId),
                 Field.Store.YES));
         doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
