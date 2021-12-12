@@ -61,11 +61,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ReadonlyColorin
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 /**
  * Modal Window to configure layers, window size, etc.
@@ -84,6 +87,7 @@ public class AnnotationPreferencesDialogContent
     private @SpringBean UserDao userDao;
     private @SpringBean UserPreferencesService userPreferencesService;
     private @SpringBean AnnotationEditorProperties annotationEditorProperties;
+    private @SpringBean PreferencesService preferencesService;
 
     private final ModalWindow modalWindow;
     private final Form<Preferences> form;
@@ -128,10 +132,13 @@ public class AnnotationPreferencesDialogContent
         fontZoomField.setMaximum(AnnotationPreference.FONT_ZOOM_MAX);
         form.add(fontZoomField);
 
+        AnnotationEditorState state = preferencesService.loadDefaultTraitsForProject(
+                AnnotationPageBase.KEY_EDITOR_STATE, stateModel.getObject().getProject());
+
         DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
         editor.setChoices(editorChoices);
-        editor.add(visibleWhen(() -> editor.getChoices().size() > 1
+        editor.add(visibleWhen(() -> state.getDefaultEditor() == null && editor.getChoices().size() > 1
                 && ANNOTATION.equals(stateModel.getObject().getMode())));
         form.add(editor);
 

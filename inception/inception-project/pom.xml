@@ -48,10 +48,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-annotation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
     <dependency>
@@ -77,38 +73,12 @@
       <artifactId>spring-beans</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
-    </dependency>
-
-    <!-- DKPro Core dependencies -->
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-syntax-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-lexmorph-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-ner-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-semantics-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-transform-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
     </dependency>
 
     <!-- Hibernate dependencies -->

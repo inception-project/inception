@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
+import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 /**
  * The start and End offset positions of a span annotation as required by the Brat protocol

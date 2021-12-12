@@ -428,7 +428,8 @@ public class AeroRemoteApiController
 
         FullProjectExportRequest request = new FullProjectExportRequest(project,
                 aFormat.orElse(WebAnnoTsv3FormatSupport.ID), true);
-        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null, "test");
+        ProjectExportTaskMonitor monitor = new ProjectExportTaskMonitor(project, null,
+                "report-export");
         File exportedFile = exportService.exportProject(request, monitor);
 
         // Turn the file into a resource and auto-delete the file when the resource closes the

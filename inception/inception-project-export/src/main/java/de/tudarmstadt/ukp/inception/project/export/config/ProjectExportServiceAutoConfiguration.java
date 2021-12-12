@@ -55,14 +55,14 @@ public class ProjectExportServiceAutoConfiguration
         return new ProjectExportServiceImpl(aApplicationContext, aExporters, aProjectService);
     }
 
-    @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "false", matchIfMissing = false)
     @Bean
     public ExportProjectSettingsPanelFactory exportProjectSettingsPanelFactory()
     {
         return new ExportProjectSettingsPanelFactory();
     }
 
-    @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnProperty(name = "dashboard.legacy-export", havingValue = "true", matchIfMissing = true)
     @Bean
     public LegacyExportProjectSettingsPanelFactory legacyExportProjectSettingsPanelFactory()
     {

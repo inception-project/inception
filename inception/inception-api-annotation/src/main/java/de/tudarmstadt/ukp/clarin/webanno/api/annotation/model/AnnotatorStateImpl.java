@@ -86,6 +86,8 @@ public class AnnotatorStateImpl
      */
     private User user;
 
+    private String editorFactoryId;
+
     private ScriptDirection scriptDirection;
 
     /**
@@ -221,8 +223,11 @@ public class AnnotatorStateImpl
     @Override
     public void setProject(Project aProject)
     {
+        if (project == null || !project.equals(aProject)) {
+            setScriptDirection(aProject.getScriptDirection());
+        }
+
         project = aProject;
-        setScriptDirection(project.getScriptDirection());
     }
 
     @Override
@@ -737,6 +742,18 @@ public class AnnotatorStateImpl
     public boolean isUserViewingOthersWork(String aCurrentUserName)
     {
         return !user.getUsername().equals(aCurrentUserName);
+    }
+
+    @Override
+    public void setEditorFactoryId(String aId)
+    {
+        editorFactoryId = aId;
+    }
+
+    @Override
+    public String getEditorFactoryId()
+    {
+        return editorFactoryId;
     }
 
     @SuppressWarnings("unchecked")

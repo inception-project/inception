@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
@@ -30,6 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -53,10 +55,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBeh
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerTraits;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
@@ -133,10 +138,11 @@ public class RelationRenderer
 
         RelationAdapter typeAdapter = getTypeAdapter();
 
-        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBegin, aWindowEnd);
-
-        // if this is a governor for more than one dependent, avoid duplicate yield
-        List<Integer> yieldDeps = new ArrayList<>();
+        // Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, aWindowBegin,
+        // aWindowEnd);
+        //
+        // // if this is a governor for more than one dependent, avoid duplicate yield
+        // List<Integer> yieldDeps = new ArrayList<>();
 
         // Index mapping annotations to the corresponding rendered arcs
         Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
@@ -152,7 +158,7 @@ public class RelationRenderer
                 aResponse.add(arc);
                 annoToArcIdx.put(fs, (VArc) arc);
 
-                renderYield(aResponse, fs, relationLinks, yieldDeps);
+                // renderYield(aResponse, fs, relationLinks, yieldDeps);
 
                 renderLazyDetails(fs, arc, aFeatures);
                 renderRequiredFeatureErrors(aFeatures, fs, aResponse);
@@ -164,8 +170,8 @@ public class RelationRenderer
         }
     }
 
-    private void renderYield(VDocument aResponse, AnnotationFS fs,
-            Map<Integer, Set<Integer>> relationLinks, List<Integer> yieldDeps)
+    private Optional<String> renderYield(AnnotationFS fs, Map<Integer, Set<Integer>> relationLinks,
+            List<Integer> yieldDeps)
     {
         FeatureStructure dependentFs = getDependentFs(fs);
 
@@ -179,8 +185,11 @@ public class RelationRenderer
                     comparingInt(arg0 -> selectAnnotationByAddr(fs.getCAS(), arg0).getBegin()));
 
             String cm = getYieldMessage(fs.getCAS(), sortedDepFs);
-            aResponse.add(new VComment(dependentFs, VCommentType.YIELD, cm));
+
+            return Optional.of(cm);
         }
+
+        return Optional.empty();
     }
 
     @Override
@@ -247,6 +256,47 @@ public class RelationRenderer
 
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public List<VLazyDetailQuery> getLazyDetails(AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
+    {
+        List<VLazyDetailQuery> queries = super.getLazyDetails(aFs, aFeatures);
+
+        if (!queries.contains(VLazyDetailQuery.LAYER_LEVEL_QUERY)) {
+            queries.add(VLazyDetailQuery.LAYER_LEVEL_QUERY);
+        }
+
+        return queries;
+    }
+
+    @Override
+    public List<VLazyDetailResult> renderLazyDetails(CAS aCas, VID aVid, int windowBeginOffset,
+            int windowEndOffset)
+    {
+        checkTypeSystem(aCas);
+
+        // FIXME Should also handle relations that are only partially visible using
+        // selectAnnotationsInWindow()
+        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aCas, windowBeginOffset,
+                windowEndOffset);
+
+        // if this is a governor for more than one dependent, avoid duplicate yield
+        List<Integer> yieldDeps = new ArrayList<>();
+
+        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+
+        Optional<String> yield = renderYield(fs, relationLinks, yieldDeps);
+
+        List<VLazyDetailResult> details = super.renderLazyDetails(aCas, aVid, windowBeginOffset,
+                windowEndOffset);
+
+        if (yield.isPresent()) {
+            details.add(new VLazyDetailResult("Yield", yield.get()));
+        }
+
+        return details;
     }
 
     /**

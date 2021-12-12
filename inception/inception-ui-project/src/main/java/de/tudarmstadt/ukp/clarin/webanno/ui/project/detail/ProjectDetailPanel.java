@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectName;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
-import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -34,8 +33,6 @@ import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -57,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -129,11 +125,6 @@ public class ProjectDetailPanel
                 .equals(getApplication().getConfigurationType()));
 
         form.add(new TextArea<String>("description").setOutputMarkupId(true));
-
-        DropDownChoice<ScriptDirection> scriptDirection = new DropDownChoice<>("scriptDirection");
-        scriptDirection.setChoiceRenderer(new EnumChoiceRenderer<>(this));
-        scriptDirection.setChoices(asList(ScriptDirection.values()));
-        form.add(scriptDirection);
 
         form.add(new CheckBox("disableExport").setOutputMarkupPlaceholderTag(true));
 

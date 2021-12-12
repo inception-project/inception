@@ -1,0 +1,35 @@
+[[sect_statistics]]
+== Statistics
+
+The statistics section provides useful statistics about the project.  Currently, the statistics are provided by *MTAS* (Multi Tier Annotation Search), a Lucene/Solr based search and indexing mechanism (https://github.com/textexploration/mtas).
+
+=== High-level statistics sidebar
+To reach the statistics sidebar, go to *Annotation*, open a document and choose the statistics sidebar on the left, indicated by the clipboard icon.
+Select a granularity and a statistic which shall be displayed. After clicking the calculate button, the results are shown in the table below.
+
+NOTE: Clicking the *Calculate* button will compute all statistics and all granularities at once. The dropdowns are just there to reduce the size of the table. Therefore, depending on the size of the project, clicking the calculate button may take a while . The exported file always contains all statistics, so it is significantly larger than the displayed table.
+
+For the calculation of the statistics, all documents which the current user has access to and all are considered. They are computed for all layer/feature combinations. Please make sure that the name of the layer/feature combinations are valid (e.g. they don't contain incorrect bracketing).
+
+* **Granularity**: Currently, there are two options to choose from, *per Document* and *per Sentence*. Understanding what's actually computed by them is illustrated best by an example. Assume you have 3 documents, the first with 1 sentence, the second with 2 sentences and the third with 3 sentences. Let X~i~ be the number of occurrences of feature X (e.g. the *Feature* "value" in the *Layer* "named entity") in document i (i = 1, 2, 3). Then *per Document* is just the vector Y = (X~1~, X~2~, X~3~), i.e. we look at the raw occurrences per Document. In contrast, *per Sentence* calculates the vector Z = (X~1~/1, X~2~/2, X~3~/3), i.e. it divides the number of occurrences by the number of sentences. This vector is then evaluated according to the chosen statistic (e.g. Mean(Y) = (X~1~ + X~2~ + X~3~)/3, Max(Z) = max(X~1~/1, X~2~/2, X~3~/3)).
+
+* **Statistic**: The kind of statistic which is displayed in the table. Let (Y~1~, ..., Y~n~) be a vector of real numbers. Its values are calculated as shown in the *Granularity* section above.
+
+- Maximum: the greatest entry, i.e. max(Y~1~, ..., Y~n~)
+- Mean: the arithmetic mean of the entries, i.e. (Y~1~ + ... + Y~n~)/n
+- Median: the entry in the middle of the sorted vector, i.e. let Z = (Z~1~, ..., Z~n~) be a vector which contains the same entries as Y, but they are in ascending order (Z~1~ < = Z~2~ < = ... < = Z~n~). Then the median is given by Z~(n+1)/2~ if n is odd
+or (Z~n/2~ + Z~(n/2)+1~)/2 if n is even
+- Minimum: the smallest entry, i.e. min(Y~1~, ..., Y~n~)
+- Number of Documents: the number of documents considered, i.e. n
+- Standard Deviation: 1/n * ( (Y~1~ - Mean(Y))^2^ + ... + (Y~n~ - Mean(Y))^2^)
+- Sum: the total number of occurrences across all documents, i.e. Y~1~ + ... + Y~n~
+
+NOTE: The two artificial features *token* and *sentence* are contained in the artificial layer *Segmentation* and statistics for them are computed. Note that *per Sentence* statistics of *Segmentation.sentence* are trivial so they are omitted from the table and the downloadable file.
+
+* **Hide empty layers**: Usually, a project does not use all layers. If a feature of a layer does never occur, all its statistics (except Number of Documents) will be zero. Tick this box and press the *Calculate* button again to omit them from the displayed table. If you then download the table, the generated file will not include these layers.
+
+After some data is displayed in the table, it is possible to download the results. For this, after clicking the *Calculate* button there will appear a *Format* Dropdown and an *Export* button below the table. Choose your format and click the button to start a download of the results. The download will always include all possible statistics and either all features or only the non-null features.
+
+* **Formats**: Currently, two formats are possible, *.txt* and *.csv*. In the first format, columns are separated by a *tab* "*\t*" whereas in the second format they are separated by a *comma* "*,*".
+
+
