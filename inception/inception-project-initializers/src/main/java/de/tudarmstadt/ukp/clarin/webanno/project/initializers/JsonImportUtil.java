@@ -72,13 +72,17 @@ public class JsonImportUtil
         tagsetInUse.setLanguage(importedTagSet.getLanguage());
         tagsetInUse.setProject(project);
         aAnnotationService.createTagSet(tagsetInUse);
+        
         // Add all tags from imported tagset
+        int rank = 0;
         for (ExportedTag tag : importedTagSet.getTags()) {
             Tag newTag = new Tag();
             newTag.setDescription(tag.getDescription());
             newTag.setName(tag.getName());
+            newTag.setRank(rank);
             newTag.setTagSet(tagsetInUse);
             aAnnotationService.createTag(newTag);
+            rank++;
         }
 
         return tagsetInUse;
@@ -118,6 +122,7 @@ public class JsonImportUtil
             tag.setDescription(exTag.getDescription());
             tag.setTagSet(newTagSet);
             tag.setName(exTag.getName());
+            tag.setRank(tags.size());
             tags.add(tag);
         }
 

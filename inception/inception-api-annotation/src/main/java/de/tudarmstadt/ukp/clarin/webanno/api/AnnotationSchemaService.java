@@ -74,6 +74,8 @@ public interface AnnotationSchemaService
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     void createTags(Tag... tag);
 
+    void updateTagRanks(TagSet aTagSet, List<Tag> aTags);
+
     /**
      * creates a {@link TagSet} object in the database
      *

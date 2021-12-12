@@ -54,6 +54,9 @@ public class Tag
     @JoinColumn(name = "tagset")
     private TagSet tagSet;
 
+    @Column(nullable = false)
+    private int rank;
+
     public Tag()
     {
         // Nothing to do
@@ -109,6 +112,16 @@ public class Tag
     public void setTagSet(TagSet aTagSet)
     {
         tagSet = aTagSet;
+    }
+
+    public int getRank()
+    {
+        return rank;
+    }
+
+    public void setRank(int aRank)
+    {
+        rank = aRank;
     }
 
     @Override

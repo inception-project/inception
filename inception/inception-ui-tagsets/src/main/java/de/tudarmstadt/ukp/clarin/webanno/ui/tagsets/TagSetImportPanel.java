@@ -184,8 +184,9 @@ public class TagSetImportPanel
                         // to the tagset
                         else {
                             Tag tag = new Tag();
-                            tag.setDescription(tabbedTagsetFromFile.get(key).replace("\\n", "\n"));
                             tag.setName(key);
+                            tag.setDescription(tabbedTagsetFromFile.get(key).replace("\\n", "\n"));
+                            tag.setRank(i);
                             tag.setTagSet(tagSet);
                             annotationService.createTag(tag);
                         }
