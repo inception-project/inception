@@ -44,7 +44,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -222,6 +224,31 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
+    public void updateTagRanks(TagSet aTagSet, List<Tag> aTags)
+    {
+        Map<Tag, Tag> dbTags = new HashMap<Tag, Tag>();
+        for (Tag t : listTags(aTagSet)) {
+            dbTags.put(t, t);
+        }
+
+        int n = 0;
+        for (Tag t : aTags) {
+            if (!aTagSet.equals(t.getTagSet())) {
+                throw new IllegalArgumentException("All tags to be updated must belong to "
+                        + aTagSet + ", but [" + t + "] belongs to " + t.getTagSet());
+            }
+
+            Tag dbTag = dbTags.get(t);
+            if (dbTag != null) {
+                dbTag.setRank(n);
+                t.setRank(n);
+                n++;
+            }
+        }
+    }
+
+    @Override
+    @Transactional
     public void createTagSet(TagSet aTagSet)
     {
         try (var logCtx = withProjectLogger(aTagSet.getProject())) {
@@ -280,8 +307,10 @@ public class AnnotationSchemaServiceImpl
     public Tag getTag(String aTagName, TagSet aTagSet)
     {
         return entityManager
-                .createQuery("FROM Tag WHERE name = :name AND" + " tagSet =:tagSet", Tag.class)
-                .setParameter("name", aTagName).setParameter("tagSet", aTagSet).getSingleResult();
+                .createQuery("FROM Tag WHERE name = :name AND" + " tagSet = :tagSet", Tag.class)
+                .setParameter("name", aTagName) //
+                .setParameter("tagSet", aTagSet) //
+                .getSingleResult();
     }
 
     @Override
@@ -793,7 +822,8 @@ public class AnnotationSchemaServiceImpl
         }
 
         return entityManager
-                .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY name ASC", Tag.class)
+                .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY rank ASC, name ASC",
+                        Tag.class)
                 .setParameter("tagSet", aTagSet) //
                 .getResultList();
     }

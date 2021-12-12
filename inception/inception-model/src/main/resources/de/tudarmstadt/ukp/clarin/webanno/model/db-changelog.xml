@@ -1326,4 +1326,17 @@
       tableName="project"
       constraintName="UK3k75vvu7mevyvvb5may5lj8k7" />
   </changeSet>  
+
+  <changeSet author="INCEpTION Team" id="20211212-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="tag" columnName="rank"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="tag">
+      <column name="rank" type="INT" defaultValueNumeric="0">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

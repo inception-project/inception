@@ -208,7 +208,6 @@ public class TagSetEditorPanel
                     exportedTag.setDescription(tag.getDescription());
                     exportedTag.setName(tag.getName());
                     exportedTags.add(exportedTag);
-
                 }
                 exTagSet.setTags(exportedTags);
 

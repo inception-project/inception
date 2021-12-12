@@ -185,9 +185,10 @@ public class TagSetExporter
             }
 
             Tag tag = new Tag();
-            tag.setDescription(exTag.getDescription());
             tag.setTagSet(aTagSet);
             tag.setName(exTag.getName());
+            tag.setDescription(exTag.getDescription());
+            tag.setRank(tags.size());
             tags.add(tag);
         }
 
