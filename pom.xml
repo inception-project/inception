@@ -79,7 +79,7 @@
     <mockito.version>2.28.2</mockito.version>
     <assertj.version>3.21.0</assertj.version>
     <tomcat.version>8.5.73</tomcat.version>
-    <mysql-driver.version>8.0.27</mysql-driver.version>
+    <mysql-driver.version>8.0.20</mysql-driver.version>
   </properties>
   <repositories>
     <repository>
