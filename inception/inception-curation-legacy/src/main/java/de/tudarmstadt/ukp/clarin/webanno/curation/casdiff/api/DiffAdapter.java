@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
@@ -28,6 +30,9 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
 
 public interface DiffAdapter
 {
+    /**
+     * @return UIMA type name to which the adapter applies.
+     */
     String getType();
 
     Collection<? extends Position> generateSubPositions(int aCasId, AnnotationFS aFs,
@@ -41,4 +46,6 @@ public interface DiffAdapter
 
     Position getPosition(int aCasId, FeatureStructure aFS, String aFeature, String aRole,
             int aLinkTargetBegin, int aLinkTargetEnd, LinkCompareBehavior aLinkCompareBehavior);
+
+    List<AnnotationFS> selectAnnotationsInWindow(CAS aCas, int aWindowBegin, int aWindowEnd);
 }

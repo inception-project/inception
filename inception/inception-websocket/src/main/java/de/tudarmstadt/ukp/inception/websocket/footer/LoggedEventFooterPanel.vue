@@ -57,7 +57,12 @@ module.exports = {
       if (this.connected){
         return;
       }
-      this.socket = new WebSocket(this.wsEndpoint);
+      
+      let protocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:');
+      let wsEndpoint = new URL(this.wsEndpoint)
+      wsEndpoint.protocol = protocol;
+ 
+      this.socket = new WebSocket(wsEndpoint.toString());
       this.stompClient = webstomp.over(this.socket);
       var that = this;
       this.stompClient.connect({}, 

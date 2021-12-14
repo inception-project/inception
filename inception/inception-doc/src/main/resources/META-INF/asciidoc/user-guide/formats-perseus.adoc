@@ -27,7 +27,7 @@ An XML format used by the link:https://github.com/PerseusDL/treebank_data/tree/m
 |====
 | Format | Read | Write | Custom Layers | Description
 
-| Perseus Ancient Greek and Latin Dependency Treebank 2.1 XML
+| Perseus Ancient Greek and Latin Dependency Treebank 2.1 XML (`perseus_2.1`)
 | yes
 | no
 | no

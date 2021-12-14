@@ -1,28 +1,14 @@
-== webanno-brat/src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource
+== src/main/ts/brat
 
 This folder includes a modified version of the brat (http://brat.nlplab.org) JavaScript client
 and rendering engine. Additional CSS files are located in 
-webanno-brat/src/main/resources/de/tudarmstadt/ukp/clarin/webanno/brat/client/css/
+src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource
 
  * Copyright (C) 2010-2012 The brat contributors, all rights reserved.
 
 
-It also includes the the JQuery JSON module:
+== jquery.ba-scrollbarwidth.js
 
- * Copyright 2009-2011 Brantley Harris
- * Copyright 2010–2014 Timo Tijhof
-
-
-And the JQuery SVG module:
-
- * Copyright 2007 - 2014 Keith Wood
-
-
-And jquery.ba-scrollbarwidth.js dual-licensed under MIT and GPL:
+Dual-licensed under MIT and GPL:
 
  * Copyright (c) 2010 "Cowboy" Ben Alman
- 
-
-JSON-Patch
-
- * Copyright (c) 2013, 2014 Joachim Wester

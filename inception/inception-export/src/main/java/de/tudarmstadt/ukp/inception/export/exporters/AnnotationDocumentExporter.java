@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FO
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest.FORMAT_AUTO;
+import static de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest.FORMAT_AUTO;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils.copy;
 import static java.lang.Math.ceil;
@@ -59,7 +59,6 @@ import org.apache.uima.UIMAException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -68,7 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -83,8 +82,14 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DocumentImportExportServiceAutoConfiguration#annotationDocumentExporter}.
+ * </p>
+ */
 public class AnnotationDocumentExporter
     implements ProjectExporter
 {
@@ -123,7 +128,7 @@ public class AnnotationDocumentExporter
     }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+    public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
         throws UIMAException, ClassNotFoundException, IOException, InterruptedException
     {
@@ -153,7 +158,7 @@ public class AnnotationDocumentExporter
         aExProject.setAnnotationDocuments(annotationDocuments);
     }
 
-    private void exportAnnotationDocumentContents(ProjectExportRequest aRequest,
+    private void exportAnnotationDocumentContents(FullProjectExportRequest aRequest,
             ProjectExportTaskMonitor aMonitor, ExportedProject aExProject, File aStage)
         throws UIMAException, ClassNotFoundException, IOException, InterruptedException
     {
@@ -183,7 +188,7 @@ public class AnnotationDocumentExporter
             if (Thread.interrupted()) {
                 throw new InterruptedException();
             }
-            
+
             try (CasStorageSession session = CasStorageSession.openNested()) {
                 //
                 // Export initial CASes
@@ -217,20 +222,22 @@ public class AnnotationDocumentExporter
                 // Export per-user annotation document
                 //
 
-                // Determine which format to use for export
-                String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? srcDoc.getFormat()
-                        : aRequest.getFormat();
+                FormatSupport format = null;
+                if (aRequest.getFormat() != null) {
+                    // Determine which format to use for export
+                    String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? srcDoc.getFormat()
+                            : aRequest.getFormat();
 
-                FormatSupport format = importExportService.getWritableFormatById(formatId)
-                        .orElseGet(() -> {
-                            FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
-                            aMonitor.addMessage(LogMessage.warn(this,
-                                    "Annotation: [%s] No writer "
-                                            + "found for original format [%s] - exporting as [%s] "
-                                            + "instead.",
-                                    srcDoc.getName(), formatId, fallbackFormat.getName()));
-                            return fallbackFormat;
-                        });
+                    format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
+                        FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
+                        aMonitor.addMessage(LogMessage.warn(this,
+                                "Annotation: [%s] No writer "
+                                        + "found for original format [%s] - exporting as [%s] "
+                                        + "instead.",
+                                srcDoc.getName(), formatId, fallbackFormat.getName()));
+                        return fallbackFormat;
+                    });
+                }
 
                 // Export annotations from regular users
                 for (AnnotationDocument annDoc : srcToAnnIdx.computeIfAbsent(srcDoc,
@@ -251,18 +258,20 @@ public class AnnotationDocumentExporter
                             documentService.exportCas(srcDoc, annDoc.getUser(), os);
                         }
 
-                        File annDocDir = new File(aStage.getAbsolutePath()
-                                + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
-                        File annFile = null;
-                        try {
-                            annFile = importExportService.exportAnnotationDocument(srcDoc,
-                                    annDoc.getUser(), format, annDoc.getUser(), ANNOTATION, false,
-                                    bulkOperationContext);
-                            forceMkdir(annDocDir);
-                            copyFileToDirectory(annFile, annDocDir);
-                        }
-                        finally {
-                            forceDelete(annFile);
+                        if (format != null) {
+                            File annDocDir = new File(aStage.getAbsolutePath()
+                                    + ANNOTATION_ORIGINAL_FOLDER + srcDoc.getName());
+                            File annFile = null;
+                            try {
+                                annFile = importExportService.exportAnnotationDocument(srcDoc,
+                                        annDoc.getUser(), format, annDoc.getUser(), ANNOTATION,
+                                        false, bulkOperationContext);
+                                forceMkdir(annDocDir);
+                                copyFileToDirectory(annFile, annDocDir);
+                            }
+                            finally {
+                                forceDelete(annFile);
+                            }
                         }
 
                         log.info("Exported annotation document content for user ["

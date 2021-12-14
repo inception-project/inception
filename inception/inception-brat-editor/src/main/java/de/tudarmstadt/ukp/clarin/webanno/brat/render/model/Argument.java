@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.BeanAsArraySerializer;
+import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 /**
  * The Arguments used during arc annotation in the form of [["Arg1","p_21346"],["Arg2","p_21341"]]

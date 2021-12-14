@@ -36,6 +36,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Anno
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_DISAGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_INCOMPLETE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.REJECTED_BY_CURATOR;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -49,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -81,11 +83,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.AlreadyMergedException;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.MergeConflictException;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -101,6 +98,11 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSe
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.AnnotationStateColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
+import de.tudarmstadt.ukp.inception.curation.merge.AlreadyMergedException;
+import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
+import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeConflictException;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 
 /**
  * Panel with the annotator's annotations.
@@ -431,6 +433,9 @@ public class AnnotatorsPanel
 
             var annotationStates = annoStates.get(username);
 
+            assert annotationStates != null : format(
+                    "No annotation states for user [" + username + "]");
+
             // Create curation view for the current user
             AnnotatorSegment seg = new AnnotatorSegment();
             seg.setUser(userService.get(username));
@@ -479,6 +484,10 @@ public class AnnotatorsPanel
         completeAgreementSets.removeAll(incompleteSets);
 
         Map<String, Map<VID, AnnotationState>> annoStates = new HashMap<>();
+        for (String casGroupId : aCasses.keySet()) {
+            annoStates.put(casGroupId, new HashMap<>());
+        }
+
         addSuggestionColor(aState.getProject(), aCasses, annoStates, differingSets,
                 ConfigurationSetType.DISAGREEMENT_SET);
         addSuggestionColor(aState.getProject(), aCasses, annoStates, incompleteSets,
@@ -531,6 +540,8 @@ public class AnnotatorsPanel
     private void renderSegment(AjaxRequestTarget aTarget, AnnotatorSegment aSegment,
             AnnotatorState aState, CAS aCas, Map<VID, AnnotationState> aAnnotationStates)
     {
+        Validate.notNull(aAnnotationStates, "Parameter [aAnnotationStates] must not be null");
+
         // Create curation view for the current user
         try {
             var coloringStrategy = new AnnotationStateColoringStrategy(aAnnotationStates);
@@ -553,7 +564,7 @@ public class AnnotatorsPanel
      * the curation annotation.
      */
     private void addSuggestionColor(Project aProject, Map<String, CAS> aCasMap,
-            Map<String, Map<VID, AnnotationState>> aSuggestionColors,
+            Map<String, Map<VID, AnnotationState>> aAnnotationStatesForAllUsers,
             Collection<ConfigurationSet> aConfigurationSets, ConfigurationSetType aSetType)
     {
         for (ConfigurationSet configurationSet : aConfigurationSets) {
@@ -562,8 +573,7 @@ public class AnnotatorsPanel
                     continue;
                 }
 
-                Map<VID, AnnotationState> colors = aSuggestionColors.computeIfAbsent(user,
-                        k -> new HashMap<>());
+                Map<VID, AnnotationState> annotationStates = aAnnotationStatesForAllUsers.get(user);
 
                 for (Configuration configuration : configurationSet.getConfigurations(user)) {
                     FeatureStructure fs = configuration.getFs(user, aCasMap);
@@ -588,31 +598,31 @@ public class AnnotatorsPanel
 
                     // The curator has accepted this configuration
                     if (configuration.getCasGroupIds().contains(CURATION_USER)) {
-                        colors.put(vid, ACCEPTED_BY_CURATOR);
+                        annotationStates.put(vid, ACCEPTED_BY_CURATOR);
                         continue;
                     }
 
                     // The curator has accepted *another* configuration in this set
                     if (configurationSet.getCasGroupIds().contains(CURATION_USER)) {
-                        colors.put(vid, REJECTED_BY_CURATOR);
+                        annotationStates.put(vid, REJECTED_BY_CURATOR);
                         continue;
                     }
 
                     // All annotators participated and agree but the curator did not make a decision
                     // yet.
                     if (aSetType == ConfigurationSetType.COMPLETE_AGREEMENT_SET) {
-                        colors.put(vid, ANNOTATORS_AGREE);
+                        annotationStates.put(vid, ANNOTATORS_AGREE);
                         continue;
                     }
 
                     // Annotators disagree and the curator has not made a choice yet
                     if (aSetType == ConfigurationSetType.DISAGREEMENT_SET) {
-                        colors.put(vid, ANNOTATORS_DISAGREE);
+                        annotationStates.put(vid, ANNOTATORS_DISAGREE);
                         continue;
                     }
 
                     // Annotation is incomplete and the curator has not made a choice yet
-                    colors.put(vid, ANNOTATORS_INCOMPLETE);
+                    annotationStates.put(vid, ANNOTATORS_INCOMPLETE);
                 }
             }
         }

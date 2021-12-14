@@ -26,6 +26,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.request.IRequestHandler;
@@ -36,6 +37,7 @@ import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class VueBehavior
     extends Behavior
@@ -61,9 +63,6 @@ public class VueBehavior
     @Override
     public void renderHead(Component aComponent, IHeaderResponse aResponse)
     {
-        IRequestHandler handler = new ResourceReferenceRequestHandler(ref);
-        String url = RequestCycle.get().urlFor(handler).toString();
-
         switch (aComponent.getApplication().getConfigurationType()) {
         case DEPLOYMENT:
             aResponse.render(forReference(
@@ -78,6 +77,21 @@ public class VueBehavior
         JavaScriptResourceReference vue3SfcLoaderRef = new JavaScriptResourceReference(getClass(),
                 "vue3-sfc-loader.min.js");
         aResponse.render(forReference(vue3SfcLoaderRef));
+
+        aResponse.render(OnDomReadyHeaderItem.forScript(initScript(aComponent)));
+    }
+
+    @Override
+    public void onRemove(Component aComponent)
+    {
+        aComponent.getRequestCycle().find(IPartialPageRequestHandler.class)
+                .ifPresent(target -> target.prependJavaScript(destroyScript(aComponent)));
+    }
+
+    private CharSequence initScript(Component aComponent)
+    {
+        IRequestHandler handler = new ResourceReferenceRequestHandler(ref);
+        String url = RequestCycle.get().urlFor(handler).toString();
 
         Object model = aComponent.getDefaultModelObject();
         String propsJson;
@@ -114,6 +128,12 @@ public class VueBehavior
         script.append("});\n");
         script.append("const vm = app.mount('#" + aComponent.getMarkupId() + "');\n}");
 
-        aResponse.render(OnDomReadyHeaderItem.forScript(script));
+        return script;
+    }
+
+    private CharSequence destroyScript(Component aComponent)
+    {
+        return WicketUtil.wrapInTryCatch("document.getElementById('" + aComponent.getMarkupId()
+                + "').__vue_app__.unmount(); console.log('Unmounting');");
     }
 }

@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -61,7 +63,7 @@
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
     <excludedTestCategories>slow</excludedTestCategories>
 
-    <junit.version>5.7.2</junit.version>
+    <junit.version>5.8.1</junit.version>
     <mockito.version>3.12.4</mockito.version>
     <assertj.version>3.20.2</assertj.version>
 
@@ -69,33 +71,33 @@
     <uima.version>3.2.0</uima.version>
     <uimafit.version>3.2.0</uimafit.version>
 
-    <spring.version>5.3.9</spring.version>
-    <spring.boot.version>2.5.4</spring.boot.version>
+    <spring.version>5.3.10</spring.version>
+    <spring.boot.version>2.5.5</spring.boot.version>
     <spring.security.version>5.5.2</spring.security.version>
-    <springdoc.version>1.5.10</springdoc.version>
-    <swagger.version>2.1.10</swagger.version>
+    <springdoc.version>1.5.11</springdoc.version>
+    <swagger.version>2.1.11</swagger.version>
 
     <slf4j.version>1.7.32</slf4j.version>
-    <log4j.version>2.14.1</log4j.version>
+    <log4j.version>2.15.0</log4j.version>
     <jboss.logging.version>3.4.1.Final</jboss.logging.version>
 
-    <groovy.version>3.0.3</groovy.version>
+    <groovy.version>3.0.9</groovy.version>
 
-    <tomcat.version>9.0.52</tomcat.version>
+    <tomcat.version>9.0.54</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.4</mariadb.driver.version>
     <hibernate.version>5.5.7.Final</hibernate.version>
     <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
 
-    <wicket.version>9.4.0</wicket.version>
-    <wicketstuff.version>9.4.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.3.2</wicket-jquery-ui.version>
+    <wicket.version>9.6.0</wicket.version>
+    <wicketstuff.version>9.6.0</wicketstuff.version>
+    <wicket-jquery-ui.version>9.5.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.0-M4</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.3</wicket-webjars.version>
     <wicket-spring-boot.version>3.0.4</wicket-spring-boot.version>
-    <bootstrap.version>5.1.0</bootstrap.version>
+    <bootstrap.version>5.1.2</bootstrap.version>
     <hover.version>2.0.2</hover.version>
 
     <!--
@@ -109,7 +111,7 @@
     <solr.version>7.7.3</solr.version> <!-- 8.5.1 / 8.7.0 -->
     <mtas.version>7.7.1.0</mtas.version> <!-- 8.7.0.0 -->
     <elasticsearch.version>6.8.17</elasticsearch.version> <!-- 7.10.2 -->
-    <rdf4j.version>3.7.3</rdf4j.version>
+    <rdf4j.version>3.7.4</rdf4j.version>
     <jena.version>3.17.0</jena.version>
 
     <asciidoctor.plugin.version>2.2.1</asciidoctor.plugin.version>
@@ -118,7 +120,7 @@
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.12.5</jackson.version>
+    <jackson.version>2.13.0</jackson.version>
     <okhttp.version>4.9.1</okhttp.version>
   </properties>
   <repositories>
@@ -148,11 +150,10 @@
       </snapshots>
     </repository>
     -->
-    <!-- For Wicket Boostrap 6.0.0-SNAPSHOT -->
-    <!--
+    <!-- For Wicket Bootstrap 6.0.0-SNAPSHOT -->
     <repository>
       <id>oss.sonatype.org-snapshot</id>
-      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
       <releases>
         <enabled>false</enabled>
       </releases>
@@ -160,7 +161,6 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
-    -->
     <!-- For Apache UIMA release candidates -->
     <!--
     <repository>
@@ -295,6 +295,16 @@
       <artifactId>mockwebserver</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>com.squareup.okhttp3</groupId>
+      <artifactId>okhttp</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.squareup.okio</groupId>
+      <artifactId>okio</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
@@ -373,6 +383,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-diam-word-alignment-editor</artifactId>
+        <version>22.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload</artifactId>
         <version>22.0-SNAPSHOT</version>
       </dependency>
@@ -419,6 +434,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-dashboard</artifactId>
+        <version>22.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-ui-dashboard-activity</artifactId>
         <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -651,12 +671,27 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-project-initializers</artifactId>
+        <version>22.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-project-export</artifactId>
         <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-curation-legacy</artifactId>
+        <version>22.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-diam</artifactId>
+        <version>22.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-diam-editor</artifactId>
         <version>22.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -711,15 +746,9 @@
       </dependency>
 
       <!-- Testing -->
-
       <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-api</artifactId>
-        <version>${junit.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.junit.jupiter</groupId>
-        <artifactId>junit-jupiter-params</artifactId>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
         <version>${junit.version}</version>
       </dependency>
 
@@ -947,6 +976,16 @@
         <version>${hover.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>axios</artifactId>
+        <version>0.21.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>animate.css</artifactId>
+        <version>3.2.6</version>
+      </dependency>
+      <dependency>
         <groupId>ua.kasta</groupId>
         <artifactId>jsass</artifactId>
         <version>5.10.5</version>
@@ -1100,6 +1139,12 @@
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-yaml</artifactId>
         <version>${jackson.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.codehaus.woodstox</groupId>
+        <artifactId>stax2-api</artifactId>
+        <version>3.1.4</version>
       </dependency>
 
       <dependency>
@@ -1736,6 +1781,7 @@
     <module>inception-model</module>
     <module>inception-model-export</module>
     <module>inception-project</module>
+    <module>inception-project-initializers</module>
     <module>inception-project-export</module>
     <module>inception-remote</module>
     <module>inception-security</module>
@@ -1754,6 +1800,7 @@
     <module>inception-constraints</module>
     <module>inception-ui-agreement</module>
     <module>inception-ui-dashboard</module>
+    <module>inception-ui-dashboard-activity</module>
     <module>inception-ui-project</module>
     <module>inception-ui-annotation</module>
     <module>inception-ui-tagsets</module>
@@ -1791,6 +1838,9 @@
     <module>inception-html-recogito-editor</module>
     <module>inception-pdf-editor</module>
     <module>inception-review-editor</module>
+    <module>inception-diam</module>
+    <module>inception-diam-editor</module>
+    <module>inception-diam-word-alignment-editor</module>
     <!-- Schema extensions -->
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
@@ -1897,7 +1947,8 @@
         </executions>
         <configuration>
           <failOnWarning>true</failOnWarning>
-          <ignoredDependencies combine.children="append">
+          <ignoredUnusedDeclaredDependencies
+            combine.children="append">
             <!--
               - Logging is used via reflection and cannot be detected by Maven
             -->
@@ -1921,7 +1972,7 @@
             <dependency>com.h2database:h2</dependency>
             <dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
             <!--
-              - Basic test dependencies
+              - Common test dependencies
             -->
             <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
             <dependency>org.junit.jupiter:junit-jupiter-params</dependency>
@@ -1933,7 +1984,10 @@
             <dependency>com.squareup.okio:okio</dependency>
             <dependency>org.awaitility:awaitility</dependency>
             <dependency>org.springframework:spring-test</dependency>
-          </ignoredDependencies>
+            <dependency>org.springframework.boot:spring-boot-starter-web</dependency>
+            <dependency>org.springframework.boot:spring-boot-test-autoconfigure</dependency>
+            <dependency>org.springframework.security:spring-security-test</dependency>
+          </ignoredUnusedDeclaredDependencies>
         </configuration>
         <dependencies>
           <dependency>
@@ -2305,6 +2359,112 @@
       <properties>
         <excludedTestCategories />
       </properties>
+    </profile>
+    <profile>
+      <id>typescript-module</id>
+      <activation>
+        <file>
+          <exists>src/main/ts</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-clean-plugin</artifactId>
+            <configuration>
+              <filesets>
+                <fileset>
+                  <directory>src/main/ts/node_modules</directory>
+                  <followSymlinks>false</followSymlinks>
+                </fileset>
+                <fileset>
+                  <directory>src/main/ts</directory>
+                  <includes>
+                    <include>package.json</include>
+                    <include>package-lock.json</include>
+                  </includes>
+                  <followSymlinks>false</followSymlinks>
+                </fileset>
+              </filesets>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>stage-ts-build</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>src/main/ts</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>src/main/ts_template</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <configuration>
+              <workingDirectory>src/main/ts</workingDirectory>
+              <installDirectory>../../node</installDirectory>
+              <nodeVersion>v16.13.0</nodeVersion>
+              <npmVersion>8.1.0</npmVersion>
+            </configuration>
+            <executions>
+              <execution>
+                <id>install node and npm</id>
+                <goals>
+                  <goal>install-node-and-npm</goal>
+                </goals>
+                <phase>generate-sources</phase>
+              </execution>
+              <execution>
+                <id>npm install</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <arguments>install</arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>npm link</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <phase>install</phase>
+                <configuration>
+                  <arguments>link</arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.rat</groupId>
+              <artifactId>apache-rat-plugin</artifactId>
+              <configuration>
+                <excludes combine.children="append">
+                  <exclude>src/main/ts/*.json</exclude>
+                  <exclude>src/main/ts_template/*.json</exclude>
+                  <exclude>src/main/ts/node_modules/**/*</exclude>
+                </excludes>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
     </profile>
   </profiles>
 </project>

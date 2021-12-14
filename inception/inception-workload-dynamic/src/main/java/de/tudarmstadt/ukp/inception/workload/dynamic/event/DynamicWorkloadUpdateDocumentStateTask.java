@@ -38,6 +38,7 @@ import de.tudarmstadt.ukp.inception.scheduling.DebouncingTask;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 public class DynamicWorkloadUpdateDocumentStateTask
     extends DebouncingTask
@@ -72,8 +73,9 @@ public class DynamicWorkloadUpdateDocumentStateTask
 
         // We check this here instead of checking at task submission to avoid hammering the
         // DB if there is a high event frequency
-        if (!DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
-                .loadOrCreateWorkloadManagerConfiguration(project).getType())) {
+        WorkloadManager workloadManager = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(project);
+        if (!DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManager.getType())) {
             return;
         }
 
@@ -85,8 +87,7 @@ public class DynamicWorkloadUpdateDocumentStateTask
             return;
         }
 
-        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(
-                workloadManagementService.loadOrCreateWorkloadManagerConfiguration(project));
+        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(workloadManager);
         int requiredAnnotatorCount = traits.getDefaultNumberOfAnnotations();
 
         dynamicWorkloadExtension.updateDocumentState(doc, requiredAnnotatorCount);

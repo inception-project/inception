@@ -127,6 +127,7 @@ public class ProjectConstraintsPanel
                 {
                     setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
+                    // Turn this into a LambdaFormComponentUpdatingBehavior?
                     add(new FormComponentUpdatingBehavior());
                 }
 

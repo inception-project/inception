@@ -155,50 +155,133 @@ public class ConceptLinkingServiceImpl
     public Set<KBHandle> generateCandidates(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention)
     {
-        // If the query of the user is smaller or equal to this threshold, then we only use it for
-        // exact matching. If it is longer, we look for concepts which start with or which contain
-        // the users input. This is meant as a performance optimization for large KBs where we
-        // want to avoid long reaction times when there is large number of candidates (which is
-        // very likely when e.g. searching for all items starting with or containing a specific
-        // letter.
-        final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 3;
-
         long startTime = currentTimeMillis();
         Set<KBHandle> result = new HashSet<>();
+        try {
+            // If the query of the user is smaller or equal to this threshold, then we only use it
+            // for exact matching. If it is longer, we look for concepts which start with or which
+            // contain the users input. This is meant as a performance optimization for large KBs
+            // where we want to avoid long reaction times when there is large number of candidates
+            // (which is very likely when e.g. searching for all items starting with or containing a
+            // specific letter.
+            final int threshold = RepositoryType.LOCAL.equals(aKB.getType()) ? 0 : 3;
 
-        if (aQuery != null) {
-            ParsedIRI iri = null;
-            try {
-                iri = new ParsedIRI(aQuery);
+            if (aQuery != null) {
+                findExactIriMatches(result, aKB, aConceptScope, aValueType, aQuery);
+
+                // If there was an exact IRI match, there is probably little point in searching for
+                // matching labels... I mean, who would use an IRI as a concept label...?
+                if (!result.isEmpty()) {
+                    return result;
+                }
             }
-            catch (URISyntaxException | NullPointerException e) {
-                // Skip match by IRI.
+
+            // Collect exact matches - although exact matches are theoretically contained in the
+            // set of containing matches, due to the ranking performed by the KB/FTS, we might
+            // not actually see the exact matches within the first N results. So we query for
+            // the exact matches separately to ensure we have them.
+            // Mind, we use the query and the mention text here - of course we don't only want
+            // exact matches of the query but also of the mention :)
+            String[] exactLabels = asList(aQuery, aMention).stream() //
+                    .filter(StringUtils::isNotBlank) //
+                    .toArray(String[]::new);
+
+            if (exactLabels.length > 0) {
+                findExactMatches(result, aKB, aConceptScope, aValueType, exactLabels);
             }
-            if (iri != null && iri.isAbsolute()) {
-                SPARQLQueryPrimaryConditions iriMatchBuilder = newQueryBuilder(aValueType, aKB)
-                        .withIdentifier(aQuery);
 
-                if (aConceptScope != null) {
-                    iriMatchBuilder.descendantsOf(aConceptScope);
-                }
+            // Next we also do a "starting with" search - but only if the user's query is longer
+            // than the threshold - this is because for short queries, we'd get way too many results
+            // which would be slow - and also the results would likely not be very accurate
+            if (aQuery != null && aQuery.trim().length() >= threshold) {
+                findStartingWithMatches(result, aKB, aConceptScope, aValueType, aQuery);
+            }
 
-                iriMatchBuilder.retrieveLabel().retrieveDescription();
+            // Finally, we use the query and mention also for a "containing" search - but only if
+            // they are longer than the threshold. Again, for very short query/mention, we'd
+            // otherwise get way too many matches, being slow and not accurate.
+            String[] longLabels = asList(aQuery, aMention).stream() //
+                    .filter(Objects::nonNull) //
+                    .map(s -> s.trim()) //
+                    .filter(s -> s.length() >= threshold) //
+                    .toArray(String[]::new);
 
-                List<KBHandle> iriMatches;
-                if (aKB.isReadOnly()) {
-                    iriMatches = kbService.listHandlesCaching(aKB, iriMatchBuilder, true);
-                }
-                else {
-                    iriMatches = kbService.read(aKB, conn -> iriMatchBuilder.asHandles(conn, true));
-                }
-
-                log.debug("Found [{}] candidates exactly matching IRI [{}]", iriMatches.size(),
-                        aQuery);
-
-                result.addAll(iriMatches);
+            if (longLabels.length > 0) {
+                findContainingMatches(result, aKB, aConceptScope, aValueType, longLabels);
             }
         }
+        finally {
+            log.debug("Generated [{}] candidates in {}ms", result.size(),
+                    currentTimeMillis() - startTime);
+        }
 
+        return result;
+    }
+
+    private void findContainingMatches(Set<KBHandle> result, KnowledgeBase aKB,
+            String aConceptScope, ConceptFeatureValueType aValueType, String[] aLongLabels)
+    {
+        // Collect containing matches
+        SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
+
+        if (aConceptScope != null) {
+            // Scope-limiting must always happen before label matching!
+            containingBuilder.descendantsOf(aConceptScope);
+        }
+
+        containingBuilder.withLabelMatchingAnyOf(aLongLabels);
+
+        containingBuilder.retrieveLabel().retrieveDescription();
+
+        List<KBHandle> containingMatches;
+        if (aKB.isReadOnly()) {
+            containingMatches = kbService.listHandlesCaching(aKB, containingBuilder, true);
+        }
+        else {
+            containingMatches = kbService.read(aKB,
+                    conn -> containingBuilder.asHandles(conn, true));
+        }
+
+        log.debug("Found [{}] candidates using matching {}", containingMatches.size(),
+                asList(aLongLabels));
+
+        result.addAll(containingMatches);
+
+    }
+
+    private void findStartingWithMatches(Set<KBHandle> result, KnowledgeBase aKB,
+            String aConceptScope, ConceptFeatureValueType aValueType, String aQuery)
+    {
+        SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB);
+
+        if (aConceptScope != null) {
+            // Scope-limiting must always happen before label matching!
+            startingWithBuilder.descendantsOf(aConceptScope);
+        }
+
+        // Collect matches starting with the query - this is the main driver for the
+        // auto-complete functionality
+        startingWithBuilder.withLabelStartingWith(aQuery);
+
+        startingWithBuilder.retrieveLabel().retrieveDescription();
+
+        List<KBHandle> startingWithMatches;
+        if (aKB.isReadOnly()) {
+            startingWithMatches = kbService.listHandlesCaching(aKB, startingWithBuilder, true);
+        }
+        else {
+            startingWithMatches = kbService.read(aKB,
+                    conn -> startingWithBuilder.asHandles(conn, true));
+        }
+
+        log.debug("Found [{}] candidates starting with [{}]]", startingWithMatches.size(), aQuery);
+
+        result.addAll(startingWithMatches);
+    }
+
+    private void findExactMatches(Set<KBHandle> result, KnowledgeBase aKB, String aConceptScope,
+            ConceptFeatureValueType aValueType, String[] aExactLabels)
+    {
         SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB);
 
         if (aConceptScope != null) {
@@ -206,105 +289,59 @@ public class ConceptLinkingServiceImpl
             exactBuilder.descendantsOf(aConceptScope);
         }
 
-        // Collect exact matches - although exact matches are theoretically contained in the
-        // set of containing matches, due to the ranking performed by the KB/FTS, we might
-        // not actually see the exact matches within the first N results. So we query for
-        // the exact matches separately to ensure we have them.
-        // Mind, we use the query and the mention text here - of course we don't only want
-        // exact matches of the query but also of the mention :)
-        String[] exactLabels = asList(aQuery, aMention).stream() //
-                .filter(StringUtils::isNotBlank) //
-                .toArray(String[]::new);
+        exactBuilder.withLabelMatchingExactlyAnyOf(aExactLabels);
 
-        if (exactLabels.length > 0) {
-            exactBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
+        exactBuilder.retrieveLabel().retrieveDescription();
 
-            exactBuilder.retrieveLabel().retrieveDescription();
-
-            List<KBHandle> exactMatches;
-            if (aKB.isReadOnly()) {
-                exactMatches = kbService.listHandlesCaching(aKB, exactBuilder, true);
-            }
-            else {
-                exactMatches = kbService.read(aKB, conn -> exactBuilder.asHandles(conn, true));
-            }
-
-            log.debug("Found [{}] candidates exactly matching {}", exactMatches.size(),
-                    asList(exactLabels));
-
-            result.addAll(exactMatches);
+        List<KBHandle> exactMatches;
+        if (aKB.isReadOnly()) {
+            exactMatches = kbService.listHandlesCaching(aKB, exactBuilder, true);
+        }
+        else {
+            exactMatches = kbService.read(aKB, conn -> exactBuilder.asHandles(conn, true));
         }
 
-        // Next we also do a "starting with" search - but only if the user's query is longer than
-        // the threshold - this is because for short queries, we'd get way too many results which
-        // would be slow - and also the results would likely not be very accurate
-        if (aQuery != null && aQuery.trim().length() >= threshold) {
-            SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB);
+        log.debug("Found [{}] candidates exactly matching {}", exactMatches.size(),
+                asList(aExactLabels));
 
-            if (aConceptScope != null) {
-                // Scope-limiting must always happen before label matching!
-                startingWithBuilder.descendantsOf(aConceptScope);
-            }
+        result.addAll(exactMatches);
+    }
 
-            // Collect matches starting with the query - this is the main driver for the
-            // auto-complete functionality
-            startingWithBuilder.withLabelStartingWith(aQuery);
-
-            startingWithBuilder.retrieveLabel().retrieveDescription();
-
-            List<KBHandle> startingWithMatches;
-            if (aKB.isReadOnly()) {
-                startingWithMatches = kbService.listHandlesCaching(aKB, startingWithBuilder, true);
-            }
-            else {
-                startingWithMatches = kbService.read(aKB,
-                        conn -> startingWithBuilder.asHandles(conn, true));
-            }
-
-            log.debug("Found [{}] candidates starting with [{}]]", startingWithMatches.size(),
-                    aQuery);
-
-            result.addAll(startingWithMatches);
+    private void findExactIriMatches(Set<KBHandle> result, KnowledgeBase aKB, String aConceptScope,
+            ConceptFeatureValueType aValueType, String aQuery)
+    {
+        ParsedIRI iri = null;
+        try {
+            iri = new ParsedIRI(aQuery);
+        }
+        catch (URISyntaxException | NullPointerException e) {
+            // Skip match by IRI.
         }
 
-        // Finally, we use the query and mention also for a "containing" search - but only if they
-        // are longer than the threshold. Again, for very short query/mention, we'd otherwise get
-        // way too many matches, being slow and not accurate.
-        String[] longLabels = asList(aQuery, aMention).stream().filter(Objects::nonNull)
-                .map(s -> s.trim()).filter(s -> s.length() >= threshold).toArray(String[]::new);
-
-        if (longLabels.length > 0) {
-            // Collect containing matches
-            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
-
-            if (aConceptScope != null) {
-                // Scope-limiting must always happen before label matching!
-                containingBuilder.descendantsOf(aConceptScope);
-            }
-
-            containingBuilder.withLabelMatchingAnyOf(longLabels);
-
-            containingBuilder.retrieveLabel().retrieveDescription();
-
-            List<KBHandle> containingMatches;
-            if (aKB.isReadOnly()) {
-                containingMatches = kbService.listHandlesCaching(aKB, containingBuilder, true);
-            }
-            else {
-                containingMatches = kbService.read(aKB,
-                        conn -> containingBuilder.asHandles(conn, true));
-            }
-
-            log.debug("Found [{}] candidates using matching {}", containingMatches.size(),
-                    asList(longLabels));
-
-            result.addAll(containingMatches);
+        if (iri == null || !iri.isAbsolute()) {
+            return;
         }
 
-        log.debug("Generated [{}] candidates in {}ms", result.size(),
-                currentTimeMillis() - startTime);
+        SPARQLQueryPrimaryConditions iriMatchBuilder = newQueryBuilder(aValueType, aKB)
+                .withIdentifier(aQuery);
 
-        return result;
+        if (aConceptScope != null) {
+            iriMatchBuilder.descendantsOf(aConceptScope);
+        }
+
+        iriMatchBuilder.retrieveLabel().retrieveDescription();
+
+        List<KBHandle> iriMatches;
+        if (aKB.isReadOnly()) {
+            iriMatches = kbService.listHandlesCaching(aKB, iriMatchBuilder, true);
+        }
+        else {
+            iriMatches = kbService.read(aKB, conn -> iriMatchBuilder.asHandles(conn, true));
+        }
+
+        log.debug("Found [{}] candidates exactly matching IRI [{}]", iriMatches.size(), aQuery);
+
+        result.addAll(iriMatches);
     }
 
     @Override

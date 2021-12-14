@@ -27,12 +27,10 @@ import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -42,17 +40,28 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link DocumentImportExportServiceAutoConfiguration#tagSetExporter}.
+ * </p>
+ */
 public class TagSetExporter
     implements ProjectExporter
 {
     private static final Logger LOG = LoggerFactory.getLogger(TagSetExporter.class);
 
-    private @Autowired AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService annotationService;
+
+    public TagSetExporter(AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
 
     @Override
-    public void exportData(ProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
+    public void exportData(FullProjectExportRequest aRequest, ProjectExportTaskMonitor aMonitor,
             ExportedProject aExProject, File aStage)
         throws Exception
     {
@@ -176,9 +185,10 @@ public class TagSetExporter
             }
 
             Tag tag = new Tag();
-            tag.setDescription(exTag.getDescription());
             tag.setTagSet(aTagSet);
             tag.setName(exTag.getName());
+            tag.setDescription(exTag.getDescription());
+            tag.setRank(tags.size());
             tags.add(tag);
         }
 

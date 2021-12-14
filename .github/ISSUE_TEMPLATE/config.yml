@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: INCEpTION Forum/Mailing list
+    url: https://groups.google.com/d/forum/inception-users
+    about: Community support.
+  - name: INCEpTION Gitter/Matrix Channel
+    url: https://gitter.im/inception-project/Lobby
+    about: Public chat channel.

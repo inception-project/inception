@@ -136,7 +136,7 @@ NOTE: If you are running {product-name} on a different port than 8080, please ma
 We will now configure NGINX to proxy pass all traffic received at `example.com/inception` to our {product-name} instance.
 
 Create a new virtual host for your domain.
-Inside of `/etc/nginx-sites-available/` create a new file for your domain (e.g. `example.com`).
+Inside of `/etc/nginx/sites-available/` create a new file for your domain (e.g. `example.com`).
 Paste the following contents:
 
 ----
@@ -184,7 +184,7 @@ server {
 
         location ^~ /inception/ {
             proxy_pass http://127.0.0.1:8080/inception/;
-            proxy_redirect default;
+            proxy_redirect http://inception.example.com/ /;
             proxy_http_version 1.1;
 
             proxy_set_header   Host             $host;

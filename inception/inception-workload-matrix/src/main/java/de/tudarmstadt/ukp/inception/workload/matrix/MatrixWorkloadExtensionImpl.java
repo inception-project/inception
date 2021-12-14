@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.workload.matrix;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 
 import java.util.Map;
 
@@ -37,7 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTrait;
+import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -87,12 +89,12 @@ public class MatrixWorkloadExtensionImpl
 
     @Override
     @Transactional
-    public MatrixWorkloadTrait readTraits(WorkloadManager aWorkloadManager)
+    public MatrixWorkloadTraits readTraits(WorkloadManager aWorkloadManager)
     {
-        MatrixWorkloadTrait traits = null;
+        MatrixWorkloadTraits traits = null;
 
         try {
-            traits = JSONUtil.fromJsonString(MatrixWorkloadTrait.class,
+            traits = JSONUtil.fromJsonString(MatrixWorkloadTraits.class,
                     aWorkloadManager.getTraits());
         }
         catch (Exception e) {
@@ -100,7 +102,7 @@ public class MatrixWorkloadExtensionImpl
         }
 
         if (traits == null) {
-            traits = new MatrixWorkloadTrait();
+            traits = new MatrixWorkloadTraits();
         }
 
         return traits;
@@ -108,7 +110,7 @@ public class MatrixWorkloadExtensionImpl
 
     @Override
     @Transactional
-    public void writeTraits(MatrixWorkloadTrait aTrait, Project aProject)
+    public void writeTraits(MatrixWorkloadTraits aTrait, Project aProject)
     {
         try {
             WorkloadManager manager = workloadManagementService
@@ -163,6 +165,12 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public void updateDocumentState(SourceDocument aDocument, int aAnnotatorCount)
     {
+        // If the SOURCE document is already in curation, we do not touch the state anymore
+        if (aDocument.getState() == CURATION_FINISHED
+                || aDocument.getState() == CURATION_IN_PROGRESS) {
+            return;
+        }
+
         Map<AnnotationDocumentState, Long> stats = documentService
                 .getAnnotationDocumentStats(aDocument);
         long ignoreCount = stats.get(AnnotationDocumentState.IGNORE);

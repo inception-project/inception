@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Anno
 
 import java.util.Map;
 
+import org.apache.commons.lang3.Validate;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -34,12 +36,15 @@ public class AnnotationStateColoringStrategy
 
     public AnnotationStateColoringStrategy(Map<VID, AnnotationState> aAnnotationStates)
     {
+        Validate.notNull(aAnnotationStates, "Parameter [aAnnotationStates] must not be null");
+
         annotationStates = aAnnotationStates;
     }
 
     @Override
     public String getColor(VObject aVObject, String aLabel, ColoringRules aColoringRules)
     {
-        return annotationStates.getOrDefault(aVObject.getVid(), ERROR).getColorCode();
+        AnnotationState state = annotationStates.getOrDefault(aVObject.getVid(), ERROR);
+        return state.getColorCode();
     }
 }

@@ -181,7 +181,8 @@ public class INCEpTION
         // either located in inception.home or under the user's home directory. Make sure we pick
         // it up from there in addition to reading the built-in application.yml file.
         aBuilder.properties("spring.config.additional-location="
-                + "optional:${inception.home:${user.home}/.inception}/settings.properties");
+                + "optional:${inception.home:${user.home}/.inception}/settings.properties;"
+                + "optional:${inception.home:${user.home}/.inception}/settings.yml");
     }
 
     protected static void run(String[] args, Class<?>... aSources)

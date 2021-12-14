@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BeforeDocumentOpenedEvent;
@@ -76,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreferen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
@@ -95,11 +97,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
-/**
- * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
- * annotation layer configuration, and Exporting document
- */
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/annotate/#{" + PAGE_PARAM_DOCUMENT + "}")
 public class AnnotationPage
     extends AnnotationPageBase
@@ -119,6 +118,7 @@ public class AnnotationPage
     private @SpringBean AnnotationEditorRegistry editorRegistry;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
+    private @SpringBean PreferencesService preferencesService;
 
     private long currentprojectId;
 
@@ -281,7 +281,14 @@ public class AnnotationPage
     {
         AnnotatorState state = getModelObject();
 
-        String editorId = getModelObject().getPreferences().getEditor();
+        AnnotationEditorState editorState = preferencesService
+                .loadDefaultTraitsForProject(KEY_EDITOR_STATE, getProject());
+
+        String editorId = editorState.getDefaultEditor();
+
+        if (editorId == null) {
+            editorId = getModelObject().getPreferences().getEditor();
+        }
 
         AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
@@ -293,14 +300,15 @@ public class AnnotationPage
             }
         }
 
+        state.setEditorFactoryId(factory.getBeanName());
         annotationEditor = factory.create("editor", getModel(), detailEditor, this::getEditorCas);
         annotationEditor.setOutputMarkupPlaceholderTag(true);
 
         centerArea.addOrReplace(annotationEditor);
 
-        // Give the new editor an opportunity to configure the current paging strategy,
-        // this does not configure the paging for a document yet
-        // this would require loading the cas which might not have been upgraded yet
+        // Give the new editor an opportunity to configure the current paging strategy, this does
+        // not configure the paging for a document yet this would require loading the CAS which
+        // might not have been upgraded yet
         factory.initState(state);
         // Use the proper position labels for the current paging strategy
         centerArea.addOrReplace(
@@ -369,6 +377,12 @@ public class AnnotationPage
         Optional<Long> diskTimestamp = documentService
                 .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
         AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
+    }
+
+    @Override
+    public AnnotationActionHandler getAnnotationActionHandler()
+    {
+        return detailEditor;
     }
 
     @Override

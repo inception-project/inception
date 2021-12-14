@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_ACTION;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_ARC_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.PARAM_ID;
 
 import java.io.IOException;
@@ -30,8 +29,6 @@ import org.apache.wicket.request.IRequestParameters;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 public class BratRequestUtils
@@ -46,29 +43,7 @@ public class BratRequestUtils
      */
     public static VID getVidFromRequest(IRequestParameters request)
     {
-        String action = getActionFromRequest(request);
-        final VID paramId;
-        if (!request.getParameterValue(PARAM_ID).isEmpty()
-                && !request.getParameterValue(PARAM_ARC_ID).isEmpty()) {
-            throw new IllegalStateException(
-                    "[id] and [arcId] cannot be both set at the same time!");
-        }
-        else if (!request.getParameterValue(PARAM_ID).isEmpty()) {
-            paramId = VID.parseOptional(request.getParameterValue(PARAM_ID).toString());
-        }
-        else {
-            VID arcId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
-            // HACK: If an arc was clicked that represents a link feature, then
-            // open the associated span annotation instead.
-            if (arcId.isSlotSet() && ArcAnnotationResponse.is(action)) {
-                action = SpanAnnotationResponse.COMMAND;
-                paramId = new VID(arcId.getId());
-            }
-            else {
-                paramId = arcId;
-            }
-        }
-        return paramId;
+        return VID.parseOptional(request.getParameterValue(PARAM_ID).toString());
     }
 
     public static void attachResponse(AjaxRequestTarget aTarget, Component vis, Object result)
@@ -100,5 +75,4 @@ public class BratRequestUtils
         }
         return json;
     }
-
 }

@@ -22,11 +22,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransit
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -36,13 +38,17 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategyFactory;
+import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 
 public class CuratorWorkflowActionBarItemGroup
     extends Panel
@@ -50,12 +56,14 @@ public class CuratorWorkflowActionBarItemGroup
     private static final long serialVersionUID = 8596786586955459711L;
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean CurationService curationService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean UserDao userRepository;
 
     private final AnnotationPageBase page;
     protected final ConfirmationDialog finishDocumentDialog;
     private final LambdaAjaxLink finishDocumentLink;
+    private final IModel<CurationWorkflow> curationWorkflowModel;
     private MergeDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
 
@@ -76,12 +84,14 @@ public class CuratorWorkflowActionBarItemGroup
         finishDocumentLink.add(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
 
+        curationWorkflowModel = Model.of(
+                curationService.readOrCreateCurationWorkflow(page.getModelObject().getProject()));
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
         add(resetDocumentDialog = new MergeDialog("resetDocumentDialog",
                 new StringResourceModel("ResetDocumentDialog.title", this),
                 new StringResourceModel("ResetDocumentDialog.text", this).setModel(page.getModel())
                         .setParameters(documentNameModel),
-                documentNameModel));
+                documentNameModel, curationWorkflowModel));
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
 
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
@@ -130,13 +140,23 @@ public class CuratorWorkflowActionBarItemGroup
     protected void actionResetDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)
         throws Exception
     {
-        ((CurationPage) page)
-                .readOrCreateMergeCas(aForm.getModelObject().isMergeIncompleteAnnotations(), true);
+        MergeStrategyFactory<?> mergeStrategyFactory = curationService
+                .getMergeStrategyFactory(curationWorkflowModel.getObject());
+        MergeStrategy mergeStrategy = curationService
+                .getMergeStrategy(curationWorkflowModel.getObject());
+
+        if (aForm.getModelObject().isSaveSettingsAsDefault()) {
+            curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
+            getPage().success("Updated project merge strategy settings");
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
+
+        ((CurationPage) page).readOrCreateCurationCas(mergeStrategy, true);
 
         // ... and load it
         page.actionLoadDocument(aTarget);
 
-        success("Re-merge finished!");
-        aTarget.add(page.getFeedbackPanel());
+        getPage().success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 }

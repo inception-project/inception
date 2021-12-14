@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import wicket.contrib.input.events.EventType;
@@ -82,6 +83,14 @@ public class DefaultPagingNavigator
 
         form.add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
+
+        form.add(LambdaBehavior.visibleWhen(() -> !contentFitsFullyIntoVisibleWindow()));
+    }
+
+    private boolean contentFitsFullyIntoVisibleWindow()
+    {
+        AnnotatorState state = page.getModelObject();
+        return state.getUnitCount() <= state.getPreferences().getWindowSize();
     }
 
     public AnnotatorState getModelObject()
@@ -142,5 +151,4 @@ public class DefaultPagingNavigator
     {
         aEvent.getRequestHandler().add(gotoPageTextField);
     }
-
 }

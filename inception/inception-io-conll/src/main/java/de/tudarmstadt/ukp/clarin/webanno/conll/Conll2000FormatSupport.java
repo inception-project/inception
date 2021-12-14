@@ -41,8 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 public class Conll2000FormatSupport
     implements FormatSupport
 {
-    public static final String ID = "conll2002";
-    public static final String NAME = "CoNLL 2002";
+    public static final String ID = "conll2000";
+    public static final String NAME = "CoNLL 2000";
 
     @Override
     public String getId()

@@ -53,25 +53,24 @@ public class CasXmlHandler
         text = new StringBuilder();
         stack = new ArrayDeque<>();
     }
-    
+
     @Override
     public void startDocument() throws SAXException
     {
         if (docNode != null || !stack.isEmpty() || text.length() != 0) {
-            throw new SAXException(
-                    "Illegal document start event when data has already been seen.");
+            throw new SAXException("Illegal document start event when data has already been seen.");
         }
-        
+
         docNode = new XmlDocument(jcas);
         docNode.setBegin(text.length());
     }
-    
+
     @Override
     public void endDocument() throws SAXException
     {
         docNode.setEnd(text.length());
         docNode.addToIndexes();
-        
+
         jcas.setDocumentText(text.toString());
     };
 
@@ -89,7 +88,7 @@ public class CasXmlHandler
         element.setUri(trimToNull(aUri));
         element.setLocalName(trimToNull(aLocalName));
         element.setQName(trimToNull(aQName));
-        
+
         if (aAttributes.getLength() > 0) {
             FSArray attributes = new FSArray(jcas, aAttributes.getLength());
             for (int i = 0; i < aAttributes.getLength(); i++) {
@@ -103,9 +102,9 @@ public class CasXmlHandler
             }
             element.setAttributes(attributes);
         }
-        
+
         attachToParent(element);
-        
+
         boolean capture;
         StackFrame parentFrame = stack.peek();
         if (parentFrame != null) {
@@ -114,15 +113,15 @@ public class CasXmlHandler
         else {
             capture = captureText;
         }
-        
+
         stack.push(new StackFrame(element, capture));
     }
-    
+
     @Override
     public void endElement(String aUri, String aLocalName, String aQName) throws SAXException
     {
         StackFrame frame = stack.pop();
-        
+
         XmlElement element = frame.getElement();
         element.setEnd(text.length());
 
@@ -134,10 +133,10 @@ public class CasXmlHandler
             }
             element.setChildren(children);
         }
-        
+
         element.addToIndexes();
     }
-    
+
     @Override
     public void characters(char[] aCh, int aStart, int aLength) throws SAXException
     {
@@ -147,10 +146,10 @@ public class CasXmlHandler
             // after the root element.
             return;
         }
-        
+
         XmlTextNode textNode = new XmlTextNode(jcas);
         textNode.setBegin(text.length());
-        
+
         if (stack.peek().isCaptureText()) {
             text.append(aCh, aStart, aLength);
             textNode.setCaptured(true);
@@ -159,19 +158,19 @@ public class CasXmlHandler
             textNode.setText(new String(aCh, aStart, aLength));
             textNode.setCaptured(false);
         }
-        
+
         textNode.setEnd(text.length());
         textNode.addToIndexes();
 
         attachToParent(textNode);
     }
-    
+
     @Override
     public void ignorableWhitespace(char[] aCh, int aStart, int aLength) throws SAXException
     {
         characters(aCh, aStart, aLength);
     }
-    
+
     private void attachToParent(XmlNode aNode)
     {
         StackFrame parentFrame = stack.peek();
@@ -183,22 +182,22 @@ public class CasXmlHandler
             docNode.setRoot((XmlElement) aNode);
         }
     }
-    
+
     public CharSequence getText()
     {
         return text;
     }
-    
+
     public Collection<StackFrame> getStack()
     {
         return Collections.unmodifiableCollection(stack);
     }
-    
+
     public XmlElement getCurrentElement()
     {
         return stack.peek().getElement();
     }
-    
+
     public void captureText(boolean aCapture)
     {
         if (stack.isEmpty()) {
@@ -208,7 +207,7 @@ public class CasXmlHandler
             stack.peek().setCaptureText(aCapture);
         }
     }
-    
+
     private static class StackFrame
     {
         private final XmlElement element;
@@ -225,7 +224,7 @@ public class CasXmlHandler
         {
             return element;
         }
-        
+
         public void addChild(XmlNode aChild)
         {
             children.add(aChild);
@@ -235,12 +234,12 @@ public class CasXmlHandler
         {
             return children;
         }
-        
+
         public boolean isCaptureText()
         {
             return captureText;
         }
-        
+
         public void setCaptureText(boolean aCaptureText)
         {
             captureText = aCaptureText;
