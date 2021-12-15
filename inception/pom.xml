@@ -1776,11 +1776,13 @@
         <artifactId>dkpro-core-api-resources-asl</artifactId>
         <version>${dkpro.version}</version>
         <exclusions>
-          <!-- We do not use model-downloading -->
+          <!-- We do not use DKPro Core model-downloading -->
           <exclusion>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-model</artifactId>
           </exclusion>
+          <!--  
+          Cannot exclude until https://github.com/dkpro/dkpro-core/issues/1511 is fixed
           <exclusion>
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
@@ -1789,6 +1791,7 @@
             <groupId>org.apache.ivy</groupId>
             <artifactId>ivy</artifactId>
           </exclusion>
+          -->
         </exclusions>
       </dependency>
     </dependencies>
