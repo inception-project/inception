@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -69,23 +71,23 @@
     <uima.version>3.2.0</uima.version>
     <uimafit.version>3.2.0</uimafit.version>
 
-    <spring.version>5.3.9</spring.version>
-    <spring.boot.version>2.5.4</spring.boot.version>
-    <spring.security.version>5.5.2</spring.security.version>
-    <springdoc.version>1.5.10</springdoc.version>
-    <swagger.version>2.1.10</swagger.version>
+    <spring.version>5.3.13</spring.version>
+    <spring.boot.version>2.5.7</spring.boot.version>
+    <spring.security.version>5.5.3</spring.security.version>
+    <springdoc.version>1.5.13</springdoc.version>
+    <swagger.version>2.1.11</swagger.version>
 
     <slf4j.version>1.7.32</slf4j.version>
-    <log4j.version>2.15.0</log4j.version>
-    <jboss.logging.version>3.4.1.Final</jboss.logging.version>
+    <log4j.version>2.16.0</log4j.version>
+    <jboss.logging.version>3.4.2.Final</jboss.logging.version>
 
-    <groovy.version>3.0.3</groovy.version>
+    <groovy.version>3.0.9</groovy.version>
 
-    <tomcat.version>9.0.52</tomcat.version>
+    <tomcat.version>9.0.56</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.4</mariadb.driver.version>
-    <hibernate.version>5.5.7.Final</hibernate.version>
+    <hibernate.version>5.5.8.Final</hibernate.version>
     <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
 
     <wicket.version>9.4.0</wicket.version>
@@ -105,10 +107,10 @@
       - At the moment (2020-FEB-09), there are no versions of RDF4J and Jena (Fuseki) which
       - are built against Lucene 8.x.
       -->
-    <lucene.version>7.7.3</lucene.version> <!-- 8.7.0 -->
-    <solr.version>7.7.3</solr.version> <!-- 8.5.1 / 8.7.0 -->
-    <mtas.version>7.7.1.0</mtas.version> <!-- 8.7.0.0 -->
-    <elasticsearch.version>6.8.17</elasticsearch.version> <!-- 7.10.2 -->
+    <lucene.version>7.7.3</lucene.version> <!-- 9.0.0 -->
+    <solr.version>7.7.3</solr.version> <!-- 8.11.0 -->
+    <mtas.version>7.7.1.0</mtas.version> <!-- 8.9.0.0 -->
+    <elasticsearch.version>6.8.21</elasticsearch.version> <!-- 7.16.1 -->
     <rdf4j.version>3.7.2</rdf4j.version>
     <jena.version>3.17.0</jena.version>
 
@@ -866,6 +868,18 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
           </exclusion>
+          <exclusion>
+            <groupId>org.webjars</groupId>
+            <artifactId>tempusdominus-bootstrap-4</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquerypp</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.webjars.bower</groupId>
+            <artifactId>summernote</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
@@ -907,6 +921,11 @@
         <groupId>com.giffing.wicket.spring.boot.starter</groupId>
         <artifactId>wicket-spring-boot-context</artifactId>
         <version>${wicket-spring-boot.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>axios</artifactId>
+        <version>0.24.0</version>
       </dependency>
       <dependency>
         <groupId>org.webjars</groupId>
@@ -969,6 +988,13 @@
         <artifactId>txtmark</artifactId>
         <version>0.13</version>
       </dependency>
+
+      <dependency>
+        <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+        <artifactId>owasp-java-html-sanitizer</artifactId>
+        <version>20211018.2</version>
+      </dependency>
+
       <dependency>
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
@@ -1658,6 +1684,23 @@
         <artifactId>kinetic</artifactId>
         <version>5.2.0</version>
       </dependency>
+      <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>color-thief</artifactId>
+        <version>2.2.1</version>
+        <exclusions>
+        <!-- The versions of canvas referenced by color-thief are not available on Maven Central -->
+          <exclusion>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>canvas</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>canvas</artifactId>
+        <version>1.4.0</version>
+      </dependency>
 
       <dependency>
         <groupId>org.mariadb.jdbc</groupId>
@@ -1697,6 +1740,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.apache.ant</groupId>
+        <artifactId>ant</artifactId>
+        <version>1.10.12</version>
+      </dependency>
+
+      <dependency>
         <!-- Import dependency management from Spring Boot -->
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-dependencies</artifactId>
@@ -1721,6 +1770,29 @@
         <version>${dkpro.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-api-resources-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <exclusions>
+          <!-- We do not use DKPro Core model-downloading -->
+          <exclusion>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+          </exclusion>
+          <!--  
+          Cannot exclude until https://github.com/dkpro/dkpro-core/issues/1511 is fixed
+          <exclusion>
+            <groupId>org.codehaus.plexus</groupId>
+            <artifactId>plexus-utils</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.ivy</groupId>
+            <artifactId>ivy</artifactId>
+          </exclusion>
+          -->
+        </exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
