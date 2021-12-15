@@ -47,7 +47,10 @@ public class ProjectUsersPanel
         add(permissions);
 
         UserSelectionPanel users = new UserSelectionPanel("users", project, selectedUser);
-        users.setChangeAction(t -> t.add(permissions));
+        users.setChangeAction(t -> {
+            permissions.modelChanged();
+            t.add(permissions);
+        });
         add(users);
     }
 
