@@ -34,10 +34,13 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.validation.IValidatable;
+import org.apache.wicket.validation.ValidationError;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -49,9 +52,12 @@ public class UserPermissionsPanel
     private static final long serialVersionUID = -5278078988218713188L;
 
     private @SpringBean ProjectService projectRepository;
+    private @SpringBean UserDao userRepository;
 
     private IModel<Project> project;
     private IModel<User> user;
+    private Form<Void> form;
+    private CheckBoxMultipleChoice<PermissionLevel> levels;
 
     public UserPermissionsPanel(String aId, IModel<Project> aProject, IModel<User> aUser)
     {
@@ -63,11 +69,10 @@ public class UserPermissionsPanel
         project = aProject;
         user = aUser;
 
-        Form<Void> form = new Form<>("form");
+        form = new Form<>("form");
         add(form);
 
-        CheckBoxMultipleChoice<PermissionLevel> levels = new CheckBoxMultipleChoice<>(
-                "permissions");
+        levels = new CheckBoxMultipleChoice<>("permissions");
         levels.setPrefix("<div class=\"checkbox\">");
         levels.setSuffix("</div>");
         levels.setLabelPosition(LabelPosition.WRAP_AFTER);
@@ -81,6 +86,7 @@ public class UserPermissionsPanel
         }));
         levels.setChoices(asList(MANAGER, CURATOR, ANNOTATOR));
         levels.setChoiceRenderer(new EnumChoiceRenderer<>(levels));
+        levels.add(this::ensureManagersNotRemovingThemselves);
         form.add(levels);
 
         form.add(new Label("username", PropertyModel.of(aUser, "username")));
@@ -89,11 +95,37 @@ public class UserPermissionsPanel
     }
 
     @Override
+    protected void onModelChanged()
+    {
+        levels.modelChanged();
+        form.modelChanged();
+        super.onModelChanged();
+    }
+
+    @Override
     protected void onConfigure()
     {
         super.onConfigure();
 
         setVisible(user.getObject() != null);
+    }
+
+    private void ensureManagersNotRemovingThemselves(
+            IValidatable<Collection<PermissionLevel>> aValidatable)
+    {
+        if (!userRepository.getCurrentUsername()
+                .equals(user.map(User::getUsername).orElse(null).getObject())) {
+            return;
+        }
+
+        if (!projectRepository.isManager(project.getObject(), user.getObject())) {
+            return;
+        }
+
+        if (!aValidatable.getValue().contains(MANAGER)) {
+            aValidatable.error(new ValidationError(
+                    "Managers cannot remove their own manager role from a project"));
+        }
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Void> aForm)
