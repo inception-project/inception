@@ -31,6 +31,7 @@ import javax.validation.Validator;
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.webresources.StandardRoot;
+import org.dkpro.core.api.resources.ResourceObjectProviderBase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -168,8 +169,11 @@ public class INCEpTION
 
     private static void init(SpringApplicationBuilder aBuilder)
     {
-        // WebAnno relies on FS IDs being stable, so we need to enable this
+        // We rely on FS IDs being stable, so we need to enable this
         System.setProperty(ALWAYS_HOLD_ONTO_FSS, "true");
+
+        // We do not want DKPro Core to try and auto-download anything
+        System.setProperty(ResourceObjectProviderBase.PROP_REPO_OFFLINE, "true");
 
         aBuilder.banner(new InceptionBanner());
         aBuilder.initializers(new InceptionApplicationContextInitializer());

@@ -23,7 +23,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
@@ -63,6 +65,7 @@ class UserSelectionPanel
 
     private OverviewListChoice<User> overviewList;
     private MultiSelect<User> usersToAdd;
+    private Map<String, User> recentUsers;
 
     public UserSelectionPanel(String id, IModel<Project> aProject, IModel<User> aUser)
     {
@@ -72,6 +75,7 @@ class UserSelectionPanel
 
         projectModel = aProject;
         userModel = aUser;
+        recentUsers = new HashMap<>();
 
         overviewList = new OverviewListChoice<>("user");
         overviewList.setChoiceRenderer(makeUserChoiceRenderer());
@@ -99,7 +103,9 @@ class UserSelectionPanel
                     builder.append(")");
                 }
 
-                return builder.toString();
+                String text = builder.toString();
+                recentUsers.put(text, aUser);
+                return text;
             };
         };
 
@@ -167,7 +173,10 @@ class UserSelectionPanel
                         continue;
                     }
 
-                    User user = userRepository.get(value);
+                    // We get the formatted user (possibly with display name) back, so we cannot
+                    // look up the user directly in the repository and use the list of recently
+                    // formatted users instead to perform the lookup
+                    User user = recentUsers.get(value);
                     if (user != null) {
                         result.add(user);
                     }

@@ -42,6 +42,10 @@
   
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-resources-asl</artifactId>
+    </dependency>
+    <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-core</artifactId>
     </dependency>
