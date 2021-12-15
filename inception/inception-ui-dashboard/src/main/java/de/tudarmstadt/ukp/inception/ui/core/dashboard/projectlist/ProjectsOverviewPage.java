@@ -35,6 +35,8 @@ import static org.apache.wicket.authroles.authorization.strategies.role.metadata
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -65,7 +67,6 @@ import org.apache.wicket.util.lang.Classes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
-import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import com.github.rjeschke.txtmark.Processor;
@@ -114,6 +115,8 @@ public class ProjectsOverviewPage
     private static final long serialVersionUID = -2159246322262294746L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectsOverviewPage.class);
+
+    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
@@ -296,11 +299,14 @@ public class ProjectsOverviewPage
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
                 aItem.add(new Label(MID_DESCRIPTION, aItem.getModelObject().getShortDescription())
                         .setEscapeModelStrings(false));
-                DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
-                        () -> project.getCreated(), "yyyy-MM-dd");
+
+                Label createdLabel = new Label(MID_CREATED,
+                        () -> project.getCreated() != null
+                                ? DATE_FORMAT.format(project.getCreated())
+                                : null);
                 addActionsDropdown(aItem);
                 aItem.add(projectLink);
-                createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
+                createdLabel.add(visibleWhen(() -> createdLabel.getDefaultModelObject() != null));
                 aItem.add(createdLabel);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
                 Label projectId = new Label(MID_ID, () -> project.getId());
