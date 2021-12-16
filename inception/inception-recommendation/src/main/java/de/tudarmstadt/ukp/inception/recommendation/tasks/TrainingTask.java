@@ -99,7 +99,7 @@ public class TrainingTask
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             Project project = getProject();
-            User user = getUser();
+            User user = getUser().orElseThrow();
 
             log.debug("[{}][{}]: Starting training for project {} triggered by [{}]...", getId(),
                     user.getUsername(), project, getTrigger());

@@ -259,7 +259,8 @@ public class SchedulingServiceImpl
     @Override
     public void stopAllTasksForUser(String aUserName)
     {
-        stopAllTasksMatching(t -> t.getUser().getUsername().equals(aUserName));
+        stopAllTasksMatching(
+                t -> t.getUser().map(_user -> aUserName.equals(_user.getUsername())).get());
     }
 
     @Override
