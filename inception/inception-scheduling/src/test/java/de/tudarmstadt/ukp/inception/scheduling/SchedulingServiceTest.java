@@ -100,7 +100,8 @@ public class SchedulingServiceTest
                 buildDummyTask("testUser", "project2"), //
                 buildDummyTask("testUser", "project2"));
         Task[] tasksToRemove = tasks.stream()
-                .filter(t -> t.getUser().getUsername().equals("testUser")).toArray(Task[]::new);
+                .filter(t -> t.getUser().get().getUsername().equals("testUser"))
+                .toArray(Task[]::new);
 
         for (Task task : tasks) {
             sut.enqueue(task);

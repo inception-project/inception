@@ -103,7 +103,7 @@ public abstract class IndexingTask_ImplBase
         builder.append(" [project=");
         builder.append(getProject().getName());
         builder.append(", user=");
-        builder.append((getUser() == null) ? " " : getUser());
+        builder.append((getUser().isPresent()) ? " " : getUser().get());
         builder.append(", sourceDocument=");
         builder.append(sourceDocument == null ? "null" : sourceDocument.getName());
         builder.append(", annotationDocument=");

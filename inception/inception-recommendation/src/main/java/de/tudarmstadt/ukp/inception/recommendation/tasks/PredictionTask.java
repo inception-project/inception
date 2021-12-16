@@ -67,7 +67,7 @@ public class PredictionTask
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
-            User user = getUser();
+            User user = getUser().orElseThrow();
             String username = user.getUsername();
 
             Project project = getProject();
