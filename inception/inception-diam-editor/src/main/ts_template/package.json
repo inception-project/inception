@@ -1,6 +1,6 @@
 {
   "name": "@inception-project/${project.artifactId}",
-  "version": "0.${project.version}",
+  "version": "${semver}",
   "description": "Custom annotation editor",
   "keywords": [
     "API",
@@ -11,7 +11,7 @@
   },
   "external": {},
   "devDependencies": {
-    "@inception-project/inception-diam": "0.${project.version}",
+    "@inception-project/inception-diam": "${semver}",
     "@stomp/stompjs": "^6.1.0",
     "@types/sockjs-client": "^1.5.0",
     "@types/stompjs": "^2.3.4",

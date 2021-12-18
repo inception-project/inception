@@ -2193,7 +2193,6 @@
       <build>
         <pluginManagement>
           <plugins>
-            <!-- Activate buildnumber plugin in Eclipse -->
             <plugin>
               <groupId>org.eclipse.m2e</groupId>
               <artifactId>lifecycle-mapping</artifactId>
@@ -2202,6 +2201,24 @@
                 <lifecycleMappingMetadata>
                   <pluginExecutions>
                     <pluginExecution>
+                      <!-- Activate groovy plugin in Eclipse -->
+                      <pluginExecutionFilter>
+                        <groupId>org.codehaus.gmaven</groupId>
+                        <artifactId>groovy-maven-plugin</artifactId>
+                        <versionRange>[2.1,)</versionRange>
+                        <goals>
+                          <goal>execute</goal>
+                        </goals>
+                      </pluginExecutionFilter>
+                      <action>
+                        <execute>
+                          <runOnConfiguration>true</runOnConfiguration>
+                          <runOnIncremental>true</runOnIncremental>
+                        </execute>
+                      </action>
+                    </pluginExecution>
+                    <pluginExecution>
+                      <!-- Activate buildnumber plugin in Eclipse -->
                       <pluginExecutionFilter>
                         <groupId>org.codehaus.mojo</groupId>
                         <artifactId>buildnumber-maven-plugin</artifactId>
@@ -2434,6 +2451,39 @@
       </activation>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.codehaus.gmaven</groupId>
+            <artifactId>groovy-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>derive-npm-compatible-version</id>
+                <phase>validate</phase>
+                <goals>
+                  <goal>execute</goal>
+                </goals>
+                <configuration>
+                  <source><![CDATA[
+                      def version = project.version as String
+                      if (version.contains("-")) {
+                          def suffix = version.substring(version.indexOf("-") + 1, version.length())
+                          version = version.substring(0, version.indexOf("-"))
+                          def versionParts = version.tokenize("\\.")
+                          while (versionParts.size() < 3) {
+                              versionParts.add("0")
+                          }
+                          suffix = suffix.replace("-", ".")
+                          version = versionParts.join(".")
+                          if (suffix) {
+                              version = version + "-" + suffix
+                          }
+                      }
+                      log.info("Semver representation of project version: " + version)
+                      project.properties.semver = version
+                  ]]></source>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
           <plugin>
             <artifactId>maven-clean-plugin</artifactId>
             <configuration>
