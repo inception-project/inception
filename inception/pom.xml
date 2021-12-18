@@ -1552,11 +1552,6 @@
         <artifactId>caffeine</artifactId>
         <version>2.9.3</version>
       </dependency>
-      <dependency>
-        <groupId>com.h2database</groupId>
-        <artifactId>h2</artifactId>
-        <version>2.0.202</version>
-      </dependency>
 
       <!-- JAXB DEPENDENCIES -->
       <dependency>
@@ -2020,10 +2015,10 @@
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
             <!--
-              - h2database and data-jpa, used via reflection in tests in search-mtas,
+              - hsqldb and data-jpa, used via reflection in tests in search-mtas,
               - cannot be detected by Maven
             -->
-            <dependency>com.h2database:h2</dependency>
+            <usedDependency>org.hsqldb:hsqldb</usedDependency>
             <dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
             <!--
               - Common test dependencies
@@ -2330,7 +2325,7 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
-            <version>3.0.0</version>
+            <version>3.2.0</version>
             <executions>
               <execution>
                 <id>addToSourceFolder</id>

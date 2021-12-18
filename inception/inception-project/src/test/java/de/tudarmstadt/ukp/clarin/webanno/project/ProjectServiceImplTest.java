@@ -52,7 +52,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
-@DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class, showSql = false, //
+@DataJpaTest( //
+        excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
+        showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off" })
 @ExtendWith(SpringExtension.class)

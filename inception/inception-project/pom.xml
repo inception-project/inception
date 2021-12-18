@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -99,51 +101,48 @@
     
     <!-- DEPENDENCIES FOR TESTING -->
     <dependency>
-    	<groupId>org.springframework.boot</groupId>
-    	<artifactId>spring-boot</artifactId>
-    	<scope>test</scope>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>org.springframework.boot</groupId>
-    	<artifactId>spring-boot-test-autoconfigure</artifactId>
-    	<scope>test</scope>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-test-autoconfigure</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>org.springframework.boot</groupId>
-    	<artifactId>spring-boot-starter-data-jpa</artifactId>
-    	<scope>test</scope>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
-    	<groupId>com.h2database</groupId>
-    	<artifactId>h2</artifactId>
-    	<scope>test</scope>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+      <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
     <plugins>
-	  <plugin>
-	    <groupId>org.apache.maven.plugins</groupId>
-		<artifactId>maven-dependency-plugin</artifactId>
-		<executions>
-		  <execution>
-		    <id>default</id>
-			<phase>verify</phase>
-			<goals>
-			  <goal>analyze-only</goal>
-			</goals>
-		  </execution>
-		</executions>
-		<configuration>
-		  <failOnWarning>true</failOnWarning>
-		  <ignoredDependencies>
-			<!-- - h2database and data-jpa, used via reflection in tests, cannot 
-			     -be detected by Maven 
-			-->
-			<dependency>com.h2database:h2</dependency>
-			<dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
-		  </ignoredDependencies>
-		</configuration>
-	  </plugin>
-	</plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>analyze-only</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <failOnWarning>true</failOnWarning>
+          <ignoredDependencies>
+            <ignoredDependency>org.hsqldb:hsqldb</ignoredDependency>
+            <ignoredDependency>org.springframework.boot:spring-boot-starter-data-jpa</ignoredDependency>
+          </ignoredDependencies>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 </project>
