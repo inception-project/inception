@@ -1,5 +1,5 @@
 {
-  "name": "@inception-project/${semver}",
+  "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
   "description": "INCEpTION brat-based editor",
   "keywords": [
