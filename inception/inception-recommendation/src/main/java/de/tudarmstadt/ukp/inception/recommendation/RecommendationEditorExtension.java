@@ -70,10 +70,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.RejectActionResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -81,6 +79,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -164,11 +163,31 @@ public class RecommendationEditorExtension
         }
 
         // Create annotation
-        if (SpanAnnotationResponse.is(aAction) || AcceptActionResponse.is(aAction)) {
-            actionAcceptSpanRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
-        }
-        else if (ArcAnnotationResponse.is(aAction)) {
-            actionAcceptRelationRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
+        if (SelectAnnotationHandler.COMMAND.equals(aAction) || AcceptActionResponse.is(aAction)) {
+            Predictions predictions = recommendationService.getPredictions(aState.getUser(),
+                    aState.getProject());
+            SourceDocument document = aState.getDocument();
+            VID recommendationVid = VID.parse(aVID.getExtensionPayload());
+            Optional<AnnotationSuggestion> prediction = predictions //
+                    .getPredictionByVID(document, recommendationVid);
+
+            if (prediction.isEmpty()) {
+                log.error("Could not find annotation in [{}] with id [{}]", document,
+                        recommendationVid);
+                aTarget.getPage().error("Could not find annotation");
+                aTarget.addChildren(aTarget.getPage(), IFeedback.class);
+                return;
+            }
+
+            if (prediction.map(p -> p instanceof SpanSuggestion).get()) {
+                actionAcceptSpanRecommendation((SpanSuggestion) prediction.get(), document,
+                        aActionHandler, aState, aTarget, aCas, aVID);
+            }
+
+            if (prediction.map(p -> p instanceof RelationSuggestion).get()) {
+                actionAcceptRelationRecommendation((RelationSuggestion) prediction.get(), document,
+                        aActionHandler, aState, aTarget, aCas, aVID);
+            }
         }
         else if (DoActionResponse.is(aAction) || RejectActionResponse.is(aAction)) {
             actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID);
@@ -185,29 +204,11 @@ public class RecommendationEditorExtension
      * <li>Sends events to the UI and application informing other components about the action.</li>
      * </ul>
      */
-    private void actionAcceptSpanRecommendation(AnnotationActionHandler aActionHandler,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
+    private void actionAcceptSpanRecommendation(SpanSuggestion suggestion, SourceDocument document,
+            AnnotationActionHandler aActionHandler, AnnotatorState aState,
+            AjaxRequestTarget aTarget, CAS aCas, VID aVID)
         throws AnnotationException, IOException
     {
-        SourceDocument document = aState.getDocument();
-        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-        VID recommendationVid = VID.parse(aVID.getExtensionPayload());
-        Optional<SpanSuggestion> prediction = predictions //
-                .getPredictionByVID(document, recommendationVid) //
-                .filter(f -> f instanceof SpanSuggestion) //
-                .map(f -> (SpanSuggestion) f);
-
-        if (prediction.isEmpty()) {
-            log.error("Could not find annotation in [{}] with id [{}]", document,
-                    recommendationVid);
-            aTarget.getPage().error("Could not find annotation");
-            aTarget.addChildren(aTarget.getPage(), IFeedback.class);
-            return;
-        }
-
-        SpanSuggestion suggestion = prediction.get();
-
         // Upsert an annotation based on the suggestion
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
@@ -226,32 +227,14 @@ public class RecommendationEditorExtension
         learningRecordService.logSpanRecord(document, aState.getUser().getUsername(), suggestion,
                 layer, feature, ACCEPTED, MAIN_EDITOR);
 
-        hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, recommendationVid,
-                address);
+        hideSuggestionAndPublishAceptedEvents(suggestion, aState, aTarget, aCas, aVID, address);
     }
 
-    private void actionAcceptRelationRecommendation(AnnotationActionHandler aActionHandler,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID)
+    private void actionAcceptRelationRecommendation(RelationSuggestion suggestion,
+            SourceDocument document, AnnotationActionHandler aActionHandler, AnnotatorState aState,
+            AjaxRequestTarget aTarget, CAS aCas, VID aVID)
         throws AnnotationException, IOException
     {
-        SourceDocument document = aState.getDocument();
-
-        // TODO: Find out why we do not unpack the aVID here like we do for span recommendations
-        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
-        VID recommendationVid = VID.parse(aVID.getExtensionPayload());
-        Optional<RelationSuggestion> prediction = predictions
-                .getPredictionByVID(document, recommendationVid)
-                .filter(f -> f instanceof RelationSuggestion).map(f -> (RelationSuggestion) f);
-
-        if (prediction.isEmpty()) {
-            log.error("Could not find relation in [{}] with id [{}]", document, recommendationVid);
-            aTarget.getPage().error("Could not find relation");
-            aTarget.addChildren(aTarget.getPage(), IFeedback.class);
-            return;
-        }
-
-        RelationSuggestion suggestion = prediction.get();
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
 

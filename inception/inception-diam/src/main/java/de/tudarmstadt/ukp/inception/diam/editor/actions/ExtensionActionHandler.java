@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
  * {@link DiamEditorAutoConfig#extensionActionHandler}.
  * </p>
  */
-@Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)
+@Order(EditorAjaxRequestHandler.PRIO_EXTENSION_HANDLER)
 public class ExtensionActionHandler
     extends EditorAjaxRequestHandlerBase
 {
