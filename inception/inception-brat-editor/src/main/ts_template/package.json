@@ -1,6 +1,6 @@
 {
-  "name": "@inception-project/${project.artifactId}",
-  "version": "0.${project.version}",
+  "name": "@inception-project/${semver}",
+  "version": "${semver}",
   "description": "INCEpTION brat-based editor",
   "keywords": [
     "INCEpTION",
@@ -15,7 +15,7 @@
   },
   "external": {},
   "devDependencies": {
-    "@inception-project/inception-diam": "0.${project.version}",
+    "@inception-project/inception-diam": "${semver}",
     "fast-json-patch": "^3.1.0",
     "esbuild": "^0.13.13",
     "eslint": "^7.32.0",

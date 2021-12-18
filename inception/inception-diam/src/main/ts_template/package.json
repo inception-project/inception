@@ -1,6 +1,6 @@
 {
   "name": "@inception-project/${project.artifactId}",
-  "version": "0.${project.version}",
+  "version": "${semver}",
   "description": "Front-end API for custom annotation editor",
   "keywords": [
     "API",
