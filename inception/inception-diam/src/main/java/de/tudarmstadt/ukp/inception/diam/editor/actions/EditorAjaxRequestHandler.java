@@ -30,7 +30,8 @@ public interface EditorAjaxRequestHandler
 {
     int PRIO_RENDER_HANDLER = 0;
     int PRIO_SLOT_FILLER_HANDLER = 100;
-    int PRIO_UNARM_SLOT_HANDLER = 199;
+    int PRIO_UNARM_SLOT_HANDLER = 180;
+    int PRIO_EXTENSION_HANDLER = 190;
     int PRIO_ANNOTATION_HANDLER = 200;
 
     String PARAM_ACTION = "action";
@@ -61,7 +62,6 @@ public interface EditorAjaxRequestHandler
     @Override
     default boolean accepts(Request aRequest)
     {
-        System.out.println(getClass());
         return getCommand().equals(
                 aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString());
     }
