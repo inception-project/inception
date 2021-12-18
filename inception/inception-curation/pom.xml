@@ -233,8 +233,8 @@
       </exclusions>
     </dependency>
     <dependency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -262,7 +262,7 @@
                -->
               <ignoredDependency>org.springframework.boot:spring-boot-test</ignoredDependency>
               <ignoredDependency>org.springframework.boot:spring-boot-starter-data-jpa</ignoredDependency>
-              <ignoredDependency>com.h2database:h2</ignoredDependency>
+              <ignoredDependency>org.hsqldb:hsqldb</ignoredDependency>
             </ignoredDependencies>
           </configuration>
         </plugin>
