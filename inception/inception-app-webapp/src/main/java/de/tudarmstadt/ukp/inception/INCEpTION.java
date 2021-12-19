@@ -32,6 +32,7 @@ import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.webresources.StandardRoot;
 import org.dkpro.core.api.resources.ResourceObjectProviderBase;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -50,6 +51,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+
+import com.giffing.wicket.spring.boot.starter.app.classscanner.candidates.WicketClassCandidatesHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
@@ -90,6 +93,17 @@ public class INCEpTION
     private String ajpAddress;
 
     private StartupNoticeValve startupNoticeValve;
+
+    /**
+     * Workaround for <a href="https://github.com/MarcGiffing/wicket-spring-boot/issues/186">Wicket
+     * Spring Boot #186</a>
+     */
+    @Autowired
+    public void configureBasePackagesWorkaround(WicketClassCandidatesHolder aHolder)
+    {
+        aHolder.getBasePackages().add(INCEPTION_BASE_PACKAGE);
+        aHolder.getBasePackages().add(WEBANNO_BASE_PACKAGE);
+    }
 
     @Bean
     @Primary
