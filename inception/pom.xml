@@ -2440,6 +2440,11 @@
           <exists>src/main/ts</exists>
         </file>
       </activation>
+      <properties>
+        <ts-link-dependency-phase>generate-sources</ts-link-dependency-phase>
+        <ts-build-phase>generate-resources</ts-build-phase>
+        <ts-link-phase>install</ts-link-phase>
+      </properties>
       <build>
         <plugins>
           <plugin>
@@ -2497,7 +2502,7 @@
             <executions>
               <execution>
                 <id>stage-ts-build</id>
-                <phase>generate-resources</phase>
+                <phase>initialize</phase>
                 <goals>
                   <goal>copy-resources</goal>
                 </goals>
@@ -2528,7 +2533,7 @@
                 <goals>
                   <goal>install-node-and-npm</goal>
                 </goals>
-                <phase>generate-sources</phase>
+                <phase>initialize</phase>
               </execution>
               <execution>
                 <id>npm install</id>
@@ -2545,9 +2550,29 @@
                 <goals>
                   <goal>npm</goal>
                 </goals>
-                <phase>install</phase>
+                <phase>${ts-link-phase}</phase>
                 <configuration>
                   <arguments>link</arguments>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>add-js-resources</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>add-resource</goal>
+                </goals>
+                <configuration>
+                  <resources>
+                    <resource>
+                      <directory>target/js</directory>
+                    </resource>
+                  </resources>
                 </configuration>
               </execution>
             </executions>

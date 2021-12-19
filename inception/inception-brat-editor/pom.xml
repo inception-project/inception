@@ -207,7 +207,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>generate-sources</phase>
+            <phase>${ts-link-dependency-phase}</phase>
             <configuration>
               <arguments>link @inception-project/inception-diam</arguments>
             </configuration>
@@ -217,7 +217,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>compile</phase>
+            <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build:brat</arguments>
             </configuration>
@@ -227,7 +227,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>compile</phase>
+            <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build:brat-minified</arguments>
             </configuration>
@@ -237,7 +237,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>compile</phase>
+            <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build:brat-curation</arguments>
             </configuration>
@@ -247,29 +247,9 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>compile</phase>
+            <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build:brat-curation-minified</arguments>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-js-resources</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>add-resource</goal>
-            </goals>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>target/js</directory>
-                </resource>
-              </resources>
             </configuration>
           </execution>
         </executions>
