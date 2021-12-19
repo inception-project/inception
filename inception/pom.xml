@@ -2464,20 +2464,18 @@
                   <source><![CDATA[
                       def version = project.version as String
                       if (version.contains("-")) {
-                          def suffix = version.substring(version.indexOf("-") + 1, version.length())
-                          version = version.substring(0, version.indexOf("-"))
-                          def versionParts = version.tokenize("\\.")
-                          while (versionParts.size() < 3) {
-                              versionParts.add("0")
-                          }
-                          suffix = suffix.replace("-", ".")
-                          version = versionParts.join(".")
+                          def suffix = version.substring(version.indexOf("-") + 1, version.length());
+                          version = version.substring(0, version.indexOf("-"));
+                          def versionParts = version.tokenize("\\.");
+                          while (versionParts.size() < 3) { versionParts.add("0"); };
+                          suffix = suffix.replace("-", ".");
+                          version = versionParts.join(".");
                           if (suffix) {
-                              version = version + "-" + suffix
-                          }
+                              version = version + "-" + suffix;
+                          };
                       }
-                      log.info("Semver representation of project version: " + version)
-                      project.properties.semver = version
+                      log.info("Semver representation of project version: " + version);
+                      project.properties.semver = version;
                   ]]></source>
                 </configuration>
               </execution>
