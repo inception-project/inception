@@ -30,10 +30,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.BeanIds;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.GlobalAuthenticationConfigurerAdapter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -77,7 +75,6 @@ public class InceptionSecurity
     private final DataSource dataSource;
     private final AuthenticationManager authenticationManager;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationProvider authenticationProvider;
     private final UserDao userRepository;
     private final SessionRegistry sessionRegistry;
 
@@ -86,23 +83,14 @@ public class InceptionSecurity
     // lazily inject it here.
     @Autowired
     public InceptionSecurity(PasswordEncoder aPasswordEncoder,
-            @Lazy AuthenticationManager aAuthenticationManager,
-            @Lazy AuthenticationProvider aAuthenticationProvider, DataSource aDataSource,
+            @Lazy AuthenticationManager aAuthenticationManager, DataSource aDataSource,
             SessionRegistry aSessionRegistry, UserDao aUserRepository)
     {
         passwordEncoder = aPasswordEncoder;
         authenticationManager = aAuthenticationManager;
-        authenticationProvider = aAuthenticationProvider;
         dataSource = aDataSource;
         userRepository = aUserRepository;
         sessionRegistry = aSessionRegistry;
-    }
-
-    @Autowired
-    protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception
-    {
-        auth.authenticationProvider(authenticationProvider);
-        auth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
     }
 
     @Order(1)
