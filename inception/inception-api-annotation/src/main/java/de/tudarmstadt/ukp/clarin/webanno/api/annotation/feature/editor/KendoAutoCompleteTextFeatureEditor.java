@@ -21,26 +21,17 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.List;
-import java.util.Locale;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.util.convert.ConversionException;
-import org.apache.wicket.util.convert.IConverter;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 
 /**
  * String feature editor using a Kendo AutoComplete field.
@@ -100,27 +91,9 @@ public class KendoAutoCompleteTextFeatureEditor
     @Override
     protected AbstractTextComponent createInputField()
     {
-        return new AutoCompleteTextField<ReorderableTag>("value")
+        return new ReorderableTagAutoCompleteField("value")
         {
             private static final long serialVersionUID = 311286735004237737L;
-
-            @Override
-            public void onConfigure(JQueryBehavior behavior)
-            {
-                super.onConfigure(behavior);
-
-                behavior.setOption("delay", 500);
-                behavior.setOption("animation", false);
-                behavior.setOption("footerTemplate",
-                        Options.asString("#: instance.dataSource.total() # items found"));
-                // Prevent scrolling action from closing the dropdown while the focus is on the
-                // input field
-                behavior.setOption("close",
-                        String.join(" ", "function(e) {",
-                                "  if (document.activeElement == e.sender.element[0]) {",
-                                "    e.preventDefault();" + "  }", "}"));
-                behavior.setOption("select", " function (e) { this.trigger('change'); }");
-            }
 
             @Override
             protected List<ReorderableTag> getChoices(String aTerm)
@@ -132,57 +105,6 @@ public class KendoAutoCompleteTextFeatureEditor
                 ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
 
                 return ranker.rank(aTerm, state.tagset);
-            }
-
-            /*
-             * Below is a hack which is required because all the text feature editors are expected
-             * to write a plain string into the feature state. However, we cannot have an {@code
-             * AutoCompleteTextField<String>} field because then we would loose easy access to the
-             * tag description which we show in the tooltips. So we hack the converter to return
-             * strings on the way out into the model. This is a very evil hack and we need to avoid
-             * declaring generic types because we work against them!
-             */
-            @SuppressWarnings({ "rawtypes", "unchecked" })
-            @Override
-            public <C> IConverter<C> getConverter(Class<C> aType)
-            {
-                IConverter originalConverter = super.getConverter(aType);
-
-                return new IConverter()
-                {
-                    private static final long serialVersionUID = -6505569244789767066L;
-
-                    @Override
-                    public Object convertToObject(String aValue, Locale aLocale)
-                        throws ConversionException
-                    {
-                        Object value = originalConverter.convertToObject(aValue, aLocale);
-                        if (value instanceof String) {
-                            return value;
-                        }
-                        else if (value instanceof Tag) {
-                            return ((Tag) value).getName();
-                        }
-                        else if (value instanceof ReorderableTag) {
-                            return ((ReorderableTag) value).getName();
-                        }
-                        else {
-                            return null;
-                        }
-                    }
-
-                    @Override
-                    public String convertToString(Object aValue, Locale aLocale)
-                    {
-                        return originalConverter.convertToString(aValue, aLocale);
-                    }
-                };
-            }
-
-            @Override
-            protected IJQueryTemplate newTemplate()
-            {
-                return KendoChoiceDescriptionScriptReference.templateReorderable();
             }
         };
     }
