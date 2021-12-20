@@ -48,7 +48,6 @@ public class ImplicitUnarmSlotHandler
     @Override
     public boolean accepts(Request aRequest)
     {
-        System.out.println(getClass());
         AnnotatorState state = getAnnotatorState();
         if (state.isSlotArmed()) {
             state.clearArmedSlot();
