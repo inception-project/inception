@@ -90,11 +90,11 @@
 
     <wicket.version>9.7.0</wicket.version>
     <wicketstuff.version>9.7.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.5.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>6.0.0-M4</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>3.0.3</wicket-jquery-selectors.version>
-    <wicket-webjars.version>3.0.3</wicket-webjars.version>
-    <wicket-spring-boot.version>3.1.5</wicket-spring-boot.version>
+    <wicket-jquery-ui.version>9.6.0-SNAPSHOT</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>6.0.0-M6</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
+    <wicket-webjars.version>3.0.4</wicket-webjars.version>
+    <wicket-spring-boot.version>3.1.6</wicket-spring-boot.version>
     <bootstrap.version>5.1.3</bootstrap.version>
     <hover.version>2.0.2</hover.version>
 
