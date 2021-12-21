@@ -17,21 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
-import de.agilecoders.wicket.sass.SassResourceReference;
+import org.apache.wicket.request.resource.CssResourceReference;
 
-public class BratCssVisReference
-    extends SassResourceReference
+public class BratCssReference
+    extends CssResourceReference
 {
-    private static final long serialVersionUID = 5755999000175373522L;
+    private static final long serialVersionUID = 1L;
 
-    private static final BratCssVisReference INSTANCE = new BratCssVisReference();
+    private static final BratCssReference INSTANCE = new BratCssReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static BratCssVisReference get()
+    public static BratCssReference get()
     {
         return INSTANCE;
     }
@@ -39,8 +39,8 @@ public class BratCssVisReference
     /**
      * Private constructor
      */
-    private BratCssVisReference()
+    private BratCssReference()
     {
-        super(BratCssVisReference.class, "style-vis.scss");
+        super(BratCssReference.class, "brat.css");
     }
 }

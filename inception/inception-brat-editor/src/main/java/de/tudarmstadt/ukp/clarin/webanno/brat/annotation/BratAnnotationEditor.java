@@ -83,8 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssUiReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssVisReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
@@ -312,8 +311,7 @@ public class BratAnnotationEditor
         super.renderHead(aResponse);
 
         // CSS
-        aResponse.render(CssHeaderItem.forReference(BratCssVisReference.get()));
-        aResponse.render(CssHeaderItem.forReference(BratCssUiReference.get()));
+        aResponse.render(CssHeaderItem.forReference(BratCssReference.get()));
         aResponse.render(CssHeaderItem
                 .forReference(new WebjarsCssResourceReference("animate.css/current/animate.css")));
 
