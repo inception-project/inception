@@ -182,6 +182,14 @@ server {
         #    return 301 https://$host/inception;
         #}
 
+        location /ws {
+            proxy_pass http://127.0.0.1:8080;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "Upgrade";
+            proxy_set_header Host $host;
+        }
+
         location ^~ /inception/ {
             proxy_pass http://127.0.0.1:8080/inception/;
             proxy_redirect http://inception.example.com/ /;
@@ -268,7 +276,15 @@ Origin does not correspond to request
 ====
 
 If this is the case, then CSRF protection is kicking in.
-What seems to work in this case is to turn off CSRF entirely by adding the following lines to your `settings.properties` file (see <<admin-guide.adoc#sect_settings>>):
+What seems to work in this case is to turn add the following lines to your `settings.properties` file (see <<admin-guide.adoc#sect_settings>>, replace the server name and URL with your own):
+
+----
+wicket.core.csrf.error-message=Origin does not quite correspond to request
+wicket.core.csrf.accepted-origins[0]=inception.example.com
+wicket.core.csrf.accepted-origins[1]=https://inception.example.com
+----
+
+Alternatively, you can try to disable CSRF completely:
 
 ----
 wicket.core.csrf.enabled=false
