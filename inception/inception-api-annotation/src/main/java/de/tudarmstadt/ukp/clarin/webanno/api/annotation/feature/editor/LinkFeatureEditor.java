@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
@@ -30,7 +31,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -268,59 +268,12 @@ public class LinkFeatureEditor
         });
 
         if (getModelObject().feature.getTagset() != null) {
-            field = new StyledComboBox<Tag>("newRole", PropertyModel.of(this, "newRole"),
-                    PropertyModel.of(getModel(), "tagset"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void onInitialize()
-                {
-                    super.onInitialize();
-
-                    // Ensure proper order of the initializing JS header items: first combo box
-                    // behavior (in super.onInitialize()), then tooltip.
-                    Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
-                    options.set("content",
-                            ClassicKendoComboboxTextFeatureEditor.FUNCTION_FOR_TOOLTIP);
-                    add(new TooltipBehavior("#" + field.getMarkupId() + "_listbox *[title]",
-                            options)
-                    {
-                        private static final long serialVersionUID = -7207021885475073279L;
-
-                        @Override
-                        protected String $()
-                        {
-                            // REC: It takes a moment for the KendoDatasource to load the data and
-                            // for the Combobox to render the hidden dropdown. I did not find
-                            // a way to hook into this process and to get notified when the
-                            // data is available in the dropdown, so trying to handle this
-                            // with a slight delay hopeing that all is set up after 1 second.
-                            return "try {setTimeout(function () { " + super.$()
-                                    + " }, 1000); } catch (err) {}; ";
-                        }
-                    });
-                }
-
-                @Override
-                public void onConfigure(JQueryBehavior aBehavior)
-                {
-                    super.onConfigure(aBehavior);
-
-                    aBehavior.setOption("placeholder", Options.asString("Select role"));
-
-                    // Trigger a re-loading of the tagset from the server as constraints may have
-                    // changed the ordering
-                    Optional<AjaxRequestTarget> target = RequestCycle.get()
-                            .find(AjaxRequestTarget.class);
-                    if (target.isPresent()) {
-                        target.get()
-                                .appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
-                                        "var $w = %s; if ($w) { $w.dataSource.read(); }",
-                                        KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
-                    }
-                }
-            };
+            if (getModelObject().tagset.size() > 100) {
+                field = makeAutoComplete("newRole");
+            }
+            else {
+                field = makeComboBox("newRole");
+            }
         }
         else {
             field = new TextField<String>("newRole", PropertyModel.of(this, "newRole"));
@@ -418,6 +371,81 @@ public class LinkFeatureEditor
                         .equals(state.getArmedFeature().feature));
             }
         });
+    }
+
+    private AbstractTextComponent makeAutoComplete(String aId)
+    {
+        return new ReorderableTagAutoCompleteField(aId, PropertyModel.of(this, "newRole"))
+        {
+            private static final long serialVersionUID = 311286735004237737L;
+
+            @Override
+            protected List<ReorderableTag> getChoices(String aTerm)
+            {
+                FeatureState state = LinkFeatureEditor.this.getModelObject();
+
+                TagRanker ranker = new TagRanker();
+                ranker.setMaxResults(100);
+                ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
+
+                return ranker.rank(aTerm, state.tagset);
+            }
+        };
+    }
+
+    private AbstractTextComponent makeComboBox(String aId)
+    {
+        return new StyledComboBox<Tag>(aId, PropertyModel.of(this, "newRole"),
+                PropertyModel.of(getModel(), "tagset"))
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onInitialize()
+            {
+                super.onInitialize();
+
+                // Ensure proper order of the initializing JS header items: first combo box
+                // behavior (in super.onInitialize()), then tooltip.
+                Options options = new Options(DescriptionTooltipBehavior.makeTooltipOptions());
+                options.set("content", ClassicKendoComboboxTextFeatureEditor.FUNCTION_FOR_TOOLTIP);
+                add(new TooltipBehavior("#" + field.getMarkupId() + "_listbox *[title]", options)
+                {
+                    private static final long serialVersionUID = -7207021885475073279L;
+
+                    @Override
+                    protected String $()
+                    {
+                        // REC: It takes a moment for the KendoDatasource to load the data and
+                        // for the Combobox to render the hidden dropdown. I did not find
+                        // a way to hook into this process and to get notified when the
+                        // data is available in the dropdown, so trying to handle this
+                        // with a slight delay hoping that all is set up after 1 second.
+                        return "try {setTimeout(function () { " + super.$()
+                                + " }, 1000); } catch (err) {}; ";
+                    }
+                });
+            }
+
+            @Override
+            public void onConfigure(JQueryBehavior aBehavior)
+            {
+                super.onConfigure(aBehavior);
+
+                aBehavior.setOption("placeholder", Options.asString("Select role"));
+
+                // Trigger a re-loading of the tagset from the server as constraints may have
+                // changed the ordering
+                Optional<AjaxRequestTarget> target = RequestCycle.get()
+                        .find(AjaxRequestTarget.class);
+                if (target.isPresent()) {
+                    target.get()
+                            .appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
+                                    "var $w = %s; if ($w) { $w.dataSource.read(); }",
+                                    KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
+                }
+            }
+        };
     }
 
     private void removeAutomaticallyAddedUnusedEntries()
@@ -539,56 +567,67 @@ public class LinkFeatureEditor
 
     private void actionAdd(AjaxRequestTarget aTarget)
     {
-        if (StringUtils.isBlank((String) field.getModelObject())
-                && getTraits().isEnableRoleLabels()) {
+        if (isBlank((String) field.getModelObject()) && getTraits().isEnableRoleLabels()) {
             error("Must set slot label before adding!");
             aTarget.addChildren(getPage(), IFeedback.class);
+            return;
         }
-        else {
-            @SuppressWarnings("unchecked")
-            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                    .getModelObject().value;
-            AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
 
-            LinkWithRoleModel m = new LinkWithRoleModel();
-            m.role = (String) field.getModelObject();
-            links.add(m);
-            state.setArmedSlot(getModelObject(), links.size() - 1);
+        @SuppressWarnings("unchecked")
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                .getModelObject().value;
+        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
 
-            // Need to re-render the whole form because a slot in another
-            // link editor might get unarmed
-            aTarget.add(getOwner());
+        LinkWithRoleModel m = new LinkWithRoleModel();
+        m.role = (String) field.getModelObject();
+        int insertionPoint = findInsertionPoint(links);
+        links.add(insertionPoint, m);
+        state.setArmedSlot(getModelObject(), insertionPoint);
+
+        // Need to re-render the whole form because a slot in another link editor might get unarmed
+        aTarget.add(getOwner());
+    }
+
+    private int findInsertionPoint(List<LinkWithRoleModel> aLinks)
+    {
+        if (aLinks.isEmpty()) {
+            return 0;
         }
+
+        int i = aLinks.size();
+        while (i > 0 && aLinks.get(i - 1).autoCreated) {
+            i--;
+        }
+
+        return i;
     }
 
     private void actionSet(AjaxRequestTarget aTarget)
     {
-        if (StringUtils.isBlank((String) field.getModelObject())
-                && getTraits().isEnableRoleLabels()) {
+        if (isBlank((String) field.getModelObject()) && getTraits().isEnableRoleLabels()) {
             error("Must set slot label before changing!");
             aTarget.addChildren(getPage(), IFeedback.class);
+            return;
         }
-        else {
-            @SuppressWarnings("unchecked")
-            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                    .getModelObject().value;
-            AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
-            FeatureState fs = state.getArmedFeature();
 
-            // Update the slot
-            LinkWithRoleModel m = links.get(state.getArmedSlot());
-            m.role = (String) field.getModelObject();
-            links.set(state.getArmedSlot(), m); // avoid reordering
+        @SuppressWarnings("unchecked")
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
+                .getModelObject().value;
+        AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
 
-            aTarget.add(content);
+        // Update the slot
+        LinkWithRoleModel m = links.get(state.getArmedSlot());
+        m.role = (String) field.getModelObject();
+        links.set(state.getArmedSlot(), m); // avoid reordering
 
-            // Send event - but only if we set the label on a slot which was already filled/saved.
-            // Unset slots only exist in the link editor and if we commit the change here, we
-            // trigger a reload of the feature editors from the CAS which makes the unfilled slots
-            // disappear and leaves behind an armed slot pointing to a removed slot.
-            if (m.targetAddr != -1) {
-                send(this, Broadcast.BUBBLE, new FeatureEditorValueChangedEvent(this, aTarget));
-            }
+        aTarget.add(content);
+
+        // Send event - but only if we set the label on a slot which was already filled/saved.
+        // Unset slots only exist in the link editor and if we commit the change here, we
+        // trigger a reload of the feature editors from the CAS which makes the unfilled slots
+        // disappear and leaves behind an armed slot pointing to a removed slot.
+        if (m.targetAddr != -1) {
+            send(this, Broadcast.BUBBLE, new FeatureEditorValueChangedEvent(this, aTarget));
         }
     }
 
@@ -598,7 +637,6 @@ public class LinkFeatureEditor
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                 .getModelObject().value;
         AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
-        FeatureState fs = state.getArmedFeature();
 
         LinkWithRoleModel linkWithRoleModel = links.get(state.getArmedSlot());
         links.remove(state.getArmedSlot());
