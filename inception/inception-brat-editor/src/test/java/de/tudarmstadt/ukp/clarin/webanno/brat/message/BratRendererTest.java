@@ -47,8 +47,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.LinkFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
@@ -125,7 +125,7 @@ public class BratRendererTest
 
         FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
-                        new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
+                        new NumberFeatureSupport(), new LinkFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());

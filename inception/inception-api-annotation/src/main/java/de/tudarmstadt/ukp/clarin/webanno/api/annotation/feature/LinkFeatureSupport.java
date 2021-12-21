@@ -63,7 +63,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * {@code AnnotationServiceAutoConfiguration#slotFeatureSupport}.
  * </p>
  */
-public class SlotFeatureSupport
+public class LinkFeatureSupport
     implements FeatureSupport<LinkFeatureTraits>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -73,7 +73,7 @@ public class SlotFeatureSupport
     private String featureSupportId;
 
     @Autowired
-    public SlotFeatureSupport(AnnotationSchemaService aAnnotationService)
+    public LinkFeatureSupport(AnnotationSchemaService aAnnotationService)
     {
         annotationService = aAnnotationService;
     }

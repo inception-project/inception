@@ -38,7 +38,6 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.ExtensionActionHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.FillSlotWithExistingAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.FillSlotWithNewAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ImplicitUnarmSlotHandler;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.ImplicitUnarmSlotHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;

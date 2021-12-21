@@ -41,10 +41,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSu
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.LinkFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.PrimitiveUimaFeatureSupportProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.LinkFeatureSupportPropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
@@ -57,7 +59,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 
 @Configuration
 @EnableConfigurationProperties({ //
-        PrimitiveUimaFeatureSupportProperties.class, //
+        StringFeatureSupportPropertiesImpl.class, //
+        LinkFeatureSupportPropertiesImpl.class, //
         AnnotationEditorPropertiesImpl.class })
 public class AnnotationSchemaServiceAutoConfiguration
 {
@@ -93,17 +96,16 @@ public class AnnotationSchemaServiceAutoConfiguration
     }
 
     @Bean
-    public StringFeatureSupport stringFeaturesupport(
-            PrimitiveUimaFeatureSupportProperties aProperties,
+    public StringFeatureSupport stringFeaturesupport(StringFeatureSupportProperties aProperties,
             AnnotationSchemaService aSchemaService)
     {
         return new StringFeatureSupport(aProperties, aSchemaService);
     }
 
     @Bean
-    public SlotFeatureSupport slotFeaturesupport(AnnotationSchemaService aAnnotationService)
+    public LinkFeatureSupport linkFeatureSupport(AnnotationSchemaService aAnnotationService)
     {
-        return new SlotFeatureSupport(aAnnotationService);
+        return new LinkFeatureSupport(aAnnotationService);
     }
 
     @Bean

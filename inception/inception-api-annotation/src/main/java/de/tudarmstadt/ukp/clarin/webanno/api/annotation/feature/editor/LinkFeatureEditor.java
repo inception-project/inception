@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedE
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.LinkFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
@@ -106,6 +107,7 @@ public class LinkFeatureEditor
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
+    private @SpringBean LinkFeatureSupportProperties properties;
 
     private WebMarkupContainer content;
 
@@ -268,7 +270,7 @@ public class LinkFeatureEditor
         });
 
         if (getModelObject().feature.getTagset() != null) {
-            if (getModelObject().tagset.size() > 100) {
+            if (getModelObject().tagset.size() > properties.getAutoCompleteThreshold()) {
                 field = makeAutoComplete("newRole");
             }
             else {
@@ -385,7 +387,7 @@ public class LinkFeatureEditor
                 FeatureState state = LinkFeatureEditor.this.getModelObject();
 
                 TagRanker ranker = new TagRanker();
-                ranker.setMaxResults(100);
+                ranker.setMaxResults(properties.getAutoCompleteMaxResults());
                 ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
 
                 return ranker.rank(aTerm, state.tagset);
