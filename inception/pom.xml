@@ -172,11 +172,6 @@
       </snapshots>
     </repository>
     -->
-    <!-- For a jsass version that works on Apple Silicon -->
-    <repository>
-      <id>clojars.org</id>
-      <url>https://repo.clojars.org</url>
-    </repository>
   </repositories>
   <pluginRepositories>
     <!--
@@ -709,11 +704,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-support-jsass</artifactId>
-        <version>22.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support-standalone</artifactId>
         <version>22.0-SNAPSHOT</version>
       </dependency>
@@ -923,21 +913,6 @@
         <version>${wicket-bootstrap.version}</version>
       </dependency>
       <dependency>
-        <groupId>de.agilecoders.wicket</groupId>
-        <artifactId>wicket-bootstrap-sass</artifactId>
-        <version>${wicket-bootstrap.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>io.bit3</groupId>
-            <artifactId>jsass</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
         <groupId>de.agilecoders.wicket.webjars</groupId>
         <artifactId>wicket-webjars</artifactId>
         <version>${wicket-webjars.version}</version>
@@ -999,11 +974,6 @@
         <groupId>org.webjars</groupId>
         <artifactId>animate.css</artifactId>
         <version>3.2.6</version>
-      </dependency>
-      <dependency>
-        <groupId>ua.kasta</groupId>
-        <artifactId>jsass</artifactId>
-        <version>5.10.5</version>
       </dependency>
       <dependency>
         <groupId>org.sharegov</groupId>
@@ -1833,7 +1803,6 @@
     <module>inception-bootstrap</module>
     <module>inception-support</module>
     <module>inception-support-standalone</module>
-    <module>inception-support-jsass</module>
     <module>inception-model</module>
     <module>inception-model-export</module>
     <module>inception-project</module>

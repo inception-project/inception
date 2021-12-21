@@ -1,7 +1,7 @@
 {
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
-  "description": "INCEpTION Knowledge Base",
+  "description": "INCEpTION Annotation Sidebar",
   "keywords": [],
   "scripts": {
     "build": "./node_modules/.bin/sass scss/SearchAnnotationSidebar.scss ../../../target/js/de/tudarmstadt/ukp/inception/app/ui/search/sidebar/SearchAnnotationSidebar.css",
@@ -9,7 +9,6 @@
   },
   "external": {},
   "devDependencies": {
-    "bootstrap": "^5.1.3",
     "sass": "^1.45.1"
   }
 }
