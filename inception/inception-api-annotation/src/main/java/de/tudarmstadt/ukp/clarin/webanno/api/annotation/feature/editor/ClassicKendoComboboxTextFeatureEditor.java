@@ -25,8 +25,6 @@ import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
@@ -43,9 +41,6 @@ public class ClassicKendoComboboxTextFeatureEditor
     extends TextFeatureEditorBase
 {
     private static final long serialVersionUID = 8686646370500180943L;
-
-    private static final Logger LOG = LoggerFactory
-            .getLogger(ClassicKendoComboboxTextFeatureEditor.class);
 
     /**
      * Function to return tooltip using jquery Docs for the JQuery tooltip widget that we configure
