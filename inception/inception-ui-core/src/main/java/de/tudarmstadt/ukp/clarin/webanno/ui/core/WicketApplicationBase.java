@@ -65,8 +65,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.bootstrap.CustomBootstrapSassReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
+import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
 import io.bit3.jsass.Options;
 
 /**
@@ -182,7 +182,8 @@ public abstract class WicketApplicationBase
         Bootstrap.install(this);
 
         IBootstrapSettings settings = Bootstrap.getSettings(this);
-        settings.setCssResourceReference(CustomBootstrapSassReference.get());
+        // settings.setCssResourceReference(CustomBootstrapSassReference.get());
+        settings.setCssResourceReference(InceptionBootstrapCssReference.get());
     }
 
     protected void addKendoResourcesToAllPages()
