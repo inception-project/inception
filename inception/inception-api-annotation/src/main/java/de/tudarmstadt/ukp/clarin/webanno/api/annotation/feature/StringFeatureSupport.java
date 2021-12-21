@@ -35,7 +35,8 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.PrimitiveUimaFeatureSupportProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.DynamicTextAreaFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFieldTextFeatureEditor;
@@ -67,7 +68,7 @@ public class StringFeatureSupport
 
     private List<FeatureType> primitiveTypes;
 
-    private final PrimitiveUimaFeatureSupportProperties properties;
+    private final StringFeatureSupportProperties properties;
 
     private final AnnotationSchemaService schemaService;
 
@@ -76,10 +77,10 @@ public class StringFeatureSupport
      */
     public StringFeatureSupport()
     {
-        this(new PrimitiveUimaFeatureSupportProperties(), null);
+        this(new StringFeatureSupportPropertiesImpl(), null);
     }
 
-    public StringFeatureSupport(PrimitiveUimaFeatureSupportProperties aProperties,
+    public StringFeatureSupport(StringFeatureSupportProperties aProperties,
             AnnotationSchemaService aSchemaService)
     {
         properties = aProperties;

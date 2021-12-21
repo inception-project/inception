@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.PrimitiveUimaFeatureSupportProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -54,7 +54,7 @@ public class StringFeatureSupportTest
     {
         initMocks(this);
 
-        sut = new StringFeatureSupport(new PrimitiveUimaFeatureSupportProperties(), schemaService);
+        sut = new StringFeatureSupport(new StringFeatureSupportPropertiesImpl(), schemaService);
 
         valueFeature = new AnnotationFeature("value", CAS.TYPE_NAME_STRING);
 

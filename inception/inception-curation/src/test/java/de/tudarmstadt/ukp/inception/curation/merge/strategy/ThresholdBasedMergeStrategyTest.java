@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
-import de.tudarmstadt.ukp.inception.curation.merge.strategy.ThresholdBasedMergeStrategy;
 
 class ThresholdBasedMergeStrategyTest
 {

@@ -41,7 +41,7 @@ import com.googlecode.wicket.kendo.ui.form.multiselect.MultiSelect;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.LinkFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -62,7 +62,7 @@ public class LinkFeatureTraitsEditor
     private IModel<AnnotationFeature> feature;
     private IModel<Traits> traits;
 
-    public LinkFeatureTraitsEditor(String aId, SlotFeatureSupport aFS,
+    public LinkFeatureTraitsEditor(String aId, LinkFeatureSupport aFS,
             IModel<AnnotationFeature> aFeatureModel)
     {
         super(aId, aFeatureModel);
@@ -184,9 +184,9 @@ public class LinkFeatureTraitsEditor
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
 
-    private SlotFeatureSupport getFeatureSupport()
+    private LinkFeatureSupport getFeatureSupport()
     {
-        return (SlotFeatureSupport) featureSupportRegistry.getExtension(featureSupportId)
+        return (LinkFeatureSupport) featureSupportRegistry.getExtension(featureSupportId)
                 .orElseThrow();
     }
 

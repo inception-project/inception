@@ -51,8 +51,8 @@ import org.mockito.Mock;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.LinkFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
@@ -87,7 +87,7 @@ public class AgreementMeasureTestSuite_ImplBase
 
         FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
-                        new NumberFeatureSupport(), new SlotFeatureSupport(annotationService)));
+                        new NumberFeatureSupport(), new LinkFeatureSupport(annotationService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());

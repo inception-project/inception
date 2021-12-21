@@ -49,11 +49,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
-public class SlotFeatureSupportTest
+public class LinkFeatureSupportTest
 {
     private @Mock AnnotationSchemaService schemaService;
 
-    private SlotFeatureSupport sut;
+    private LinkFeatureSupport sut;
 
     private AnnotationFeature slotFeature;
 
@@ -67,7 +67,7 @@ public class SlotFeatureSupportTest
     {
         initMocks(this);
 
-        sut = new SlotFeatureSupport(schemaService);
+        sut = new LinkFeatureSupport(schemaService);
 
         slotFeature = new AnnotationFeature("links", "webanno.custom.SimpleSpan");
         slotFeature.setLinkTypeName("webanno.custom.LinkType");
