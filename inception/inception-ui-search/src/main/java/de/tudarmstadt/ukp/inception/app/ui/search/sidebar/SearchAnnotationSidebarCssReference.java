@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
-import de.agilecoders.wicket.sass.SassResourceReference;
+import org.apache.wicket.request.resource.CssResourceReference;
 
 public class SearchAnnotationSidebarCssReference
-    extends SassResourceReference
+    extends CssResourceReference
 {
-    private static final long serialVersionUID = 5755999000175373522L;
+    private static final long serialVersionUID = 1L;
 
     private static final SearchAnnotationSidebarCssReference INSTANCE = new SearchAnnotationSidebarCssReference();
 
@@ -41,6 +41,6 @@ public class SearchAnnotationSidebarCssReference
      */
     private SearchAnnotationSidebarCssReference()
     {
-        super(SearchAnnotationSidebarCssReference.class, "SearchAnnotationSidebar.scss");
+        super(SearchAnnotationSidebarCssReference.class, "SearchAnnotationSidebar.css");
     }
 }
