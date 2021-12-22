@@ -44,7 +44,7 @@ $ apachectl -M
 server.port=8080
 server.address=127.0.0.1
 server.servlet.context-path=/inception
-server.use-forward-headers=true
+server.forward-headers-strategy=NATIVE
 wicket.core.csrf.accepted-origins[0]=your.public.domain.name.com
 wicket.core.csrf.accepted-origins[1]=https://your.public.domain.name.com
 ----
