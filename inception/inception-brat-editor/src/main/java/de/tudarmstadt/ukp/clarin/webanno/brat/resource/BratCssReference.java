@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
+package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
 import org.apache.wicket.request.resource.CssResourceReference;
 
-public class SearchAnnotationSidebarCssReference
+public class BratCssReference
     extends CssResourceReference
 {
     private static final long serialVersionUID = 1L;
 
-    private static final SearchAnnotationSidebarCssReference INSTANCE = new SearchAnnotationSidebarCssReference();
+    private static final BratCssReference INSTANCE = new BratCssReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static SearchAnnotationSidebarCssReference get()
+    public static BratCssReference get()
     {
         return INSTANCE;
     }
@@ -39,8 +39,8 @@ public class SearchAnnotationSidebarCssReference
     /**
      * Private constructor
      */
-    private SearchAnnotationSidebarCssReference()
+    private BratCssReference()
     {
-        super(SearchAnnotationSidebarCssReference.class, "SearchAnnotationSidebar.css");
+        super(BratCssReference.class, "brat.css");
     }
 }

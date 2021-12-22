@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
+package de.tudarmstadt.ukp.inception.ui.kb.sass;
 
-import de.agilecoders.wicket.sass.SassResourceReference;
+import org.apache.wicket.request.resource.CssResourceReference;
 
-public class BratCssUiReference
-    extends SassResourceReference
+public class KnowledgeBasePageCssReference
+    extends CssResourceReference
 {
-    private static final long serialVersionUID = -7167264646343829988L;
+    private static final long serialVersionUID = 1L;
 
-    private static final BratCssUiReference INSTANCE = new BratCssUiReference();
+    private static final KnowledgeBasePageCssReference INSTANCE = new KnowledgeBasePageCssReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static BratCssUiReference get()
+    public static KnowledgeBasePageCssReference get()
     {
         return INSTANCE;
     }
@@ -39,8 +39,8 @@ public class BratCssUiReference
     /**
      * Private constructor
      */
-    private BratCssUiReference()
+    private KnowledgeBasePageCssReference()
     {
-        super(BratCssUiReference.class, "style-ui.scss");
+        super(KnowledgeBasePageCssReference.class, "inception-ui-kbp.css");
     }
 }

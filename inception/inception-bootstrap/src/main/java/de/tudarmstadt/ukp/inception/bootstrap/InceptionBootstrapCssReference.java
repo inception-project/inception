@@ -15,23 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.sass;
+package de.tudarmstadt.ukp.inception.bootstrap;
 
-import de.agilecoders.wicket.sass.SassResourceReference;
+import org.apache.wicket.request.resource.CssResourceReference;
 
-public class KnowledgeBasePageLRR
-    extends SassResourceReference
+public class InceptionBootstrapCssReference
+    extends CssResourceReference
 {
+    private static final long serialVersionUID = 1L;
 
-    private static final long serialVersionUID = -5906752913389722261L;
-    private static final KnowledgeBasePageLRR INSTANCE = new KnowledgeBasePageLRR();
+    private static final InceptionBootstrapCssReference INSTANCE = new InceptionBootstrapCssReference();
 
     /**
      * Gets the instance of the resource reference
      *
      * @return the single instance of the resource reference
      */
-    public static KnowledgeBasePageLRR get()
+    public static InceptionBootstrapCssReference get()
     {
         return INSTANCE;
     }
@@ -39,8 +39,8 @@ public class KnowledgeBasePageLRR
     /**
      * Private constructor
      */
-    private KnowledgeBasePageLRR()
+    private InceptionBootstrapCssReference()
     {
-        super(KnowledgeBasePageLRR.class, "inception-ui-kbp.scss");
+        super(InceptionBootstrapCssReference.class, "inception-bootstrap.css");
     }
 }

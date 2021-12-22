@@ -25,25 +25,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * </p>
  */
 @ConfigurationProperties("annotation.feature-support.string")
-public class PrimitiveUimaFeatureSupportProperties
+public class StringFeatureSupportPropertiesImpl
+    implements StringFeatureSupportProperties
 {
-    /**
-     * If the tagset is larger than the threshold, a combo-box is used instead of a radio choice.
-     */
     private int comboBoxThreshold = 6;
 
-    /**
-     * If the tagset is larger than the threshold, an auto-complete field is used instead of a
-     * standard combobox.
-     */
     private int autoCompleteThreshold = 75;
 
-    /**
-     * When an auto-complete field is used, this determines the maximum number of items shown in the
-     * dropdown menu.
-     */
     private int autoCompleteMaxResults = 100;
 
+    @Override
     public int getComboBoxThreshold()
     {
         return comboBoxThreshold;
@@ -54,6 +45,7 @@ public class PrimitiveUimaFeatureSupportProperties
         comboBoxThreshold = aComboBoxThreshold;
     }
 
+    @Override
     public int getAutoCompleteThreshold()
     {
         return autoCompleteThreshold;
@@ -64,6 +56,7 @@ public class PrimitiveUimaFeatureSupportProperties
         autoCompleteThreshold = aAutoCompleteThreshold;
     }
 
+    @Override
     public int getAutoCompleteMaxResults()
     {
         return autoCompleteMaxResults;

@@ -65,7 +65,7 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
             }
         }
 
-        log.debug("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
+        log.info("Found [{}] {} extensions", extensions.size(), getClass().getSimpleName());
 
         extensionsList = unmodifiableList(extensions);
     }

@@ -17,6 +17,22 @@
 [[sect_settings_annotation]]
 = Annotation editor
 
+.Settings related to all annotation editors
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| annotation.default-preferences.remember-layer
+| Whether "remember layer" is activated by default
+| false
+| 
+|===
+
+
+.Settings related to the brat editor
 [cols="4*", options="header"]
 |===
 | Setting
@@ -34,29 +50,52 @@
 | 5
 | 
 
-| annotation.default-preferences.remember-layer
-| Whether "remember layer" is activated by default
+| ui.brat.single-click-selection
+| Whether to select annotations with a single click
 | false
-| 
+|
+|===
 
-| annotation.feature-support.string.comboBoxThreshold
+.Settings related to string features
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| annotation.feature-support.string.combo-box-threshold
 | If the tagset is larger than the threshold, an combo-box field is used instead of a radio-choice.
 | 6
 | 16
 
-| annotation.feature-support.string.autoCompleteThreshold
+| annotation.feature-support.string.auto-complete-threshold
 | If the tagset is larger than the threshold, an auto-complete field is used instead of a standard combobox.
 | 75
 | 100
 
-| annotation.feature-support.string.autoCompleteMaxResults
+| annotation.feature-support.string.auto-complete-max-results
 | When an auto-complete field is used, this determines the maximum number of items shown in the dropdown menu.
 | 100
 | 1000
+|===
 
-| ui.brat.singleClickSelection
-| Whether to select annotations with a single click
-| false
-|
+.Settings related to link features
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| annotation.feature-support.link.auto-complete-threshold
+| If the tagset is larger than the threshold, an auto-complete field is used instead of a standard combobox.
+| 75
+| 100
+
+| annotation.feature-support.link.auto-complete-max-results
+| When an auto-complete field is used, this determines the maximum number of items shown in the dropdown menu.
+| 100
+| 1000
 |===
 

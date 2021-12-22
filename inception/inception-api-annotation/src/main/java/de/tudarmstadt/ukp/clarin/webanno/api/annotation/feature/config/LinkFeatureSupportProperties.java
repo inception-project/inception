@@ -15,32 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config;
 
-import org.apache.wicket.request.resource.CssResourceReference;
-
-public class SearchAnnotationSidebarCssReference
-    extends CssResourceReference
+public interface LinkFeatureSupportProperties
 {
-    private static final long serialVersionUID = 1L;
-
-    private static final SearchAnnotationSidebarCssReference INSTANCE = new SearchAnnotationSidebarCssReference();
+    /**
+     * If the tagset is larger than the threshold, an auto-complete field is used instead of a
+     * standard combobox.
+     */
+    int getAutoCompleteThreshold();
 
     /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
+     * When an auto-complete field is used, this determines the maximum number of items shown in the
+     * dropdown menu.
      */
-    public static SearchAnnotationSidebarCssReference get()
-    {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private SearchAnnotationSidebarCssReference()
-    {
-        super(SearchAnnotationSidebarCssReference.class, "SearchAnnotationSidebar.css");
-    }
+    int getAutoCompleteMaxResults();
 }

@@ -155,10 +155,6 @@
       <artifactId>wicket-webjars</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-sass</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.webjars</groupId>
       <artifactId>animate.css</artifactId>
     </dependency>
@@ -250,6 +246,26 @@
             <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build:brat-curation-minified</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-css</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build:brat-css</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-css-minified</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build:brat-css-minified</arguments>
             </configuration>
           </execution>
         </executions>
