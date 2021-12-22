@@ -164,7 +164,6 @@ public abstract class AnnotationDetailEditorPanel
 
         editorPage = aPage;
 
-        setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
 
@@ -178,7 +177,7 @@ public abstract class AnnotationDetailEditorPanel
         add(layerSelectionPanel = new LayerSelectionPanel("layerContainer", getModel(), this));
         add(selectedAnnotationInfoPanel = new AnnotationInfoPanel("infoContainer", getModel(),
                 this));
-        add(featureEditorListPanel = new FeatureEditorListPanel("featureEditorContainer",
+        add(featureEditorListPanel = new FeatureEditorListPanel("featureEditorListPanel",
                 getModel(), this));
         add(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aPage,
                 this, aModel));
@@ -756,12 +755,6 @@ public abstract class AnnotationDetailEditorPanel
 
         if (aTarget != null) {
             refresh(aTarget);
-            // // After the annotation has been created, we need to re-render the button container
-            // e.g.
-            // // to make the buttons show up if previously no annotation was selected
-            // aTarget.add(buttonContainer);
-            // // Also update the features and selected annotation info
-            // aTarget.add(selectedAnnotationInfoPanel, featureEditorListPanel, relationListPanel);
         }
 
         state.clearArmedSlot();
@@ -1456,8 +1449,6 @@ public abstract class AnnotationDetailEditorPanel
     {
         if (aEvent.getRequestHandler() != null) {
             refresh(aEvent.getRequestHandler());
-            // aEvent.getRequestHandler().add(selectedAnnotationInfoPanel, featureEditorListPanel,
-            // relationListPanel);
         }
     }
 
@@ -1811,8 +1802,10 @@ public abstract class AnnotationDetailEditorPanel
             aTarget.add(layerSelectionPanel);
         }
 
-        aTarget.add(buttonContainer, navContainer, selectedAnnotationInfoPanel,
-                featureEditorListPanel, relationListPanel);
+        // featureEditorListPanel is in a wicket:container, so we cannot refresh it directly. It
+        // is in a wicket:container for the no-data-notice to lay out properly
+        featureEditorListPanel.stream().forEach(aTarget::add);
+        aTarget.add(buttonContainer, navContainer, selectedAnnotationInfoPanel, relationListPanel);
     }
 
     @OnEvent(stop = true)

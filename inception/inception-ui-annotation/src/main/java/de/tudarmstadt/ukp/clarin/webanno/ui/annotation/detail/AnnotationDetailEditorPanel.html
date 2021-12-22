@@ -113,7 +113,8 @@
           <div class="scrolling card-body flex-v-container">
             <div wicket:id="infoContainer"/>
             <div wicket:id="relationListContainer"/>
-            <div wicket:id="featureEditorContainer"/>
+            <!-- Using container so no-data-notice is filling space correctly -->
+            <wicket:container wicket:id="featureEditorListPanel"/>
           </div>
         </div>
       </div>

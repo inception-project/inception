@@ -220,8 +220,21 @@ public class LinkFeatureEditor
                 AnnotatorState state = stateModel.getObject();
 
                 aItem.setModel(new CompoundPropertyModel<>(aItem.getModelObject()));
-                aItem.add(new Label("role",
-                        LoadableDetachableModel.of(() -> getRole(aItem.getModelObject()))));
+
+                FeatureState featureState = LinkFeatureEditor.this.getModelObject();
+                IModel<String> roleModel = LoadableDetachableModel
+                        .of(() -> getRole(aItem.getModelObject()));
+                Label labelComponent = new Label("role", roleModel);
+                labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
+                if (featureState.tagset != null) {
+                    String role = aItem.getModelObject().role;
+                    String description = featureState.tagset.stream()
+                            .filter(t -> role.equals(t.getName())).findFirst()
+                            .map(ReorderableTag::getDescription).orElse("No description");
+                    labelComponent.add(
+                            new DescriptionTooltipBehavior(roleModel.getObject(), description));
+                }
+                aItem.add(labelComponent);
 
                 aItem.add(new LambdaAjaxLink("jumpToAnnotation",
                         _target -> actionHandler.actionSelectAndJump(_target,
