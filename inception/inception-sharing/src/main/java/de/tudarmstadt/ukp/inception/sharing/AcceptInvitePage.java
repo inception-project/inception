@@ -206,7 +206,7 @@ public class AcceptInvitePage
         }
 
         User user;
-        if (aForm.getModelObject().registeredLogin) {
+        if (aForm.getModelObject().registeredLogin || userRepository.getCurrentUser() != null) {
             user = signInAsRegisteredUserIfNecessary();
         }
         else {
