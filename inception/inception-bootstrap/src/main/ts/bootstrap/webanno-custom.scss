@@ -48,8 +48,8 @@ html, body {
   margin-bottom: 0px; 
   text-align: center; 
   font-size: $font-size-sm; 
-  padding-left: ceil(($grid-gutter-width / 2));
-  padding-right: ceil(($grid-gutter-width / 2));
+  padding-left: ceil(calc($grid-gutter-width / 2));
+  padding-right: ceil(calc($grid-gutter-width / 2));
   color: $card-color;
   background-color: $card-bg;
   border-color: $card-border-color;
@@ -66,7 +66,7 @@ html, body {
   bottom: $page-footer-height;
   z-index: 10010;
   min-width: 30%;
-  max-height: calc(100vh - $page-footer-height - $page-header-height);
+  max-height: calc(calc(100vh - $page-footer-height - $page-header-height));
   overflow: auto;
  
   ul.feedbackPanel {
@@ -137,10 +137,10 @@ span.form-control {
 
 /* Flex layout helpers as CSS classes - order matters! */
 .flex-h-container { display: flex; flex-direction: row; }
-.flex-h-container.flex-gutter > * { margin-left: ceil($grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > * { margin-left: ceil(calc($grid-gutter-width / 2)) }
 .flex-h-container.flex-no-gutter > .panel { margin-bottom: 0px; }
 .flex-h-container.flex-gutter > .panel { margin-bottom: 0px; }
-.flex-h-container.flex-gutter > *:last-child { margin-right: ceil($grid-gutter-width / 2) }
+.flex-h-container.flex-gutter > *:last-child { margin-right: ceil(calc($grid-gutter-width / 2)) }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:first-child { margin-left: 0px; }
 .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > *:last-child { margin-right: 0px; }
 .flex-h-container.flex-no-initial-gutter > *:first-child { margin-left: 0px; }
@@ -150,8 +150,8 @@ span.form-control {
 .flex-v-container.flex-no-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
 .flex-v-container.flex-gutter > .panel { margin-bottom: 0px; } /* Has to be first here! */
 .flex-v-container { display: flex; flex-direction: column; }
-.flex-v-container.flex-gutter > * { margin-top: ($grid-gutter-width / 2) }
-.flex-v-container.flex-gutter > *:last-child { margin-bottom: ceil($grid-gutter-width / 2) }
+.flex-v-container.flex-gutter > * { margin-top: (calc($grid-gutter-width / 2)) }
+.flex-v-container.flex-gutter > *:last-child { margin-bottom: ceil(calc($grid-gutter-width / 2)) }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:first-child { margin-top: 0px; }
 .flex-v-container.flex-gutter > .flex-h-container.flex-gutter > .flex-v-container.flex-gutter > *:last-child { margin-bottom: 0px; }
 .flex-v-container.flex-only-internal-gutter > *:first-child { margin-top: 0px; }

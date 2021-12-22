@@ -54,7 +54,6 @@ import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
-import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
@@ -153,8 +152,6 @@ public abstract class WicketApplicationBase
         addJQueryUIResourcesToAllPages();
 
         addFontAwesomeToAllPages();
-
-        addCssBrowserSelectorToAllPages();
     }
 
     protected void initBootstrap()
@@ -182,15 +179,6 @@ public abstract class WicketApplicationBase
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
                 component.add(new FontAwesomeResourceBehavior());
-            }
-        });
-    }
-
-    protected void addCssBrowserSelectorToAllPages()
-    {
-        getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
-                component.add(new CssBrowserSelectorResourceBehavior());
             }
         });
     }

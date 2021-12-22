@@ -84,8 +84,6 @@ public class FeatureEditorListPanel
     {
         super(aId, aModel);
 
-        setOutputMarkupPlaceholderTag(true);
-
         owner = aOwner;
 
         featureEditorContainer = new WebMarkupContainer("featureEditorContainer");
@@ -282,7 +280,7 @@ public class FeatureEditorListPanel
             FeatureSupport<?> featureSupport = featureSupportRegistry
                     .findExtension(featureState.feature).orElseThrow();
             AnnotationDetailEditorPanel editorPanel = findParent(AnnotationDetailEditorPanel.class);
-            editor = featureSupport.createEditor("editor", FeatureEditorListPanel.this, editorPanel,
+            editor = featureSupport.createEditor("editor", featureEditorContainer, editorPanel,
                     getModel(), item.getModel());
 
             // We need to enable the markup ID here because we use it during the AJAX behavior
@@ -368,7 +366,7 @@ public class FeatureEditorListPanel
             if (state.getConstraints() != null) {
                 // Make sure we update the feature editor panel because due to
                 // constraints the contents may have to be re-rendered
-                aTarget.add(this);
+                aTarget.add(featureEditorContainer);
             }
 
             // When updating an annotation in the sidebar, we must not force a

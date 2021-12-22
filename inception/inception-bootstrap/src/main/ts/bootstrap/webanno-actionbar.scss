@@ -37,20 +37,20 @@
 
   @include media-breakpoint-down(lg) {
     .btn {
-      padding-left: $input-btn-padding-x / 2;
-      padding-right: $input-btn-padding-x / 2;
+      padding-left: calc($input-btn-padding-x / 2);
+      padding-right: calc($input-btn-padding-x / 2);
     }
   }
 
   > * {
-    padding-left: $grid-gutter-width / 4;
-    padding-right: $grid-gutter-width / 4;
+    padding-left: calc($grid-gutter-width / 4);
+    padding-right: calc($grid-gutter-width / 4);
   }
 
   @include media-breakpoint-down(xl) {
     > * {
-      padding-left: $grid-gutter-width / 8;
-      padding-right: $grid-gutter-width / 8;
+      padding-left: calc($grid-gutter-width / 8);
+      padding-right: calc($grid-gutter-width / 8);
     }
   }
     
@@ -64,20 +64,20 @@
     flex: 0;
 
     > * {
-      padding-left: $grid-gutter-width / 8;
-      padding-right: $grid-gutter-width / 8;
+      padding-left: calc($grid-gutter-width / 8);
+      padding-right: calc($grid-gutter-width / 8);
     }
 
     @include media-breakpoint-down(xl) {
       > * {
-        padding-left: $grid-gutter-width / 16;
-        padding-right: $grid-gutter-width / 16;
+        padding-left: calc($grid-gutter-width / 16);
+        padding-right: calc($grid-gutter-width / 16);
       }
     }
   }
   
   .action-bar-group-title {
-    padding-left: $grid-gutter-width / 2;
-    padding-right: $grid-gutter-width / 2;
+    padding-left: calc($grid-gutter-width / 2);
+    padding-right: calc($grid-gutter-width / 2);
   }
 }
