@@ -17,9 +17,9 @@
  */
 
 // @import "variables";
-@import "classpath!/de/tudarmstadt/ukp/clarin/webanno/ui/core/bootstrap/webanno-variables";
-@import "webjars!bootstrap/current/scss/functions";
-@import "webjars!bootstrap/current/scss/variables";
+@import "../node_modules/@inception-project/inception-bootstrap/bootstrap/webanno-variables";
+@import "../node_modules/bootstrap/scss/functions";
+@import "../node_modules/bootstrap/scss/variables";
 
 /* style for overall panel structure */
 div.flex-25 {
