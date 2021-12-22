@@ -221,10 +221,7 @@ public abstract class WicketApplicationBase
 
     protected void initJQueryResourceReference()
     {
-        // See:
-        // https://github.com/webanno/webanno/issues/1397
-        // https://github.com/sebfz1/wicket-jquery-ui/issues/311
-        getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV2());
+        getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV3());
     }
 
     protected void initNestedStringResourceLoader()
