@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recogitojseditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -50,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 import de.tudarmstadt.ukp.inception.htmleditor.HtmlAnnotationEditorImplBase;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
@@ -104,35 +104,27 @@ public class RecogitoHtmlAnnotationEditor
 
     private CharSequence destroyScript()
     {
-        String markupId = vis.getMarkupId();
-        
-        return WicketUtil.wrapInTryCatch("document.getElementById('" + markupId
-                + "')['recogito'].destroy(); console.log('Destroyed RecogitoJS');");
+        return wrapInTryCatch("RecogitoEditor.destroy('" + vis.getMarkupId() + "');");
     }
 
     private String initScript()
     {
-        String markupId = vis.getMarkupId();
         String callbackUrl = storeAdapter.getCallbackUrl().toString();
+        return wrapInTryCatch(
+                "RecogitoEditor.getInstance('" + vis.getMarkupId() + "', '" + callbackUrl + "');");
+    }
 
-        StringBuilder js = new StringBuilder();
-        js.append("(function() {");
-        js.append("  recogito('" + markupId + "', '" + callbackUrl + "')");
-        js.append("})();");
-        return WicketUtil.wrapInTryCatch(js.toString());
+    private String renderScript()
+    {
+        String callbackUrl = storeAdapter.getCallbackUrl().toString();
+        return wrapInTryCatch(
+                "RecogitoEditor.getInstance('" + vis.getMarkupId() + "', '" + callbackUrl + "').loadAnnotations();");
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        String markupId = vis.getMarkupId();
-        
-        StringBuilder js = new StringBuilder();
-        js.append("(function() {");
-        js.append("  document.getElementById('" + markupId + "')['recogito'].loadAnnotations('"
-                + storeAdapter.getCallbackUrl() + "')");
-        js.append("})();");
-        aTarget.appendJavaScript(js);
+        aTarget.appendJavaScript(renderScript());
     }
 
     private class StoreAdapter
