@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
 import static java.lang.System.currentTimeMillis;
 
 import java.lang.reflect.Modifier;
@@ -227,8 +228,9 @@ public class CasDoctor
             throw new CasDoctorException(aMessages);
         }
 
-        LOG.debug("CasDoctor completed all analyses in " + (System.currentTimeMillis() - tStart)
-                + "ms");
+        long duration = System.currentTimeMillis() - tStart;
+        LOG.debug("CasDoctor completed all analyses in {}ms", duration);
+        serverTiming("Brat-AJAX", "CasDoctor (analyze)", duration);
 
         return ok;
     }
