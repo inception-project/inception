@@ -31,7 +31,8 @@ import {FeatureX} from "../../model/FeatureX";
  * @layerId: The ID of the layer the annotation belongs to
  * @feature: The feature for which a @value shall be assigned
  * @value: The new value for the @feature
- **/
+ * @deprecated 
+ */
 export class UpdateFeatureRequest
 {
     annotatorName: string;

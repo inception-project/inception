@@ -20,7 +20,11 @@ package de.tudarmstadt.ukp.inception.experimental.editor.config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-//@Configuration
+/**
+ * @deprecated
+ */
+@Deprecated
+// @Configuration
 @ConditionalOnProperty(prefix = "ui.experimental", name = "enabled", havingValue = "true")
 public class ExperimentalAnnotationEditorAutoConfiguration
 {

@@ -48,6 +48,6 @@ public class DiamEditorBase
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
-        aResponse.render(forReference(DiamJavaScriptApiReference.get()));
+        aResponse.render(forReference(DiamJavaScriptReference.get()));
     }
 }

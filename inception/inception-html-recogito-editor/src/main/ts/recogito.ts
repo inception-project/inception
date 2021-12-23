@@ -19,7 +19,7 @@
 import { Recogito } from '@recogito/recogito-js';
 
 import '@recogito/recogito-js/dist/recogito.min.css'
-import { DiamAjax } from "@inception-project/inception-diam/client/DiamAjax";
+import { DiamAjax } from "@inception-project/inception-diam/diam/Diam";
 
 function recogito(markupId: string, callbackUrl: string) {
   var ajax = new DiamAjax(callbackUrl);

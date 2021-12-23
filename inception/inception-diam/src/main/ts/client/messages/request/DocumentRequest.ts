@@ -26,7 +26,8 @@
  * @projectId: The ID of the project the annotation will belong to
  * @sourceDocumentId: The ID of the sourcedocument requested by the client
  * @viewport: List of Viewports that the client want to obtain (including the viewports text, begin, end and layers
- **/
+ * @deprecated 
+ */
 import {Viewport} from "../../model/Viewport";
 
 export class DocumentRequest

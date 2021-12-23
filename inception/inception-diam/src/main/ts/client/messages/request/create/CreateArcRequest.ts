@@ -27,7 +27,8 @@
  * @sourceId: The ID of the source span annotation for the Arc
  * @targetId: The ID of the target span annotation for the Arc
  * @layerId: The ID of the layer the annotation shall belong to
- **/
+ * @deprecated 
+ */
 export class CreateArcRequest
 {
     annotatorName : string;

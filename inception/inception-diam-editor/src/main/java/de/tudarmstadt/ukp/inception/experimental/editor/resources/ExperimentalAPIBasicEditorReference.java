@@ -19,7 +19,12 @@ package de.tudarmstadt.ukp.inception.experimental.editor.resources;
 
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public class ExperimentalAPIBasicEditorReference extends JavaScriptResourceReference
+/**
+ * @deprecated
+ */
+@Deprecated
+public class ExperimentalAPIBasicEditorReference
+    extends JavaScriptResourceReference
 {
     private static final long serialVersionUID = 1L;
 

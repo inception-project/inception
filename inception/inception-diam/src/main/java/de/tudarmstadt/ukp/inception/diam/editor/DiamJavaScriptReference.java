@@ -15,17 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.diam.editor;
 
-/**
- * Class required for Messaging between Server and Client.
- * Basis for JSON
- * DeleteAnnotationMessage: Message from server that an annotation has been delete
- *
- * Attributes:
- * @annotationId: ID of the annotation that was deleted
- * @deprecated 
- */
-export class DeleteAnnotationMessage
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
+
+public class DiamJavaScriptReference
+    extends JavaScriptResourceReference
 {
-    annotationId: number;
+    private static final long serialVersionUID = 8110724056092366243L;
+
+    private static final DiamJavaScriptReference INSTANCE = new DiamJavaScriptReference();
+
+    public static DiamJavaScriptReference get()
+    {
+        return INSTANCE;
+    }
+
+    /**
+     * Private constructor
+     */
+    private DiamJavaScriptReference()
+    {
+        super(DiamJavaScriptReference.class, "Diam.js");
+    }
 }

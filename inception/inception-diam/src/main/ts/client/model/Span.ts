@@ -27,7 +27,8 @@ import {FeatureX} from "./FeatureX";
  * @layerId: The ID of the layer the Span belongs to
  * @features: List of annotation features (FeatureX) of the Span
  * @color: Color of the Span
- **/
+ * @deprecated 
+ */
 export class Span
 {
     id: number;

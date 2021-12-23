@@ -27,7 +27,8 @@ import {FeatureX} from "./FeatureX";
  * @layerId: The ID of the layer the Arc belongs to
  * @features: List of annotation features (FeatureX) of the Arc
  * @color: Color of the Arc
- **/
+ * @deprecated 
+ */
 export class Arc
 {
     id : number;

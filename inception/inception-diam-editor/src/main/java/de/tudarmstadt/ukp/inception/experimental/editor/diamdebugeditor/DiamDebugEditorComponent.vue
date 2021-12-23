@@ -68,7 +68,7 @@ module.exports = {
   methods: {
   },
   mounted() {
-    this.client = new AnnotationEditing.AnnotationEditing();
+    this.client = new Diam.DiamWebsocket();
     this.client.onConnect = () => {
       this.client.subscribeToViewport(this.topicChannel, data => this.data = data);
     };

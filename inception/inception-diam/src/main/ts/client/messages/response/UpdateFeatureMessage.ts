@@ -27,7 +27,8 @@ import {FeatureX} from "../../model/FeatureX";
  * @annotationId: The ID of the annotation for which a feature value has been changed
  * @feature: The feature which has an updated @value
  * @value: The new value for a @feature
- **/
+ * @deprecated 
+ */
 export class UpdateFeatureMessage
 {
     annotationId : number;

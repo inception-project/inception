@@ -18,6 +18,9 @@
 
 import {AnnotationExperienceAPI} from "./AnnotationExperienceAPI";
 
+/**
+ * @deprecated 
+ */
 export interface Observer
 {
     update(annotationExperienceAPI: AnnotationExperienceAPI);

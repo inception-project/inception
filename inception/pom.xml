@@ -2179,7 +2179,7 @@
                           <goal>execute</goal>
                         </goals>
                       </pluginExecutionFilter>
-                      <action>
+                      <action combine.self="override">
                         <execute>
                           <runOnConfiguration>true</runOnConfiguration>
                           <runOnIncremental>true</runOnIncremental>
@@ -2196,7 +2196,7 @@
                           <goal>create</goal>
                         </goals>
                       </pluginExecutionFilter>
-                      <action>
+                      <action combine.self="override">
                         <execute>
                           <runOnConfiguration>true</runOnConfiguration>
                           <runOnIncremental>true</runOnIncremental>

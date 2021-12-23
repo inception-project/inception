@@ -15,17 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+export type OffsetsList = Array<Offsets>;
 
-/**
- * Class required for Messaging between Server and Client.
- * Basis for JSON
- * DeleteAnnotationMessage: Message from server that an annotation has been delete
- *
- * Attributes:
- * @annotationId: ID of the annotation that was deleted
- * @deprecated 
- */
-export class DeleteAnnotationMessage
-{
-    annotationId: number;
+export type Offsets = [number, number];
+
+export class Annotation {
+    vid: string;
+    color: string;
+    label: string;
 }

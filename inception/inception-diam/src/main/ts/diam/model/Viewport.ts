@@ -15,27 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.editor;
+import { Arc } from "../newmodel/Arc";
+import { Span } from "../newmodel/Span";
 
-import org.apache.wicket.request.resource.JavaScriptResourceReference;
-
-public class DiamJavaScriptApiReference
-    extends JavaScriptResourceReference
+export class Viewport
 {
-    private static final long serialVersionUID = 8110724056092366243L;
-
-    private static final DiamJavaScriptApiReference INSTANCE = new DiamJavaScriptApiReference();
-
-    public static DiamJavaScriptApiReference get()
-    {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private DiamJavaScriptApiReference()
-    {
-        super(DiamJavaScriptApiReference.class, "AnnotationEditing.js");
-    }
+    text :string;
+    arcs :Arc[];
+    spans :Span[];
 }
