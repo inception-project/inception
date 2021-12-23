@@ -186,7 +186,7 @@ public class RecogitoHtmlAnnotationEditor
             handler.setCacheDuration(Duration.ofSeconds(1));
             handler.setContentDisposition(ContentDisposition.INLINE);
 
-            LOG.info("Sending back RecogitoJS JSON data");
+            LOG.trace("Sending back RecogitoJS JSON data");
 
             getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
         }
