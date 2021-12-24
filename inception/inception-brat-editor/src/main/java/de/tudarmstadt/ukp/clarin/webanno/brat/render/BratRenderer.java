@@ -121,20 +121,6 @@ public class BratRenderer
         return render(aState, aVDoc, aCas, null);
     }
 
-    /**
-     * Convert the visual representation to the brat representation.
-     *
-     * @param aResponse
-     *            the response.
-     * @param aState
-     *            the annotator model.
-     * @param aVDoc
-     *            the visual document representation.
-     * @param aCas
-     *            the CAS.
-     * @param aColoringStrategy
-     *            the coloring strategy.
-     */
     @Override
     public GetDocumentResponse render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
             ColoringStrategy aColoringStrategy)

@@ -26,5 +26,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 public interface TerminalRenderStep<T>
     extends RenderStep
 {
+    /**
+     * Convert the visual representation to the brat representation.
+     *
+     * @param aState
+     *            the annotator model.
+     * @param aVDoc
+     *            the visual document representation.
+     * @param aCas
+     *            the CAS.
+     * @param aColoringStrategy
+     *            the coloring strategy.
+     * @return representation suitable for sending to the browser
+     */
     T render(AnnotatorState aState, VDocument aVDoc, CAS aCas, ColoringStrategy aColoringStrategy);
 }

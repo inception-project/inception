@@ -57,6 +57,7 @@ public class AnnotatorJsRenderer
         annotationService = aAnnotationService;
     }
 
+    @Override
     public List<Annotation> render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
             ColoringStrategy aColoringStrategy)
     {
@@ -82,7 +83,7 @@ public class AnnotatorJsRenderer
                     .map(ColoringRulesTrait::getColoringRules).orElse(null);
 
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
-                String labelText = getUiLabelText(typeAdapter, vspan);
+                String labelText = getUiLabelText(vspan);
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
                 labelText = "[" + layer.getUiName() + "] "
