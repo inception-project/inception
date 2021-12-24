@@ -166,9 +166,9 @@ public class PdfAnnotationEditor
             int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
 
             VDocument vdoc = render(cas, begin, end);
-            PdfAnnoRenderer renderer = new PdfAnnoRenderer(annotationService, coloringService);
-            PdfAnnoModel pdfAnnoModel = renderer.render(getModelObject(), vdoc,
-                    cas.getDocumentText(), pdfExtractFile, begin);
+            PdfAnnoRenderer renderer = new PdfAnnoRenderer(annotationService, coloringService,
+                    pdfExtractFile, begin);
+            PdfAnnoModel pdfAnnoModel = renderer.render(getModelObject(), vdoc, cas, null);
             // show unmatched spans to user
             if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
                 String annotations = pdfAnnoModel.getUnmatchedSpans().stream()

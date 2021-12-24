@@ -29,6 +29,7 @@ import java.util.Queue;
 
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
@@ -37,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTr
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -50,20 +52,27 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Relation;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
 
 public class PdfAnnoRenderer
+    implements TerminalRenderStep<PdfAnnoModel>
 {
     private static final int WINDOW_SIZE_INCREMENT = 5;
 
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
+    private final PdfExtractFile pdfExtractFile;
+    private final int pageBeginOffset;
 
-    public PdfAnnoRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService)
+    public PdfAnnoRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService,
+            PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
     {
         schemaService = aSchemaService;
         coloringService = aColoringService;
+        pdfExtractFile = aPdfExtractFile;
+        pageBeginOffset = aPageBeginOffset;
     }
 
-    public PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
-            PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
+    @Override
+    public PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
+            ColoringStrategy aColoringStrategy)
     {
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
         List<RenderSpan> spans = new ArrayList<>();
@@ -71,8 +80,8 @@ public class PdfAnnoRenderer
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
-            ColoringStrategy coloringStrategy = coloringService.getStrategy(layer,
-                    aState.getPreferences(), colorQueues);
+            ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
+                    : coloringService.getStrategy(layer, aState.getPreferences(), colorQueues);
 
             // If the layer is not included in the rendering, then we skip here - but only after
             // we have obtained a coloring strategy for this layer and thus secured the layer
@@ -88,15 +97,15 @@ public class PdfAnnoRenderer
                     .map(ColoringRulesTrait::getColoringRules).orElse(null);
 
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
-                String labelText = getUiLabelText(typeAdapter, vspan);
+                String labelText = getUiLabelText(vspan);
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
                 spans.add(new RenderSpan(vspan,
-                        new Span(vspan.getVid().toString(), labelText, color), aPageBeginOffset));
+                        new Span(vspan.getVid().toString(), labelText, color), pageBeginOffset));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                String labelText = getUiLabelText(typeAdapter, varc);
+                String labelText = getUiLabelText(varc);
                 String color = coloringStrategy.getColor(varc, labelText, coloringRules);
 
                 pdfAnnoModel.addRelation(
@@ -104,7 +113,7 @@ public class PdfAnnoRenderer
                                 varc.getTarget().toString(), labelText, color));
             }
         }
-        pdfAnnoModel.addSpans(convertToPdfAnnoSpans(spans, aDocumentText, aPdfExtractFile));
+        pdfAnnoModel.addSpans(convertToPdfAnnoSpans(spans, aCas.getDocumentText(), pdfExtractFile));
         return pdfAnnoModel;
     }
 
