@@ -278,16 +278,14 @@ public class BratAnnotationEditor
 
         final CAS cas = getCasProvider().get();
 
-        GetDocumentResponse response = new GetDocumentResponse();
         String json;
         if (getModelObject().getProject() != null) {
-            render(response, cas);
-            json = toJson(response);
+            json = toJson(render(cas));
             lastRenderedJson = json;
             lastRenderedJsonParsed = null;
         }
         else {
-            json = toJson(response);
+            json = toJson(new GetDocumentResponse());
         }
 
         timer.stop();
@@ -345,8 +343,7 @@ public class BratAnnotationEditor
         StopWatch timer = new StopWatch();
         timer.start();
 
-        GetDocumentResponse response = new GetDocumentResponse();
-        render(response, aCas);
+        GetDocumentResponse response = render(aCas);
 
         ObjectMapper mapper = JSONUtil.getObjectMapper();
         JsonNode current = mapper.valueToTree(response);
@@ -427,13 +424,13 @@ public class BratAnnotationEditor
                 + responseJson + "]);");
     }
 
-    private void render(GetDocumentResponse response, CAS aCas)
+    private GetDocumentResponse render(CAS aCas)
     {
         AnnotatorState aState = getModelObject();
         VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
         BratRenderer renderer = new BratRenderer(annotationService, coloringService,
                 bratProperties);
-        renderer.render(response, aState, vdoc, aCas);
+        return renderer.render(aState, vdoc, aCas);
     }
 
     private String bratInitCommand()

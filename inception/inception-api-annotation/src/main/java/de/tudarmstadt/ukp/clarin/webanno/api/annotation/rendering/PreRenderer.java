@@ -25,11 +25,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface PreRenderer
+    extends InitialRenderStep
 {
     /**
      * @param aLayers
      *            the layers which should be rendered.
      */
+    @Override
     void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
             List<AnnotationLayer> aLayers);
 }

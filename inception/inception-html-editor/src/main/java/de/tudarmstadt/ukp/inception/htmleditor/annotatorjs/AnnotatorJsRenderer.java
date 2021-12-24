@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTr
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -44,6 +45,7 @@ import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Annotation;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Range;
 
 public class AnnotatorJsRenderer
+    implements TerminalRenderStep<List<Annotation>>
 {
     private final ColoringService coloringService;
     private final AnnotationSchemaService annotationService;

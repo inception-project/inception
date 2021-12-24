@@ -17,7 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-public interface RenderStep
+import org.apache.uima.cas.CAS;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+
+public interface IntermediateRenderStep
+    extends RenderStep
 {
-    // Marker interface
+    void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
+            int aWindowEndOffset);
 }

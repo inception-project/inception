@@ -17,7 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-public interface RenderStep
+import java.util.List;
+
+import org.apache.uima.cas.CAS;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+
+public interface InitialRenderStep
+    extends RenderStep
 {
-    // Marker interface
+    /**
+     * @param aLayers
+     *            the layers which should be rendered.
+     */
+    void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
+            List<AnnotationLayer> aLayers);
+
 }

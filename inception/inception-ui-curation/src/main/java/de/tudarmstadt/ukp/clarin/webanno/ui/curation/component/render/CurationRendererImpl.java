@@ -77,9 +77,8 @@ public class CurationRendererImpl
         preRenderer.render(vdoc, aState.getWindowBeginOffset(), aState.getWindowEndOffset(), aCas,
                 layersToRender);
 
-        GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer renderer = new BratRenderer(schemaService, coloringService, bratProperties);
-        renderer.render(response, aState, vdoc, aCas, aColoringStrategy);
+        GetDocumentResponse response = renderer.render(aState, vdoc, aCas, aColoringStrategy);
         return JSONUtil.toInterpretableJsonString(response);
     }
 }

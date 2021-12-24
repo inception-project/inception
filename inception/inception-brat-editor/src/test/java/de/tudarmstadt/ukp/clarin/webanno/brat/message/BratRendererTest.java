@@ -174,10 +174,9 @@ public class BratRendererTest
         preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
                 schemaService.listAnnotationLayer(project));
 
-        GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer renderer = new BratRenderer(schemaService,
                 new ColoringServiceImpl(schemaService), new BratAnnotationEditorPropertiesImpl());
-        renderer.render(response, state, vdoc, cas);
+        GetDocumentResponse response = renderer.render(state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -211,10 +210,9 @@ public class BratRendererTest
         preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
                 schemaService.listAnnotationLayer(project));
 
-        GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer renderer = new BratRenderer(schemaService,
                 new ColoringServiceImpl(schemaService), new BratAnnotationEditorPropertiesImpl());
-        renderer.render(response, state, vdoc, cas);
+        GetDocumentResponse response = renderer.render(state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -248,10 +246,9 @@ public class BratRendererTest
         preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
                 schemaService.listAnnotationLayer(project));
 
-        GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer renderer = new BratRenderer(schemaService,
                 new ColoringServiceImpl(schemaService), new BratAnnotationEditorPropertiesImpl());
-        renderer.render(response, state, vdoc, cas);
+        GetDocumentResponse response = renderer.render(state, vdoc, cas);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 

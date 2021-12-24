@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTr
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -42,7 +43,7 @@ import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationBodyItem
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationTarget;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
 
-public class RecogitoJsRenderer
+public class RecogitoJsRenderer implements TerminalRenderStep<WebAnnotations>
 {
     private final ColoringService coloringService;
     private final AnnotationSchemaService annotationService;
@@ -54,6 +55,7 @@ public class RecogitoJsRenderer
         annotationService = aAnnotationService;
     }
 
+    @Override
     public WebAnnotations render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
             ColoringStrategy aColoringStrategy)
     {

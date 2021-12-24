@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrateg
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -99,6 +100,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * can then use.
  */
 public class BratRenderer
+    implements TerminalRenderStep<GetDocumentResponse>
 {
     private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
 
@@ -114,10 +116,9 @@ public class BratRenderer
         properties = aProperties;
     }
 
-    public void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
-            CAS aCas)
+    public GetDocumentResponse render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
     {
-        render(aResponse, aState, aVDoc, aCas, null);
+        return render(aState, aVDoc, aCas, null);
     }
 
     /**
@@ -134,9 +135,12 @@ public class BratRenderer
      * @param aColoringStrategy
      *            the coloring strategy.
      */
-    public void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
-            CAS aCas, ColoringStrategy aColoringStrategy)
+    @Override
+    public GetDocumentResponse render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
+            ColoringStrategy aColoringStrategy)
     {
+        GetDocumentResponse aResponse = new GetDocumentResponse();
+
         aResponse.setRtlMode(RTL == aState.getScriptDirection());
         aResponse.setFontZoom(aState.getPreferences().getFontZoom());
 
@@ -289,6 +293,8 @@ public class BratRenderer
                 LOG.warn("Unknown how to render marker: [" + vmarker + "]");
             }
         }
+
+        return aResponse;
     }
 
     /**
