@@ -143,9 +143,18 @@ public class BratRenderer
             renderBratTokensFromText(aCas, aResponse, aState);
         }
 
-        Map<AnnotationFS, Integer> sentenceIndexes = null;
+        renderLayers(aResponse, aState, aVDoc, aCas, aColoringStrategy);
 
-        // Render visible (custom) layers
+        renderComments(aResponse, aState, aVDoc, aCas);
+
+        renderMarkers(aResponse, aVDoc);
+
+        return aResponse;
+    }
+
+    public void renderLayers(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
+            CAS aCas, ColoringStrategy aColoringStrategy)
+    {
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
             ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
@@ -178,7 +187,7 @@ public class BratRenderer
                             return range;
                         }).collect(toList());
 
-                String labelText = getUiLabelText(typeAdapter, vspan);
+                String labelText = getUiLabelText(vspan);
 
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
@@ -207,7 +216,7 @@ public class BratRenderer
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                String bratLabelText = getUiLabelText(typeAdapter, varc);
+                String bratLabelText = getUiLabelText(varc);
                 String color = coloringStrategy.getColor(varc, bratLabelText, coloringRules);
 
                 Relation arc = new Relation(varc.getVid(), varc.getType(),
@@ -219,7 +228,12 @@ public class BratRenderer
                         .forEach(aResponse::addNormalization);
             }
         }
+    }
 
+    private void renderComments(GetDocumentResponse aResponse, AnnotatorState aState,
+            VDocument aVDoc, CAS aCas)
+    {
+        Map<AnnotationFS, Integer> sentenceIndexes = null;
         for (VComment vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
@@ -259,7 +273,10 @@ public class BratRenderer
                         new AnnotationComment(vcomment.getVid(), type, vcomment.getComment()));
             }
         }
+    }
 
+    private void renderMarkers(GetDocumentResponse aResponse, VDocument aVDoc)
+    {
         // Render markers
         for (VMarker vmarker : aVDoc.getMarkers()) {
             if (vmarker instanceof VAnnotationMarker) {
@@ -279,8 +296,6 @@ public class BratRenderer
                 LOG.warn("Unknown how to render marker: [" + vmarker + "]");
             }
         }
-
-        return aResponse;
     }
 
     /**
