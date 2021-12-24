@@ -79,7 +79,7 @@ public class RecogitoJsRenderer
                     .map(ColoringRulesTrait::getColoringRules).orElse(null);
 
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
-                String labelText = getUiLabelText(typeAdapter, vspan);
+                String labelText = getUiLabelText(vspan);
                 String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
 
                 WebAnnotation anno = new WebAnnotation();
@@ -92,7 +92,7 @@ public class RecogitoJsRenderer
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                String labelText = getUiLabelText(typeAdapter, varc);
+                String labelText = getUiLabelText(varc);
                 String color = coloringStrategy.getColor(varc, labelText, coloringRules);
 
                 WebAnnotation anno = new WebAnnotation();
