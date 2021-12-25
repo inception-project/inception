@@ -181,9 +181,9 @@ public class PdfAnnoRendererTest
         new LabelRenderer().render(cas, state, vdoc, state.getWindowBeginOffset(),
                 state.getWindowEndOffset());
 
-        ColorRenderer calRenderer = new ColorRenderer(schemaService,
+        ColorRenderer colorRenderer = new ColorRenderer(schemaService,
                 new ColoringServiceImpl(schemaService), null);
-        calRenderer.render(cas, state, vdoc, 0, cas.getDocumentText().length());
+        colorRenderer.render(cas, state, vdoc, 0, cas.getDocumentText().length());
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoRenderer renderer = new PdfAnnoRenderer(pdfExtractFile, 0);

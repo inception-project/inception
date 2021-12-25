@@ -145,8 +145,10 @@ public class CurationRenderer
 
         Set<VID> generatedCurationVids = new HashSet<>();
         boolean showAll = curationService.isShowAll(currentUsername, aState.getProject().getId());
+        String curationTarget = curationService.retrieveCurationTarget(currentUsername,
+                aState.getProject().getId());
         for (ConfigurationSet cfgSet : diff.getConfigurationSets()) {
-            if (!showAll && cfgSet.getCasGroupIds().contains(currentUsername)) {
+            if (!showAll && cfgSet.getCasGroupIds().contains(curationTarget)) {
                 // Hide configuration sets where the curator has already curated (likely)
                 continue;
             }

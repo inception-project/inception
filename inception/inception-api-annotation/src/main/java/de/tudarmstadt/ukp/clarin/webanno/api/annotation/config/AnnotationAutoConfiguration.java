@@ -24,12 +24,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipelineImpl;
 
 @Configuration
 public class AnnotationAutoConfiguration
@@ -46,5 +51,15 @@ public class AnnotationAutoConfiguration
             @Lazy @Autowired(required = false) List<AnnotationEditorFactory> aExtensions)
     {
         return new AnnotationEditorRegistryImpl(aExtensions);
+    }
+
+    @Bean
+    public RenderingPipeline renderingPipeline(PreRenderer aPreRenderer,
+            AnnotationEditorExtensionRegistry aExtensionRegistry,
+            AnnotationSchemaService aAnnotationService, ColoringService aColoringService,
+            AnnotationEditorProperties aProperties)
+    {
+        return new RenderingPipelineImpl(aPreRenderer, aExtensionRegistry, aAnnotationService,
+                aColoringService, aProperties);
     }
 }

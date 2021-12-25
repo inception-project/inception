@@ -17,24 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
-
 import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPageRequestHandler;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,17 +34,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public abstract class AnnotationEditorBase
     extends Panel
@@ -68,6 +50,7 @@ public abstract class AnnotationEditorBase
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
+    private @SpringBean RenderingPipeline renderingPipeline;
 
     private final AnnotationActionHandler actionHandler;
     private final CasProvider casProvider;
@@ -157,66 +140,7 @@ public abstract class AnnotationEditorBase
 
     protected VDocument render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset)
     {
-        AnnotatorState state = getModelObject();
-
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aWindowBeginOffset, aWindowEndOffset, aCas, getLayersToRender());
-
-        extensionRegistry.fireRender(aCas, state, vdoc, aWindowBeginOffset, aWindowEndOffset);
-
-        // Fire render event into UI
-        send(getPageForRendering(), Broadcast.BREADTH,
-                new RenderAnnotationsEvent(
-                        RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aCas,
-                        getModelObject(), vdoc));
-
-        if (state.getSelection().getAnnotation().isSet()) {
-            vdoc.add(new VAnnotationMarker(VMarker.FOCUS, state.getSelection().getAnnotation()));
-        }
-
-        new LabelRenderer().render(aCas, state, vdoc, aWindowBeginOffset, aWindowEndOffset);
-
-        ColorRenderer colorRenderer = new ColorRenderer(annotationService, coloringService);
-        colorRenderer.render(aCas, getModelObject(), vdoc, aWindowBeginOffset, aWindowEndOffset);
-
-        return vdoc;
-    }
-
-    private Page getPageForRendering()
-    {
-        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
-        if (handler.isPresent()) {
-            return (Page) handler.get().getPage();
-        }
-
-        return getPage();
-    }
-
-    public List<AnnotationLayer> getLayersToRender()
-    {
-        AnnotatorState state = getModelObject();
-        List<AnnotationLayer> layersToRender = new ArrayList<>();
-        for (AnnotationLayer layer : state.getAnnotationLayers()) {
-            if (!layer.isEnabled()) {
-                continue;
-            }
-
-            if (!properties.isTokenLayerEditable()
-                    && Token.class.getName().equals(layer.getName())) {
-                continue;
-            }
-
-            if (!properties.isSentenceLayerEditable()
-                    && Sentence.class.getName().equals(layer.getName())) {
-                continue;
-            }
-
-            if (layer.getType().equals(CHAIN_TYPE) && CURATION == state.getMode()) {
-                continue;
-            }
-
-            layersToRender.add(layer);
-        }
-        return layersToRender;
+        return renderingPipeline.render(getModelObject(), aCas, aWindowBeginOffset,
+                aWindowEndOffset);
     }
 }

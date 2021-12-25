@@ -17,26 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
-
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-public class LabelRenderer
-    implements IntermediateRenderStep
+public interface RenderingPipeline
 {
-    @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
-    {
-        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
-            for (VObject vobj : aVDoc.objects(layer.getId())) {
-                vobj.setLabelHint(getUiLabelText(vobj));
-            }
-        }
-    }
+    VDocument render(AnnotatorState state, CAS aCas, int aWindowBeginOffset, int aWindowEndOffset);
 }

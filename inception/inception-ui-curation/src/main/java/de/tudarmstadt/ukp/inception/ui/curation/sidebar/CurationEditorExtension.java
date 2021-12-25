@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 
 import java.io.IOException;
@@ -43,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationRenderer;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationVID;
@@ -94,7 +97,7 @@ public class CurationEditorExtension
             return;
         }
 
-        if (!aAction.equals(ACTION_SELECT_ARC) && !aAction.equals(ACTION_SELECT_SPAN)) {
+        if (!SelectAnnotationHandler.COMMAND.equals(aAction)) {
             return;
         }
 
@@ -128,47 +131,68 @@ public class CurationEditorExtension
         AnnotationFS sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
         AnnotationLayer layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
 
-        // merge into curator's CAS depending on annotation type (span or arc)
-        CasMerge casMerge = new CasMerge(annotationService);
-        CasMergeOperationResult mergeResult;
-        if (ACTION_SELECT_SPAN.equals(aAction.toString())) {
-            mergeResult = casMerge.mergeSpanAnnotation(doc, srcUser, layer, aTargetCas,
-                    sourceAnnotation, layer.isAllowStacking());
-
-            // open created/updates FS in annotation detail editorpanel
-            AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
-                    mergeResult.getResultFSAddress());
-            aState.getSelection().selectSpan(mergedAnno);
+        if (vid.isSlotSet()) {
+            mergeSlot(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
-        else if (ACTION_SELECT_ARC.equals(aAction.toString())) {
-            // this is a slot arc
-            if (vid.isSlotSet()) {
-                TypeAdapter adapter = annotationService.getAdapter(layer);
-                AnnotationFeature feature = adapter.listFeatures().stream().sequential()
-                        .skip(vid.getAttribute()).findFirst().get();
-
-                mergeResult = casMerge.mergeSlotFeature(doc, srcUser, layer, aTargetCas,
-                        sourceAnnotation, feature.getName(), vid.getSlot());
-
-                // open created/updates FS in annotation detail editorpanel
-                AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
-                        mergeResult.getResultFSAddress());
-                aState.getSelection().selectSpan(mergedAnno);
-            }
-            // normal relation annotation arc is clicked
-            else {
-                mergeResult = casMerge.mergeRelationAnnotation(doc, srcUser, layer, aTargetCas,
-                        sourceAnnotation, layer.isAllowStacking());
-
-                // open created/updates FS in annotation detail editorpanel
-                AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
-                        mergeResult.getResultFSAddress());
-                aState.getSelection().selectArc(mergedAnno);
-            }
+        else if (RELATION_TYPE.equals(layer.getType())) {
+            mergeRelation(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
+        }
+        else if (SPAN_TYPE.equals(layer.getType())) {
+            mergeSpan(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
         }
 
         aPanel.actionSelect(aTarget);
         aPanel.actionCreateOrUpdate(aTarget, aTargetCas); // should also update timestamps
+    }
+
+    private void mergeSlot(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
+            AnnotationFS sourceAnnotation, AnnotationLayer layer)
+        throws AnnotationException
+    {
+        SourceDocument doc = aState.getDocument();
+        CasMerge casMerge = new CasMerge(annotationService);
+
+        TypeAdapter adapter = annotationService.getAdapter(layer);
+        AnnotationFeature feature = adapter.listFeatures().stream().sequential()
+                .skip(aVid.getAttribute()).findFirst().get();
+
+        CasMergeOperationResult mergeResult = casMerge.mergeSlotFeature(doc, aSrcUser, layer,
+                aTargetCas, sourceAnnotation, feature.getName(), aVid.getSlot());
+
+        // open created/updates FS in annotation detail editorpanel
+        AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+                mergeResult.getResultFSAddress());
+        aState.getSelection().selectSpan(mergedAnno);
+    }
+
+    private void mergeRelation(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
+            AnnotationFS sourceAnnotation, AnnotationLayer layer)
+        throws AnnotationException
+    {
+        SourceDocument doc = aState.getDocument();
+        CasMerge casMerge = new CasMerge(annotationService);
+        CasMergeOperationResult mergeResult = casMerge.mergeRelationAnnotation(doc, aSrcUser, layer,
+                aTargetCas, sourceAnnotation, layer.isAllowStacking());
+
+        // open created/updates FS in annotation detail editorpanel
+        AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+                mergeResult.getResultFSAddress());
+        aState.getSelection().selectArc(mergedAnno);
+    }
+
+    private void mergeSpan(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
+            AnnotationFS sourceAnnotation, AnnotationLayer layer)
+        throws AnnotationException
+    {
+        SourceDocument doc = aState.getDocument();
+        CasMerge casMerge = new CasMerge(annotationService);
+        CasMergeOperationResult mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer,
+                aTargetCas, sourceAnnotation, layer.isAllowStacking());
+
+        // open created/updates FS in annotation detail editorpanel
+        AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+                mergeResult.getResultFSAddress());
+        aState.getSelection().selectSpan(mergedAnno);
     }
 
     @Override
