@@ -21,7 +21,6 @@ import java.util.ArrayList;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -36,8 +35,7 @@ import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
 public class RecogitoJsRenderer implements TerminalRenderStep<WebAnnotations>
 {
     @Override
-    public WebAnnotations render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
-            ColoringStrategy aColoringStrategy)
+    public WebAnnotations render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
     {
         WebAnnotations annotations = new WebAnnotations();
 

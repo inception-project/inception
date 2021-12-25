@@ -45,7 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorAndLabelRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
@@ -164,35 +165,31 @@ public abstract class AnnotationEditorBase
         extensionRegistry.fireRender(aCas, state, vdoc, aWindowBeginOffset, aWindowEndOffset);
 
         // Fire render event into UI
-        Page page = null;
-        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
-        if (handler.isPresent()) {
-            page = (Page) handler.get().getPage();
-        }
-
-        if (page == null) {
-            page = getPage();
-        }
-        send(page, Broadcast.BREADTH,
+        send(getPageForRendering(), Broadcast.BREADTH,
                 new RenderAnnotationsEvent(
                         RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aCas,
                         getModelObject(), vdoc));
-
-        // Disabling for 3.3.0 by default per #406
-        // FIXME: should be enabled by default and made optional per #606
-        // if (state.getFocusUnitIndex() > 0) {
-        // response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
-        // }
 
         if (state.getSelection().getAnnotation().isSet()) {
             vdoc.add(new VAnnotationMarker(VMarker.FOCUS, state.getSelection().getAnnotation()));
         }
 
-        ColorAndLabelRenderer calRenderer = new ColorAndLabelRenderer(annotationService,
-                coloringService, null);
-        calRenderer.render(aCas, getModelObject(), vdoc, aWindowBeginOffset, aWindowEndOffset);
+        new LabelRenderer().render(aCas, state, vdoc, aWindowBeginOffset, aWindowEndOffset);
+
+        ColorRenderer colorRenderer = new ColorRenderer(annotationService, coloringService);
+        colorRenderer.render(aCas, getModelObject(), vdoc, aWindowBeginOffset, aWindowEndOffset);
 
         return vdoc;
+    }
+
+    private Page getPageForRendering()
+    {
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent()) {
+            return (Page) handler.get().getPage();
+        }
+
+        return getPage();
     }
 
     public List<AnnotationLayer> getLayersToRender()

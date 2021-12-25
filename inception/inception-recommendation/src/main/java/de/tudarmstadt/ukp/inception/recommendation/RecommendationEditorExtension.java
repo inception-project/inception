@@ -403,7 +403,6 @@ public class RecommendationEditorExtension
         render(aVDoc, aState, aCas, aWindowBeginOffset, aWindowEndOffset);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
             AnnotationFeature aFeature, String aQuery)

@@ -48,7 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
@@ -106,8 +105,7 @@ public class BratRenderer
     }
 
     @Override
-    public GetDocumentResponse render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
-            ColoringStrategy aColoringStrategy)
+    public GetDocumentResponse render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
     {
         GetDocumentResponse aResponse = new GetDocumentResponse();
 
@@ -127,7 +125,7 @@ public class BratRenderer
             renderBratTokensFromText(aCas, aResponse, aState);
         }
 
-        renderLayers(aResponse, aState, aVDoc, aCas, aColoringStrategy);
+        renderLayers(aResponse, aState, aVDoc, aCas);
 
         renderComments(aResponse, aState, aVDoc, aCas);
 
@@ -137,7 +135,7 @@ public class BratRenderer
     }
 
     public void renderLayers(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
-            CAS aCas, ColoringStrategy aColoringStrategy)
+            CAS aCas)
     {
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {

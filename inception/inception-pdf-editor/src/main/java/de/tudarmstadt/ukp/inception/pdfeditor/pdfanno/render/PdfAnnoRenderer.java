@@ -28,7 +28,6 @@ import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -58,8 +57,7 @@ public class PdfAnnoRenderer
     }
 
     @Override
-    public PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
-            ColoringStrategy aColoringStrategy)
+    public PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
     {
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
         List<RenderSpan> spans = new ArrayList<>();

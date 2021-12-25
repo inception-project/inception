@@ -431,7 +431,7 @@ public class BratAnnotationEditor
         VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
 
         BratRenderer renderer = new BratRenderer(bratProperties);
-        return renderer.render(aState, vdoc, aCas, null);
+        return renderer.render(aState, vdoc, aCas);
     }
 
     private String bratInitCommand()

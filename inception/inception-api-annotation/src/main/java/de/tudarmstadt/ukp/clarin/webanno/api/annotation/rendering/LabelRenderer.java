@@ -2,13 +2,13 @@
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
- * regarding copyright ownership.  The Technische Universität Darmstadt
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
  * licenses this file to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.
- *
+ *  
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,24 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
+
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-public interface TerminalRenderStep<T>
-    extends RenderStep
+public class LabelRenderer
+    implements IntermediateRenderStep
 {
-    /**
-     * Convert the visual representation to the brat representation.
-     *
-     * @param aState
-     *            the annotator state.
-     * @param aVDoc
-     *            the visual document representation.
-     * @param aCas
-     *            the CAS.
-     * @return representation suitable for sending to the browser
-     */
-    T render(AnnotatorState aState, VDocument aVDoc, CAS aCas);
+    @Override
+    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aWindowBeginOffset,
+            int aWindowEndOffset)
+    {
+        for (AnnotationLayer layer : aState.getAnnotationLayers()) {
+            for (VObject vobj : aVDoc.objects(layer.getId())) {
+                vobj.setLabelHint(getUiLabelText(vobj));
+            }
+        }
+    }
 }

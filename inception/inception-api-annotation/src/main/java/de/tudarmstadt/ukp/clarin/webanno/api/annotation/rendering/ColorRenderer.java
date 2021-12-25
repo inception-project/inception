@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -36,14 +34,20 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
-public class ColorAndLabelRenderer
+public class ColorRenderer
     implements IntermediateRenderStep
 {
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
     private final ColoringStrategy coloringStrategyOverride;
 
-    public ColorAndLabelRenderer(AnnotationSchemaService aSchemaService,
+    public ColorRenderer(AnnotationSchemaService aSchemaService,
+            ColoringService aColoringService)
+    {
+        this(aSchemaService, aColoringService, null);
+    }
+
+    public ColorRenderer(AnnotationSchemaService aSchemaService,
             ColoringService aColoringService, ColoringStrategy aColoringStrategy)
     {
         schemaService = aSchemaService;
@@ -76,9 +80,8 @@ public class ColorAndLabelRenderer
                     .orElse(null);
 
             for (VObject vobj : aVDoc.objects(layer.getId())) {
-                vobj.setLabelHint(getUiLabelText(vobj));
                 vobj.setColorHint(
-                        coloringStrategy.getColor(vobj, getUiLabelText(vobj), coloringRules));
+                        coloringStrategy.getColor(vobj, vobj.getLabelHint(), coloringRules));
             }
         }
     }

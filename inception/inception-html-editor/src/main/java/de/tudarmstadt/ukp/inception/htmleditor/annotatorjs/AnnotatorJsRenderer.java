@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -39,8 +38,7 @@ public class AnnotatorJsRenderer
     implements TerminalRenderStep<List<Annotation>>
 {
     @Override
-    public List<Annotation> render(AnnotatorState aState, VDocument aVDoc, CAS aCas,
-            ColoringStrategy aColoringStrategy)
+    public List<Annotation> render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
     {
         List<Annotation> annotations = new ArrayList<>();
 
