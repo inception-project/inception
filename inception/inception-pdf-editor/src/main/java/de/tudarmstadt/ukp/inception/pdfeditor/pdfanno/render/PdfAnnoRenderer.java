@@ -17,25 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
@@ -56,16 +48,11 @@ public class PdfAnnoRenderer
 {
     private static final int WINDOW_SIZE_INCREMENT = 5;
 
-    private final AnnotationSchemaService schemaService;
-    private final ColoringService coloringService;
     private final PdfExtractFile pdfExtractFile;
     private final int pageBeginOffset;
 
-    public PdfAnnoRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService,
-            PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
+    public PdfAnnoRenderer(PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
     {
-        schemaService = aSchemaService;
-        coloringService = aColoringService;
         pdfExtractFile = aPdfExtractFile;
         pageBeginOffset = aPageBeginOffset;
     }
@@ -77,36 +64,18 @@ public class PdfAnnoRenderer
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
         List<RenderSpan> spans = new ArrayList<>();
 
-        // Render visible (custom) layers
-        Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
-            ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
-                    : coloringService.getStrategy(layer, aState.getPreferences(), colorQueues);
-
-            // If the layer is not included in the rendering, then we skip here - but only after
-            // we have obtained a coloring strategy for this layer and thus secured the layer
-            // color. This ensures that the layer colors do not change depending on the number
-            // of visible layers.
-            if (!aVDoc.getAnnotationLayers().contains(layer)) {
-                continue;
-            }
-
-            TypeAdapter typeAdapter = schemaService.getAdapter(layer);
-
-            ColoringRules coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
-                    .map(ColoringRulesTrait::getColoringRules).orElse(null);
-
+        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
-                String labelText = getUiLabelText(vspan);
-                String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
+                String labelText = vspan.getLabelHint();
+                String color = vspan.getColorHint();
 
                 spans.add(new RenderSpan(vspan,
                         new Span(vspan.getVid().toString(), labelText, color), pageBeginOffset));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                String labelText = getUiLabelText(varc);
-                String color = coloringStrategy.getColor(varc, labelText, coloringRules);
+                String labelText = varc.getLabelHint();
+                String color = varc.getColorHint();
 
                 pdfAnnoModel.addRelation(
                         new Relation(varc.getVid().toString(), varc.getSource().toString(),

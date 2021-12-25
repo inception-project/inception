@@ -427,10 +427,11 @@ public class BratAnnotationEditor
     private GetDocumentResponse render(CAS aCas)
     {
         AnnotatorState aState = getModelObject();
+
         VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
-        BratRenderer renderer = new BratRenderer(annotationService, coloringService,
-                bratProperties);
-        return renderer.render(aState, vdoc, aCas);
+
+        BratRenderer renderer = new BratRenderer(bratProperties);
+        return renderer.render(aState, vdoc, aCas, null);
     }
 
     private String bratInitCommand()

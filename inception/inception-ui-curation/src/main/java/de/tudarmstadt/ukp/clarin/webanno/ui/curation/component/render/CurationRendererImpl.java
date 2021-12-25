@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorAndLabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
@@ -77,8 +78,14 @@ public class CurationRendererImpl
         preRenderer.render(vdoc, aState.getWindowBeginOffset(), aState.getWindowEndOffset(), aCas,
                 layersToRender);
 
-        BratRenderer renderer = new BratRenderer(schemaService, coloringService, bratProperties);
+        ColorAndLabelRenderer calRenderer = new ColorAndLabelRenderer(schemaService,
+                coloringService, aColoringStrategy);
+        calRenderer.render(aCas, aState, vdoc, aState.getWindowBeginOffset(),
+                aState.getWindowEndOffset());
+
+        BratRenderer renderer = new BratRenderer(bratProperties);
         GetDocumentResponse response = renderer.render(aState, vdoc, aCas, aColoringStrategy);
+
         return JSONUtil.toInterpretableJsonString(response);
     }
 }

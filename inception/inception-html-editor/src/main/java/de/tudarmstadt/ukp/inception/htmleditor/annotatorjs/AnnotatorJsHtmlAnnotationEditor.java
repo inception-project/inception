@@ -280,8 +280,7 @@ public class AnnotatorJsHtmlAnnotationEditor
 
             VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
 
-            AnnotatorJsRenderer renderer = new AnnotatorJsRenderer(coloringService,
-                    annotationService);
+            AnnotatorJsRenderer renderer = new AnnotatorJsRenderer();
             List<Annotation> annotations = renderer.render(getModelObject(), vdoc, cas, null);
 
             String json = toInterpretableJsonString(annotations);

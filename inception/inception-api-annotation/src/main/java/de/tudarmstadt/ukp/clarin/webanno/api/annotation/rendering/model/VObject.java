@@ -34,7 +34,7 @@ public abstract class VObject
 
     private VID vid;
     private List<VLazyDetailQuery> lazyDetails = new ArrayList<>();
-    private String colorHint;
+    private String color;
     private String label;
     private boolean actionButtons;
 
@@ -105,12 +105,12 @@ public abstract class VObject
 
     public void setColorHint(String aColor)
     {
-        colorHint = aColor;
+        color = aColor;
     }
 
     public String getColorHint()
     {
-        return colorHint;
+        return color;
     }
 
     public void setLabelHint(String aLabelHint)

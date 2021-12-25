@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
@@ -39,7 +38,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
@@ -50,10 +48,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -104,21 +98,11 @@ public class BratRenderer
 {
     private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
 
-    private final AnnotationSchemaService schemaService;
-    private final ColoringService coloringService;
     private final BratAnnotationEditorProperties properties;
 
-    public BratRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService,
-            BratAnnotationEditorProperties aProperties)
+    public BratRenderer(BratAnnotationEditorProperties aProperties)
     {
-        schemaService = aSchemaService;
-        coloringService = aColoringService;
         properties = aProperties;
-    }
-
-    public GetDocumentResponse render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
-    {
-        return render(aState, aVDoc, aCas, null);
     }
 
     @Override
@@ -155,24 +139,7 @@ public class BratRenderer
     public void renderLayers(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
             CAS aCas, ColoringStrategy aColoringStrategy)
     {
-        Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
-            ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
-                    : coloringService.getStrategy(layer, aState.getPreferences(), colorQueues);
-
-            // If the layer is not included in the rendering, then we skip here - but only after
-            // we have obtained a coloring strategy for this layer and thus secured the layer
-            // color. This ensures that the layer colors do not change depending on the number
-            // of visible layers.
-            if (!aVDoc.getAnnotationLayers().contains(layer)) {
-                continue;
-            }
-
-            TypeAdapter typeAdapter = schemaService.getAdapter(layer);
-
-            ColoringRules coloringRules = typeAdapter.getTraits(ColoringRulesTrait.class)
-                    .map(ColoringRulesTrait::getColoringRules).orElse(null);
-
+        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<Offsets> offsets = vspan.getRanges().stream()
                         .flatMap(range -> split(aResponse.getSentenceOffsets(),
@@ -187,12 +154,8 @@ public class BratRenderer
                             return range;
                         }).collect(toList());
 
-                String labelText = getUiLabelText(vspan);
-
-                String color = coloringStrategy.getColor(vspan, labelText, coloringRules);
-
-                Entity entity = new Entity(vspan.getVid(), vspan.getType(), offsets, labelText,
-                        color, vspan.isActionButtons());
+                Entity entity = new Entity(vspan.getVid(), vspan.getType(), offsets,
+                        vspan.getLabelHint(), vspan.getColorHint(), vspan.isActionButtons());
                 if (!layer.isShowTextInHover()) {
                     // If the layer is configured not to display the span text in the popup, then
                     // we simply set the popup to the empty string here.
@@ -216,11 +179,10 @@ public class BratRenderer
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                String bratLabelText = getUiLabelText(varc);
-                String color = coloringStrategy.getColor(varc, bratLabelText, coloringRules);
 
                 Relation arc = new Relation(varc.getVid(), varc.getType(),
-                        getArgument(varc.getSource(), varc.getTarget()), bratLabelText, color);
+                        getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
+                        varc.getColorHint());
                 aResponse.addRelation(arc);
 
                 varc.getLazyDetails().stream()

@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorAndLabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -75,7 +76,6 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer;
 
 public class PdfAnnoRendererTest
 {
-
     private @Mock AnnotationSchemaService schemaService;
 
     private Project project;
@@ -177,9 +177,12 @@ public class PdfAnnoRendererTest
         preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
                 schemaService.listAnnotationLayer(project));
 
+        ColorAndLabelRenderer calRenderer = new ColorAndLabelRenderer(schemaService,
+                new ColoringServiceImpl(schemaService), null);
+        calRenderer.render(cas, state, vdoc, 0, cas.getDocumentText().length());
+
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
-        PdfAnnoRenderer renderer = new PdfAnnoRenderer(schemaService,
-                new ColoringServiceImpl(schemaService), pdfExtractFile, 0);
+        PdfAnnoRenderer renderer = new PdfAnnoRenderer(pdfExtractFile, 0);
         PdfAnnoModel annoFile = renderer.render(state, vdoc, cas, null);
 
         assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(

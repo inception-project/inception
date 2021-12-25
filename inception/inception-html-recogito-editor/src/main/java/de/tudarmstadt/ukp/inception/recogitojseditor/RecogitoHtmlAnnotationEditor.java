@@ -164,9 +164,8 @@ public class RecogitoHtmlAnnotationEditor
             CAS cas = getCasProvider().get();
 
             VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
-
-            RecogitoJsRenderer renderer = new RecogitoJsRenderer(coloringService,
-                    annotationService);
+            
+            RecogitoJsRenderer renderer = new RecogitoJsRenderer();
             WebAnnotations annotations = renderer.render(getModelObject(), vdoc, cas, null);
 
             String json = toInterpretableJsonString(annotations);

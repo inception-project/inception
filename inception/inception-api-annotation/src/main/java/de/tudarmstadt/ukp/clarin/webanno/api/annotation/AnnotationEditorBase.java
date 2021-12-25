@@ -39,10 +39,13 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorAndLabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
@@ -62,6 +65,8 @@ public abstract class AnnotationEditorBase
     private @SpringBean AnnotationEditorProperties properties;
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean ColoringService coloringService;
 
     private final AnnotationActionHandler actionHandler;
     private final CasProvider casProvider;
@@ -182,6 +187,10 @@ public abstract class AnnotationEditorBase
         if (state.getSelection().getAnnotation().isSet()) {
             vdoc.add(new VAnnotationMarker(VMarker.FOCUS, state.getSelection().getAnnotation()));
         }
+
+        ColorAndLabelRenderer calRenderer = new ColorAndLabelRenderer(annotationService,
+                coloringService, null);
+        calRenderer.render(aCas, getModelObject(), vdoc, aWindowBeginOffset, aWindowEndOffset);
 
         return vdoc;
     }
