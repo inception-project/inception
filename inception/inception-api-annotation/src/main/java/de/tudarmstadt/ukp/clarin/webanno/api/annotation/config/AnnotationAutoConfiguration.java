@@ -32,7 +32,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipelineImpl;
 
@@ -61,5 +64,18 @@ public class AnnotationAutoConfiguration
     {
         return new RenderingPipelineImpl(aPreRenderer, aExtensionRegistry, aAnnotationService,
                 aColoringService, aProperties);
+    }
+
+    @Bean
+    public ColoringService coloringService(AnnotationSchemaService aSchemaService)
+    {
+        return new ColoringServiceImpl(aSchemaService);
+    }
+
+    @Bean
+    public PreRenderer preRenderer(LayerSupportRegistry aLayerSupportRegistry,
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new PreRendererImpl(aLayerSupportRegistry, aAnnotationService);
     }
 }

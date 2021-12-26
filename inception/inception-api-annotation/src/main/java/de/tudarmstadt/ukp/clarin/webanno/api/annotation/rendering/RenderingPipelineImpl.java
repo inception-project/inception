@@ -33,6 +33,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
@@ -43,6 +44,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationAutoConfiguration#renderingPipeline}.
+ * </p>
+ */
 public class RenderingPipelineImpl
     implements RenderingPipeline
 {
@@ -64,6 +71,7 @@ public class RenderingPipelineImpl
         properties = aProperties;
     }
 
+    @Override
     public VDocument render(AnnotatorState state, CAS aCas, int aWindowBeginOffset,
             int aWindowEndOffset)
     {
