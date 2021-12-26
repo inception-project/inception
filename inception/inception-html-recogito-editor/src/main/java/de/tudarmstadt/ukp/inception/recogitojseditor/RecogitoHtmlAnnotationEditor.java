@@ -17,16 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recogitojseditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
 
-import java.io.IOException;
-import java.time.Duration;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.uima.cas.CAS;
-import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.CssHeaderItem;
@@ -34,25 +26,12 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
-import org.apache.wicket.request.resource.ContentDisposition;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.StringResourceStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.htmleditor.HtmlAnnotationEditorImplBase;
-import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
 
@@ -60,22 +39,15 @@ public class RecogitoHtmlAnnotationEditor
     extends HtmlAnnotationEditorImplBase
 {
     private static final long serialVersionUID = -3358207848681467993L;
-    private static final Logger LOG = LoggerFactory.getLogger(RecogitoHtmlAnnotationEditor.class);
 
-    private StoreAdapter storeAdapter;
-
-    private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
-    private @SpringBean ColoringService coloringService;
-    private @SpringBean EditorAjaxRequestHandlerExtensionPoint handlers;
-
+    private DiamAjaxBehavior diamBehavior;
+    
     public RecogitoHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
 
-        storeAdapter = new StoreAdapter();
-        add(storeAdapter);
+        add(diamBehavior = new DiamAjaxBehavior());
     }
 
     @Override
@@ -108,14 +80,14 @@ public class RecogitoHtmlAnnotationEditor
 
     private String initScript()
     {
-        String callbackUrl = storeAdapter.getCallbackUrl().toString();
+        String callbackUrl = diamBehavior.getCallbackUrl().toString();
         return wrapInTryCatch(
                 "RecogitoEditor.getInstance('" + vis.getMarkupId() + "', '" + callbackUrl + "');");
     }
 
     private String renderScript()
     {
-        String callbackUrl = storeAdapter.getCallbackUrl().toString();
+        String callbackUrl = diamBehavior.getCallbackUrl().toString();
         return wrapInTryCatch(
                 "RecogitoEditor.getInstance('" + vis.getMarkupId() + "', '" + callbackUrl + "').loadAnnotations();");
     }
@@ -124,59 +96,5 @@ public class RecogitoHtmlAnnotationEditor
     protected void render(AjaxRequestTarget aTarget)
     {
         aTarget.appendJavaScript(renderScript());
-    }
-
-    private class StoreAdapter
-        extends AbstractDefaultAjaxBehavior
-    {
-        private static final long serialVersionUID = -7919362960963563800L;
-
-        @Override
-        protected void respond(AjaxRequestTarget aTarget)
-        {
-            if (!(getRequest().getContainerRequest() instanceof HttpServletRequest)) {
-                return;
-            }
-
-            HttpServletRequest request = (HttpServletRequest) getRequest().getContainerRequest();
-
-            LOG.debug("[" + request.getMethod() + "]");
-
-            try {
-                if ("GET".equals(request.getMethod())) {
-                    read(aTarget);
-                    return;
-                }
-
-                handlers.getHandler(getRequest()) //
-                        .map(handler -> handler.handle(aTarget, getRequest())) //
-                        .orElse(null);
-            }
-            catch (Exception e) {
-                handleError("Error", e);
-            }
-        }
-
-        private void read(AjaxRequestTarget aTarget)
-            throws JsonParseException, JsonMappingException, IOException
-        {
-            CAS cas = getCasProvider().get();
-
-            WebAnnotations annotations = render(cas, 0, cas.getDocumentText().length(),
-                    new RecogitoJsSerializer());
-            
-            String json = toInterpretableJsonString(annotations);
-
-            StringResourceStream resource = new StringResourceStream(json, "application/ld+json");
-
-            ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(resource);
-            handler.setFileName("data.json");
-            handler.setCacheDuration(Duration.ofSeconds(1));
-            handler.setContentDisposition(ContentDisposition.INLINE);
-
-            LOG.trace("Sending back RecogitoJS JSON data");
-
-            getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
-        }
     }
 }
