@@ -346,8 +346,7 @@ public class DiamController_ViewportRoutingTest
             return new PreRenderer()
             {
                 @Override
-                public void render(VDocument aResponse, RenderRequest aRequest,
-                        List<AnnotationLayer> aLayers)
+                public void render(VDocument aResponse, RenderRequest aRequest)
                 {
                     AnnotationLayer layer = new AnnotationLayer();
                     layer.setId(1l);

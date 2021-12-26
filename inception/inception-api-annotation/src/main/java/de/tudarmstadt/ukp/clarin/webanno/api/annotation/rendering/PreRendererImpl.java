@@ -78,14 +78,14 @@ public class PreRendererImpl
     }
 
     @Override
-    public void render(VDocument aResponse, RenderRequest aRequest, List<AnnotationLayer> aLayers)
+    public void render(VDocument aResponse, RenderRequest aRequest)
     {
         log.trace("Prerenderer.render()");
 
         CAS cas = aRequest.getCas();
         Validate.notNull(cas, "CAS cannot be null");
 
-        if (aLayers.isEmpty()) {
+        if (aRequest.getVisibleLayers().isEmpty()) {
             return;
         }
 
@@ -96,9 +96,7 @@ public class PreRendererImpl
         int renderEnd = Math.min(documentText.length(), aRequest.getWindowEndOffset());
         aResponse.setText(documentText.substring(renderBegin, renderEnd));
 
-        // The project for all layers must be the same, so we just fetch the project from the
-        // first layer
-        Project project = aLayers.get(0).getProject();
+        Project project = aRequest.getProject();
 
         // Listing the features once is faster than repeatedly hitting the DB to list features for
         // every layer.
@@ -106,7 +104,7 @@ public class PreRendererImpl
         List<AnnotationFeature> allFeatures = allFeaturesCache.get(project);
 
         // Render (custom) layers
-        for (AnnotationLayer layer : aLayers) {
+        for (AnnotationLayer layer : aRequest.getVisibleLayers()) {
             List<AnnotationFeature> layerSupportedFeatures = supportedFeatures.stream() //
                     .filter(feature -> feature.getLayer().equals(layer)) //
                     .collect(toList());
@@ -124,8 +122,8 @@ public class PreRendererImpl
         long duration = currentTimeMillis() - start;
         log.trace(
                 "Prerenderer.render() took {}ms to render {} layers [{}-{}] with {} spans and {} arcs",
-                duration, aLayers.size(), renderBegin, renderEnd, aResponse.spans().size(),
-                aResponse.arcs().size());
+                duration, aRequest.getVisibleLayers().size(), renderBegin, renderEnd,
+                aResponse.spans().size(), aResponse.arcs().size());
         serverTiming("Prerenderer", "Pre-rendering", duration);
     }
 

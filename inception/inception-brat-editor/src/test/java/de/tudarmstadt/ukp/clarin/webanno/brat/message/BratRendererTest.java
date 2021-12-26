@@ -73,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -82,6 +83,7 @@ public class BratRendererTest
     private @Mock AnnotationSchemaService schemaService;
 
     private Project project;
+    private SourceDocument sourceDocument;
     private AnnotationLayer tokenLayer;
     private AnnotationFeature tokenPosFeature;
     private AnnotationLayer posLayer;
@@ -95,6 +97,7 @@ public class BratRendererTest
         MockitoAnnotations.openMocks(this);
 
         project = new Project();
+        sourceDocument = new SourceDocument("test.txt", project, null);
 
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
                 SINGLE_TOKEN, NO_OVERLAP);
@@ -170,17 +173,18 @@ public class BratRendererTest
         state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
-
         state.setProject(project);
+        state.setDocument(sourceDocument, asList(sourceDocument));
 
         RenderRequest request = RenderRequest.builder() //
                 .withState(state) //
                 .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
                 .withCas(cas) //
+                .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
                 .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, request, schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, request);
 
         new LabelRenderer().render(vdoc, request);
 
@@ -216,17 +220,18 @@ public class BratRendererTest
         state.setPagingStrategy(new LineOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
-
         state.setProject(project);
+        state.setDocument(sourceDocument, asList(sourceDocument));
 
         RenderRequest request = RenderRequest.builder() //
                 .withState(state) //
                 .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
                 .withCas(cas) //
+                .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
                 .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, request, schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, request);
 
         new LabelRenderer().render(vdoc, request);
 
@@ -262,17 +267,18 @@ public class BratRendererTest
         state.setPagingStrategy(new TokenWrappingPagingStrategy(80));
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
-
         state.setProject(project);
+        state.setDocument(sourceDocument, asList(sourceDocument));
 
         RenderRequest request = RenderRequest.builder() //
                 .withState(state) //
                 .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
                 .withCas(cas) //
+                .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
                 .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, request, schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, request);
 
         new LabelRenderer().render(vdoc, request);
 

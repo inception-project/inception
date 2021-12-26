@@ -258,15 +258,17 @@ public class DiamController
         CAS cas = documentService.readAnnotationCas(doc, aUser);
 
         List<AnnotationLayer> layers = schemaService.listSupportedLayers(aProject).stream()
-                .filter(AnnotationLayer::isEnabled).collect(toList());
+                .filter(AnnotationLayer::isEnabled) //
+                .collect(toList());
 
         RenderRequest request = RenderRequest.builder() //
                 .withWindow(aViewportBegin, aViewportEnd) //
                 .withCas(cas) //
+                .withVisibleLayers(layers) //
                 .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, request, layers);
+        preRenderer.render(vdoc, request);
         return vdoc;
     }
 

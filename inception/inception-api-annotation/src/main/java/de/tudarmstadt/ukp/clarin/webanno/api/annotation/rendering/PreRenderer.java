@@ -17,18 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import java.util.List;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface PreRenderer
     extends InitialRenderStep
 {
-    /**
-     * @param aLayers
-     *            the layers which should be rendered.
-     */
     @Override
-    void render(VDocument aResponse, RenderRequest aRequest, List<AnnotationLayer> aLayers);
+    void render(VDocument aResponse, RenderRequest aRequest);
 }

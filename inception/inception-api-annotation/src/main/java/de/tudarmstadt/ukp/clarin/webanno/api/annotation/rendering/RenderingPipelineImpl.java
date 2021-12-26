@@ -17,12 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -33,15 +27,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * <p>
@@ -56,25 +45,22 @@ public class RenderingPipelineImpl
     private final AnnotationEditorExtensionRegistry extensionRegistry;
     private final AnnotationSchemaService annotationService;
     private final ColoringService coloringService;
-    private final AnnotationEditorProperties properties;
 
     public RenderingPipelineImpl(PreRenderer aPreRenderer,
             AnnotationEditorExtensionRegistry aExtensionRegistry,
-            AnnotationSchemaService aAnnotationService, ColoringService aColoringService,
-            AnnotationEditorProperties aProperties)
+            AnnotationSchemaService aAnnotationService, ColoringService aColoringService)
     {
         preRenderer = aPreRenderer;
         extensionRegistry = aExtensionRegistry;
         annotationService = aAnnotationService;
         coloringService = aColoringService;
-        properties = aProperties;
     }
 
     @Override
     public VDocument render(RenderRequest aRequest)
     {
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aRequest, getLayersToRender(aRequest.getState()));
+        preRenderer.render(vdoc, aRequest);
 
         extensionRegistry.fireRender(vdoc, aRequest);
 
@@ -103,32 +89,5 @@ public class RenderingPipelineImpl
                             RequestCycle.get().find(IPartialPageRequestHandler.class).get(),
                             aRequest.getCas(), aRequest.getState(), aVDoc));
         });
-    }
-
-    private List<AnnotationLayer> getLayersToRender(AnnotatorState state)
-    {
-        List<AnnotationLayer> layersToRender = new ArrayList<>();
-        for (AnnotationLayer layer : state.getAnnotationLayers()) {
-            if (!layer.isEnabled()) {
-                continue;
-            }
-
-            if (!properties.isTokenLayerEditable()
-                    && Token.class.getName().equals(layer.getName())) {
-                continue;
-            }
-
-            if (!properties.isSentenceLayerEditable()
-                    && Sentence.class.getName().equals(layer.getName())) {
-                continue;
-            }
-
-            if (layer.getType().equals(CHAIN_TYPE) && CURATION == state.getMode()) {
-                continue;
-            }
-
-            layersToRender.add(layer);
-        }
-        return layersToRender;
     }
 }

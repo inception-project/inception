@@ -59,11 +59,10 @@ public class AnnotationAutoConfiguration
     @Bean
     public RenderingPipeline renderingPipeline(PreRenderer aPreRenderer,
             AnnotationEditorExtensionRegistry aExtensionRegistry,
-            AnnotationSchemaService aAnnotationService, ColoringService aColoringService,
-            AnnotationEditorProperties aProperties)
+            AnnotationSchemaService aAnnotationService, ColoringService aColoringService)
     {
         return new RenderingPipelineImpl(aPreRenderer, aExtensionRegistry, aAnnotationService,
-                aColoringService, aProperties);
+                aColoringService);
     }
 
     @Bean

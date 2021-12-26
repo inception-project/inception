@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import java.util.List;
+
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -31,6 +34,8 @@ public class RenderRequest
     private final User annotationUser;
     private final int windowBeginOffset;
     private final int windowEndOffset;
+    private final List<AnnotationLayer> allLayers;
+    private final List<AnnotationLayer> visibleLayers;
     private final CAS cas;
 
     private RenderRequest(Builder builder)
@@ -41,6 +46,8 @@ public class RenderRequest
         this.sourceDocument = builder.sourceDocument;
         this.annotationUser = builder.annotationUser;
         this.cas = builder.cas;
+        this.allLayers = builder.allLayers;
+        this.visibleLayers = builder.visibleLayers;
     }
 
     public int getWindowBeginOffset()
@@ -72,6 +79,16 @@ public class RenderRequest
     {
         return cas;
     }
+    
+    public List<AnnotationLayer> getAllLayers()
+    {
+        return allLayers;
+    }
+    
+    public List<AnnotationLayer> getVisibleLayers()
+    {
+        return visibleLayers;
+    }
 
     /**
      * @deprecated We want to minimize the state information carried around in the render request,
@@ -97,6 +114,8 @@ public class RenderRequest
         private SourceDocument sourceDocument;
         private User annotationUser;
         private CAS cas;
+        private List<AnnotationLayer> allLayers;
+        private List<AnnotationLayer> visibleLayers;
 
         private Builder()
         {
@@ -108,9 +127,15 @@ public class RenderRequest
             return this;
         }
 
+        /**
+         * @deprecated See {@link RenderRequest#getState}
+         */
+        @Deprecated
         public Builder withState(AnnotatorState aState)
         {
             state = aState;
+            allLayers = aState.getAllAnnotationLayers();
+            visibleLayers = aState.getAnnotationLayers();
             sourceDocument = state.getDocument();
             annotationUser = state.getUser();
             return this;
@@ -120,6 +145,12 @@ public class RenderRequest
         {
             this.windowBeginOffset = aBegin;
             this.windowEndOffset = aEnd;
+            return this;
+        }
+
+        public Builder withVisibleLayers(List<AnnotationLayer> aLayers)
+        {
+            visibleLayers = aLayers;
             return this;
         }
 

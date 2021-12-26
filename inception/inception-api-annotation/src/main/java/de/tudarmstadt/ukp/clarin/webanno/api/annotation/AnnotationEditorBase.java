@@ -17,7 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
@@ -38,7 +43,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public abstract class AnnotationEditorBase
     extends Panel
@@ -145,8 +153,36 @@ public abstract class AnnotationEditorBase
                 .withState(getModelObject()) //
                 .withWindow(aWindowBeginOffset, aWindowEndOffset) //
                 .withCas(aCas) //
+                .withVisibleLayers(getLayersToRender(getModelObject())) //
                 .build();
 
         return renderingPipeline.render(request);
+    }
+
+    private List<AnnotationLayer> getLayersToRender(AnnotatorState state)
+    {
+        List<AnnotationLayer> layersToRender = new ArrayList<>();
+        for (AnnotationLayer layer : state.getAnnotationLayers()) {
+            if (!layer.isEnabled()) {
+                continue;
+            }
+
+            if (!properties.isTokenLayerEditable()
+                    && Token.class.getName().equals(layer.getName())) {
+                continue;
+            }
+
+            if (!properties.isSentenceLayerEditable()
+                    && Sentence.class.getName().equals(layer.getName())) {
+                continue;
+            }
+
+            if (layer.getType().equals(CHAIN_TYPE) && CURATION == state.getMode()) {
+                continue;
+            }
+
+            layersToRender.add(layer);
+        }
+        return layersToRender;
     }
 }

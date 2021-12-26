@@ -80,10 +80,11 @@ public class CurationRendererImpl
                 .withState(aState) //
                 .withWindow(aState.getWindowBeginOffset(), aState.getWindowEndOffset()) //
                 .withCas(aCas) //
+                .withVisibleLayers(layersToRender) //
                 .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, request, layersToRender);
+        preRenderer.render(vdoc, request);
 
         new LabelRenderer().render(vdoc, request);
 
