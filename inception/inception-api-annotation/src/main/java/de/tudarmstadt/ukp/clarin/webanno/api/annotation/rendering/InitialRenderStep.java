@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -31,7 +29,6 @@ public interface InitialRenderStep
      * @param aLayers
      *            the layers which should be rendered.
      */
-    void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
-            List<AnnotationLayer> aLayers);
+    void render(VDocument aResponse, RenderRequest aRequest, List<AnnotationLayer> aLayers);
 
 }

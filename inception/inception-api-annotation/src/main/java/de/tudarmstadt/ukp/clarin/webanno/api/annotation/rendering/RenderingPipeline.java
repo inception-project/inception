@@ -17,12 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 public interface RenderingPipeline
 {
-    VDocument render(AnnotatorState state, CAS aCas, int aWindowBeginOffset, int aWindowEndOffset);
+    VDocument render(RenderRequest aRequest);
 }

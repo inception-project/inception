@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -72,34 +71,38 @@ public class RenderingPipelineImpl
     }
 
     @Override
-    public VDocument render(AnnotatorState state, CAS aCas, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public VDocument render(RenderRequest aRequest)
     {
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aWindowBeginOffset, aWindowEndOffset, aCas,
-                getLayersToRender(state));
+        preRenderer.render(vdoc, aRequest, getLayersToRender(aRequest.getState()));
 
-        extensionRegistry.fireRender(aCas, state, vdoc, aWindowBeginOffset, aWindowEndOffset);
+        extensionRegistry.fireRender(vdoc, aRequest);
 
+        maybeNotifyWicketComponentsOnPage(vdoc, aRequest);
+
+        if (aRequest.getState().getSelection().getAnnotation().isSet()) {
+            vdoc.add(new VAnnotationMarker(VMarker.FOCUS,
+                    aRequest.getState().getSelection().getAnnotation()));
+        }
+
+        new LabelRenderer().render(vdoc, aRequest);
+
+        ColorRenderer colorRenderer = new ColorRenderer(annotationService, coloringService);
+        colorRenderer.render(vdoc, aRequest);
+
+        return vdoc;
+    }
+
+    private void maybeNotifyWicketComponentsOnPage(VDocument aVDoc, RenderRequest aRequest)
+    {
         // Fire render event into UI
         RequestCycle.get().find(IPageRequestHandler.class).ifPresent(handler -> {
             Page page = (Page) handler.getPage();
             page.send(page, Broadcast.BREADTH,
                     new RenderAnnotationsEvent(
-                            RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aCas,
-                            state, vdoc));
+                            RequestCycle.get().find(IPartialPageRequestHandler.class).get(),
+                            aRequest.getCas(), aRequest.getState(), aVDoc));
         });
-
-        if (state.getSelection().getAnnotation().isSet()) {
-            vdoc.add(new VAnnotationMarker(VMarker.FOCUS, state.getSelection().getAnnotation()));
-        }
-
-        new LabelRenderer().render(aCas, state, vdoc, aWindowBeginOffset, aWindowEndOffset);
-
-        ColorRenderer colorRenderer = new ColorRenderer(annotationService, coloringService);
-        colorRenderer.render(aCas, state, vdoc, aWindowBeginOffset, aWindowEndOffset);
-
-        return vdoc;
     }
 
     private List<AnnotationLayer> getLayersToRender(AnnotatorState state)

@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -189,16 +190,15 @@ public class CurationEditorExtension
         CasMergeOperationResult mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer,
                 aTargetCas, sourceAnnotation, layer.isAllowStacking());
 
-        // open created/updates FS in annotation detail editorpanel
+        // open created/updates FS in annotation detail editor panel
         AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
 
     @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public void render(VDocument aVDoc, RenderRequest aRequest)
     {
-        curationRenderer.render(aCas, aState, aVdoc, aWindowBeginOffset, aWindowEndOffset);
+        curationRenderer.render(aVDoc, aRequest);
     }
 }

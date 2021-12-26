@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -174,16 +175,20 @@ public class PdfAnnoRendererTest
         state.getPreferences().setWindowSize(10);
         state.setProject(project);
 
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
-                schemaService.listAnnotationLayer(project));
+        RenderRequest request = RenderRequest.builder() //
+                .withState(state) //
+                .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                .withCas(cas) //
+                .build();
 
-        new LabelRenderer().render(cas, state, vdoc, state.getWindowBeginOffset(),
-                state.getWindowEndOffset());
+        VDocument vdoc = new VDocument();
+        preRenderer.render(vdoc, request, schemaService.listAnnotationLayer(project));
+
+        new LabelRenderer().render(vdoc, request);
 
         ColorRenderer colorRenderer = new ColorRenderer(schemaService,
                 new ColoringServiceImpl(schemaService), null);
-        colorRenderer.render(cas, state, vdoc, 0, cas.getDocumentText().length());
+        colorRenderer.render(vdoc, request);
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoRenderer renderer = new PdfAnnoRenderer(pdfExtractFile, 0);

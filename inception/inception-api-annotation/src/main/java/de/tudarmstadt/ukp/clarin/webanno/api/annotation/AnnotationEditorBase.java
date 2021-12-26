@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
@@ -140,7 +141,12 @@ public abstract class AnnotationEditorBase
 
     protected VDocument render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset)
     {
-        return renderingPipeline.render(getModelObject(), aCas, aWindowBeginOffset,
-                aWindowEndOffset);
+        RenderRequest request = RenderRequest.builder() //
+                .withState(getModelObject()) //
+                .withWindow(aWindowBeginOffset, aWindowEndOffset) //
+                .withCas(aCas) //
+                .build();
+
+        return renderingPipeline.render(request);
     }
 }

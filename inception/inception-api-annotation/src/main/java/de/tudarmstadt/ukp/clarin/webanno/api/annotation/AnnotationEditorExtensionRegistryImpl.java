@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoCon
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 /**
@@ -130,11 +131,10 @@ public class AnnotationEditorExtensionRegistryImpl
     }
 
     @Override
-    public void fireRender(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public void fireRender(VDocument aVdoc, RenderRequest aRequest)
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.render(aCas, aState, aVdoc, aWindowBeginOffset, aWindowEndOffset);
+            ext.render(aVdoc, aRequest);
         }
     }
 

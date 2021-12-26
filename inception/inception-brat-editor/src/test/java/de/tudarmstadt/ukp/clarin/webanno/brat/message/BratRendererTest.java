@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorPropertiesImpl;
@@ -172,17 +173,20 @@ public class BratRendererTest
 
         state.setProject(project);
 
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
-                schemaService.listAnnotationLayer(project));
+        RenderRequest request = RenderRequest.builder() //
+                .withState(state) //
+                .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                .withCas(cas) //
+                .build();
 
-        new LabelRenderer().render(cas, state, vdoc, state.getWindowBeginOffset(),
-                state.getWindowEndOffset());
+        VDocument vdoc = new VDocument();
+        preRenderer.render(vdoc, request, schemaService.listAnnotationLayer(project));
+
+        new LabelRenderer().render(vdoc, request);
 
         ColorRenderer colorRenderer = new ColorRenderer(schemaService,
                 new ColoringServiceImpl(schemaService), null);
-        colorRenderer.render(cas, state, vdoc, state.getWindowBeginOffset(),
-                state.getWindowEndOffset());
+        colorRenderer.render(vdoc, request);
 
         BratRenderer renderer = new BratRenderer(new BratAnnotationEditorPropertiesImpl());
         GetDocumentResponse response = renderer.render(state, vdoc, cas);
@@ -215,17 +219,20 @@ public class BratRendererTest
 
         state.setProject(project);
 
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
-                schemaService.listAnnotationLayer(project));
+        RenderRequest request = RenderRequest.builder() //
+                .withState(state) //
+                .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                .withCas(cas) //
+                .build();
 
-        new LabelRenderer().render(cas, state, vdoc, state.getWindowBeginOffset(),
-                state.getWindowEndOffset());
+        VDocument vdoc = new VDocument();
+        preRenderer.render(vdoc, request, schemaService.listAnnotationLayer(project));
+
+        new LabelRenderer().render(vdoc, request);
 
         ColorRenderer calRenderer = new ColorRenderer(schemaService,
                 new ColoringServiceImpl(schemaService), null);
-        calRenderer.render(cas, state, vdoc, state.getWindowBeginOffset(),
-                state.getWindowEndOffset());
+        calRenderer.render(vdoc, request);
 
         BratRenderer renderer = new BratRenderer(new BratAnnotationEditorPropertiesImpl());
         GetDocumentResponse response = renderer.render(state, vdoc, cas);
@@ -258,17 +265,20 @@ public class BratRendererTest
 
         state.setProject(project);
 
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
-                schemaService.listAnnotationLayer(project));
+        RenderRequest request = RenderRequest.builder() //
+                .withState(state) //
+                .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                .withCas(cas) //
+                .build();
 
-        new LabelRenderer().render(cas, state, vdoc, state.getWindowBeginOffset(),
-                state.getWindowEndOffset());
+        VDocument vdoc = new VDocument();
+        preRenderer.render(vdoc, request, schemaService.listAnnotationLayer(project));
+
+        new LabelRenderer().render(vdoc, request);
 
         ColorRenderer calRenderer = new ColorRenderer(schemaService,
                 new ColoringServiceImpl(schemaService), null);
-        calRenderer.render(cas, state, vdoc, state.getWindowBeginOffset(),
-                state.getWindowEndOffset());
+        calRenderer.render(vdoc, request);
 
         BratRenderer renderer = new BratRenderer(new BratAnnotationEditorPropertiesImpl());
         GetDocumentResponse response = renderer.render(state, vdoc, cas);

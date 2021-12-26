@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
@@ -390,17 +391,34 @@ public class RecommendationEditorExtension
     }
 
     @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public void render(VDocument aVDoc, RenderRequest aRequest)
     {
         // do not show predictions during curation or when viewing others' work
-        if (!aState.getMode().equals(ANNOTATION)
-                || !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
+        if (!aRequest.getState().getMode().equals(ANNOTATION) || !aRequest.getAnnotationUser()
+                .getUsername().equals(userRegistry.getCurrentUsername())) {
+            return;
+        }
+
+        if (aRequest.getCas() == null) {
             return;
         }
 
         // Add the suggestions to the visual document
-        render(aVDoc, aState, aCas, aWindowBeginOffset, aWindowEndOffset);
+        for (AnnotationLayer layer : aRequest.getState().getAnnotationLayers()) {
+            if (layer.getName().equals(Token.class.getName())
+                    || layer.getName().equals(Sentence.class.getName())
+                    || (layer.getType().equals(CHAIN_TYPE)
+                            && CURATION == aRequest.getState().getMode())
+                    || !layer.isEnabled()) { /* Hide layer if not enabled */
+                continue;
+            }
+
+            TypeAdapter adapter = annotationService.getAdapter(layer);
+            RecommendationTypeRenderer renderer = getRenderer(adapter);
+            if (renderer != null) {
+                renderer.render(aVDoc, aRequest);
+            }
+        }
     }
 
     @Override
@@ -453,39 +471,6 @@ public class RecommendationEditorExtension
         }
 
         return details;
-    }
-
-    /**
-     * wrap JSON responses to BRAT visualizer
-     *
-     * @param aVdoc
-     *            A VDocument containing annotations for the given layer
-     * @param aState
-     *            the annotator state.
-     * @param aCas
-     *            the CAS.
-     */
-    private void render(VDocument aVdoc, AnnotatorState aState, CAS aCas, int aWindowBeginOffset,
-            int aWindowEndOffset)
-    {
-        if (aCas == null) {
-            return;
-        }
-
-        for (AnnotationLayer layer : aState.getAnnotationLayers()) {
-            if (layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName())
-                    || (layer.getType().equals(CHAIN_TYPE) && CURATION == aState.getMode())
-                    || !layer.isEnabled()) { /* Hide layer if not enabled */
-                continue;
-            }
-
-            TypeAdapter adapter = annotationService.getAdapter(layer);
-            RecommendationTypeRenderer renderer = getRenderer(adapter);
-            if (renderer != null) {
-                renderer.render(aCas, aVdoc, aState, aWindowBeginOffset, aWindowEndOffset);
-            }
-        }
     }
 
     /**

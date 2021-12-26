@@ -21,15 +21,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
-import org.apache.uima.cas.CAS;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -41,14 +38,13 @@ public class ColorRenderer
     private final ColoringService coloringService;
     private final ColoringStrategy coloringStrategyOverride;
 
-    public ColorRenderer(AnnotationSchemaService aSchemaService,
-            ColoringService aColoringService)
+    public ColorRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService)
     {
         this(aSchemaService, aColoringService, null);
     }
 
-    public ColorRenderer(AnnotationSchemaService aSchemaService,
-            ColoringService aColoringService, ColoringStrategy aColoringStrategy)
+    public ColorRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService,
+            ColoringStrategy aColoringStrategy)
     {
         schemaService = aSchemaService;
         coloringService = aColoringService;
@@ -56,14 +52,14 @@ public class ColorRenderer
     }
 
     @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public void render(VDocument aVDoc, RenderRequest aRequest)
     {
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
+        for (AnnotationLayer layer : aRequest.getState().getAllAnnotationLayers()) {
             ColoringStrategy coloringStrategy = coloringStrategyOverride != null //
                     ? coloringStrategyOverride
-                    : coloringService.getStrategy(layer, aState.getPreferences(), colorQueues);
+                    : coloringService.getStrategy(layer, aRequest.getState().getPreferences(),
+                            colorQueues);
 
             // If the layer is not included in the rendering, then we skip here - but only after
             // we have obtained a coloring strategy for this layer and thus secured the layer

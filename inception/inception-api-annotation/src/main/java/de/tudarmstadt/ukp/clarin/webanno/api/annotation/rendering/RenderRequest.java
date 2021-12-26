@@ -1,0 +1,131 @@
+/*
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
+
+import org.apache.uima.cas.CAS;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+
+public class RenderRequest
+{
+    private final AnnotatorState state;
+    private final SourceDocument sourceDocument;
+    private final User annotationUser;
+    private final int windowBeginOffset;
+    private final int windowEndOffset;
+    private final CAS cas;
+
+    private RenderRequest(Builder builder)
+    {
+        this.windowBeginOffset = builder.windowBeginOffset;
+        this.windowEndOffset = builder.windowEndOffset;
+        this.state = builder.state;
+        this.sourceDocument = builder.sourceDocument;
+        this.annotationUser = builder.annotationUser;
+        this.cas = builder.cas;
+    }
+
+    public int getWindowBeginOffset()
+    {
+        return windowBeginOffset;
+    }
+
+    public int getWindowEndOffset()
+    {
+        return windowEndOffset;
+    }
+
+    public User getAnnotationUser()
+    {
+        return annotationUser;
+    }
+
+    public SourceDocument getSourceDocument()
+    {
+        return sourceDocument;
+    }
+
+    public Project getProject()
+    {
+        return sourceDocument.getProject();
+    }
+
+    public CAS getCas()
+    {
+        return cas;
+    }
+
+    /**
+     * @deprecated We want to minimize the state information carried around in the render request,
+     *             so better not use the full annotator state and instead add relevant information
+     *             as fields to the render request itself.
+     */
+    @Deprecated
+    public AnnotatorState getState()
+    {
+        return state;
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private int windowBeginOffset;
+        private int windowEndOffset;
+        private AnnotatorState state;
+        private SourceDocument sourceDocument;
+        private User annotationUser;
+        private CAS cas;
+
+        private Builder()
+        {
+        }
+
+        public Builder withCas(CAS aCas)
+        {
+            cas = aCas;
+            return this;
+        }
+
+        public Builder withState(AnnotatorState aState)
+        {
+            state = aState;
+            sourceDocument = state.getDocument();
+            annotationUser = state.getUser();
+            return this;
+        }
+
+        public Builder withWindow(int aBegin, int aEnd)
+        {
+            this.windowBeginOffset = aBegin;
+            this.windowEndOffset = aEnd;
+            return this;
+        }
+
+        public RenderRequest build()
+        {
+            return new RenderRequest(this);
+        }
+    }
+}

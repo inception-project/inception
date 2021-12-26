@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -259,8 +260,13 @@ public class DiamController
         List<AnnotationLayer> layers = schemaService.listSupportedLayers(aProject).stream()
                 .filter(AnnotationLayer::isEnabled).collect(toList());
 
+        RenderRequest request = RenderRequest.builder() //
+                .withWindow(aViewportBegin, aViewportEnd) //
+                .withCas(cas) //
+                .build();
+
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aViewportBegin, aViewportEnd, cas, layers);
+        preRenderer.render(vdoc, request, layers);
         return vdoc;
     }
 

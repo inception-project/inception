@@ -43,7 +43,6 @@ import java.util.concurrent.TimeoutException;
 import javax.persistence.EntityManager;
 import javax.sql.DataSource;
 
-import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +62,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
@@ -78,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -338,19 +339,22 @@ public class DiamController_ViewportRoutingTest
             return manager;
         }
 
+        @Primary
         @Bean
-        public PreRenderer preRenderer()
+        public PreRenderer testPreRenderer()
         {
             return new PreRenderer()
             {
                 @Override
-                public void render(VDocument aResponse, int aWindowBeginOffset,
-                        int aWindowEndOffset, CAS aCas, List<AnnotationLayer> aLayers)
+                public void render(VDocument aResponse, RenderRequest aRequest,
+                        List<AnnotationLayer> aLayers)
                 {
                     AnnotationLayer layer = new AnnotationLayer();
                     layer.setId(1l);
                     aResponse.add(new VSpan(layer, new VID(1), "dummy",
-                            new VRange(aWindowBeginOffset, aWindowEndOffset), emptyMap()));
+                            new VRange(aRequest.getWindowBeginOffset(),
+                                    aRequest.getWindowEndOffset()),
+                            emptyMap()));
                 }
             };
         }

@@ -78,12 +78,12 @@ public class PreRendererImpl
     }
 
     @Override
-    public void render(VDocument aResponse, int windowBegin, int windowEnd, CAS aCas,
-            List<AnnotationLayer> aLayers)
+    public void render(VDocument aResponse, RenderRequest aRequest, List<AnnotationLayer> aLayers)
     {
         log.trace("Prerenderer.render()");
 
-        Validate.notNull(aCas, "CAS cannot be null");
+        CAS cas = aRequest.getCas();
+        Validate.notNull(cas, "CAS cannot be null");
 
         if (aLayers.isEmpty()) {
             return;
@@ -91,9 +91,10 @@ public class PreRendererImpl
 
         long start = System.currentTimeMillis();
 
-        int renderBegin = Math.max(0, windowBegin);
-        int renderEnd = Math.min(aCas.getDocumentText().length(), windowEnd);
-        aResponse.setText(aCas.getDocumentText().substring(renderBegin, renderEnd));
+        String documentText = cas.getDocumentText();
+        int renderBegin = Math.max(0, aRequest.getWindowBeginOffset());
+        int renderEnd = Math.min(documentText.length(), aRequest.getWindowEndOffset());
+        aResponse.setText(documentText.substring(renderBegin, renderEnd));
 
         // The project for all layers must be the same, so we just fetch the project from the
         // first layer
@@ -117,7 +118,7 @@ public class PreRendererImpl
             // the same because otherwise the IDs of armed slots would be inconsistent
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
                     .createRenderer(layer, () -> layerAllFeatures);
-            renderer.render(aCas, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
+            renderer.render(cas, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
         }
 
         long duration = currentTimeMillis() - start;
