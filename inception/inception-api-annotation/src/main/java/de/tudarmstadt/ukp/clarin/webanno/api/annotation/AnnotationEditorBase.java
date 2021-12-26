@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
@@ -147,7 +148,8 @@ public abstract class AnnotationEditorBase
      */
     protected abstract void render(AjaxRequestTarget aTarget);
 
-    protected VDocument render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset)
+    protected <T> T render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset,
+            TerminalRenderStep<T> aTerminalStep)
     {
         RenderRequest request = RenderRequest.builder() //
                 .withState(getModelObject()) //
@@ -156,7 +158,8 @@ public abstract class AnnotationEditorBase
                 .withVisibleLayers(getLayersToRender(getModelObject())) //
                 .build();
 
-        return renderingPipeline.render(request);
+        VDocument vdoc = renderingPipeline.render(request);
+        return aTerminalStep.render(vdoc, request);
     }
 
     private List<AnnotationLayer> getLayersToRender(AnnotatorState state)

@@ -74,8 +74,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -274,20 +272,18 @@ public class BratAnnotationEditor
 
     private String actionGetDocument() throws IOException
     {
+        if (getModelObject().getProject() == null) {
+            return toJson(new GetDocumentResponse());
+        }
+
         StopWatch timer = new StopWatch();
         timer.start();
 
         final CAS cas = getCasProvider().get();
 
-        String json;
-        if (getModelObject().getProject() != null) {
-            json = toJson(render(cas));
-            lastRenderedJson = json;
-            lastRenderedJsonParsed = null;
-        }
-        else {
-            json = toJson(new GetDocumentResponse());
-        }
+        String json = toJson(render(cas));
+        lastRenderedJson = json;
+        lastRenderedJsonParsed = null;
 
         timer.stop();
         metrics.renderComplete(RenderType.FULL, timer.getTime(), json, null);
@@ -429,16 +425,8 @@ public class BratAnnotationEditor
     {
         AnnotatorState aState = getModelObject();
 
-        RenderRequest request = RenderRequest.builder() //
-                .withState(aState) //
-                .withWindow(aState.getWindowBeginOffset(), aState.getWindowEndOffset()) //
-                .withCas(aCas) //
-                .build();
-
-        VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
-
-        BratRenderer renderer = new BratRenderer(bratProperties);
-        return renderer.render(vdoc, request);
+        return render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
+                new BratRenderer(bratProperties));
     }
 
     private String bratInitCommand()

@@ -39,8 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -48,7 +46,6 @@ import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationRenderer;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationVID;
 
 /**
@@ -63,23 +60,17 @@ public class CurationEditorExtension
 {
     public static final String EXTENSION_ID = "curationEditorExtension";
 
-    // actions from the ui when selecting span or arc annotation
-    private static final String ACTION_SELECT_ARC = "arcOpenDialog";
-    private static final String ACTION_SELECT_SPAN = "spanOpenDialog";
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final AnnotationSchemaService annotationService;
     private final DocumentService documentService;
-    private final CurationRenderer curationRenderer;
 
     @Autowired
     public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
-            DocumentService aDocumentService, CurationRenderer aCurationRenderer)
+            DocumentService aDocumentService)
     {
         annotationService = aAnnotationService;
         documentService = aDocumentService;
-        curationRenderer = aCurationRenderer;
     }
 
     @Override
@@ -194,11 +185,5 @@ public class CurationEditorExtension
         AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
-    }
-
-    @Override
-    public void render(VDocument aVDoc, RenderRequest aRequest)
-    {
-        curationRenderer.render(aVDoc, aRequest);
     }
 }

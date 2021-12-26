@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
@@ -101,6 +102,12 @@ public class CurationRenderer
     public String getId()
     {
         return ID;
+    }
+
+    @Override
+    public boolean accepts(RenderRequest aContext)
+    {
+        return aContext.getState().getMode() == Mode.ANNOTATION;
     }
 
     @Override

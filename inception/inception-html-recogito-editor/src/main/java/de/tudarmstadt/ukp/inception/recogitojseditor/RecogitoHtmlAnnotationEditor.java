@@ -50,8 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 import de.tudarmstadt.ukp.inception.htmleditor.HtmlAnnotationEditorImplBase;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
@@ -164,17 +162,9 @@ public class RecogitoHtmlAnnotationEditor
         {
             CAS cas = getCasProvider().get();
 
-            RenderRequest request = RenderRequest.builder() //
-                    .withState(getModelObject()) //
-                    .withWindow(0, cas.getDocumentText().length()) //
-                    .withCas(cas) //
-                    .build();
+            WebAnnotations annotations = render(cas, 0, cas.getDocumentText().length(),
+                    new RecogitoJsRenderer());
             
-            VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
-            
-            RecogitoJsRenderer renderer = new RecogitoJsRenderer();
-            WebAnnotations annotations = renderer.render(vdoc, request);
-
             String json = toInterpretableJsonString(annotations);
 
             StringResourceStream resource = new StringResourceStream(json, "application/ld+json");
