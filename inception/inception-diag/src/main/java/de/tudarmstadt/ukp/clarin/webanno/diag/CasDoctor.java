@@ -198,6 +198,10 @@ public class CasDoctor
             boolean aFatalChecks)
         throws CasDoctorException
     {
+        if (checkClasses.isEmpty()) {
+            return true;
+        }
+
         long tStart = System.currentTimeMillis();
 
         boolean ok = true;

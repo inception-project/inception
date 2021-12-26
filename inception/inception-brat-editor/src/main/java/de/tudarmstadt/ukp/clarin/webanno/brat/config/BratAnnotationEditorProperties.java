@@ -66,9 +66,4 @@ public interface BratAnnotationEditorProperties
      * @return a single replacement character.
      */
     String getWhiteSpaceReplacementCharacter();
-
-    /**
-     * @return whether to send the tokens from the CAS directly to brat or not.
-     */
-    boolean isUseCasTokens();
 }

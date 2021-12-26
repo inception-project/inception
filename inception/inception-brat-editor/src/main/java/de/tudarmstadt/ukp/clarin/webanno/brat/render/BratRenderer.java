@@ -28,7 +28,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.text.BreakIterator;
 import java.util.ArrayList;
@@ -41,14 +40,11 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
@@ -85,7 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 /**
@@ -117,43 +112,38 @@ public class BratRenderer
     {
         GetDocumentResponse aResponse = new GetDocumentResponse();
 
-        AnnotatorState aState = aRequest.getState();
         CAS aCas = aRequest.getCas();
 
-        aResponse.setRtlMode(RTL == aState.getScriptDirection());
-        aResponse.setFontZoom(aState.getPreferences().getFontZoom());
+        aResponse.setRtlMode(RTL == aRequest.getState().getScriptDirection());
+        aResponse.setFontZoom(aRequest.getState().getPreferences().getFontZoom());
 
-        renderText(aCas, aResponse, aState);
+        renderText(aCas, aResponse, aRequest);
 
         // The rows need to be rendered first because we use the row boundaries to split
         // cross-row spans into multiple ranges
-        renderBratRowsFromUnits(aResponse, aState);
+        renderBratRowsFromUnits(aResponse, aRequest);
 
-        if (properties.isUseCasTokens()) {
-            renderBratTokensFromTokens(aCas, aResponse, aState);
-        }
-        else {
-            renderBratTokensFromText(aCas, aResponse, aState);
-        }
+        renderBratTokensFromText(aResponse, aRequest);
 
-        renderLayers(aResponse, aState, aVDoc, aCas);
+        renderLayers(aResponse, aVDoc, aRequest);
 
-        renderComments(aResponse, aState, aVDoc, aCas);
+        renderComments(aResponse, aVDoc, aRequest);
 
         renderMarkers(aResponse, aVDoc);
 
         return aResponse;
     }
 
-    public void renderLayers(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
-            CAS aCas)
+    public void renderLayers(GetDocumentResponse aResponse, VDocument aVDoc, RenderRequest aRequest)
     {
+        CAS cas = aRequest.getCas();
+
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<Offsets> offsets = vspan.getRanges().stream()
                         .flatMap(range -> split(aResponse.getSentenceOffsets(),
-                                aCas.getDocumentText().substring(aState.getWindowBeginOffset(),
-                                        aState.getWindowEndOffset()),
+                                cas.getDocumentText().substring(aRequest.getWindowBeginOffset(),
+                                        aRequest.getWindowEndOffset()),
                                 range.getBegin(), range.getEnd()).stream())
                         .map(range -> {
                             int[] span = { range.getBegin(), range.getEnd() };
@@ -201,9 +191,11 @@ public class BratRenderer
         }
     }
 
-    private void renderComments(GetDocumentResponse aResponse, AnnotatorState aState,
-            VDocument aVDoc, CAS aCas)
+    private void renderComments(GetDocumentResponse aResponse, VDocument aVDoc,
+            RenderRequest aRequest)
     {
+        CAS cas = aRequest.getCas();
+
         Map<AnnotationFS, Integer> sentenceIndexes = null;
         for (VComment vcomment : aVDoc.comments()) {
             String type;
@@ -224,13 +216,13 @@ public class BratRenderer
 
             AnnotationFS fs;
             if (!vcomment.getVid().isSynthetic()
-                    && ((fs = selectAnnotationByAddr(aCas, vcomment.getVid().getId())) != null
+                    && ((fs = selectAnnotationByAddr(cas, vcomment.getVid().getId())) != null
                             && fs.getType().getName().equals(Sentence.class.getName()))) {
                 // Lazily fetching the sentences because we only need them for the comments
                 if (sentenceIndexes == null) {
                     sentenceIndexes = new HashMap<>();
                     int i = 1;
-                    for (AnnotationFS s : select(aCas, getType(aCas, Sentence.class))) {
+                    for (AnnotationFS s : select(cas, getType(cas, Sentence.class))) {
                         sentenceIndexes.put(s, i);
                         i++;
                     }
@@ -277,50 +269,22 @@ public class BratRenderer
         return asList(new Argument("Arg1", aGovernorFs), new Argument("Arg2", aDependentFs));
     }
 
-    public void renderText(CAS aCas, GetDocumentResponse aResponse, AnnotatorState aState)
+    public void renderText(CAS aCas, GetDocumentResponse aResponse, RenderRequest aRequest)
     {
-        int windowBegin = aState.getWindowBeginOffset();
-        int windowEnd = aState.getWindowEndOffset();
+        int windowBegin = aRequest.getWindowBeginOffset();
+        int windowEnd = aRequest.getWindowEndOffset();
 
         String visibleText = aCas.getDocumentText().substring(windowBegin, windowEnd);
         visibleText = sanitizeVisibleText(visibleText);
         aResponse.setText(visibleText);
     }
 
-    /**
-     * @deprecated We want to get away from this any use {@link #renderBratTokensFromText} instead.
-     */
-    @Deprecated
-    private void renderBratTokensFromTokens(CAS aCas, GetDocumentResponse aResponse,
-            AnnotatorState aState)
+    private void renderBratTokensFromText(GetDocumentResponse aResponse, RenderRequest aRequest)
     {
-        int winBegin = aState.getWindowBeginOffset();
-        int winEnd = aState.getWindowEndOffset();
-        Type tokenType = CasUtil.getType(aCas, Token.class);
-
-        List<AnnotationFS> tokens = selectCovered(aCas, tokenType, winBegin, winEnd);
-        for (AnnotationFS fs : tokens) {
-            // attach type such as POS adds non-existing token element for ellipsis annotation
-            // REC 2021-03-27: The bug that empty tokens were being added has been removed long
-            // ago and there is a CAS Doctor check to ensure such tokens no longer exist. Possibly
-            // this can be removed in one of the next refactoring iterations.
-            if (fs.getBegin() == fs.getEnd()) {
-                continue;
-            }
-
-            split(aResponse.getSentenceOffsets(), fs.getCoveredText(), fs.getBegin() - winBegin,
-                    fs.getEnd() - winBegin)
-                            .forEach(range -> aResponse.addToken(range.getBegin(), range.getEnd()));
-        }
-    }
-
-    private void renderBratTokensFromText(CAS aCas, GetDocumentResponse aResponse,
-            AnnotatorState aState)
-    {
-        int winBegin = aState.getWindowBeginOffset();
-        int winEnd = aState.getWindowEndOffset();
+        int winBegin = aRequest.getWindowBeginOffset();
+        int winEnd = aRequest.getWindowEndOffset();
         List<Offsets> bratTokenOffsets = new ArrayList<>();
-        String visibleText = aCas.getDocumentText().substring(winBegin, winEnd);
+        String visibleText = aRequest.getCas().getDocumentText().substring(winBegin, winEnd);
         BreakIterator bi = BreakIterator.getWordInstance(Locale.ROOT);
         bi.setText(visibleText);
         int last = bi.first();
@@ -345,15 +309,15 @@ public class BratRenderer
         }
     }
 
-    private void renderBratRowsFromUnits(GetDocumentResponse aResponse, AnnotatorState aState)
+    private void renderBratRowsFromUnits(GetDocumentResponse aResponse, RenderRequest aRequest)
     {
-        int windowBegin = aState.getWindowBeginOffset();
+        int windowBegin = aRequest.getWindowBeginOffset();
 
-        aResponse.setSentenceNumberOffset(aState.getFirstVisibleUnitIndex());
+        aResponse.setSentenceNumberOffset(aRequest.getState().getFirstVisibleUnitIndex());
 
         // Render sentences
         int unitNum = aResponse.getSentenceNumberOffset();
-        for (Unit unit : aState.getVisibleUnits()) {
+        for (Unit unit : aRequest.getState().getVisibleUnits()) {
             aResponse.addSentence(unit.getBegin() - windowBegin, unit.getEnd() - windowBegin);
 
             // If there is a sentence ID, then make it accessible to the user via a sentence-level

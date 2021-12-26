@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
+import static java.lang.System.currentTimeMillis;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
@@ -42,7 +45,10 @@ public class RenderingPipelineImpl
         VDocument vdoc = new VDocument();
 
         for (RenderStep<?> step : renderStepExtensionPoint.getExtensions(aRequest)) {
+            long start = currentTimeMillis();
             step.render(vdoc, aRequest);
+            serverTiming("Rendering", "Rendering (" + step.getId() + ")",
+                    currentTimeMillis() - start);
         }
 
         return vdoc;
