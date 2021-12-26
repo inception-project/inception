@@ -278,7 +278,7 @@ public class AnnotatorJsHtmlAnnotationEditor
             CAS cas = getCasProvider().get();
 
             List<Annotation> annotations = render(cas, 0, cas.getDocumentText().length(),
-                    new AnnotatorJsRenderer());
+                    new AnnotatorJsSerializer());
 
             String json = toInterpretableJsonString(annotations);
 

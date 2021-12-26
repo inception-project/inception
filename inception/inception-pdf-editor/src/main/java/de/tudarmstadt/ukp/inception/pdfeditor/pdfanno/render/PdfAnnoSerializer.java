@@ -28,7 +28,7 @@ import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -41,16 +41,16 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractLine;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Relation;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
 
-public class PdfAnnoRenderer
-    implements TerminalRenderStep<PdfAnnoModel>
+public class PdfAnnoSerializer
+    implements VDocumentSerializer<PdfAnnoModel>
 {
-    public static final String ID = "PdfAnnoRenderer";
+    public static final String ID = "PdfAnno";
     private static final int WINDOW_SIZE_INCREMENT = 5;
 
     private final PdfExtractFile pdfExtractFile;
     private final int pageBeginOffset;
 
-    public PdfAnnoRenderer(PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
+    public PdfAnnoSerializer(PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
     {
         pdfExtractFile = aPdfExtractFile;
         pageBeginOffset = aPageBeginOffset;

@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.IntermediateRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
@@ -76,7 +75,7 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAu
  */
 @Order(RenderStep.RENDER_SYNTHETIC_STRUCTURE)
 public class CurationRenderer
-    implements IntermediateRenderStep
+    implements RenderStep
 {
     public static final String ID = "CurationRenderer";
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -111,14 +110,14 @@ public class CurationRenderer
     }
 
     @Override
-    public VDocument render(VDocument aVdoc, RenderRequest aRequest)
+    public void render(VDocument aVdoc, RenderRequest aRequest)
     {
         String currentUsername = userRepository.getCurrentUsername();
         List<User> selectedUsers = curationService.listUsersReadyForCuration(currentUsername,
                 aRequest.getProject(), aRequest.getSourceDocument());
 
         if (selectedUsers.isEmpty()) {
-            return aVdoc;
+            return;
         }
 
         Map<String, CAS> casses = new LinkedHashMap<>();
@@ -223,8 +222,6 @@ public class CurationRenderer
                 }
             }
         }
-
-        return aVdoc;
     }
 
     /**

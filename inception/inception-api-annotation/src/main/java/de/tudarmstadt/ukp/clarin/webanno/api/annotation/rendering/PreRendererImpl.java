@@ -87,7 +87,7 @@ public class PreRendererImpl
     }
 
     @Override
-    public VDocument render(VDocument aResponse, RenderRequest aRequest)
+    public void render(VDocument aResponse, RenderRequest aRequest)
     {
         log.trace("Prerenderer.render()");
 
@@ -95,7 +95,7 @@ public class PreRendererImpl
         Validate.notNull(cas, "CAS cannot be null");
 
         if (aRequest.getVisibleLayers().isEmpty()) {
-            return aResponse;
+            return;
         }
 
         long start = System.currentTimeMillis();
@@ -135,8 +135,6 @@ public class PreRendererImpl
                     duration, aRequest.getVisibleLayers().size(), renderBegin, renderEnd,
                     aResponse.spans().size(), aResponse.arcs().size());
         }
-
-        return aResponse;
     }
 
     @EventListener

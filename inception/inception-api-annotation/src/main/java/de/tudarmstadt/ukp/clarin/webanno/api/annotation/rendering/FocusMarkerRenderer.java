@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
  */
 @Order(RenderStep.RENDER_FOCUS)
 public class FocusMarkerRenderer
-    implements IntermediateRenderStep
+    implements RenderStep
 {
     public static final String ID = "FocusMarkerRenderer";
 
@@ -43,13 +43,11 @@ public class FocusMarkerRenderer
     }
 
     @Override
-    public VDocument render(VDocument aVDoc, RenderRequest aRequest)
+    public void render(VDocument aVDoc, RenderRequest aRequest)
     {
         if (aRequest.getState().getSelection().getAnnotation().isSet()) {
             aVDoc.add(new VAnnotationMarker(VMarker.FOCUS,
                     aRequest.getState().getSelection().getAnnotation()));
         }
-
-        return aVDoc;
     }
 }

@@ -32,11 +32,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_I
  * </p>
  */
 public class RenderStepExtensionPointImpl
-    extends ExtensionPoint_ImplBase<RenderRequest, RenderStep<?>>
+    extends ExtensionPoint_ImplBase<RenderRequest, RenderStep>
     implements RenderStepExtensionPoint
 {
     public RenderStepExtensionPointImpl(
-            @Lazy @Autowired(required = false) List<RenderStep<?>> aExtensions)
+            @Lazy @Autowired(required = false) List<RenderStep> aExtensions)
     {
         super(aExtensions);
     }

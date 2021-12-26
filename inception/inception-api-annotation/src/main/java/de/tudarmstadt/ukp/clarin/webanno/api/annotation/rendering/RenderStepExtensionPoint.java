@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 
 public interface RenderStepExtensionPoint
-    extends ExtensionPoint<RenderRequest, RenderStep<?>>
+    extends ExtensionPoint<RenderRequest, RenderStep>
 {
     // No additional methods
 }

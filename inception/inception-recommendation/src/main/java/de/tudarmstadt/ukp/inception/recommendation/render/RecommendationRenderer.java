@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.IntermediateRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -52,7 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
  */
 @Order(RenderStep.RENDER_SYNTHETIC_STRUCTURE)
 public class RecommendationRenderer
-    implements IntermediateRenderStep
+    implements RenderStep
 {
     public static final String ID = "RecommendationRenderer";
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -101,14 +99,13 @@ public class RecommendationRenderer
     }
 
     @Override
-    public VDocument render(VDocument aVDoc, RenderRequest aRequest)
+    public void render(VDocument aVDoc, RenderRequest aRequest)
     {
         // Add the suggestions to the visual document
-        for (AnnotationLayer layer : aRequest.getState().getAnnotationLayers()) {
+        for (AnnotationLayer layer : aRequest.getVisibleLayers()) {
             if (layer.getName().equals(Token.class.getName())
                     || layer.getName().equals(Sentence.class.getName())
-                    || (layer.getType().equals(CHAIN_TYPE)
-                            && CURATION == aRequest.getState().getMode())
+                    || layer.getType().equals(CHAIN_TYPE)
                     || !layer.isEnabled()) { /* Hide layer if not enabled */
                 continue;
             }
@@ -119,8 +116,6 @@ public class RecommendationRenderer
                 renderer.render(aVDoc, aRequest);
             }
         }
-
-        return aVDoc;
     }
 
     /**

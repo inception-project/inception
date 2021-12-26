@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -88,15 +88,15 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
  * model used by brat. The result can be converted to JSON that the browser-side brat SVG renderer
  * can then use.
  */
-public class BratRenderer
-    implements TerminalRenderStep<GetDocumentResponse>
+public class BratSerializer
+    implements VDocumentSerializer<GetDocumentResponse>
 {
     private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
-    public static final String ID = "BratRenderer";
+    public static final String ID = "Brat";
 
     private final BratAnnotationEditorProperties properties;
 
-    public BratRenderer(BratAnnotationEditorProperties aProperties)
+    public BratSerializer(BratAnnotationEditorProperties aProperties)
     {
         properties = aProperties;
     }

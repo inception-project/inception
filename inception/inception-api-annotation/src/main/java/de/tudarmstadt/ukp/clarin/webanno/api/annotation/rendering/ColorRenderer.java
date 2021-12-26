@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
  */
 @Order(RenderStep.RENDER_COLORS)
 public class ColorRenderer
-    implements IntermediateRenderStep
+    implements RenderStep
 {
     public static final String ID = "ColorRenderer";
 
@@ -62,7 +62,7 @@ public class ColorRenderer
     }
 
     @Override
-    public VDocument render(VDocument aVDoc, RenderRequest aRequest)
+    public void render(VDocument aVDoc, RenderRequest aRequest)
     {
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
         for (AnnotationLayer layer : aRequest.getAllLayers()) {
@@ -89,7 +89,5 @@ public class ColorRenderer
                         coloringStrategy.getColor(vobj, vobj.getLabelHint(), coloringRules));
             }
         }
-
-        return aVDoc;
     }
 }

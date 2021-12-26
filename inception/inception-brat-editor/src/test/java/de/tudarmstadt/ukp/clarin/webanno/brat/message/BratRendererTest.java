@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorPropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -90,6 +90,10 @@ public class BratRendererTest
     private AnnotationFeature posFeature;
 
     private PreRenderer preRenderer;
+    private LabelRenderer labelRenderer;
+    private ColorRenderer colorRenderer;
+
+    private BratSerializer sut;
 
     @BeforeEach
     public void setup()
@@ -156,6 +160,9 @@ public class BratRendererTest
         });
 
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
+        labelRenderer = new LabelRenderer();
+        colorRenderer = new ColorRenderer(schemaService, new ColoringServiceImpl(schemaService));
+        sut = new BratSerializer(new BratAnnotationEditorPropertiesImpl());
     }
 
     @Test
@@ -185,15 +192,10 @@ public class BratRendererTest
 
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, request);
-
-        new LabelRenderer().render(vdoc, request);
-
-        ColorRenderer colorRenderer = new ColorRenderer(schemaService,
-                new ColoringServiceImpl(schemaService));
+        labelRenderer.render(vdoc, request);
         colorRenderer.render(vdoc, request);
 
-        BratRenderer renderer = new BratRenderer(new BratAnnotationEditorPropertiesImpl());
-        GetDocumentResponse response = renderer.render(vdoc, request);
+        GetDocumentResponse response = sut.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -232,15 +234,10 @@ public class BratRendererTest
 
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, request);
+        labelRenderer.render(vdoc, request);
+        colorRenderer.render(vdoc, request);
 
-        new LabelRenderer().render(vdoc, request);
-
-        ColorRenderer calRenderer = new ColorRenderer(schemaService,
-                new ColoringServiceImpl(schemaService));
-        calRenderer.render(vdoc, request);
-
-        BratRenderer renderer = new BratRenderer(new BratAnnotationEditorPropertiesImpl());
-        GetDocumentResponse response = renderer.render(vdoc, request);
+        GetDocumentResponse response = sut.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -279,15 +276,10 @@ public class BratRendererTest
 
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, request);
+        labelRenderer.render(vdoc, request);
+        colorRenderer.render(vdoc, request);
 
-        new LabelRenderer().render(vdoc, request);
-
-        ColorRenderer calRenderer = new ColorRenderer(schemaService,
-                new ColoringServiceImpl(schemaService));
-        calRenderer.render(vdoc, request);
-
-        BratRenderer renderer = new BratRenderer(new BratAnnotationEditorPropertiesImpl());
-        GetDocumentResponse response = renderer.render(vdoc, request);
+        GetDocumentResponse response = sut.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 

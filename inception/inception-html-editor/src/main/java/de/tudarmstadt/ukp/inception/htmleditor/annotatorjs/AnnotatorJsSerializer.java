@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -32,10 +32,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Annotation;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Range;
 
-public class AnnotatorJsRenderer
-    implements TerminalRenderStep<List<Annotation>>
+public class AnnotatorJsSerializer
+    implements VDocumentSerializer<List<Annotation>>
 {
-    public static final String ID = "AnnotatorJsRenderer";
+    public static final String ID = "AnnotatorJs";
 
     @Override
     public String getId()

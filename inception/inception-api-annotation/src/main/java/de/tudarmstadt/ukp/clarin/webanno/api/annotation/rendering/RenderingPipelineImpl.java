@@ -44,7 +44,7 @@ public class RenderingPipelineImpl
     {
         VDocument vdoc = new VDocument();
 
-        for (RenderStep<?> step : renderStepExtensionPoint.getExtensions(aRequest)) {
+        for (RenderStep step : renderStepExtensionPoint.getExtensions(aRequest)) {
             long start = currentTimeMillis();
             step.render(vdoc, aRequest);
             serverTiming("Rendering", "Rendering (" + step.getId() + ")",

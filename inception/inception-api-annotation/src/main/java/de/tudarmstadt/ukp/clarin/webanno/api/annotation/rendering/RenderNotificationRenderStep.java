@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
  */
 @Order(RenderStep.RENDER_NOTIFICATION)
 public class RenderNotificationRenderStep
-    implements IntermediateRenderStep
+    implements RenderStep
 {
     public static final String ID = "RenderNotificationRenderStep";
 
@@ -47,7 +47,7 @@ public class RenderNotificationRenderStep
     }
 
     @Override
-    public VDocument render(VDocument aVDoc, RenderRequest aRequest)
+    public void render(VDocument aVDoc, RenderRequest aRequest)
     {
         // Fire render event into UI
         RequestCycle.get().find(IPageRequestHandler.class).ifPresent(handler -> {
@@ -57,7 +57,5 @@ public class RenderNotificationRenderStep
                             RequestCycle.get().find(IPartialPageRequestHandler.class).get(),
                             aRequest.getCas(), aRequest.getState(), aVDoc));
         });
-
-        return aVDoc;
     }
 }

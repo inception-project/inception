@@ -81,7 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -260,7 +260,7 @@ public class BratAnnotationEditor
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
         if (getModelObject().getProject() != null) {
-            info.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject().getProject(),
+            info.setEntityTypes(BratSerializer.buildEntityTypes(getModelObject().getProject(),
                     getModelObject().getAnnotationLayers(), annotationService));
             info.getVisualOptions()
                     .setArcBundle(getModelObject().getPreferences().isCollapseArcs()
@@ -426,7 +426,7 @@ public class BratAnnotationEditor
         AnnotatorState aState = getModelObject();
 
         return render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
-                new BratRenderer(bratProperties));
+                new BratSerializer(bratProperties));
     }
 
     private String bratInitCommand()
@@ -454,7 +454,7 @@ public class BratAnnotationEditor
         LOG.trace("[{}][{}] bratLoadCollectionCommand", getMarkupId(), vis.getMarkupId());
 
         GetCollectionInformationResponse response = actionGetCollectionInformation();
-        response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject().getProject(),
+        response.setEntityTypes(BratSerializer.buildEntityTypes(getModelObject().getProject(),
                 getModelObject().getAnnotationLayers(), annotationService));
         String json = toJson(response);
 

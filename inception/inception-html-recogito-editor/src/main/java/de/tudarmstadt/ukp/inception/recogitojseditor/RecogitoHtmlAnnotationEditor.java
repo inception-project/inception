@@ -163,7 +163,7 @@ public class RecogitoHtmlAnnotationEditor
             CAS cas = getCasProvider().get();
 
             WebAnnotations annotations = render(cas, 0, cas.getDocumentText().length(),
-                    new RecogitoJsRenderer());
+                    new RecogitoJsSerializer());
             
             String json = toInterpretableJsonString(annotations);
 

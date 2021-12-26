@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 
-public interface RenderStep<T>
+public interface RenderStep
     extends Extension<RenderRequest>
 {
     public static final int RENDER_STRUCTURE = 100;
@@ -36,5 +36,5 @@ public interface RenderStep<T>
         return true;
     }
 
-    T render(VDocument aVdoc, RenderRequest aRequest);
+    void render(VDocument aVdoc, RenderRequest aRequest);
 }

@@ -17,10 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import java.util.List;
 
-public interface IntermediateRenderStep
-    extends RenderStep<VDocument>
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationAutoConfiguration#vDocumentSerializerExtensionPoint}.
+ * </p>
+ */
+public class VDocumentSerializerExtensionPointImpl
+    extends ExtensionPoint_ImplBase<RenderRequest, VDocumentSerializer<?>>
+    implements VDocumentSerializerExtensionPoint
 {
-    // No additional methods
+    public VDocumentSerializerExtensionPointImpl(
+            @Lazy @Autowired(required = false) List<VDocumentSerializer<?>> aExtensions)
+    {
+        super(aExtensions);
+    }
 }

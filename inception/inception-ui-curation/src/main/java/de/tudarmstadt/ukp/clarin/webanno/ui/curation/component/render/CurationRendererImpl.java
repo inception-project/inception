@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -92,7 +92,7 @@ public class CurationRendererImpl
         ColorRenderer colorRenderer = new ColorRenderer(schemaService, coloringService);
         colorRenderer.render(vdoc, request);
 
-        BratRenderer renderer = new BratRenderer(bratProperties);
+        BratSerializer renderer = new BratSerializer(bratProperties);
         GetDocumentResponse response = renderer.render(vdoc, request);
 
         return JSONUtil.toInterpretableJsonString(response);

@@ -76,7 +76,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer;
 
 public class PdfAnnoRendererTest
 {
@@ -197,7 +197,7 @@ public class PdfAnnoRendererTest
         colorRenderer.render(vdoc, request);
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
-        PdfAnnoRenderer renderer = new PdfAnnoRenderer(pdfExtractFile, 0);
+        PdfAnnoSerializer renderer = new PdfAnnoSerializer(pdfExtractFile, 0);
         PdfAnnoModel annoFile = renderer.render(vdoc, request);
 
         assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
@@ -244,7 +244,7 @@ public class PdfAnnoRendererTest
         offsets.add(new Offset(28, 30));
         offsets.add(new Offset(35, 38));
         // convert to offests for document in INCEpTION
-        List<Offset> docOffsets = PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel,
+        List<Offset> docOffsets = PdfAnnoSerializer.convertToDocumentOffsets(offsets, documentModel,
                 pdfExtractFile);
         List<Offset> expectedOffsets = new ArrayList<>();
         expectedOffsets.add(new Offset(0, 0));

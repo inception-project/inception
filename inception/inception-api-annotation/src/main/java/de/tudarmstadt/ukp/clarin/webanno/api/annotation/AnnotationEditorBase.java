@@ -39,10 +39,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
@@ -56,7 +55,6 @@ public abstract class AnnotationEditorBase
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean AnnotationEditorProperties properties;
-    private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
@@ -149,7 +147,7 @@ public abstract class AnnotationEditorBase
     protected abstract void render(AjaxRequestTarget aTarget);
 
     protected <T> T render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset,
-            TerminalRenderStep<T> aTerminalStep)
+            VDocumentSerializer<T> aTerminalStep)
     {
         RenderRequest request = RenderRequest.builder() //
                 .withState(getModelObject()) //

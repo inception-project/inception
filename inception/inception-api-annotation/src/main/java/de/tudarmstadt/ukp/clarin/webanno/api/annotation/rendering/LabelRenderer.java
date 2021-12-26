@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
  */
 @Order(RenderStep.RENDER_LABELS)
 public class LabelRenderer
-    implements IntermediateRenderStep
+    implements RenderStep
 {
     public static final String ID = "LabelRenderer";
 
@@ -45,13 +45,12 @@ public class LabelRenderer
     }
 
     @Override
-    public VDocument render(VDocument aVDoc, RenderRequest aRequest)
+    public void render(VDocument aVDoc, RenderRequest aRequest)
     {
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VObject vobj : aVDoc.objects(layer.getId())) {
                 vobj.setLabelHint(getUiLabelText(vobj));
             }
         }
-        return aVDoc;
     }
 }

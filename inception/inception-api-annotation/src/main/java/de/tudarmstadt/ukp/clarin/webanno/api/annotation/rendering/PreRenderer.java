@@ -17,10 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-
 public interface PreRenderer
-    extends RenderStep<VDocument>
+    extends RenderStep
 {
     // No additional methods
 }

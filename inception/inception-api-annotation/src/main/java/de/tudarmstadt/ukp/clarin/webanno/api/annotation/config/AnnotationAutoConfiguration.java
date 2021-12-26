@@ -45,6 +45,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStepExte
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStepExtensionPointImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipelineImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializerExtensionPoint;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializerExtensionPointImpl;
 
 @Configuration
 public class AnnotationAutoConfiguration
@@ -97,7 +100,7 @@ public class AnnotationAutoConfiguration
 
     @Bean
     public RenderStepExtensionPoint renderStepExtensionPoint(
-            @Lazy @Autowired(required = false) List<RenderStep<?>> aExtensions)
+            @Lazy @Autowired(required = false) List<RenderStep> aExtensions)
     {
         return new RenderStepExtensionPointImpl(aExtensions);
     }
@@ -112,5 +115,12 @@ public class AnnotationAutoConfiguration
     public FocusMarkerRenderer focusMarkerRenderer()
     {
         return new FocusMarkerRenderer();
+    }
+
+    @Bean
+    public VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint(
+            @Lazy @Autowired(required = false) List<VDocumentSerializer<?>> aExtensions)
+    {
+        return new VDocumentSerializerExtensionPointImpl(aExtensions);
     }
 }

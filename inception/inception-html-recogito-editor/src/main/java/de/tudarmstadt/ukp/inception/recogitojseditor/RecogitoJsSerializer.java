@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recogitojseditor;
 import java.util.ArrayList;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -30,10 +30,10 @@ import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationBodyItem
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationTarget;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
 
-public class RecogitoJsRenderer
-    implements TerminalRenderStep<WebAnnotations>
+public class RecogitoJsSerializer
+    implements VDocumentSerializer<WebAnnotations>
 {
-    public static final String ID = "RecogitoJsRenderer";
+    public static final String ID = "RecogitoJs";
 
     @Override
     public String getId()

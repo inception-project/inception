@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.pdfeditor;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
-import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer.convertToDocumentOffset;
+import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer.convertToDocumentOffset;
 import static java.lang.String.join;
 
 import java.io.File;
@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
 
 public class PdfAnnotationEditor
@@ -166,7 +166,7 @@ public class PdfAnnotationEditor
             int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
 
             PdfAnnoModel pdfAnnoModel = render(cas, begin, end,
-                    new PdfAnnoRenderer(pdfExtractFile, begin));
+                    new PdfAnnoSerializer(pdfExtractFile, begin));
 
             // show unmatched spans to user
             if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
@@ -346,7 +346,7 @@ public class PdfAnnotationEditor
             if (paramId.isSynthetic()) {
                 getModelObject().clearArmedSlot();
                 Offset offset = new Offset(aParams);
-                Offset docOffset = PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel,
+                Offset docOffset = PdfAnnoSerializer.convertToDocumentOffset(offset, documentModel,
                         pdfExtractFile);
                 if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
@@ -377,7 +377,7 @@ public class PdfAnnotationEditor
             List<Offset> offsets = new ArrayList<>();
             offsets.add(new Offset(begin, begin));
             offsets.add(new Offset(end + 1, end + 1));
-            offsets = PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel,
+            offsets = PdfAnnoSerializer.convertToDocumentOffsets(offsets, documentModel,
                     pdfExtractFile);
             int newBegin = offsets.stream().mapToInt(Offset::getBegin).min().getAsInt();
             int newEnd = offsets.stream().mapToInt(Offset::getEnd).max().getAsInt();
