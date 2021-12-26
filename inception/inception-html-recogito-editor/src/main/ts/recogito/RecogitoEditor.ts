@@ -21,18 +21,20 @@ import { Recogito } from '@recogito/recogito-js';
 import { DiamAjax } from "@inception-project/inception-diam/diam/Diam";
 
 export interface AnnotationEditor {
+  // static getInstance(element: HTMLElement | string, callbackUrl: string)
+  // static destroy(element: HTMLElement | string)
   loadAnnotations() : void;
 }
 
+const FORMAT_RECOGITO_JS = "RecogitoJs";
+
 export class RecogitoEditor implements AnnotationEditor {
   private ajax : DiamAjax; 
-  private callbackUrl : string;
   private recogito : Recogito;
 
   public constructor(element: HTMLElement, callbackUrl: string) {
     this.ajax = new DiamAjax(callbackUrl);
-    this.callbackUrl = callbackUrl;
-
+    
     this.recogito = new Recogito({
       content: element,
       disableEditor: true,
@@ -41,6 +43,8 @@ export class RecogitoEditor implements AnnotationEditor {
 
     this.recogito.on('createAnnotation', annotation => this.createAnnotation(annotation));
     this.recogito.on('selectAnnotation', annotation => this.selectAnnotation(annotation));
+
+    this.loadAnnotations();
   }
 
   public static getInstance(element: HTMLElement | string, callbackUrl: string) : RecogitoEditor {
@@ -69,7 +73,7 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public loadAnnotations() : void {
-    this.recogito.loadAnnotations(this.callbackUrl);
+    this.ajax.loadAnnotations(FORMAT_RECOGITO_JS).then(a => this.recogito.setAnnotations(a));
   }
 
   private createAnnotation(annotation) : void {

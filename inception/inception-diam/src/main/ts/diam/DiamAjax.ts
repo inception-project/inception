@@ -19,6 +19,12 @@ import { OffsetsList } from "./model/Annotation";
 
 declare const Wicket: any;
 
+if (!document.hasOwnProperty('DIAM_TRANSPORT_BUFFER')) {
+  document['DIAM_TRANSPORT_BUFFER'] = {};
+}
+
+const TRANSPORT_BUFFER : any = document['DIAM_TRANSPORT_BUFFER'];
+
 export class DiamAjax {
   private ajaxEndpoint: string;
 
@@ -60,6 +66,41 @@ export class DiamAjax {
         targetSpanId: targetSpanId,
         targetType: targetType
       }
+    });
+  }
+
+  static storeResult(token: string, result: string) {
+    TRANSPORT_BUFFER[token] = JSON.parse(result);
+  }
+
+  loadAnnotations(format: string) : Promise<any> {
+    let token = btoa(String.fromCharCode(...window.crypto.getRandomValues(new Uint8Array(16))));
+    return new Promise((resolve, reject) => {
+      Wicket.Ajax.ajax({
+        "m": "POST",
+        "u": this.ajaxEndpoint,
+        "ep": {
+          "action": 'loadAnnotations',
+          "token": token,
+          "format": format
+        },
+        "sh": [() => {
+          if (TRANSPORT_BUFFER.hasOwnProperty(token)) {
+            const buf = TRANSPORT_BUFFER[token];
+            delete TRANSPORT_BUFFER[token];
+            resolve(buf);
+          }
+          
+          reject("Server did not place result into transport buffer");
+        }],
+        "eh": [() => {
+          if (TRANSPORT_BUFFER.hasOwnProperty(token)) {
+            delete TRANSPORT_BUFFER[token];
+          }
+
+          reject("Unable to load annotation");
+        }]
+      });
     });
   }
 }

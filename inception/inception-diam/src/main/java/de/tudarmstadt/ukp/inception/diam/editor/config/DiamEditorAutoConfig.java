@@ -28,6 +28,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializerExtensionPoint;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CustomActionHandler;
@@ -39,6 +41,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.FillSlotWithExistingAnno
 import de.tudarmstadt.ukp.inception.diam.editor.actions.FillSlotWithNewAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.ImplicitUnarmSlotHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.LoadAnnotationsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
@@ -118,5 +121,12 @@ public class DiamEditorAutoConfig
     {
         return new LazyDetailsLookupServiceImpl(aAnnotationService, aExtensionRegistry,
                 aLayerSupportRegistry, aFeatureSupportRegistry);
+    }
+
+    @Bean
+    public LoadAnnotationsHandler loadAnnotationsHandler(RenderingPipeline aRenderingPipeline,
+            VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint)
+    {
+        return new LoadAnnotationsHandler(aRenderingPipeline, aVDocumentSerializerExtensionPoint);
     }
 }
