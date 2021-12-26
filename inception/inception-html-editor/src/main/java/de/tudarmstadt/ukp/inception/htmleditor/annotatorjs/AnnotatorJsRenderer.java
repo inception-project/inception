@@ -23,9 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
@@ -37,12 +35,20 @@ import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Range;
 public class AnnotatorJsRenderer
     implements TerminalRenderStep<List<Annotation>>
 {
+    public static final String ID = "AnnotatorJsRenderer";
+
     @Override
-    public List<Annotation> render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public List<Annotation> render(VDocument aVDoc, RenderRequest aRequest)
     {
         List<Annotation> annotations = new ArrayList<>();
 
-        for (AnnotationLayer layer : aState.getAllAnnotationLayers()) {
+        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 String labelText = vspan.getLabelHint();
                 labelText = "[" + layer.getUiName() + "] "

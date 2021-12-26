@@ -18,9 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -37,6 +39,7 @@ public class RenderRequest
     private final List<AnnotationLayer> allLayers;
     private final List<AnnotationLayer> visibleLayers;
     private final CAS cas;
+    private final ColoringStrategy coloringStrategyOverride;
 
     private RenderRequest(Builder builder)
     {
@@ -48,6 +51,12 @@ public class RenderRequest
         this.cas = builder.cas;
         this.allLayers = builder.allLayers;
         this.visibleLayers = builder.visibleLayers;
+        this.coloringStrategyOverride = builder.coloringStrategyOverride;
+    }
+
+    public Optional<ColoringStrategy> getColoringStrategyOverride()
+    {
+        return Optional.ofNullable(coloringStrategyOverride);
     }
 
     public int getWindowBeginOffset()
@@ -79,12 +88,12 @@ public class RenderRequest
     {
         return cas;
     }
-    
+
     public List<AnnotationLayer> getAllLayers()
     {
         return allLayers;
     }
-    
+
     public List<AnnotationLayer> getVisibleLayers()
     {
         return visibleLayers;
@@ -116,6 +125,7 @@ public class RenderRequest
         private CAS cas;
         private List<AnnotationLayer> allLayers;
         private List<AnnotationLayer> visibleLayers;
+        private ColoringStrategy coloringStrategyOverride;
 
         private Builder()
         {
@@ -151,6 +161,12 @@ public class RenderRequest
         public Builder withVisibleLayers(List<AnnotationLayer> aLayers)
         {
             visibleLayers = aLayers;
+            return this;
+        }
+
+        public Builder withColoringStrategyOverride(ColoringStrategy aColoringStrategyOverride)
+        {
+            coloringStrategyOverride = aColoringStrategyOverride;
             return this;
         }
 

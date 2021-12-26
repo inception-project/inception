@@ -19,9 +19,7 @@ package de.tudarmstadt.ukp.inception.recogitojseditor;
 
 import java.util.ArrayList;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -32,10 +30,19 @@ import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationBodyItem
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationTarget;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
 
-public class RecogitoJsRenderer implements TerminalRenderStep<WebAnnotations>
+public class RecogitoJsRenderer
+    implements TerminalRenderStep<WebAnnotations>
 {
+    public static final String ID = "RecogitoJsRenderer";
+
     @Override
-    public WebAnnotations render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public WebAnnotations render(VDocument aVDoc, RenderRequest aRequest)
     {
         WebAnnotations annotations = new WebAnnotations();
 

@@ -189,11 +189,11 @@ public class BratRendererTest
         new LabelRenderer().render(vdoc, request);
 
         ColorRenderer colorRenderer = new ColorRenderer(schemaService,
-                new ColoringServiceImpl(schemaService), null);
+                new ColoringServiceImpl(schemaService));
         colorRenderer.render(vdoc, request);
 
         BratRenderer renderer = new BratRenderer(new BratAnnotationEditorPropertiesImpl());
-        GetDocumentResponse response = renderer.render(state, vdoc, cas);
+        GetDocumentResponse response = renderer.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -236,11 +236,11 @@ public class BratRendererTest
         new LabelRenderer().render(vdoc, request);
 
         ColorRenderer calRenderer = new ColorRenderer(schemaService,
-                new ColoringServiceImpl(schemaService), null);
+                new ColoringServiceImpl(schemaService));
         calRenderer.render(vdoc, request);
 
         BratRenderer renderer = new BratRenderer(new BratAnnotationEditorPropertiesImpl());
-        GetDocumentResponse response = renderer.render(state, vdoc, cas);
+        GetDocumentResponse response = renderer.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -283,11 +283,11 @@ public class BratRendererTest
         new LabelRenderer().render(vdoc, request);
 
         ColorRenderer calRenderer = new ColorRenderer(schemaService,
-                new ColoringServiceImpl(schemaService), null);
+                new ColoringServiceImpl(schemaService));
         calRenderer.render(vdoc, request);
 
         BratRenderer renderer = new BratRenderer(new BratAnnotationEditorPropertiesImpl());
-        GetDocumentResponse response = renderer.render(state, vdoc, cas);
+        GetDocumentResponse response = renderer.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 

@@ -17,7 +17,24 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-public interface RenderStep
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+
+public interface RenderStep<T>
+    extends Extension<RenderRequest>
 {
-    // Marker interface
+    public static final int RENDER_STRUCTURE = 100;
+    public static final int RENDER_SYNTHETIC_STRUCTURE = 200;
+    public static final int RENDER_NOTIFICATION = 300;
+    public static final int RENDER_FOCUS = 400;
+    public static final int RENDER_LABELS = 500;
+    public static final int RENDER_COLORS = 600;
+
+    @Override
+    default boolean accepts(RenderRequest aContext)
+    {
+        return true;
+    }
+
+    T render(VDocument aVdoc, RenderRequest aRequest);
 }

@@ -17,24 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-
 public interface TerminalRenderStep<T>
-    extends RenderStep
+    extends RenderStep<T>
 {
-    /**
-     * Convert the visual representation to the brat representation.
-     *
-     * @param aState
-     *            the annotator state.
-     * @param aVDoc
-     *            the visual document representation.
-     * @param aCas
-     *            the CAS.
-     * @return representation suitable for sending to the browser
-     */
-    T render(AnnotatorState aState, VDocument aVDoc, CAS aCas);
+    // No additional methods
 }

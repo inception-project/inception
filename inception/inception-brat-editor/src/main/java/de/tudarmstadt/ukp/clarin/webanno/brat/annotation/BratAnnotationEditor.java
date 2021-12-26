@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -428,10 +429,16 @@ public class BratAnnotationEditor
     {
         AnnotatorState aState = getModelObject();
 
+        RenderRequest request = RenderRequest.builder() //
+                .withState(aState) //
+                .withWindow(aState.getWindowBeginOffset(), aState.getWindowEndOffset()) //
+                .withCas(aCas) //
+                .build();
+
         VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
 
         BratRenderer renderer = new BratRenderer(bratProperties);
-        return renderer.render(aState, vdoc, aCas);
+        return renderer.render(vdoc, request);
     }
 
     private String bratInitCommand()

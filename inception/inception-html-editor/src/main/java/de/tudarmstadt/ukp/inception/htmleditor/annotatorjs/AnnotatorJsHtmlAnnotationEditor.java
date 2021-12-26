@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -278,10 +279,16 @@ public class AnnotatorJsHtmlAnnotationEditor
         {
             CAS cas = getCasProvider().get();
 
+            RenderRequest request = RenderRequest.builder() //
+                    .withState(getModelObject()) //
+                    .withWindow(0, cas.getDocumentText().length()) //
+                    .withCas(cas) //
+                    .build();
+
             VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
 
             AnnotatorJsRenderer renderer = new AnnotatorJsRenderer();
-            List<Annotation> annotations = renderer.render(getModelObject(), vdoc, cas);
+            List<Annotation> annotations = renderer.render(vdoc, request);
 
             String json = toInterpretableJsonString(annotations);
 

@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -49,9 +50,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
  * This class is exposed as a Spring Component via {@link AnnotationAutoConfiguration#preRenderer}.
  * </p>
  */
+@Order(RenderStep.RENDER_STRUCTURE)
 public class PreRendererImpl
     implements PreRenderer
 {
+    public static final String ID = "PreRenderer";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final AnnotationSchemaService annotationService;
@@ -78,7 +82,13 @@ public class PreRendererImpl
     }
 
     @Override
-    public void render(VDocument aResponse, RenderRequest aRequest)
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public VDocument render(VDocument aResponse, RenderRequest aRequest)
     {
         log.trace("Prerenderer.render()");
 
@@ -86,7 +96,7 @@ public class PreRendererImpl
         Validate.notNull(cas, "CAS cannot be null");
 
         if (aRequest.getVisibleLayers().isEmpty()) {
-            return;
+            return aResponse;
         }
 
         long start = System.currentTimeMillis();
@@ -125,6 +135,8 @@ public class PreRendererImpl
                 duration, aRequest.getVisibleLayers().size(), renderBegin, renderEnd,
                 aResponse.spans().size(), aResponse.arcs().size());
         serverTiming("Prerenderer", "Pre-rendering", duration);
+
+        return aResponse;
     }
 
     @EventListener

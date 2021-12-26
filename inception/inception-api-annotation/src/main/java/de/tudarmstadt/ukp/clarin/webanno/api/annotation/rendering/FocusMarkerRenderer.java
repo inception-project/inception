@@ -17,34 +17,39 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import org.springframework.core.annotation.Order;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationAutoConfiguration#renderingPipeline}.
+ * {@link AnnotationAutoConfiguration#focusMarkerRenderer}.
  * </p>
  */
-public class RenderingPipelineImpl
-    implements RenderingPipeline
+@Order(RenderStep.RENDER_FOCUS)
+public class FocusMarkerRenderer
+    implements IntermediateRenderStep
 {
-    private final RenderStepExtensionPoint renderStepExtensionPoint;
+    public static final String ID = "FocusMarkerRenderer";
 
-    public RenderingPipelineImpl(RenderStepExtensionPoint aRenderStepExtensionPoint)
+    @Override
+    public String getId()
     {
-        renderStepExtensionPoint = aRenderStepExtensionPoint;
+        return ID;
     }
 
     @Override
-    public VDocument render(RenderRequest aRequest)
+    public VDocument render(VDocument aVDoc, RenderRequest aRequest)
     {
-        VDocument vdoc = new VDocument();
-
-        for (RenderStep<?> step : renderStepExtensionPoint.getExtensions(aRequest)) {
-            step.render(vdoc, aRequest);
+        if (aRequest.getState().getSelection().getAnnotation().isSet()) {
+            aVDoc.add(new VAnnotationMarker(VMarker.FOCUS,
+                    aRequest.getState().getSelection().getAnnotation()));
         }
 
-        return vdoc;
+        return aVDoc;
     }
 }

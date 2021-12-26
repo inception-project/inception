@@ -193,12 +193,12 @@ public class PdfAnnoRendererTest
         new LabelRenderer().render(vdoc, request);
 
         ColorRenderer colorRenderer = new ColorRenderer(schemaService,
-                new ColoringServiceImpl(schemaService), null);
+                new ColoringServiceImpl(schemaService));
         colorRenderer.render(vdoc, request);
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoRenderer renderer = new PdfAnnoRenderer(pdfExtractFile, 0);
-        PdfAnnoModel annoFile = renderer.render(state, vdoc, cas);
+        PdfAnnoModel annoFile = renderer.render(vdoc, request);
 
         assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
                 contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));

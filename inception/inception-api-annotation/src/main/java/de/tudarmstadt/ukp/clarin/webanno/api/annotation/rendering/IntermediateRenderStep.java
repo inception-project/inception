@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 public interface IntermediateRenderStep
-    extends RenderStep
+    extends RenderStep<VDocument>
 {
-    void render(VDocument aVdoc, RenderRequest aRequest);
+    // No additional methods
 }

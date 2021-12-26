@@ -30,7 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.IntermediateRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
@@ -39,8 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface AnnotationEditorExtension
-    extends IntermediateRenderStep
-
 {
     /**
      * @return get the bean name.
@@ -65,7 +62,6 @@ public interface AnnotationEditorExtension
     /**
      * Post-process the output during rendering.
      */
-    @Override
     default void render(VDocument vdoc, RenderRequest aRequest)
     {
         // Do nothing by default

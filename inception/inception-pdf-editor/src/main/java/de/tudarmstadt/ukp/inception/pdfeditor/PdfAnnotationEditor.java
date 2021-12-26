@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
@@ -165,10 +166,16 @@ public class PdfAnnotationEditor
             AnnotationFS endSent = selectSentenceAt(cas, pageOffset.getEnd());
             int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
 
+            RenderRequest request = RenderRequest.builder() //
+                    .withState(getModelObject()) //
+                    .withWindow(begin, end) //
+                    .withCas(cas) //
+                    .build();
+
             VDocument vdoc = render(cas, begin, end);
 
             PdfAnnoRenderer renderer = new PdfAnnoRenderer(pdfExtractFile, begin);
-            PdfAnnoModel pdfAnnoModel = renderer.render(getModelObject(), vdoc, cas);
+            PdfAnnoModel pdfAnnoModel = renderer.render(vdoc, request);
             // show unmatched spans to user
             if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
                 String annotations = pdfAnnoModel.getUnmatchedSpans().stream()

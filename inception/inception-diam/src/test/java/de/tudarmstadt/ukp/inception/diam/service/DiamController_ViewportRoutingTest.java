@@ -346,7 +346,13 @@ public class DiamController_ViewportRoutingTest
             return new PreRenderer()
             {
                 @Override
-                public void render(VDocument aResponse, RenderRequest aRequest)
+                public String getId()
+                {
+                    return "TestPreRenderer";
+                }
+
+                @Override
+                public VDocument render(VDocument aResponse, RenderRequest aRequest)
                 {
                     AnnotationLayer layer = new AnnotationLayer();
                     layer.setId(1l);
@@ -354,6 +360,7 @@ public class DiamController_ViewportRoutingTest
                             new VRange(aRequest.getWindowBeginOffset(),
                                     aRequest.getWindowEndOffset()),
                             emptyMap()));
+                    return aResponse;
                 }
             };
         }

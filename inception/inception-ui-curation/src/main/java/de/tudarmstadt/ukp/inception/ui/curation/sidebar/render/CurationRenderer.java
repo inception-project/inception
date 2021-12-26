@@ -38,6 +38,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -45,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.IntermediateRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -71,9 +73,11 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAu
  * {@link CurationSidebarAutoConfiguration#curationRenderer}.
  * </p>
  */
+@Order(RenderStep.RENDER_SYNTHETIC_STRUCTURE)
 public class CurationRenderer
     implements IntermediateRenderStep
 {
+    public static final String ID = "CurationRenderer";
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final CurationSidebarService curationService;
@@ -94,14 +98,20 @@ public class CurationRenderer
     }
 
     @Override
-    public void render(VDocument aVdoc, RenderRequest aRequest)
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public VDocument render(VDocument aVdoc, RenderRequest aRequest)
     {
         String currentUsername = userRepository.getCurrentUsername();
         List<User> selectedUsers = curationService.listUsersReadyForCuration(currentUsername,
                 aRequest.getProject(), aRequest.getSourceDocument());
 
         if (selectedUsers.isEmpty()) {
-            return;
+            return aVdoc;
         }
 
         Map<String, CAS> casses = new LinkedHashMap<>();
@@ -122,7 +132,7 @@ public class CurationRenderer
         }
 
         List<DiffAdapter> adapters = getDiffAdapters(annotationService,
-                aRequest.getState().getAnnotationLayers());
+                aRequest.getVisibleLayers());
         CasDiff casDiff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
         DiffResult diff = casDiff.toResult();
@@ -206,6 +216,8 @@ public class CurationRenderer
                 }
             }
         }
+
+        return aVdoc;
     }
 
     /**

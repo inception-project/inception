@@ -81,6 +81,7 @@ public class CurationRendererImpl
                 .withWindow(aState.getWindowBeginOffset(), aState.getWindowEndOffset()) //
                 .withCas(aCas) //
                 .withVisibleLayers(layersToRender) //
+                .withColoringStrategyOverride(aColoringStrategy) //
                 .build();
 
         VDocument vdoc = new VDocument();
@@ -88,12 +89,11 @@ public class CurationRendererImpl
 
         new LabelRenderer().render(vdoc, request);
 
-        ColorRenderer colorRenderer = new ColorRenderer(schemaService, coloringService,
-                aColoringStrategy);
+        ColorRenderer colorRenderer = new ColorRenderer(schemaService, coloringService);
         colorRenderer.render(vdoc, request);
 
         BratRenderer renderer = new BratRenderer(bratProperties);
-        GetDocumentResponse response = renderer.render(aState, vdoc, aCas);
+        GetDocumentResponse response = renderer.render(vdoc, request);
 
         return JSONUtil.toInterpretableJsonString(response);
     }

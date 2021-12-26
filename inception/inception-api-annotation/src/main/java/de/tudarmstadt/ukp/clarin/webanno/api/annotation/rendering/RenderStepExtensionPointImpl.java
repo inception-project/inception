@@ -17,10 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import java.util.List;
 
-public interface PreRenderer
-    extends RenderStep<VDocument>
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationAutoConfiguration#renderStepExtensionPoint}.
+ * </p>
+ */
+public class RenderStepExtensionPointImpl
+    extends ExtensionPoint_ImplBase<RenderRequest, RenderStep<?>>
+    implements RenderStepExtensionPoint
 {
-    // No additional methods
+    public RenderStepExtensionPointImpl(
+            @Lazy @Autowired(required = false) List<RenderStep<?>> aExtensions)
+    {
+        super(aExtensions);
+    }
 }

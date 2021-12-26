@@ -17,26 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil.getUiLabelText;
-
+import org.apache.wicket.Page;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationAutoConfiguration#labelRenderer}.
+ * {@link AnnotationAutoConfiguration#renderNotificationRenderStep}.
  * </p>
  */
-@Order(RenderStep.RENDER_LABELS)
-public class LabelRenderer
+@Order(RenderStep.RENDER_NOTIFICATION)
+public class RenderNotificationRenderStep
     implements IntermediateRenderStep
 {
-    public static final String ID = "LabelRenderer";
+    public static final String ID = "RenderNotificationRenderStep";
 
     @Override
     public String getId()
@@ -47,11 +49,15 @@ public class LabelRenderer
     @Override
     public VDocument render(VDocument aVDoc, RenderRequest aRequest)
     {
-        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
-            for (VObject vobj : aVDoc.objects(layer.getId())) {
-                vobj.setLabelHint(getUiLabelText(vobj));
-            }
-        }
+        // Fire render event into UI
+        RequestCycle.get().find(IPageRequestHandler.class).ifPresent(handler -> {
+            Page page = (Page) handler.getPage();
+            page.send(page, Broadcast.BREADTH,
+                    new RenderAnnotationsEvent(
+                            RequestCycle.get().find(IPartialPageRequestHandler.class).get(),
+                            aRequest.getCas(), aRequest.getState(), aVDoc));
+        });
+
         return aVDoc;
     }
 }

@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -96,6 +97,7 @@ public class BratRenderer
     implements TerminalRenderStep<GetDocumentResponse>
 {
     private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
+    public static final String ID = "BratRenderer";
 
     private final BratAnnotationEditorProperties properties;
 
@@ -105,9 +107,18 @@ public class BratRenderer
     }
 
     @Override
-    public GetDocumentResponse render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public GetDocumentResponse render(VDocument aVDoc, RenderRequest aRequest)
     {
         GetDocumentResponse aResponse = new GetDocumentResponse();
+
+        AnnotatorState aState = aRequest.getState();
+        CAS aCas = aRequest.getCas();
 
         aResponse.setRtlMode(RTL == aState.getScriptDirection());
         aResponse.setFontZoom(aState.getPreferences().getFontZoom());

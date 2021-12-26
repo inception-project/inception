@@ -34,8 +34,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.FocusMarkerRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderNotificationRenderStep;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStep;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStepExtensionPoint;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStepExtensionPointImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipelineImpl;
 
@@ -57,12 +64,9 @@ public class AnnotationAutoConfiguration
     }
 
     @Bean
-    public RenderingPipeline renderingPipeline(PreRenderer aPreRenderer,
-            AnnotationEditorExtensionRegistry aExtensionRegistry,
-            AnnotationSchemaService aAnnotationService, ColoringService aColoringService)
+    public RenderingPipeline renderingPipeline(RenderStepExtensionPoint aRenderStepExtensionPoint)
     {
-        return new RenderingPipelineImpl(aPreRenderer, aExtensionRegistry, aAnnotationService,
-                aColoringService);
+        return new RenderingPipelineImpl(aRenderStepExtensionPoint);
     }
 
     @Bean
@@ -76,5 +80,37 @@ public class AnnotationAutoConfiguration
             AnnotationSchemaService aAnnotationService)
     {
         return new PreRendererImpl(aLayerSupportRegistry, aAnnotationService);
+    }
+
+    @Bean
+    public LabelRenderer labelRenderer()
+    {
+        return new LabelRenderer();
+    }
+
+    @Bean
+    public ColorRenderer colorRenderer(AnnotationSchemaService aSchemaService,
+            ColoringService aColoringService)
+    {
+        return new ColorRenderer(aSchemaService, aColoringService);
+    }
+
+    @Bean
+    public RenderStepExtensionPoint renderStepExtensionPoint(
+            @Lazy @Autowired(required = false) List<RenderStep<?>> aExtensions)
+    {
+        return new RenderStepExtensionPointImpl(aExtensions);
+    }
+
+    @Bean
+    public RenderNotificationRenderStep renderNotificationRenderStep()
+    {
+        return new RenderNotificationRenderStep();
+    }
+
+    @Bean
+    public FocusMarkerRenderer focusMarkerRenderer()
+    {
+        return new FocusMarkerRenderer();
     }
 }

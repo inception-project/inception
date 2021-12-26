@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 
-public interface InitialRenderStep
-    extends RenderStep
+public interface RenderStepExtensionPoint
+    extends ExtensionPoint<RenderRequest, RenderStep<?>>
 {
-    void render(VDocument aResponse, RenderRequest aRequest);
+    // No additional methods
 }

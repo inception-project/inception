@@ -21,45 +21,54 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
+import org.springframework.core.annotation.Order;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationAutoConfiguration#colorRenderer}.
+ * </p>
+ */
+@Order(RenderStep.RENDER_COLORS)
 public class ColorRenderer
     implements IntermediateRenderStep
 {
+    public static final String ID = "ColorRenderer";
+
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
-    private final ColoringStrategy coloringStrategyOverride;
 
     public ColorRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService)
     {
-        this(aSchemaService, aColoringService, null);
-    }
-
-    public ColorRenderer(AnnotationSchemaService aSchemaService, ColoringService aColoringService,
-            ColoringStrategy aColoringStrategy)
-    {
         schemaService = aSchemaService;
         coloringService = aColoringService;
-        coloringStrategyOverride = aColoringStrategy;
     }
 
     @Override
-    public void render(VDocument aVDoc, RenderRequest aRequest)
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public VDocument render(VDocument aVDoc, RenderRequest aRequest)
     {
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aRequest.getState().getAllAnnotationLayers()) {
-            ColoringStrategy coloringStrategy = coloringStrategyOverride != null //
-                    ? coloringStrategyOverride
-                    : coloringService.getStrategy(layer, aRequest.getState().getPreferences(),
-                            colorQueues);
+        for (AnnotationLayer layer : aRequest.getAllLayers()) {
+            ColoringStrategy coloringStrategy = aRequest.getColoringStrategyOverride()
+                    .orElse(coloringService.getStrategy(layer, aRequest.getState().getPreferences(),
+                            colorQueues));
 
             // If the layer is not included in the rendering, then we skip here - but only after
             // we have obtained a coloring strategy for this layer and thus secured the layer
@@ -80,5 +89,7 @@ public class ColorRenderer
                         coloringStrategy.getColor(vobj, vobj.getLabelHint(), coloringRules));
             }
         }
+
+        return aVDoc;
     }
 }

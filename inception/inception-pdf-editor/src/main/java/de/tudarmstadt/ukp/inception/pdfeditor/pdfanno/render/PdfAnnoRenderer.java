@@ -26,9 +26,8 @@ import java.util.Map;
 
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
-import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.TerminalRenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -45,6 +44,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
 public class PdfAnnoRenderer
     implements TerminalRenderStep<PdfAnnoModel>
 {
+    public static final String ID = "PdfAnnoRenderer";
     private static final int WINDOW_SIZE_INCREMENT = 5;
 
     private final PdfExtractFile pdfExtractFile;
@@ -57,7 +57,13 @@ public class PdfAnnoRenderer
     }
 
     @Override
-    public PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, CAS aCas)
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public PdfAnnoModel render(VDocument aVDoc, RenderRequest aRequest)
     {
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
         List<RenderSpan> spans = new ArrayList<>();
@@ -80,7 +86,8 @@ public class PdfAnnoRenderer
                                 varc.getTarget().toString(), labelText, color));
             }
         }
-        pdfAnnoModel.addSpans(convertToPdfAnnoSpans(spans, aCas.getDocumentText(), pdfExtractFile));
+        pdfAnnoModel.addSpans(
+                convertToPdfAnnoSpans(spans, aRequest.getCas().getDocumentText(), pdfExtractFile));
         return pdfAnnoModel;
     }
 
