@@ -15,9 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recogitojseditor;
+package de.tudarmstadt.ukp.inception.externaleditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -29,42 +32,54 @@ import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.resource.FileSystemResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
-import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssResourceReference;
-import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
+import de.tudarmstadt.ukp.inception.externaleditor.config.EditorPluginDescripion;
 
-public class RecogitoHtmlAnnotationEditor
+public class ExternalAnnotationEditor
     extends AnnotationEditorBase
 {
     private static final long serialVersionUID = -3358207848681467993L;
 
     private @SpringBean DocumentViewExtensionPoint documentViewExtensionPoint;
     private @SpringBean DocumentService documentService;
+    private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
 
-    private final DiamAjaxBehavior diamBehavior;
-    private final Component vis;
+    private final String editorFactoryId;
 
-    private final String VIEW_FORMAT = "cas+html";
-    private final String EDITOR_JS_CLASS = "RecogitoEditor";
+    private DiamAjaxBehavior diamBehavior;
+    private Component vis;
 
-    public RecogitoHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+    public ExternalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
+            String aEditorFactoryId)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
 
-        AnnotationDocument annDoc = documentService.getAnnotationDocument(
-                aModel.getObject().getDocument(), aModel.getObject().getUser());
+        editorFactoryId = aEditorFactoryId;
+    }
 
-        vis = documentViewExtensionPoint.getExtension(VIEW_FORMAT) //
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+        
+        AnnotatorState state = getModelObject();
+
+        AnnotationDocument annDoc = documentService.getAnnotationDocument(
+                state.getDocument(), state.getUser());
+
+        vis = documentViewExtensionPoint.getExtension(getDescription().getView()) //
                 .map(ext -> ext.createView("vis", Model.of(annDoc))) //
                 .orElseGet(() -> new Label("Unsupported view"));
         add(vis);
@@ -72,14 +87,31 @@ public class RecogitoHtmlAnnotationEditor
         add(diamBehavior = new DiamAjaxBehavior());
     }
 
+    private EditorPluginDescripion getDescription()
+    {
+        ExternalAnnotationEditorFactory factory = (ExternalAnnotationEditorFactory) annotationEditorRegistry
+                .getEditorFactory(editorFactoryId);
+        return factory.getDescription();
+    }
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
 
-        aResponse.render(CssHeaderItem.forReference(RecogitoJsCssResourceReference.get()));
-        aResponse.render(
-                JavaScriptHeaderItem.forReference(RecogitoJsJavascriptResourceReference.get()));
+        EditorPluginDescripion description = getDescription();
+
+        Path jsPath = description.getBasePath().resolve("plugin.js");
+        FileSystemResourceReference jsReference = new FileSystemResourceReference(
+                description.getImplementation() + ".js", jsPath);
+        aResponse.render(JavaScriptHeaderItem.forReference(jsReference));
+
+        Path cssPath = description.getBasePath().resolve("plugin.css");
+        if (Files.isRegularFile(cssPath)) {
+            FileSystemResourceReference cssReference = new FileSystemResourceReference(
+                    description.getImplementation() + ".css", cssPath);
+            aResponse.render(CssHeaderItem.forReference(cssReference));
+        }
 
         if (getModelObject().getDocument() != null) {
             aResponse.render(OnDomReadyHeaderItem.forScript(initScript()));
@@ -97,21 +129,22 @@ public class RecogitoHtmlAnnotationEditor
 
     private CharSequence destroyScript()
     {
-        return wrapInTryCatch(EDITOR_JS_CLASS + ".destroy('" + vis.getMarkupId() + "');");
+        return wrapInTryCatch(
+                getDescription().getImplementation() + ".destroy('" + vis.getMarkupId() + "');");
     }
 
     private String initScript()
     {
         String callbackUrl = diamBehavior.getCallbackUrl().toString();
-        return wrapInTryCatch(EDITOR_JS_CLASS + ".getInstance('" + vis.getMarkupId() + "', '"
-                + callbackUrl + "');");
+        return wrapInTryCatch(getDescription().getImplementation() + ".getInstance('"
+                + vis.getMarkupId() + "', '" + callbackUrl + "');");
     }
 
     private String renderScript()
     {
         String callbackUrl = diamBehavior.getCallbackUrl().toString();
-        return wrapInTryCatch(EDITOR_JS_CLASS + ".getInstance('" + vis.getMarkupId() + "', '"
-                + callbackUrl + "').loadAnnotations();");
+        return wrapInTryCatch(getDescription().getImplementation() + ".getInstance('"
+                + vis.getMarkupId() + "', '" + callbackUrl + "').loadAnnotations();");
     }
 
     @Override

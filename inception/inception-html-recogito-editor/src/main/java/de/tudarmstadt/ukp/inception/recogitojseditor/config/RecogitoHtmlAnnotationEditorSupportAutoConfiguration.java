@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.recogitojseditor.RecogitoHtmlAnnotationEditorFactory;
-import de.tudarmstadt.ukp.inception.recogitojseditor.RecogitoJsSerializer;
+import de.tudarmstadt.ukp.inception.recogitojseditor.render.RecogitoJsSerializer;
 
 /**
  * Provides support for an HTML-oriented annotation editor.
