@@ -32,6 +32,7 @@ import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -200,7 +201,7 @@ public interface TypeAdapter
      */
     void silenceEvents();
 
-    void select(AnnotatorState aState, AnnotationFS aAnnotation);
+    Selection select(VID aVid, AnnotationFS aAnnotation);
 
     /**
      * @return the encoded type name sent to the browser.

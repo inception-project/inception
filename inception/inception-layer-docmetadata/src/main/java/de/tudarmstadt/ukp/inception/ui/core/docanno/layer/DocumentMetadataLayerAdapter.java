@@ -36,7 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_Impl
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -135,8 +135,10 @@ public class DocumentMetadataLayerAdapter
     }
 
     @Override
-    public void select(AnnotatorState aState, AnnotationFS aAnno)
+    public Selection select(VID aVid, AnnotationFS aAnno)
     {
-        aState.getSelection().selectSpan(aAnno);
+        Selection selection = new Selection();
+        selection.selectSpan(aAnno);
+        return selection;
     }
 }
