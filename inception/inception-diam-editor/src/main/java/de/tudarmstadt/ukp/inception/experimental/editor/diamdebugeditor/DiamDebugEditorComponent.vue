@@ -31,7 +31,7 @@
           <th>end</th>
         </tr>
         <tr v-for="span in data.spans" :key="span.vid">
-          <td><button v-on:click="client.select(span.vid)">{{span.vid}}</button></td>
+          <td><button v-on:click="ajaxClient.selectAnnotation(span.vid)">{{span.vid}}</button></td>
           <td>{{span.color}}</td>
           <td>{{span.label}}</td>
           <td>{{span.begin}}</td>
@@ -61,22 +61,24 @@ module.exports = {
       data: [],
       diff: null,
       socket: null,
-      client: null,
+      wsClient: null,
+      ajaxClient: null,
       connected: false
     }
   },
   methods: {
   },
   mounted() {
-    this.client = new Diam.DiamWebsocket();
-    this.client.onConnect = () => {
-      this.client.subscribeToViewport(this.topicChannel, data => this.data = data);
+    this.wsClient = new Diam.DiamWebsocket();
+    this.wsClient.onConnect = () => {
+      this.wsClient.subscribeToViewport(this.topicChannel, data => this.data = data);
     };
-    this.client.connect(this.wsEndpoint, this.ajaxEndpoint);
+    this.wsClient.connect(this.wsEndpoint);
+    this.ajaxClient = new Diam.DiamAjax(this.ajaxEndpoint);
   },
   beforeUnmount() {
-    this.client.unsubscribeFromViewport();
-    this.client.disconnect();
+    this.wsClient.unsubscribeFromViewport();
+    this.wsClient.disconnect();
   }
 }
 </script>

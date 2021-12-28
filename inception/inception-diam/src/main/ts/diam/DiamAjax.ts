@@ -19,11 +19,14 @@ import { OffsetsList } from "./model/Annotation";
 
 declare const Wicket: any;
 
+type SuccessHandler = (attrs, jqXHR, data, textStatus: string) => void;
+type ErrorHandler = (attrs, jqXHR, errorMessage, textStatus: string) => void;
+
 if (!document.hasOwnProperty('DIAM_TRANSPORT_BUFFER')) {
   document['DIAM_TRANSPORT_BUFFER'] = {};
 }
 
-const TRANSPORT_BUFFER : any = document['DIAM_TRANSPORT_BUFFER'];
+const TRANSPORT_BUFFER: any = document['DIAM_TRANSPORT_BUFFER'];
 
 export class DiamAjax {
   private ajaxEndpoint: string;
@@ -55,26 +58,38 @@ export class DiamAjax {
     });
   }
 
-  createRelationAnnotation(originSpanId, originType, targetSpanId, targetType) {
+  createRelationAnnotation(originSpanId, targetSpanId) {
     Wicket.Ajax.ajax({
       "m": "POST",
       "u": this.ajaxEndpoint,
       "ep": {
         action: 'arcOpenDialog',
         originSpanId: originSpanId,
-        originType: originType,
         targetSpanId: targetSpanId,
-        targetType: targetType
       }
     });
+  }
+
+  static newToken(): string {
+    return btoa(String.fromCharCode(...window.crypto.getRandomValues(new Uint8Array(16))));
   }
 
   static storeResult(token: string, result: string) {
     TRANSPORT_BUFFER[token] = JSON.parse(result);
   }
 
-  loadAnnotations(format: string) : Promise<any> {
-    let token = btoa(String.fromCharCode(...window.crypto.getRandomValues(new Uint8Array(16))));
+  static clearResult(token: string): any {
+    if (TRANSPORT_BUFFER.hasOwnProperty(token)) {
+      const result = TRANSPORT_BUFFER[token];
+      delete TRANSPORT_BUFFER[token];
+      return result;
+    }
+
+    return undefined;
+  }
+
+  loadAnnotations(format: string): Promise<any> {
+    const token = DiamAjax.newToken();
     return new Promise((resolve, reject) => {
       Wicket.Ajax.ajax({
         "m": "POST",
@@ -85,18 +100,15 @@ export class DiamAjax {
           "format": format
         },
         "sh": [() => {
-          if (TRANSPORT_BUFFER.hasOwnProperty(token)) {
-            const buf = TRANSPORT_BUFFER[token];
-            delete TRANSPORT_BUFFER[token];
-            resolve(buf);
+          const result = DiamAjax.clearResult(token);
+          if (result !== undefined) {
+            resolve(result);
           }
-          
+
           reject("Server did not place result into transport buffer");
         }],
         "eh": [() => {
-          if (TRANSPORT_BUFFER.hasOwnProperty(token)) {
-            delete TRANSPORT_BUFFER[token];
-          }
+          DiamAjax.clearResult(token);
 
           reject("Unable to load annotation");
         }]

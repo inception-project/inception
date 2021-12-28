@@ -726,7 +726,7 @@ export class AnnotatorUI {
         // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
         const originSpan = this.data.spans[origin];
         const targetSpan = this.data.spans[id];
-        
+
         if (this.arcOptions && this.arcOptions.old_target) {
           this.arcOptions.target = targetSpan.id;
           this.dispatcher.post('ajax', [this.arcOptions, 'edited']);
@@ -739,7 +739,7 @@ export class AnnotatorUI {
             'document': this.doc
           };
 
-          this.ajax.createRelationAnnotation(originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);        
+          this.ajax.createRelationAnnotation(originSpan.id, targetSpan.id);
         }
       }
     } else if (!evt.ctrlKey) {

@@ -151,6 +151,13 @@ public class RenderRequest
             return this;
         }
 
+        public Builder withDocument(SourceDocument aDocument, User aUser)
+        {
+            sourceDocument = aDocument;
+            annotationUser = aUser;
+            return this;
+        }
+
         public Builder withWindow(int aBegin, int aEnd)
         {
             this.windowBeginOffset = aBegin;

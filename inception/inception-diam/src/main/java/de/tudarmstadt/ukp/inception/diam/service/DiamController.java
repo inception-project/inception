@@ -255,6 +255,7 @@ public class DiamController
         throws IOException
     {
         SourceDocument doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
+        User user = userRepository.get(aUser);
         CAS cas = documentService.readAnnotationCas(doc, aUser);
 
         List<AnnotationLayer> layers = schemaService.listSupportedLayers(aProject).stream()
@@ -262,6 +263,7 @@ public class DiamController
                 .collect(toList());
 
         RenderRequest request = RenderRequest.builder() //
+                .withDocument(doc, user) //
                 .withWindow(aViewportBegin, aViewportEnd) //
                 .withCas(cas) //
                 .withVisibleLayers(layers) //

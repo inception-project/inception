@@ -28,7 +28,6 @@ export declare type dataCallback = (data: Viewport) => void;
 
 export class DiamWebsocket {
 
-    private ajaxEndpoint: string;
     private stompClient: Client;
     private webSocket: WebSocket;
     private initSubscription: StompSubscription;
@@ -39,12 +38,10 @@ export class DiamWebsocket {
 
     public onConnect: frameCallbackType;
 
-    connect(aWsEndpoint: string, aAjaxEndpoint: string) {
+    connect(aWsEndpoint: string) {
         if (this.stompClient) {
             throw "Already connected";
         }
-
-        this.ajaxEndpoint = aAjaxEndpoint;
 
         let protocol = (window.location.protocol === 'https:' ? 'wss:' : 'ws:');
         let wsEndpoint = new URL(aWsEndpoint)
@@ -68,22 +65,6 @@ export class DiamWebsocket {
     disconnect() {
         this.stompClient.deactivate();
         this.webSocket.close();
-    }
-
-    select(vid: string) {
-        Wicket.Ajax.ajax({
-            "m": "GET",
-            // "c": dispatcher.wicketId,
-            "u": this.ajaxEndpoint,
-            "ep": {
-                "action": "selectAnnotation",
-                "id": vid
-            },
-            // success
-            "sh": [function () { }],
-            // error
-            "fh": [function () { }]
-        });
     }
 
     private handleBrokerError(receipt: IFrame) {
