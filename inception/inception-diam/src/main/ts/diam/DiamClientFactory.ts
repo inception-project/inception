@@ -15,6 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { RecogitoEditor } from './recogito/RecogitoEditor';
+import { DiamWebsocket } from './DiamWebsocket'
+import { DiamAjax } from './DiamAjax'
 
-export = RecogitoEditor;
+export class DiamClientFactory {
+  createWebsocketClient() : DiamWebsocket {
+    return new DiamWebsocket();
+  }
+
+  createAjaxClient(ajaxEndpoint: string) : DiamAjax {
+    return new DiamAjax(ajaxEndpoint);
+  }
+}

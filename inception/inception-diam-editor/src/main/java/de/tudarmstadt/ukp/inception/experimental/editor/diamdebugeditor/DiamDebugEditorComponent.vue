@@ -69,12 +69,12 @@ module.exports = {
   methods: {
   },
   mounted() {
-    this.wsClient = new Diam.DiamWebsocket();
+    this.wsClient = Diam.factory().createWebsocketClient();
     this.wsClient.onConnect = () => {
       this.wsClient.subscribeToViewport(this.topicChannel, data => this.data = data);
     };
     this.wsClient.connect(this.wsEndpoint);
-    this.ajaxClient = new Diam.DiamAjax(this.ajaxEndpoint);
+    this.ajaxClient = Diam.factory().createAjaxClient(this.ajaxEndpoint);
   },
   beforeUnmount() {
     this.wsClient.unsubscribeFromViewport();

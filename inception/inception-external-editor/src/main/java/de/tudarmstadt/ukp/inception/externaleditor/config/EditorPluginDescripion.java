@@ -25,11 +25,16 @@ public class EditorPluginDescripion
 {
     private static final long serialVersionUID = 4400329006838299692L;
     
+    private static final String DEFAULT_PLUGIN_CSS = "plugin.css";
+    private static final String DEFAULT_PLUGIN_JS = "plugin.js";
+    
     private Path basePath;
-    private String implementation;
+    private String factory;
     private String name;
     private String annotationFormat;
     private String view;
+    private String js = DEFAULT_PLUGIN_JS;
+    private String css = DEFAULT_PLUGIN_CSS;
 
     public void setBasePath(Path aBasePath)
     {
@@ -71,13 +76,33 @@ public class EditorPluginDescripion
         view = aView;
     }
 
-    public String getImplementation()
+    public String getFactory()
     {
-        return implementation;
+        return factory;
     }
 
-    public void setImplementation(String aImplementation)
+    public void setFactory(String aImplementation)
     {
-        implementation = aImplementation;
+        factory = aImplementation;
+    }
+
+    public String getJs()
+    {
+        return js;
+    }
+
+    public void setJs(String aJs)
+    {
+        js = aJs;
+    }
+
+    public String getCss()
+    {
+        return css;
+    }
+
+    public void setCss(String aCss)
+    {
+        css = aCss;
     }
 }

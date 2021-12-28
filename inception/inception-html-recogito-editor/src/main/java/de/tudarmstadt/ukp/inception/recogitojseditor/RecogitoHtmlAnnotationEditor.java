@@ -54,7 +54,7 @@ public class RecogitoHtmlAnnotationEditor
     private final Component vis;
 
     private final String VIEW_FORMAT = "cas+html";
-    private final String EDITOR_JS_CLASS = "RecogitoEditor";
+    private final String EDITOR_FACTORY = "RecogitoEditor";
 
     public RecogitoHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
@@ -97,21 +97,21 @@ public class RecogitoHtmlAnnotationEditor
 
     private CharSequence destroyScript()
     {
-        return wrapInTryCatch(EDITOR_JS_CLASS + ".destroy('" + vis.getMarkupId() + "');");
+        return wrapInTryCatch(EDITOR_FACTORY + ".destroy('" + vis.getMarkupId() + "');");
     }
 
     private String initScript()
     {
         String callbackUrl = diamBehavior.getCallbackUrl().toString();
-        return wrapInTryCatch(EDITOR_JS_CLASS + ".getInstance('" + vis.getMarkupId() + "', '"
-                + callbackUrl + "');");
+        return wrapInTryCatch(EDITOR_FACTORY + ".getOrInitialize('" + vis.getMarkupId()
+                + "', Diam.factory(), '" + callbackUrl + "');");
     }
 
     private String renderScript()
     {
         String callbackUrl = diamBehavior.getCallbackUrl().toString();
-        return wrapInTryCatch(EDITOR_JS_CLASS + ".getInstance('" + vis.getMarkupId() + "', '"
-                + callbackUrl + "').loadAnnotations();");
+        return wrapInTryCatch(EDITOR_FACTORY + ".getOrInitialize('" + vis.getMarkupId()
+                + "', Diam.factory(), '" + callbackUrl + "').loadAnnotations();");
     }
 
     @Override

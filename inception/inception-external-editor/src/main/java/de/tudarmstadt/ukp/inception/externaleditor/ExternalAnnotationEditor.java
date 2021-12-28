@@ -44,11 +44,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 import de.tudarmstadt.ukp.inception.externaleditor.config.EditorPluginDescripion;
 
 public class ExternalAnnotationEditor
     extends AnnotationEditorBase
 {
+    private static final String MID_VIS = "vis";
+
     private static final long serialVersionUID = -3358207848681467993L;
 
     private @SpringBean DocumentViewExtensionPoint documentViewExtensionPoint;
@@ -73,14 +76,14 @@ public class ExternalAnnotationEditor
     protected void onInitialize()
     {
         super.onInitialize();
-        
+
         AnnotatorState state = getModelObject();
 
-        AnnotationDocument annDoc = documentService.getAnnotationDocument(
-                state.getDocument(), state.getUser());
+        AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
+                state.getUser());
 
         vis = documentViewExtensionPoint.getExtension(getDescription().getView()) //
-                .map(ext -> ext.createView("vis", Model.of(annDoc))) //
+                .map(ext -> ext.createView(MID_VIS, Model.of(annDoc))) //
                 .orElseGet(() -> new Label("Unsupported view"));
         add(vis);
 
@@ -101,15 +104,17 @@ public class ExternalAnnotationEditor
 
         EditorPluginDescripion description = getDescription();
 
-        Path jsPath = description.getBasePath().resolve("plugin.js");
+        aResponse.render(JavaScriptHeaderItem.forReference(DiamJavaScriptReference.get()));
+
+        Path jsPath = description.getBasePath().resolve(description.getJs());
         FileSystemResourceReference jsReference = new FileSystemResourceReference(
-                description.getImplementation() + ".js", jsPath);
+                description.getFactory() + ".js", jsPath);
         aResponse.render(JavaScriptHeaderItem.forReference(jsReference));
 
-        Path cssPath = description.getBasePath().resolve("plugin.css");
+        Path cssPath = description.getBasePath().resolve(description.getCss());
         if (Files.isRegularFile(cssPath)) {
             FileSystemResourceReference cssReference = new FileSystemResourceReference(
-                    description.getImplementation() + ".css", cssPath);
+                    description.getFactory() + ".css", cssPath);
             aResponse.render(CssHeaderItem.forReference(cssReference));
         }
 
@@ -130,21 +135,22 @@ public class ExternalAnnotationEditor
     private CharSequence destroyScript()
     {
         return wrapInTryCatch(
-                getDescription().getImplementation() + ".destroy('" + vis.getMarkupId() + "');");
+                getDescription().getFactory() + ".destroy('" + vis.getMarkupId() + "');");
     }
 
     private String initScript()
     {
         String callbackUrl = diamBehavior.getCallbackUrl().toString();
-        return wrapInTryCatch(getDescription().getImplementation() + ".getInstance('"
-                + vis.getMarkupId() + "', '" + callbackUrl + "');");
+        return wrapInTryCatch(getDescription().getFactory() + ".getOrInitialize('"
+                + vis.getMarkupId() + "', Diam.factory(), '" + callbackUrl + "');");
     }
 
     private String renderScript()
     {
         String callbackUrl = diamBehavior.getCallbackUrl().toString();
-        return wrapInTryCatch(getDescription().getImplementation() + ".getInstance('"
-                + vis.getMarkupId() + "', '" + callbackUrl + "').loadAnnotations();");
+        return wrapInTryCatch(
+                getDescription().getFactory() + ".getOrInitialize('" + vis.getMarkupId()
+                        + "', Diam.factory(), '" + callbackUrl + "').loadAnnotations();");
     }
 
     @Override

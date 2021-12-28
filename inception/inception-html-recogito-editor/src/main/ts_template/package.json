@@ -7,8 +7,8 @@
     "Annotation"
   ],
   "scripts": {
-    "build:recogito": "./node_modules/esbuild/bin/esbuild recogito.ts --target=es6 --bundle --sourcemap --global-name=RecogitoEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.js",
-    "build:recogito-minified": "./node_modules/esbuild/bin/esbuild recogito.ts --target=es6 --bundle --sourcemap --global-name=RecogitoEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.min.js"
+    "build:recogito": "./node_modules/esbuild/bin/esbuild index.ts --target=es6 --bundle --sourcemap --global-name=RecogitoEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.js",
+    "build:recogito-minified": "./node_modules/esbuild/bin/esbuild index.ts --minify --target=es6 --bundle --sourcemap --global-name=RecogitoEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.min.js"
   },
   "external": {},
   "devDependencies": {

@@ -15,5 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export { DiamWebsocket } from './DiamWebsocket'
-export { DiamAjax } from './DiamAjax'
+import { RecogitoEditorFactory } from './recogito/RecogitoEditorFactory';
+
+const INSTANCE = new RecogitoEditorFactory()
+
+export = INSTANCE;

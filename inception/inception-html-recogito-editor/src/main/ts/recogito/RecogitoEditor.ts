@@ -15,26 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js';
-import { DiamAjax } from "@inception-project/inception-diam/diam/Diam";
-
-export interface AnnotationEditor {
-  // static getInstance(element: HTMLElement | string, callbackUrl: string)
-  // static destroy(element: HTMLElement | string)
-  loadAnnotations() : void;
-}
+import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-diam";
 
 const FORMAT_RECOGITO_JS = "RecogitoJs";
 
 export class RecogitoEditor implements AnnotationEditor {
-  private ajax : DiamAjax; 
-  private recogito : Recogito;
+  private ajax: DiamAjax;
+  private recogito: Recogito;
 
-  public constructor(element: HTMLElement, callbackUrl: string) {
-    this.ajax = new DiamAjax(callbackUrl);
-    
+  public constructor(element: HTMLElement, ajax: DiamAjax) {
+    this.ajax = ajax;
+
     this.recogito = new Recogito({
       content: element,
       disableEditor: true,
@@ -47,39 +40,18 @@ export class RecogitoEditor implements AnnotationEditor {
     this.loadAnnotations();
   }
 
-  public static getInstance(element: HTMLElement | string, callbackUrl: string) : RecogitoEditor {
-    if (!(element instanceof HTMLElement)) {
-      element = document.getElementById(element)
-    }
-
-    if (element['recogito'] != null) {
-      return element['recogito'];
-    }
-
-    let instance : RecogitoEditor = new RecogitoEditor(element, callbackUrl);
-    element['recogito'] = instance;
-    return instance;
-  }
-
-  public static destroy(element: HTMLElement | string) {
-    if (!(element instanceof HTMLElement)) {
-      element = document.getElementById(element)
-    }
-
-    if (element['recogito'] != null) {
-      element['recogito'].destroy(); 
-      console.log('Destroyed RecogitoJS');
-    }
-  }
-
-  public loadAnnotations() : void {
+  public loadAnnotations(): void {
     this.ajax.loadAnnotations(FORMAT_RECOGITO_JS).then(a => this.recogito.setAnnotations(a));
   }
 
-  private createAnnotation(annotation) : void {
+  public destroy(): void {
+    this.recogito.destroy();
+  }
+
+  private createAnnotation(annotation): void {
     let target = annotation.target;
     let text: string, begin: number, end: number;
-    for (let i = 0; i < target.selector.length; i ++) {
+    for (let i = 0; i < target.selector.length; i++) {
       if (target.selector[i].type === "TextQuoteSelector") {
         text = target.selector[i].exact;
       }
@@ -92,7 +64,7 @@ export class RecogitoEditor implements AnnotationEditor {
     this.ajax.createSpanAnnotation([[begin, end]], text);
   }
 
-  private selectAnnotation(annotation) : void {
+  private selectAnnotation(annotation): void {
     // The RecogitoJS annotation IDs start with a hash `#` which we need to remove
     this.ajax.selectAnnotation(annotation.id.substring('1'));
   }

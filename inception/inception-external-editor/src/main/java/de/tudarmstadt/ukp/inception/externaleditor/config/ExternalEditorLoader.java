@@ -81,7 +81,7 @@ public class ExternalEditorLoader
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(
                 ExternalAnnotationEditorFactory.class,
                 () -> new ExternalAnnotationEditorFactory(aDesc));
-        aRegistry.registerBeanDefinition("external-editor-" + aDesc.getImplementation(),
+        aRegistry.registerBeanDefinition("external-editor-" + aDesc.getFactory(),
                 builder.getBeanDefinition());
     }
 
