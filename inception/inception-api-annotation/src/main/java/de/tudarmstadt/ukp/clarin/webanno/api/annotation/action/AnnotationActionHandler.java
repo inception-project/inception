@@ -43,6 +43,11 @@ public interface AnnotationActionHandler
      */
     void actionSelect(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
+    /**
+     * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
+     *             {@link #actionSelect(AjaxRequestTarget, VID)}
+     */
+    @Deprecated
     void actionSelect(AjaxRequestTarget aTarget, AnnotationFS aAnnoFs)
         throws IOException, AnnotationException;
 
@@ -53,9 +58,19 @@ public interface AnnotationActionHandler
 
     void actionJump(AjaxRequestTarget aTarget, VID aVid) throws IOException, AnnotationException;
 
+    /**
+     * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
+     *             {@link #actionSelectAndJump(AjaxRequestTarget, VID)}
+     */
+    @Deprecated
     void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException;
 
+    /**
+     * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
+     *             {@link #actionJump(AjaxRequestTarget, VID)}
+     */
+    @Deprecated
     void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException;
 

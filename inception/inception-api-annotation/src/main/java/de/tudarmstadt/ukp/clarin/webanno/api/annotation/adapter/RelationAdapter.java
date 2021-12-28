@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -210,8 +210,9 @@ public class RelationAdapter
     }
 
     @Override
-    public void select(AnnotatorState aState, AnnotationFS aAnno)
+    public Selection select(VID aVid, AnnotationFS aAnno)
     {
+        Selection selection = new Selection();
         AnnotationFS src = getSourceAnnotation(aAnno);
         AnnotationFS tgt = getTargetAnnotation(aAnno);
 
@@ -220,7 +221,8 @@ public class RelationAdapter
             tgt = getFeature(tgt, getLayer().getAttachFeature().getName(), AnnotationFS.class);
         }
 
-        aState.getSelection().selectArc(new VID(aAnno), src, tgt);
+        selection.selectArc(new VID(aAnno), src, tgt);
+        return selection;
     }
 
     @Override

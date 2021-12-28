@@ -232,7 +232,9 @@ public interface AnnotationSchemaService
     Optional<AnnotationLayer> getLayer(Project aProject, long aLayerId);
 
     /**
-     * Find the {@link AnnotationLayer} matching the given UIMA type name (if any).
+     * Find the {@link AnnotationLayer} matching the given UIMA type name (if any). <b>Note:</b>
+     * This method is unable to handle chain layers. Better use
+     * {@link #findLayer(Project, FeatureStructure)}
      * 
      * @param aProject
      *            the project.
