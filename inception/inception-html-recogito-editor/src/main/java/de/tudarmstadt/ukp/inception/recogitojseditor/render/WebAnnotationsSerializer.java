@@ -25,15 +25,22 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.recogitojseditor.config.RecogitoHtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotation;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationBodyItem;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotationTarget;
 import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
 
-public class RecogitoJsSerializer
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecogitoHtmlAnnotationEditorSupportAutoConfiguration#recogitoJsSerializer}.
+ * </p>
+ */
+public class WebAnnotationsSerializer
     implements VDocumentSerializer<WebAnnotations>
 {
-    public static final String ID = "RecogitoJs";
+    public static final String ID = "WebAnnotations";
 
     @Override
     public String getId()

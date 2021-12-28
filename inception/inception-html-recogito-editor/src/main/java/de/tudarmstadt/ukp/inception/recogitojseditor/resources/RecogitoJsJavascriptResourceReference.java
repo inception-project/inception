@@ -18,12 +18,13 @@
 package de.tudarmstadt.ukp.inception.recogitojseditor.resources;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.wicket.markup.head.HeaderItem;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-import de.agilecoders.wicket.core.util.Dependencies;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 
 public class RecogitoJsJavascriptResourceReference
@@ -46,10 +47,12 @@ public class RecogitoJsJavascriptResourceReference
     @Override
     public List<HeaderItem> getDependencies()
     {
-        return Dependencies.combine(super.getDependencies(),
-                JavaScriptHeaderItem.forReference(DiamJavaScriptReference.get()));
+        return Stream
+                .concat(super.getDependencies().stream(),
+                        Stream.of(JavaScriptHeaderItem.forReference(DiamJavaScriptReference.get())))
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Private constructor
      */

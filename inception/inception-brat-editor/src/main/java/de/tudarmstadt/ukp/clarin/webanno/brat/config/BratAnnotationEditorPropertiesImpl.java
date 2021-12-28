@@ -20,9 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties("ui.brat")
 @ManagedResource
 public class BratAnnotationEditorPropertiesImpl

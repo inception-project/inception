@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -50,15 +49,15 @@ public class CurationRendererImpl
     private final PreRenderer preRenderer;
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
-    private final BratAnnotationEditorProperties bratProperties;
+    private final BratSerializer bratSerializer;
 
     public CurationRendererImpl(PreRenderer aPreRenderer, AnnotationSchemaService aSchemaService,
-            ColoringService aColoringService, BratAnnotationEditorProperties aBratProperties)
+            ColoringService aColoringService, BratSerializer aBratSerializer)
     {
         preRenderer = aPreRenderer;
         schemaService = aSchemaService;
         coloringService = aColoringService;
-        bratProperties = aBratProperties;
+        bratSerializer = aBratSerializer;
     }
 
     @Override
@@ -92,8 +91,7 @@ public class CurationRendererImpl
         ColorRenderer colorRenderer = new ColorRenderer(schemaService, coloringService);
         colorRenderer.render(vdoc, request);
 
-        BratSerializer renderer = new BratSerializer(bratProperties);
-        GetDocumentResponse response = renderer.render(vdoc, request);
+        GetDocumentResponse response = bratSerializer.render(vdoc, request);
 
         return JSONUtil.toInterpretableJsonString(response);
     }

@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorPropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -93,7 +93,7 @@ public class BratRendererTest
     private LabelRenderer labelRenderer;
     private ColorRenderer colorRenderer;
 
-    private BratSerializer sut;
+    private BratSerializerImpl sut;
 
     @BeforeEach
     public void setup()
@@ -162,7 +162,7 @@ public class BratRendererTest
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
         labelRenderer = new LabelRenderer();
         colorRenderer = new ColorRenderer(schemaService, new ColoringServiceImpl(schemaService));
-        sut = new BratSerializer(new BratAnnotationEditorPropertiesImpl());
+        sut = new BratSerializerImpl(new BratAnnotationEditorPropertiesImpl());
     }
 
     @Test

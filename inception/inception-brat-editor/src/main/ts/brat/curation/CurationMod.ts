@@ -17,7 +17,7 @@
  */
 import { Dispatcher } from "../dispatcher/Dispatcher";
 import { DocumentData } from "../visualizer/DocumentData";
-import { DiamAjax } from "@inception-project/inception-diam/client/DiamAjax";
+import { DiamAjax } from "@inception-project/inception-diam";
 
 export class CurationMod {
   private data: DocumentData;

@@ -85,7 +85,8 @@ public class LoadAnnotationsHandler
                     .toString();
 
             VDocumentSerializer<?> ser = vDocumentSerializerExtensionPoint.getExtension(format)
-                    .orElseThrow();
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Unknown serializer: [" + format + "]"));
 
             String token = aRequest.getRequestParameters().getParameterValue(PARAM_TOKEN)
                     .toString();

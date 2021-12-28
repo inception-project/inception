@@ -45,7 +45,7 @@ import { Span } from "../visualizer/Span";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
-import { DiamAjax } from "@inception-project/inception-diam/client/DiamAjax";
+import { DiamAjax } from "@inception-project/inception-diam";
 import { SpanType } from "../visualizer/SpanType";
 
 export class AnnotatorUI {

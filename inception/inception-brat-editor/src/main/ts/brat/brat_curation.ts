@@ -18,7 +18,7 @@
 import { Ajax } from "./ajax/Ajax";
 import { INSTANCE as Util } from "./util/Util";
 import { CurationMod } from "./curation/CurationMod";
-import { DiamAjax } from "@inception-project/inception-diam/diam/Diam";
+import { DiamAjax } from "@inception-project/inception-diam";
 
 declare let Wicket;
 

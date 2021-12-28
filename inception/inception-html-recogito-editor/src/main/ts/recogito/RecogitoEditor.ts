@@ -19,7 +19,7 @@ import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js';
 import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-diam";
 
-const FORMAT_RECOGITO_JS = "RecogitoJs";
+const ANNOTATIONS_SERIALIZER = "WebAnnotations";
 
 export class RecogitoEditor implements AnnotationEditor {
   private ajax: DiamAjax;
@@ -41,7 +41,7 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public loadAnnotations(): void {
-    this.ajax.loadAnnotations(FORMAT_RECOGITO_JS).then(a => this.recogito.setAnnotations(a));
+    this.ajax.loadAnnotations(ANNOTATIONS_SERIALIZER).then(a => this.recogito.setAnnotations(a));
   }
 
   public destroy(): void {
