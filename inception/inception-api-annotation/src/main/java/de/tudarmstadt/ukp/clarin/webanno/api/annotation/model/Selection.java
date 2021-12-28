@@ -296,6 +296,8 @@ public class Selection
         sel.endOffset = endOffset;
         sel.selectedAnnotationId = selectedAnnotationId;
         sel.text = text;
+        sel.originText = originText;
+        sel.targetText = targetText;
         return sel;
     }
 
@@ -307,5 +309,7 @@ public class Selection
         endOffset = aSelection.endOffset;
         selectedAnnotationId = aSelection.selectedAnnotationId;
         text = aSelection.text;
+        originText = aSelection.originText;
+        targetText = aSelection.targetText;
     }
 }
