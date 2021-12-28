@@ -570,15 +570,15 @@ public class AnnotationSystemAPIImpl
 
         for (int i = 3; i < featureList.size(); i++) {
             switch (featureList.get(i).getRange().getName()) {
-            case "uima.cas.Integer":
+            case CAS.TYPE_NAME_INTEGER:
                 features.add(new FeatureX(featureList.get(i).getShortName(),
                         String.valueOf(aAnnotation.getIntValue(featureList.get(i)))));
                 break;
-            case "uima.cas.String":
+            case CAS.TYPE_NAME_STRING:
                 features.add(new FeatureX(featureList.get(i).getShortName(),
                         aAnnotation.getStringValue(featureList.get(i))));
                 break;
-            case "uima.cas.Boolean":
+            case CAS.TYPE_NAME_BOOLEAN:
                 features.add(new FeatureX(featureList.get(i).getShortName(),
                         String.valueOf(aAnnotation.getBooleanValue(featureList.get(i)))));
                 break;
@@ -602,10 +602,9 @@ public class AnnotationSystemAPIImpl
      */
     private String getColorForAnnotation(AnnotationFS aAnnotation, Project aProject)
     {
-        // TODO proper coloring strategy (without VTypes)
         try {
-            TypeAdapter adapter = annotationService.getAdapter(annotationService.findLayer(
-                    projectService.getProject(aProject.getId()), aAnnotation.getType().getName()));
+            TypeAdapter adapter = annotationService.getAdapter(annotationService
+                    .findLayer(projectService.getProject(aProject.getId()), aAnnotation));
 
             return PALETTE_NORMAL_FILTERED[adapter.getLayer().getId().intValue()
                     % PALETTE_NORMAL_FILTERED.length];

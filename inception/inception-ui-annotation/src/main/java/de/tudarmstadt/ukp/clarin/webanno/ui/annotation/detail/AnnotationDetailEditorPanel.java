@@ -632,20 +632,21 @@ public abstract class AnnotationDetailEditorPanel
     public void actionSelect(AjaxRequestTarget aTarget, AnnotationFS annoFs)
         throws IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-
-        TypeAdapter adapter = annotationService
-                .getAdapter(annotationService.findLayer(state.getProject(), annoFs));
-
-        adapter.select(getModelObject(), annoFs);
-        actionSelect(aTarget);
+        actionSelect(aTarget, new VID(annoFs));
     }
 
     @Override
     public void actionSelect(AjaxRequestTarget aTarget, VID aVid)
         throws IOException, AnnotationException
     {
-        actionSelect(aTarget, selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
+        AnnotationFS annoFs = selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId());
+        AnnotatorState state = getModelObject();
+
+        TypeAdapter adapter = annotationService
+                .getAdapter(annotationService.findLayer(state.getProject(), annoFs));
+
+        state.getSelection().set(adapter.select(aVid, annoFs));
+        actionSelect(aTarget);
     }
 
     @Override

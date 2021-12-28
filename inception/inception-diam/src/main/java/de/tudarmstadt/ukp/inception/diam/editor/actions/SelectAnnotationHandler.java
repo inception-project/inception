@@ -89,7 +89,7 @@ public class SelectAnnotationHandler
             AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
 
             TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
-            adapter.select(state, fs);
+            state.getSelection().set(adapter.select(vid, fs));
 
             page.getAnnotationActionHandler().actionSelect(aTarget);
 
