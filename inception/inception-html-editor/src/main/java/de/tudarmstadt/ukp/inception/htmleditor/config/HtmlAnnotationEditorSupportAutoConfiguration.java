@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.AnnotatorJsHtmlAnnotationEditorFactory;
+import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentIFrameViewFactory;
 import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentViewFactory;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
@@ -55,5 +56,11 @@ public class HtmlAnnotationEditorSupportAutoConfiguration
     public HtmlDocumentViewFactory htmlDocumentViewFactory()
     {
         return new HtmlDocumentViewFactory();
+    }
+
+    @Bean
+    public HtmlDocumentIFrameViewFactory htmlDocumentIFrameViewFactory()
+    {
+        return new HtmlDocumentIFrameViewFactory();
     }
 }

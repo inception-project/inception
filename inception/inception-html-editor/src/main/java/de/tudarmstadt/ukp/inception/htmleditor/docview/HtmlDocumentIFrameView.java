@@ -17,40 +17,37 @@
  */
 package de.tudarmstadt.ukp.inception.htmleditor.docview;
 
-import org.apache.wicket.Component;
+import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
-import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via
- * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlDocumentViewFactory}.
- * </p>
- */
-public class HtmlDocumentViewFactory
-    implements DocumentViewFactory
+public class HtmlDocumentIFrameView
+    extends WebMarkupContainer
 {
-    public static final String ID = "cas+html";
+    private static final long serialVersionUID = 4436249885266856565L;
 
-    @Override
-    public String getId()
+    private @SpringBean DocumentService documentService;
+    private @SpringBean HtmlDocumentViewController htmlDocumentViewController;
+
+    private IModel<AnnotationDocument> document;
+
+    public HtmlDocumentIFrameView(String aId, IModel<AnnotationDocument> aDoc)
     {
-        return ID;
+        super(aId);
+
+        document = aDoc;
     }
 
     @Override
-    public boolean accepts(AnnotationDocument aContext)
+    protected void onComponentTag(ComponentTag aTag)
     {
-        return HtmlFormatSupport.ID.equals(aContext.getDocument().getFormat());
-    }
-
-    @Override
-    public Component createView(String aId, IModel<AnnotationDocument> aDoc)
-    {
-        return new HtmlDocumentView(aId, aDoc);
+        aTag.setName("iframe");
+        aTag.put("src",
+                htmlDocumentViewController.getDocumentUrl(document.getObject().getDocument()));
+        super.onComponentTag(aTag);
     }
 }

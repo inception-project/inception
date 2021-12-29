@@ -68,6 +68,8 @@ public class ExternalAnnotationEditor
             String aEditorFactoryId)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
+        
+        setOutputMarkupPlaceholderTag(true);
 
         editorFactoryId = aEditorFactoryId;
     }
@@ -84,7 +86,9 @@ public class ExternalAnnotationEditor
 
         vis = documentViewExtensionPoint.getExtension(getDescription().getView()) //
                 .map(ext -> ext.createView(MID_VIS, Model.of(annDoc))) //
-                .orElseGet(() -> new Label("Unsupported view"));
+                .orElseGet(() -> new Label(MID_VIS,
+                        "Unsupported view: [" + getDescription().getView() + "]"));
+        vis.setOutputMarkupPlaceholderTag(true);
         add(vis);
 
         add(diamBehavior = new DiamAjaxBehavior());

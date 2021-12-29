@@ -49,7 +49,6 @@ public class HtmlDocumentView
     {
         super(aId);
         document = aDoc;
-        setOutputMarkupId(true);
         setEscapeModelStrings(false);
         setDefaultModel(LoadableDetachableModel.of(this::renderDocument));
     }

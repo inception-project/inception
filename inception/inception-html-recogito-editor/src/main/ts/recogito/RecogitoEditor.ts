@@ -19,11 +19,11 @@ import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js';
 import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-diam";
 
-const ANNOTATIONS_SERIALIZER = "WebAnnotations";
+const ANNOTATIONS_SERIALIZER = "WebAnnotation";
 
 export class RecogitoEditor implements AnnotationEditor {
   private ajax: DiamAjax;
-  private recogito: Recogito;
+  private recogito: typeof Recogito;
 
   public constructor(element: HTMLElement, ajax: DiamAjax) {
     this.ajax = ajax;

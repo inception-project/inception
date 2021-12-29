@@ -101,11 +101,12 @@ export class DiamAjax {
         },
         "sh": [() => {
           const result = DiamAjax.clearResult(token);
-          if (result !== undefined) {
-            resolve(result);
+          if (result === undefined) {
+            reject("Server did not place result into transport buffer");
+            return;
           }
 
-          reject("Server did not place result into transport buffer");
+          resolve(result);
         }],
         "eh": [() => {
           DiamAjax.clearResult(token);

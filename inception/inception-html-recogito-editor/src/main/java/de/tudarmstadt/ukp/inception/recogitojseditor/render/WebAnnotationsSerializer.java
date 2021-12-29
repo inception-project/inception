@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
 public class WebAnnotationsSerializer
     implements VDocumentSerializer<WebAnnotations>
 {
-    public static final String ID = "WebAnnotations";
+    public static final String ID = "WebAnnotation";
 
     @Override
     public String getId()

@@ -28,13 +28,13 @@ import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlDocumentViewFactory}.
+ * {@link HtmlAnnotationEditorSupportAutoConfiguration#htmlDocumentIFrameViewFactory}.
  * </p>
  */
-public class HtmlDocumentViewFactory
+public class HtmlDocumentIFrameViewFactory
     implements DocumentViewFactory
 {
-    public static final String ID = "cas+html";
+    public static final String ID = "iframe:cas+html";
 
     @Override
     public String getId()
@@ -51,6 +51,6 @@ public class HtmlDocumentViewFactory
     @Override
     public Component createView(String aId, IModel<AnnotationDocument> aDoc)
     {
-        return new HtmlDocumentView(aId, aDoc);
+        return new HtmlDocumentIFrameView(aId, aDoc);
     }
 }

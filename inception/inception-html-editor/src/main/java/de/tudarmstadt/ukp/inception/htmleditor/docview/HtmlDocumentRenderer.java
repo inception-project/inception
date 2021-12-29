@@ -46,6 +46,13 @@ import de.tudarmstadt.ukp.clarin.webanno.support.xml.TextSanitizingContentHandle
 
 public class HtmlDocumentRenderer
 {
+    private boolean renderOnlyBody = true;
+
+    public void setRenderOnlyBody(boolean aRenderOnlyBody)
+    {
+        renderOnlyBody = aRenderOnlyBody;
+    }
+
     public String render(CAS aCas)
         throws IOException, TransformerConfigurationException, CASException, SAXException
     {
@@ -73,14 +80,19 @@ public class HtmlDocumentRenderer
             // rendering to the body so that the text and the annotations align properly. Also,
             // we wouldn't want to render anything outside the body anyway.
             XmlElement html = selectSingle(aCas.getJCas(), XmlDocument.class).getRoot();
-            XmlElement body = html.getChildren().stream() //
-                    .filter(e -> e instanceof XmlElement) //
-                    .map(e -> (XmlElement) e) //
-                    .filter(e -> equalsIgnoreCase("body", e.getQName())) //
-                    .findFirst().orElseThrow();
 
             Cas2SaxEvents serializer = new Cas2SaxEvents(sh);
-            serializer.process(body);
+            if (renderOnlyBody) {
+                XmlElement body = html.getChildren().stream() //
+                        .filter(e -> e instanceof XmlElement) //
+                        .map(e -> (XmlElement) e) //
+                        .filter(e -> equalsIgnoreCase("body", e.getQName())) //
+                        .findFirst().orElseThrow();
+                serializer.process(body);
+            }
+            else {
+                serializer.process(html);
+            }
             return out.toString();
         }
     }
