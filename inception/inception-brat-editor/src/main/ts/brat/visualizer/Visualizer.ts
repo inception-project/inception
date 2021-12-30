@@ -411,8 +411,6 @@ export class Visualizer {
 
   /**
    * Calculate average arc distances. Average distance of arcs (0 for no arcs).
-   *
-   * @param {Entity[]} spans
    */
   calculateAverageArcDistances(spans: Entity[]) {
     spans.map(span => span.avgDist = span.numArcs ? span.totalDist / span.numArcs : 0);
@@ -420,8 +418,6 @@ export class Visualizer {
 
   /**
    * Collect fragment texts into span texts
-   *
-   * @param {Entity[]} spans
    */
   collectFragmentTextsIntoSpanTexts(spans: Entity[]) {
     spans.map(span => {
@@ -434,7 +430,7 @@ export class Visualizer {
   /**
    * @returns list of span IDs in the order they should be drawn.
    */
-  determineDrawOrder(spans: Record<string, Entity>) {
+  determineDrawOrder(spans: Record<VID, Entity>): Array<VID> {
     const spanDrawOrderPermutation = Object.keys(spans);
     spanDrawOrderPermutation.sort((a, b) => {
       const spanA = spans[a];
@@ -454,7 +450,7 @@ export class Visualizer {
     return spanDrawOrderPermutation;
   }
 
-  organizeFragmentsIntoTowers(sortedFragments) {
+  organizeFragmentsIntoTowers(sortedFragments: Array<Fragment>) {
     let lastFragment = null;
     let towerId = -1;
 
@@ -467,11 +463,11 @@ export class Visualizer {
     });
   }
 
-  applyMarkedTextToChunks(markedText, chunks) {
+  applyMarkedTextToChunks(markedText: Array<MarkedText>, chunks: Array<Chunk>) {
     const numChunks = chunks.length;
     // note the location of marked text with respect to chunks
     let startChunk = 0;
-    let currentChunk;
+    let currentChunk: number;
     $.each(markedText, (textNo, textPos) => {
       let from = textPos[0];
       let to = textPos[1];
@@ -545,18 +541,12 @@ export class Visualizer {
     });
   }
 
-  /**
-   *
-   * @param {string} documentText
-   * @param {[[string, string, [[number, number]], {}]]} entities
-   * @return {Object.<string, Entity>}
-   */
-  buildSpansFromEntities(documentText: string, entities: Array<EntityDto>): { [s: string]: Entity; } {
+  buildSpansFromEntities(documentText: string, entities: Array<EntityDto>): Record<VID, Entity> {
     if (!entities) {
       return {};
     }
 
-    const spans = {};
+    const spans: Record<VID, Entity> = {};
     entities.map(entity => {
       const id = entity[0];
       const type = entity[1];
@@ -632,9 +622,6 @@ export class Visualizer {
     });
   }
 
-  /**
-   * @param {Entity[]} spans
-   */
   splitSpansIntoFragments(spans: Entity[]) {
     if (!spans) {
       return;

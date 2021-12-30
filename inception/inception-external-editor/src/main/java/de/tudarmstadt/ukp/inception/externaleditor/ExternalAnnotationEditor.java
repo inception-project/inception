@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.externaleditor;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
 import static de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorLoader.PLUGINS_EDITOR_BASE_URL;
 import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 
