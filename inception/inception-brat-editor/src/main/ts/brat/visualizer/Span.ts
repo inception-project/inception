@@ -38,9 +38,9 @@
  * SOFTWARE.
  */
 
+import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
 import { Arc } from "./Arc";
 import { Fragment } from "./Fragment";
-import { Offsets, OffsetsList } from "./SourceData";
 
 export class Span {
   id: string = undefined;
@@ -49,7 +49,7 @@ export class Span {
   numArcs = 0;
   generalType: string = undefined;
   headFragment: Fragment = undefined;
-  unsegmentedOffsets: Array<Offsets> = [];
+  unsegmentedOffsets: OffsetsList = [];
   offsets: OffsetsList = [];
   segmentedOffsetsMap = {};
   hidden = false;

@@ -15,12 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Arc } from "../newmodel/Arc";
-import { Span } from "../newmodel/Span";
+import { Arc } from "../model/Arc";
+import { Span } from "../model/Span";
 
-export class Viewport
-{
-    text :string;
-    arcs :Arc[];
-    spans :Span[];
+export class Viewport {
+    text: string;
+    arcs: Arc[];
+    spans: Span[];
 }

@@ -26,7 +26,6 @@ import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 /**
  * The Arguments used during arc annotation in the form of [["Arg1","p_21346"],["Arg2","p_21341"]]
  * to denote a given arc annotation such as dependency parsing and coreference resolution
- *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "label", "target" })

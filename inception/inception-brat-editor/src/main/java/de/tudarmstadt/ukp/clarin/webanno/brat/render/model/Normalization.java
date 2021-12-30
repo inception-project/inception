@@ -27,28 +27,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
-/**
- * <pre>
- * <code>
- * var id = norm[0];
- * var normType = norm[1];
- * var target = norm[2];
- * var refdb = norm[3];
- * var refid = norm[4];
- * var reftext = norm[5];
- * </code>
- * </pre>
- */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { /* "id", "type", */ "target", "refDb", "refId", "refText" })
+@JsonPropertyOrder(value = { "target", "refDb", "refId", "refText" })
 public class Normalization
 {
-    // The UI JS code used the ID is only used to generate an error message if the target is missing
-    // and otherwise this ID doesn't matter
-    // private String id;
-    // The type seems to be entirely unused in the JS code
-    // private String type;
-
     private VID target;
 
     @JsonInclude(NON_NULL)
@@ -75,9 +57,7 @@ public class Normalization
 
     public Normalization(VID aTarget, String aRefDb, String aRefId, String aReftext)
     {
-        // id = aTarget.toString();
         target = aTarget;
-        // type = TYPE_INFO;
         refText = aReftext;
         refDb = aRefDb;
         refId = aRefId;

@@ -46,15 +46,12 @@ import { EventDesc } from "./EventDesc";
 import { Chunk } from "./Chunk";
 import { Fragment } from "./Fragment";
 import { Arc } from "./Arc";
-import { SourceData } from "./SourceData";
 import { Row } from "./Row";
 import { RectBox } from "./RectBox";
 import { AttributeType } from "./AttributeType";
 import { CollectionLoadedResponse } from "./CollectionLoadedResponse";
-import { RelationType } from "./RelationType";
-import { SpanType } from "./SpanType";
+import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode } from "../protocol/Protocol";
 import type { Dispatcher } from "../dispatcher/Dispatcher";
-import type { sourceCommentType, sourceEntityType, Offsets } from "./SourceData";
 import * as jsonpatch from 'fast-json-patch';
 import { Operation } from "fast-json-patch";
 import { scrollbarWidth } from "../util/ScrollbarWidth";
@@ -65,6 +62,7 @@ import { INSTANCE as Util } from "../util/Util";
 import { ArrayXY } from "@svgdotjs/svg.js";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
 import { Defs } from "@svgdotjs/svg.js";
+import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
 declare const $: JQueryStatic;
 
 /** 
@@ -162,8 +160,8 @@ export class Visualizer {
   private redraw = false;
   arcDragOrigin; // Seems this field is declared and checked in this file but never set!
 
-  private spanTypes: Record<string, SpanType> = {};
-  private relationTypesHash: Record<string, RelationType> = {};
+  private spanTypes: Record<string, EntityTypeDto> = {};
+  private relationTypesHash: Record<string, RelationTypeDto> = {};
   private entityAttributeTypes: Record<string, AttributeType> = {};
   private eventAttributeTypes: Record<string, AttributeType> = {};
   private isCollectionLoaded = false;
@@ -518,7 +516,7 @@ export class Visualizer {
     }); // markedText
   }
 
-  applyNormalizations(normalizations) {
+  applyNormalizations(normalizations: Array<NormalizationDto>) {
     if (!normalizations) {
       return;
     }
@@ -553,7 +551,7 @@ export class Visualizer {
    * @param {[[string, string, [[number, number]], {}]]} entities
    * @return {Object.<string, Span>}
    */
-  buildSpansFromEntities(documentText: string, entities: Array<sourceEntityType>): { [s: string]: Span; } {
+  buildSpansFromEntities(documentText: string, entities: Array<EntityDto>): { [s: string]: Span; } {
     if (!entities) {
       return {};
     }
@@ -593,7 +591,10 @@ export class Visualizer {
     return spans;
   }
 
-  buildSpansFromTriggers(triggers: Array<[string, string, [Offsets]]>): Record<string, [Span, Array<EventDesc>]> {
+  /**
+   * @deprecated Triggers are not used by INCEptION
+   */
+  buildSpansFromTriggers(triggers: Array<TriggerDto>): Record<string, [Span, Array<EventDesc>]> {
     if (!triggers) {
       return {};
     }
@@ -640,9 +641,9 @@ export class Visualizer {
   }
 
   /**
-   * @param equivs
+   * @deprecated INCEpTION does not use equivs
    */
-  buildEventDescsFromEquivs(equivs, spans: Record<string, Span>, eventDescs: Record<string, EventDesc>) {
+  buildEventDescsFromEquivs(equivs: Array<EquivDto>, spans: Record<string, Span>, eventDescs: Record<string, EventDesc>) {
     if (!equivs) {
       return;
     }
@@ -714,12 +715,12 @@ export class Visualizer {
     });
   }
 
-  // INCEpTION does not use attributes...
   /**
    * @param {[string, string, string, string]} attributes id, name, spanId, value
    * @param {Object.<string, Span>} spans
+   * @deprecated INCEpTION does not use attributes
    */
-  assignAttributesToSpans(attributes: [string, string, string, string], spans: Record<string, Span>) {
+  assignAttributesToSpans(attributes: Array<AttributeDto>, spans: Record<string, Span>) {
     if (!attributes) {
       return;
     }
@@ -757,7 +758,7 @@ export class Visualizer {
    * @param comments
    * @param triggerHash
    */
-  assignComments(comments: Array<sourceCommentType>, triggerHash: Record<string, unknown>) {
+  assignComments(comments: Array<CommentDto>, triggerHash: Record<string, unknown>) {
     if (!comments) {
       return;
     }
@@ -3518,9 +3519,6 @@ export class Visualizer {
     }
   }
 
-  /**
-   * @param {MouseEvent} evt
-   */
   onMouseOverSpan(evt: MouseEvent) {
     const target = $(evt.target);
     const id = target.attr('data-span-id');
@@ -3598,9 +3596,6 @@ export class Visualizer {
     }
   }
 
-  /**
-   * @param {MouseEvent} evt
-   */
   onMouseOverArc(evt: MouseEvent) {
     const target = $(evt.target);
     const originSpanId = target.attr('data-arc-origin');
@@ -3663,9 +3658,6 @@ export class Visualizer {
       .map(e => e.parent().addClass('highlight'));
   }
 
-  /**
-   * @param {MouseEvent} evt
-   */
   onMouseOverSentence(evt: MouseEvent) {
     const target = $(evt.target);
     const id = target.attr('data-sent');
@@ -3675,9 +3667,6 @@ export class Visualizer {
     }
   }
 
-  /**
-   * @param {MouseEvent} evt
-   */
   onMouseOver(evt: MouseEvent) {
     const target = $(evt.target);
     if (target.attr('data-span-id')) {
@@ -3975,7 +3964,7 @@ export class Visualizer {
       .addTo(fragment.group);
   }
 
-  renderCurly(fragment, x, yy, hh) {
+  renderCurly(fragment: Fragment, x: number, yy: number, hh: number) {
     const span = fragment.span;
 
     let curlyColor = 'grey';
@@ -4021,7 +4010,7 @@ function isRTL(charCode: number): boolean {
 
 // http://24ways.org/2010/calculating-color-contrast/
 // http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
-function bgToFgColor(hexcolor) {
+function bgToFgColor(hexcolor: ColorCode) {
   const r = parseInt(hexcolor.substr(1, 2), 16);
   const g = parseInt(hexcolor.substr(3, 2), 16);
   const b = parseInt(hexcolor.substr(5, 2), 16);
@@ -4049,12 +4038,11 @@ function findClosestHorizontalScrollable(node: JQuery) {
 
 /**
  * A naive whitespace tokeniser
- * @returns {number[][]}
  */
-function tokenise(text): number[][] {
-  const tokenOffsets = [];
-  let tokenStart = null;
-  let lastCharPos = null;
+function tokenise(text: string): OffsetsList {
+  const tokenOffsets: OffsetsList = [];
+  let tokenStart: number = null;
+  let lastCharPos: number = null;
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
@@ -4081,13 +4069,11 @@ function tokenise(text): number[][] {
 
 /**
  * A naive newline sentence splitter
- *
- * @returns {number[][]}
  */
-function sentenceSplit(text): number[][] {
-  const sentenceOffsets = [];
-  let sentStart = null;
-  let lastCharPos = null;
+function sentenceSplit(text: string): OffsetsList {
+  const sentenceOffsets: OffsetsList = [];
+  let sentStart: number = null;
+  let lastCharPos: number = null;
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i];

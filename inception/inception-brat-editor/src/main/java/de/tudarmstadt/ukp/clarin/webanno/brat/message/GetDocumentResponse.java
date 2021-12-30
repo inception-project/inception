@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,8 +56,11 @@ public class GetDocumentResponse
 
     private String text;
 
-    @JsonProperty("source_files")
-    private @JsonInclude(NON_EMPTY) List<String> sourceFiles = new ArrayList<>();
+    // /**
+    // * @deprecated Not used
+    // */
+    // @JsonProperty("source_files")
+    // private @JsonInclude(NON_EMPTY) List<String> sourceFiles = new ArrayList<>();
 
     // private long ctime;
     // private long mtime;
@@ -67,7 +69,10 @@ public class GetDocumentResponse
     // https://github.com/nlplab/brat/blob/master/server/src/document.py#L794
     // private int offset;
 
-    private @JsonInclude(NON_NULL) GetCollectionInformationResponse info;
+    // /**
+    // * @deprecated Not used
+    // */
+    // private @JsonInclude(NON_NULL) GetCollectionInformationResponse info;
 
     /**
      * [ 0, 3 ]
@@ -101,15 +106,15 @@ public class GetDocumentResponse
         super(COMMAND);
     }
 
-    public GetCollectionInformationResponse getInfo()
-    {
-        return info;
-    }
-
-    public void setInfo(GetCollectionInformationResponse aInfo)
-    {
-        info = aInfo;
-    }
+    // public GetCollectionInformationResponse getInfo()
+    // {
+    // return info;
+    // }
+    //
+    // public void setInfo(GetCollectionInformationResponse aInfo)
+    // {
+    // info = aInfo;
+    // }
 
     public void addToken(int aBegin, int aEnd)
     {
@@ -171,26 +176,26 @@ public class GetDocumentResponse
         normalizations.add(aNormalization);
     }
 
-    /**
-     * Get source files for the annotations.
-     * 
-     * @return the source files.
-     */
-    public List<String> getSourceFiles()
-    {
-        return sourceFiles;
-    }
-
-    /**
-     * Set source files for the annotations.
-     * 
-     * @param aSourceFiles
-     *            the source files.
-     */
-    public void setSourceFiles(List<String> aSourceFiles)
-    {
-        sourceFiles = aSourceFiles;
-    }
+    // /**
+    // * Get source files for the annotations.
+    // *
+    // * @return the source files.
+    // */
+    // public List<String> getSourceFiles()
+    // {
+    // return sourceFiles;
+    // }
+    //
+    // /**
+    // * Set source files for the annotations.
+    // *
+    // * @param aSourceFiles
+    // * the source files.
+    // */
+    // public void setSourceFiles(List<String> aSourceFiles)
+    // {
+    // sourceFiles = aSourceFiles;
+    // }
 
     // /**
     // * Get creation time.

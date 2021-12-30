@@ -17,7 +17,7 @@
  */
 export type OffsetsList = Array<Offsets>;
 
-export type Offsets = [number, number];
+export type Offsets = [begin: number, end: number];
 
 export class Annotation {
     vid: string;

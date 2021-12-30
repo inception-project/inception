@@ -29,26 +29,31 @@ import java.util.List;
  * "borderColor":"green","labels":[], "children":[{"name":"LOC","type":"LOC","unused":false,
  * "fgColor":"black","bgColor":"cyan","borderColor":"green","labels":["LOC"],"children":[],
  * "attributes":[],"arcs":[]},....
- *
- *
  */
 public class EntityType
 {
     private String name;
     private String type;
-    private boolean unused;
-
-    private String hotkey;
 
     private String fgColor;
     private String bgColor;
     private String borderColor;
 
     private List<String> labels;
-    private List<EntityType> children;
-    private List<String> attributes;
 
     private List<RelationType> arcs;
+
+    // @Deprecated
+    // private List<SpanType> children;
+    //
+    // @Deprecated
+    // private List<String> attributes;
+    //
+    // @Deprecated
+    // private boolean unused;
+    //
+    // @Deprecated
+    // private String hotkey;
 
     public EntityType()
     {
@@ -67,37 +72,9 @@ public class EntityType
      */
     public EntityType(String aName, String aLabel, String aType)
     {
-        this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
-                null /* fgColor */, null /* bgColor */, null /* borderColor */,
-                asList(aLabel, abbreviate(aLabel)) /* labels */, null /* children */,
-                null /* attributes */, null /* arcs */);
-    }
-
-    // public EntityType(String aName, String aType, String aFgColor, String aBgColor,
-    // String aBorderColor)
-    // {
-    // this(aName /* name */, aType /* type */, true /* unused */, "" /* hotkey */,
-    // aFgColor /* fgColor */, aBgColor /* bgColor */, aBorderColor /* borderColor */,
-    // Arrays.asList(aName) /* labels */, null /* children */, null /* attributes */,
-    // null /* arcs */);
-    // }
-
-    private EntityType(String aName, String aType, boolean aUnused, String aHotkey, String aFgColor,
-            String aBgColor, String aBorderColor, List<String> aLabels, List<EntityType> aChildren,
-            List<String> aAttributes, List<RelationType> aArcs)
-    {
-        super();
         name = aName;
         type = aType;
-        unused = aUnused;
-        hotkey = aHotkey;
-        borderColor = aBorderColor;
-        fgColor = aFgColor;
-        bgColor = aBgColor;
-        labels = aLabels;
-        children = aChildren;
-        attributes = aAttributes;
-        arcs = aArcs;
+        labels = asList(aLabel, abbreviate(aLabel));
     }
 
     public String getName()
@@ -120,25 +97,29 @@ public class EntityType
         type = aType;
     }
 
-    public boolean isUnused()
-    {
-        return unused;
-    }
-
-    public void setUnused(boolean aUnused)
-    {
-        unused = aUnused;
-    }
-
-    public String getHotkey()
-    {
-        return hotkey;
-    }
-
-    public void setHotkey(String aHotkey)
-    {
-        hotkey = aHotkey;
-    }
+    // @Deprecated
+    // public boolean isUnused()
+    // {
+    // return unused;
+    // }
+    //
+    // @Deprecated
+    // public void setUnused(boolean aUnused)
+    // {
+    // unused = aUnused;
+    // }
+    //
+    // @Deprecated
+    // public String getHotkey()
+    // {
+    // return hotkey;
+    // }
+    //
+    // @Deprecated
+    // public void setHotkey(String aHotkey)
+    // {
+    // hotkey = aHotkey;
+    // }
 
     public String getFgColor()
     {
@@ -180,25 +161,29 @@ public class EntityType
         labels = aLabels;
     }
 
-    public List<EntityType> getChildren()
-    {
-        return children;
-    }
-
-    public void setChildren(List<EntityType> aChildren)
-    {
-        children = aChildren;
-    }
-
-    public List<String> getAttributes()
-    {
-        return attributes;
-    }
-
-    public void setAttributes(List<String> aAttributes)
-    {
-        attributes = aAttributes;
-    }
+    // @Deprecated
+    // public List<SpanType> getChildren()
+    // {
+    // return children;
+    // }
+    //
+    // @Deprecated
+    // public void setChildren(List<SpanType> aChildren)
+    // {
+    // children = aChildren;
+    // }
+    //
+    // @Deprecated
+    // public List<String> getAttributes()
+    // {
+    // return attributes;
+    // }
+    //
+    // @Deprecated
+    // public void setAttributes(List<String> aAttributes)
+    // {
+    // attributes = aAttributes;
+    // }
 
     public List<RelationType> getArcs()
     {

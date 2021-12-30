@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.inception.externaleditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
-
+import static de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorLoader.PLUGINS_EDITOR_BASE_URL;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import java.nio.file.Files;
 import java.nio.file.Path;
+
+import javax.servlet.ServletContext;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -32,7 +35,8 @@ import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.resource.FileSystemResourceReference;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.resource.UrlResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -57,6 +61,7 @@ public class ExternalAnnotationEditor
     private @SpringBean DocumentViewExtensionPoint documentViewExtensionPoint;
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
+    private @SpringBean ServletContext context;
 
     private final String editorFactoryId;
 
@@ -68,7 +73,7 @@ public class ExternalAnnotationEditor
             String aEditorFactoryId)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-        
+
         setOutputMarkupPlaceholderTag(true);
 
         editorFactoryId = aEditorFactoryId;
@@ -110,15 +115,18 @@ public class ExternalAnnotationEditor
 
         aResponse.render(JavaScriptHeaderItem.forReference(DiamJavaScriptReference.get()));
 
-        Path jsPath = description.getBasePath().resolve(description.getJs());
-        FileSystemResourceReference jsReference = new FileSystemResourceReference(
-                description.getFactory() + ".js", jsPath);
+        UrlResourceReference jsReference = new UrlResourceReference(
+                Url.parse(context.getContextPath() + PLUGINS_EDITOR_BASE_URL
+                        + description.getFactory() + "/" + description.getJs(), UTF_8));
         aResponse.render(JavaScriptHeaderItem.forReference(jsReference));
 
         Path cssPath = description.getBasePath().resolve(description.getCss());
         if (Files.isRegularFile(cssPath)) {
-            FileSystemResourceReference cssReference = new FileSystemResourceReference(
-                    description.getFactory() + ".css", cssPath);
+            UrlResourceReference cssReference = new UrlResourceReference(
+                    Url.parse(
+                            context.getContextPath() + PLUGINS_EDITOR_BASE_URL
+                                    + description.getFactory() + "/" + description.getCss(),
+                            UTF_8));
             aResponse.render(CssHeaderItem.forReference(cssReference));
         }
 

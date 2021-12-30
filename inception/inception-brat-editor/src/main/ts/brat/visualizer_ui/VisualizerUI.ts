@@ -42,18 +42,15 @@ import type { Dispatcher } from "../dispatcher/Dispatcher";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 
 import { INSTANCE as Util } from "../util/Util";
-import { OffsetsList } from "../visualizer/SourceData";
 import { DocumentData } from "../visualizer/DocumentData";
-import { RelationType } from "../visualizer/RelationType";
-import { SpanType } from "../visualizer/SpanType";
+import { RelationTypeDto, EntityTypeDto, VID } from "../protocol/Protocol";
+import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
+import { Span } from "../visualizer/Span";
 
 export class VisualizerUI {
-  private spanTypes: Record<string, SpanType> = null;
-  private relationTypesHash:Record<string, RelationType> = null;
+  private spanTypes: Record<string, EntityTypeDto> = null;
+  private relationTypesHash:Record<string, RelationTypeDto> = null;
   private data: DocumentData = null;
-  private coll;
-  private doc;
-  private args;
   private user = null;
   private annotationAvailable = false;
 
@@ -279,7 +276,6 @@ export class VisualizerUI {
       action: 'normData',
       database: dbName,
       key: dbKey,
-      collection: this.coll,
       id: id,
       type: type,
     }, (response) => {
@@ -377,7 +373,7 @@ export class VisualizerUI {
     }]);
   }
 
-  rejectAction(evt: MouseEvent, offsets: OffsetsList, editedSpan, id) {
+  rejectAction(evt: MouseEvent, offsets: OffsetsList, editedSpan: Span, id: VID) {
     // must be logged in
     if (this.user === null) return;
 

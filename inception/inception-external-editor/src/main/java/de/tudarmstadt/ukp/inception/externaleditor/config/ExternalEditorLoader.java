@@ -39,15 +39,22 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.PathResource;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorFactory;
 
 @Configuration
 public class ExternalEditorLoader
-    implements BeanDefinitionRegistryPostProcessor
+    implements BeanDefinitionRegistryPostProcessor, WebMvcConfigurer
 {
+    public static final String PLUGINS_EDITOR_BASE_URL = "/plugins/editor/";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
+
+    private List<EditorPluginDescripion> descriptions = Collections.emptyList();
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory aFactory)
@@ -61,12 +68,14 @@ public class ExternalEditorLoader
         throws BeansException
     {
         List<Path> pluginJsonFiles = scanEditorPluginFolders();
+        descriptions = new ArrayList<>();
 
         for (Path pluginJsonFile : pluginJsonFiles) {
             try (InputStream is = Files.newInputStream(pluginJsonFile)) {
                 EditorPluginDescripion desc = fromJsonStream(EditorPluginDescripion.class, is);
                 desc.setBasePath(pluginJsonFile.getParent());
                 registerEditorPlugin(aRegistry, desc);
+                descriptions.add(desc);
             }
             catch (IOException e) {
                 log.error("Error loading editor plugin description from [{}]", pluginJsonFile, e);
@@ -108,5 +117,14 @@ public class ExternalEditorLoader
         }
 
         return pluginJsonFiles;
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry aRegistry)
+    {
+        for (EditorPluginDescripion desc : descriptions) {
+            aRegistry.addResourceHandler(PLUGINS_EDITOR_BASE_URL + desc.getFactory() + "/**")
+                    .addResourceLocations(new PathResource(desc.getBasePath()));
+        }
     }
 }

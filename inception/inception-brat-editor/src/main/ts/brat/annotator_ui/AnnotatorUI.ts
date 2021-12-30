@@ -40,13 +40,13 @@
 import { Dispatcher } from "../dispatcher/Dispatcher";
 import { Svg } from "@svgdotjs/svg.js";
 import { DocumentData } from "../visualizer/DocumentData";
-import { OffsetsList } from "../visualizer/SourceData";
 import { Span } from "../visualizer/Span";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
 import { DiamAjax } from "@inception-project/inception-diam";
-import { SpanType } from "../visualizer/SpanType";
+import { EntityTypeDto } from "../protocol/Protocol";
+import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
 
 export class AnnotatorUI {
   private data: DocumentData = null;
@@ -65,7 +65,7 @@ export class AnnotatorUI {
   private arcOptions = null;
   private editedSpan: Span = null;
   private editedFragment = null;
-  private spanTypes: Record<string, SpanType> = null;
+  private spanTypes: Record<string, EntityTypeDto> = null;
   private selRect = null;
   private lastStartRec = null;
   private lastEndRec = null;
@@ -895,26 +895,6 @@ export class AnnotatorUI {
       tagger: taggerId,
     };
     this.dispatcher.post('ajax', [tagOptions, 'edited']);
-  }
-
-  // recursively traverses type hierarchy (entity_types or
-  // event_types) and stores normalizations in normDbsByType.
-  rememberNormDbsForType(types) {
-    if (!types) return;
-
-    $.each(types, (typeNo, type) => {
-      if (type === null) {
-        // spacer, no-op
-      } else {
-        this.normDbsByType[type.type] = type.normalizations || [];
-        // WEBANNO EXTENSION BEGIN
-        // Avoid exception when no children are set
-        if (type.children && type.children.length) {
-          // WEBANNO EXTENSION END
-          this.rememberNormDbsForType(type.children);
-        }
-      }
-    });
   }
 
   spanAndAttributeTypesLoaded(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
