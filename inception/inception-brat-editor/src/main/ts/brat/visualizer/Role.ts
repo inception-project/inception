@@ -36,22 +36,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- */
+ */import { VID } from "../protocol/Protocol";
 
-import { ColorCode } from "../protocol/Protocol";
-
-/**
- * Class currently defined only for documentation purposes
- */
-export type ValType = {
-  name: string,
-  glyph: string,
-  glyphColor: ColorCode,
-  position: "left" | "right"
-}
-
-export class AttributeType {
-  name: string;
-  values: Record<string, ValType> = {};
-  bool: string;
+export class Role {
+  type: string;
+  targetId: VID;
 }

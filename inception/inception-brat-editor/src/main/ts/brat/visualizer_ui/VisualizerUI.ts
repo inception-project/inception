@@ -45,7 +45,7 @@ import { INSTANCE as Util } from "../util/Util";
 import { DocumentData } from "../visualizer/DocumentData";
 import { RelationTypeDto, EntityTypeDto, VID } from "../protocol/Protocol";
 import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
-import { Span } from "../visualizer/Span";
+import { Entity } from "../visualizer/Entity";
 
 export class VisualizerUI {
   private spanTypes: Record<string, EntityTypeDto> = null;
@@ -373,7 +373,7 @@ export class VisualizerUI {
     }]);
   }
 
-  rejectAction(evt: MouseEvent, offsets: OffsetsList, editedSpan: Span, id: VID) {
+  rejectAction(evt: MouseEvent, offsets: OffsetsList, editedSpan: Entity, id: VID) {
     // must be logged in
     if (this.user === null) return;
 

@@ -40,7 +40,7 @@
 import { Dispatcher } from "../dispatcher/Dispatcher";
 import { Svg } from "@svgdotjs/svg.js";
 import { DocumentData } from "../visualizer/DocumentData";
-import { Span } from "../visualizer/Span";
+import { Entity } from "../visualizer/Entity";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
@@ -63,7 +63,7 @@ export class AnnotatorUI {
 
   private spanOptions = null;
   private arcOptions = null;
-  private editedSpan: Span = null;
+  private editedSpan: Entity = null;
   private editedFragment = null;
   private spanTypes: Record<string, EntityTypeDto> = null;
   private selRect = null;
@@ -207,7 +207,7 @@ export class AnnotatorUI {
     this.sendTriggerCustomArcAction(id, type, originSpan, targetSpan);
   }
 
-  private sendTriggerCustomArcAction(id: string, type: string, originSpan: Span, targetSpan: Span) {
+  private sendTriggerCustomArcAction(id: string, type: string, originSpan: Entity, targetSpan: Entity) {
     this.dispatcher.post('ajax', [{
       action: 'doAction',
       arcId: id,

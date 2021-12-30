@@ -38,6 +38,7 @@
  * SOFTWARE.
  */
 
+import { MarkerType } from "../protocol/Protocol";
 import { EventDesc } from "./EventDesc";
 
 export class Arc {
@@ -53,8 +54,7 @@ export class Arc {
   eventDescId: string;
   relation = false;
   normalizations: Array<[string, string, string]> = [];
-  marked: string;
-  normalized: string;
+  marked: MarkerType;
   hidden = false;
 
   constructor(eventDesc: EventDesc, role, dist: number, eventNo: string) {

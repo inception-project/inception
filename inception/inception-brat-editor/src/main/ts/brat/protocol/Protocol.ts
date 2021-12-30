@@ -42,7 +42,7 @@ export type EntityAttributesDto = {
  * Use this "comments" to highlight "yield" of relation nodes
  */
 export type AnnotationCommentDto = [
-  vid: VID,
+  id: VID,
   commentType: CommentType,
   comment: string
 ];
@@ -56,12 +56,12 @@ export type SentenceCommentDto = [
 export type CommentDto = AnnotationCommentDto | SentenceCommentDto;
 
 export type AnnotationMarkerDto = [
-  vid: VID,
+  id: VID,
   type: MarkerType
 ];
 
 export type SentenceMarkerDto = [
-  kind: "send",
+  kind: "sent",
   type: MarkerType,
   index: number
 ]
@@ -74,16 +74,18 @@ export type TextMarkerDto = [
 export type MarkerDto = AnnotationMarkerDto | SentenceMarkerDto | TextMarkerDto;
 
 /**
- * The Arguments used during arc annotation in the form of [["Arg1","p_21346"],["Arg2","p_21341"]]
+ * The roles used during arc annotation in the form of [["Arg1","p_21346"],["Arg2","p_21341"]]
  * to denote a given arc annotation such as dependency parsing and coreference resolution
+ * 
+ * @see
  */
-export type ArgumentDto = [
-  label: string,
+export type RoleDto = [
+  type: string,
   target: VID
 ];
 
 export type EntityDto = [
-  vid: VID,
+  id: VID,
   type: string,
   offsets: OffsetsList,
   attributes?: EntityAttributesDto
@@ -104,9 +106,9 @@ export type EntityDto = [
  */
 
 export type RelationDto = [
-  vid: VID,
+  id: VID,
   type: string,
-  arguments: Array<ArgumentDto>,
+  arguments: [arg0: RoleDto, arg1: RoleDto],
   labelText?: string,
   color?: ColorCode
 ]
@@ -177,10 +179,10 @@ export type RelationTypeDto = {
   targets: Array<string>;
   labelArrow: string; // deprecated? not supported server-side
   args; // Absolutely no clue; deprecated? not supported server-side
-  properties: Record<string, RelationProperty>; // deprecated? not supported server-side
+  properties: RelationProperties; // deprecated? not supported server-side
 }
 
-export type RelationProperty = {
+export type RelationProperties = {
   symmetric: boolean;
 }
 
@@ -220,7 +222,7 @@ export type EquivDto = [
  export type EventDto = [
   id: string, 
   triggerId: string, 
-  roles: Array<unknown> 
+  roles: Array<RoleDto> 
 ]
 
 /**
@@ -249,7 +251,7 @@ export type EquivDto = [
   sentence_number_offset: number;
   rtl_mode: boolean;
   font_zoom: number;
-  args: Record<string, []>;
+  args: Record<MarkerType, MarkerDto>;
 
   /**
    * @deprecated INCEpTION does not use triggers

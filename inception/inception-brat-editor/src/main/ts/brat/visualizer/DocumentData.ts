@@ -43,8 +43,10 @@ import { Chunk } from "./Chunk";
 import { EventDesc } from "./EventDesc";
 import { Fragment } from "./Fragment";
 import { Sizes } from "./Sizes";
-import { Span } from "./Span";
-import { Text as SVGText} from "@svgdotjs/svg.js";
+import { Entity } from "./Entity";
+import { Text as SVGText } from "@svgdotjs/svg.js";
+import { Comment } from "./Comment";
+import { VID } from "../protocol/Protocol";
 
 /**
  * Document data prepared for rendering. The JSON data we get from the server is converted into
@@ -53,20 +55,20 @@ import { Text as SVGText} from "@svgdotjs/svg.js";
  */
 export class DocumentData {
   text: string = undefined;
-  chunks: Chunk[] = [];
-  spans: Record<string, Span> = {};
-  eventDescs: Record<string, EventDesc> = {};
-  arcs: Arc[] = [];
-  arcById: Record<string, Arc> = {};
-  sentComment = {};
-  markedSent: Record<string, boolean> = {};
+  chunks: Array<Chunk> = [];
+  spans: Record<VID, Entity> = {};
+  arcById: Record<VID, Arc> = {};
+  arcs: Array<Arc> = [];
+  eventDescs: Record<VID, EventDesc> = {};
+  sentComment: Record<number, Comment> = {};
+  markedSent: Record<number, boolean> = {};
   /**
    * Template SVG text elements. Clone these and fill in any missing information (translate, fill)
    * before adding them to the SVG.
    */
   spanAnnTexts: Record<string, SVGText> = {};
   towers: Record<string, Fragment[]> = {};
-  spanDrawOrderPermutation: string[] = []
+  spanDrawOrderPermutation: Array<string> = []
   sizes: Sizes = undefined;
   exception = false;
 

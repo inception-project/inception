@@ -39,15 +39,26 @@
  */
 
 import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
+import { VID } from "../protocol/Protocol";
 import { Arc } from "./Arc";
+import { Comment } from "./Comment";
 import { Fragment } from "./Fragment";
 
-export class Span {
-  id: string = undefined;
+export const TRIGGER: GeneralEntityType = "trigger";
+export const ENTITY: GeneralEntityType = "entity";
+
+export type GeneralEntityType = string;
+
+/**
+ * The visual model of a span annotation. This is traditionally called "entity" in many places, but
+ * also at times "span".
+ */
+export class Entity {
+  id: VID = undefined;
   type: string = undefined;
   totalDist = 0;
   numArcs = 0;
-  generalType: string = undefined;
+  generalType: GeneralEntityType = undefined;
   headFragment: Fragment = undefined;
   unsegmentedOffsets: OffsetsList = [];
   offsets: OffsetsList = [];
@@ -64,28 +75,24 @@ export class Span {
   annotatorNotes = undefined;
   attributeMerge: Record<string, unknown> = {}; // for box, cross, etc. that are span-global
   fragments: Fragment[] = [];
-  normalized: string;
   normalizations: Array<[string, string, string]> = [];
-  wholeFrom = undefined;
-  wholeTo = undefined;
-  comment = undefined; // { type: undefined, text: undefined };
+  wholeFrom: number = undefined;
+  wholeTo: number = undefined;
+  comment: Comment = undefined;
   drawCurly = false;
   labelText: string;
-  refedIndexSum = undefined;
+  refedIndexSum: number = undefined;
   color: string;
   shadowClass: string;
   floor: number;
-  marked;
-  avgDist;
+  marked: string;
+  avgDist: number;
   text: string;
   cue: string;
   hovertext: string;
   actionButtons: boolean;
 
-  /**
-   * @param {*} id
-   */
-  constructor(id, type: string, offsets: OffsetsList, generalType: string) {
+  constructor(id: VID, type: string, offsets: OffsetsList, generalType: GeneralEntityType) {
     this.id = id;
     this.type = type;
     this.unsegmentedOffsets = offsets;
@@ -94,7 +101,7 @@ export class Span {
     this.initContainers();
   }
 
-  static compare(spans: Record<string, Span>, a: string, b: string) {
+  static compare(spans: Record<VID, Entity>, a: VID, b: VID) {
     const aSpan = spans[a];
     const bSpan = spans[b];
     const tmp = aSpan.headFragment.from + aSpan.headFragment.to - bSpan.headFragment.from - bSpan.headFragment.to;
@@ -123,7 +130,7 @@ export class Span {
     this.segmentedOffsetsMap = {};
 
     for (let fi = 0, nfi = 0; fi < this.unsegmentedOffsets.length; fi++) {
-      /** @type {number | any} */ let begin = this.unsegmentedOffsets[fi][0];
+      let begin = this.unsegmentedOffsets[fi][0];
       const end = this.unsegmentedOffsets[fi][1];
 
       for (let ti = begin; ti < end; ti++) {
@@ -149,11 +156,10 @@ export class Span {
   /**
    * Create a partial copy of the span with a new ID.
    *
-   * @param {String} id
    * @returns the copy.
    */
-  copy(id) {
-    const span = $.extend(new Span(id, undefined, this.unsegmentedOffsets.slice(), undefined), this); // clone
+  copy(id: string) {
+    const span = $.extend(new Entity(id, undefined, this.unsegmentedOffsets.slice(), undefined), this); // clone
     // read-only; shallow copy is fine
     span.offsets = this.offsets;
     span.segmentedOffsetsMap = this.segmentedOffsetsMap;

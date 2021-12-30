@@ -43,8 +43,6 @@ public class GetDocumentResponse
 {
     public static final String COMMAND = "getDocument";
 
-    private @JsonInclude(NON_EMPTY) List<String> modifications = new ArrayList<>();
-
     @JsonProperty("rtl_mode")
     private boolean rtlMode;
 
@@ -94,10 +92,26 @@ public class GetDocumentResponse
      * Guess: ID (maybe token ID?), Type, begin offset, end offset
      */
     private @JsonInclude(NON_EMPTY) List<Entity> entities = new ArrayList<>();
-    private @JsonInclude(NON_EMPTY) List<String> attributes = new ArrayList<>();
-    private @JsonInclude(NON_EMPTY) List<String> equivs = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<Comment> comments = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<Normalization> normalizations = new ArrayList<>();
+
+    /**
+     * @deprecated not used
+     */
+    @Deprecated
+    private @JsonInclude(NON_EMPTY) List<String> attributes = new ArrayList<>();
+
+    /**
+     * @deprecated not used
+     */
+    @Deprecated
+    private @JsonInclude(NON_EMPTY) List<String> equivs = new ArrayList<>();
+
+    /**
+     * @deprecated not used
+     */
+    @Deprecated
+    private @JsonInclude(NON_EMPTY) List<String> modifications = new ArrayList<>();
 
     private Map<String, List<Marker>> args = new HashMap<>();
 
@@ -299,25 +313,25 @@ public class GetDocumentResponse
         entities.add(aEntity);
     }
 
-    public List<String> getAttributes()
-    {
-        return attributes;
-    }
-
-    public void setAttributes(List<String> aAttributes)
-    {
-        attributes = aAttributes;
-    }
-
-    public List<String> getEquivs()
-    {
-        return equivs;
-    }
-
-    public void setEquivs(List<String> aEquivs)
-    {
-        equivs = aEquivs;
-    }
+    // public List<String> getAttributes()
+    // {
+    // return attributes;
+    // }
+    //
+    // public void setAttributes(List<String> aAttributes)
+    // {
+    // attributes = aAttributes;
+    // }
+    //
+    // public List<String> getEquivs()
+    // {
+    // return equivs;
+    // }
+    //
+    // public void setEquivs(List<String> aEquivs)
+    // {
+    // equivs = aEquivs;
+    // }
 
     public int getSentenceNumberOffset()
     {
