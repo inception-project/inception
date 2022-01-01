@@ -15,15 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { DiamWebsocket } from './DiamWebsocket'
-import { DiamAjax } from './DiamAjax'
+import { Offsets, VID } from "../model";
 
-export class DiamClientFactory {
-  createWebsocketClient() : DiamWebsocket {
-    return new DiamWebsocket();
-  }
+declare const Wicket: any;
 
-  createAjaxClient(ajaxEndpoint: string) : DiamAjax {
-    return new DiamAjax(ajaxEndpoint);
-  }
+export interface DiamAjax {
+  selectAnnotation(id: VID): void;
+
+  createSpanAnnotation(offsets: Array<Offsets>, spanText: string): void;
+
+  createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void;
+
+  loadAnnotations(format: string): Promise<any>;
 }

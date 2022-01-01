@@ -44,9 +44,8 @@ import { Entity } from "../visualizer/Entity";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
-import { DiamAjax } from "@inception-project/inception-diam";
+import { DiamAjax, Offsets } from "@inception-project/inception-js-api";
 import { EntityTypeDto } from "../protocol/Protocol";
-import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
 
 export class AnnotatorUI {
   private data: DocumentData = null;
@@ -227,7 +226,7 @@ export class AnnotatorUI {
     this.sendTriggerCustomSpanAction(id, this.editedSpan.fragmentOffsets);
   }
 
-  private sendTriggerCustomSpanAction(id: string, offsets: OffsetsList) {
+  private sendTriggerCustomSpanAction(id: string, offsets: ReadonlyArray<Offsets>) {
     this.dispatcher.post('ajax', [{
       action: 'doAction',
       offsets: JSON.stringify(offsets),
@@ -289,7 +288,7 @@ export class AnnotatorUI {
     this.clearSelection();
     this.editedSpan = this.data.spans[id];
     this.editedFragment = target.attr('data-fragment-id');
-    const offsets: OffsetsList = this.editedSpan.fragmentOffsets;
+    const offsets: Array<Offsets> = this.editedSpan.fragmentOffsets;
 
     this.spanOptions = {
       action: 'createSpan',

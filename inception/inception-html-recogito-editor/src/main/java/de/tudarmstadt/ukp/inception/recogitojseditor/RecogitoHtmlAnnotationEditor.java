@@ -104,14 +104,14 @@ public class RecogitoHtmlAnnotationEditor
     {
         String callbackUrl = diamBehavior.getCallbackUrl().toString();
         return wrapInTryCatch(EDITOR_FACTORY + ".getOrInitialize('" + vis.getMarkupId()
-                + "', Diam.factory(), '" + callbackUrl + "');");
+                + "', Diam.factory(), { diamAjaxCallbackUrl: '" + callbackUrl + "' });");
     }
 
     private String renderScript()
     {
         String callbackUrl = diamBehavior.getCallbackUrl().toString();
         return wrapInTryCatch(EDITOR_FACTORY + ".getOrInitialize('" + vis.getMarkupId()
-                + "', Diam.factory(), '" + callbackUrl + "').loadAnnotations();");
+                + "', Diam.factory(), { diamAjaxCallbackUrl: '" + callbackUrl + "' }).then(editor => editor.loadAnnotations());");
     }
 
     @Override

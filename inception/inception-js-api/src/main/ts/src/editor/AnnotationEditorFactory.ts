@@ -13,23 +13,13 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the License.
+ * limitations under the L
  */
-import { Ajax } from "./ajax/Ajax";
-import { INSTANCE as Util } from "./util/Util";
-import { CurationMod } from "./curation/CurationMod";
-import { factory as diamAjaxFactory } from "@inception-project/inception-diam";
+import { DiamClientFactory } from "../diam";
+import { AnnotationEditor, AnnotationEditorProperties } from ".";
 
-declare let Wicket;
+export interface AnnotationEditorFactory {
+  getOrInitialize(element: HTMLElement | string, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor>;
 
-function brat(markupId: string, controllerCallbackUrl: string, collCallbackUrl: string, docCallbackUrl: string) {
-  Util.embedByURL(markupId, collCallbackUrl, docCallbackUrl,
-    function (dispatcher) {
-      const diamAjax = diamAjaxFactory().createAjaxClient(controllerCallbackUrl);
-      new Ajax(dispatcher, markupId, controllerCallbackUrl);
-      new CurationMod(dispatcher, diamAjax);
-      Wicket.$(markupId).dispatcher = dispatcher;
-    });
+  destroy(element: HTMLElement | string): void;
 }
-
-export = brat;

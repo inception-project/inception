@@ -62,7 +62,7 @@ import { INSTANCE as Util } from "../util/Util";
 import { ArrayXY } from "@svgdotjs/svg.js";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
 import { Defs } from "@svgdotjs/svg.js";
-import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
+import { Offsets } from "@inception-project/inception-js-api";
 declare const $: JQueryStatic;
 
 /** 
@@ -4022,8 +4022,8 @@ function findClosestHorizontalScrollable(node: JQuery) {
 /**
  * A naive whitespace tokeniser
  */
-function tokenise(text: string): OffsetsList {
-  const tokenOffsets: OffsetsList = [];
+function tokenise(text: string): Array<Offsets> {
+  const tokenOffsets: Array<Offsets> = [];
   let tokenStart: number = null;
   let lastCharPos: number = null;
 
@@ -4053,8 +4053,8 @@ function tokenise(text: string): OffsetsList {
 /**
  * A naive newline sentence splitter
  */
-function sentenceSplit(text: string): OffsetsList {
-  const sentenceOffsets: OffsetsList = [];
+function sentenceSplit(text: string): Array<Offsets> {
+  const sentenceOffsets: Array<Offsets> = [];
   let sentStart: number = null;
   let lastCharPos: number = null;
 

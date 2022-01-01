@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { OffsetsList } from "./model/Annotation";
+import { DiamAjax, Offsets, VID } from '@inception-project/inception-js-api';
 
 declare const Wicket: any;
 
@@ -28,7 +28,7 @@ if (!document.hasOwnProperty('DIAM_TRANSPORT_BUFFER')) {
 
 const TRANSPORT_BUFFER: any = document['DIAM_TRANSPORT_BUFFER'];
 
-export class DiamAjax {
+export class DiamAjaxImpl implements DiamAjax {
   private ajaxEndpoint: string;
 
   constructor(ajaxEndpoint: string) {
@@ -46,7 +46,7 @@ export class DiamAjax {
     });
   }
 
-  createSpanAnnotation(offsets: OffsetsList, spanText: string) {
+  createSpanAnnotation(offsets: Array<Offsets>, spanText: string) {
     Wicket.Ajax.ajax({
       "m": "POST",
       "u": this.ajaxEndpoint,
@@ -58,7 +58,7 @@ export class DiamAjax {
     });
   }
 
-  createRelationAnnotation(originSpanId, targetSpanId) {
+  createRelationAnnotation(originSpanId: VID, targetSpanId: VID) {
     Wicket.Ajax.ajax({
       "m": "POST",
       "u": this.ajaxEndpoint,
@@ -89,7 +89,7 @@ export class DiamAjax {
   }
 
   loadAnnotations(format: string): Promise<any> {
-    const token = DiamAjax.newToken();
+    const token = DiamAjaxImpl.newToken();
     return new Promise((resolve, reject) => {
       Wicket.Ajax.ajax({
         "m": "POST",
@@ -100,7 +100,7 @@ export class DiamAjax {
           "format": format
         },
         "sh": [() => {
-          const result = DiamAjax.clearResult(token);
+          const result = DiamAjaxImpl.clearResult(token);
           if (result === undefined) {
             reject("Server did not place result into transport buffer");
             return;
@@ -109,7 +109,7 @@ export class DiamAjax {
           resolve(result);
         }],
         "eh": [() => {
-          DiamAjax.clearResult(token);
+          DiamAjaxImpl.clearResult(token);
 
           reject("Unable to load annotation");
         }]

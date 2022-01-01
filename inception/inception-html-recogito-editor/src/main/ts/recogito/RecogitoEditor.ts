@@ -17,7 +17,7 @@
  */
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js';
-import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-diam";
+import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-js-api"
 
 const ANNOTATIONS_SERIALIZER = "WebAnnotation";
 

@@ -15,9 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation } from "./Annotation";
+import { Viewport } from '../model';
 
-export class Span extends Annotation {
-    begin: number;
-    end: number;
+declare var Wicket: any;
+
+/**
+ * This callback will accept the annotation data.
+ */
+export declare type dataCallback = (data: Viewport) => void;
+
+export interface DiamWebsocket {
+    connect(aWsEndpoint: string): void;
+
+    disconnect(): void;
+
+    subscribeToViewport(aViewportTopic: string, callback: dataCallback): void;
+
+    unsubscribeFromViewport(): void;
 }

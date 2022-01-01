@@ -15,12 +15,4 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export type OffsetsList = Array<Offsets>;
-
 export type Offsets = [begin: number, end: number];
-
-export class Annotation {
-    vid: string;
-    color: string;
-    label: string;
-}

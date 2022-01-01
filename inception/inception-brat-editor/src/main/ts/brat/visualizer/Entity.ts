@@ -38,7 +38,7 @@
  * SOFTWARE.
  */
 
-import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
+import { Offsets } from "@inception-project/inception-js-api";
 import { VID } from "../protocol/Protocol";
 import { Arc } from "./Arc";
 import { Comment } from "./Comment";
@@ -60,8 +60,8 @@ export class Entity {
   numArcs = 0;
   generalType: GeneralEntityType = undefined;
   headFragment: Fragment = undefined;
-  unsegmentedOffsets: OffsetsList = [];
-  offsets: OffsetsList = [];
+  unsegmentedOffsets: Array<Offsets> = [];
+  offsets: Array<Offsets> = [];
   segmentedOffsetsMap = {};
   hidden = false;
   clippedAtStart = false;
@@ -92,7 +92,7 @@ export class Entity {
   hovertext: string;
   actionButtons: boolean;
 
-  constructor(id: VID, type: string, offsets: OffsetsList, generalType: GeneralEntityType) {
+  constructor(id: VID, type: string, offsets: Array<Offsets>, generalType: GeneralEntityType) {
     this.id = id;
     this.type = type;
     this.unsegmentedOffsets = offsets;
@@ -166,7 +166,7 @@ export class Entity {
     return span;
   }
 
-  buildFragments() {
+  buildFragments(): void {
     $.each(this.offsets, (offsetsNo, offsets) => {
       const from = offsets[0];
       const to = offsets[1];
@@ -181,7 +181,7 @@ export class Entity {
     this.headFragment = this.fragments[this.fragments.length - 1];
   }
 
-  get fragmentOffsets(): OffsetsList {
+  get fragmentOffsets(): Array<Offsets> {
     return this.fragments.map(f => [f.from, f.to])
   }
 }

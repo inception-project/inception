@@ -50,6 +50,12 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-js-api</artifactId>
+      <!-- JS-only dependency that we have here only for a correct build order -->
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-websocket</artifactId>
     </dependency>
     <dependency>
@@ -235,6 +241,16 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
+            <id>npm link dependency inception-js-api</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-link-dependency-phase}</phase>
+            <configuration>
+              <arguments>link @inception-project/inception-js-api</arguments>
+            </configuration>
+          </execution>
+          <execution>
             <id>npm build</id>
             <goals>
               <goal>npm</goal>
@@ -257,5 +273,21 @@
         </executions>
       </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <ignoredDependencies>
+              <!--
+               - Pure JS dependency
+               -->
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-js-api</ignoredDependency>
+            </ignoredDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>

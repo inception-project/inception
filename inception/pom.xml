@@ -585,6 +585,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-js-api</artifactId>
+        <version>23.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-api-annotation</artifactId>
         <version>23.0-SNAPSHOT</version>
       </dependency>
@@ -1822,6 +1827,7 @@
     <module>inception-log</module>
     <module>inception-scheduling</module>
     <module>inception-api</module>
+    <module>inception-js-api</module>
     <module>inception-api-annotation</module>
     <module>inception-api-formats</module>
     <module>inception-api-dao</module>

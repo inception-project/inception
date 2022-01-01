@@ -15,9 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Annotation } from "./Annotation";
-
-export class Arc extends Annotation {
-    source: string;
-    target: string;
-}
+export { AnnotationEditor } from "./AnnotationEditor";
+export { AnnotationEditorFactory } from "./AnnotationEditorFactory";
+export { AnnotationEditorProperties } from "./AnnotationEditorProperties";

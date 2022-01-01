@@ -15,8 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Client, Stomp, StompSubscription, IFrame, ActivationState, frameCallbackType } from '@stomp/stompjs';
-import { Viewport } from './model/Viewport';
+import { Client, Stomp, StompSubscription, IFrame, frameCallbackType } from '@stomp/stompjs';
+import { DiamWebsocket, Viewport } from '@inception-project/inception-js-api';
 import * as jsonpatch from 'fast-json-patch';
 
 declare var Wicket: any;
@@ -26,7 +26,7 @@ declare var Wicket: any;
  */
 export declare type dataCallback = (data: Viewport) => void;
 
-export class DiamWebsocket {
+export class DiamWebsocketImpl implements DiamWebsocket {
 
     private stompClient: Client;
     private webSocket: WebSocket;

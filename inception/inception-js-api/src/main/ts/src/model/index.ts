@@ -15,11 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Arc } from "../model/Arc";
-import { Span } from "../model/Span";
-
-export class Viewport {
-    text: string;
-    arcs: Arc[];
-    spans: Span[];
-}
+export { Annotation } from "./Annotation";
+export { Offsets } from "./Offsets";
+export { Arc } from "./Arc";
+export { Span } from "./Span";
+export { Viewport } from "./Viewport";
+export { VID } from "./VID";

@@ -44,7 +44,7 @@ import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { DocumentData } from "../visualizer/DocumentData";
 import { RelationTypeDto, EntityTypeDto, VID } from "../protocol/Protocol";
-import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
+import { Offsets } from "@inception-project/inception-js-api";
 import { Entity } from "../visualizer/Entity";
 
 export class VisualizerUI {
@@ -373,7 +373,7 @@ export class VisualizerUI {
     }]);
   }
 
-  rejectAction(evt: MouseEvent, offsets: OffsetsList, editedSpan: Entity, id: VID) {
+  rejectAction(evt: MouseEvent, offsets: Array<Offsets>, editedSpan: Entity, id: VID) {
     // must be logged in
     if (this.user === null) return;
 
@@ -398,7 +398,7 @@ export class VisualizerUI {
     const spanWidth = target.width();
     const spanHeight = target.height();
     const editedSpan = this.data.spans[id];
-    const offsets: OffsetsList = [];
+    const offsets: Array<Offsets> = [];
 
     $.each(editedSpan.fragments, (fragmentNo, fragment) => {
       offsets.push([fragment.from, fragment.to]);

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-import { OffsetsList } from "@inception-project/inception-diam/diam/model/Annotation";
+import { Offsets } from "@inception-project/inception-js-api";
 
 export type VID = string;
 export type CommentType = string;
@@ -87,7 +87,7 @@ export type RoleDto = [
 export type EntityDto = [
   id: VID,
   type: string,
-  offsets: OffsetsList,
+  offsets: Array<Offsets>,
   attributes?: EntityAttributesDto
 ]
 
@@ -231,7 +231,7 @@ export type EquivDto = [
  export type TriggerDto = [
   id: string, 
   type: string, 
-  offsets: OffsetsList
+  offsets: Array<Offsets>
 ]
 
 /**
@@ -246,8 +246,8 @@ export type EquivDto = [
   entities: Array<EntityDto>;
   normalizations: Array<NormalizationDto>;
   relations: Array<RelationDto>;
-  sentence_offsets: OffsetsList;
-  token_offsets: OffsetsList;
+  sentence_offsets: Array<Offsets>;
+  token_offsets: Array<Offsets>;
   sentence_number_offset: number;
   rtl_mode: boolean;
   font_zoom: number;

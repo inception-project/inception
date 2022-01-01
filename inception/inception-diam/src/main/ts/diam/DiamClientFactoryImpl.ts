@@ -15,21 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Ajax } from "./ajax/Ajax";
-import { INSTANCE as Util } from "./util/Util";
-import { CurationMod } from "./curation/CurationMod";
-import { factory as diamAjaxFactory } from "@inception-project/inception-diam";
+import { DiamWebsocketImpl } from './DiamWebsocketImpl'
+import { DiamAjaxImpl } from './DiamAjaxImpl'
+import { DiamClientFactory } from '@inception-project/inception-js-api';
 
-declare let Wicket;
+export class DiamClientFactoryImpl implements DiamClientFactory {
+  createWebsocketClient() : DiamWebsocketImpl {
+    return new DiamWebsocketImpl();
+  }
 
-function brat(markupId: string, controllerCallbackUrl: string, collCallbackUrl: string, docCallbackUrl: string) {
-  Util.embedByURL(markupId, collCallbackUrl, docCallbackUrl,
-    function (dispatcher) {
-      const diamAjax = diamAjaxFactory().createAjaxClient(controllerCallbackUrl);
-      new Ajax(dispatcher, markupId, controllerCallbackUrl);
-      new CurationMod(dispatcher, diamAjax);
-      Wicket.$(markupId).dispatcher = dispatcher;
-    });
+  createAjaxClient(ajaxEndpoint: string) : DiamAjaxImpl {
+    return new DiamAjaxImpl(ajaxEndpoint);
+  }
 }
-
-export = brat;
