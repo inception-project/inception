@@ -47,6 +47,11 @@
     </dependency>
     
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+    </dependency>
+    
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
     </dependency>
@@ -71,10 +76,6 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-spring</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-request</artifactId>
-    </dependency>
     
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -87,4 +88,44 @@
       <scope>provided</scope>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>npm link dependency</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <arguments>link @inception-project/inception-diam</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build-minified</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build-minified</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -25,14 +25,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryI
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
-import de.tudarmstadt.ukp.inception.externaleditor.config.EditorPluginDescripion;
+import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPluginDescripion;
 
 public class ExternalAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
-    private final EditorPluginDescripion description;
+    private final ExternalEditorPluginDescripion description;
     
-    public ExternalAnnotationEditorFactory(EditorPluginDescripion aDescription)
+    public ExternalAnnotationEditorFactory(ExternalEditorPluginDescripion aDescription)
     {
         description = aDescription;
     }
@@ -43,7 +43,7 @@ public class ExternalAnnotationEditorFactory
         return description.getName();
     }
     
-    public EditorPluginDescripion getDescription()
+    public ExternalEditorPluginDescripion getDescription()
     {
         return description;
     }

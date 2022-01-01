@@ -13,13 +13,10 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the L
+ * limitations under the License.
  */
-import { AnnotationEditor, DiamClientFactory } from "..";
-import { AnnotationEditorProperties } from "./AnnotationEditorProperties";
+import { ExternalEditorFactory } from "./ExternalEditorFactory";
 
-export interface AnnotationEditorFactory {
-  getOrInitialize(element: HTMLElement | string, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor>;
+const INSTANCE = new ExternalEditorFactory();
 
-  destroy(element: HTMLElement | string): void;
-}
+export = INSTANCE;

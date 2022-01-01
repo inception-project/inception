@@ -22,10 +22,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -125,6 +127,17 @@ public abstract class AnnotationEditorBase
                 // Is a document loaded?
                 if (getModelObject().getDocument() == null) {
                     return;
+                }
+
+                Collection<? extends Component> componentsBeingRerendered = _target.getComponents();
+                Component c = AnnotationEditorBase.this;
+                while (c != null) {
+                    if (componentsBeingRerendered.contains(c)) {
+                        // If the editor or any of its parents are re-rendered anyway, we do not
+                        // need to schedule a JS-based rendering.
+                        return;
+                    }
+                    c = c.getParent();
                 }
 
                 render(_target);

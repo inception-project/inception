@@ -13,13 +13,31 @@
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
- * limitations under the L
+ * limitations under the License.
  */
-import { AnnotationEditor, DiamClientFactory } from "..";
-import { AnnotationEditorProperties } from "./AnnotationEditorProperties";
+package de.tudarmstadt.ukp.inception.externaleditor;
 
-export interface AnnotationEditorFactory {
-  getOrInitialize(element: HTMLElement | string, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor>;
+import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 
-  destroy(element: HTMLElement | string): void;
+public class ExternalAnnotationEditorStaticIFrameView
+    extends WebMarkupContainer
+{
+    private static final long serialVersionUID = 4436249885266856565L;
+
+    private String url;
+
+    public ExternalAnnotationEditorStaticIFrameView(String aId, String aUrl)
+    {
+        super(aId);
+        url = aUrl;
+    }
+
+    @Override
+    protected void onComponentTag(ComponentTag aTag)
+    {
+        aTag.setName("iframe");
+        aTag.put("src", url);
+        super.onComponentTag(aTag);
+    }
 }

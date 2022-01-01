@@ -54,7 +54,7 @@ public class ExternalEditorLoader
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private List<EditorPluginDescripion> descriptions = Collections.emptyList();
+    private List<ExternalEditorPluginDescripion> descriptions = Collections.emptyList();
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory aFactory)
@@ -72,7 +72,8 @@ public class ExternalEditorLoader
 
         for (Path pluginJsonFile : pluginJsonFiles) {
             try (InputStream is = Files.newInputStream(pluginJsonFile)) {
-                EditorPluginDescripion desc = fromJsonStream(EditorPluginDescripion.class, is);
+                ExternalEditorPluginDescripion desc = fromJsonStream(ExternalEditorPluginDescripion.class, is);
+                desc.setId(pluginJsonFile.getParent().getFileName().toString());
                 desc.setBasePath(pluginJsonFile.getParent());
                 registerEditorPlugin(aRegistry, desc);
                 descriptions.add(desc);
@@ -84,13 +85,13 @@ public class ExternalEditorLoader
     }
 
     private void registerEditorPlugin(BeanDefinitionRegistry aRegistry,
-            EditorPluginDescripion aDesc)
+            ExternalEditorPluginDescripion aDesc)
     {
         log.info("Loading editor plugin: {}", aDesc.getName());
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(
                 ExternalAnnotationEditorFactory.class,
                 () -> new ExternalAnnotationEditorFactory(aDesc));
-        aRegistry.registerBeanDefinition("external-editor-" + aDesc.getFactory(),
+        aRegistry.registerBeanDefinition("external-editor-" + aDesc.getId(),
                 builder.getBeanDefinition());
     }
 
@@ -122,8 +123,8 @@ public class ExternalEditorLoader
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry aRegistry)
     {
-        for (EditorPluginDescripion desc : descriptions) {
-            aRegistry.addResourceHandler(PLUGINS_EDITOR_BASE_URL + desc.getFactory() + "/**")
+        for (ExternalEditorPluginDescripion desc : descriptions) {
+            aRegistry.addResourceHandler(PLUGINS_EDITOR_BASE_URL + desc.getId() + "/**")
                     .addResourceLocations(new PathResource(desc.getBasePath()));
         }
     }

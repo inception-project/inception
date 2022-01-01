@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the L
  */
-import { AnnotationEditor, DiamClientFactory } from "..";
-import { AnnotationEditorProperties } from "./AnnotationEditorProperties";
 
-export interface AnnotationEditorFactory {
-  getOrInitialize(element: HTMLElement | string, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor>;
-
-  destroy(element: HTMLElement | string): void;
+export interface AnnotationEditorProperties {
+  editorFactory: string;
+  scriptSources: ReadonlyArray<string>;
+  stylesheetSources: ReadonlyArray<string>;
+  diamAjaxCallbackUrl: string;
 }

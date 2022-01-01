@@ -51,7 +51,6 @@ public class PreferencesActionBarItem
 
     private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
     {
-        page.getModelObject().getSelection().clear();
         preferencesModal.show(aTarget);
     }
 }

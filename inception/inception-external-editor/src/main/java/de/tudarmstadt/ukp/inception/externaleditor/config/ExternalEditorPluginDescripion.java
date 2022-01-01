@@ -19,23 +19,33 @@ package de.tudarmstadt.ukp.inception.externaleditor.config;
 
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
-public class EditorPluginDescripion
+public class ExternalEditorPluginDescripion
     implements Serializable
 {
     private static final long serialVersionUID = 4400329006838299692L;
     
-    private static final String DEFAULT_PLUGIN_CSS = "plugin.css";
-    private static final String DEFAULT_PLUGIN_JS = "plugin.js";
-    
+    private String id;
     private Path basePath;
     private String factory;
     private String name;
     private String annotationFormat;
     private String view;
-    private String js = DEFAULT_PLUGIN_JS;
-    private String css = DEFAULT_PLUGIN_CSS;
+    private List<String> scripts = Collections.emptyList();
+    private List<String> stylesheets = Collections.emptyList();
 
+    public void setId(String aId)
+    {
+        id = aId;
+    }
+    
+    public String getId()
+    {
+        return id;
+    }
+    
     public void setBasePath(Path aBasePath)
     {
         basePath = aBasePath;
@@ -86,23 +96,23 @@ public class EditorPluginDescripion
         factory = aImplementation;
     }
 
-    public String getJs()
+    public List<String> getScripts()
     {
-        return js;
+        return scripts;
     }
 
-    public void setJs(String aJs)
+    public void setScripts(List<String> aScripts)
     {
-        js = aJs;
+        scripts = aScripts;
     }
 
-    public String getCss()
+    public List<String> getStylesheets()
     {
-        return css;
+        return stylesheets;
     }
 
-    public void setCss(String aCss)
+    public void setStylesheets(List<String> aStylesheets)
     {
-        css = aCss;
+        stylesheets = aStylesheets;
     }
 }
