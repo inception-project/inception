@@ -18,14 +18,14 @@
 import { Ajax } from "./ajax/Ajax";
 import { INSTANCE as Util } from "./util/Util";
 import { CurationMod } from "./curation/CurationMod";
-import { DiamAjax } from "@inception-project/inception-diam/client/DiamAjax";
+import { factory as diamAjaxFactory } from "@inception-project/inception-diam";
 
 declare let Wicket;
 
 function brat(markupId: string, controllerCallbackUrl: string, collCallbackUrl: string, docCallbackUrl: string) {
   Util.embedByURL(markupId, collCallbackUrl, docCallbackUrl,
     function (dispatcher) {
-      const diamAjax = new DiamAjax(controllerCallbackUrl);
+      const diamAjax = diamAjaxFactory().createAjaxClient(controllerCallbackUrl);
       new Ajax(dispatcher, markupId, controllerCallbackUrl);
       new CurationMod(dispatcher, diamAjax);
       Wicket.$(markupId).dispatcher = dispatcher;

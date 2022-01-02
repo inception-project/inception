@@ -40,11 +40,11 @@
 
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
 import { Chunk } from "./Chunk";
-import { Span } from "./Span";
+import { Entity } from "./Entity";
 
 export class Fragment {
   id: number = undefined;
-  span: Span = undefined;
+  span: Entity = undefined;
   from: number = undefined;
   to: number = undefined;
   rectBox = undefined;
@@ -73,11 +73,11 @@ export class Fragment {
 
   /**
    * @param {Number} id
-   * @param {Span} span
+   * @param {Entity} span
    * @param {Number} from
    * @param {Number} to
    */
-  constructor(id: number, span: Span, from: number, to: number) {
+  constructor(id: number, span: Entity, from: number, to: number) {
     this.id = id;
     this.span = span;
     this.from = from;

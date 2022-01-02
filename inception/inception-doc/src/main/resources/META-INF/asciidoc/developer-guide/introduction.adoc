@@ -17,8 +17,3 @@ tokenization, import and export to many different standard formats, as well as
 recommenders i.e. machine learning tools that provide annotation support. The internal
 data format heavily relies on https://uima.apache.org/[UIMA] and its
 https://uima.apache.org/d/uimaj-current/references.html#ugr.ref.cas[CAS] format.
-
-
-
-
-

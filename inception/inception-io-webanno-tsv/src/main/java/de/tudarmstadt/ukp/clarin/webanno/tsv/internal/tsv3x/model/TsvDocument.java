@@ -204,7 +204,8 @@ public class TsvDocument
     public void addDisambiguationId(AnnotationFS aAnnotation, int aId)
     {
         AnnotationFS oldEntry = id2fsIndex.put(aId, aAnnotation);
-        assert oldEntry == null || aAnnotation.equals(oldEntry);
+        assert oldEntry == null || aAnnotation.equals(oldEntry) : "Disambiguation ID [" + aId
+                + "] is not unique";
         fs2IdIndex.put(aAnnotation, aId);
     }
 

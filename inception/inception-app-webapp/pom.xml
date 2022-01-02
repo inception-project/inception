@@ -197,6 +197,10 @@
     <!-- INCEPTION - ADDITIONAL EDITORS -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-html-editor</artifactId>
     </dependency>
     <dependency>
@@ -409,7 +413,6 @@
     <dependency>
       <groupId>org.mozilla</groupId>
       <artifactId>rhino-runtime</artifactId>
-      <version>1.7.12</version>
     </dependency>
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
@@ -896,6 +899,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-preferences</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-recogito-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>

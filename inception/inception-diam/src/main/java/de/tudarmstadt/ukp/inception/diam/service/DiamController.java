@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -254,13 +255,22 @@ public class DiamController
         throws IOException
     {
         SourceDocument doc = documentService.getSourceDocument(aProject.getId(), aDocumentId);
+        User user = userRepository.get(aUser);
         CAS cas = documentService.readAnnotationCas(doc, aUser);
 
         List<AnnotationLayer> layers = schemaService.listSupportedLayers(aProject).stream()
-                .filter(AnnotationLayer::isEnabled).collect(toList());
+                .filter(AnnotationLayer::isEnabled) //
+                .collect(toList());
+
+        RenderRequest request = RenderRequest.builder() //
+                .withDocument(doc, user) //
+                .withWindow(aViewportBegin, aViewportEnd) //
+                .withCas(cas) //
+                .withVisibleLayers(layers) //
+                .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aViewportBegin, aViewportEnd, cas, layers);
+        preRenderer.render(vdoc, request);
         return vdoc;
     }
 

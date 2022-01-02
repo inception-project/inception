@@ -22,32 +22,29 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.Page;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPageRequestHandler;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -60,8 +57,10 @@ public abstract class AnnotationEditorBase
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean AnnotationEditorProperties properties;
-    private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean ColoringService coloringService;
+    private @SpringBean RenderingPipeline renderingPipeline;
 
     private final AnnotationActionHandler actionHandler;
     private final CasProvider casProvider;
@@ -130,6 +129,17 @@ public abstract class AnnotationEditorBase
                     return;
                 }
 
+                Collection<? extends Component> componentsBeingRerendered = _target.getComponents();
+                Component c = AnnotationEditorBase.this;
+                while (c != null) {
+                    if (componentsBeingRerendered.contains(c)) {
+                        // If the editor or any of its parents are re-rendered anyway, we do not
+                        // need to schedule a JS-based rendering.
+                        return;
+                    }
+                    c = c.getParent();
+                }
+
                 render(_target);
             }));
 
@@ -149,46 +159,22 @@ public abstract class AnnotationEditorBase
      */
     protected abstract void render(AjaxRequestTarget aTarget);
 
-    protected VDocument render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset)
+    protected <T> T render(CAS aCas, int aWindowBeginOffset, int aWindowEndOffset,
+            VDocumentSerializer<T> aTerminalStep)
     {
-        AnnotatorState state = getModelObject();
+        RenderRequest request = RenderRequest.builder() //
+                .withState(getModelObject()) //
+                .withWindow(aWindowBeginOffset, aWindowEndOffset) //
+                .withCas(aCas) //
+                .withVisibleLayers(getLayersToRender(getModelObject())) //
+                .build();
 
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aWindowBeginOffset, aWindowEndOffset, aCas, getLayersToRender());
-
-        extensionRegistry.fireRender(aCas, state, vdoc, aWindowBeginOffset, aWindowEndOffset);
-
-        // Fire render event into UI
-        Page page = null;
-        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
-        if (handler.isPresent()) {
-            page = (Page) handler.get().getPage();
-        }
-
-        if (page == null) {
-            page = getPage();
-        }
-        send(page, Broadcast.BREADTH,
-                new RenderAnnotationsEvent(
-                        RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aCas,
-                        getModelObject(), vdoc));
-
-        // Disabling for 3.3.0 by default per #406
-        // FIXME: should be enabled by default and made optional per #606
-        // if (state.getFocusUnitIndex() > 0) {
-        // response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
-        // }
-
-        if (state.getSelection().getAnnotation().isSet()) {
-            vdoc.add(new VAnnotationMarker(VMarker.FOCUS, state.getSelection().getAnnotation()));
-        }
-
-        return vdoc;
+        VDocument vdoc = renderingPipeline.render(request);
+        return aTerminalStep.render(vdoc, request);
     }
 
-    public List<AnnotationLayer> getLayersToRender()
+    private List<AnnotationLayer> getLayersToRender(AnnotatorState state)
     {
-        AnnotatorState state = getModelObject();
         List<AnnotationLayer> layersToRender = new ArrayList<>();
         for (AnnotationLayer layer : state.getAnnotationLayers()) {
             if (!layer.isEnabled()) {

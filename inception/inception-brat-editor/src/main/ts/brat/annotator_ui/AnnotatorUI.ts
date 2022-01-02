@@ -40,13 +40,12 @@
 import { Dispatcher } from "../dispatcher/Dispatcher";
 import { Svg } from "@svgdotjs/svg.js";
 import { DocumentData } from "../visualizer/DocumentData";
-import { OffsetsList } from "../visualizer/SourceData";
-import { Span } from "../visualizer/Span";
+import { Entity } from "../visualizer/Entity";
 import { INSTANCE as Configuration } from "../configuration/Configuration";
 import { INSTANCE as Util } from "../util/Util";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
-import { DiamAjax } from "@inception-project/inception-diam/client/DiamAjax";
-import { SpanType } from "../visualizer/SpanType";
+import { DiamAjax, Offsets } from "@inception-project/inception-js-api";
+import { EntityTypeDto } from "../protocol/Protocol";
 
 export class AnnotatorUI {
   private data: DocumentData = null;
@@ -63,9 +62,9 @@ export class AnnotatorUI {
 
   private spanOptions = null;
   private arcOptions = null;
-  private editedSpan: Span = null;
+  private editedSpan: Entity = null;
   private editedFragment = null;
-  private spanTypes: Record<string, SpanType> = null;
+  private spanTypes: Record<string, EntityTypeDto> = null;
   private selRect = null;
   private lastStartRec = null;
   private lastEndRec = null;
@@ -207,7 +206,7 @@ export class AnnotatorUI {
     this.sendTriggerCustomArcAction(id, type, originSpan, targetSpan);
   }
 
-  private sendTriggerCustomArcAction(id: string, type: string, originSpan: Span, targetSpan: Span) {
+  private sendTriggerCustomArcAction(id: string, type: string, originSpan: Entity, targetSpan: Entity) {
     this.dispatcher.post('ajax', [{
       action: 'doAction',
       arcId: id,
@@ -227,7 +226,7 @@ export class AnnotatorUI {
     this.sendTriggerCustomSpanAction(id, this.editedSpan.fragmentOffsets);
   }
 
-  private sendTriggerCustomSpanAction(id: string, offsets: OffsetsList) {
+  private sendTriggerCustomSpanAction(id: string, offsets: ReadonlyArray<Offsets>) {
     this.dispatcher.post('ajax', [{
       action: 'doAction',
       offsets: JSON.stringify(offsets),
@@ -289,7 +288,7 @@ export class AnnotatorUI {
     this.clearSelection();
     this.editedSpan = this.data.spans[id];
     this.editedFragment = target.attr('data-fragment-id');
-    const offsets: OffsetsList = this.editedSpan.fragmentOffsets;
+    const offsets: Array<Offsets> = this.editedSpan.fragmentOffsets;
 
     this.spanOptions = {
       action: 'createSpan',
@@ -726,7 +725,7 @@ export class AnnotatorUI {
         // WEBANNO EXTENSION END - #277 - self-referencing arcs for custom layers 
         const originSpan = this.data.spans[origin];
         const targetSpan = this.data.spans[id];
-        
+
         if (this.arcOptions && this.arcOptions.old_target) {
           this.arcOptions.target = targetSpan.id;
           this.dispatcher.post('ajax', [this.arcOptions, 'edited']);
@@ -739,7 +738,7 @@ export class AnnotatorUI {
             'document': this.doc
           };
 
-          this.ajax.createRelationAnnotation(originSpan.id, originSpan.type, targetSpan.id, targetSpan.type);        
+          this.ajax.createRelationAnnotation(originSpan.id, targetSpan.id);
         }
       }
     } else if (!evt.ctrlKey) {
@@ -895,26 +894,6 @@ export class AnnotatorUI {
       tagger: taggerId,
     };
     this.dispatcher.post('ajax', [tagOptions, 'edited']);
-  }
-
-  // recursively traverses type hierarchy (entity_types or
-  // event_types) and stores normalizations in normDbsByType.
-  rememberNormDbsForType(types) {
-    if (!types) return;
-
-    $.each(types, (typeNo, type) => {
-      if (type === null) {
-        // spacer, no-op
-      } else {
-        this.normDbsByType[type.type] = type.normalizations || [];
-        // WEBANNO EXTENSION BEGIN
-        // Avoid exception when no children are set
-        if (type.children && type.children.length) {
-          // WEBANNO EXTENSION END
-          this.rememberNormDbsForType(type.children);
-        }
-      }
-    });
   }
 
   spanAndAttributeTypesLoaded(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {

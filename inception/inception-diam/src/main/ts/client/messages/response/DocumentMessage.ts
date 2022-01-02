@@ -29,7 +29,8 @@ import {Viewport} from "../../model/Viewport";
  * @sourceDocumentId: The ID of the requested sourcedocument
  * @spans: List of Spans contained in the requested viewport for a certain document
  * @arcs: List of Arcs contained in the requested viewport for a certain document
- **/
+ * @deprecated 
+ */
 export class DocumentMessage
 {
     viewport : Viewport[];

@@ -41,20 +41,17 @@
 import { Sizes } from "./Sizes";
 import { Measurements } from "./Measurements";
 import { DocumentData } from "./DocumentData";
-import { Span } from "./Span";
-import { EventDesc } from "./EventDesc";
+import { ENTITY, Entity, TRIGGER } from "./Entity";
+import { EQUIV, EventDesc, RELATION } from "./EventDesc";
 import { Chunk } from "./Chunk";
 import { Fragment } from "./Fragment";
 import { Arc } from "./Arc";
-import { SourceData } from "./SourceData";
 import { Row } from "./Row";
 import { RectBox } from "./RectBox";
 import { AttributeType } from "./AttributeType";
 import { CollectionLoadedResponse } from "./CollectionLoadedResponse";
-import { RelationType } from "./RelationType";
-import { SpanType } from "./SpanType";
+import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from "../protocol/Protocol";
 import type { Dispatcher } from "../dispatcher/Dispatcher";
-import type { sourceCommentType, sourceEntityType, Offsets } from "./SourceData";
 import * as jsonpatch from 'fast-json-patch';
 import { Operation } from "fast-json-patch";
 import { scrollbarWidth } from "../util/ScrollbarWidth";
@@ -65,12 +62,15 @@ import { INSTANCE as Util } from "../util/Util";
 import { ArrayXY } from "@svgdotjs/svg.js";
 import { SVGTypeMapping } from "@svgdotjs/svg.js";
 import { Defs } from "@svgdotjs/svg.js";
+import { Offsets } from "@inception-project/inception-js-api";
 declare const $: JQueryStatic;
 
 /** 
  * [lastRow, textDesc[3], lastX - boxX, textDesc[4]] 
  */
 type MarkedRow = [Row, unknown, number, unknown];
+
+type MarkedText = [begin: number, end: number, type: string];
 
 /**
  * Sets default values for a wide range of optional attributes.
@@ -155,20 +155,20 @@ export class Visualizer {
    */
   private doc: string = undefined;
 
-  private args: Record<string, string[]> = null;
+  private args: Record<MarkerType, MarkerDto> = null;
 
   private isRenderRequested = false;
   private drawing = false;
   private redraw = false;
-  arcDragOrigin; // Seems this field is declared and checked in this file but never set!
+  private arcDragOrigin; // Seems this field is declared and checked in this file but never set!
 
-  private spanTypes: Record<string, SpanType> = {};
-  private relationTypesHash: Record<string, RelationType> = {};
+  private entityTypes: Record<string, EntityTypeDto> = {};
+  private relationTypes: Record<string, RelationTypeDto> = {};
   private entityAttributeTypes: Record<string, AttributeType> = {};
   private eventAttributeTypes: Record<string, AttributeType> = {};
   private isCollectionLoaded = false;
 
-  private markedText: Array<[number, number, string]> = [];
+  private markedText: Array<MarkedText> = [];
   private highlight: Array<Rect> | undefined;
   private highlightArcs;
   private highlightSpans;
@@ -314,7 +314,7 @@ export class Visualizer {
     return 0;
   }
 
-  setMarked(markedType: string) {
+  setMarked(markedType: MarkerType) {
     if (!this.args[markedType]) {
       return;
     }
@@ -403,27 +403,23 @@ export class Visualizer {
 
   applyHighlighting() {
     this.markedText = [];
-    this.setMarked('edited'); // set by editing process
-    this.setMarked('focus'); // set by URL
-    this.setMarked('matchfocus'); // set by search process, focused match
-    this.setMarked('match'); // set by search process, other (non-focused) match
+    this.setMarked(EDITED); // set by editing process
+    this.setMarked(FOCUS); // set by URL
+    this.setMarked(MATCH_FOCUS); // set by search process, focused match
+    this.setMarked(MATCH); // set by search process, other (non-focused) match
   }
 
   /**
    * Calculate average arc distances. Average distance of arcs (0 for no arcs).
-   *
-   * @param {Span[]} spans
    */
-  calculateAverageArcDistances(spans: Span[]) {
+  calculateAverageArcDistances(spans: Entity[]) {
     spans.map(span => span.avgDist = span.numArcs ? span.totalDist / span.numArcs : 0);
   }
 
   /**
    * Collect fragment texts into span texts
-   *
-   * @param {Span[]} spans
    */
-  collectFragmentTextsIntoSpanTexts(spans: Span[]) {
+  collectFragmentTextsIntoSpanTexts(spans: Entity[]) {
     spans.map(span => {
       const fragmentTexts = [];
       span.fragments && span.fragments.map(fragment => fragmentTexts.push(fragment.text));
@@ -434,7 +430,7 @@ export class Visualizer {
   /**
    * @returns list of span IDs in the order they should be drawn.
    */
-  determineDrawOrder(spans: Record<string, Span>) {
+  determineDrawOrder(spans: Record<VID, Entity>): Array<VID> {
     const spanDrawOrderPermutation = Object.keys(spans);
     spanDrawOrderPermutation.sort((a, b) => {
       const spanA = spans[a];
@@ -454,7 +450,7 @@ export class Visualizer {
     return spanDrawOrderPermutation;
   }
 
-  organizeFragmentsIntoTowers(sortedFragments) {
+  organizeFragmentsIntoTowers(sortedFragments: Array<Fragment>) {
     let lastFragment = null;
     let towerId = -1;
 
@@ -467,11 +463,11 @@ export class Visualizer {
     });
   }
 
-  applyMarkedTextToChunks(markedText, chunks) {
+  applyMarkedTextToChunks(markedText: Array<MarkedText>, chunks: Array<Chunk>) {
     const numChunks = chunks.length;
     // note the location of marked text with respect to chunks
     let startChunk = 0;
-    let currentChunk;
+    let currentChunk: number;
     $.each(markedText, (textNo, textPos) => {
       let from = textPos[0];
       let to = textPos[1];
@@ -518,7 +514,7 @@ export class Visualizer {
     }); // markedText
   }
 
-  applyNormalizations(normalizations) {
+  applyNormalizations(normalizations: Array<NormalizationDto>) {
     if (!normalizations) {
       return;
     }
@@ -532,14 +528,12 @@ export class Visualizer {
       const span = this.data.spans[target];
       if (span) {
         span.normalizations.push([refdb, refid, reftext]);
-        span.normalized = 'Normalized';
         return;
       }
 
       const arc = this.data.arcById[target];
       if (arc) {
         arc.normalizations.push([refdb, refid, reftext]);
-        arc.normalized = "Normalized";
         return;
       }
 
@@ -547,23 +541,17 @@ export class Visualizer {
     });
   }
 
-  /**
-   *
-   * @param {string} documentText
-   * @param {[[string, string, [[number, number]], {}]]} entities
-   * @return {Object.<string, Span>}
-   */
-  buildSpansFromEntities(documentText: string, entities: Array<sourceEntityType>): { [s: string]: Span; } {
+  buildSpansFromEntities(documentText: string, entities: Array<EntityDto>): Record<VID, Entity> {
     if (!entities) {
       return {};
     }
 
-    const spans = {};
+    const spans: Record<VID, Entity> = {};
     entities.map(entity => {
       const id = entity[0];
       const type = entity[1];
       const offsets = entity[2]; // offsets given as array of (start, end) pairs
-      const span = new Span(id, type, offsets, 'entity');
+      const span = new Entity(id, type, offsets, ENTITY);
 
       if (entity[3]) {
         const attributes = entity[3];
@@ -593,15 +581,18 @@ export class Visualizer {
     return spans;
   }
 
-  buildSpansFromTriggers(triggers: Array<[string, string, [Offsets]]>): Record<string, [Span, Array<EventDesc>]> {
+  /**
+   * @deprecated Triggers are not used by INCEptION
+   */
+  buildSpansFromTriggers(triggers: Array<TriggerDto>): Record<string, [Entity, Array<EventDesc>]> {
     if (!triggers) {
       return {};
     }
 
-    const triggerHash = {};
+    const triggerHash: Record<string, [Entity, Array<EventDesc>]> = {};
     triggers.map(trigger => {
       //                          (id,         type,       offsets,    generalType)
-      const triggerSpan = new Span(trigger[0], trigger[1], trigger[2], 'trigger');
+      const triggerSpan = new Entity(trigger[0], trigger[1], trigger[2], TRIGGER);
 
       triggerSpan.splitMultilineOffsets(this.data.text);
 
@@ -610,7 +601,10 @@ export class Visualizer {
     return triggerHash;
   }
 
-  buildEventDescsFromTriggers(triggerHash: Record<string, [Span, Array<EventDesc>]>) {
+  /**
+   * @deprecated Not used by INCEpTION
+   */
+  buildEventDescsFromTriggers(triggerHash: Record<string, [Entity, Array<EventDesc>]>) {
     if (!triggerHash) {
       return;
     }
@@ -628,10 +622,7 @@ export class Visualizer {
     });
   }
 
-  /**
-   * @param {Span[]} spans
-   */
-  splitSpansIntoFragments(spans: Span[]) {
+  splitSpansIntoFragments(spans: Entity[]) {
     if (!spans) {
       return;
     }
@@ -640,9 +631,9 @@ export class Visualizer {
   }
 
   /**
-   * @param equivs
+   * @deprecated INCEpTION does not use equivs
    */
-  buildEventDescsFromEquivs(equivs, spans: Record<string, Span>, eventDescs: Record<string, EventDesc>) {
+  buildEventDescsFromEquivs(equivs: Array<EquivDto>, spans: Record<VID, Entity>, eventDescs: Record<VID, EventDesc>) {
     if (!equivs) {
       return;
     }
@@ -651,7 +642,7 @@ export class Visualizer {
       // equiv: ['*', 'Equiv', spanId...]
       equiv[0] = "*" + equivNo;
       const equivSpans = equiv.slice(2);
-      const okEquivSpans = [];
+      const okEquivSpans: Array<VID> = [];
 
       // collect the equiv spans in an array
       equivSpans.map(equivSpan => {
@@ -662,29 +653,29 @@ export class Visualizer {
       });
 
       // sort spans in the equiv by their midpoint
-      okEquivSpans.sort((a, b) => Span.compare(spans, a, b));
+      okEquivSpans.sort((a, b) => Entity.compare(spans, a, b));
 
       // generate the arcs
       const len = okEquivSpans.length;
       for (let i = 1; i < len; i++) {
         const id = okEquivSpans[i - 1];
         const tiggerId = okEquivSpans[i - 1];
-        const roles = [[equiv[1], okEquivSpans[i]]];
-        const eventDesc = eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, 'equiv');
+        const roles: Array<RoleDto> = [[equiv[1], okEquivSpans[i]]];
+        const eventDesc = eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, EQUIV);
         eventDesc.leftSpans = okEquivSpans.slice(0, i);
         eventDesc.rightSpans = okEquivSpans.slice(i);
       }
     });
   }
 
-  buildEventDescsFromRelations(relations, eventDescs: Record<string, EventDesc>) {
+  buildEventDescsFromRelations(relations: Array<RelationDto>, eventDescs: Record<string, EventDesc>) {
     if (!relations) {
       return;
     }
 
     relations.map(rel => {
       // rel[2] is args, rel[2][a][0] is role and rel[2][a][1] is value for a in (0,1)
-      let argsDesc = this.relationTypesHash[rel[1]];
+      let argsDesc = this.relationTypes[rel[1]];
       argsDesc = argsDesc && argsDesc.args;
 
       let t1, t2;
@@ -702,7 +693,7 @@ export class Visualizer {
       }
 
       //                                (id, triggerId, roles,   klass)
-      eventDescs[rel[0]] = new EventDesc(t1, t1, [[rel[1], t2]], 'relation');
+      eventDescs[rel[0]] = new EventDesc(t1, t1, [[rel[1], t2]], RELATION);
 
       if (rel[3]) {
         eventDescs[rel[0]].labelText = rel[3];
@@ -714,18 +705,15 @@ export class Visualizer {
     });
   }
 
-  // INCEpTION does not use attributes...
   /**
-   * @param {[string, string, string, string]} attributes id, name, spanId, value
-   * @param {Object.<string, Span>} spans
+   * @deprecated INCEpTION does not use attributes
    */
-  assignAttributesToSpans(attributes: [string, string, string, string], spans: Record<string, Span>) {
+  assignAttributesToSpans(attributes: Array<AttributeDto>, spans: Record<VID, Entity>) {
     if (!attributes) {
       return;
     }
 
     attributes.map(attr => {
-      // attr: [id, name, spanId, value]
       const id = attr[0];
       const name = attr[1];
       const spanId = attr[2];
@@ -753,11 +741,7 @@ export class Visualizer {
     });
   }
 
-  /**
-   * @param comments
-   * @param triggerHash
-   */
-  assignComments(comments: Array<sourceCommentType>, triggerHash: Record<string, unknown>) {
+  assignComments(comments: Array<CommentDto>, triggerHash: Record<string, unknown>) {
     if (!comments) {
       return;
     }
@@ -787,7 +771,7 @@ export class Visualizer {
             ? [this.data.eventDescs[id]] // arc: [eventDesc]
             : [];
 
-      commentEntities.map(entity => {
+      commentEntities.map((entity: Entity) => {
         // if duplicate comment for entity:
         // overwrite type, concatenate comment with a newline
         if (!entity.comment) {
@@ -810,14 +794,14 @@ export class Visualizer {
     });
   }
 
-  buildSortedFragments(spans: Record<string, Span>): Fragment[] {
+  buildSortedFragments(spans: Record<string, Entity>): Fragment[] {
     if (!spans) {
       return [];
     }
 
     const sortedFragments = [];
 
-    Object.values(spans).map((span: Span) => span.fragments.map(
+    Object.values(spans).map((span: Entity) => span.fragments.map(
       fragment => sortedFragments.push(fragment)));
 
     sortedFragments.sort(function (a, b) {
@@ -954,7 +938,7 @@ export class Visualizer {
    * - Fields on spans are changed: totalDist, numArcs, outgoing, incoming
    * - data.arcById index is populated.
    */
-  assignArcsToSpans(eventDescs: Record<string, EventDesc>, spans: Record<string, Span>): Arc[] {
+  assignArcsToSpans(eventDescs: Record<string, EventDesc>, spans: Record<string, Entity>): Arc[] {
     if (!eventDescs || !spans) {
       return [];
     }
@@ -1107,8 +1091,8 @@ export class Visualizer {
         }
         chunk.lastFragmentIndex = fragment.towerId;
 
-        const spanLabels = Util.getSpanLabels(this.spanTypes, fragment.span.type);
-        fragment.labelText = Util.spanDisplayForm(this.spanTypes, fragment.span.type);
+        const spanLabels = Util.getSpanLabels(this.entityTypes, fragment.span.type);
+        fragment.labelText = Util.spanDisplayForm(this.entityTypes, fragment.span.type);
         // Find the most appropriate label according to text width
         if (Configuration.abbrevsOn && spanLabels) {
           let labelIdx = 1; // first abbrev
@@ -1518,7 +1502,7 @@ export class Visualizer {
     const arcTexts = {};
     if (arcs) {
       arcs.map(arc => {
-        let labels = Util.getArcLabels(this.spanTypes, spans[arc.origin].type, arc.type, this.relationTypesHash);
+        let labels = Util.getArcLabels(this.entityTypes, spans[arc.origin].type, arc.type, this.relationTypes);
         if (!labels.length) {
           labels = [arc.type];
         }
@@ -1620,7 +1604,7 @@ export class Visualizer {
 
     $.each(spanDrawOrderPermutation, (spanIdNo, spanId) => {
       const span = this.data.spans[spanId];
-      const spanDesc = this.spanTypes[span.type];
+      const spanDesc = this.entityTypes[span.type];
       const bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
 
       if (bgColor === "hidden") {
@@ -1798,7 +1782,7 @@ export class Visualizer {
           return;
         }
 
-        const spanDesc = this.spanTypes[span.type];
+        const spanDesc = this.entityTypes[span.type];
         let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
         let fgColor = ((spanDesc && spanDesc.fgColor) || '#000000');
         let borderColor = ((spanDesc && spanDesc.borderColor) || '#000000');
@@ -1904,7 +1888,7 @@ export class Visualizer {
         }
 
         if (fragment === span.headFragment) {
-          const checkLeftRightArcs = (arc: Arc, refSpan: Span, leftSpan: Span) => {
+          const checkLeftRightArcs = (arc: Arc, refSpan: Entity, leftSpan: Entity) => {
             const refChunk = leftSpan.headFragment.chunk;
             if (!refChunk.row) {
               hasRightArcs = true;
@@ -1922,7 +1906,7 @@ export class Visualizer {
               }
             }
 
-            let labels = Util.getArcLabels(this.spanTypes, refSpan.type, arc.type, this.relationTypesHash);
+            let labels = Util.getArcLabels(this.entityTypes, refSpan.type, arc.type, this.relationTypes);
             if (!labels.length)
               labels = [arc.type];
 
@@ -2338,7 +2322,7 @@ export class Visualizer {
             continue;
           }
 
-          const spanDesc = this.spanTypes[fragment.span.type];
+          const spanDesc = this.entityTypes[fragment.span.type];
           let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
 
 
@@ -2552,11 +2536,11 @@ export class Visualizer {
 
       // fall back on relation types in case we still don't have
       // an arc description, with final fallback to unnumbered relation
-      let arcDesc = this.relationTypesHash[arc.type];
+      let arcDesc = this.relationTypes[arc.type];
 
       // if it's not a relationship, see if we can find it in span descriptions
       // TODO: might make more sense to reformat this as dict instead of searching through the list every type
-      const spanDesc = this.spanTypes[originSpan.type];
+      const spanDesc = this.entityTypes[originSpan.type];
       if (!arcDesc && spanDesc && spanDesc.arcs) {
         $.each(spanDesc.arcs, (arcDescNo, arcDescIter) => {
           if (arcDescIter.type === arc.type) {
@@ -2694,8 +2678,8 @@ export class Visualizer {
         }
 
         const originType = this.data.spans[arc.origin].type;
-        const arcLabels = Util.getArcLabels(this.spanTypes, originType, arc.type, this.relationTypesHash);
-        let labelText = Util.arcDisplayForm(this.spanTypes, originType, arc.type, this.relationTypesHash);
+        const arcLabels = Util.getArcLabels(this.entityTypes, originType, arc.type, this.relationTypes);
+        let labelText = Util.arcDisplayForm(this.entityTypes, originType, arc.type, this.relationTypes);
         // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
         if (Configuration.abbrevsOn && arcLabels) {
           let labelIdx = 1; // first abbreviation
@@ -3518,9 +3502,6 @@ export class Visualizer {
     }
   }
 
-  /**
-   * @param {MouseEvent} evt
-   */
   onMouseOverSpan(evt: MouseEvent) {
     const target = $(evt.target);
     const id = target.attr('data-span-id');
@@ -3541,7 +3522,7 @@ export class Visualizer {
     if (span.hidden)
       return;
 
-    const spanDesc = this.spanTypes[span.type];
+    const spanDesc = this.entityTypes[span.type];
     const bgColor = span.color || ((spanDesc && spanDesc.bgColor) || '#ffffff');
 
     this.highlight = [];
@@ -3598,18 +3579,15 @@ export class Visualizer {
     }
   }
 
-  /**
-   * @param {MouseEvent} evt
-   */
   onMouseOverArc(evt: MouseEvent) {
     const target = $(evt.target);
     const originSpanId = target.attr('data-arc-origin');
     const targetSpanId = target.attr('data-arc-target');
     const role = target.attr('data-arc-role');
-    const symmetric = (this.relationTypesHash &&
-      this.relationTypesHash[role] &&
-      this.relationTypesHash[role].properties &&
-      this.relationTypesHash[role].properties.symmetric);
+    const symmetric = (this.relationTypes &&
+      this.relationTypes[role] &&
+      this.relationTypes[role].properties &&
+      this.relationTypes[role].properties.symmetric);
 
       // NOTE: no commentText, commentType for now
       /** @type {string} */ const arcEventDescId: string = target.attr('data-arc-ed');
@@ -3663,9 +3641,6 @@ export class Visualizer {
       .map(e => e.parent().addClass('highlight'));
   }
 
-  /**
-   * @param {MouseEvent} evt
-   */
   onMouseOverSentence(evt: MouseEvent) {
     const target = $(evt.target);
     const id = target.attr('data-sent');
@@ -3675,9 +3650,6 @@ export class Visualizer {
     }
   }
 
-  /**
-   * @param {MouseEvent} evt
-   */
   onMouseOver(evt: MouseEvent) {
     const target = $(evt.target);
     if (target.attr('data-span-id')) {
@@ -3770,7 +3742,7 @@ export class Visualizer {
   loadSpanTypes(types) {
     $.each(types, (typeNo, type) => {
       if (type) {
-        this.spanTypes[type.type] = type;
+        this.entityTypes[type.type] = type;
         const children = type.children;
         if (children && children.length) {
           this.loadSpanTypes(children);
@@ -3800,7 +3772,7 @@ export class Visualizer {
   loadRelationTypes(relation_types) {
     $.each(relation_types, (relTypeNo, relType) => {
       if (relType) {
-        this.relationTypesHash[relType.type] = relType;
+        this.relationTypes[relType.type] = relType;
         const children = relType.children;
         if (children && children.length) {
           this.loadRelationTypes(children);
@@ -3814,24 +3786,24 @@ export class Visualizer {
     this.eventAttributeTypes = this.loadAttributeTypes(response.event_attribute_types);
     this.entityAttributeTypes = this.loadAttributeTypes(response.entity_attribute_types);
 
-    this.spanTypes = {};
+    this.entityTypes = {};
     this.loadSpanTypes(response.entity_types);
     this.loadSpanTypes(response.event_types);
     this.loadSpanTypes(response.unconfigured_types);
 
-    this.relationTypesHash = {};
+    this.relationTypes = {};
     this.loadRelationTypes(response.relation_types);
     this.loadRelationTypes(response.unconfigured_types);
 
     // TODO XXX: isn't the following completely redundant with
     // loadRelationTypes?
-    $.each(response.relation_types, (relTypeNo, relType) => this.relationTypesHash[relType.type] = relType);
+    $.each(response.relation_types, (relTypeNo, relType) => this.relationTypes[relType.type] = relType);
     const arcBundle = (response.visual_options || {}).arc_bundle || 'none';
     this.collapseArcs = arcBundle === "all";
     this.collapseArcSpace = arcBundle !== "none";
 
     this.dispatcher.post('spanAndAttributeTypesLoaded', [
-      this.spanTypes, this.entityAttributeTypes, this.eventAttributeTypes, this.relationTypesHash]);
+      this.entityTypes, this.entityAttributeTypes, this.eventAttributeTypes, this.relationTypes]);
 
     this.isCollectionLoaded = true;
     this.triggerRender();
@@ -3975,12 +3947,12 @@ export class Visualizer {
       .addTo(fragment.group);
   }
 
-  renderCurly(fragment, x, yy, hh) {
+  renderCurly(fragment: Fragment, x: number, yy: number, hh: number) {
     const span = fragment.span;
 
     let curlyColor = 'grey';
     if (this.coloredCurlies) {
-      const spanDesc = this.spanTypes[span.type];
+      const spanDesc = this.entityTypes[span.type];
       let bgColor: string;
       if (span.color) {
         bgColor = span.color;
@@ -4021,7 +3993,7 @@ function isRTL(charCode: number): boolean {
 
 // http://24ways.org/2010/calculating-color-contrast/
 // http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
-function bgToFgColor(hexcolor) {
+function bgToFgColor(hexcolor: ColorCode) {
   const r = parseInt(hexcolor.substr(1, 2), 16);
   const g = parseInt(hexcolor.substr(3, 2), 16);
   const b = parseInt(hexcolor.substr(5, 2), 16);
@@ -4049,12 +4021,11 @@ function findClosestHorizontalScrollable(node: JQuery) {
 
 /**
  * A naive whitespace tokeniser
- * @returns {number[][]}
  */
-function tokenise(text): number[][] {
-  const tokenOffsets = [];
-  let tokenStart = null;
-  let lastCharPos = null;
+function tokenise(text: string): Array<Offsets> {
+  const tokenOffsets: Array<Offsets> = [];
+  let tokenStart: number = null;
+  let lastCharPos: number = null;
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
@@ -4081,13 +4052,11 @@ function tokenise(text): number[][] {
 
 /**
  * A naive newline sentence splitter
- *
- * @returns {number[][]}
  */
-function sentenceSplit(text): number[][] {
-  const sentenceOffsets = [];
-  let sentStart = null;
-  let lastCharPos = null;
+function sentenceSplit(text: string): Array<Offsets> {
+  const sentenceOffsets: Array<Offsets> = [];
+  let sentStart: number = null;
+  let lastCharPos: number = null;
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i];

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import org.apache.wicket.model.IModel;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
@@ -26,8 +25,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryI
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
 
-@Component("lineOrientedBratEditor")
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link BratAnnotationEditorAutoConfiguration#lineOrientedBratEditor}.
+ * </p>
+ */
 public class BratLineOrientedAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {

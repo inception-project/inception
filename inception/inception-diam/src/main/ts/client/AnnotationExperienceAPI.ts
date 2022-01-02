@@ -66,7 +66,8 @@ import {ArcCreatedMessage} from "./messages/response/create/ArcCreatedMessage";
  *
  * @NOTE: For further information please look into the README file
  *
- **/
+ * @deprecated 
+ */
 export interface AnnotationExperienceAPI
 {
     /**

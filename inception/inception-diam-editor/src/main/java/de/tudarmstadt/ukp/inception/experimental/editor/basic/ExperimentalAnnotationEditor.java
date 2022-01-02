@@ -36,6 +36,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.experimental.editor.resources.ExperimentalAPIBasicEditorReference;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
 
+/**
+ * @deprecated
+ */
+@Deprecated
 public class ExperimentalAnnotationEditor
     extends AnnotationEditorBase
 {

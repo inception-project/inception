@@ -52,9 +52,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.htmleditor.HtmlAnnotationEditorImplBase;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.model.Annotation;
 import de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.resources.AnnotatorJsCssResourceReference;
@@ -202,7 +202,7 @@ public class AnnotatorJsHtmlAnnotationEditor
 
                 if (paramId.isSynthetic()) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget, cas,
-                            paramId, "spanOpenDialog");
+                            paramId, SelectAnnotationHandler.COMMAND);
                     return;
                 }
 
@@ -278,11 +278,8 @@ public class AnnotatorJsHtmlAnnotationEditor
         {
             CAS cas = getCasProvider().get();
 
-            VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
-
-            AnnotatorJsRenderer renderer = new AnnotatorJsRenderer(coloringService,
-                    annotationService);
-            List<Annotation> annotations = renderer.render(getModelObject(), vdoc, cas, null);
+            List<Annotation> annotations = render(cas, 0, cas.getDocumentText().length(),
+                    new AnnotatorJsSerializer());
 
             String json = toInterpretableJsonString(annotations);
 

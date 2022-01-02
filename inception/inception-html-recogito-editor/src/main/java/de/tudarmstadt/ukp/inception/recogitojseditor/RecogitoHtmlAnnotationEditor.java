@@ -17,66 +17,59 @@
  */
 package de.tudarmstadt.ukp.inception.recogitojseditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
 
-import java.io.IOException;
-import java.time.Duration;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.uima.cas.CAS;
-import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
-import org.apache.wicket.request.resource.ContentDisposition;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.StringResourceStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
-import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
-import de.tudarmstadt.ukp.inception.htmleditor.HtmlAnnotationEditorImplBase;
-import de.tudarmstadt.ukp.inception.recogitojseditor.model.WebAnnotations;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPoint;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
 
 public class RecogitoHtmlAnnotationEditor
-    extends HtmlAnnotationEditorImplBase
+    extends AnnotationEditorBase
 {
     private static final long serialVersionUID = -3358207848681467993L;
-    private static final Logger LOG = LoggerFactory.getLogger(RecogitoHtmlAnnotationEditor.class);
 
-    private StoreAdapter storeAdapter;
+    private @SpringBean DocumentViewExtensionPoint documentViewExtensionPoint;
+    private @SpringBean DocumentService documentService;
 
-    private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
-    private @SpringBean ColoringService coloringService;
-    private @SpringBean EditorAjaxRequestHandlerExtensionPoint handlers;
+    private final DiamAjaxBehavior diamBehavior;
+    private final Component vis;
+
+    private final String VIEW_FORMAT = "cas+html";
+    private final String EDITOR_FACTORY = "RecogitoEditor";
 
     public RecogitoHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
 
-        storeAdapter = new StoreAdapter();
-        add(storeAdapter);
+        AnnotationDocument annDoc = documentService.getAnnotationDocument(
+                aModel.getObject().getDocument(), aModel.getObject().getUser());
+
+        vis = documentViewExtensionPoint.getExtension(VIEW_FORMAT) //
+                .map(ext -> ext.createView("vis", Model.of(annDoc))) //
+                .orElseGet(() -> new Label("Unsupported view"));
+        add(vis);
+
+        add(diamBehavior = new DiamAjaxBehavior());
     }
 
     @Override
@@ -104,91 +97,26 @@ public class RecogitoHtmlAnnotationEditor
 
     private CharSequence destroyScript()
     {
-        String markupId = vis.getMarkupId();
-        
-        return WicketUtil.wrapInTryCatch("document.getElementById('" + markupId
-                + "')['recogito'].destroy(); console.log('Destroyed RecogitoJS');");
+        return wrapInTryCatch(EDITOR_FACTORY + ".destroy('" + vis.getMarkupId() + "');");
     }
 
     private String initScript()
     {
-        String markupId = vis.getMarkupId();
-        String callbackUrl = storeAdapter.getCallbackUrl().toString();
+        String callbackUrl = diamBehavior.getCallbackUrl().toString();
+        return wrapInTryCatch(EDITOR_FACTORY + ".getOrInitialize('" + vis.getMarkupId()
+                + "', Diam.factory(), { diamAjaxCallbackUrl: '" + callbackUrl + "' });");
+    }
 
-        StringBuilder js = new StringBuilder();
-        js.append("(function() {");
-        js.append("  recogito('" + markupId + "', '" + callbackUrl + "')");
-        js.append("})();");
-        return WicketUtil.wrapInTryCatch(js.toString());
+    private String renderScript()
+    {
+        String callbackUrl = diamBehavior.getCallbackUrl().toString();
+        return wrapInTryCatch(EDITOR_FACTORY + ".getOrInitialize('" + vis.getMarkupId()
+                + "', Diam.factory(), { diamAjaxCallbackUrl: '" + callbackUrl + "' }).then(editor => editor.loadAnnotations());");
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        String markupId = vis.getMarkupId();
-        
-        StringBuilder js = new StringBuilder();
-        js.append("(function() {");
-        js.append("  document.getElementById('" + markupId + "')['recogito'].loadAnnotations('"
-                + storeAdapter.getCallbackUrl() + "')");
-        js.append("})();");
-        aTarget.appendJavaScript(js);
-    }
-
-    private class StoreAdapter
-        extends AbstractDefaultAjaxBehavior
-    {
-        private static final long serialVersionUID = -7919362960963563800L;
-
-        @Override
-        protected void respond(AjaxRequestTarget aTarget)
-        {
-            if (!(getRequest().getContainerRequest() instanceof HttpServletRequest)) {
-                return;
-            }
-
-            HttpServletRequest request = (HttpServletRequest) getRequest().getContainerRequest();
-
-            LOG.debug("[" + request.getMethod() + "]");
-
-            try {
-                if ("GET".equals(request.getMethod())) {
-                    read(aTarget);
-                    return;
-                }
-
-                handlers.getHandler(getRequest()) //
-                        .map(handler -> handler.handle(aTarget, getRequest())) //
-                        .orElse(null);
-            }
-            catch (Exception e) {
-                handleError("Error", e);
-            }
-        }
-
-        private void read(AjaxRequestTarget aTarget)
-            throws JsonParseException, JsonMappingException, IOException
-        {
-            CAS cas = getCasProvider().get();
-
-            VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
-
-            RecogitoJsRenderer renderer = new RecogitoJsRenderer(coloringService,
-                    annotationService);
-            WebAnnotations annotations = renderer.render(getModelObject(), vdoc, cas, null);
-
-            String json = toInterpretableJsonString(annotations);
-
-            StringResourceStream resource = new StringResourceStream(json, "application/ld+json");
-
-            ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(resource);
-            handler.setFileName("data.json");
-            handler.setCacheDuration(Duration.ofSeconds(1));
-            handler.setContentDisposition(ContentDisposition.INLINE);
-
-            LOG.trace("Sending back RecogitoJS JSON data");
-
-            getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);
-        }
+        aTarget.appendJavaScript(renderScript());
     }
 }

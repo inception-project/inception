@@ -29,7 +29,8 @@ import {FeatureX} from "../../../model/FeatureX";
  * @color: The color of the Arc
  * @layerId: The ID of the layer the Arc belongs to
  * @features: List of AnnotationFeatures (FeatureX) that the Span has
- **/
+ * @deprecated 
+ */
 export class SpanCreatedMessage
 {
     spanId : number;

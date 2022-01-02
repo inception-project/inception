@@ -42,6 +42,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.htmleditor.docview.HtmlDocumentRenderer;
+import de.tudarmstadt.ukp.inception.htmleditor.docview.LegacyHtmlDocumentRenderer;
 
 public abstract class HtmlAnnotationEditorImplBase
     extends AnnotationEditorBase

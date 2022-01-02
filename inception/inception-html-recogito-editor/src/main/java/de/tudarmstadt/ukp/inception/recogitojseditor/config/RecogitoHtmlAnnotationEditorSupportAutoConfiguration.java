@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.recogitojseditor.RecogitoHtmlAnnotationEditorFactory;
+import de.tudarmstadt.ukp.inception.recogitojseditor.render.WebAnnotationsSerializer;
 
 /**
  * Provides support for an HTML-oriented annotation editor.
@@ -34,5 +35,10 @@ public class RecogitoHtmlAnnotationEditorSupportAutoConfiguration
     public RecogitoHtmlAnnotationEditorFactory recogitoHtmlAnnotationEditorFactory()
     {
         return new RecogitoHtmlAnnotationEditorFactory();
+    }
+    
+    @Bean
+    public WebAnnotationsSerializer recogitoJsSerializer() {
+        return new WebAnnotationsSerializer();
     }
 }

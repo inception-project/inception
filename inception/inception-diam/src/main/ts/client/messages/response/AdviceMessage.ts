@@ -27,8 +27,8 @@
  * @adviceMessageType: String representation for the TYPE of the message.
  *
  * @NOTE: Whenever an AdviceMessage is received please show it to the user accordingly
- **/
-
+ * @deprecated 
+ */
 export class AdviceMessage
 {
     adviceMessage : string;

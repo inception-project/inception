@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 import { Ajax } from "./ajax/Ajax";
-import { DiamAjax } from "@inception-project/inception-diam/client/DiamAjax";
+import { factory as diamAjaxFactory } from "@inception-project/inception-diam";
 import { AnnotatorUI } from "./annotator_ui/AnnotatorUI";
 import { Dispatcher } from "./dispatcher/Dispatcher";
 import { Visualizer } from "./visualizer/Visualizer";
@@ -26,7 +26,7 @@ declare let Wicket;
 
 function brat(markupId: string, callbackUrl: string) {
   const dispatcher = new Dispatcher();
-  const diamAjax = new DiamAjax(callbackUrl);
+  const diamAjax = diamAjaxFactory().createAjaxClient(callbackUrl);
   new Ajax(dispatcher, markupId, callbackUrl);
   const visualizer = new Visualizer(dispatcher, markupId);
   new VisualizerUI(dispatcher);

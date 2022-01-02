@@ -28,7 +28,8 @@
  * @begin: The character offset begin of the Span
  * @end: The character offset end of the Span
  * @layerId: The ID of the layer the annotation shall belong to
- **/
+ * @deprecated 
+ */
 export class CreateSpanRequest
 {
     annotatorName : string;

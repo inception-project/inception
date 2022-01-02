@@ -20,9 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.stereotype.Component;
 
-@Component
 @ConfigurationProperties("ui.brat")
 @ManagedResource
 public class BratAnnotationEditorPropertiesImpl
@@ -33,7 +31,6 @@ public class BratAnnotationEditorPropertiesImpl
     private boolean clientSideProfiling = false;
     private boolean clientSideTraceLog = false;
     private String whiteSpaceReplacementCharacter = REPLACEMENT_CHARACTER;
-    private boolean useCasTokens = false;
 
     @ManagedAttribute
     @Override
@@ -96,18 +93,5 @@ public class BratAnnotationEditorPropertiesImpl
     public void setWhiteSpaceReplacementCharacter(String aWhiteSpaceReplacementCharacter)
     {
         whiteSpaceReplacementCharacter = aWhiteSpaceReplacementCharacter;
-    }
-
-    @ManagedAttribute
-    public void setUseCasTokens(boolean aIgnoreCasTokens)
-    {
-        useCasTokens = aIgnoreCasTokens;
-    }
-
-    @ManagedAttribute
-    @Override
-    public boolean isUseCasTokens()
-    {
-        return useCasTokens;
     }
 }

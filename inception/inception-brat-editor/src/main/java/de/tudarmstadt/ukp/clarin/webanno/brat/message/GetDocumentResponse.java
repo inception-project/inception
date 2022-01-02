@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
-import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,8 +43,6 @@ public class GetDocumentResponse
 {
     public static final String COMMAND = "getDocument";
 
-    private @JsonInclude(NON_EMPTY) List<String> modifications = new ArrayList<>();
-
     @JsonProperty("rtl_mode")
     private boolean rtlMode;
 
@@ -57,8 +54,11 @@ public class GetDocumentResponse
 
     private String text;
 
-    @JsonProperty("source_files")
-    private @JsonInclude(NON_EMPTY) List<String> sourceFiles = new ArrayList<>();
+    // /**
+    // * @deprecated Not used
+    // */
+    // @JsonProperty("source_files")
+    // private @JsonInclude(NON_EMPTY) List<String> sourceFiles = new ArrayList<>();
 
     // private long ctime;
     // private long mtime;
@@ -67,7 +67,10 @@ public class GetDocumentResponse
     // https://github.com/nlplab/brat/blob/master/server/src/document.py#L794
     // private int offset;
 
-    private @JsonInclude(NON_NULL) GetCollectionInformationResponse info;
+    // /**
+    // * @deprecated Not used
+    // */
+    // private @JsonInclude(NON_NULL) GetCollectionInformationResponse info;
 
     /**
      * [ 0, 3 ]
@@ -89,10 +92,26 @@ public class GetDocumentResponse
      * Guess: ID (maybe token ID?), Type, begin offset, end offset
      */
     private @JsonInclude(NON_EMPTY) List<Entity> entities = new ArrayList<>();
-    private @JsonInclude(NON_EMPTY) List<String> attributes = new ArrayList<>();
-    private @JsonInclude(NON_EMPTY) List<String> equivs = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<Comment> comments = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<Normalization> normalizations = new ArrayList<>();
+
+    /**
+     * @deprecated not used
+     */
+    @Deprecated
+    private @JsonInclude(NON_EMPTY) List<String> attributes = new ArrayList<>();
+
+    /**
+     * @deprecated not used
+     */
+    @Deprecated
+    private @JsonInclude(NON_EMPTY) List<String> equivs = new ArrayList<>();
+
+    /**
+     * @deprecated not used
+     */
+    @Deprecated
+    private @JsonInclude(NON_EMPTY) List<String> modifications = new ArrayList<>();
 
     private Map<String, List<Marker>> args = new HashMap<>();
 
@@ -101,15 +120,15 @@ public class GetDocumentResponse
         super(COMMAND);
     }
 
-    public GetCollectionInformationResponse getInfo()
-    {
-        return info;
-    }
-
-    public void setInfo(GetCollectionInformationResponse aInfo)
-    {
-        info = aInfo;
-    }
+    // public GetCollectionInformationResponse getInfo()
+    // {
+    // return info;
+    // }
+    //
+    // public void setInfo(GetCollectionInformationResponse aInfo)
+    // {
+    // info = aInfo;
+    // }
 
     public void addToken(int aBegin, int aEnd)
     {
@@ -171,26 +190,26 @@ public class GetDocumentResponse
         normalizations.add(aNormalization);
     }
 
-    /**
-     * Get source files for the annotations.
-     * 
-     * @return the source files.
-     */
-    public List<String> getSourceFiles()
-    {
-        return sourceFiles;
-    }
-
-    /**
-     * Set source files for the annotations.
-     * 
-     * @param aSourceFiles
-     *            the source files.
-     */
-    public void setSourceFiles(List<String> aSourceFiles)
-    {
-        sourceFiles = aSourceFiles;
-    }
+    // /**
+    // * Get source files for the annotations.
+    // *
+    // * @return the source files.
+    // */
+    // public List<String> getSourceFiles()
+    // {
+    // return sourceFiles;
+    // }
+    //
+    // /**
+    // * Set source files for the annotations.
+    // *
+    // * @param aSourceFiles
+    // * the source files.
+    // */
+    // public void setSourceFiles(List<String> aSourceFiles)
+    // {
+    // sourceFiles = aSourceFiles;
+    // }
 
     // /**
     // * Get creation time.
@@ -294,25 +313,25 @@ public class GetDocumentResponse
         entities.add(aEntity);
     }
 
-    public List<String> getAttributes()
-    {
-        return attributes;
-    }
-
-    public void setAttributes(List<String> aAttributes)
-    {
-        attributes = aAttributes;
-    }
-
-    public List<String> getEquivs()
-    {
-        return equivs;
-    }
-
-    public void setEquivs(List<String> aEquivs)
-    {
-        equivs = aEquivs;
-    }
+    // public List<String> getAttributes()
+    // {
+    // return attributes;
+    // }
+    //
+    // public void setAttributes(List<String> aAttributes)
+    // {
+    // attributes = aAttributes;
+    // }
+    //
+    // public List<String> getEquivs()
+    // {
+    // return equivs;
+    // }
+    //
+    // public void setEquivs(List<String> aEquivs)
+    // {
+    // equivs = aEquivs;
+    // }
 
     public int getSentenceNumberOffset()
     {

@@ -30,7 +30,8 @@ import {Arc} from "./Arc";
  * @begin: The character offset begin of the viewport
  * @end: The character offset end of the viewport
  * @layers: List of layers the viewport shows. The list contains the layerIds
- **/
+ * @deprecated 
+ */
 export class Viewport
 {
     sourceDocumentId: number

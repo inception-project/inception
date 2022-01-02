@@ -27,7 +27,8 @@
  * @sourceDocumentId: The ID of the sourcedocument the annotation belongs to
  * @annotationId: The ID of the annotation to delete
  * @layerId: The ID of the layer the annotation belongs to
- **/
+ * @deprecated 
+ */
 export class DeleteAnnotationRequest
 {
     annotatorName: string;

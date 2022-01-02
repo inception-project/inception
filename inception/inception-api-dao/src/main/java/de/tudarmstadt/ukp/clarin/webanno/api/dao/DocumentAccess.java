@@ -24,6 +24,8 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -45,6 +47,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
  */
 public class DocumentAccess
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private final UserDao userService;
     private final ProjectService projectService;
     private final DocumentService documentService;
@@ -66,6 +70,10 @@ public class DocumentAccess
     public boolean canViewAnnotationDocument(String aUser, String aProjectId, long aDocumentId,
             String aAnnotator)
     {
+        log.trace(
+                "Permission check: canViewAnnotationDocument [user: {}] [project: {}] [document: {}] [annotator: {}]",
+                aUser, aProjectId, aDocumentId, aAnnotator);
+
         try {
             User user = getUser(aUser);
             Project project = getProject(aProjectId);
@@ -103,6 +111,10 @@ public class DocumentAccess
     public boolean canEditAnnotationDocument(String aUser, String aProjectId, long aDocumentId,
             String aAnnotator)
     {
+        log.trace(
+                "Permission check: canEditAnnotationDocument [user: {}] [project: {}] [document: {}] [annotator: {}]",
+                aUser, aProjectId, aDocumentId, aAnnotator);
+
         try {
             User user = getUser(aUser);
             Project project = getProject(aProjectId);

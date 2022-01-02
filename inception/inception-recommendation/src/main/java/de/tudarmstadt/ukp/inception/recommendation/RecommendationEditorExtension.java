@@ -21,11 +21,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
@@ -58,15 +56,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
@@ -77,8 +70,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -89,16 +80,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRelationRenderer;
-import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationSpanRenderer;
-import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationTypeRenderer;
 
 /**
  * This component hooks into the annotation editor in order to:
@@ -125,25 +112,19 @@ public class RecommendationEditorExtension
     private final RecommendationService recommendationService;
     private final LearningRecordService learningRecordService;
     private final ApplicationEventPublisher applicationEventPublisher;
-    private final FeatureSupportRegistry fsRegistry;
-    private final RecommenderProperties recommenderProperties;
     private final UserDao userRegistry;
 
     @Autowired
     public RecommendationEditorExtension(AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            FeatureSupportRegistry aFsRegistry, UserDao aUserRegistry,
-            RecommenderProperties aRecommenderProperties)
+            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRegistry)
     {
         annotationService = aAnnotationService;
         recommendationService = aRecommendationService;
         learningRecordService = aLearningRecordService;
         applicationEventPublisher = aApplicationEventPublisher;
-        fsRegistry = aFsRegistry;
         userRegistry = aUserRegistry;
-        recommenderProperties = aRecommenderProperties;
     }
 
     @Override
@@ -390,21 +371,6 @@ public class RecommendationEditorExtension
     }
 
     @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
-    {
-        // do not show predictions during curation or when viewing others' work
-        if (!aState.getMode().equals(ANNOTATION)
-                || !aState.getUser().getUsername().equals(userRegistry.getCurrentUsername())) {
-            return;
-        }
-
-        // Add the suggestions to the visual document
-        render(aVDoc, aState, aCas, aWindowBeginOffset, aWindowEndOffset);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
     public List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser, VID aVid,
             AnnotationFeature aFeature, String aQuery)
     {
@@ -454,58 +420,5 @@ public class RecommendationEditorExtension
         }
 
         return details;
-    }
-
-    /**
-     * wrap JSON responses to BRAT visualizer
-     *
-     * @param aVdoc
-     *            A VDocument containing annotations for the given layer
-     * @param aState
-     *            the annotator state.
-     * @param aCas
-     *            the CAS.
-     */
-    private void render(VDocument aVdoc, AnnotatorState aState, CAS aCas, int aWindowBeginOffset,
-            int aWindowEndOffset)
-    {
-        if (aCas == null) {
-            return;
-        }
-
-        for (AnnotationLayer layer : aState.getAnnotationLayers()) {
-            if (layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName())
-                    || (layer.getType().equals(CHAIN_TYPE) && CURATION == aState.getMode())
-                    || !layer.isEnabled()) { /* Hide layer if not enabled */
-                continue;
-            }
-
-            TypeAdapter adapter = annotationService.getAdapter(layer);
-            RecommendationTypeRenderer renderer = getRenderer(adapter);
-            if (renderer != null) {
-                renderer.render(aCas, aVdoc, aState, aWindowBeginOffset, aWindowEndOffset);
-            }
-        }
-    }
-
-    /**
-     * Helper method to fetch a renderer for a given type. This is indented to be a temporary
-     * solution. The final solution should be able to return renderers specific to a certain
-     * visualization - one of which would be brat.
-     */
-    private RecommendationTypeRenderer getRenderer(TypeAdapter aTypeAdapter)
-    {
-        if (aTypeAdapter instanceof SpanAdapter) {
-            return new RecommendationSpanRenderer((SpanAdapter) aTypeAdapter, recommendationService,
-                    annotationService, fsRegistry, recommenderProperties);
-        }
-
-        if (aTypeAdapter instanceof RelationAdapter) {
-            return new RecommendationRelationRenderer((RelationAdapter) aTypeAdapter,
-                    recommendationService, annotationService, fsRegistry);
-        }
-
-        return null;
     }
 }

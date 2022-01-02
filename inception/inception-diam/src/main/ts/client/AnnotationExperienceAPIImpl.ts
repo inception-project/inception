@@ -39,6 +39,7 @@ import {Observer} from "./Observer";
  *
  * For further details @see interface class (AnnotationExperienceAPI.ts).
  *
+ * @deprecated 
  **/
 export class AnnotationExperienceAPIImpl implements AnnotationExperienceAPI {
 

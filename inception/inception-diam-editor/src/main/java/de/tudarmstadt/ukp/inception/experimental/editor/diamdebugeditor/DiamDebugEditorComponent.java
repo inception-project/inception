@@ -34,8 +34,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
-import de.tudarmstadt.ukp.inception.support.axios.AxiosResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
 
 public class DiamDebugEditorComponent
@@ -86,6 +86,6 @@ public class DiamDebugEditorComponent
     {
         super.renderHead(aResponse);
 
-        aResponse.render(forReference(AxiosResourceReference.get()));
+        aResponse.render(forReference(DiamJavaScriptReference.get()));
     }
 }

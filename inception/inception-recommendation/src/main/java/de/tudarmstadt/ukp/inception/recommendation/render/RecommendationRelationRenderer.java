@@ -35,8 +35,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
@@ -76,51 +76,50 @@ public class RecommendationRelationRenderer
      * Add annotations from the CAS, which is controlled by the window size, to the VDocument
      * {@link VDocument}
      *
-     * @param aCas
-     *            The CAS object containing annotations
-     * @param vdoc
+     * @param aVDoc
      *            A VDocument containing annotations for the given layer
      */
     @Override
-    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public void render(VDocument aVDoc, RenderRequest aRequest)
     {
-        if (aCas == null || recommendationService == null) {
+        if (aRequest.getCas() == null || recommendationService == null) {
             return;
         }
 
-        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
+        Predictions predictions = recommendationService.getPredictions(aRequest.getAnnotationUser(),
+                aRequest.getProject());
 
         // No recommendations available at all
         if (predictions == null) {
             return;
         }
 
+        CAS cas = aRequest.getCas();
+
         AnnotationLayer layer = typeAdapter.getLayer();
 
         // TODO #176 use the document Id once it it available in the CAS
-        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
-                .orElseGet(() -> getDocumentTitle(aCas));
+        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
+                .orElseGet(() -> getDocumentTitle(cas));
         SuggestionDocumentGroup<RelationSuggestion> groupedPredictions = predictions
                 .getGroupedPredictions(RelationSuggestion.class, sourceDocumentName, layer,
-                        aWindowBeginOffset, aWindowEndOffset);
+                        aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
         // No recommendations to render for this layer
         if (groupedPredictions.isEmpty()) {
             return;
         }
 
-        recommendationService.calculateRelationSuggestionVisibility(aCas,
-                aState.getUser().getUsername(), layer, groupedPredictions, aWindowBeginOffset,
-                aWindowEndOffset);
+        recommendationService.calculateRelationSuggestionVisibility(cas,
+                aRequest.getAnnotationUser().getUsername(), layer, groupedPredictions,
+                aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
-        Preferences pref = recommendationService.getPreferences(aState.getUser(),
+        Preferences pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
                 layer.getProject());
 
         String bratTypeName = typeAdapter.getEncodedTypeName();
 
-        Type attachType = CasUtil.getType(aCas, layer.getAttachType().getName());
+        Type attachType = CasUtil.getType(cas, layer.getAttachType().getName());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
         Map<String, AnnotationFeature> features = annotationService.listSupportedFeatures(layer)
@@ -144,10 +143,10 @@ public class RecommendationRelationRenderer
                 // FIXME: We get the first match for the (begin, end) span. With stacking, there can
                 // be more than one and we need to get the right one then which does not need to be
                 // the first. We wait for #2135 for a maybe fix.
-                AnnotationFS source = selectAt(aCas, attachType, sourceBegin, sourceEnd) //
+                AnnotationFS source = selectAt(cas, attachType, sourceBegin, sourceEnd) //
                         .stream().findFirst().orElse(null);
 
-                AnnotationFS target = selectAt(aCas, attachType, targetBegin, targetEnd) //
+                AnnotationFS target = selectAt(cas, attachType, targetBegin, targetEnd) //
                         .stream().findFirst().orElse(null);
 
                 // Retrieve the UI display label for the given feature value
@@ -174,7 +173,7 @@ public class RecommendationRelationRenderer
                             new VLazyDetailQuery(feature.getName(), suggestion.getLabel()));
                 }
 
-                vdoc.add(arc);
+                aVDoc.add(arc);
             }
         }
     }

@@ -37,30 +37,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+import { ColorCode, RoleDto, VID } from "../protocol/Protocol";
 import { Arc } from "./Arc";
 import { Comment } from "./Comment"; 
+import { Role } from "./Role";
 
+export const EQUIV: GeneralEventType = "equiv";
+export const RELATION: GeneralEventType = "relation";
 
+export type GeneralEventType = string;
+
+/**
+ * An n-ary relation which is used to represent either a simple relation (relation === true) or
+ * an equivalence (equiv === true) or an event (equiv === false and relation === false).
+ */
 export class EventDesc {
-  id;
-  triggerId;
-  roles = [];
-  equiv = false;
+  id: VID;
+  triggerId: VID;
+  roles: Array<Role> = [];
   equivArc: Arc = undefined;
+  equiv = false;
   relation = false;
-  leftSpans = undefined;
-  rightSpans = undefined;
+  leftSpans: Array<VID> = undefined;
+  rightSpans: Array<VID> = undefined;
   annotatorNotes = undefined;
   comment: Comment = undefined;
-  labelText = undefined;
-  color: string = undefined
+  labelText: string = undefined;
+  color: ColorCode = undefined
   shadowClass: string = undefined;
 
-  constructor(id, triggerId, roles, klass?: string) {
+  constructor(id: VID, triggerId: VID, roles: Array<RoleDto>, generalType?: GeneralEventType) {
     this.id = id;
     this.triggerId = triggerId;
-    this.equiv = klass === "equiv";
-    this.relation = klass === "relation";
+    this.equiv = generalType === EQUIV;
+    this.relation = generalType === RELATION;
     // Object.seal(this);
     roles.map(role => this.roles.push({ type: role[0], targetId: role[1] }));
   }

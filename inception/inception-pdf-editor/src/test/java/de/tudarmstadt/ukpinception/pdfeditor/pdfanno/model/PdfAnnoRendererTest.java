@@ -57,28 +57,33 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSuppo
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer;
 
 public class PdfAnnoRendererTest
 {
-
     private @Mock AnnotationSchemaService schemaService;
 
     private Project project;
+    private SourceDocument sourceDocument;
     private AnnotationLayer tokenLayer;
     private AnnotationFeature tokenPosFeature;
     private AnnotationLayer posLayer;
@@ -92,6 +97,7 @@ public class PdfAnnoRendererTest
         initMocks(this);
 
         project = new Project();
+        sourceDocument = new SourceDocument("test.txt", project, null);
 
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
                 SINGLE_TOKEN, NO_OVERLAP);
@@ -169,19 +175,30 @@ public class PdfAnnoRendererTest
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.setAllAnnotationLayers(schemaService.listAnnotationLayer(project));
-        state.setPagingStrategy(new SentenceOrientedPagingStrategy());
-        state.getPreferences().setWindowSize(10);
+        state.setPagingStrategy(new NoPagingStrategy());
+        state.setPageBegin(cas, 0);
         state.setProject(project);
+        state.setDocument(sourceDocument, asList(sourceDocument));
+
+        RenderRequest request = RenderRequest.builder() //
+                .withState(state) //
+                .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                .withCas(cas) //
+                .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
+                .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
-                schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, request);
+
+        new LabelRenderer().render(vdoc, request);
+
+        ColorRenderer colorRenderer = new ColorRenderer(schemaService,
+                new ColoringServiceImpl(schemaService));
+        colorRenderer.render(vdoc, request);
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
-        PdfAnnoRenderer renderer = new PdfAnnoRenderer(schemaService,
-                new ColoringServiceImpl(schemaService));
-        PdfAnnoModel annoFile = renderer.render(state, vdoc, cas.getDocumentText(), pdfExtractFile,
-                0);
+        PdfAnnoSerializer renderer = new PdfAnnoSerializer(pdfExtractFile, 0);
+        PdfAnnoModel annoFile = renderer.render(vdoc, request);
 
         assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
                 contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
@@ -227,7 +244,7 @@ public class PdfAnnoRendererTest
         offsets.add(new Offset(28, 30));
         offsets.add(new Offset(35, 38));
         // convert to offests for document in INCEpTION
-        List<Offset> docOffsets = PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel,
+        List<Offset> docOffsets = PdfAnnoSerializer.convertToDocumentOffsets(offsets, documentModel,
                 pdfExtractFile);
         List<Offset> expectedOffsets = new ArrayList<>();
         expectedOffsets.add(new Offset(0, 0));

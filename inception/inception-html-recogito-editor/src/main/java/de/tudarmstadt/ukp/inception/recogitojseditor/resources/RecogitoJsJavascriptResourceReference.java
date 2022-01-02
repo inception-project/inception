@@ -17,7 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recogitojseditor.resources;
 
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import org.apache.wicket.markup.head.HeaderItem;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
+
+import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 
 public class RecogitoJsJavascriptResourceReference
     extends JavaScriptResourceReference
@@ -36,11 +44,20 @@ public class RecogitoJsJavascriptResourceReference
         return INSTANCE;
     }
 
+    @Override
+    public List<HeaderItem> getDependencies()
+    {
+        return Stream
+                .concat(super.getDependencies().stream(),
+                        Stream.of(JavaScriptHeaderItem.forReference(DiamJavaScriptReference.get())))
+                .collect(Collectors.toList());
+    }
+
     /**
      * Private constructor
      */
     private RecogitoJsJavascriptResourceReference()
     {
-        super(RecogitoJsJavascriptResourceReference.class, "recogito.js");
+        super(RecogitoJsJavascriptResourceReference.class, "RecogitoEditor.js");
     }
 }

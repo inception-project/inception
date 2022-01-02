@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableCollection;
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -111,7 +115,7 @@ public class VDocument
 
     public Collection<VSpan> spans()
     {
-        return Collections.unmodifiableCollection(spans.values());
+        return unmodifiableCollection(spans.values());
     }
 
     public List<VMarker> getMarkers()
@@ -123,27 +127,39 @@ public class VDocument
     public Collection<VSpan> spans(long aLayerId)
     {
         if (spansByLayer.containsKey(aLayerId)) {
-            return Collections.unmodifiableList((List) spansByLayer.get(aLayerId));
+            return unmodifiableList((List) spansByLayer.get(aLayerId));
         }
-        else {
-            return Collections.emptyList();
-        }
+
+        return emptyList();
     }
 
     public Collection<VArc> arcs()
     {
-        return Collections.unmodifiableCollection(arcs.values());
+        return unmodifiableCollection(arcs.values());
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public Collection<VArc> arcs(long aLayerId)
     {
         if (arcsByLayer.containsKey(aLayerId)) {
-            return Collections.unmodifiableList((List) arcsByLayer.get(aLayerId));
+            return unmodifiableList((List) arcsByLayer.get(aLayerId));
         }
-        else {
-            return Collections.emptyList();
+
+        return emptyList();
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public Collection<VObject> objects(long aLayerId)
+    {
+        if (spansByLayer.containsKey(aLayerId)) {
+            return unmodifiableList((List) spansByLayer.get(aLayerId));
         }
+
+        if (arcsByLayer.containsKey(aLayerId)) {
+            return unmodifiableList((List) arcsByLayer.get(aLayerId));
+        }
+
+        return emptyList();
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

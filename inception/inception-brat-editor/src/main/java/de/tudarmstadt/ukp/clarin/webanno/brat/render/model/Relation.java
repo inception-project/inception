@@ -29,8 +29,6 @@ import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 /**
  * A relation between span annotations -&gt; an arc annotation. Example
  * "relations":[["d_48420","SUBJ",[["Arg1","p_21346"],["Arg2","p_21341"]]],...
- *
- *
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "vid", "type", "arguments", "labelText", "color" })

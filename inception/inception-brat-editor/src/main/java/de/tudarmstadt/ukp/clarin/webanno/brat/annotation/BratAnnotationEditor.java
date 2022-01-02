@@ -74,7 +74,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
@@ -82,7 +81,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -108,6 +108,7 @@ public class BratAnnotationEditor
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratAnnotationEditorProperties bratProperties;
     private @SpringBean EditorAjaxRequestHandlerExtensionPoint handlers;
+    private @SpringBean BratSerializer bratSerializer;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -261,7 +262,7 @@ public class BratAnnotationEditor
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
         if (getModelObject().getProject() != null) {
-            info.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject().getProject(),
+            info.setEntityTypes(BratSerializerImpl.buildEntityTypes(getModelObject().getProject(),
                     getModelObject().getAnnotationLayers(), annotationService));
             info.getVisualOptions()
                     .setArcBundle(getModelObject().getPreferences().isCollapseArcs()
@@ -273,22 +274,18 @@ public class BratAnnotationEditor
 
     private String actionGetDocument() throws IOException
     {
+        if (getModelObject().getProject() == null) {
+            return toJson(new GetDocumentResponse());
+        }
+
         StopWatch timer = new StopWatch();
         timer.start();
 
         final CAS cas = getCasProvider().get();
 
-        GetDocumentResponse response = new GetDocumentResponse();
-        String json;
-        if (getModelObject().getProject() != null) {
-            render(response, cas);
-            json = toJson(response);
-            lastRenderedJson = json;
-            lastRenderedJsonParsed = null;
-        }
-        else {
-            json = toJson(response);
-        }
+        String json = toJson(render(cas));
+        lastRenderedJson = json;
+        lastRenderedJsonParsed = null;
 
         timer.stop();
         metrics.renderComplete(RenderType.FULL, timer.getTime(), json, null);
@@ -345,8 +342,7 @@ public class BratAnnotationEditor
         StopWatch timer = new StopWatch();
         timer.start();
 
-        GetDocumentResponse response = new GetDocumentResponse();
-        render(response, aCas);
+        GetDocumentResponse response = render(aCas);
 
         ObjectMapper mapper = JSONUtil.getObjectMapper();
         JsonNode current = mapper.valueToTree(response);
@@ -427,13 +423,12 @@ public class BratAnnotationEditor
                 + responseJson + "]);");
     }
 
-    private void render(GetDocumentResponse response, CAS aCas)
+    private GetDocumentResponse render(CAS aCas)
     {
         AnnotatorState aState = getModelObject();
-        VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
-        BratRenderer renderer = new BratRenderer(annotationService, coloringService,
-                bratProperties);
-        renderer.render(response, aState, vdoc, aCas);
+
+        return render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
+                bratSerializer);
     }
 
     private String bratInitCommand()
@@ -461,7 +456,7 @@ public class BratAnnotationEditor
         LOG.trace("[{}][{}] bratLoadCollectionCommand", getMarkupId(), vis.getMarkupId());
 
         GetCollectionInformationResponse response = actionGetCollectionInformation();
-        response.setEntityTypes(BratRenderer.buildEntityTypes(getModelObject().getProject(),
+        response.setEntityTypes(BratSerializerImpl.buildEntityTypes(getModelObject().getProject(),
                 getModelObject().getAnnotationLayers(), annotationService));
         String json = toJson(response);
 

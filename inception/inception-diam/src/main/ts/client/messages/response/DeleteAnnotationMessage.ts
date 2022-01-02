@@ -23,7 +23,8 @@
  *
  * Attributes:
  * @annotationId: ID of the annotation that was deleted
- **/
+ * @deprecated 
+ */
 export class DeleteAnnotationMessage
 {
     annotationId: number;

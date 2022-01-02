@@ -24,7 +24,8 @@
  * Attributes:
  * @name: String representation of the features names
  * @value: Value of the feature. Can be of various types (any)
- **/
+ * @deprecated 
+ */
 export class FeatureX
 {
     name : string;

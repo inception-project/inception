@@ -32,8 +32,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
@@ -77,23 +77,20 @@ public class RecommendationSpanRenderer
      * Add annotations from the CAS, which is controlled by the window size, to the VDocument
      * {@link VDocument}
      *
-     * @param aCas
-     *            The CAS object containing annotations
      * @param vdoc
      *            A VDocument containing annotations for the given layer
-     * @param aState
-     *            Data model for brat annotations
      */
     @Override
-    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public void render(VDocument vdoc, RenderRequest aRequest)
     {
-        if (aCas == null || recommendationService == null) {
+        CAS cas = aRequest.getCas();
+
+        if (cas == null || recommendationService == null) {
             return;
         }
 
-        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
-                aState.getProject());
+        Predictions predictions = recommendationService.getPredictions(aRequest.getAnnotationUser(),
+                aRequest.getProject());
         // No recommendations available at all
         if (predictions == null) {
             return;
@@ -102,11 +99,11 @@ public class RecommendationSpanRenderer
         AnnotationLayer layer = typeAdapter.getLayer();
 
         // TODO #176 use the document Id once it it available in the CAS
-        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
-                .orElse(getDocumentTitle(aCas));
+        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
+                .orElse(getDocumentTitle(cas));
         SuggestionDocumentGroup<SpanSuggestion> groups = predictions.getGroupedPredictions(
-                SpanSuggestion.class, sourceDocumentName, layer, aWindowBeginOffset,
-                aWindowEndOffset);
+                SpanSuggestion.class, sourceDocumentName, layer, aRequest.getWindowBeginOffset(),
+                aRequest.getWindowEndOffset());
 
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
@@ -115,11 +112,11 @@ public class RecommendationSpanRenderer
 
         String bratTypeName = typeAdapter.getEncodedTypeName();
 
-        recommendationService.calculateSpanSuggestionVisibility(aCas,
-                aState.getUser().getUsername(), layer, groups, aWindowBeginOffset,
-                aWindowEndOffset);
+        recommendationService.calculateSpanSuggestionVisibility(cas,
+                aRequest.getAnnotationUser().getUsername(), layer, groups,
+                aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
-        Preferences pref = recommendationService.getPreferences(aState.getUser(),
+        Preferences pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
                 layer.getProject());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
@@ -130,8 +127,8 @@ public class RecommendationSpanRenderer
         for (SuggestionGroup<SpanSuggestion> suggestionGroup : groups) {
             // Render annotations for each label
             for (SpanSuggestion ao : suggestionGroup.bestSuggestions(pref)) {
-                Optional<VRange> range = VRange.clippedRange(aWindowBeginOffset, aWindowEndOffset,
-                        ao.getBegin(), ao.getEnd());
+                Optional<VRange> range = VRange.clippedRange(aRequest.getWindowBeginOffset(),
+                        aRequest.getWindowEndOffset(), ao.getBegin(), ao.getEnd());
 
                 if (!range.isPresent()) {
                     continue;
