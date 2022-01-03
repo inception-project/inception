@@ -378,11 +378,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-diam-word-alignment-editor</artifactId>
-        <version>23.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-workload</artifactId>
         <version>23.0-SNAPSHOT</version>
       </dependency>
@@ -1837,14 +1832,13 @@
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
     <module>inception-brat-editor</module>
+    <module>inception-diam</module>
+    <module>inception-diam-editor</module>
     <module>inception-external-editor</module>
     <module>inception-html-editor</module>
     <module>inception-html-recogito-editor</module>
     <module>inception-pdf-editor</module>
     <module>inception-review-editor</module>
-    <module>inception-diam</module>
-    <module>inception-diam-editor</module>
-    <module>inception-diam-word-alignment-editor</module>
     <!-- Schema extensions -->
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
