@@ -55,6 +55,7 @@
   },
   "dependencies": {
     "anno-ui": "github:paperai/anno-ui#master",
+    "esbuild-loader": "^2.18.0",
     "gulp-htmlmin": "^4.0.0",
     "pako": "^1.0.6",
     "request": "^2.81.0",

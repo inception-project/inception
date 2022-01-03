@@ -20,13 +20,17 @@ module.exports = (env, argv) => {
       libraryTarget: 'umd'
     },
     module: {
-      rules: [{
+      rules: [
+        {
         test: /\.js$/,
-        loader: 'eslint-loader',
-        enforce: 'pre',
+        loader: 'esbuild-loader',
         include: [path.join(__dirname, 'src')],
-        exclude: /node_modules/
-      }, {
+        exclude: /node_modules/,
+          options: {
+            target: 'es2015'
+        }
+      },
+        {
         test: /\.css$/,
         use: [
           {
