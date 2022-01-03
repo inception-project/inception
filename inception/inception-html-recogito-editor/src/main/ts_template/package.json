@@ -7,8 +7,8 @@
     "Annotation"
   ],
   "scripts": {
-    "build:recogito": "npm bin esbuild recogito.ts --target=es6 --bundle --sourcemap --global-name=recogito --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/recogito.js",
-    "build:recogito-minified": "npm bin esbuild recogito.ts --target=es6 --bundle --sourcemap --global-name=recogito --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/recogito.min.js"
+    "build:recogito": "./node_modules/esbuild/bin/esbuild recogito.ts --target=es6 --bundle --sourcemap --global-name=recogito --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/recogito.js",
+    "build:recogito-minified": "./node_modules/esbuild/bin/esbuild recogito.ts --target=es6 --bundle --sourcemap --global-name=recogito --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/recogito.min.js"
   },
   "external": {},
   "devDependencies": {

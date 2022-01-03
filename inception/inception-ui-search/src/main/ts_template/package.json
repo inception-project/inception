@@ -4,8 +4,8 @@
   "description": "INCEpTION Annotation Sidebar",
   "keywords": [],
   "scripts": {
-    "build": "npm bin sass scss/SearchAnnotationSidebar.scss ../../../target/js/de/tudarmstadt/ukp/inception/app/ui/search/sidebar/SearchAnnotationSidebar.css",
-    "build:minified": "npm bin sass scss/SearchAnnotationSidebar.scss ../../../target/js/de/tudarmstadt/ukp/inception/app/ui/search/sidebar/SearchAnnotationSidebar.min.css --style compressed"
+    "build": "./node_modules/.bin/sass scss/SearchAnnotationSidebar.scss ../../../target/js/de/tudarmstadt/ukp/inception/app/ui/search/sidebar/SearchAnnotationSidebar.css",
+    "build:minified": "./node_modules/.bin/sass scss/SearchAnnotationSidebar.scss ../../../target/js/de/tudarmstadt/ukp/inception/app/ui/search/sidebar/SearchAnnotationSidebar.min.css --style compressed"
   },
   "external": {},
   "devDependencies": {

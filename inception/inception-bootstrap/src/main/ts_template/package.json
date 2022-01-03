@@ -4,8 +4,8 @@
   "description": "INCEpTION customized Bootstrap",
   "keywords": [],
   "scripts": {
-    "build": "npm bin sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.css",
-    "build:minified": "npm bin sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.min.css --style compressed"
+    "build": "./node_modules/.bin/sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.css",
+    "build:minified": "./node_modules/.bin/sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.min.css --style compressed"
   },
   "external": {},
   "devDependencies": {
