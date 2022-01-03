@@ -8,12 +8,12 @@
     "brat"
   ],
   "scripts": {
-    "build:brat": "npm bin esbuild brat/brat.ts --target=esnext --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.js",
-    "build:brat-minified": "npm bin esbuild brat/brat.ts --target=esnext --minify --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.js",
-    "build:brat-curation": "npm bin esbuild brat/brat_curation.ts --target=esnext --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.js",
-    "build:brat-curation-minified": "npm bin esbuild brat/brat_curation.ts --target=esnext --minify --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.min.js",
-    "build:brat-css": "npm bin sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.css",
-    "build:brat-css-minified": "npm bin sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.css --style compressed"
+    "build:brat": "esbuild brat/brat.ts --target=esnext --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.js",
+    "build:brat-minified": "esbuild brat/brat.ts --target=esnext --minify --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.js",
+    "build:brat-curation": "esbuild brat/brat_curation.ts --target=esnext --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.js",
+    "build:brat-curation-minified": "esbuild brat/brat_curation.ts --target=esnext --minify --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.min.js",
+    "build:brat-css": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.css",
+    "build:brat-css-minified": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.css --style compressed"
   },
   "external": {},
   "devDependencies": {
