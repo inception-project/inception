@@ -2,8 +2,8 @@
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
   "scripts": {
-    "build:recogito": "npm bin esbuild index.ts --target=es6 --bundle --sourcemap --global-name=RecogitoEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.js",
-    "build:recogito-minified": "npm bin esbuild index.ts --minify --target=es6 --bundle --sourcemap --global-name=RecogitoEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.min.js"
+    "build:recogito": "esbuild index.ts --target=es6 --bundle --sourcemap --global-name=RecogitoEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.js",
+    "build:recogito-minified": "esbuild index.ts --minify --target=es6 --bundle --sourcemap --global-name=RecogitoEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.min.js"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",
