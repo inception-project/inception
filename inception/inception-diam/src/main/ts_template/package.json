@@ -7,7 +7,7 @@
     "Annotation"
   ],
   "scripts": {
-    "build": "./node_modules/esbuild/bin/esbuild client/AnnotationEditing.ts --target=es6 --bundle --sourcemap --global-name=AnnotationEditing --outfile=../../../target/js/de/tudarmstadt/ukp/inception/diam/editor/AnnotationEditing.js"
+    "build": "npm bin esbuild client/AnnotationEditing.ts --target=es6 --bundle --sourcemap --global-name=AnnotationEditing --outfile=../../../target/js/de/tudarmstadt/ukp/inception/diam/editor/AnnotationEditing.js"
   },
   "external": {},
   "devDependencies": {
