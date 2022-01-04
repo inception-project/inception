@@ -42,14 +42,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.LazyDetail;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.LazyDetailsResponse;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#lazyDetailsLookupService}.
+ * {@link DiamAutoConfig#lazyDetailsLookupService}.
  * </p>
  */
 public class LazyDetailsLookupServiceImpl

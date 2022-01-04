@@ -15,12 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
+package de.tudarmstadt.ukp.clarin.webanno.brat.schema.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializerImpl.abbreviate;
 import static java.util.Arrays.asList;
 
 import java.util.List;
+
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 
 /**
  * Type of an arc. Defines properties such as color, possible targets, etc. Example:

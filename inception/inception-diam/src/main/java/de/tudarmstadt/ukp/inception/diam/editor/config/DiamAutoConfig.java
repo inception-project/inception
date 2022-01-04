@@ -45,10 +45,11 @@ import de.tudarmstadt.ukp.inception.diam.editor.actions.LoadAnnotationsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupServiceImpl;
+import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializer;
+import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
 
-// @ConditionalOnProperty(name = "diam.enabled", havingValue = "true", matchIfMissing = false)
 @Configuration
-public class DiamEditorAutoConfig
+public class DiamAutoConfig
 {
     @Bean
     public EditorAjaxRequestHandlerExtensionPoint editorAjaxRequestHandlerExtensionPoint(
@@ -128,5 +129,11 @@ public class DiamEditorAutoConfig
             VDocumentSerializerExtensionPoint aVDocumentSerializerExtensionPoint)
     {
         return new LoadAnnotationsHandler(aRenderingPipeline, aVDocumentSerializerExtensionPoint);
+    }
+
+    @Bean
+    public CompactSerializer compactSerializer()
+    {
+        return new CompactSerializerImpl();
     }
 }

@@ -82,9 +82,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
@@ -109,6 +109,7 @@ public class BratAnnotationEditor
     private @SpringBean BratAnnotationEditorProperties bratProperties;
     private @SpringBean EditorAjaxRequestHandlerExtensionPoint handlers;
     private @SpringBean BratSerializer bratSerializer;
+    private @SpringBean BratSchemaGenerator bratSchemaGenerator;
 
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
@@ -262,8 +263,8 @@ public class BratAnnotationEditor
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
         if (getModelObject().getProject() != null) {
-            info.setEntityTypes(BratSerializerImpl.buildEntityTypes(getModelObject().getProject(),
-                    getModelObject().getAnnotationLayers(), annotationService));
+            info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(getModelObject().getProject(),
+                    getModelObject().getAnnotationLayers()));
             info.getVisualOptions()
                     .setArcBundle(getModelObject().getPreferences().isCollapseArcs()
                             ? VisualOptions.ARC_BUNDLE_ALL
@@ -456,8 +457,8 @@ public class BratAnnotationEditor
         LOG.trace("[{}][{}] bratLoadCollectionCommand", getMarkupId(), vis.getMarkupId());
 
         GetCollectionInformationResponse response = actionGetCollectionInformation();
-        response.setEntityTypes(BratSerializerImpl.buildEntityTypes(getModelObject().getProject(),
-                getModelObject().getAnnotationLayers(), annotationService));
+        response.setEntityTypes(bratSchemaGenerator.buildEntityTypes(getModelObject().getProject(),
+                getModelObject().getAnnotationLayers()));
         String json = toJson(response);
 
         StringBuilder js = new StringBuilder();

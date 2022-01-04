@@ -939,8 +939,8 @@
         <artifactId>rhino-runtime</artifactId>
         <version>1.7.12</version>
       </dependency>
-      
-      
+
+
       <dependency>
         <groupId>org.webjars.npm</groupId>
         <artifactId>axios</artifactId>
@@ -1012,6 +1012,11 @@
         <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
         <artifactId>owasp-java-html-sanitizer</artifactId>
         <version>20211018.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.owasp.antisamy</groupId>
+        <artifactId>antisamy</artifactId>
+        <version>1.6.4</version>
       </dependency>
 
       <dependency>
