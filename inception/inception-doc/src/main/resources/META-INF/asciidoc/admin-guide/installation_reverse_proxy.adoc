@@ -15,7 +15,7 @@
 // limitations under the License.
 = Running the behind a reverse proxy (JAR)
 
-These are *optional* instructions if you want to run {product-name} behind an Apache or Nginx web-server instead of accessing it directly.
+These are *optional* instructions if you want to run {product-name} behind an Apache HTTPD or Nginx web-server instead of accessing it directly.
 
 These guides assumes Debian 9.1 (Stretch) as the operating system.
 For the optional SSL configuration, it further assumes that you want to use link:https://letsencrypt.org/[Let's Encrypt] as a CA for obtaining valid SSL certificates.
@@ -53,19 +53,9 @@ If this is the case, then CSRF protection is kicking in.
 Check that the following lines are in your `settings.properties` file (see <<admin-guide.adoc#sect_settings>>, replace the server name and URL with your own):
 
 ----
-wicket.core.csrf.error-message=Origin does not quite correspond to request
 wicket.core.csrf.accepted-origins[0]=inception.example.com
 wicket.core.csrf.accepted-origins[1]=https://inception.example.com
 ----
 
-Alternatively, you can try to disable CSRF completely:
-
-----
-wicket.core.csrf.enabled=false
-wicket.core.csrf.no-origin-action=allow
-wicket.core.csrf.conflicting-origin-action=allow
-----
-
-NOTE: **Turning off a security feature is obviously not a great solution.** Better check out the documentation for the link:https://github.com/MarcGiffing/wicket-spring-boot/blob/master/README.adoc#core---prevention-of-csrf-attacks[Wicket Spring Boot CSRF settings] and if you figure out a better solution than the above, please get in touch with use via our
-link:https://github.com/inception-project/inception/issues[issue tracker].
+NOTE: You could disable CSRF completely, but this is obivously not the recommended approach. To disable CSRF, add `wicket.core.csrf.enabled=false` to the `settings.properties` file.
 
