@@ -51,5 +51,10 @@ instances.
 | enable/disable guest annotators
 | false
 | true
+
+| sharing.invites.invite-base-url
+| base URL used to generate invite links, e.g. when running behind a reverse proxy
+| _unset_
+| https://public.mydomain.com/inception
 |===
 
