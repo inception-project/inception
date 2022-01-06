@@ -327,9 +327,14 @@ public class InviteServiceImpl
             while (url.charAt(url.length() - 1) == '/') {
                 url.setLength(url.length() - 1);
             }
+
+            Project project = aInvite.getProject();
+            String projectSegment = project.getSlug() != null ? project.getSlug()
+                    : String.valueOf(project.getId());
+
             url.append(NS_PROJECT);
             url.append("/");
-            url.append(aInvite.getProject().getId());
+            url.append(projectSegment);
             url.append("/");
             url.append("join-project");
             url.append("/");
