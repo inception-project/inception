@@ -27,6 +27,7 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LambdaModel;
@@ -37,6 +38,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameMod
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -114,7 +116,8 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     /**
      * This method represents the opening dialog upon clicking "Finish" for the current document.
      */
-    private void actionFinishDocument(AjaxRequestTarget aTarget) throws IOException
+    private void actionFinishDocument(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
     {
         WorkloadManager manager = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(getModelObject().getProject());
@@ -125,19 +128,22 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                     .setConfirmAction(_target -> this.actionFinishDocumentConfirmed(_target));
         }
         else {
-            this.actionFinishDocumentConfirmed(aTarget);
+            actionFinishDocumentConfirmed(aTarget);
         }
 
         finishDocumentDialog.show(aTarget);
     }
 
-    private void actionFinishDocumentConfirmed(AjaxRequestTarget aTarget) throws IOException
+    private void actionFinishDocumentConfirmed(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
     {
         try {
             page.actionValidateDocument(aTarget, page.getEditorCas());
         }
         catch (ValidationException e) {
-            page.getSession().error("Document cannot be marked as finished: " + e.getMessage());
+            page.error("Document cannot be marked as finished: " + e.getMessage());
+            aTarget.addChildren(page, IFeedback.class);
+            return;
         }
 
         AnnotatorState state = getModelObject();

@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateCha
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -112,7 +113,9 @@ public class AnnotatorWorkflowActionBarItemGroup
                 page.actionValidateDocument(_target, page.getEditorCas());
             }
             catch (ValidationException e) {
-                page.getSession().error("Document cannot be marked as finished: " + e.getMessage());
+                page.error("Document cannot be marked as finished: " + e.getMessage());
+                _target.addChildren(page, IFeedback.class);
+                return;
             }
 
             AnnotatorState state = page.getModelObject();

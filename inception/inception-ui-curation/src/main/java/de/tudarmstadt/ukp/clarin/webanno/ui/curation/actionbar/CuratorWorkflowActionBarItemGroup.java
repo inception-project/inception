@@ -127,7 +127,9 @@ public class CuratorWorkflowActionBarItemGroup
                 page.actionValidateDocument(_target, page.getEditorCas());
             }
             catch (ValidationException e) {
-                page.getSession().error("Document cannot be marked as finished: " + e.getMessage());
+                page.error("Document cannot be marked as finished: " + e.getMessage());
+                _target.addChildren(page, IFeedback.class);
+                return;
             }
 
             AnnotatorState state = page.getModelObject();
