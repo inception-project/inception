@@ -123,6 +123,15 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
                 .loadOrCreateWorkloadManagerConfiguration(getModelObject().getProject());
         DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(manager);
 
+        try {
+            page.actionValidateDocument(aTarget, page.getEditorCas());
+        }
+        catch (ValidationException e) {
+            page.error("Document cannot be marked as finished: " + e.getMessage());
+            aTarget.addChildren(page, IFeedback.class);
+            return;
+        }
+
         if (traits.isConfirmFinishingDocuments()) {
             finishDocumentDialog
                     .setConfirmAction(_target -> this.actionFinishDocumentConfirmed(_target));
@@ -137,15 +146,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private void actionFinishDocumentConfirmed(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        try {
-            page.actionValidateDocument(aTarget, page.getEditorCas());
-        }
-        catch (ValidationException e) {
-            page.error("Document cannot be marked as finished: " + e.getMessage());
-            aTarget.addChildren(page, IFeedback.class);
-            return;
-        }
-
         AnnotatorState state = getModelObject();
         User user = state.getUser();
         Project project = state.getProject();
