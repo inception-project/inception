@@ -17,27 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
 
-public class AnnotationException
+public class ValidationException
     extends Exception
 {
     private static final long serialVersionUID = 1280015349963924638L;
 
-    public AnnotationException()
+    public ValidationException()
     {
         super();
     }
 
-    public AnnotationException(String message)
+    public ValidationException(String message)
     {
         super(message);
     }
 
-    public AnnotationException(String aMessage, Throwable aCause)
+    public ValidationException(String aMessage, Throwable aCause)
     {
         super(aMessage, aCause);
     }
 
-    public AnnotationException(Throwable aCause)
+    public ValidationException(Throwable aCause)
     {
         super(aCause);
     }

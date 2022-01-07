@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.websocket.config;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
@@ -34,6 +35,7 @@ import de.tudarmstadt.ukp.inception.websocket.footer.LoggedEventFooterItem;
 @EnableWebSocketMessageBroker
 @AutoConfigureAfter(EventLoggingAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
+@EnableConfigurationProperties(CsrfAttacksPreventionProperties.class)
 public class WebsocketAutoConfiguration
 {
     @ConditionalOnBean(LoggedEventMessageController.class)
