@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -298,6 +299,7 @@ public abstract class AnnotationPageBase
      */
     protected void validateRequiredFeatures(AjaxRequestTarget aTarget, CAS aCas,
             TypeAdapter aAdapter)
+        throws ValidationException
     {
         AnnotatorState state = getModelObject();
 
@@ -328,17 +330,16 @@ public abstract class AnnotationPageBase
                     }
 
                     // Inform the user
-                    throw new IllegalStateException(
-                            "Document cannot be marked as finished. Annotation with ID ["
-                                    + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
-                                    + layer.getUiName() + "] is missing value for feature ["
-                                    + f.getUiName() + "].");
+                    throw new ValidationException("Annotation with ID ["
+                            + WebAnnoCasUtil.getAddr(fs) + "] on layer [" + layer.getUiName()
+                            + "] is missing value for feature [" + f.getUiName() + "].");
                 }
             }
         }
     }
 
     public void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
+        throws ValidationException
     {
         AnnotatorState state = getModelObject();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
@@ -369,10 +370,9 @@ public abstract class AnnotationPageBase
                 actionRefreshDocument(aTarget);
 
                 // Inform the user
-                throw new IllegalStateException(
-                        "Document cannot be marked as finished. Annotation with ID ["
-                                + WebAnnoCasUtil.getAddr(fs) + "] on layer [" + layer.getUiName()
-                                + "] is invalid: " + message.getMessage());
+                throw new ValidationException(
+                        "Annotation with ID [" + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
+                                + layer.getUiName() + "] is invalid: " + message.getMessage());
             }
         }
     }

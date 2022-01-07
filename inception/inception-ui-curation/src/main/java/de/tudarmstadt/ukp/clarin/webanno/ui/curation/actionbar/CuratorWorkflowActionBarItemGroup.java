@@ -36,6 +36,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -122,7 +123,12 @@ public class CuratorWorkflowActionBarItemGroup
     protected void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((_target) -> {
-            page.actionValidateDocument(_target, page.getEditorCas());
+            try {
+                page.actionValidateDocument(_target, page.getEditorCas());
+            }
+            catch (ValidationException e) {
+                page.getSession().error("Document cannot be marked as finished: " + e.getMessage());
+            }
 
             AnnotatorState state = page.getModelObject();
             SourceDocument sourceDocument = state.getDocument();

@@ -37,6 +37,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameMod
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -132,7 +133,12 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
 
     private void actionFinishDocumentConfirmed(AjaxRequestTarget aTarget) throws IOException
     {
-        page.actionValidateDocument(aTarget, page.getEditorCas());
+        try {
+            page.actionValidateDocument(aTarget, page.getEditorCas());
+        }
+        catch (ValidationException e) {
+            page.getSession().error("Document cannot be marked as finished: " + e.getMessage());
+        }
 
         AnnotatorState state = getModelObject();
         User user = state.getUser();
