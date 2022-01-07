@@ -246,6 +246,12 @@ public class AnnotatorJsHtmlAnnotationEditor
                 }
 
                 CAS cas = getCasProvider().get();
+
+                // Well, this shoulnd't really happen but it seems AnnotatorJS may at times return
+                // a too-large span when selecting at the end of the document (probably selection
+                // overflowing into other parts of the HTML document - so we snap it here.
+                end = Math.min(end, cas.getDocumentText().length());
+
                 AnnotatorState state = getModelObject();
                 if (state.isSlotArmed()) {
                     // When filling a slot, the current selection is *NOT* changed. The
