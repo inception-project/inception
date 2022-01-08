@@ -30,12 +30,11 @@ import de.tudarmstadt.ukp.inception.diam.model.Offsets;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "vid", "type", "offsets", "attributes" })
+@JsonPropertyOrder(value = { "vid", "offsets", "attributes" })
 public class CompactSpan
     implements CompactAnnotation
 {
     private VID vid;
-    private String type;
     private List<Offsets> offsets = new ArrayList<>();
     private CompactSpanAttributes attributes = new CompactSpanAttributes();
 
@@ -44,16 +43,14 @@ public class CompactSpan
         // Nothing to do
     }
 
-    public CompactSpan(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor)
+    public CompactSpan(VID aVid, Offsets aOffsets, String aLabelText, String aColor)
     {
-        this(aVid, aType, asList(aOffsets), aLabelText, aColor);
+        this(aVid, asList(aOffsets), aLabelText, aColor);
     }
 
-    public CompactSpan(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText,
-            String aColor)
+    public CompactSpan(VID aVid, List<Offsets> aOffsets, String aLabelText, String aColor)
     {
         vid = aVid;
-        type = aType;
         offsets = aOffsets;
         attributes.setLabelText(aLabelText);
         attributes.setColor(aColor);
@@ -68,17 +65,6 @@ public class CompactSpan
     public void setVid(VID aVid)
     {
         vid = aVid;
-    }
-
-    @Override
-    public String getType()
-    {
-        return type;
-    }
-
-    public void setType(String aType)
-    {
-        type = aType;
     }
 
     public List<Offsets> getOffsets()

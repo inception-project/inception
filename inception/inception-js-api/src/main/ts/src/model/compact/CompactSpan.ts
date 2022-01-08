@@ -20,7 +20,6 @@ import { CompactSpanAttributes } from "./CompactSpanAttributes";
 
 export type CompactSpan = [
   vid: VID,
-  type: string,
   offsets: Array<Offsets>,
   attributes?: CompactSpanAttributes
 ]

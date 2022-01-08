@@ -22,6 +22,4 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public interface CompactAnnotation
 {
     VID getVid();
-
-    String getType();
 }

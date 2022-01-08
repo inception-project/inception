@@ -21,7 +21,6 @@ import { CompactRelationAttributes } from "./CompactRelationAttributes";
 
 export type CompactRelation = [
   vid: VID,
-  type: string,
   arguments: Array<CompactArgument>,
   attributes?: CompactRelationAttributes
 ]

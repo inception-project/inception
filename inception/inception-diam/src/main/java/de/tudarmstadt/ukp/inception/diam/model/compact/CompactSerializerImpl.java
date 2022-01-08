@@ -76,8 +76,8 @@ public class CompactSerializerImpl
                         .map(range -> new Offsets(range.getBegin(), range.getEnd()))
                         .collect(toList());
 
-                CompactSpan entity = new CompactSpan(vspan.getVid(), vspan.getType(), offsets,
-                        vspan.getLabelHint(), vspan.getColorHint());
+                CompactSpan entity = new CompactSpan(vspan.getVid(), offsets, vspan.getLabelHint(),
+                        vspan.getColorHint());
                 entity.getAttributes()
                         .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
                 entity.getAttributes().setClippedAtEnd(
@@ -87,7 +87,7 @@ public class CompactSerializerImpl
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                CompactRelation arc = new CompactRelation(varc.getVid(), varc.getType(),
+                CompactRelation arc = new CompactRelation(varc.getVid(),
                         getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                         varc.getColorHint());
                 aResponse.addRelation(arc);

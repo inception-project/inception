@@ -26,17 +26,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
-/**
- * A relation between span annotations -&gt; an arc annotation. Example
- * "relations":[["d_48420","SUBJ",[["Arg1","p_21346"],["Arg2","p_21341"]]],...
- */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "vid", "type", "arguments", "labelText", "color" })
+@JsonPropertyOrder(value = { "vid", "arguments", "attributes" })
 public class CompactRelation
     implements CompactAnnotation
 {
     private VID vid;
-    private String type;
 
     /**
      * The initial/destination span annotations as shown in the example above
@@ -50,17 +45,16 @@ public class CompactRelation
         // Nothing to do
     }
 
-    public CompactRelation(int aId, String aType, List<CompactArgument> aArguments,
-            String aLabelText, String aColor)
+    public CompactRelation(int aId, List<CompactArgument> aArguments, String aLabelText,
+            String aColor)
     {
-        this(new VID(aId), aType, aArguments, aLabelText, aColor);
+        this(new VID(aId), aArguments, aLabelText, aColor);
     }
 
-    public CompactRelation(VID aVid, String aType, List<CompactArgument> aArguments,
-            String aLabelText, String aColor)
+    public CompactRelation(VID aVid, List<CompactArgument> aArguments, String aLabelText,
+            String aColor)
     {
         vid = aVid;
-        type = aType;
         arguments = aArguments;
         attributes.setLabelText(aLabelText);
         attributes.setColor(aColor);
@@ -75,17 +69,6 @@ public class CompactRelation
     public void setVid(VID aVid)
     {
         vid = aVid;
-    }
-
-    @Override
-    public String getType()
-    {
-        return type;
-    }
-
-    public void setType(String aType)
-    {
-        type = aType;
     }
 
     public List<CompactArgument> getArguments()
