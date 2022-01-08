@@ -28,15 +28,12 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.Offsets;
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
@@ -57,9 +54,9 @@ public class CompactSerializerImpl
     }
 
     @Override
-    public AnnotatedDocument render(VDocument aVDoc, RenderRequest aRequest)
+    public CompactAnnotatedText render(VDocument aVDoc, RenderRequest aRequest)
     {
-        AnnotatedDocument aResponse = new AnnotatedDocument();
+        CompactAnnotatedText aResponse = new CompactAnnotatedText();
 
         CAS aCas = aRequest.getCas();
 
@@ -67,14 +64,11 @@ public class CompactSerializerImpl
 
         renderLayers(aResponse, aVDoc, aRequest);
 
-        renderComments(aResponse, aVDoc, aRequest);
-
-        renderMarkers(aResponse, aVDoc);
-
         return aResponse;
     }
 
-    private void renderLayers(AnnotatedDocument aResponse, VDocument aVDoc, RenderRequest aRequest)
+    private void renderLayers(CompactAnnotatedText aResponse, VDocument aVDoc,
+            RenderRequest aRequest)
     {
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
@@ -82,57 +76,21 @@ public class CompactSerializerImpl
                         .map(range -> new Offsets(range.getBegin(), range.getEnd()))
                         .collect(toList());
 
-                Span entity = new Span(vspan.getVid(), vspan.getType(), offsets,
+                CompactSpan entity = new CompactSpan(vspan.getVid(), vspan.getType(), offsets,
                         vspan.getLabelHint(), vspan.getColorHint());
                 entity.getAttributes()
                         .setClippedAtStart(vspan.getRanges().get(0).isClippedAtBegin());
                 entity.getAttributes().setClippedAtEnd(
                         vspan.getRanges().get(vspan.getRanges().size() - 1).isClippedAtEnd());
 
-                aResponse.addEntity(entity);
-
-                vspan.getLazyDetails().stream()
-                        .map(d -> new LazyDetailQuery(vspan.getVid(), d.getFeature(), d.getQuery()))
-                        .forEach(aResponse::addNormalization);
+                aResponse.addSpan(entity);
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
-                Relation arc = new Relation(varc.getVid(), varc.getType(),
+                CompactRelation arc = new CompactRelation(varc.getVid(), varc.getType(),
                         getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                         varc.getColorHint());
                 aResponse.addRelation(arc);
-
-                varc.getLazyDetails().stream()
-                        .map(d -> new LazyDetailQuery(varc.getVid(), d.getFeature(), d.getQuery()))
-                        .forEach(aResponse::addNormalization);
-            }
-        }
-    }
-
-    private void renderComments(AnnotatedDocument aResponse, VDocument aVDoc,
-            RenderRequest aRequest)
-    {
-        for (VComment vcomment : aVDoc.comments()) {
-            aResponse.addComment(new AnnotationComment(vcomment.getVid(),
-                    vcomment.getCommentType().toString(), vcomment.getComment()));
-        }
-    }
-
-    private void renderMarkers(AnnotatedDocument aResponse, VDocument aVDoc)
-    {
-        // Render markers
-        for (VMarker vmarker : aVDoc.getMarkers()) {
-            if (vmarker instanceof VAnnotationMarker) {
-                VAnnotationMarker marker = (VAnnotationMarker) vmarker;
-                aResponse.addMarker(new AnnotationMarker(vmarker.getType(), marker.getVid()));
-            }
-            else if (vmarker instanceof VTextMarker) {
-                VTextMarker marker = (VTextMarker) vmarker;
-                aResponse.addMarker(
-                        new TextMarker(marker.getType(), marker.getBegin(), marker.getEnd()));
-            }
-            else {
-                LOG.warn("Unknown how to render marker: [" + vmarker + "]");
             }
         }
     }
@@ -140,12 +98,13 @@ public class CompactSerializerImpl
     /**
      * Argument lists for the arc annotation
      */
-    private List<Argument> getArgument(VID aGovernorFs, VID aDependentFs)
+    private List<CompactArgument> getArgument(VID aGovernorFs, VID aDependentFs)
     {
-        return asList(new Argument("Arg1", aGovernorFs), new Argument("Arg2", aDependentFs));
+        return asList(new CompactArgument("Arg1", aGovernorFs),
+                new CompactArgument("Arg2", aDependentFs));
     }
 
-    private void renderText(CAS aCas, AnnotatedDocument aResponse, RenderRequest aRequest)
+    private void renderText(CAS aCas, CompactAnnotatedText aResponse, RenderRequest aRequest)
     {
         int windowBegin = aRequest.getWindowBeginOffset();
         int windowEnd = aRequest.getWindowEndOffset();

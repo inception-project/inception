@@ -24,54 +24,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * This is not part of the original brat data model.
- */
 @JsonInclude(Include.NON_DEFAULT)
-public class SpanAttributes
+public class CompactSpanAttributes
+    extends CompactAnnotationAttributes
 {
     public static final String VALUE_CLIPPED_AT_START = "s";
     public static final String VALUE_CLIPPED_AT_END = "e";
 
-    public static final String ATTR_LABEL = "l";
-    public static final String ATTR_COLOR = "c";
-    public static final String ATTR_HOVER_TEXT = "h";
     public static final String ATTR_CLIPPED = "cl";
 
-    private @JsonProperty(ATTR_LABEL) String labelText;
-    private @JsonProperty(ATTR_COLOR) String color;
-    private @JsonProperty(ATTR_HOVER_TEXT) String hoverText;
     private @JsonProperty(ATTR_CLIPPED) String clipped;
-
-    public void setLabelText(String aLabelText)
-    {
-        labelText = aLabelText;
-    }
-
-    public String getLabelText()
-    {
-        return labelText;
-    }
-
-    public String getColor()
-    {
-        return color;
-    }
-
-    public void setColor(String aColor)
-    {
-        color = aColor;
-    }
-
-    public void setHoverText(String aHovertext)
-    {
-        hoverText = aHovertext;
-    }
-
-    public String getHoverText()
-    {
-        return hoverText;
-    }
 
     public void setClippedAtStart(boolean aFlag)
     {

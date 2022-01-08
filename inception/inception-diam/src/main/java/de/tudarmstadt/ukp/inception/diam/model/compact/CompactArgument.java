@@ -24,60 +24,36 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 /**
- * Use this "comments" to highlight "yield" of relation nodes
+ * The Arguments used during arc annotation in the form of [["Arg1","p_21346"],["Arg2","p_21341"]]
+ * to denote a given arc annotation such as dependency parsing and coreference resolution
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "vid", "commentType", "comment" })
-public class AnnotationComment
+@JsonPropertyOrder(value = { "target", "label" })
+public class CompactArgument
 {
-    private VID vid;
-    private String commentType;
-    private String comment;
+    /**
+     * Argument label.
+     */
+    private final String label;
 
-    public AnnotationComment()
+    /**
+     * The target span annotation.
+     */
+    private final VID target;
+
+    public CompactArgument(String aLabel, VID aTarget)
     {
-        // Nothing to do
+        label = aLabel;
+        target = aTarget;
     }
 
-    public AnnotationComment(int aId, String aCommentType, String aComment)
+    public String getLabel()
     {
-        this(new VID(aId), aCommentType, aComment);
+        return label;
     }
 
-    public AnnotationComment(VID aVid, String aCommentType, String aComment)
+    public VID getTarget()
     {
-        vid = aVid;
-        commentType = aCommentType;
-        comment = aComment;
-    }
-
-    public VID getVid()
-    {
-        return vid;
-    }
-
-    public void setVid(VID aVid)
-    {
-        vid = aVid;
-    }
-
-    public String getCommentType()
-    {
-        return commentType;
-    }
-
-    public void setCommentType(String commentType)
-    {
-        this.commentType = commentType;
-    }
-
-    public String getComment()
-    {
-        return comment;
-    }
-
-    public void setComment(String comment)
-    {
-        this.comment = comment;
+        return target;
     }
 }

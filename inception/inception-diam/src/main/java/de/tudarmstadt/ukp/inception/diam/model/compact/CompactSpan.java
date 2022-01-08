@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model.compact;
 
+import static java.util.Arrays.asList;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,64 +26,40 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.diam.model.Offsets;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
-/**
- * A relation between span annotations -&gt; an arc annotation. Example
- * "relations":[["d_48420","SUBJ",[["Arg1","p_21346"],["Arg2","p_21341"]]],...
- */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "vid", "type", "arguments", "labelText", "color" })
-public class Relation
+@JsonPropertyOrder(value = { "vid", "type", "offsets", "attributes" })
+public class CompactSpan
+    implements CompactAnnotation
 {
     private VID vid;
-
-    /**
-     * The type of the relation between two spans
-     */
     private String type;
+    private List<Offsets> offsets = new ArrayList<>();
+    private CompactSpanAttributes attributes = new CompactSpanAttributes();
 
-    /**
-     * The initial/destination span annotations as shown in the example above
-     */
-    private List<Argument> arguments = new ArrayList<>();
-
-    private String labelText;
-    private String color;
-
-    public Relation()
+    public CompactSpan()
     {
         // Nothing to do
     }
 
-    public Relation(int aId, String aType, List<Argument> aArguments, String aLabelText,
-            String aColor)
+    public CompactSpan(VID aVid, String aType, Offsets aOffsets, String aLabelText, String aColor)
     {
-        this(new VID(aId), aType, aArguments, aLabelText, aColor);
+        this(aVid, aType, asList(aOffsets), aLabelText, aColor);
     }
 
-    public Relation(VID aVid, String aType, List<Argument> aArguments, String aLabelText,
+    public CompactSpan(VID aVid, String aType, List<Offsets> aOffsets, String aLabelText,
             String aColor)
     {
         vid = aVid;
         type = aType;
-        arguments = aArguments;
-        labelText = aLabelText;
-        color = aColor;
+        offsets = aOffsets;
+        attributes.setLabelText(aLabelText);
+        attributes.setColor(aColor);
     }
 
-    @Deprecated
-    public int getId()
-    {
-        return vid.getId();
-    }
-
-    @Deprecated
-    public void setId(int aId)
-    {
-        vid = new VID(aId);
-    }
-
+    @Override
     public VID getVid()
     {
         return vid;
@@ -92,6 +70,7 @@ public class Relation
         vid = aVid;
     }
 
+    @Override
     public String getType()
     {
         return type;
@@ -102,33 +81,23 @@ public class Relation
         type = aType;
     }
 
-    public List<Argument> getArguments()
+    public List<Offsets> getOffsets()
     {
-        return arguments;
+        return offsets;
     }
 
-    public void setArguments(List<Argument> aArguments)
+    public void setOffsets(List<Offsets> aOffsets)
     {
-        arguments = aArguments;
+        offsets = aOffsets;
     }
 
-    public void setLabelText(String aLabelText)
+    public CompactSpanAttributes getAttributes()
     {
-        labelText = aLabelText;
+        return attributes;
     }
 
-    public String getLabelText()
+    public void setAttributes(CompactSpanAttributes aAttributes)
     {
-        return labelText;
-    }
-
-    public String getColor()
-    {
-        return color;
-    }
-
-    public void setColor(String aColor)
-    {
-        color = aColor;
+        attributes = aAttributes;
     }
 }

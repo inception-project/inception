@@ -17,4 +17,5 @@
  */
 export * from "./src/diam";
 export * from "./src/editor";
-export * from "./src/model";
+export * from "./src/model"; 
+export * from "./src/model/compact";

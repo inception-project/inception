@@ -15,47 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.ajax;
+package de.tudarmstadt.ukp.inception.diam.model.compact;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
-
-/**
- * @deprecated Need to check if we want to keep this for DIAM
- */
-@Deprecated
-@JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "label", "value" })
-public class LazyDetail
+public class CompactAnnotationAttributes
 {
-    private String label;
-    private String value;
+    public static final String ATTR_LABEL = "l";
+    public static final String ATTR_COLOR = "c";
 
-    public LazyDetail(String aLabel, String aValue)
+    private @JsonProperty(ATTR_LABEL) String labelText;
+    private @JsonProperty(ATTR_COLOR) String color;
+
+    public void setLabelText(String aLabelText)
     {
-        label = aLabel;
-        value = aValue;
+        labelText = aLabelText;
     }
 
-    public String getLabel()
+    public String getLabelText()
     {
-        return label;
+        return labelText;
     }
 
-    public void setLabel(String aLabel)
+    public String getColor()
     {
-        label = aLabel;
+        return color;
     }
 
-    public String getValue()
+    public void setColor(String aColor)
     {
-        return value;
-    }
-
-    public void setValue(String aValue)
-    {
-        value = aValue;
+        color = aColor;
     }
 }

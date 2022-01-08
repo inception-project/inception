@@ -15,14 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact;
+package de.tudarmstadt.ukp.inception.diam.model;
 
-public interface Marker
+import java.util.ArrayList;
+
+/**
+ * List of {@link Offsets}. Required so Jackson knows the generic type of the list when converting
+ * an array of offsets from JSON to Java.
+ */
+public class OffsetsList
+    extends ArrayList<Offsets>
 {
-    public static final String EDITED = "edited";
-    public static final String FOCUS = "focus";
-    public static final String MATCH_FOCUS = "matchfocus";
-    public static final String MATCH = "match";
+    // See
+    // http://stackoverflow.com/questions/6173182/spring-json-convert-a-typed-collection-like-listmypojo
 
-    String getType();
+    private static final long serialVersionUID = 1441338116416225186L;
 }

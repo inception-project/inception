@@ -17,41 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model.compact;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-public class Annotation_ImplBase
+@JsonInclude(Include.NON_DEFAULT)
+public class CompactRelationAttributes
+    extends CompactAnnotationAttributes
 {
-    private VID vid;
-    private String type;
-
-    public Annotation_ImplBase()
-    {
-        // Nothing to do
-    }
-
-    public Annotation_ImplBase(VID aVid, String aType)
-    {
-        vid = aVid;
-        type = aType;
-    }
-
-    public VID getVid()
-    {
-        return vid;
-    }
-
-    public void setVid(VID aVid)
-    {
-        vid = aVid;
-    }
-
-    public String getType()
-    {
-        return type;
-    }
-
-    public void setType(String aType)
-    {
-        type = aType;
-    }
+    // No additional attributes (yet)
 }

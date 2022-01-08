@@ -15,36 +15,47 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.compact;
+package de.tudarmstadt.ukp.inception.diam.model.ajax;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
+/**
+ * @deprecated Need to check if we want to keep this for DIAM
+ */
+@Deprecated
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "vid", "type" })
-public class AnnotationMarker
-    implements Marker
+@JsonPropertyOrder(value = { "label", "value" })
+public class LazyDetailQuery
 {
-    private final VID vid;
-    private String type;
+    private String label;
+    private String value;
 
-    public AnnotationMarker(String aType, VID aVid)
+    public LazyDetailQuery(String aLabel, String aValue)
     {
-        vid = aVid;
-        type = aType;
+        label = aLabel;
+        value = aValue;
     }
 
-    public VID getVid()
+    public String getLabel()
     {
-        return vid;
+        return label;
     }
 
-    @Override
-    public String getType()
+    public void setLabel(String aLabel)
     {
-        return type;
+        label = aLabel;
+    }
+
+    public String getValue()
+    {
+        return value;
+    }
+
+    public void setValue(String aValue)
+    {
+        value = aValue;
     }
 }

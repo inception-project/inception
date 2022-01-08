@@ -32,24 +32,24 @@ import java.util.List;
 public class LazyDetailsResponse
     extends AjaxResponse
 {
-    private List<LazyDetail> results = new ArrayList<>();
+    private List<LazyDetailQuery> results = new ArrayList<>();
 
     public LazyDetailsResponse(String aAction)
     {
         super(aAction);
     }
 
-    public List<LazyDetail> getResults()
+    public List<LazyDetailQuery> getResults()
     {
         return results;
     }
 
-    public void setResults(List<LazyDetail> aResult)
+    public void setResults(List<LazyDetailQuery> aResult)
     {
         results = aResult;
     }
 
-    public void addResult(LazyDetail aResult)
+    public void addResult(LazyDetailQuery aResult)
     {
         results.add(aResult);
     }
