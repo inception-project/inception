@@ -15,42 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.ajax;
+package de.tudarmstadt.ukp.inception.diam.model.compact;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * Response for the {@code normData} command.
- * 
- * This is essentially present in brat, but there {@code results} would be a member of an array
- * called {@code value}. We simplified this a bit here and in {@code visualizer_ui.js}.
- * 
- * @deprecated Need to check if we want to keep this for DIAM
- */
-@Deprecated
-public class LazyDetailsResponse
-    extends AjaxResponse
+public class CompactAnnotationAttributes
 {
-    private List<LazyDetailQuery> results = new ArrayList<>();
+    public static final String ATTR_LABEL = "l";
+    public static final String ATTR_COLOR = "c";
 
-    public LazyDetailsResponse(String aAction)
+    private @JsonProperty(ATTR_LABEL) String labelText;
+    private @JsonProperty(ATTR_COLOR) String color;
+
+    public void setLabelText(String aLabelText)
     {
-        super(aAction);
+        labelText = aLabelText;
     }
 
-    public List<LazyDetailQuery> getResults()
+    public String getLabelText()
     {
-        return results;
+        return labelText;
     }
 
-    public void setResults(List<LazyDetailQuery> aResult)
+    public String getColor()
     {
-        results = aResult;
+        return color;
     }
 
-    public void addResult(LazyDetailQuery aResult)
+    public void setColor(String aColor)
     {
-        results.add(aResult);
+        color = aColor;
     }
 }

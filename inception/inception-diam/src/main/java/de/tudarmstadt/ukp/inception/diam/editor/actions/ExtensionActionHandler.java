@@ -25,13 +25,13 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#extensionActionHandler}.
+ * {@link DiamAutoConfig#extensionActionHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_EXTENSION_HANDLER)

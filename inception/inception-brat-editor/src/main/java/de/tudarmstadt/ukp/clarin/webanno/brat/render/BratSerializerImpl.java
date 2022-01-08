@@ -17,34 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.text.BreakIterator;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
@@ -56,7 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
@@ -66,22 +58,16 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Normalization;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.RelationType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
 /**
  * Render documents using brat. This class converts a UIMA annotation representation into the object
@@ -280,7 +266,12 @@ public class BratSerializerImpl
         int windowEnd = aRequest.getWindowEndOffset();
 
         String visibleText = aCas.getDocumentText().substring(windowBegin, windowEnd);
-        visibleText = sanitizeVisibleText(visibleText);
+        char replacementChar = 0;
+        if (StringUtils.isNotEmpty(properties.getWhiteSpaceReplacementCharacter())) {
+            replacementChar = properties.getWhiteSpaceReplacementCharacter().charAt(0);
+        }
+
+        visibleText = TextUtils.sanitizeVisibleText(visibleText, replacementChar);
         aResponse.setText(visibleText);
     }
 
@@ -404,139 +395,6 @@ public class BratSerializerImpl
         return ranges;
     }
 
-    /**
-     * Generates brat type definitions from the WebAnno layer definitions.
-     *
-     * @param aProject
-     *            the project to which the layers belong
-     * @param aAnnotationLayers
-     *            the layers
-     * @param aAnnotationService
-     *            the annotation service
-     * @return the brat type definitions
-     */
-    public static Set<EntityType> buildEntityTypes(Project aProject,
-            List<AnnotationLayer> aAnnotationLayers, AnnotationSchemaService aAnnotationService)
-    {
-        // Sort layers
-        List<AnnotationLayer> layers = new ArrayList<>(aAnnotationLayers);
-        layers.sort(Comparator.comparing(AnnotationLayer::getName));
-
-        // Look up all the features once to avoid hammering the database in the loop below
-        Map<AnnotationLayer, List<AnnotationFeature>> layerToFeatures = aAnnotationService
-                .listSupportedFeatures(aProject).stream()
-                .collect(groupingBy(AnnotationFeature::getLayer));
-
-        // Now build the actual configuration
-        Set<EntityType> entityTypes = new LinkedHashSet<>();
-        for (AnnotationLayer layer : layers) {
-            EntityType entityType = configureEntityType(layer);
-
-            List<RelationType> arcs = new ArrayList<>();
-
-            // For link features, we also need to configure the arcs, even though there is no arc
-            // layer here.
-            boolean hasLinkFeatures = false;
-            for (AnnotationFeature f : layerToFeatures.computeIfAbsent(layer, k -> emptyList())) {
-                if (!LinkMode.NONE.equals(f.getLinkMode())) {
-                    hasLinkFeatures = true;
-                    break;
-                }
-            }
-
-            if (hasLinkFeatures) {
-                String bratTypeName = TypeUtil.getUiTypeName(layer);
-                arcs.add(new RelationType(layer.getName(), layer.getUiName(), bratTypeName,
-                        bratTypeName, null, "triangle,5", "3,3"));
-            }
-
-            // Styles for the remaining relation and chain layers
-            for (AnnotationLayer attachingLayer : getAttachingLayers(layer, layers,
-                    aAnnotationService)) {
-                arcs.add(configureRelationType(layer, attachingLayer));
-            }
-
-            entityType.setArcs(arcs);
-            entityTypes.add(entityType);
-        }
-
-        return entityTypes;
-    }
-
-    /**
-     * Scan through the layers once to remember which layers attach to which layers.
-     */
-    private static List<AnnotationLayer> getAttachingLayers(AnnotationLayer aTarget,
-            List<AnnotationLayer> aLayers, AnnotationSchemaService aAnnotationService)
-    {
-        List<AnnotationLayer> attachingLayers = new ArrayList<>();
-
-        // Chains always attach to themselves
-        if (CHAIN_TYPE.equals(aTarget.getType())) {
-            attachingLayers.add(aTarget);
-        }
-
-        // FIXME This is a hack! Actually we should check the type of the attachFeature when
-        // determine which layers attach to with other layers. Currently we only use attachType,
-        // but do not follow attachFeature if it is set.
-        if (aTarget.isBuiltIn() && aTarget.getName().equals(POS.class.getName())) {
-            attachingLayers.add(
-                    aAnnotationService.findLayer(aTarget.getProject(), Dependency.class.getName()));
-        }
-
-        // Custom layers
-        for (AnnotationLayer l : aLayers) {
-            if (aTarget.equals(l.getAttachType())) {
-                attachingLayers.add(l);
-            }
-        }
-
-        return attachingLayers;
-    }
-
-    private static EntityType configureEntityType(AnnotationLayer aLayer)
-    {
-        String bratTypeName = TypeUtil.getUiTypeName(aLayer);
-        return new EntityType(aLayer.getName(), aLayer.getUiName(), bratTypeName);
-    }
-
-    private static RelationType configureRelationType(AnnotationLayer aLayer,
-            AnnotationLayer aAttachingLayer)
-    {
-        String attachingLayerBratTypeName = TypeUtil.getUiTypeName(aAttachingLayer);
-
-        // // FIXME this is a hack because the chain layer consists of two UIMA types, a "Chain"
-        // // and a "Link" type. ChainAdapter always seems to use "Chain" but some places also
-        // // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
-        // // "Link" types is local to the ChainAdapter and not known outside it!
-        // if (aLayer.getType().equals(CHAIN_TYPE)) {
-        // attachingLayerBratTypeName += ChainAdapter.LINK;
-        // }
-
-        // Handle arrow-head styles depending on linkedListBehavior
-        String arrowHead;
-        if (aLayer.getType().equals(CHAIN_TYPE) && !aLayer.isLinkedListBehavior()) {
-            arrowHead = "none";
-        }
-        else {
-            arrowHead = "triangle,5";
-        }
-
-        String dashArray;
-        switch (aLayer.getType()) {
-        case CHAIN_TYPE:
-            dashArray = "5,1";
-            break;
-        default:
-            dashArray = "";
-            break;
-        }
-
-        String bratTypeName = TypeUtil.getUiTypeName(aLayer);
-        return new RelationType(aAttachingLayer.getName(), aAttachingLayer.getUiName(),
-                attachingLayerBratTypeName, bratTypeName, null, arrowHead, dashArray);
-    }
-
     public static String abbreviate(String aName)
     {
         if (aName == null || aName.length() < 3) {
@@ -652,81 +510,5 @@ public class BratSerializerImpl
         default:
             return Character.isWhitespace(aChar);
         }
-    }
-
-    private String sanitizeVisibleText(String aText)
-    {
-        // NBSP is recognized by Firefox as a proper addressable character in
-        // SVGText.getNumberOfChars()
-        char whiteplaceReplacementChar = '\u00A0'; // NBSP
-        if (isNotEmpty(properties.getWhiteSpaceReplacementCharacter())) {
-            whiteplaceReplacementChar = properties.getWhiteSpaceReplacementCharacter().charAt(0);
-        }
-
-        char[] chars = aText.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            switch (chars[i]) {
-            // Replace newline characters before sending to the client to avoid
-            // rendering glitches in the client-side brat rendering code
-            case '\n':
-            case '\r':
-                chars[i] = ' ';
-                break;
-            // Some browsers (e.g. Firefox) do not count invisible chars in some functions
-            // (e.g. SVGText.getNumberOfChars()) and this causes trouble. See:
-            //
-            // - https://github.com/webanno/webanno/issues/307
-            // - https://github.com/inception-project/inception/issues/1849
-            //
-            // To avoid this, we replace the chars with a visible whitespace character before
-            // sending the data to the browser. Hopefully this makes sense.
-            case '\u2000': // EN QUAD
-            case '\u2001': // EM QUAD
-            case '\u2002': // EN SPACE
-            case '\u2003': // EM SPACE
-            case '\u2004': // THREE-PER-EM SPACE
-            case '\u2005': // FOUR-PER-EM SPACE
-            case '\u2006': // SIX-PER-EM SPACE
-            case '\u2007': // FIGURE SPACE
-            case '\u2008': // PUNCTUATION SPACE
-            case '\u2009': // THIN SPACE
-            case '\u200A': // HAIR SPACE
-            case '\u200B': // ZERO WIDTH SPACE
-            case '\u200C': // ZERO WIDTH NON-JOINER
-            case '\u200D': // ZERO WIDTH JOINER
-            case '\u200E': // LEFT-TO-RIGHT MARK
-            case '\u200F': // RIGHT-TO-LEFT MARK
-            case '\u2028': // LINE SEPARATOR
-            case '\u2029': // PARAGRAPH SEPARATOR
-            case '\u202A': // LEFT-TO-RIGHT EMBEDDING
-            case '\u202B': // RIGHT-TO-LEFT EMBEDDING
-            case '\u202C': // POP DIRECTIONAL FORMATTING
-            case '\u202D': // LEFT-TO-RIGHT OVERRIDE
-            case '\u202E': // RIGHT-TO-LEFT OVERRIDE
-            case '\u202F': // NARROW NO-BREAK SPACE
-            case '\u2060': // WORD JOINER
-            case '\u2061': // FUNCTION APPLICATION
-            case '\u2062': // INVISIBLE TIMES
-            case '\u2063': // INVISIBLE SEPARATOR
-            case '\u2064': // INVISIBLE PLUS
-            case '\u2065': // <unassigned>
-            case '\u2066': // LEFT-TO-RIGHT ISOLATE
-            case '\u2067': // RIGHT-TO-LEFT ISOLATE
-            case '\u2068': // FIRST STRONG ISOLATE
-            case '\u2069': // POP DIRECTIONAL ISOLATE
-            case '\u206A': // INHIBIT SYMMETRIC SWAPPING
-            case '\u206B': // ACTIVATE SYMMETRIC SWAPPING
-            case '\u206C': // INHIBIT ARABIC FORM SHAPING
-            case '\u206D': // ACTIVATE ARABIC FORM SHAPING
-            case '\u206E': // NATIONAL DIGIT SHAPES
-            case '\u206F': // NOMINAL DIGIT SHAPES
-                chars[i] = whiteplaceReplacementChar;
-                break;
-            default:
-                // Nothing to do
-            }
-        }
-
-        return new String(chars);
     }
 }

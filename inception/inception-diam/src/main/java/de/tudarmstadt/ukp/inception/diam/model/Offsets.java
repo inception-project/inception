@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.ajax;
+package de.tudarmstadt.ukp.inception.diam.model;
 
 import java.io.IOException;
 
@@ -26,17 +26,15 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.impl.BeanAsArraySerializer;
+
+import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 /**
  * The start and End offset positions of a span annotation as required by the Brat protocol
- * 
- * @deprecated Need to check if we want to keep this for DIAM
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonDeserialize(using = Offsets.OffsetsDeserializer.class)
 @JsonPropertyOrder(value = { "begin", "end" })
-@Deprecated
 public class Offsets
 {
     private int begin;

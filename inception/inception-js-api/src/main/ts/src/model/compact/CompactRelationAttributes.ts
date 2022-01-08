@@ -15,7 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from "./src/diam";
-export * from "./src/editor";
-export * from "./src/model"; 
-export * from "./src/model/compact";
+import { CompactAnnotationAttributes } from "./CompactAnnotationAttributes";
+
+export interface CompactRelationAttributes extends CompactAnnotationAttributes {
+  // No additional attributes (yet)
+}

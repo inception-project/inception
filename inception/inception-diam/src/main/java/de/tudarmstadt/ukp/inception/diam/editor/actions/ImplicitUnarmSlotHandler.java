@@ -22,7 +22,7 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
 /**
@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
  * side-effect.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#implicitUnarmSlotHandler}.
+ * {@link DiamAutoConfig#implicitUnarmSlotHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_UNARM_SLOT_HANDLER)

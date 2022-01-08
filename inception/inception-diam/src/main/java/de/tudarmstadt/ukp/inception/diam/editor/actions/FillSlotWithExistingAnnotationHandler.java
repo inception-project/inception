@@ -23,13 +23,13 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#fillSlotWithExistingAnnotationHandler}.
+ * {@link DiamAutoConfig#fillSlotWithExistingAnnotationHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_SLOT_FILLER_HANDLER)

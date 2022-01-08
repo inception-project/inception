@@ -15,22 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model.ajax;
+package de.tudarmstadt.ukp.inception.diam.model.compact;
 
-import java.util.ArrayList;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-/**
- * List of {@link Offsets}. Required so Jackson knows the generic type of the list when converting
- * an array of offsets from JSON to Java.
- * 
- * @deprecated Need to check if we want to keep this for DIAM
- */
-@Deprecated
-public class OffsetsList
-    extends ArrayList<Offsets>
+@JsonInclude(Include.NON_DEFAULT)
+public class CompactRelationAttributes
+    extends CompactAnnotationAttributes
 {
-    // See
-    // http://stackoverflow.com/questions/6173182/spring-json-convert-a-typed-collection-like-listmypojo
-
-    private static final long serialVersionUID = 1441338116416225186L;
+    // No additional attributes (yet)
 }

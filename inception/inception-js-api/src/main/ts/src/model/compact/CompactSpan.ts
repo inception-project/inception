@@ -15,7 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from "./src/diam";
-export * from "./src/editor";
-export * from "./src/model"; 
-export * from "./src/model/compact";
+import { Offsets, VID } from "..";
+import { CompactSpanAttributes } from "./CompactSpanAttributes";
+
+export type CompactSpan = [
+  vid: VID,
+  offsets: Array<Offsets>,
+  attributes?: CompactSpanAttributes
+]

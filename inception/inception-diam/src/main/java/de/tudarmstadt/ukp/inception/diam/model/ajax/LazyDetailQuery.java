@@ -28,12 +28,12 @@ import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 @Deprecated
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "label", "value" })
-public class LazyDetail
+public class LazyDetailQuery
 {
     private String label;
     private String value;
 
-    public LazyDetail(String aLabel, String aValue)
+    public LazyDetailQuery(String aLabel, String aValue)
     {
         label = aLabel;
         value = aValue;

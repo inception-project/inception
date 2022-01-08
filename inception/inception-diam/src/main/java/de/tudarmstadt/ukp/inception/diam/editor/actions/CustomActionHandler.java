@@ -44,12 +44,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via {@link DiamEditorAutoConfig#customActionHandler}.
+ * This class is exposed as a Spring Component via {@link DiamAutoConfig#customActionHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)

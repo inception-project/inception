@@ -15,7 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from "./src/diam";
-export * from "./src/editor";
-export * from "./src/model"; 
-export * from "./src/model/compact";
+import { VID } from "..";
+import { CompactArgument } from "./CompactArgument";
+import { CompactRelationAttributes } from "./CompactRelationAttributes";
+
+export type CompactRelation = [
+  vid: VID,
+  arguments: Array<CompactArgument>,
+  attributes?: CompactRelationAttributes
+]

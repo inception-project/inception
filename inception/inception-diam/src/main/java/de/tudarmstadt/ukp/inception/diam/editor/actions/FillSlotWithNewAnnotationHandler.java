@@ -30,15 +30,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.Offsets;
+import de.tudarmstadt.ukp.inception.diam.model.OffsetsList;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.diam.model.ajax.Offsets;
-import de.tudarmstadt.ukp.inception.diam.model.ajax.OffsetsList;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#fillSlotWithNewAnnotationHandler}.
+ * {@link DiamAutoConfig#fillSlotWithNewAnnotationHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_SLOT_FILLER_HANDLER)
