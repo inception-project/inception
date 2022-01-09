@@ -115,6 +115,13 @@
         </exclusion>
       </exclusions>
     </dependency>
+    
+    <!-- INCEPTION - FACT LINKING FUNCTIONALITY (deprecated) 
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-kb-fact-linking</artifactId>
+    </dependency>
+    -->
 
     <!-- INCEPTION - ANNOTATION RECOMMENDATION FUNCTIONALITY -->
     <dependency>
@@ -865,6 +872,7 @@
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-kb-fact-linking</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->

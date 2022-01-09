@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.ui.kb.feature;
+package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
 import java.util.List;
 
@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
+@Deprecated
 public interface FactLinkingService
 {
     List<KBProperty> listProperties(Project aProject, ConceptFeatureTraits traits);

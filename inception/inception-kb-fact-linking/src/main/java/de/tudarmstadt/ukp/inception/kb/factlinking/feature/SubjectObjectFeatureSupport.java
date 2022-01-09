@@ -15,13 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.feature;
+package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
-import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.OBJECT_LINK;
-import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.OBJECT_ROLE;
-import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.QUALIFIER_LINK;
-import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.SUBJECT_LINK;
-import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.SUBJECT_ROLE;
+import static de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants.OBJECT_LINK;
+import static de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants.OBJECT_ROLE;
+import static de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants.QUALIFIER_LINK;
+import static de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants.SUBJECT_LINK;
+import static de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants.SUBJECT_ROLE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.ui.kb.config.FactLinkingAutoConfiguration;
+import de.tudarmstadt.ukp.inception.kb.factlinking.config.FactLinkingAutoConfiguration;
 
 /**
  * To create feature support for subject and object of the fact layer
@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.FactLinkingAutoConfiguration;
  * {@link FactLinkingAutoConfiguration#subjectObjectFeatureSupport}.
  * </p>
  */
+@Deprecated
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SubjectObjectFeatureSupport
     implements FeatureSupport<Void>

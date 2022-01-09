@@ -15,9 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.feature;
+package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
-import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.FACT_LAYER;
+import static de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants.FACT_LAYER;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
@@ -58,7 +58,9 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.DisabledKBWarning;
 
+@Deprecated
 public class PropertyFeatureEditor
     extends FeatureEditor
 {

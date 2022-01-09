@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.feature;
+package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
@@ -81,7 +81,9 @@ import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.DisabledKBWarning;
 
+@Deprecated
 public class QualifierFeatureEditor
     extends FeatureEditor
 {

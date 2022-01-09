@@ -443,6 +443,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-kb-fact-linking</artifactId>
+        <version>23.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-html-editor</artifactId>
         <version>23.0-SNAPSHOT</version>
       </dependency>
@@ -1843,6 +1848,7 @@
     <module>inception-ui-external-search</module>
     <!-- Knowledge base -->
     <module>inception-kb</module>
+    <module>inception-kb-fact-linking</module>
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->

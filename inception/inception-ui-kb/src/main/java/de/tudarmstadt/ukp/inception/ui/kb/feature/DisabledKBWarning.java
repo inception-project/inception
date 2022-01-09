@@ -98,5 +98,4 @@ public class DisabledKBWarning
         String repoId = featureTraits.getObject().getRepositoryId();
         setVisible(!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId)));
     }
-
 }
