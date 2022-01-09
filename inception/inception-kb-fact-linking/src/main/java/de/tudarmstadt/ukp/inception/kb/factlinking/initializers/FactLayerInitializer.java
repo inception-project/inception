@@ -41,14 +41,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.kb.factlinking.config.FactLinkingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants;
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.PropertyFeatureSupport;
-import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link KnowledgeBaseServiceUIAutoConfiguration#factLayerInitializer}.
+ * {@link FactLinkingAutoConfiguration#factLayerInitializer}.
  * </p>
  */
 @Deprecated
