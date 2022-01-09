@@ -15,8 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.feature;
+package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
+@Deprecated
 public final class FactLinkingConstants
 {
     public static final String SUBJECT_LINK = "de.tudarmstadt.ukp.inception.api.kb.type.FactSubjectLink";

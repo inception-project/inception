@@ -19,7 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.initializers;
+package de.tudarmstadt.ukp.inception.kb.factlinking.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
@@ -41,9 +41,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants;
+import de.tudarmstadt.ukp.inception.kb.factlinking.feature.PropertyFeatureSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.PropertyFeatureSupport;
 
 /**
  * <p>
@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.feature.PropertyFeatureSupport;
  * {@link KnowledgeBaseServiceUIAutoConfiguration#factLayerInitializer}.
  * </p>
  */
+@Deprecated
 public class FactLayerInitializer
     implements LayerInitializer
 {

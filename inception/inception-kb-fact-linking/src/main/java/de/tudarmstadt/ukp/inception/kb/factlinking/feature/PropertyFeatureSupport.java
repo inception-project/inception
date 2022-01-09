@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.feature;
+package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +46,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.factlinking.config.FactLinkingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
-import de.tudarmstadt.ukp.inception.ui.kb.config.FactLinkingAutoConfiguration;
 
 /**
  * <p>
@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.FactLinkingAutoConfiguration;
  * {@link FactLinkingAutoConfiguration#propertyFeatureSupport}.
  * </p>
  */
+@Deprecated
 public class PropertyFeatureSupport
     implements FeatureSupport<Void>
 {

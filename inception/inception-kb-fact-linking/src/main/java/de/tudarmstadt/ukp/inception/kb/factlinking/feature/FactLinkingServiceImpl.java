@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.ui.kb.feature;
+package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
-import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.LINKED_LAYER_FEATURE;
+import static de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants.LINKED_LAYER_FEATURE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,11 +41,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.factlinking.config.FactLinkingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.config.FactLinkingAutoConfiguration;
 
 /**
  * <p>
@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.config.FactLinkingAutoConfiguration;
  * {@link FactLinkingAutoConfiguration#factLinkingService}.
  * </p>
  */
+@Deprecated
 public class FactLinkingServiceImpl
     implements FactLinkingService
 {

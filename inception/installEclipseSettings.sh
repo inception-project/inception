@@ -52,6 +52,7 @@ installPrefs inception-io-text
 installPrefs inception-io-webanno-tsv
 installPrefs inception-io-xmi
 installPrefs inception-kb
+installPrefs inception-kb-fact-linking
 installPrefs inception-layer-docmetadata
 installPrefs inception-log
 installPrefs inception-model

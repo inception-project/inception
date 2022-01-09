@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.config;
+package de.tudarmstadt.ukp.inception.kb.factlinking.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -27,12 +27,13 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingService;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingServiceImpl;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.PropertyFeatureSupport;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.SubjectObjectFeatureSupport;
-import de.tudarmstadt.ukp.inception.ui.kb.initializers.FactLayerInitializer;
+import de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingService;
+import de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingServiceImpl;
+import de.tudarmstadt.ukp.inception.kb.factlinking.feature.PropertyFeatureSupport;
+import de.tudarmstadt.ukp.inception.kb.factlinking.feature.SubjectObjectFeatureSupport;
+import de.tudarmstadt.ukp.inception.kb.factlinking.initializers.FactLayerInitializer;
 
+@Deprecated
 @Configuration
 @AutoConfigureAfter(KnowledgeBaseServiceAutoConfiguration.class)
 @ConditionalOnBean(KnowledgeBaseService.class)
@@ -40,6 +41,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.initializers.FactLayerInitializer;
         name = "enabled", havingValue = "true", matchIfMissing = false)
 public class FactLinkingAutoConfiguration
 {
+    @Deprecated
     @Bean
     @Autowired
     public PropertyFeatureSupport propertyFeatureSupport(KnowledgeBaseService aKbService)
@@ -47,18 +49,21 @@ public class FactLinkingAutoConfiguration
         return new PropertyFeatureSupport(aKbService);
     }
 
+    @Deprecated
     @Bean
     public SubjectObjectFeatureSupport subjectObjectFeatureSupport()
     {
         return new SubjectObjectFeatureSupport();
     }
 
+    @Deprecated
     @Bean
     public FactLinkingService factLinkingService()
     {
         return new FactLinkingServiceImpl();
     }
 
+    @Deprecated
     @Bean
     @Autowired
     public FactLayerInitializer factLayerInitializer(

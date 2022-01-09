@@ -81,7 +81,7 @@ for the qualifier value is a list of instances from the knowledge base.
 
 image::factExtraction8.png[align="center"]
 
-After annotating this qualifer, in the main editor, there is an arrow from the label above the
+After annotating this qualifier, in the main editor, there is an arrow from the label above the
 predicate to the label above the qualifier value, with the qualifier name _start-date_.
 
 So, a fact (Barack Obama, educated-at, Harvard Law School, Start-date: 1988) with its mentions is
