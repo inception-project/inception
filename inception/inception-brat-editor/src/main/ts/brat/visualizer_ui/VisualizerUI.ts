@@ -43,7 +43,7 @@ import { INSTANCE as Configuration } from "../configuration/Configuration";
 
 import { INSTANCE as Util } from "../util/Util";
 import { DocumentData } from "../visualizer/DocumentData";
-import { RelationTypeDto, EntityTypeDto, VID } from "../protocol/Protocol";
+import { RelationTypeDto, EntityTypeDto, VID, CommentType } from "../protocol/Protocol";
 import { Offsets } from "@inception-project/inception-js-api";
 import { Entity } from "../visualizer/Entity";
 
@@ -119,11 +119,11 @@ export class VisualizerUI {
     element.css({ top: y, left: x });
   }
 
-  displayComment(evt: MouseEvent, target, comment, commentText, commentType, immediately?) {
-    let idtype;
+  displayComment(evt: MouseEvent, target, comment: string, commentText: string, commentType: CommentType, immediately?: boolean) {
+    let idtype: string;
     if (commentType) {
       // label comment by type, with special case for default note type
-      let commentLabel;
+      let commentLabel: string;
       if (commentType == 'AnnotatorNotes') {
         commentLabel = '<b>Note:</b> ';
       } else {
@@ -140,13 +140,7 @@ export class VisualizerUI {
     /* slight "tooltip" delay to allow highlights to be seen
                before the popup obstructs them. */
     this.displayCommentTimer = setTimeout(() => {
-      // BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
-      // - Show/hide comments immediately instead of using an animation to avoid costly reflows
-      /*
-      commentPopup.stop(true, true).fadeIn(0);
-      */
       this.commentPopup.show();
-      // END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
       this.commentDisplayed = true;
     }, immediately ? 0 : 500);
   }
