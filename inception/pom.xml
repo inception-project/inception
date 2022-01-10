@@ -511,6 +511,11 @@
         <artifactId>inception-imls-opennlp</artifactId>
         <version>23.0-SNAPSHOT</version>
       </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-elg</artifactId>
+        <version>23.0-SNAPSHOT</version>
+      </dependency>
       <!--
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -1869,6 +1874,7 @@
     <module>inception-active-learning</module>
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
+    <module>inception-imls-elg</module>
     <module>inception-imls-external</module>
     <module>inception-imls-lapps</module>
     <module>inception-imls-weblicht</module>
