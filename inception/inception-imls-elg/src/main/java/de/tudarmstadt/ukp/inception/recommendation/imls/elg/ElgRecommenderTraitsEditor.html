@@ -17,14 +17,38 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<wicket:extend>
+<wicket:panel>
   <form wicket:id="form">
-    <div class="row form-row" wicket:enclosure="serviceId">
-      <label class="col-sm-3 col-form-label" wicket:for="serviceId">
-        <wicket:message key="serviceId"/>
+    <div class="row form-row" wicket:enclosure="search">
+      <label class="col-sm-3 col-form-label" wicket:for="search">
+        <wicket:message key="search"/>
       </label>
       <div class="col-sm-9">
-        <input wicket:id="serviceId" type="text" class="form-control"></input>
+        <input wicket:id="search" type="text" class="form-control w-100"></input>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="serviceName">
+      <label class="col-sm-3 col-form-label" wicket:for="serviceName">
+        <wicket:message key="serviceName"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="serviceName" type="text" class="form-control"></input>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="serviceUrlSync">
+      <label class="col-sm-3 col-form-label" wicket:for="serviceUrlSync">
+        <wicket:message key="serviceUrlSync"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="serviceUrlSync" type="text" class="form-control"></input>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="serviceUrlAsync">
+      <label class="col-sm-3 col-form-label" wicket:for="serviceUrlAsync">
+        <wicket:message key="serviceUrlAsync"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="serviceUrlAsync" type="text" class="form-control"></input>
       </div>
     </div>
     <div class="row form-row" wicket:enclosure="token">
@@ -34,7 +58,11 @@
       <div class="col-sm-9">
         <textarea wicket:id="token" class="form-control"/>
       </div>
+      <div class="offset-sm-3 col-sm-9 small text-muted">
+        Visit the <a target="_blank" wicket:id="elgLink">ELG page</a>&nbsp;<i class="fas fa-external-link-alt"></i> 
+        for this service, log in, copy the token from the <b>Code samples / curl</b> tab and paste it here.
+      </div>
     </div>
   </form>
-</wicket:extend>
+</wicket:panel>
 </html>

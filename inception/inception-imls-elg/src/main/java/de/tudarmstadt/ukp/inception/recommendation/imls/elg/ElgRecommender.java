@@ -17,37 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.commons.lang3.StringUtils.appendIfMissing;
-
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpRequest.BodyPublishers;
-import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.http.HttpHeaders;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgAnnotation;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgAnnotationsResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponse;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponseContainer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTextsResponse;
 
 public class ElgRecommender
@@ -55,11 +43,9 @@ public class ElgRecommender
 {
     private static final String BASE_URL = "https://live.european-language-grid.eu/execution/process/";
 
-    private static final int HTTP_BAD_REQUEST = 400;
-
     private final ElgRecommenderTraits traits;
 
-    private final HttpClient client;
+    private final ElgServiceClient client;
 
     public ElgRecommender(Recommender aRecommender, ElgRecommenderTraits aTraits)
     {
@@ -67,37 +53,26 @@ public class ElgRecommender
 
         traits = aTraits;
 
-        client = HttpClient.newBuilder().build();
+        client = new ElgServiceClientImpl();
     }
 
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        HttpRequest request = HttpRequest.newBuilder() //
-                .uri(URI.create(appendIfMissing(BASE_URL, "/")).resolve(traits.getServiceId())) //
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + traits.getToken()) //
-                .header(HttpHeaders.CONTENT_TYPE, "text/plain")
-                .POST(BodyPublishers.ofString(aCas.getDocumentText(), UTF_8)) //
-                .build();
-
-        HttpResponse<String> response = sendRequest(request);
-
-        // If the response indicates that the request was not successful,
-        // then it does not make sense to go on and try to decode the XMI
-        if (response.statusCode() >= HTTP_BAD_REQUEST) {
-            String responseBody = getResponseBody(response);
-            String msg = format("Request was not successful: [%d] - [%s]", response.statusCode(),
-                    responseBody);
-            throw new RecommendationException(msg);
+        ElgResponse response;
+        try {
+            response = client.invokeService(traits.getServiceUrlSync(), traits.getToken(), aCas);
         }
-
-        ElgResponseContainer resp = deserializePredictionResponse(response);
+        catch (IOException e) {
+            throw new RecommendationException(
+                    "Error invoking ELG service: " + ExceptionUtils.getRootCauseMessage(e), e);
+        }
 
         Type predictedType = getPredictedType(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
-        for (Entry<String, List<ElgAnnotation>> group : getAnnotationGroups(resp.getResponse())
+        for (Entry<String, List<ElgAnnotation>> group : getAnnotationGroups(response)
                 .entrySet()) {
             String tag = group.getKey();
             for (ElgAnnotation elgAnn : group.getValue()) {
@@ -129,37 +104,5 @@ public class ElgRecommender
         }
 
         throw new IllegalArgumentException("Unknown response type: [" + aResponse.getClass() + "]");
-    }
-
-    private ElgResponseContainer deserializePredictionResponse(HttpResponse<String> response)
-        throws RecommendationException
-    {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.readValue(response.body(), ElgResponseContainer.class);
-        }
-        catch (IOException e) {
-            throw new RecommendationException("Error while deserializing prediction response!", e);
-        }
-    }
-
-    private HttpResponse<String> sendRequest(HttpRequest aRequest) throws RecommendationException
-    {
-        try {
-            return client.send(aRequest, BodyHandlers.ofString(UTF_8));
-        }
-        catch (IOException | InterruptedException e) {
-            throw new RecommendationException("Error while sending request: " + e.getMessage(), e);
-        }
-    }
-
-    private String getResponseBody(HttpResponse<String> response) throws RecommendationException
-    {
-        if (response.body() != null) {
-            return response.body();
-        }
-        else {
-            return "";
-        }
     }
 }

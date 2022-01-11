@@ -22,6 +22,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgRecommenderFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClientImpl;
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.elg", name = "enabled", havingValue = "true", matchIfMissing = false)
@@ -31,5 +35,17 @@ public class ElgRecommenderAutoConfiguration
     public ElgRecommenderFactory elgRecommenderFactory()
     {
         return new ElgRecommenderFactory();
+    }
+
+    @Bean
+    public ElgCatalogClient elgCatalogClient()
+    {
+        return new ElgCatalogClientImpl();
+    }
+    
+    @Bean
+    public ElgServiceClient elgServiceClient()
+    {
+        return new ElgServiceClientImpl();
     }
 }

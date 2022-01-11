@@ -26,17 +26,33 @@ public class ElgRecommenderTraits
     implements Serializable
 {
     private static final long serialVersionUID = 9030733775045245314L;
-    
-    private String serviceId;
+
+    private long serviceId;
+
+    private String serviceName;
+
+    private String serviceUrlSync;
+
+    private String serviceUrlAsync;
 
     private String token;
 
-    public String getServiceId()
+    public String getServiceName()
+    {
+        return serviceName;
+    }
+
+    public void setServiceName(String aServiceName)
+    {
+        serviceName = aServiceName;
+    }
+
+    public long getServiceId()
     {
         return serviceId;
     }
 
-    public void setServiceId(String aServiceId)
+    public void setServiceId(long aServiceId)
     {
         serviceId = aServiceId;
     }
@@ -49,5 +65,25 @@ public class ElgRecommenderTraits
     public void setToken(String aToken)
     {
         token = aToken;
+    }
+
+    public String getServiceUrlSync()
+    {
+        return serviceUrlSync;
+    }
+
+    public void setServiceUrlSync(String aServiceUrlSync)
+    {
+        serviceUrlSync = aServiceUrlSync;
+    }
+
+    public String getServiceUrlAsync()
+    {
+        return serviceUrlAsync;
+    }
+
+    public void setServiceUrlAsync(String aServiceUrlAsync)
+    {
+        serviceUrlAsync = aServiceUrlAsync;
     }
 }
