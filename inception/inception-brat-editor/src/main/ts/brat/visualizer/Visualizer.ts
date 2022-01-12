@@ -1277,7 +1277,7 @@ export class Visualizer {
       chunkText.push(...chunk.markedTextEnd);
     });
 
-    return this.getTextMeasurements(chunkTexts, undefined, (fragment, text) => 
+    return this.getTextMeasurements(chunkTexts, undefined, (fragment, text) =>
       this.calculateChunkTextElementMeasure(fragment, text));
   }
 
@@ -1346,7 +1346,7 @@ export class Visualizer {
 
   calculateSubstringWidthRobust(fragment: Fragment, text: SVGTextElement, firstChar: number, lastChar: number) {
     let charDirection: Array<"rtl" | "ltr">;
-    let charAttrs: Array<{order: number, width: number, direction: "rtl" | "ltr"}>;
+    let charAttrs: Array<{ order: number, width: number, direction: "rtl" | "ltr" }>;
     let corrFactor = 1;
 
     if (fragment.chunk.rtlsizes) {
@@ -2942,14 +2942,14 @@ export class Visualizer {
           if (row.chunks.length) {
             row.hasAnnotations = true;
 
-            let from;
+            let from: number;
             if (rowIndex === leftRow) {
               from = this.rtlmode ? leftBox.x : leftBox.x + leftBox.width;
             } else {
               from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin;
             }
 
-            let to;
+            let to: number;
             if (rowIndex === rightRow) {
               to = this.rtlmode ? rightBox.x + rightBox.width : rightBox.x;
             } else {
@@ -3263,10 +3263,6 @@ export class Visualizer {
     }
 
     this.svg.clear();
-    // Ensure we do have a scrollbar when starting with the calculations - this avoid the SVG 
-    // resizing on the first action (if we actually have a scrollbar when the whole rendering is
-    // over).
-    this.svg.height(window.innerHeight + 300); 
     this.svg.attr('direction', null);
 
     if (!this.data) {
@@ -3281,13 +3277,10 @@ export class Visualizer {
     this.svg.css('fontStyle', `${this.fontZoom}%`);
     this.sentNumMargin = 40 * (this.fontZoom / 100.0);
 
-    // establish the width according to the enclosing element
+    const scrollable = findClosestVerticalScrollable($(this.svg.node));
     const svgWidth = $(this.svgContainer).width();
     this.baseCanvasWidth = this.forceWidth || svgWidth;
-    this.canvasWidth = this.forceWidth || (svgWidth - scrollbarWidth());
-
-    // Take hairline border of SVG into account
-    this.canvasWidth -= 4;
+    this.canvasWidth = this.forceWidth || (svgWidth - (!scrollable ? scrollbarWidth() : 0));
 
     this.addHeaderAndDefs();
 
@@ -4001,8 +3994,6 @@ function bgToFgColor(hexcolor: ColorCode) {
   return (yiq >= 128) ? '#000000' : '#ffffff';
 }
 
-// WEBANNO EXTENSION BEGIN - RTL - Need to find scrollable ancestor
-// https://stackoverflow.com/a/35940276/2511197
 function findClosestHorizontalScrollable(node: JQuery) {
   if (node === null || node.is('html')) {
     return null;
@@ -4013,11 +4004,38 @@ function findClosestHorizontalScrollable(node: JQuery) {
     (node.css('overflow-x') === 'scroll')
   ) {
     return node;
-  } else {
-    return findClosestHorizontalScrollable(node.parent());
   }
+
+  // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
+  // to avoid that we consider scrollbars too far out
+  if (node.hasClass('scrollable')) {
+    return null;
+  }
+
+  return findClosestHorizontalScrollable(node.parent());
 }
-// WEBANNO EXTENSION END - RTL - Need to find scrollable ancestor
+
+function findClosestVerticalScrollable(node: JQuery) {
+  if (node === null || node.is('html')) {
+    return null;
+  }
+
+  if (
+    (node.css('overflow-y') === 'auto' && node.prop('scrollHeight') > node.prop('clientHeight')) ||
+    (node.css('overflow-y') === 'scroll')
+  ) {
+    return node;
+  }
+
+  // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
+  // to avoid that we consider scrollbars too far out
+  if (node.hasClass('scrollable')) {
+    return null;
+  }
+
+  return findClosestVerticalScrollable(node.parent());
+}
+
 
 /**
  * A naive whitespace tokeniser
