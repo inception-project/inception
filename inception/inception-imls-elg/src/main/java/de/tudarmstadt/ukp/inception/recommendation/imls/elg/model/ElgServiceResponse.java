@@ -17,19 +17,29 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.model;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-public class ElgTextsResponse extends ElgServiceResponse
+@JsonSerialize
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes({ //
+        @Type(value = ElgTextsResponse.class, name = "texts"),
+        @Type(value = ElgAnnotationsResponse.class, name = "annotations") })
+public abstract class ElgServiceResponse
 {
-    private List<ElgText> texts;
+    private String type;
 
-    public List<ElgText> getTexts()
+    public String getType()
     {
-        return texts;
+        return type;
     }
 
-    public void setTexts(List<ElgText> aTexts)
+    public void setType(String aType)
     {
-        texts = aTexts;
+        type = aType;
     }
 }

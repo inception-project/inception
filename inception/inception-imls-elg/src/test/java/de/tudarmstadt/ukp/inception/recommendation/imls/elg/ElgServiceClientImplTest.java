@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 
 public class ElgServiceClientImplTest
 {
@@ -44,7 +44,7 @@ public class ElgServiceClientImplTest
         var token = "hahaha!";
         CAS cas = CasFactory.createCas();
         cas.setDocumentText("John Smith is working at IBM London.");
-        ElgResponse response = sut.invokeService(syncUrl, token, cas);
+        ElgServiceResponse response = sut.invokeService(syncUrl, token, cas);
         
         System.out.println(JSONUtil.toPrettyJsonString(response));
     }

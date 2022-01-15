@@ -26,35 +26,27 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
-
 import org.apache.uima.cas.CAS;
 import org.springframework.http.HttpHeaders;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponseContainer;
 
-public class ElgServiceClientImpl
+public class ElgServiceClientImpl extends ElgClientImplBase
     implements ElgServiceClient
 {
-    private static final int HTTP_BAD_REQUEST = 400;
-
-    private final HttpClient client;
-
     public ElgServiceClientImpl()
     {
-        this(HttpClient.newBuilder().build());
+        super();
     }
 
     public ElgServiceClientImpl(HttpClient aClient)
     {
-        client = aClient;
+        super(aClient);
     }
 
     @Override
-    public ElgResponse invokeService(String aServiceSync, String aToken, CAS aCas)
+    public ElgServiceResponse invokeService(String aServiceSync, String aToken, CAS aCas)
         throws IOException
     {
         HttpRequest request = HttpRequest.newBuilder() //
@@ -75,38 +67,6 @@ public class ElgServiceClientImpl
             throw new IOException(msg);
         }
 
-        return deserializeServiceResponse(response).getResponse();
-    }
-
-    private ElgResponseContainer deserializeServiceResponse(HttpResponse<String> response)
-        throws IOException
-    {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.readValue(response.body(), ElgResponseContainer.class);
-        }
-        catch (IOException e) {
-            throw new IOException("Error while deserializing prediction response!", e);
-        }
-    }
-
-    private HttpResponse<String> sendRequest(HttpRequest aRequest) throws IOException
-    {
-        try {
-            return client.send(aRequest, BodyHandlers.ofString(UTF_8));
-        }
-        catch (IOException | InterruptedException e) {
-            throw new IOException("Error while sending request: " + e.getMessage(), e);
-        }
-    }
-
-    private String getResponseBody(HttpResponse<String> response)
-    {
-        if (response.body() != null) {
-            return response.body();
-        }
-        else {
-            return "";
-        }
+        return deserializeResponse(response, ElgResponseContainer.class).getResponse();
     }
 }

@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
 import static java.time.Duration.ofMillis;
-
 import java.io.IOException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -27,18 +26,18 @@ import org.apache.wicket.ajax.attributes.ThrottlingSettings;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntity;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntityDetails;
@@ -50,11 +49,13 @@ public class ElgRecommenderTraitsEditor
 
     private static final String MID_FORM = "form";
 
+    private @SpringBean RecommendationService recommendationService;
     private @SpringBean RecommendationEngineFactory<ElgRecommenderTraits> toolFactory;
     private @SpringBean ElgCatalogClient elgCatalogClient;
+    private @SpringBean ElgAuthenticationClient elgAuthenticationClient;
 
     private final ElgRecommenderTraits traits;
-    
+
     private ElgCatalogEntity searchResult;
 
     public ElgRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
@@ -62,6 +63,8 @@ public class ElgRecommenderTraitsEditor
         super(aId, aRecommender);
 
         traits = toolFactory.readTraits(aRecommender.getObject());
+
+        add(new ElgSessionPanel("elgSession", aRecommender.map(Recommender::getProject)));
 
         Form<ElgRecommenderTraits> form = new Form<ElgRecommenderTraits>(MID_FORM,
                 CompoundPropertyModel.of(Model.of(traits)))
@@ -75,24 +78,8 @@ public class ElgRecommenderTraitsEditor
                 toolFactory.writeTraits(aRecommender.getObject(), traits);
             }
         };
-        
-        ExternalLink link = new ExternalLink("elgLink", LoadableDetachableModel.of(
-                () -> {
-                    if (traits == null || traits.getServiceId() <= 0) {
-                        return "";
-                    }
-                    
-//                    String redirectUrl = RequestCycle.get().getUrlRenderer()
-//                            .renderFullUrl(RequestCycle.get().getRequest().getClientUrl());
-                    
-                    return "https://live.european-language-grid.eu/catalogue/tool-service/" + traits.getServiceId();
-//                    return "https://live.european-language-grid.eu/auth/realms/ELG/protocol/openid-connect/auth?client_id=elg-oob&redirect_uri="
-//                            + UrlEncoder.QUERY_INSTANCE.encode(redirectUrl, UTF_8)
-//                            + "&response_type=code&scope=openid";
-                }));
-        link.setOutputMarkupPlaceholderTag(true);
-        form.add(link);
-        
+        form.setOutputMarkupPlaceholderTag(true);
+
         TextField<String> serviceName = new TextField<>("serviceName");
         serviceName.setOutputMarkupPlaceholderTag(true);
         serviceName.setRequired(true);
@@ -108,7 +95,8 @@ public class ElgRecommenderTraitsEditor
         serviceUrlAsync.setRequired(true);
         form.add(serviceUrlAsync);
 
-        ElgCatalogSearchField searchField = new ElgCatalogSearchField("search", new PropertyModel<ElgCatalogEntity>(this, "searchResult"));
+        ElgCatalogSearchField searchField = new ElgCatalogSearchField("search",
+                new PropertyModel<ElgCatalogEntity>(this, "searchResult"));
         searchField.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             private static final long serialVersionUID = -8944946839865527412L;
@@ -126,28 +114,24 @@ public class ElgRecommenderTraitsEditor
                 if (searchResult == null) {
                     return;
                 }
-                
+
                 try {
                     traits.setServiceId(searchResult.getId());
                     traits.setServiceName(searchResult.getResourceName());
-                    ElgCatalogEntityDetails details = elgCatalogClient.details(searchResult.getDetailUrl());
+                    ElgCatalogEntityDetails details = elgCatalogClient
+                            .details(searchResult.getDetailUrl());
                     traits.setServiceUrlAsync(details.getServiceInfo().getElgExecutionLocation());
-                    traits.setServiceUrlSync(details.getServiceInfo().getElgExecutionLocationSync());
-                    aTarget.add(serviceName, serviceUrlSync, serviceUrlAsync, link);
+                    traits.setServiceUrlSync(
+                            details.getServiceInfo().getElgExecutionLocationSync());
+                    aTarget.add(serviceName, serviceUrlSync, serviceUrlAsync);
                 }
                 catch (IOException e) {
                     error(ExceptionUtils.getRootCauseMessage(e));
                     aTarget.addChildren(getPage(), IFeedback.class);
                 }
             }
-        });        
-        
+        });
         form.add(searchField);
-        
-
-        TextArea<String> token = new TextArea<>("token");
-        token.setRequired(true);
-        form.add(token);
 
         add(form);
     }

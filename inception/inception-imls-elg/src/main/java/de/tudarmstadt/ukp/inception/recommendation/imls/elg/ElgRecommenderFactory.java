@@ -18,28 +18,40 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgSessionState.KEY_ELG_SESSION_STATE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
 
-public class ElgRecommenderFactory extends RecommendationEngineFactoryImplBase<ElgRecommenderTraits>
+public class ElgRecommenderFactory
+    extends RecommendationEngineFactoryImplBase<ElgRecommenderTraits>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgRecommenderFactory";
 
+    private final PreferencesService preferencesService;
+    private final ElgServiceClient elgServiceClient;
+
+    public ElgRecommenderFactory(PreferencesService aPreferencesService,
+            ElgServiceClient aElgServiceClient)
+    {
+        preferencesService = aPreferencesService;
+        elgServiceClient = aElgServiceClient;
+    }
+
     @Override
     public String getId()
     {
-       return ID;
+        return ID;
     }
 
     @Override
@@ -52,7 +64,9 @@ public class ElgRecommenderFactory extends RecommendationEngineFactoryImplBase<E
     public RecommendationEngine build(Recommender aRecommender)
     {
         ElgRecommenderTraits traits = readTraits(aRecommender);
-        return new ElgRecommender(aRecommender, traits);
+        ElgSessionState session = preferencesService.loadDefaultTraitsForProject(
+                KEY_ELG_SESSION_STATE, aRecommender.getProject());
+        return new ElgRecommender(aRecommender, traits, elgServiceClient, session);
     }
 
     @Override
@@ -61,10 +75,9 @@ public class ElgRecommenderFactory extends RecommendationEngineFactoryImplBase<E
         return SPAN_TYPE.equals(aFeature.getLayer().getType())
                 && TYPE_NAME_STRING.equals(aFeature.getType());
     }
-    
+
     @Override
-    public ElgRecommenderTraitsEditor createTraitsEditor(String aId,
-            IModel<Recommender> aModel)
+    public ElgRecommenderTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
         return new ElgRecommenderTraitsEditor(aId, aModel);
     }

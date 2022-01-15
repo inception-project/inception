@@ -17,42 +17,32 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.client;
 
-import static java.lang.String.format;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.HttpResponse.BodyHandlers;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntityDetails;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogSearchResponse;
 
-public class ElgCatalogClientImpl implements ElgCatalogClient
+public class ElgCatalogClientImpl
+    extends ElgClientImplBase
+    implements ElgCatalogClient
 {
-    private static final int HTTP_BAD_REQUEST = 400;
-
     private String searchUrl = "https://live.european-language-grid.eu/catalogue_backend/api/registry/search/";
-
-    private final HttpClient client;
 
     public ElgCatalogClientImpl()
     {
-        this(HttpClient.newBuilder().build());
+        super();
     }
 
     public ElgCatalogClientImpl(HttpClient aClient)
     {
-        client = aClient;
+        super(aClient);
     }
 
     @Override
@@ -78,14 +68,9 @@ public class ElgCatalogClientImpl implements ElgCatalogClient
         }
 
         StringBuilder uriBuilder = new StringBuilder(searchUrl);
-        uriBuilder.append('?');
         if (!queryParameters.isEmpty()) {
-            for (Entry<String, String> param : queryParameters.entrySet()) {
-                uriBuilder.append(URLEncoder.encode(param.getKey(), UTF_8));
-                uriBuilder.append('=');
-                uriBuilder.append(URLEncoder.encode(param.getValue(), UTF_8));
-                uriBuilder.append("&");
-            }
+            uriBuilder.append('?');
+            uriBuilder.append(urlEncodeParameters(queryParameters));
         }
 
         HttpRequest request = HttpRequest.newBuilder() //
@@ -95,48 +80,5 @@ public class ElgCatalogClientImpl implements ElgCatalogClient
         HttpResponse<String> response = sendRequest(request);
 
         return deserializeResponse(response, ElgCatalogSearchResponse.class);
-    }
-
-    private <T> T deserializeResponse(HttpResponse<String> response, Class<T> aResponseType)
-        throws IOException
-    {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.readValue(response.body(), aResponseType);
-        }
-        catch (IOException e) {
-            throw new IOException("Error while deserializing response!", e);
-        }
-    }
-
-    private HttpResponse<String> sendRequest(HttpRequest aRequest) throws IOException
-    {
-        try {
-            HttpResponse<String> response = client.send(aRequest, BodyHandlers.ofString(UTF_8));
-
-            // If the response indicates that the request was not successful,
-            // then it does not make sense to go on and try to decode the XMI
-            if (response.statusCode() >= HTTP_BAD_REQUEST) {
-                String responseBody = getResponseBody(response);
-                String msg = format("Request was not successful: [%d] - [%s]",
-                        response.statusCode(), responseBody);
-                throw new IOException(msg);
-            }
-
-            return response;
-        }
-        catch (IOException | InterruptedException e) {
-            throw new IOException("Error while sending request: " + e.getMessage(), e);
-        }
-    }
-
-    private String getResponseBody(HttpResponse<String> response)
-    {
-        if (response.body() != null) {
-            return response.body();
-        }
-        else {
-            return "";
-        }
     }
 }

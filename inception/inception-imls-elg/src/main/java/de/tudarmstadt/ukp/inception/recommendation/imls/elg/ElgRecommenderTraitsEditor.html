@@ -18,6 +18,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
+    <div class="row form-row">
+      <label class="col-sm-3 col-form-label">
+        <wicket:message key="elgSession"/>
+      </label>
+      <div class="col-sm-9">
+        <div wicket:id="elgSession"/>
+      </div>
+    </div>
   <form wicket:id="form">
     <div class="row form-row" wicket:enclosure="search">
       <label class="col-sm-3 col-form-label" wicket:for="search">
@@ -49,18 +57,6 @@
       </label>
       <div class="col-sm-9">
         <input wicket:id="serviceUrlAsync" type="text" class="form-control"></input>
-      </div>
-    </div>
-    <div class="row form-row" wicket:enclosure="token">
-      <label class="col-sm-3 col-form-label" wicket:for="token">
-        <wicket:message key="token"/>
-      </label>
-      <div class="col-sm-9">
-        <textarea wicket:id="token" class="form-control"/>
-      </div>
-      <div class="offset-sm-3 col-sm-9 small text-muted">
-        Visit the <a target="_blank" wicket:id="elgLink">ELG page</a>&nbsp;<i class="fas fa-external-link-alt"></i> 
-        for this service, log in, copy the token from the <b>Code samples / curl</b> tab and paste it here.
       </div>
     </div>
   </form>

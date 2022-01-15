@@ -24,14 +24,14 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ElgResponseContainer
 {
-    private ElgResponse response;
+    private ElgServiceResponse response;
 
-    public ElgResponse getResponse()
+    public ElgServiceResponse getResponse()
     {
         return response;
     }
 
-    public void setResponse(ElgResponse aResponse)
+    public void setResponse(ElgServiceResponse aResponse)
     {
         response = aResponse;
     }

@@ -19,12 +19,23 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.elg.client;
 
 import java.io.IOException;
 
-import org.apache.uima.cas.CAS;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgSessionState;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTokenResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgUserInfoResponse;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
-
-public interface ElgServiceClient
+public interface ElgAuthenticationClient
 {
-    ElgServiceResponse invokeService(String aServiceSync, String aToken, CAS aCas)
-        throws IOException;
+    String getCodeUrl();
+
+    ElgTokenResponse getToken(String aCode) throws IOException;
+    
+    ElgTokenResponse refreshToken(String aRefreshToken) throws IOException;
+
+    ElgUserInfoResponse getUserInfo(String aAccessToken) throws IOException;
+
+    boolean refreshSessionIfNecessary(ElgSessionState aSession) throws IOException;
+
+    boolean requiresRefresh(ElgSessionState aSession);
+
+    boolean requiresSignIn(ElgSessionState aSession);
 }

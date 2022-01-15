@@ -32,36 +32,37 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableR
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgAnnotation;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgAnnotationsResponse;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTextsResponse;
 
 public class ElgRecommender
     extends NonTrainableRecommenderEngineImplBase
 {
-    private static final String BASE_URL = "https://live.european-language-grid.eu/execution/process/";
-
     private final ElgRecommenderTraits traits;
+    private final ElgSessionState session;
 
     private final ElgServiceClient client;
 
-    public ElgRecommender(Recommender aRecommender, ElgRecommenderTraits aTraits)
+    public ElgRecommender(Recommender aRecommender, ElgRecommenderTraits aTraits,
+            ElgServiceClient aClient, ElgSessionState aSession)
     {
         super(aRecommender);
 
         traits = aTraits;
+        session = aSession;
 
-        client = new ElgServiceClientImpl();
+        client = aClient;
     }
 
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        ElgResponse response;
+        ElgServiceResponse response;
         try {
-            response = client.invokeService(traits.getServiceUrlSync(), traits.getToken(), aCas);
+            response = client.invokeService(traits.getServiceUrlSync(), session.getAccessToken(),
+                    aCas);
         }
         catch (IOException e) {
             throw new RecommendationException(
@@ -72,8 +73,7 @@ public class ElgRecommender
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
-        for (Entry<String, List<ElgAnnotation>> group : getAnnotationGroups(response)
-                .entrySet()) {
+        for (Entry<String, List<ElgAnnotation>> group : getAnnotationGroups(response).entrySet()) {
             String tag = group.getKey();
             for (ElgAnnotation elgAnn : group.getValue()) {
                 AnnotationFS ann = aCas.createAnnotation(predictedType, elgAnn.getStart(),
@@ -85,7 +85,7 @@ public class ElgRecommender
         }
     }
 
-    private Map<String, List<ElgAnnotation>> getAnnotationGroups(ElgResponse aResponse)
+    private Map<String, List<ElgAnnotation>> getAnnotationGroups(ElgServiceResponse aResponse)
         throws RecommendationException
     {
         if (aResponse instanceof ElgTextsResponse) {

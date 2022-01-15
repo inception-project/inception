@@ -28,14 +28,9 @@ public class ElgRecommenderTraits
     private static final long serialVersionUID = 9030733775045245314L;
 
     private long serviceId;
-
     private String serviceName;
-
     private String serviceUrlSync;
-
     private String serviceUrlAsync;
-
-    private String token;
 
     public String getServiceName()
     {
@@ -55,16 +50,6 @@ public class ElgRecommenderTraits
     public void setServiceId(long aServiceId)
     {
         serviceId = aServiceId;
-    }
-
-    public String getToken()
-    {
-        return token;
-    }
-
-    public void setToken(String aToken)
-    {
-        token = aToken;
     }
 
     public String getServiceUrlSync()

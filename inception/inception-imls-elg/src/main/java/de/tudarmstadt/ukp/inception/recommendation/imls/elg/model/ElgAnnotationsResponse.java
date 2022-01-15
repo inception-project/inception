@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 public class ElgAnnotationsResponse
-    extends ElgResponse
+    extends ElgServiceResponse
 {
     private Map<String, List<ElgAnnotation>> annotations;
 

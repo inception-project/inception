@@ -18,28 +18,22 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({ //
-        @Type(value = ElgTextsResponse.class, name = "texts"),
-        @Type(value = ElgAnnotationsResponse.class, name = "annotations") })
-public abstract class ElgResponse
+public class ElgUserInfoResponse
 {
-    private String type;
+    private @JsonProperty("preferred_username") String preferredUsername;
 
-    public String getType()
+    public String getPreferredUsername()
     {
-        return type;
+        return preferredUsername;
     }
 
-    public void setType(String aType)
+    public void setPreferredUsername(String aPreferredUsername)
     {
-        type = aType;
+        preferredUsername = aPreferredUsername;
     }
 }

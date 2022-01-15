@@ -21,7 +21,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgRecommenderFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
@@ -32,9 +35,10 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceCli
 public class ElgRecommenderAutoConfiguration
 {
     @Bean
-    public ElgRecommenderFactory elgRecommenderFactory()
+    public ElgRecommenderFactory elgRecommenderFactory(PreferencesService aPreferencesService,
+            ElgServiceClient aElgServiceClient)
     {
-        return new ElgRecommenderFactory();
+        return new ElgRecommenderFactory(aPreferencesService, aElgServiceClient);
     }
 
     @Bean
@@ -42,10 +46,16 @@ public class ElgRecommenderAutoConfiguration
     {
         return new ElgCatalogClientImpl();
     }
-    
+
     @Bean
     public ElgServiceClient elgServiceClient()
     {
         return new ElgServiceClientImpl();
+    }
+
+    @Bean
+    public ElgAuthenticationClient elgAuthenticationClient()
+    {
+        return new ElgAuthenticationClientImpl();
     }
 }
