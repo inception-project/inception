@@ -18,18 +18,19 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgSessionState.KEY_ELG_SESSION_STATE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+
+import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgService;
 
 public class ElgRecommenderFactory
     extends RecommendationEngineFactoryImplBase<ElgRecommenderTraits>
@@ -38,14 +39,11 @@ public class ElgRecommenderFactory
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgRecommenderFactory";
 
-    private final PreferencesService preferencesService;
-    private final ElgServiceClient elgServiceClient;
+    private final ElgService elgService;
 
-    public ElgRecommenderFactory(PreferencesService aPreferencesService,
-            ElgServiceClient aElgServiceClient)
+    public ElgRecommenderFactory(ElgService aElgService)
     {
-        preferencesService = aPreferencesService;
-        elgServiceClient = aElgServiceClient;
+        elgService = aElgService;
     }
 
     @Override
@@ -64,9 +62,11 @@ public class ElgRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         ElgRecommenderTraits traits = readTraits(aRecommender);
-        ElgSessionState session = preferencesService.loadDefaultTraitsForProject(
-                KEY_ELG_SESSION_STATE, aRecommender.getProject());
-        return new ElgRecommender(aRecommender, traits, elgServiceClient, session);
+        Optional<ElgSession> session = elgService.getSession(aRecommender.getProject());
+        if (!session.isPresent()) {
+            throw new IllegalArgumentException("Not signed in to ELG");
+        }
+        return new ElgRecommender(aRecommender, traits, elgService, session.get());
     }
 
     @Override

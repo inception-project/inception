@@ -37,6 +37,8 @@ public interface PreferencesService
 
     <T> void saveDefaultTraitsForProject(Key<T> aKey, Project aProject, T aTraits);
 
+    <T> void clearDefaultTraitsForProject(Key<T> aKey, Project aProject);
+
     List<DefaultProjectPreference> listDefaultTraitsForProject(Project aProject);
 
     void saveDefaultProjectPreference(DefaultProjectPreference aPreference);

@@ -61,6 +61,7 @@ public class ProjectRecommendersPanel
                 projectModel, selectedRecommenderModel, true);
         recommenderListPanel.setCreateAction(_target -> {
             Recommender recommender = new Recommender();
+            recommender.setProject(aProject.getObject());
             recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
             selectedRecommenderModel.setObject(recommender);
             recommenderEditorPanel.modelChanged();

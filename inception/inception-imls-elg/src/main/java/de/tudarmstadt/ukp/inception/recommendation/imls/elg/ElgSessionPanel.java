@@ -19,13 +19,14 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
-import static de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgSessionState.KEY_ELG_SESSION_STATE;
-import static java.lang.System.currentTimeMillis;
+import static java.time.Instant.now;
+import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Objects;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -45,8 +46,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgService;
 
 public class ElgSessionPanel
     extends Panel
@@ -59,28 +61,27 @@ public class ElgSessionPanel
     private static final String MID_SIGN_IN_FORM = "signInForm";
 
     private @SpringBean ElgAuthenticationClient elgAuthenticationClient;
-    private @SpringBean PreferencesService preferencesService;
+    private @SpringBean ElgService elgService;
 
     private IModel<Project> project;
+    private IModel<Boolean> requiresSignIn;
 
     private String tokenCode;
 
     public ElgSessionPanel(String aId, IModel<Project> aProject)
     {
         super(aId);
-        
+
         project = aProject;
-        
+
         setOutputMarkupId(true);
-        
-        setDefaultModel(Model.of(preferencesService
-                .loadDefaultTraitsForProject(KEY_ELG_SESSION_STATE, aProject.getObject())));
+
+        setDefaultModel(Model.of(elgService.getSession(aProject.getObject()).orElse(null)));
 
         refreshSessionIfPossible(getModelObject());
 
-        IModel<Boolean> requiresSignIn = LoadableDetachableModel
-                .of(() -> elgAuthenticationClient.requiresSignIn(getModelObject()));
-        
+        requiresSignIn = LoadableDetachableModel.of(this::isSignInRequired);
+
         Form<Void> signInForm = new Form<Void>(MID_SIGN_IN_FORM)
         {
             private static final long serialVersionUID = 1494895206703898448L;
@@ -106,69 +107,78 @@ public class ElgSessionPanel
 
         WebMarkupContainer signOutPanel = new WebMarkupContainer("signOutPanel");
         signOutPanel.add(visibleWhenNot(requiresSignIn));
-        
+
         signOutPanel.add(new LambdaAjaxLink("signOut", this::actionSignOut));
 
         Label identity = new Label("identity", getUserIdentity());
         identity.add(visibleWhenNot(requiresSignIn));
         signOutPanel.add(identity);
-        
+
         Label signInValidUntil = new Label("signInValidUntil");
         signInValidUntil.setDefaultModel(getModel() //
-                .map(ElgSessionState::getRefreshTokenValidUntil) //
+                .map(ElgSession::getRefreshTokenValidUntil) //
                 .map(DURATION_FORMAT::format));
         signInValidUntil.add(visibleWhen(getModel() //
-                .map(ElgSessionState::getRefreshTokenValidUntil) //
-                .map(v -> v > 0)));
+                .map(ElgSession::getRefreshTokenValidUntil) //
+                .map(Objects::nonNull)));
         signOutPanel.add(signInValidUntil);
 
         Label expiresIn = new Label("expiresIn");
         expiresIn.setDefaultModel(getModel() //
-                .map(s -> currentTimeMillis() - s.getRefreshTokenValidUntil())
+                .map(ElgSession::getRefreshTokenValidUntil) //
+                .map(t -> MILLIS.between(now(), t.toInstant())) //
                 .map(d -> formatDurationWords(d, true, true)));
         signOutPanel.add(expiresIn);
         add(signOutPanel);
     }
 
-    private void refreshSessionIfPossible(ElgSessionState aSession)
+    @SuppressWarnings("unchecked")
+    public IModel<ElgSession> getModel()
     {
-        if (aSession.getRefreshToken() == null) {
+        return (IModel<ElgSession>) getDefaultModel();
+    }
+
+    public void setModelObject(ElgSession aSession)
+    {
+        setDefaultModelObject(aSession);
+    }
+
+    public ElgSession getModelObject()
+    {
+        return (ElgSession) getDefaultModelObject();
+    }
+    
+    private boolean isSignInRequired() {
+        ElgSession session = getModelObject();
+        if (session == null) {
+            return true;
+        }
+        
+        return elgAuthenticationClient.requiresSignIn(session);
+    }
+
+    private void refreshSessionIfPossible(ElgSession aSession)
+    {
+        if (aSession == null) {
             return;
         }
         
         try {
-            elgAuthenticationClient.refreshToken(aSession.getRefreshToken());
+            elgService.refreshSessionIfPossible(aSession);
         }
         catch (IOException e) {
-            aSession.clear();
-            error("Signing out from ELG as session count not be refreshed: " + getRootCauseMessage(e));
+            error("Signing out from ELG as session count not be refreshed: "
+                    + getRootCauseMessage(e));
         }
-        
-        preferencesService.saveDefaultTraitsForProject(KEY_ELG_SESSION_STATE,
-                project.getObject(), aSession);
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<ElgSessionState> getModel()
-    {
-        return (IModel<ElgSessionState>) getDefaultModel();
-    }
-
-    public ElgSessionState getModelObject()
-    {
-        return (ElgSessionState) getDefaultModelObject();
     }
 
     private void actionSignOut(AjaxRequestTarget aTarget)
     {
         try {
-            ElgSessionState session = getModelObject();
-            
-            session.clear();
-
-            preferencesService.saveDefaultTraitsForProject(KEY_ELG_SESSION_STATE,
-                    project.getObject(), session);
-
+            elgService.signOut(project.getObject());
+            setModelObject(null);
+            tokenCode = null;
+            requiresSignIn.detach();
             aTarget.add(this);
         }
         catch (Exception e) {
@@ -180,13 +190,8 @@ public class ElgSessionPanel
     private void actionSignIn(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         try {
-            ElgSessionState session = getModelObject();
-            
-            session.update(elgAuthenticationClient.getToken(tokenCode));
-
-            preferencesService.saveDefaultTraitsForProject(KEY_ELG_SESSION_STATE,
-                    project.getObject(), session);
-
+            setModelObject(elgService.signIn(project.getObject(), tokenCode));
+            requiresSignIn.detach();
             aTarget.add(this);
         }
         catch (Exception e) {
@@ -194,9 +199,10 @@ public class ElgSessionPanel
             aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
-    
-    private IModel<String> getUserIdentity() {
-        return getModel().map(ElgSessionState::getAccessToken).map(accessToken -> {
+
+    private IModel<String> getUserIdentity()
+    {
+        return getModel().map(ElgSession::getAccessToken).map(accessToken -> {
             try {
                 return elgAuthenticationClient.getUserInfo(accessToken).getPreferredUsername();
             }

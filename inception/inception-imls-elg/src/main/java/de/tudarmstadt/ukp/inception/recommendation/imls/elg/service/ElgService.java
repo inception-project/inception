@@ -15,27 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.elg.client;
+package de.tudarmstadt.ukp.inception.recommendation.imls.elg.service;
 
 import java.io.IOException;
+import java.util.Optional;
 
+import org.apache.uima.cas.CAS;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTokenResponse;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgUserInfoResponse;
 
-public interface ElgAuthenticationClient
+public interface ElgService
 {
-    String getCodeUrl();
+    ElgSession signIn(Project aProject, String aSuccessCode) throws IOException;
 
-    ElgTokenResponse getToken(String aCode) throws IOException;
-    
-    ElgTokenResponse refreshToken(String aRefreshToken) throws IOException;
+    void signOut(Project aProject);
 
-    ElgUserInfoResponse getUserInfo(String aAccessToken) throws IOException;
+    Optional<ElgSession> getSession(Project aProject);
 
-    boolean refreshSessionIfNecessary(ElgSession aSession) throws IOException;
+    void refreshSessionIfPossible(ElgSession aSession) throws IOException;
 
-    boolean requiresRefresh(ElgSession aSession);
-
-    boolean requiresSignIn(ElgSession aSession);
+    ElgServiceResponse invokeService(ElgSession aSession, String aServiceSync, CAS aCas)
+        throws IOException;
 }

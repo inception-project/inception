@@ -31,29 +31,30 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgAnnotation;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgAnnotationsResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTextsResponse;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgService;
 
 public class ElgRecommender
     extends NonTrainableRecommenderEngineImplBase
 {
     private final ElgRecommenderTraits traits;
-    private final ElgSessionState session;
+    private final ElgSession session;
 
-    private final ElgServiceClient client;
+    private final ElgService elgService;
 
     public ElgRecommender(Recommender aRecommender, ElgRecommenderTraits aTraits,
-            ElgServiceClient aClient, ElgSessionState aSession)
+            ElgService aElgService, ElgSession aSession)
     {
         super(aRecommender);
 
         traits = aTraits;
         session = aSession;
 
-        client = aClient;
+        elgService = aElgService;
     }
 
     @Override
@@ -61,8 +62,7 @@ public class ElgRecommender
     {
         ElgServiceResponse response;
         try {
-            response = client.invokeService(traits.getServiceUrlSync(), session.getAccessToken(),
-                    aCas);
+            response = elgService.invokeService(session, traits.getServiceUrlSync(), aCas);
         }
         catch (IOException e) {
             throw new RecommendationException(

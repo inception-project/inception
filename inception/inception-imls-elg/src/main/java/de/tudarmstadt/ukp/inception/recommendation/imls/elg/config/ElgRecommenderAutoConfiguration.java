@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.config;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClientImpl;
@@ -29,16 +31,19 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogCli
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgServiceImpl;
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.elg", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class ElgRecommenderAutoConfiguration
 {
+    private @PersistenceContext EntityManager entityManager;
+
     @Bean
-    public ElgRecommenderFactory elgRecommenderFactory(PreferencesService aPreferencesService,
-            ElgServiceClient aElgServiceClient)
+    public ElgRecommenderFactory elgRecommenderFactory(ElgService aElgService)
     {
-        return new ElgRecommenderFactory(aPreferencesService, aElgServiceClient);
+        return new ElgRecommenderFactory(aElgService);
     }
 
     @Bean
@@ -57,5 +62,12 @@ public class ElgRecommenderAutoConfiguration
     public ElgAuthenticationClient elgAuthenticationClient()
     {
         return new ElgAuthenticationClientImpl();
+    }
+
+    @Bean
+    public ElgService elgService(ElgAuthenticationClient aElgAuthenticationClient,
+            ElgServiceClient aElgServiceClient, EntityManager aEntityManager)
+    {
+        return new ElgServiceImpl(aElgAuthenticationClient, aElgServiceClient, entityManager);
     }
 }

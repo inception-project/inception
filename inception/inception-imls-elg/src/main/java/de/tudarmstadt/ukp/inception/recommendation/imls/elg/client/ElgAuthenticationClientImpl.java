@@ -17,20 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.client;
 
-import static java.util.stream.Collectors.averagingLong;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
+import java.time.Instant;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.ElgSessionState;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTokenResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgUserInfoResponse;
 
@@ -59,25 +59,36 @@ public class ElgAuthenticationClientImpl
     }
 
     @Override
-    public boolean requiresSignIn(ElgSessionState aSession)
+    public boolean requiresSignIn(ElgSession aSession)
     {
-        if (aSession.getRefreshTokenValidUntil() == 0 && aSession.getRefreshToken() != null) {
+        Date validUntil = aSession.getRefreshTokenValidUntil();
+        
+        if (validUntil == null && aSession.getRefreshToken() != null) {
             // ELG currently seems to not provide information on how long the refresh token is
             // valid, so we assume that it is valid as long as we have a token.
             return false;
         }
         
-        return System.currentTimeMillis() >= aSession.getRefreshTokenValidUntil();
+        if (validUntil == null) {
+            return true;
+        }
+        
+        return Instant.now().isAfter(validUntil.toInstant());
     }
 
     @Override
-    public boolean requiresRefresh(ElgSessionState aSession)
+    public boolean requiresRefresh(ElgSession aSession)
     {
-        return System.currentTimeMillis() >= aSession.getAccessTokenValidUntil();
+        Date validUntil = aSession.getAccessTokenValidUntil();
+        if (validUntil == null) {
+            return true;
+        }
+        
+        return Instant.now().isAfter(validUntil.toInstant());
     }
 
     @Override
-    public boolean refreshSessionIfNecessary(ElgSessionState aSession) throws IOException
+    public boolean refreshSessionIfNecessary(ElgSession aSession) throws IOException
     {
         if (!requiresRefresh(aSession)) {
             return false;

@@ -21,15 +21,15 @@
   <form wicket:id="signInForm">
     <div class="row form-row">
       <div class="col-sm-12">
-        <ol>
-          <li wicket:enclosure="signInLink">
+        <ol class="list-group list-group-numbered">
+          <li wicket:enclosure="signInLink" class="list-group-item">
             <a wicket:id="signInLink" target="_blank">Obtain an ELG sign-in code.</a>
           </li>
-          <li wicket:enclosure="code">
+          <li wicket:enclosure="code" class="list-group-item">
             <wicket:message key="code"/>
             <textarea wicket:id="code" class="form-control"/>
           </li>
-          <li>
+          <li class="list-group-item">
             <button wicket:id="signIn" class="btn btn-primary">Sign in</button>
           </li>
         </ol>
@@ -38,16 +38,18 @@
   </form>
   <div wicket:id="signOutPanel">
     <div class="row form-row">
-      <div class="col-sm-12">
-        Signed in
-        <span wicket:enclosure="identity">
-          as <span wicket:id="identity"/>
-        </span>
-        <span wicket:enclosure="signInValidUntil"> 
-          until <span wicket:id="signInValidUntil"/> 
-          (<span wicket:id="expiresIn"/> remaining)
-        </span>
-        <button wicket:id="signOut" class="btn btn-danger float-end">Sign out</button>
+      <div class="col-sm-12 flex-h-container flex-gutter flex-only-internal-gutter">
+        <div class="form-control" readonly>
+          Signed in
+          <span wicket:enclosure="identity">
+            as <span wicket:id="identity"/>
+          </span>
+          <span wicket:enclosure="signInValidUntil"> 
+            until <span wicket:id="signInValidUntil"/> 
+            (<span wicket:id="expiresIn"/> remaining)
+          </span>
+        </div>
+        <button wicket:id="signOut" class="btn btn-danger float-end text-nowrap">Sign out</button>
       </div>
     </div>
   </div>
