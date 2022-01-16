@@ -225,6 +225,7 @@ public class ElgRecommenderTraitsEditor
 
     private void actionChangeService(AjaxRequestTarget aTarget)
     {
+        searchResult = null;
         traits.setObject(toolFactory.createTraits());
         aTarget.add(this);
     }

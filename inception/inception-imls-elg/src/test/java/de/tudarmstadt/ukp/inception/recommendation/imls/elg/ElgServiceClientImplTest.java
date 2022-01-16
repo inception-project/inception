@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.CasFactory;
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -37,7 +37,7 @@ public class ElgServiceClientImplTest
         sut = new ElgServiceClientImpl();
     }
     
-    @Ignore("Won't run without a token")
+    @Disabled("Won't run without a token")
     @Test
     public void test() throws Exception {
         String syncUrl ="https://live.european-language-grid.eu/execution/process/gatenercen";
