@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.elg.client;
 
 import java.io.IOException;
 
-import org.apache.uima.cas.CAS;
-
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 
 public interface ElgServiceClient
