@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClient;
@@ -34,6 +35,7 @@ public class ElgAuthenticationClientImplTest
         sut = new ElgAuthenticationClientImpl();
     }
 
+    @Disabled("Would need an actual token")
     @Test
     public void testGetToken() throws Exception
     {
