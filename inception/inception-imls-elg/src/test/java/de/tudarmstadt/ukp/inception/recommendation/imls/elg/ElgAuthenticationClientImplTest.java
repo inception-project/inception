@@ -39,7 +39,8 @@ public class ElgAuthenticationClientImplTest
     @Test
     public void testGetToken() throws Exception
     {
-        // Get a code here: https://live.european-language-grid.eu/auth/realms/ELG/protocol/openid-connect/auth?client_id=elg-oob&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&scope=offline_access
+        // Get a code here:
+        // https://live.european-language-grid.eu/auth/realms/ELG/protocol/openid-connect/auth?client_id=elg-oob&redirect_uri=urn:ietf:wg:oauth:2.0:oob&response_type=code&scope=offline_access
         ElgTokenResponse response = sut.getToken("hahaha");
 
         System.out.println(response);

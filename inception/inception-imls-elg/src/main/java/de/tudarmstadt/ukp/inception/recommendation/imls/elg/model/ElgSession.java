@@ -37,8 +37,7 @@ import javax.persistence.UniqueConstraint;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Entity
-@Table(name = "elg_session", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "project" }) })
+@Table(name = "elg_session", uniqueConstraints = { @UniqueConstraint(columnNames = { "project" }) })
 public class ElgSession
     implements Serializable
 {
@@ -50,18 +49,18 @@ public class ElgSession
     @ManyToOne
     @JoinColumn(name = "project")
     private Project project;
-    
+
     @Lob
     @Column(length = 4096)
     private String accessToken;
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     private Date accessTokenValidUntil;
-    
+
     @Lob
     @Column(length = 4096)
     private String refreshToken;
-    
+
     @Temporal(TemporalType.TIMESTAMP)
     private Date refreshTokenValidUntil;
 
@@ -74,7 +73,7 @@ public class ElgSession
     {
         project = aProject;
     }
-    
+
     public Long getId()
     {
         return id;
@@ -84,12 +83,12 @@ public class ElgSession
     {
         id = aId;
     }
-    
+
     public Project getProject()
     {
         return project;
     }
-    
+
     public void setProject(Project aProject)
     {
         project = aProject;
@@ -139,22 +138,24 @@ public class ElgSession
     {
         setAccessToken(response.getAccessToken());
         if (response.getExpiresIn() > 0) {
-            setAccessTokenValidUntil(new Date(response.getSubmitTime() + (response.getExpiresIn() * 1000)));
+            setAccessTokenValidUntil(
+                    new Date(response.getSubmitTime() + (response.getExpiresIn() * 1000)));
         }
         else {
             setAccessTokenValidUntil(null);
         }
         setRefreshToken(response.getRefreshToken());
         if (response.getRefreshExpiresIn() > 0) {
-            setRefreshTokenValidUntil(new Date(
-                    response.getSubmitTime() + (response.getRefreshExpiresIn() * 1000)));
+            setRefreshTokenValidUntil(
+                    new Date(response.getSubmitTime() + (response.getRefreshExpiresIn() * 1000)));
         }
         else {
             setRefreshTokenValidUntil(null);
         }
     }
-    
-    public void clear() {
+
+    public void clear()
+    {
         setAccessToken(null);
         setAccessTokenValidUntil(null);
         setRefreshToken(null);

@@ -26,10 +26,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ElgCatalogEntity implements Serializable
+public class ElgCatalogEntity
+    implements Serializable
 {
     private static final long serialVersionUID = 6132758139094707551L;
-    
+
     private @JsonProperty("id") long id;
     private @JsonProperty("resource_name") String resourceName;
     private @JsonProperty("resource_short_name") List<String> resourceShortNames;

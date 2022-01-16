@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntityDetails;
@@ -27,25 +28,27 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogSear
 public class ElgCatalogClientImplTest
 {
     private ElgCatalogClient sut;
-    
+
     @BeforeEach
-    public void setup() {
+    public void setup()
+    {
         sut = new ElgCatalogClientImpl();
     }
-    
+
     @Test
     public void testCatalogQuery() throws Exception
     {
         ElgCatalogSearchResponse response = sut.search("GATE");
-        
+
         // System.out.println(JSONUtil.toPrettyJsonString(response));
     }
 
     @Test
     public void testRetrievingDetails() throws Exception
     {
-        ElgCatalogEntityDetails response = sut.details("https://live.european-language-grid.eu/catalogue_backend/api/registry/metadatarecord/627/");
-        
+        ElgCatalogEntityDetails response = sut.details(
+                "https://live.european-language-grid.eu/catalogue_backend/api/registry/metadatarecord/627/");
+
         // System.out.println(JSONUtil.toPrettyJsonString(response));
     }
 }

@@ -19,7 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.elg.model;
 
 import java.util.List;
 
-public class ElgTextsResponse extends ElgServiceResponse
+public class ElgTextsResponse
+    extends ElgServiceResponse
 {
     private List<ElgText> texts;
 

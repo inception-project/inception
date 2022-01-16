@@ -104,7 +104,7 @@ public class ElgRecommenderTraitsEditor
         serviceDescription.setOutputMarkupPlaceholderTag(true);
         serviceDescription.add(visibleWhen(() -> traits.getObject().getServiceId() > 0));
         form.add(serviceDescription);
-        
+
         ExternalLink catalogLink = new ExternalLink("catalogLink",
                 LoadableDetachableModel.of(this::getCatalogLink));
         catalogLink.add(visibleWhen(() -> traits.getObject().getServiceId() > 0));
@@ -198,21 +198,23 @@ public class ElgRecommenderTraitsEditor
 
         add(form);
     }
-    
-    private String getCatalogLink() {
+
+    private String getCatalogLink()
+    {
         if (traits.getObject() == null) {
             return null;
         }
-        
+
         return "https://live.european-language-grid.eu/catalogue/tool-service/"
                 + traits.getObject().getServiceId();
     }
-    
-    private String getServiceDescription() {
+
+    private String getServiceDescription()
+    {
         if (traits.getObject() == null) {
             return "No service selected";
         }
-        
+
         try {
             return elgCatalogClient.findServiceById(traits.getObject().getServiceId()) //
                     .map(ElgCatalogEntity::getDescription) //

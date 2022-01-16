@@ -49,7 +49,7 @@ public class ElgRecommender
     extends NonTrainableRecommenderEngineImplBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final ElgRecommenderTraits traits;
     private final ElgSession session;
 
@@ -82,7 +82,7 @@ public class ElgRecommender
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Feature explanationFeature = getScoreExplanationFeature(aCas);
-        
+
         for (Entry<String, List<ElgAnnotation>> group : getAnnotationGroups(response).entrySet()) {
             String tag = group.getKey();
             for (ElgAnnotation elgAnn : group.getValue()) {
@@ -97,7 +97,8 @@ public class ElgRecommender
                     }
                     catch (CASRuntimeException | IOException e) {
                         ann.setStringValue(explanationFeature,
-                                "Unable to display ELG annotation features: " + getRootCauseMessage(e));
+                                "Unable to display ELG annotation features: "
+                                        + getRootCauseMessage(e));
                         log.error("Unable to display ELG annotation features", e);
                     }
                 }

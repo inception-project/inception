@@ -36,12 +36,12 @@ public class ElgTokenResponse
     {
         submitTime = aSubmitTime;
     }
-    
+
     public long getSubmitTime()
     {
         return submitTime;
     }
-    
+
     public String getAccessToken()
     {
         return accessToken;

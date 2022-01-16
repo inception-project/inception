@@ -41,7 +41,7 @@ public class ElgServiceImpl
     implements ElgService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final ElgAuthenticationClient elgAuthenticationClient;
     private final ElgServiceClient elgServiceClient;
     private final EntityManager entityManager;
@@ -72,7 +72,7 @@ public class ElgServiceImpl
     public ElgSession signIn(Project aProject, String aSuccessCode) throws IOException
     {
         log.trace("Signing in to ELG session in project {}", aProject);
-        
+
         ElgSession session = getSession(aProject).orElse(new ElgSession(aProject));
 
         session.update(elgAuthenticationClient.getToken(aSuccessCode));
@@ -87,7 +87,7 @@ public class ElgServiceImpl
     public void signOut(Project aProject)
     {
         log.trace("Signing out from ELG session in project {}", aProject);
-        
+
         String query = String.join("\n", //
                 "DELETE ElgSession", //
                 "WHERE project = :project");
@@ -106,13 +106,15 @@ public class ElgServiceImpl
         }
 
         if (!elgAuthenticationClient.requiresRefresh(aSession)) {
-            log.trace("Tokens for ELG session in project {} do not need refreshing yet", aSession.getProject());
+            log.trace("Tokens for ELG session in project {} do not need refreshing yet",
+                    aSession.getProject());
             return;
         }
-        
+
         try {
             log.trace("Refreshing tokens for ELG session in project {}", aSession.getProject());
-            ElgTokenResponse response = elgAuthenticationClient.refreshToken(aSession.getRefreshToken());
+            ElgTokenResponse response = elgAuthenticationClient
+                    .refreshToken(aSession.getRefreshToken());
             aSession.update(response);
             createOrUpdateSession(aSession);
         }
@@ -121,10 +123,11 @@ public class ElgServiceImpl
             throw e;
         }
     }
-    
+
     @Override
     @Transactional
-    public ElgSession createOrUpdateSession(ElgSession aSession) {
+    public ElgSession createOrUpdateSession(ElgSession aSession)
+    {
         Validate.notNull(aSession, "Session must be specified");
 
         if (isNull(aSession.getId())) {

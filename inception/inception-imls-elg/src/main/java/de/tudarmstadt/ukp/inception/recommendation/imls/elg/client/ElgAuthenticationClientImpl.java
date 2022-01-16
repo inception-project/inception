@@ -64,17 +64,17 @@ public class ElgAuthenticationClientImpl
     public boolean requiresSignIn(ElgSession aSession)
     {
         Date validUntil = aSession.getRefreshTokenValidUntil();
-        
+
         if (validUntil == null && aSession.getRefreshToken() != null) {
             // ELG currently seems to not provide information on how long the refresh token is
             // valid, so we assume that it is valid as long as we have a token.
             return false;
         }
-        
+
         if (validUntil == null) {
             return true;
         }
-        
+
         // Refresh if the token will expire in less than 60 seconds
         return Instant.now().isAfter(validUntil.toInstant().minus(60, SECONDS));
     }
@@ -86,7 +86,7 @@ public class ElgAuthenticationClientImpl
         if (validUntil == null) {
             return true;
         }
-        
+
         return Instant.now().isAfter(validUntil.toInstant());
     }
 
@@ -96,7 +96,7 @@ public class ElgAuthenticationClientImpl
         if (!requiresRefresh(aSession)) {
             return false;
         }
-        
+
         aSession.update(refreshToken(aSession.getRefreshToken()));
         return true;
     }
@@ -122,7 +122,7 @@ public class ElgAuthenticationClientImpl
         response.setSubmitTime(submitTime);
         return response;
     }
-    
+
     @Override
     public ElgTokenResponse refreshToken(String aRefreshToken) throws IOException
     {
@@ -143,14 +143,13 @@ public class ElgAuthenticationClientImpl
         response.setSubmitTime(submitTime);
         return response;
     }
-    
+
     @Override
     public ElgUserInfoResponse getUserInfo(String aAccessToken) throws IOException
     {
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(URI.create(USER_INFO_URL)) //
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + aAccessToken)
-                .build();
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + aAccessToken).build();
 
         HttpResponse<String> response = sendRequest(request);
 

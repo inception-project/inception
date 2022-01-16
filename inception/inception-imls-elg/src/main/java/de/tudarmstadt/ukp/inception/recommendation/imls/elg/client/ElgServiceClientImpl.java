@@ -26,13 +26,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
+
 import org.apache.uima.cas.CAS;
 import org.springframework.http.HttpHeaders;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponseContainer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 
-public class ElgServiceClientImpl extends ElgClientImplBase
+public class ElgServiceClientImpl
+    extends ElgClientImplBase
     implements ElgServiceClient
 {
     public ElgServiceClientImpl()

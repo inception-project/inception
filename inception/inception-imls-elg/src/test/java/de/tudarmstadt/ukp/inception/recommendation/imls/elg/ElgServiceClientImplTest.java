@@ -31,21 +31,23 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResp
 public class ElgServiceClientImplTest
 {
     private ElgServiceClient sut;
-    
+
     @BeforeEach
-    public void setup() {
+    public void setup()
+    {
         sut = new ElgServiceClientImpl();
     }
-    
+
     @Disabled("Won't run without a token")
     @Test
-    public void test() throws Exception {
-        String syncUrl ="https://live.european-language-grid.eu/execution/process/gatenercen";
+    public void test() throws Exception
+    {
+        String syncUrl = "https://live.european-language-grid.eu/execution/process/gatenercen";
         var token = "hahaha!";
         CAS cas = CasFactory.createCas();
         cas.setDocumentText("John Smith is working at IBM London.");
         ElgServiceResponse response = sut.invokeService(syncUrl, token, cas);
-        
+
         System.out.println(JSONUtil.toPrettyJsonString(response));
     }
 }

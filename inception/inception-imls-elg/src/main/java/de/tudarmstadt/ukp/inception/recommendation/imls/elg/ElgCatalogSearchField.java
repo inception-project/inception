@@ -30,17 +30,18 @@ import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntity;
 
-public class ElgCatalogSearchField extends AutoCompleteTextField<ElgCatalogEntity>
+public class ElgCatalogSearchField
+    extends AutoCompleteTextField<ElgCatalogEntity>
 {
     private static final long serialVersionUID = -483058932604036488L;
-    
+
     private @SpringBean ElgCatalogClient elgCatalogClient;
-    
+
     protected ElgCatalogSearchField(String aId, IModel<ElgCatalogEntity> aModel)
     {
         super(aId, aModel, new TextRenderer<>("resourceName"));
     }
-    
+
     @Override
     protected List<ElgCatalogEntity> getChoices(String aUserInput)
     {

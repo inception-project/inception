@@ -28,7 +28,7 @@ public interface ElgAuthenticationClient
     String getCodeUrl();
 
     ElgTokenResponse getToken(String aCode) throws IOException;
-    
+
     ElgTokenResponse refreshToken(String aRefreshToken) throws IOException;
 
     ElgUserInfoResponse getUserInfo(String aAccessToken) throws IOException;
