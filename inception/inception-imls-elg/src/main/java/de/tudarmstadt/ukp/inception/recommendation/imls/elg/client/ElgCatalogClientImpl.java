@@ -26,6 +26,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
+
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntity;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntityDetails;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogSearchResponse;
 
@@ -58,19 +61,32 @@ public class ElgCatalogClientImpl
     }
 
     @Override
+    public Optional<ElgCatalogEntity> findServiceById(long aServiceId) throws IOException
+    {
+        Map<String, String> queryParameters = new LinkedHashMap<>();
+        queryParameters.put("id", Long.toString(aServiceId));
+        return queryCatalog(queryParameters).getResults().stream().findFirst();
+    }
+
+    @Override
     public ElgCatalogSearchResponse search(String aSearch) throws IOException
     {
         Map<String, String> queryParameters = new LinkedHashMap<>();
-        queryParameters.put("elg_compatible_service", "true");
-        queryParameters.put("function__term", "Named Entity Recognition");
+        queryParameters.put("resource_type__term", "Tool/Service");
         if (isNotBlank(aSearch)) {
             queryParameters.put("search", aSearch);
         }
 
+        return queryCatalog(queryParameters);
+    }
+
+    public ElgCatalogSearchResponse queryCatalog(Map<String, String> aQueryParameters)
+        throws IOException
+    {
         StringBuilder uriBuilder = new StringBuilder(searchUrl);
-        if (!queryParameters.isEmpty()) {
+        if (!aQueryParameters.isEmpty()) {
             uriBuilder.append('?');
-            uriBuilder.append(urlEncodeParameters(queryParameters));
+            uriBuilder.append(urlEncodeParameters(aQueryParameters));
         }
 
         HttpRequest request = HttpRequest.newBuilder() //

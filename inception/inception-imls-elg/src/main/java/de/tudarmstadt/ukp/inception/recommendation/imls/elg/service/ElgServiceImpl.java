@@ -27,16 +27,21 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgAuthenticationClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgServiceClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTokenResponse;
 
 public class ElgServiceImpl
     implements ElgService
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final ElgAuthenticationClient elgAuthenticationClient;
     private final ElgServiceClient elgServiceClient;
     private final EntityManager entityManager;
@@ -66,14 +71,12 @@ public class ElgServiceImpl
     @Transactional
     public ElgSession signIn(Project aProject, String aSuccessCode) throws IOException
     {
+        log.trace("Signing in to ELG session in project {}", aProject);
+        
         ElgSession session = getSession(aProject).orElse(new ElgSession(aProject));
 
         session.update(elgAuthenticationClient.getToken(aSuccessCode));
 
-        if (!entityManager.contains(session)) {
-            entityManager.merge(session);
-        }
-        
         createOrUpdateSession(session);
 
         return session;
@@ -83,6 +86,8 @@ public class ElgServiceImpl
     @Transactional
     public void signOut(Project aProject)
     {
+        log.trace("Signing out from ELG session in project {}", aProject);
+        
         String query = String.join("\n", //
                 "DELETE ElgSession", //
                 "WHERE project = :project");
@@ -94,23 +99,30 @@ public class ElgServiceImpl
 
     @Override
     @Transactional
-    public void refreshSessionIfPossible(ElgSession aSession) throws IOException
+    public void refreshSession(ElgSession aSession) throws IOException
     {
         if (aSession.getRefreshToken() == null) {
             return;
         }
 
+        if (!elgAuthenticationClient.requiresRefresh(aSession)) {
+            log.trace("Tokens for ELG session in project {} do not need refreshing yet", aSession.getProject());
+            return;
+        }
+        
         try {
-            elgAuthenticationClient.refreshToken(aSession.getRefreshToken());
+            log.trace("Refreshing tokens for ELG session in project {}", aSession.getProject());
+            ElgTokenResponse response = elgAuthenticationClient.refreshToken(aSession.getRefreshToken());
+            aSession.update(response);
+            createOrUpdateSession(aSession);
         }
         catch (IOException e) {
             signOut(aSession.getProject());
             throw e;
         }
-        
-        createOrUpdateSession(aSession);
     }
     
+    @Override
     @Transactional
     public ElgSession createOrUpdateSession(ElgSession aSession) {
         Validate.notNull(aSession, "Session must be specified");
@@ -129,7 +141,7 @@ public class ElgServiceImpl
     public ElgServiceResponse invokeService(ElgSession aSession, String aServiceSync, CAS aCas)
         throws IOException
     {
-        refreshSessionIfPossible(aSession);
+        refreshSession(aSession);
 
         return elgServiceClient.invokeService(aServiceSync, aSession.getAccessToken(), aCas);
     }

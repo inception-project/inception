@@ -23,10 +23,12 @@ import static java.time.Instant.now;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Objects;
+import java.time.Instant;
+import java.util.Date;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -114,21 +116,50 @@ public class ElgSessionPanel
         identity.add(visibleWhenNot(requiresSignIn));
         signOutPanel.add(identity);
 
+        Label accessTokenValidUntil = new Label("accessTokenValidUntil");
+        accessTokenValidUntil.setDefaultModel(getModel() //
+                .map(ElgSession::getAccessTokenValidUntil) //
+                .map(DURATION_FORMAT::format));
+        accessTokenValidUntil.add(visibleWhen(getModel() //
+                .map(ElgSession::getAccessTokenValidUntil) //
+                .isPresent()));
+        accessTokenValidUntil
+                .setVisibilityAllowed(getApplication().getConfigurationType() == DEVELOPMENT);
+        signOutPanel.add(accessTokenValidUntil);
+
+        LambdaAjaxLink invalidateAccessToken = new LambdaAjaxLink("invalidateAccessToken",
+                this::actionInvalidateAccessToken);
+        invalidateAccessToken.add(visibleWhen(getModel() //
+                .map(ElgSession::getAccessTokenValidUntil) //
+                .isPresent()));
+        invalidateAccessToken
+                .setVisibilityAllowed(getApplication().getConfigurationType() == DEVELOPMENT);
+        signOutPanel.add(invalidateAccessToken);
+
+        LambdaAjaxLink refreshAccessToken = new LambdaAjaxLink("refreshAccessToken",
+                this::actionRefreshAccessToken);
+        refreshAccessToken.add(visibleWhen(getModel() //
+                .map(ElgSession::getAccessTokenValidUntil) //
+                .isPresent()));
+        refreshAccessToken
+                .setVisibilityAllowed(getApplication().getConfigurationType() == DEVELOPMENT);
+        signOutPanel.add(refreshAccessToken);
+
         Label signInValidUntil = new Label("signInValidUntil");
         signInValidUntil.setDefaultModel(getModel() //
                 .map(ElgSession::getRefreshTokenValidUntil) //
                 .map(DURATION_FORMAT::format));
         signInValidUntil.add(visibleWhen(getModel() //
                 .map(ElgSession::getRefreshTokenValidUntil) //
-                .map(Objects::nonNull)));
+                .isPresent()));
         signOutPanel.add(signInValidUntil);
 
-        Label expiresIn = new Label("expiresIn");
-        expiresIn.setDefaultModel(getModel() //
+        Label refreshTokenExpiresIn = new Label("expiresIn");
+        refreshTokenExpiresIn.setDefaultModel(getModel() //
                 .map(ElgSession::getRefreshTokenValidUntil) //
                 .map(t -> MILLIS.between(now(), t.toInstant())) //
                 .map(d -> formatDurationWords(d, true, true)));
-        signOutPanel.add(expiresIn);
+        signOutPanel.add(refreshTokenExpiresIn);
         add(signOutPanel);
     }
 
@@ -147,13 +178,14 @@ public class ElgSessionPanel
     {
         return (ElgSession) getDefaultModelObject();
     }
-    
-    private boolean isSignInRequired() {
+
+    private boolean isSignInRequired()
+    {
         ElgSession session = getModelObject();
         if (session == null) {
             return true;
         }
-        
+
         return elgAuthenticationClient.requiresSignIn(session);
     }
 
@@ -162,14 +194,32 @@ public class ElgSessionPanel
         if (aSession == null) {
             return;
         }
-        
+
         try {
-            elgService.refreshSessionIfPossible(aSession);
+            elgService.refreshSession(aSession);
         }
         catch (IOException e) {
             error("Signing out from ELG as session count not be refreshed: "
                     + getRootCauseMessage(e));
         }
+    }
+
+    private void actionInvalidateAccessToken(AjaxRequestTarget aTarget)
+    {
+        getModelObject().setAccessToken("dummy");
+        getModelObject().setAccessTokenValidUntil(Date.from(Instant.now().minusSeconds(120)));
+        elgService.createOrUpdateSession(getModelObject());
+        success("Access token invalidated");
+        aTarget.addChildren(getPage(), IFeedback.class);
+        aTarget.add(this);
+    }
+
+    private void actionRefreshAccessToken(AjaxRequestTarget aTarget)
+    {
+        refreshSessionIfPossible(getModelObject());
+        success("Access token refreshed");
+        aTarget.addChildren(getPage(), IFeedback.class);
+        aTarget.add(this);
     }
 
     private void actionSignOut(AjaxRequestTarget aTarget)

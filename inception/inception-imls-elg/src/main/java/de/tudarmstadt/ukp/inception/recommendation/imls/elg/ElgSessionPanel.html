@@ -51,6 +51,12 @@
         </div>
         <button wicket:id="signOut" class="btn btn-danger float-end text-nowrap">Sign out</button>
       </div>
+      <div wicket:enclosure="accessTokenValidUntil" class="pt-2">
+        Access token valid until 
+        <span wicket:id="accessTokenValidUntil"/> 
+        <button wicket:id="invalidateAccessToken" class="btn btn-sm btn-outline-secondary">Invalidate</button>
+        <button wicket:id="refreshAccessToken" class="btn btn-sm btn-outline-secondary">Refresh</button>
+      </div>
     </div>
   </div>
 </wicket:panel>

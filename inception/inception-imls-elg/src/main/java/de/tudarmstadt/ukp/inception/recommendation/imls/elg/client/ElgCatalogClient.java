@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.client;
 
 import java.io.IOException;
+import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntity;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntityDetails;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogSearchResponse;
 
@@ -28,5 +30,7 @@ public interface ElgCatalogClient
     ElgCatalogEntityDetails details(String aDetailUrl) throws IOException;
 
     ElgCatalogSearchResponse search(String aSearch) throws IOException;
+
+    Optional<ElgCatalogEntity> findServiceById(long aServiceId) throws IOException;
 
 }

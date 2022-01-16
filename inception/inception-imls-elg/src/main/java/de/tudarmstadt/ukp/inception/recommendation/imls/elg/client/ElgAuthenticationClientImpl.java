@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.client;
 
+import static java.time.temporal.ChronoUnit.SECONDS;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -73,7 +75,8 @@ public class ElgAuthenticationClientImpl
             return true;
         }
         
-        return Instant.now().isAfter(validUntil.toInstant());
+        // Refresh if the token will expire in less than 60 seconds
+        return Instant.now().isAfter(validUntil.toInstant().minus(60, SECONDS));
     }
 
     @Override

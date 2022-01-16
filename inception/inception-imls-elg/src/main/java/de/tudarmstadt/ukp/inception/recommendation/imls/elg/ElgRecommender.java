@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -24,9 +26,14 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -41,6 +48,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgService;
 public class ElgRecommender
     extends NonTrainableRecommenderEngineImplBase
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final ElgRecommenderTraits traits;
     private final ElgSession session;
 
@@ -72,7 +81,8 @@ public class ElgRecommender
         Type predictedType = getPredictedType(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
-
+        Feature explanationFeature = getScoreExplanationFeature(aCas);
+        
         for (Entry<String, List<ElgAnnotation>> group : getAnnotationGroups(response).entrySet()) {
             String tag = group.getKey();
             for (ElgAnnotation elgAnn : group.getValue()) {
@@ -80,6 +90,17 @@ public class ElgRecommender
                         elgAnn.getEnd());
                 ann.setStringValue(predictedFeature, tag);
                 ann.setBooleanValue(isPredictionFeature, true);
+                if (!elgAnn.getFeatures().isEmpty()) {
+                    try {
+                        ann.setStringValue(explanationFeature,
+                                JSONUtil.toPrettyJsonString(elgAnn.getFeatures()));
+                    }
+                    catch (CASRuntimeException | IOException e) {
+                        ann.setStringValue(explanationFeature,
+                                "Unable to display ELG annotation features: " + getRootCauseMessage(e));
+                        log.error("Unable to display ELG annotation features", e);
+                    }
+                }
                 aCas.addFsToIndexes(ann);
             }
         }

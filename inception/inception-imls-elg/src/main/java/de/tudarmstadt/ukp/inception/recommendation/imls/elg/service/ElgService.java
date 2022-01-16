@@ -34,8 +34,10 @@ public interface ElgService
 
     Optional<ElgSession> getSession(Project aProject);
 
-    void refreshSessionIfPossible(ElgSession aSession) throws IOException;
+    void refreshSession(ElgSession aSession) throws IOException;
 
     ElgServiceResponse invokeService(ElgSession aSession, String aServiceSync, CAS aCas)
         throws IOException;
+
+    ElgSession createOrUpdateSession(ElgSession aSession);
 }

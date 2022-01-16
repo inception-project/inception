@@ -29,6 +29,7 @@ public class ElgRecommenderTraits
 
     private long serviceId;
     private String serviceName;
+    private String serviceDetailsUrl;
     private String serviceUrlSync;
     private String serviceUrlAsync;
 
@@ -70,5 +71,15 @@ public class ElgRecommenderTraits
     public void setServiceUrlAsync(String aServiceUrlAsync)
     {
         serviceUrlAsync = aServiceUrlAsync;
+    }
+
+    public String getServiceDetailsUrl()
+    {
+        return serviceDetailsUrl;
+    }
+
+    public void setServiceDetailsUrl(String aServiceDetailsUrl)
+    {
+        serviceDetailsUrl = aServiceDetailsUrl;
     }
 }

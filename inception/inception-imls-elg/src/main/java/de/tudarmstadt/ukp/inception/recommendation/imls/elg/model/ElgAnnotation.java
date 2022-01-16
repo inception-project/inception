@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg.model;
 
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -26,7 +28,7 @@ public class ElgAnnotation
 {
     private int start;
     private int end;
-    // private Map<String, Object> features;
+    private Map<String, Object> features;
 
     public int getStart()
     {
@@ -48,13 +50,13 @@ public class ElgAnnotation
         end = aEnd;
     }
 
-//    public Map<String, String> getFeatures()
-//    {
-//        return features;
-//    }
-//
-//    public void setFeatures(Map<String, String> aFeatures)
-//    {
-//        features = aFeatures;
-//    }
+    public Map<String, Object> getFeatures()
+    {
+        return features;
+    }
+
+    public void setFeatures(Map<String, Object> aFeatures)
+    {
+        features = aFeatures;
+    }
 }
