@@ -29,6 +29,8 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 public class ElgClientImplBase
 {
     public static final int HTTP_BAD_REQUEST = 400;
