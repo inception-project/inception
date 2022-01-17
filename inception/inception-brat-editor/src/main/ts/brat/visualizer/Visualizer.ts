@@ -145,16 +145,6 @@ export class Visualizer {
   private sourceData: SourceData = null;
   private requestedData: SourceData = null; // FIXME Do we really need requestedData AND sourceData?
 
-  /**
-   * @deprecated INCEpTION does not use the collection name.
-   */
-  private coll: string = undefined;
-
-  /**
-   * @deprecated INCEpTION does not use the document name.
-   */
-  private doc: string = undefined;
-
   private args: Record<MarkerType, MarkerDto> = null;
 
   private isRenderRequested = false;
@@ -3244,14 +3234,14 @@ export class Visualizer {
     Util.profileStart('render');
 
     if (!sourceData && !this.data) {
-      this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
+      this.dispatcher.post('doneRendering', [this.args]);
       return;
     }
 
     this.svgContainer.style.visibility = 'visible';
-    if ((this.sourceData && this.sourceData.collection && (this.sourceData.document !== this.doc || this.sourceData.collection !== this.coll)) || this.drawing) {
+    if (this.drawing) {
       this.redraw = true;
-      this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
+      this.dispatcher.post('doneRendering', [this.args]);
       return;
     }
 
@@ -3365,7 +3355,7 @@ export class Visualizer {
       this.redraw = false;
     }
 
-    this.dispatcher.post('doneRendering', [this.coll, this.doc, this.args]);
+    this.dispatcher.post('doneRendering', [this.args]);
   }
 
   private renderAdjustMargin(y: number, sentNumGroup: SVGTypeMapping<SVGGElement>) {
@@ -3392,7 +3382,7 @@ export class Visualizer {
       setSourceDataDefaults(sourceData);
     }
 
-    this.dispatcher.post('startedRendering', [this.coll, this.doc, this.args]);
+    this.dispatcher.post('startedRendering', [this.args]);
     this.dispatcher.post('spin');
 
     setTimeout(() => {
@@ -3414,7 +3404,7 @@ export class Visualizer {
    * due to a partial update from the server.
    */
   rerender() {
-    this.dispatcher.post('startedRendering', [this.coll, this.doc, this.args]);
+    this.dispatcher.post('startedRendering', [this.args]);
     this.dispatcher.post('spin');
 
     try {
@@ -3443,14 +3433,9 @@ export class Visualizer {
 
   renderDocument() {
     Util.profileStart('invoke getDocument');
-    this.dispatcher.post('ajax', [{
-      action: 'getDocument',
-      collection: this.coll,
-      'document': this.doc,
-    }, 'renderData', {
-      collection: this.coll,
-      'document': this.doc
-    }]);
+    this.dispatcher.post('ajax', [
+      { action: 'getDocument' }, 
+      'renderData' ]);
   }
 
   triggerRender() {
@@ -3464,14 +3449,10 @@ export class Visualizer {
         return;
       }
 
-      if (this.doc.length) {
-        Util.profileClear();
-        Util.profileStart('before render');
-        this.renderDocument();
-        return;
-      }
-
-      this.dispatcher.post(0, 'renderError:noFileSpecified');
+      Util.profileClear();
+      Util.profileStart('before render');
+      this.renderDocument();
+      return;
     }
   }
 
@@ -3484,9 +3465,7 @@ export class Visualizer {
     this.isCollectionLoaded = false;
   }
 
-  gotCurrent(coll, doc, args, reloadData) {
-    this.coll = coll;
-    this.doc = doc;
+  gotCurrent(args, reloadData) {
     this.args = args;
 
     if (reloadData) {

@@ -267,16 +267,6 @@ export type EquivDto = [
    * @deprecated INCEpTION does not use events
    */
   events: Array<EventDto>; // deprecated?
-
-  /**
-   * @deprecated INCEpTION does not use the collection name.
-   */
-  collection: string;
-
-  /**
-   * @deprecated INCEpTION does not use the document name.
-   */
-  document: string;
 }
 
 

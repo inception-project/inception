@@ -49,8 +49,6 @@ import { EntityTypeDto } from "../protocol/Protocol";
 
 export class AnnotatorUI {
   private data: DocumentData = null;
-  private coll = null;
-  private doc = null;
 
   private arcDragOrigin = null;
   private arcDragOriginBox = null;
@@ -98,7 +96,6 @@ export class AnnotatorUI {
       on('dataReady', this, this.rememberData).
       on('spanAndAttributeTypesLoaded', this, this.spanAndAttributeTypesLoaded).
       on('user', this, this.userReceived).
-      on('current', this, this.gotCurrent).
       on('isReloadOkay', this, this.isReloadOkay).
       on('keydown', this, this.onKeyDown).
       on('click', this, this.onClick).
@@ -266,8 +263,6 @@ export class AnnotatorUI {
       old_target: targetSpanId,
       type: type,
       old_type: type,
-      collection: this.coll,
-      'document': this.doc
     };
 
     const eventDescId = evt.target.getAttribute('data-arc-ed');
@@ -734,8 +729,6 @@ export class AnnotatorUI {
             action: 'createArc',
             origin: originSpan.id,
             target: targetSpan.id,
-            collection: this.coll,
-            'document': this.doc
           };
 
           this.ajax.createRelationAnnotation(originSpan.id, targetSpan.id);
@@ -886,23 +879,8 @@ export class AnnotatorUI {
     }
   }
 
-  tagCurrentDocument(taggerId) {
-    const tagOptions = {
-      action: 'tag',
-      collection: this.coll,
-      'document': this.doc,
-      tagger: taggerId,
-    };
-    this.dispatcher.post('ajax', [tagOptions, 'edited']);
-  }
-
   spanAndAttributeTypesLoaded(_spanTypes, _entityAttributeTypes, _eventAttributeTypes, _relationTypesHash) {
     this.spanTypes = _spanTypes;
-  }
-
-  gotCurrent(_coll, _doc, _args) {
-    this.coll = _coll;
-    this.doc = _doc;
   }
 
   // WEBANNO EXTENSION BEGIN - #1388 Support context menu
