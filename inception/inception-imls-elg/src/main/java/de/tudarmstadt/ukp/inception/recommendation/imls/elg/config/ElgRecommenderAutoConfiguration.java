@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgServiceImpl;
 
 @Configuration
-@ConditionalOnProperty(prefix = "recommender.elg", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "recommender.elg", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ElgRecommenderAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
