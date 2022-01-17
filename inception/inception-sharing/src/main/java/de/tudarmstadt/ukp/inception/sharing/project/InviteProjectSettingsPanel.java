@@ -21,8 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhenNot;
 import static java.util.Arrays.asList;
 
-import javax.servlet.ServletContext;
-
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -59,7 +57,6 @@ public class InviteProjectSettingsPanel
     private static final long serialVersionUID = 947691448582391801L;
 
     private @SpringBean InviteService inviteService;
-    private @SpringBean ServletContext servletContext;
     private @SpringBean InviteServiceProperties inviteServiceProperties;
 
     private IModel<ProjectInvite> invite;

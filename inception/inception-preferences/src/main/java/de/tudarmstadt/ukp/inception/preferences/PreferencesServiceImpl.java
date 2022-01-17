@@ -234,6 +234,20 @@ public class PreferencesServiceImpl
         }
     }
 
+    @Override
+    public <T> void clearDefaultTraitsForProject(Key<T> aKey, Project aProject)
+    {
+        String query = String.join("\n", //
+                "DELETE DefaultProjectPreference ", //
+                "WHERE project = :project", //
+                "AND name = :name");
+
+        entityManager.createQuery(query) //
+                .setParameter("project", aProject) //
+                .setParameter("name", aKey.getName()) //
+                .executeUpdate();
+    }
+
     private <T> Optional<DefaultProjectPreference> getDefaultProjectPreference(Key<T> aKey,
             Project aProject)
     {

@@ -223,6 +223,8 @@ public class ExternalSearchAnnotationSidebar
         }
     }
 
+    // TODO: Maybe we should highlight all occurrences of the query term in the texst and
+    // not only the ones returned in the highlights?
     private void highlightKeywords(AnnotatorState aAnnotatorState, VDocument aVDocument)
     {
         ExternalSearchUserState searchState = searchStateModel.getObject();
