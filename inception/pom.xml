@@ -443,6 +443,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-kb-fact-linking</artifactId>
+        <version>23.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-html-editor</artifactId>
         <version>23.0-SNAPSHOT</version>
       </dependency>
@@ -504,6 +509,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-opennlp</artifactId>
+        <version>23.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-elg</artifactId>
         <version>23.0-SNAPSHOT</version>
       </dependency>
       <!--
@@ -1742,7 +1752,7 @@
       <dependency>
         <!-- Import dependency management from LOG4J -->
         <groupId>org.apache.logging.log4j</groupId>
-        <artifactId>log4j</artifactId>
+        <artifactId>log4j-bom</artifactId>
         <version>${log4j.version}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -1762,10 +1772,12 @@
         <version>${dkpro.version}</version>
         <exclusions>
           <!-- We do not use DKPro Core model-downloading -->
+          <!--  
           <exclusion>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-model</artifactId>
           </exclusion>
+          -->
           <!--  
           Cannot exclude until https://github.com/dkpro/dkpro-core/issues/1511 is fixed
           <exclusion>
@@ -1843,6 +1855,7 @@
     <module>inception-ui-external-search</module>
     <!-- Knowledge base -->
     <module>inception-kb</module>
+    <module>inception-kb-fact-linking</module>
     <module>inception-ui-kb</module>
     <module>inception-concept-linking</module>
     <!-- Editor extensions -->
@@ -1863,6 +1876,7 @@
     <module>inception-active-learning</module>
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
+    <module>inception-imls-elg</module>
     <module>inception-imls-external</module>
     <module>inception-imls-lapps</module>
     <module>inception-imls-weblicht</module>
