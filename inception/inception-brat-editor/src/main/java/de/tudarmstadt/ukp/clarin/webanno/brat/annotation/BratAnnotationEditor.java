@@ -30,27 +30,21 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.wicket.Component;
-import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRenderedMetaDataKey;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -479,47 +472,12 @@ public class BratAnnotationEditor
     {
         LOG.trace("[{}][{}] bratRenderLaterCommand", getMarkupId(), vis.getMarkupId());
 
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', " + "["
-                + toJson(getCollection()) + ", '1234', {}, true]);";
+        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', [{}, true]);";
     }
 
     @Override
     protected void render(AjaxRequestTarget aTarget)
     {
-        // Check if this editor has already been rendered in the current request cycle and if this
-        // is the case, skip rendering.
-        RequestCycle requestCycle = RequestCycle.get();
-        Set<String> renderedEditors = requestCycle
-                .getMetaData(AnnotationEditorRenderedMetaDataKey.INSTANCE);
-        if (renderedEditors == null) {
-            renderedEditors = new HashSet<>();
-            requestCycle.setMetaData(AnnotationEditorRenderedMetaDataKey.INSTANCE, renderedEditors);
-        }
-
-        if (renderedEditors.contains(getMarkupId())) {
-            LOG.trace("[{}][{}] render (AJAX) - was already rendered in this cycle - skipping",
-                    getMarkupId(), vis.getMarkupId());
-            return;
-        }
-
-        renderedEditors.add(getMarkupId());
-
-        // Check if the editor or any of its parents has been added to a partial page update. If
-        // this is the case, then deferred rendering in renderHead kicks in and we do not need to
-        // render here.
-        Set<Component> components = new HashSet<>(aTarget.getComponents());
-        boolean deferredRenderingRequired = components.contains(this)
-                || visitParents(MarkupContainer.class, (aParent, aVisit) -> {
-                    if (components.contains(aParent)) {
-                        aVisit.stop(aParent);
-                    }
-                }) != null;
-        if (deferredRenderingRequired) {
-            LOG.trace("[{}][{}] render (AJAX) - deferred rendering will trigger - skipping",
-                    getMarkupId(), vis.getMarkupId());
-            return;
-        }
-
         LOG.trace("[{}][{}] render (AJAX)", getMarkupId(), vis.getMarkupId());
 
         try {
@@ -557,16 +515,6 @@ public class BratAnnotationEditor
         }
     }
 
-    private String getCollection()
-    {
-        if (getModelObject().getProject() != null) {
-            return "#" + getModelObject().getProject().getName() + "/";
-        }
-        else {
-            return "";
-        }
-    }
-
     private String toJson(Object result)
     {
         String json = "[]";
@@ -582,26 +530,5 @@ public class BratAnnotationEditor
             handleError("Unable to produce JSON response", e);
         }
         return json;
-    }
-
-    private void handleError(String aMessage, Exception e)
-    {
-        RequestCycle requestCycle = RequestCycle.get();
-        requestCycle.find(AjaxRequestTarget.class)
-                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
-
-        if (e instanceof AnnotationException) {
-            // These are common exceptions happening as part of the user interaction. We do
-            // not really need to log their stack trace to the log.
-            error(aMessage + ": " + e.getMessage());
-            // If debug is enabled, we'll also write the error to the log just in case.
-            if (LOG.isDebugEnabled()) {
-                LOG.error("{}: {}", aMessage, e.getMessage(), e);
-            }
-            return;
-        }
-
-        LOG.error("{}", aMessage, e);
-        error(aMessage);
     }
 }

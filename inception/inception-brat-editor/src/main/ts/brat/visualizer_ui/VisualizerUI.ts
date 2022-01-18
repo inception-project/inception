@@ -455,7 +455,7 @@ export class VisualizerUI {
     });
   }
 
-  onDoneRendering(coll, doc, args) {
+  onDoneRendering(args) {
     if (args && !args.edited) {
       // FIXME REC 2021-11-21 - Good idea but won't work in INCEpTION since there could 
       // be multiple SVGs on screen. Should be removed or done differently.
