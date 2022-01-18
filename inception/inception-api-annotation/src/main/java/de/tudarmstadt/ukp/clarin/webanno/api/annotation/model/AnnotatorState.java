@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -35,7 +34,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
  * cycles.
  */
 public interface AnnotatorState
-    extends Serializable, AnnotatorViewState, AnnotatorDocumentNavigation
+    extends Serializable, AnnotationSelectionState, AnnotatorViewState, AnnotatorDocumentNavigation,
+    LayerSelectionState
 {
     void reset();
 
@@ -60,29 +60,11 @@ public interface AnnotatorState
     // Control which kinds of annotations are created when an annotation creation action is
     // triggered and also what happens after the annotation has been created (e.g. auto-forward)
     // ---------------------------------------------------------------------------------------------
+    @Deprecated
     boolean isForwardAnnotation();
 
+    @Deprecated
     void setForwardAnnotation(boolean forwardAnnotation);
-
-    /**
-     * Get annotation layer of currently selected annotation.
-     */
-    AnnotationLayer getSelectedAnnotationLayer();
-
-    /**
-     * Set annotation layer of currently selected annotation.
-     */
-    void setSelectedAnnotationLayer(AnnotationLayer aLayer);
-
-    /**
-     * Get annotation layer used for newly created annotations.
-     */
-    AnnotationLayer getDefaultAnnotationLayer();
-
-    /**
-     * Set annotation layer used for newly created annotations.
-     */
-    void setDefaultAnnotationLayer(AnnotationLayer aLayer);
 
     // REC: would be very nice if we didn't need the mode - the behaviors specific to annotation,
     // curation, automation, correction, etc. should be local to the respective modules / pages
@@ -147,33 +129,14 @@ public interface AnnotatorState
     @Deprecated
     boolean isProjectLocked();
 
+    // ---------------------------------------------------------------------------------------------
+    // Constraints
     // REC: we cache the constraints when a document is opened because parsing them takes some time
-    ParsedConstraints getConstraints();
+    // ---------------------------------------------------------------------------------------------
 
     void setConstraints(ParsedConstraints aConstraints);
 
-    // ---------------------------------------------------------------------------------------------
-    // Selection
-    // ---------------------------------------------------------------------------------------------
-    @Override
-    Selection getSelection();
-
-    /**
-     * Mark a slot in the given feature state as armed. Note that this feature state does not
-     * necessarily belong to the feature states for the annotation detail panel (cf.
-     * {@link #getFeatureStates()}) but may belong to some other feature editor elsewhere in the UI.
-     */
-    void setArmedSlot(FeatureState aState, int aIndex);
-
-    boolean isArmedSlot(FeatureState aState, int aIndex);
-
-    void clearArmedSlot();
-
-    boolean isSlotArmed();
-
-    FeatureState getArmedFeature();
-
-    int getArmedSlot();
+    ParsedConstraints getConstraints();
 
     // ---------------------------------------------------------------------------------------------
     // User preferences
@@ -182,39 +145,6 @@ public interface AnnotatorState
     AnnotationPreference getPreferences();
 
     void setPreferences(AnnotationPreference aPreferences);
-
-    /**
-     * Set all layers in the project, including hidden layers, non-enabled layers, etc. This is just
-     * a convenience method to quickly access layer information and to avoid having to access the
-     * database every time during rendering to get this information.
-     * 
-     * @param aLayers
-     *            all layers.
-     */
-    void setAllAnnotationLayers(List<AnnotationLayer> aLayers);
-
-    List<AnnotationLayer> getAllAnnotationLayers();
-
-    /**
-     * Get the annotation layers which are usable by the annotator (i.e. enabled, visible according
-     * to the user preferences , etc.)
-     * 
-     * @return usable layers
-     */
-    List<AnnotationLayer> getAnnotationLayers();
-
-    /**
-     * Set the annotation layers which are usable by the annotator (i.e. enabled, visible according
-     * to the user preferences , etc.)
-     * 
-     * @param aAnnotationLayers
-     *            usable layers
-     */
-    void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers);
-
-    void refreshSelectableLayers(AnnotationEditorProperties aProperties);
-
-    List<AnnotationLayer> getSelectableLayers();
 
     // ---------------------------------------------------------------------------------------------
     // Feature value models
