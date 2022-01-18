@@ -23,14 +23,18 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
@@ -140,6 +145,25 @@ public abstract class AnnotationEditorBase
                     c = c.getParent();
                 }
 
+                // Check if this editor has already been rendered in the current request cycle and
+                // if this is the case, skip rendering.
+                RequestCycle requestCycle = RequestCycle.get();
+                Set<String> renderedEditors = requestCycle
+                        .getMetaData(AnnotationEditorRenderedMetaDataKey.INSTANCE);
+                if (renderedEditors == null) {
+                    renderedEditors = new HashSet<>();
+                    requestCycle.setMetaData(AnnotationEditorRenderedMetaDataKey.INSTANCE,
+                            renderedEditors);
+                }
+
+                if (renderedEditors.contains(getMarkupId())) {
+                    LOG.trace("[{}] render (AJAX) - was already rendered in this cycle - skipping",
+                            getMarkupId());
+                    return;
+                }
+
+                renderedEditors.add(getMarkupId());
+
                 render(_target);
             }));
 
@@ -198,5 +222,26 @@ public abstract class AnnotationEditorBase
             layersToRender.add(layer);
         }
         return layersToRender;
+    }
+
+    protected void handleError(String aMessage, Exception e)
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        requestCycle.find(AjaxRequestTarget.class)
+                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+
+        if (e instanceof AnnotationException) {
+            // These are common exceptions happening as part of the user interaction. We do
+            // not really need to log their stack trace to the log.
+            error(aMessage + ": " + e.getMessage());
+            // If debug is enabled, we'll also write the error to the log just in case.
+            if (LOG.isDebugEnabled()) {
+                LOG.error("{}: {}", aMessage, e.getMessage(), e);
+            }
+            return;
+        }
+
+        LOG.error("{}", aMessage, e);
+        error(aMessage);
     }
 }
