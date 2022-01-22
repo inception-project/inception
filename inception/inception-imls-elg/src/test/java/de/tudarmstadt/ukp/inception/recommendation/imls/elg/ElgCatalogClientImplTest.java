@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntity;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogEntityDetails;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgCatalogSearchResponse;
 
@@ -35,6 +37,7 @@ public class ElgCatalogClientImplTest
         sut = new ElgCatalogClientImpl();
     }
 
+    @Ignore("Not really a test")
     @Test
     public void testCatalogQuery() throws Exception
     {
@@ -43,6 +46,7 @@ public class ElgCatalogClientImplTest
         // System.out.println(JSONUtil.toPrettyJsonString(response));
     }
 
+    @Ignore("Not really a test")
     @Test
     public void testRetrievingDetails() throws Exception
     {
@@ -50,5 +54,15 @@ public class ElgCatalogClientImplTest
                 "https://live.european-language-grid.eu/catalogue_backend/api/registry/metadatarecord/627/");
 
         // System.out.println(JSONUtil.toPrettyJsonString(response));
+    }
+    
+    @Ignore("Not really a test")
+    @Test
+    public void findNonExecutableServices() throws Exception {
+        ElgCatalogSearchResponse response = sut.search("");
+        for (ElgCatalogEntity e : response.getResults()) {
+            ElgCatalogEntityDetails details = sut.details(e.getDetailUrl());
+            System.out.printf("%s %b %s%n", e.getResourceName(), details.getServiceInfo() != null, e.getDetailUrl());
+        }
     }
 }
