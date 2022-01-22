@@ -95,7 +95,17 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
-            <id>npm link dependency</id>
+            <id>npm link dependency @inception-project/inception-js-api</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <arguments>link @inception-project/inception-js-api</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm link dependency @inception-project/inception-diam</id>
             <goals>
               <goal>npm</goal>
             </goals>
