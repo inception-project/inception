@@ -73,6 +73,7 @@ public class ElgCatalogClientImpl
     {
         Map<String, String> queryParameters = new LinkedHashMap<>();
         queryParameters.put("resource_type__term", "Tool/Service");
+        queryParameters.put("elg_compatible_service__term", "Yes");
         if (isNotBlank(aSearch)) {
             queryParameters.put("search", aSearch);
         }
