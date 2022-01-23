@@ -179,7 +179,8 @@ public class InviteServiceImplTest
     public void generateInviteWithExpirationDate_ShouldReturnSpecificDate() throws ParseException
     {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        Date expectedDate = dateFormat.parse("2022-01-15");
+        // Note: test fails once this date has passed - it must be a future date!
+        Date expectedDate = dateFormat.parse("2066-01-15");
         sut.generateInviteWithExpirationDate(testProject, expectedDate);
 
         Date generatedDate = sut.getExpirationDate(testProject);
