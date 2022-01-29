@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
-import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.client.ElgCatalogClient;
@@ -37,7 +37,7 @@ public class ElgCatalogClientImplTest
         sut = new ElgCatalogClientImpl();
     }
 
-    @Ignore("Not really a test")
+    @Disabled("Not really a test")
     @Test
     public void testCatalogQuery() throws Exception
     {
@@ -46,7 +46,7 @@ public class ElgCatalogClientImplTest
         // System.out.println(JSONUtil.toPrettyJsonString(response));
     }
 
-    @Ignore("Not really a test")
+    @Disabled("Not really a test")
     @Test
     public void testRetrievingDetails() throws Exception
     {
@@ -56,7 +56,7 @@ public class ElgCatalogClientImplTest
         // System.out.println(JSONUtil.toPrettyJsonString(response));
     }
     
-    @Ignore("Not really a test")
+    @Disabled("Not really a test")
     @Test
     public void findNonExecutableServices() throws Exception {
         ElgCatalogSearchResponse response = sut.search("");

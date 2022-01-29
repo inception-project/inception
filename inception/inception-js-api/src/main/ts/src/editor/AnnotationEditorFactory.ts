@@ -19,7 +19,7 @@ import { DiamClientFactory } from "../diam";
 import { AnnotationEditor, AnnotationEditorProperties } from ".";
 
 export interface AnnotationEditorFactory {
-  getOrInitialize(element: HTMLElement | string, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor>;
+  getOrInitialize(element: Node, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor>;
 
-  destroy(element: HTMLElement | string): void;
+  destroy(element: Node): void;
 }

@@ -26,5 +26,5 @@ import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 public interface DocumentViewFactory
     extends Extension<AnnotationDocument>
 {
-    Component createView(String aId, IModel<AnnotationDocument> aDocument);
+    Component createView(String aId, IModel<AnnotationDocument> aDocument, String aEditorFactoryId);
 }

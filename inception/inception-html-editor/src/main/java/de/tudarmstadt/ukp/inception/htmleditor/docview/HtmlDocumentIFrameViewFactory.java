@@ -49,7 +49,8 @@ public class HtmlDocumentIFrameViewFactory
     }
 
     @Override
-    public Component createView(String aId, IModel<AnnotationDocument> aDoc)
+    public Component createView(String aId, IModel<AnnotationDocument> aDoc,
+            String aEditorFactoryId)
     {
         return new HtmlDocumentIFrameView(aId, aDoc);
     }
