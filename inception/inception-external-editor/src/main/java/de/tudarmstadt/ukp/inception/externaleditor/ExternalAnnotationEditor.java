@@ -80,7 +80,7 @@ public class ExternalAnnotationEditor
         setOutputMarkupPlaceholderTag(true);
 
         editorFactoryId = aEditorFactoryId;
-        
+
         add(diamBehavior = new DiamAjaxBehavior());
 
         vis = makeView();
@@ -92,7 +92,8 @@ public class ExternalAnnotationEditor
     {
         if (getDescription().getView().startsWith(PLUGIN_SCHEME)) {
             String resPath = StringUtils.substringAfter(getDescription().getView(), PLUGIN_SCHEME);
-            return new ExternalAnnotationEditorStaticIFrameView(MID_VIS, getUrlForPluginAsset(resPath));
+            return new ExternalAnnotationEditorStaticIFrameView(MID_VIS,
+                    getUrlForPluginAsset(resPath));
         }
 
         AnnotatorState state = getModelObject();
@@ -101,7 +102,7 @@ public class ExternalAnnotationEditor
                 state.getUser());
 
         return documentViewExtensionPoint.getExtension(getDescription().getView()) //
-                .map(ext -> ext.createView(MID_VIS, Model.of(annDoc))) //
+                .map(ext -> ext.createView(MID_VIS, Model.of(annDoc), editorFactoryId)) //
                 .orElseGet(() -> new Label(MID_VIS,
                         "Unsupported view: [" + getDescription().getView() + "]"));
     }
@@ -139,7 +140,13 @@ public class ExternalAnnotationEditor
 
     private String getUrlForPluginAsset(String aAssetPath)
     {
-        return context.getContextPath() + PLUGINS_EDITOR_BASE_URL + getDescription().getId() + "/"
+        return getUrlForPluginAsset(context, getDescription(), aAssetPath);
+    }
+
+    public static String getUrlForPluginAsset(ServletContext aContext,
+            ExternalEditorPluginDescripion aPlugin, String aAssetPath)
+    {
+        return aContext.getContextPath() + PLUGINS_EDITOR_BASE_URL + aPlugin.getId() + "/"
                 + aAssetPath;
     }
 
@@ -149,12 +156,13 @@ public class ExternalAnnotationEditor
         ExternalEditorPluginDescripion pluginDesc = getDescription();
         props.setEditorFactory(pluginDesc.getFactory());
         props.setDiamAjaxCallbackUrl(diamBehavior.getCallbackUrl().toString());
-        props.setStylesheetSources(
-                pluginDesc.getStylesheets().stream().map(this::getUrlForPluginAsset) //
-                        .collect(toList()));
-        props.setScriptSources(pluginDesc.getScripts().stream().map(this::getUrlForPluginAsset) //
+        props.setStylesheetSources(pluginDesc.getStylesheets().stream() //
+                .map(this::getUrlForPluginAsset) //
                 .collect(toList()));
-        
+        props.setScriptSources(pluginDesc.getScripts().stream() //
+                .map(this::getUrlForPluginAsset) //
+                .collect(toList()));
+
         try {
             return JSONUtil.toInterpretableJsonString(props);
         }
@@ -165,19 +173,21 @@ public class ExternalAnnotationEditor
 
     private CharSequence destroyScript()
     {
-        return wrapInTryCatch("ExternalEditor.destroy('" + vis.getMarkupId() + "');");
+        return wrapInTryCatch(
+                "ExternalEditor.destroy(document.getElementById('" + vis.getMarkupId() + "'));");
     }
 
     private String initScript()
     {
-        return wrapInTryCatch("ExternalEditor.getOrInitialize('" + vis.getMarkupId()
-                + "', Diam.factory(), " + getProperties() + ");");
+        return wrapInTryCatch("ExternalEditor.getOrInitialize(document.getElementById('"
+                + vis.getMarkupId() + "'), Diam.factory(), " + getProperties() + ");");
     }
 
     private String renderScript()
     {
-        return wrapInTryCatch("ExternalEditor.getOrInitialize('" + vis.getMarkupId()
-                + "', Diam.factory(), " + getProperties() + ").then(e => e.loadAnnotations());");
+        return wrapInTryCatch("ExternalEditor.getOrInitialize(document.getElementById('"
+                + vis.getMarkupId() + "'), Diam.factory(), " + getProperties()
+                + ").then(e => e.loadAnnotations());");
     }
 
     @Override

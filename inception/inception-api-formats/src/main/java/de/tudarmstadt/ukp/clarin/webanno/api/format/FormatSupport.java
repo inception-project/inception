@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.request.resource.CssResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -55,6 +59,14 @@ public interface FormatSupport
     default boolean isWritable()
     {
         return false;
+    }
+
+    /**
+     * @return format-specific CSS style-sheets that styleable editors should load.
+     */
+    default List<CssResourceReference> getCssStylesheets()
+    {
+        return Collections.emptyList();
     }
 
     /**

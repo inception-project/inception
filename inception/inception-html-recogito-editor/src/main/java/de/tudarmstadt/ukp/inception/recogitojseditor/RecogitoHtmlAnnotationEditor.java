@@ -65,7 +65,7 @@ public class RecogitoHtmlAnnotationEditor
                 aModel.getObject().getDocument(), aModel.getObject().getUser());
 
         vis = documentViewExtensionPoint.getExtension(VIEW_FORMAT) //
-                .map(ext -> ext.createView("vis", Model.of(annDoc))) //
+                .map(ext -> ext.createView("vis", Model.of(annDoc), null)) //
                 .orElseGet(() -> new Label("Unsupported view"));
         add(vis);
 
