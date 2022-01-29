@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AnnotationEditorState
     implements Serializable
 {
