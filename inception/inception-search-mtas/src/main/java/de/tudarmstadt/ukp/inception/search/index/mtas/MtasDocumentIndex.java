@@ -456,7 +456,8 @@ public class MtasDocumentIndex
         allStats.put("Segmentation.sentence", results);
         nonNullStats.put("Segmentation.sentence", results);
 
-        return new StatisticsResult(aStatisticRequest, allStats, nonNullStats, aStatisticRequest.getFeatures());
+        return new StatisticsResult(aStatisticRequest, allStats, nonNullStats,
+                aStatisticRequest.getFeatures());
     }
 
     @Override
@@ -626,11 +627,10 @@ public class MtasDocumentIndex
             resultsMapSentence = resultsPerSentence.rewrite(true);
 
             Long noOfDocsLong = (Long) resultsMapSentence.get("n");
-            LayerStatistics layerStats = new LayerStatistics(
-                    (double) resultsMap.get("sum"),
-                    (double) resultsMap.get("max"),
-                    (double) resultsMap.get("min"), (double) resultsMap.get("mean"),
-                    (double) resultsMap.get("median"), (double) resultsMap.get("standarddeviation"),
+            LayerStatistics layerStats = new LayerStatistics((double) resultsMap.get("sum"),
+                    (double) resultsMap.get("max"), (double) resultsMap.get("min"),
+                    (double) resultsMap.get("mean"), (double) resultsMap.get("median"),
+                    (double) resultsMap.get("standarddeviation"),
                     (double) resultsMapSentence.get("sum"), (double) resultsMapSentence.get("max"),
                     (double) resultsMapSentence.get("min"), (double) resultsMapSentence.get("mean"),
                     (double) resultsMapSentence.get("median"),
@@ -707,9 +707,7 @@ public class MtasDocumentIndex
     {
         String result;
 
-        if (!(aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]")
-                || aQuery.contains("{") || aQuery.contains("}") || aQuery.contains("<")
-                || aQuery.contains(">"))) {
+        if (!(aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]"))) {
             // Convert raw words query to a Mtas CQP query
 
             result = "";
@@ -721,6 +719,14 @@ public class MtasDocumentIndex
             while (end != BreakIterator.DONE) {
                 String word = aQuery.substring(start, end);
                 if (!word.trim().isEmpty()) {
+                    word = word.replace("&", "\\&");
+                    word = word.replace("(", "\\(");
+                    word = word.replace(")", "\\)");
+                    word = word.replace("#", "\\#");
+                    word = word.replace("{", "\\{");
+                    word = word.replace("}", "\\}");
+                    word = word.replace("<", "\\<");
+                    word = word.replace(">", "\\>");
                     // Add the word to the query
                     result += "\"" + word + "\"";
                 }
