@@ -1436,7 +1436,7 @@ export class Visualizer {
     // startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
     let startPos = 0;
     // console.log("startPos[initial]: " + startPos);
-    for (let i = 0; i < charAttrs.length; i++) {
+    for (let i = 0; i < charAttrs.length && i < firstChar; i++) {
       // In RTL mode on RTL chars, for some reason we should not add the width of the first char.
       // But if we are in RTL mode and hit an LTR char (i.e. displaying normal LTR text in RTL mode)
       // when we need to include it... don't ask me why... REC 2021-11-27
@@ -1446,22 +1446,24 @@ export class Visualizer {
       // console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
     }
 
-    startPos = startPos * corrFactor;
-    // console.log("startPos: " + startPos);
     // endPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
     let endPos = 0;
-    //	           	  console.log("endPos[initial]: " + endPos);
+    // console.log("endPos[initial]: " + endPos);
     let i = 0;
     for (; charAttrs[i].order !== lastChar && i < charAttrs.length; i++) {
       endPos += charAttrs[i].width;
-      //	            	  console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
+      // console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
     }
+
     if (charDirection[i] === (this.rtlmode ? "rtl" : "ltr")) {
-      //	            	  console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
+      // console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
       endPos += charAttrs[i].width;
     }
+    
+    startPos = startPos * corrFactor;
     endPos = endPos * corrFactor;
-    //	        	  console.log("endPos: " + endPos);
+    // console.log("startPos: " + startPos);
+    // console.log("endPos: " + endPos);
     return [startPos, endPos];
   }
 
