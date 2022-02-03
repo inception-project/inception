@@ -69,28 +69,28 @@
     <uima.version>3.2.0</uima.version>
     <uimafit.version>3.2.0</uimafit.version>
 
-    <spring.version>5.3.14</spring.version>
-    <spring.boot.version>2.6.1</spring.boot.version>
-    <spring.security.version>5.6.0</spring.security.version>
-    <springdoc.version>1.6.1</springdoc.version>
-    <swagger.version>2.1.11</swagger.version>
+    <spring.version>5.3.15</spring.version>
+    <spring.boot.version>2.6.3</spring.boot.version>
+    <spring.security.version>5.6.1</spring.security.version>
+    <springdoc.version>1.6.5</springdoc.version>
+    <swagger.version>2.1.12</swagger.version>
 
-    <slf4j.version>1.7.32</slf4j.version>
+    <slf4j.version>1.7.35</slf4j.version>
     <log4j.version>2.17.1</log4j.version>
     <jboss.logging.version>3.4.2.Final</jboss.logging.version>
 
     <groovy.version>3.0.9</groovy.version>
 
-    <tomcat.version>9.0.56</tomcat.version>
+    <tomcat.version>9.0.58</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.4</mariadb.driver.version>
-    <hibernate.version>5.6.3.Final</hibernate.version>
+    <hibernate.version>5.6.5.Final</hibernate.version>
     <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
 
     <wicket.version>9.7.0</wicket.version>
     <wicketstuff.version>9.7.0</wicketstuff.version>
-    <wicket-jquery-ui.version>9.5.0</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>9.7.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.0-M6</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.4</wicket-webjars.version>
@@ -118,7 +118,7 @@
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.13.0</jackson.version>
+    <jackson.version>2.13.1</jackson.version>
     <okhttp.version>4.9.1</okhttp.version>
   </properties>
   <repositories>
