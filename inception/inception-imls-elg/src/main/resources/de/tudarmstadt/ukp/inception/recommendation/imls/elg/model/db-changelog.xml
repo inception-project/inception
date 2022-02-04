@@ -19,8 +19,8 @@
       <column name="refreshToken" type="LONGTEXT"></column>
     </createTable>
     <addUniqueConstraint tableName="elg_session" columnNames="project"
-      constraintName="UK_wlc_rec" />
-    <createIndex indexName="FK_wlc_rec" tableName="elg_session">
+      constraintName="UK_elg_rec" />
+    <createIndex indexName="FK_elg_rec" tableName="elg_session">
       <column name="project" />
     </createIndex>
     <addForeignKeyConstraint constraintName="FK_elgs_project"
