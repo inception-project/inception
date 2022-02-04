@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -183,7 +185,8 @@ public class KnowledgeBaseDetailsPanel
                         success("Imported: " + f.getKey());
                     }
                     catch (Exception e) {
-                        error("Failed to import: " + f.getKey());
+                        error("Failed to import [" + f.getKey() + "]: " + getRootCauseMessage(e));
+                        log.error("Failed to import [{}]: ", f.getKey(), e);
                     }
                 }
             }
