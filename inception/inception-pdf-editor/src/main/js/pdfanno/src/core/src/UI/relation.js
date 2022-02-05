@@ -1,4 +1,3 @@
-import * as textInput from '../utils/textInput'
 import RelationAnnotation from '../annotation/relation'
 import { scaleDown } from './utils'
 
@@ -32,9 +31,6 @@ export function createRelation ({ type, anno1, anno2, text, color }) {
 
   // Select.
   annotation.select()
-
-  // New type text.
-  textInput.enable({ uuid : annotation.uuid, autoFocus : true, text })
 
   return annotation
 }

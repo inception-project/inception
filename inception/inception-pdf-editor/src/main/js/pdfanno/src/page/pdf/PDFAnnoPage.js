@@ -177,7 +177,6 @@ export default class PDFAnnoPage {
           anno.render()
           anno.enableViewMode()
         })
-      dispatchWindowEvent('disappearTextInput')
 
       // Create a new rectAnnotation.
     } else if (rects) {
@@ -195,14 +194,6 @@ export default class PDFAnnoPage {
         selectedText : highlight.selectedText
       })
       this.addAnnotation(span)
-
-      var event = document.createEvent('CustomEvent')
-      event.initCustomEvent('enableTextInput', true, true, {
-        uuid      : span.uuid,
-        text      : text,
-        autoFocus : true
-      })
-      window.dispatchEvent(event)
     }
 
     // Notify annotation added.
@@ -269,12 +260,6 @@ export default class PDFAnnoPage {
       arrows[0].save()
       arrows[0].render()
       arrows[0].enableViewMode()
-      // Show label input.
-      var event = document.createEvent('CustomEvent')
-      event.initCustomEvent('enableTextInput', true, true, {
-        uuid : arrows[0].uuid,
-        text : arrows[0].text
-      })
       window.dispatchEvent(event)
       return
     }
