@@ -36,13 +36,13 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.util.JCasUtil;
-import org.dkpro.core.api.xml.Cas2SaxEvents;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.dkpro.core.api.xml.type.XmlElement;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.xml.TextSanitizingContentHandler;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 
 public class HtmlDocumentRenderer
 {

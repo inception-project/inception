@@ -736,6 +736,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-xml</artifactId>
+        <version>23.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-plugin-api</artifactId>
         <version>23.0-SNAPSHOT</version>
       </dependency>
@@ -1582,6 +1587,36 @@
           </exclusion>
         </exclusions>
       </dependency>
+      <dependency>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-io-xml-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.xml.stream</groupId>
+            <artifactId>stax-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>stax</groupId>
+            <artifactId>stax-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-api-xml-asl</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-io-html-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.dkpro.core</groupId>
+            <artifactId>dkpro-core-api-xml-asl</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
 
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
@@ -1839,6 +1874,7 @@
     <module>inception-io-text</module>
     <module>inception-io-webanno-tsv</module>
     <module>inception-io-xmi</module>
+    <module>inception-io-xml</module>
     <!-- Curation -->
     <module>inception-curation</module>
     <module>inception-curation-legacy</module>
