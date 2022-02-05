@@ -363,6 +363,16 @@ public class SuggestionGroup<T extends AnnotationSuggestion>
         return suggestions.add(aSuggestion);
     }
 
+    public void showAll(int aFlags)
+    {
+        stream().forEach(span -> span.show(aFlags));
+    }
+
+    public void hideAll(int aFlags)
+    {
+        stream().forEach(span -> span.hide(aFlags));
+    }
+
     @Override
     public Iterator<T> iterator()
     {

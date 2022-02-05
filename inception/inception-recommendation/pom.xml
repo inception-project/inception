@@ -271,6 +271,11 @@
       <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-syntax-asl</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
