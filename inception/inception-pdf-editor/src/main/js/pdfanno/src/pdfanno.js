@@ -1,6 +1,7 @@
-require('file-loader?name=index.html!./index.html')
-require('file-loader?name=index-debug.html!./index-debug.html')
-require('!style-loader!css-loader!./pdfanno.css')
+//require('file-loader?name=index.html!./index.html')
+//require('file-loader?name=index-debug.html!./index-debug.html')
+// require('!style-loader!css-loader!./pdfanno.css')
+import './pdfanno.css'
 
 import urijs from 'urijs'
 

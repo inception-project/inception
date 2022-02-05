@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -50,7 +52,7 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
@@ -85,7 +87,7 @@
     </dependency>
 
 
-      <dependency>
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
@@ -147,7 +149,7 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  
+
   <build>
     <plugins>
       <plugin>
@@ -166,6 +168,10 @@
                   <directory>src/main/js/pdfanno/dist/pdfanno</directory>
                   <targetPath>pdfanno</targetPath>
                 </resource>
+                <resource>
+                  <directory>src/main/js/pdfjs</directory>
+                  <targetPath>pdfanno</targetPath>
+                </resource>
               </resources>
             </configuration>
           </execution>
@@ -177,8 +183,8 @@
         <configuration>
           <workingDirectory>src/main/js/pdfanno/</workingDirectory>
           <installDirectory>target/frontend-maven-plugin</installDirectory>
-          <nodeVersion>v11.15.0</nodeVersion>
-          <npmVersion>6.7.0</npmVersion>
+          <nodeVersion>v16.13.0</nodeVersion>
+          <npmVersion>8.1.0</npmVersion>
         </configuration>
         <executions>
           <execution>
@@ -199,16 +205,6 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm run front:publish</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>run front:publish</arguments>
-            </configuration>
-          </execution>
-          <execution>
             <id>npm run build:pdfanno.core</id>
             <goals>
               <goal>npm</goal>
@@ -216,6 +212,46 @@
             <phase>generate-resources</phase>
             <configuration>
               <arguments>run build:pdfanno.core</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run build:pdfanno.page</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <arguments>run build:pdfanno.page</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run build:viewer</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <arguments>run build:viewer</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run build:compatibility</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <arguments>run build:compatibility</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run build:l10n</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <arguments>run build:l10n</arguments>
             </configuration>
           </execution>
         </executions>
@@ -233,6 +269,7 @@
                 <excludes combine.children="append">
                   <!-- These upstream files do not contain license headers -->
                   <exclude>src/main/js/pdfanno/**/*</exclude>
+                  <exclude>src/main/js/pdfjs/**/*</exclude>
                   <exclude>cache/**/*</exclude>
                 </excludes>
               </configuration>
