@@ -18,7 +18,7 @@
 = Remote API
 
 ====
-INFO: To use this functionality, you need to enable it first by adding `remote-api.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
+NOTE: To use this functionality, you need to enable it first by adding `remote-api.enabled=true` to the `settings.properties` file (see the <<admin-guide.adoc#sect_settings, Admin Guide>>).
 ====
 
 In order to programmatically manage annotation project, a REST-like remote API is offered. This API
