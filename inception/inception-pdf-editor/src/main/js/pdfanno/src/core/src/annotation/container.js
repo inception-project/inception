@@ -1,6 +1,5 @@
 import { uuid } from 'anno-ui/src/utils'
-import { ANNO_VERSION, PDFEXTRACT_VERSION } from '../version'
-import { toTomlString, fromTomlString } from '../utils/tomlString'
+import { fromTomlString } from '../utils/tomlString'
 import { dispatchWindowEvent } from '../utils/event'
 import SpanAnnotation from './span'
 import RelationAnnotation from './relation'
@@ -14,10 +13,10 @@ export default class AnnotationContainer {
   /**
    * Constructor.
    */
-  constructor () {
+  constructor() {
     this.set = new Set()
     this.ajv = new Ajv({
-      allErrors : true
+      allErrors: true
     })
     this.validate = this.ajv.compile(require('../../../../schemas/pdfanno-schema.json'))
   }
@@ -25,7 +24,7 @@ export default class AnnotationContainer {
   /**
    * Add an annotation to the container.
    */
-  add (annotation) {
+  add(annotation) {
     this.set.add(annotation)
     dispatchWindowEvent('annotationUpdated')
   }
@@ -33,7 +32,7 @@ export default class AnnotationContainer {
   /**
    * Remove the annotation from the container.
    */
-  remove (annotation) {
+  remove(annotation) {
     this.set.delete(annotation)
     dispatchWindowEvent('annotationUpdated')
   }
@@ -41,7 +40,7 @@ export default class AnnotationContainer {
   /**
    * Remove all annotations.
    */
-  destroy () {
+  destroy() {
     console.log('AnnotationContainer#destroy')
     this.set.forEach(a => a.destroy())
     this.set = new Set()
@@ -50,7 +49,7 @@ export default class AnnotationContainer {
   /**
    * Get all annotations from the container.
    */
-  getAllAnnotations () {
+  getAllAnnotations() {
     let list = []
     this.set.forEach(a => list.push(a))
     return list
@@ -59,14 +58,14 @@ export default class AnnotationContainer {
   /**
    * Get annotations which user select.
    */
-  getSelectedAnnotations () {
+  getSelectedAnnotations() {
     return this.getAllAnnotations().filter(a => a.selected)
   }
 
   /**
    * Find an annotation by the id which an annotation has.
    */
-  findById (uuid) {
+  findById(uuid) {
     uuid = String(uuid) // `uuid` must be string.
     let annotation = null
     this.set.forEach(a => {
@@ -82,7 +81,7 @@ export default class AnnotationContainer {
    *
    * annoType : span, one-way, two-way, link
    */
-  changeColor ({ text, color, uuid, annoType }) {
+  changeColor({ text, color, uuid, annoType }) {
     console.log('changeColor: ', text, color, uuid)
     if (uuid) {
       const a = this.findById(uuid)
@@ -111,7 +110,7 @@ export default class AnnotationContainer {
     }
   }
 
-  setColor (colorMap) {
+  setColor(colorMap) {
     console.log('setColor:', colorMap)
     Object.keys(colorMap).forEach(annoType => {
       if (annoType === 'default') {
@@ -124,73 +123,7 @@ export default class AnnotationContainer {
     })
   }
 
-  /**
-   * Export annotations as a TOML string.
-   */
-  exportData ({exportType = 'toml'} = {}) {
-
-    return new Promise((resolve, reject) => {
-
-      let dataExport = {}
-
-      // Set version.
-      dataExport.pdfanno = ANNO_VERSION
-      dataExport.pdfextract = PDFEXTRACT_VERSION
-
-      // Only writable.
-      const annos = this.getAllAnnotations().filter(a => !a.readOnly)
-
-      // Sort by create time.
-      // This reason is that a relation need start/end annotation ids which are numbered at export.
-      annos.sort((a1, a2) => a1.createdAt - a2.createdAt)
-
-      // The ID for specifing an annotation on a TOML file.
-      // This ID is sequential.
-      let id = 0
-
-      // Create export data.
-      annos.forEach(annotation => {
-
-        // Increment to next.
-        id++
-
-        // Span.
-        if (annotation.type === 'span') {
-          if (!dataExport['spans']) {
-            dataExport['spans'] = []
-          }
-          dataExport['spans'].push(annotation.export(id))
-          // Save temporary for relation.
-          annotation.exportId = id
-
-        // Relation.
-        } else if (annotation.type === 'relation') {
-          if (!dataExport['relations']) {
-            dataExport['relations'] = []
-          }
-          dataExport['relations'].push(annotation.export())
-        }
-      })
-
-      // Remove exportId.
-      annos.forEach(annotation => {
-        delete annotation.exportId
-      })
-
-      // schema Validation
-      if (!this.validate(dataExport)) {
-        console.error(JSON.stringify(this.validate.errors))
-      }
-
-      if (exportType === 'json') {
-        resolve(dataExport)
-      } else {
-        resolve(toTomlString(dataExport))
-      }
-    })
-  }
-
-  _findSpan (tomlObject, id) {
+  _findSpan(tomlObject, id) {
     return tomlObject.spans.find(v => {
       return id === v.id
     })
@@ -199,12 +132,12 @@ export default class AnnotationContainer {
   /**
    * Import annotations.
    */
-  importAnnotations (data, isPrimary) {
+  importAnnotations(data, isPrimary) {
 
     const readOnly = !isPrimary
     const colorMap = data.colorMap
 
-    function getColor (index, type, text) {
+    function getColor(index, type, text) {
       let color = colorMap.default
       if (colorMap[type] && colorMap[type][text]) {
         color = colorMap[type][text]
@@ -250,7 +183,7 @@ export default class AnnotationContainer {
   /**
    * Import annotations.
    */
-  importAnnotations040 (tomlObject, tomlIndex, readOnly, getColor) {
+  importAnnotations040(tomlObject, tomlIndex, readOnly, getColor) {
 
     for (const key in tomlObject) {
 
@@ -292,7 +225,7 @@ export default class AnnotationContainer {
   /**
    * Import annotations.
    */
-  importAnnotations041 (tomlObject, tomlIndex, readOnly, getColor) {
+  importAnnotations041(tomlObject, tomlIndex, readOnly, getColor) {
 
     // order is important.
     ;['spans', 'relations'].forEach(key => {

@@ -13,7 +13,6 @@ import * as searchUI from './page/search'
 import * as textLayer from './page/textLayer'
 import { showLoader } from './page/util/display'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
-import * as pdfextractdownload from './page/pdfextractdownload'
 import { readPdftxt } from './page/pdf/loadFiles'
 
 /**
@@ -38,9 +37,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // UI.
   setupUI()
-
-  // Setup downloadPDFExtractButton
-  pdfextractdownload.setup()
 
   // Show loading.
   showLoader(true)
