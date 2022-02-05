@@ -22,4 +22,4 @@
 = Settings
 
 Application settings are managed via a file called `settings.properties` which must reside in the
-application home folder. This file is optional and might need to be created first in the  <<admin-guide.adoc#sect_home_folder>>. If the file does not exist, default values are assumed.
+application home folder. This file is optional and might need to be created first in the <<admin-guide.adoc#sect_home_folder>>. If the file does not exist, default values are assumed.
