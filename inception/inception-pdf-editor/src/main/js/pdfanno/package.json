@@ -8,7 +8,8 @@
     "front:sw": "gulp build-sw",
     "front:sw:watch": "gulp watch-sw",
     "front:dev": "cross-env NODE_ENV=development concurrently --kill-others \"npm run _prepare && npm run front:sw && webpack-dev-server --inline\" \"npm run front:sw:watch\"",
-    "front:publish": "cross-env-shell NODE_ENV=production \"npm run _prepare && npm run front:sw && webpack && gulp publish\""
+    "front:publish": "cross-env-shell NODE_ENV=production \"npm run _prepare && npm run front:sw && webpack && gulp publish\"",
+    "build:pdfanno.core": "esbuild src/core/index.js --target=es6 --bundle --sourcemap --global-name=pdfanno.core --outfile=dist/pdfanno/pdfanno.core.bundle.js"
   },
   "repository": {
     "type": "git",
@@ -25,6 +26,8 @@
     "url": "https://github.com/paperai/pdfextract/releases/download/v0.3.0/pdfextract-0.3.0.jar"
   },
   "devDependencies": {
+    "esbuild": "^0.13.12",
+    "typescript": "^4.4.2",
     "acorn": "^6.0.0",
     "babel-eslint": "^7.2.3",
     "concurrently": "^3.5.1",

@@ -199,13 +199,23 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm run</id>
+            <id>npm run front:publish</id>
             <goals>
               <goal>npm</goal>
             </goals>
             <phase>generate-resources</phase>
             <configuration>
               <arguments>run front:publish</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm run build:pdfanno.core</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+            <configuration>
+              <arguments>run build:pdfanno.core</arguments>
             </configuration>
           </execution>
         </executions>

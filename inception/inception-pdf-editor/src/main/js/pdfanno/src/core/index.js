@@ -1,7 +1,8 @@
 /**
  Functions for annotations rendered over a PDF file.
  */
-require('!style-loader!css-loader!./index.css')
+// require('!style-loader!css-loader!./index.css')
+import './index.css'
 import { dispatchWindowEvent } from '../shared/util'
 
 import EventEmitter from 'events'

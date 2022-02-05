@@ -7,7 +7,7 @@ module.exports = (env, argv) => {
     mode: process.env.NODE_ENV || 'development',
     entry: {
       'pdfanno.page': './src/pdfanno.js',
-      'pdfanno.core': './src/core/index.js',
+      // 'pdfanno.core': './src/core/index.js',
       'viewer': './src/viewer.js',
       // 'debugger': './src/debugger.js',
       'compatibility': './src/compatibility.js',
