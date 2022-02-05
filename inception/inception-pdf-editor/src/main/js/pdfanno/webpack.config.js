@@ -9,7 +9,7 @@ module.exports = (env, argv) => {
       'pdfanno.page': './src/pdfanno.js',
       'pdfanno.core': './src/core/index.js',
       'viewer': './src/viewer.js',
-      'debugger': './src/debugger.js',
+      // 'debugger': './src/debugger.js',
       'compatibility': './src/compatibility.js',
       'l10n': './src/l10n.js'
     },
