@@ -1,6 +1,5 @@
 import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
-import * as textInput from '../utils/textInput'
 
 function scale () {
   return window.PDFView.pdfViewer.getPageView(0).viewport.scale
@@ -118,11 +117,6 @@ export function saveSpan ({
 
   // Select.
   spanAnnotation.select()
-
-  // Enable label input.
-  if (focusToLabel) {
-    textInput.enable({ uuid : spanAnnotation.uuid, autoFocus : true, text })
-  }
 
   return spanAnnotation
 }
