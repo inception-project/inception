@@ -151,26 +151,6 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-pdfanno-to-target</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>target/js/pdfanno</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/js/pdfanno</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <executions>
@@ -183,7 +163,7 @@
             <configuration>
               <resources>
                 <resource>
-                  <directory>target/js/pdfanno/dist/pdfanno</directory>
+                  <directory>src/main/js/pdfanno/dist/pdfanno</directory>
                   <targetPath>pdfanno</targetPath>
                 </resource>
               </resources>
@@ -195,7 +175,7 @@
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
         <configuration>
-          <workingDirectory>target/js/pdfanno/</workingDirectory>
+          <workingDirectory>src/main/js/pdfanno/</workingDirectory>
           <installDirectory>target/frontend-maven-plugin</installDirectory>
           <nodeVersion>v11.15.0</nodeVersion>
           <npmVersion>6.7.0</npmVersion>
