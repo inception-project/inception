@@ -1714,13 +1714,15 @@ public class RecommendationServiceImpl
         log.trace("calculateSpanSuggestionVisibility()");
 
         Type type = getAnnotationType(aCas, aLayer);
+        if (type == null) {
+            // The type does not exist in the type system of the CAS. Probably it has not
+            // been upgraded to the latest version of the type system yet. If this is the case,
+            // we'll just skip.
+            return;
+        }
 
         List<AnnotationFS> annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin,
                 aWindowEnd);
-
-        if (annotationsInWindow.isEmpty()) {
-            return;
-        }
 
         // Collect all suggestions of the given layer within the view window
         List<SuggestionGroup<SpanSuggestion>> suggestionsInWindow = aRecommendations.stream()
@@ -1746,102 +1748,20 @@ public class RecommendationServiceImpl
                 return;
             }
 
-            // Reduce the annotations to the ones which have a non-null feature value. We need to
-            // use a multi-valued map here because there may be multiple annotations at a
-            // given position.
-            MultiValuedMap<Offset, AnnotationFS> annotations = new ArrayListValuedHashMap<>();
-            annotationsInWindow
-                    .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
-            // We need to constructed a sorted list of the keys for the OverlapIterator below
-            List<Offset> sortedAnnotationKeys = new ArrayList<>(annotations.keySet());
-            sortedAnnotationKeys
-                    .sort(comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
-
             // Reduce the suggestions to the ones for the given feature. We can use the tree here
             // since we only have a single SuggestionGroup for every position
             Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions = new TreeMap<>(
                     comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
             suggestionsInWindow.stream()
-                    .filter(group -> group.getFeature().equals(feature.getName()))
+                    .filter(group -> group.getFeature().equals(feature.getName())) //
+                    .map(group -> {
+                        group.showAll(AnnotationSuggestion.FLAG_ALL);
+                        return group;
+                    }) //
                     .forEach(group -> suggestions.put((Offset) group.getPosition(), group));
 
-            // If there are no suggestions or no annotations, there is nothing to do here
-            if (suggestions.isEmpty() || annotations.isEmpty()) {
-                continue;
-            }
-
-            // This iterator gives us pairs of annotations and suggestions. Note that both lists
-            // must be sorted in the same way. The suggestion offsets are sorted because they are
-            // the keys in a TreeSet - and the annotation offsets are sorted in the same way
-            // manually
-            OverlapIterator oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()),
-                    sortedAnnotationKeys);
-
-            // Bulk-hide any groups that overlap with existing annotations on the current layer
-            // and for the current feature
-            while (oi.hasNext()) {
-                if (oi.getA().overlaps(oi.getB())) {
-                    // Fetch the current suggestion and annotation
-                    SuggestionGroup<SpanSuggestion> group = suggestions.get(oi.getA());
-                    for (AnnotationFS annotation : annotations.get(oi.getB())) {
-                        String label = annotation.getFeatureValueAsString(feat);
-                        for (SpanSuggestion suggestion : group) {
-                            // The suggestion would just create an annotation and not set any
-                            // feature
-                            if (suggestion.getLabel() == null) {
-                                // If there is already an annotation, then we hide any suggestions
-                                // that would just trigger the creation of the same annotation and
-                                // not set any new feature. This applies whether stacking is allowed
-                                // or not.
-                                if (suggestion.getBegin() == annotation.getBegin()
-                                        && suggestion.getEnd() == annotation.getEnd()) {
-                                    suggestion.hide(FLAG_OVERLAP);
-                                    continue;
-                                }
-
-                                // If stacking is enabled, we do allow suggestions that create an
-                                // annotation with no label, but only if the offsets differ
-                                if (aLayer.isAllowStacking()
-                                        && (suggestion.getBegin() != annotation.getBegin()
-                                                || suggestion.getEnd() != annotation.getEnd())) {
-                                    suggestion.hide(FLAG_OVERLAP);
-                                    continue;
-                                }
-                            }
-                            // The suggestion would merge the suggested feature value into an
-                            // existing annotation or create a new annotation with the feature if
-                            // stacking were enabled.
-                            else {
-                                // Is the feature still unset in the current annotation - i.e. would
-                                // accepting the suggestion merge the feature into it? If yes, we do
-                                // not hide
-                                if (label == null) {
-                                    continue;
-                                }
-
-                                // Does the suggested label match the label of an existing
-                                // annotation, then we hide
-                                if (label.equals(suggestion.getLabel())) {
-                                    suggestion.hide(FLAG_OVERLAP);
-                                    continue;
-                                }
-
-                                // Would accepting the suggestion create a new annotation but
-                                // stacking is not enabled - then we need to hide
-                                if (!aLayer.isAllowStacking()) {
-                                    suggestion.hide(FLAG_OVERLAP);
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-
-                    // Do not want to process the group again since the relevant annotations are
-                    // already hidden
-                    oi.ignoraA();
-                }
-                oi.step();
-            }
+            hideSpanSuggestionsThatOverlapWithAnnotations(annotationsInWindow, suggestionsInWindow,
+                    feature, feat, suggestions);
 
             // Anything that was not hidden so far might still have been rejected
             suggestions.values().stream() //
@@ -1849,6 +1769,101 @@ public class RecommendationServiceImpl
                     .filter(AnnotationSuggestion::isVisible) //
                     .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
                             recordedAnnotations));
+        }
+    }
+
+    private void hideSpanSuggestionsThatOverlapWithAnnotations(
+            List<AnnotationFS> annotationsInWindow,
+            List<SuggestionGroup<SpanSuggestion>> suggestionsInWindow, AnnotationFeature feature,
+            Feature feat, Map<Offset, SuggestionGroup<SpanSuggestion>> suggestions)
+    {
+        // If there are no suggestions or annotations, there is nothing to do here
+        if (annotationsInWindow.isEmpty() || suggestions.isEmpty()) {
+            return;
+        }
+
+        // Reduce the annotations to the ones which have a non-null feature value. We need to
+        // use a multi-valued map here because there may be multiple annotations at a
+        // given position.
+        MultiValuedMap<Offset, AnnotationFS> annotations = new ArrayListValuedHashMap<>();
+        annotationsInWindow
+                .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
+
+        // We need to constructed a sorted list of the keys for the OverlapIterator below
+        List<Offset> sortedAnnotationKeys = new ArrayList<>(annotations.keySet());
+        sortedAnnotationKeys.sort(comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
+
+        // This iterator gives us pairs of annotations and suggestions. Note that both lists
+        // must be sorted in the same way. The suggestion offsets are sorted because they are
+        // the keys in a TreeSet - and the annotation offsets are sorted in the same way
+        // manually
+        OverlapIterator oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()),
+                sortedAnnotationKeys);
+
+        // Bulk-hide any groups that overlap with existing annotations on the current layer
+        // and for the current feature
+        while (oi.hasNext()) {
+            if (oi.getA().overlaps(oi.getB())) {
+                // Fetch the current suggestion and annotation
+                SuggestionGroup<SpanSuggestion> group = suggestions.get(oi.getA());
+                for (AnnotationFS annotation : annotations.get(oi.getB())) {
+                    String label = annotation.getFeatureValueAsString(feat);
+                    for (SpanSuggestion suggestion : group) {
+                        // The suggestion would just create an annotation and not set any
+                        // feature
+                        if (suggestion.getLabel() == null) {
+                            // If there is already an annotation, then we hide any suggestions
+                            // that would just trigger the creation of the same annotation and
+                            // not set any new feature. This applies whether stacking is allowed
+                            // or not.
+                            if (suggestion.getBegin() == annotation.getBegin()
+                                    && suggestion.getEnd() == annotation.getEnd()) {
+                                suggestion.hide(FLAG_OVERLAP);
+                                continue;
+                            }
+
+                            // If stacking is enabled, we do allow suggestions that create an
+                            // annotation with no label, but only if the offsets differ
+                            if (feature.getLayer().isAllowStacking()
+                                    && (suggestion.getBegin() != annotation.getBegin()
+                                            || suggestion.getEnd() != annotation.getEnd())) {
+                                suggestion.hide(FLAG_OVERLAP);
+                                continue;
+                            }
+                        }
+                        // The suggestion would merge the suggested feature value into an
+                        // existing annotation or create a new annotation with the feature if
+                        // stacking were enabled.
+                        else {
+                            // Is the feature still unset in the current annotation - i.e. would
+                            // accepting the suggestion merge the feature into it? If yes, we do
+                            // not hide
+                            if (label == null) {
+                                continue;
+                            }
+
+                            // Does the suggested label match the label of an existing
+                            // annotation, then we hide
+                            if (label.equals(suggestion.getLabel())) {
+                                suggestion.hide(FLAG_OVERLAP);
+                                continue;
+                            }
+
+                            // Would accepting the suggestion create a new annotation but
+                            // stacking is not enabled - then we need to hide
+                            if (!feature.getLayer().isAllowStacking()) {
+                                suggestion.hide(FLAG_OVERLAP);
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                // Do not want to process the group again since the relevant annotations are
+                // already hidden
+                oi.ignoraA();
+            }
+            oi.step();
         }
     }
 
@@ -1861,6 +1876,9 @@ public class RecommendationServiceImpl
         Type type = getAnnotationType(aCas, aLayer);
 
         if (type == null) {
+            // The type does not exist in the type system of the CAS. Probably it has not
+            // been upgraded to the latest version of the type system yet. If this is the case,
+            // we'll just skip.
             return;
         }
 
@@ -1874,10 +1892,6 @@ public class RecommendationServiceImpl
 
         List<AnnotationFS> annotationsInWindow = getAnnotationsInWindow(aCas, type, aWindowBegin,
                 aWindowEnd);
-
-        if (annotationsInWindow.isEmpty()) {
-            return;
-        }
 
         // Group annotations by relation position, that is (source, target) address
         MultiValuedMap<Position, AnnotationFS> groupedAnnotations = new ArrayListValuedHashMap<>();
@@ -1921,6 +1935,8 @@ public class RecommendationServiceImpl
                     continue;
                 }
 
+                group.showAll(AnnotationSuggestion.FLAG_ALL);
+
                 Position position = group.getPosition();
 
                 // If any annotation at this position has a non-null label for this feature,
@@ -1939,7 +1955,6 @@ public class RecommendationServiceImpl
                         if (suggestion.labelEquals(learningRecord.getAnnotation())) {
                             hideSuggestion(suggestion, learningRecord.getUserAction());
                         }
-
                     }
                 }
             }
@@ -1956,11 +1971,9 @@ public class RecommendationServiceImpl
             aSuggestion.hide(FLAG_SKIPPED);
             break;
         default:
-            // Nothing to do for the other cases. ACCEPTED annotation are
-            // filtered
-            // out
-            // because the overlap with a created annotation and the same for
-            // CORRECTED
+            // Nothing to do for the other cases.
+            // ACCEPTED annotation are filtered out anyway because the overlap with a created
+            // annotation and the same for CORRECTED
         }
     }
 
