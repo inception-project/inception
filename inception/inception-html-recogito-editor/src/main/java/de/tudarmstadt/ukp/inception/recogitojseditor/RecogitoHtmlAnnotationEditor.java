@@ -34,13 +34,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditor;
+import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
 
 public class RecogitoHtmlAnnotationEditor
-    extends ExternalAnnotationEditor
+    extends ExternalAnnotationEditorBase
 {
     private static final long serialVersionUID = -3358207848681467993L;
 
@@ -53,14 +53,6 @@ public class RecogitoHtmlAnnotationEditor
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-    }
-
-    @Override
-    protected void onInitialize()
-    {
-        setEditorFactoryId(editorFactory.getBeanName());
-
-        super.onInitialize();
     }
 
     @Override
@@ -78,10 +70,10 @@ public class RecogitoHtmlAnnotationEditor
     protected AnnotationEditorProperties getProperties()
     {
         AnnotationEditorProperties props = new AnnotationEditorProperties();
-        // The factory is the JS call. Cf. the "globalName" in build.js and the factory methoh
+        // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
         // defined in main.ts
         props.setEditorFactory("RecogitoEditor.factory()");
-        props.setDiamAjaxCallbackUrl(diamBehavior.getCallbackUrl().toString());
+        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setStylesheetSources(
                 asList(referenceToUrl(servletContext, RecogitoJsCssResourceReference.get())));
         props.setScriptSources(asList(

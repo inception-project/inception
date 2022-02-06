@@ -17,21 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
 import static de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorLoader.PLUGINS_EDITOR_BASE_URL;
 import static java.util.stream.Collectors.toList;
-
-import java.io.IOException;
 
 import javax.servlet.ServletContext;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -39,25 +31,18 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPluginDescripion;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavascriptResourceReference;
 
 public class ExternalAnnotationEditor
-    extends AnnotationEditorBase
+    extends ExternalAnnotationEditorBase
 {
     private static final String PLUGIN_SCHEME = "plugin:";
-
-    protected static final String MID_VIS = "vis";
 
     private static final long serialVersionUID = -3358207848681467993L;
 
@@ -66,16 +51,7 @@ public class ExternalAnnotationEditor
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean ServletContext context;
 
-    private String editorFactoryId;
-
-    protected DiamAjaxBehavior diamBehavior;
-    private Component vis;
-
-    public ExternalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
-    {
-        super(aId, aModel, aActionHandler, aCasProvider);
-    }
+    private final String editorFactoryId;
 
     public ExternalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -83,33 +59,10 @@ public class ExternalAnnotationEditor
     {
         super(aId, aModel, aActionHandler, aCasProvider);
 
-        setEditorFactoryId(aEditorFactoryId);
-    }
-    
-    public void setEditorFactoryId(String aEditorFactoryId)
-    {
         editorFactoryId = aEditorFactoryId;
     }
     
     @Override
-    protected void onInitialize()
-    {
-        super.onInitialize();
-        
-        if (editorFactoryId == null) {
-            throw new IllegalStateException(
-                    "Editor factory ID needs to be set before the editor can be used");
-        }
-        
-        setOutputMarkupPlaceholderTag(true);
-
-        add(diamBehavior = new DiamAjaxBehavior());
-
-        vis = makeView();
-        vis.setOutputMarkupPlaceholderTag(true);
-        add(vis);
-    }
-
     protected Component makeView()
     {
         if (getDescription().getView().startsWith(PLUGIN_SCHEME)) {
@@ -136,30 +89,6 @@ public class ExternalAnnotationEditor
         return factory.getDescription();
     }
 
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        aResponse.render(JavaScriptHeaderItem.forReference(DiamJavaScriptReference.get()));
-
-        aResponse.render(
-                JavaScriptHeaderItem.forReference(ExternalEditorJavascriptResourceReference.get()));
-
-        if (getModelObject().getDocument() != null && getProperties() != null) {
-            aResponse.render(OnDomReadyHeaderItem.forScript(initScript()));
-        }
-    }
-
-    @Override
-    protected void onRemove()
-    {
-        getRequestCycle().find(IPartialPageRequestHandler.class)
-                .ifPresent(target -> target.prependJavaScript(destroyScript()));
-
-        super.onRemove();
-    }
-
     private String getUrlForPluginAsset(String aAssetPath)
     {
         return getUrlForPluginAsset(context, getDescription(), aAssetPath);
@@ -172,12 +101,13 @@ public class ExternalAnnotationEditor
                 + aAssetPath;
     }
 
+    @Override
     protected AnnotationEditorProperties getProperties()
     {
         AnnotationEditorProperties props = new AnnotationEditorProperties();
         ExternalEditorPluginDescripion pluginDesc = getDescription();
         props.setEditorFactory(pluginDesc.getFactory());
-        props.setDiamAjaxCallbackUrl(diamBehavior.getCallbackUrl().toString());
+        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
         props.setStylesheetSources(pluginDesc.getStylesheets().stream() //
                 .map(this::getUrlForPluginAsset) //
                 .collect(toList()));
@@ -186,41 +116,5 @@ public class ExternalAnnotationEditor
                 .collect(toList()));
 
         return props;
-    }
-    
-    private String getPropertiesAsJson()
-    {
-        AnnotationEditorProperties props = getProperties();
-        try {
-            return JSONUtil.toInterpretableJsonString(props);
-        }
-        catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-    }
-
-    private CharSequence destroyScript()
-    {
-        return wrapInTryCatch(
-                "ExternalEditor.destroy(document.getElementById('" + vis.getMarkupId() + "'));");
-    }
-
-    private String initScript()
-    {
-        return wrapInTryCatch("ExternalEditor.getOrInitialize(document.getElementById('"
-                + vis.getMarkupId() + "'), Diam.factory(), " + getPropertiesAsJson() + ");");
-    }
-
-    private String renderScript()
-    {
-        return wrapInTryCatch("ExternalEditor.getOrInitialize(document.getElementById('"
-                + vis.getMarkupId() + "'), Diam.factory(), " + getPropertiesAsJson()
-                + ").then(e => e.loadAnnotations());");
-    }
-
-    @Override
-    protected void render(AjaxRequestTarget aTarget)
-    {
-        aTarget.appendJavaScript(renderScript());
     }
 }
