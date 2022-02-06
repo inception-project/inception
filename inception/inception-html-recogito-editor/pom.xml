@@ -45,6 +45,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-diam</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-editor</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>org.springframework</groupId>
@@ -103,16 +107,6 @@
             <phase>compile</phase>
             <configuration>
               <arguments>run build:recogito</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm build:recogito-minified</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>compile</phase>
-            <configuration>
-              <arguments>run build:recogito-minified</arguments>
             </configuration>
           </execution>
         </executions>

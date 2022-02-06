@@ -15,32 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recogitojseditor.resources;
+const esbuild = require('esbuild')
+const { sassPlugin } = require('esbuild-sass-plugin');
 
-import org.apache.wicket.request.resource.CssResourceReference;
-
-public class RecogitoJsCssResourceReference
-    extends CssResourceReference
-{
-    private static final long serialVersionUID = 1L;
-
-    private static final RecogitoJsCssResourceReference INSTANCE = new RecogitoJsCssResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static RecogitoJsCssResourceReference get()
-    {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private RecogitoJsCssResourceReference()
-    {
-        super(RecogitoJsCssResourceReference.class, "RecogitoEditor.min.css");
-    }
-}
+esbuild.build({
+  entryPoints: ["main.ts"],
+  outfile: "../../../target/js/de/tudarmstadt/ukp/inception/recogitojseditor/resources/RecogitoEditor.min.js",
+  bundle: true,
+  sourcemap: true,
+  minify: true,
+  target: "es6",
+  globalName: "RecogitoEditor",
+  loader: { ".ts": "ts" },
+  logLevel: 'info',
+  plugins: [sassPlugin()]
+})

@@ -17,18 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
-import static java.util.stream.Collectors.toList;
-import static org.apache.uima.fit.util.JCasUtil.selectSingle;
-
 import java.io.StringWriter;
 import java.io.Writer;
 import java.security.Principal;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
 import javax.servlet.ServletContext;
 
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
+import org.dkpro.core.api.xml.type.XmlElement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +45,7 @@ import org.xml.sax.helpers.AttributesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlCas2SaxEvents;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 
@@ -54,6 +55,11 @@ public class XHtmlXmlDocumentViewControllerImpl
     implements XHtmlXmlDocumentViewController
 {
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/xml/{documentId}";
+    
+    private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
+    private static final String HTML = "html";
+    private static final String BODY = "body";
+    private static final String HEAD = "head";
 
     private final DocumentService documentService;
     private final DocumentImportExportService formatRegistry;
@@ -101,31 +107,64 @@ public class XHtmlXmlDocumentViewControllerImpl
 
         try (Writer out = new StringWriter()) {
             ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
+            
+            var maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
+            
+            var casContainsHtml = maybeXmlDocument.map(XmlDocument::getRoot) //
+                    .map(XmlElement::getQName) //
+                    .map(qname -> HTML.equals(qname.toLowerCase(Locale.ROOT))) //
+                    .orElse(false);
+            
+            // If the CAS contains an actual HTML structure, then we send that. Mind that we do
+            // not inject format-specific CSS then!
+            if (casContainsHtml) {
+                XmlDocument xml = maybeXmlDocument.get();
+                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, ch);
+                ch.startDocument();
+                ch.startPrefixMapping("", XHTML_NS_URI);
+                serializer.process(xml.getRoot());
+                ch.endPrefixMapping("");
+                ch.endDocument();
+                return toResponse(out);
+            }
+            
             ch.startDocument();
-            ch.startPrefixMapping("", "http://www.w3.org/1999/xhtml");
-            ch.startElement(null, null, "html", null);
-            ch.startElement(null, null, "head", null);
+            ch.startPrefixMapping("", XHTML_NS_URI);
+            ch.startElement(null, null, HTML, null);
+            ch.startElement(null, null, HEAD, null);
             for (String cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
-                    .map(css -> referenceToUrl(servletContext, css))
-                    .collect(toList())) {
+                    .map(css -> ServletContextUtils.referenceToUrl(servletContext, css))
+                    .collect(Collectors.toList())) {
                 renderXmlStylesheet(ch, cssUrl);
             }
 
-            ch.endElement(null, null, "head");
-            ch.startElement(null, null, "body", null);
+            ch.endElement(null, null, HEAD);
+            ch.startElement(null, null, BODY, null);
 
-            XmlDocument xml = selectSingle(cas.getJCas(), XmlDocument.class);
-            Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, ch);
-            serializer.process(xml.getRoot());
+            if (maybeXmlDocument.isEmpty()) {
+                // Gracefully handle the case that the CAS does not contain any XML structure at all
+                // and show only the document text in this case.
+                String text = cas.getDocumentText();
+                ch.characters(text.toCharArray(), 0, text.length());
+            }
+            else {
+                XmlDocument xml = maybeXmlDocument.get();
+                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml, ch);
+                serializer.process(xml.getRoot());
+            }
 
-            ch.endElement(null, null, "body");
-            ch.endElement(null, null, "html");
+            ch.endElement(null, null, BODY);
+            ch.endElement(null, null, HTML);
             ch.endPrefixMapping("");
             ch.endDocument();
 
-            return ResponseEntity.ok() //
-                    .contentType(MediaType.APPLICATION_XHTML_XML) //
-                    .body(out.toString());
+            return toResponse(out);
         }
+    }
+    
+    private ResponseEntity<String> toResponse(Writer out) {
+        return ResponseEntity.ok() //
+                .contentType(MediaType.APPLICATION_XHTML_XML) //
+                .body(out.toString());
     }
 }

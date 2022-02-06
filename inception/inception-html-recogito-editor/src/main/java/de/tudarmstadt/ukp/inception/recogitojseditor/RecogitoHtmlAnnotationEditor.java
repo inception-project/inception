@@ -17,106 +17,75 @@
  */
 package de.tudarmstadt.ukp.inception.recogitojseditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
+import static java.util.Arrays.asList;
+
+import javax.servlet.ServletContext;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPoint;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditor;
+import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
 
 public class RecogitoHtmlAnnotationEditor
-    extends AnnotationEditorBase
+    extends ExternalAnnotationEditor
 {
     private static final long serialVersionUID = -3358207848681467993L;
 
-    private @SpringBean DocumentViewExtensionPoint documentViewExtensionPoint;
+    private @SpringBean(name = "recogitoHtmlAnnotationEditorFactory") AnnotationEditorFactory editorFactory;
+    private @SpringBean(name = "xHtmlXmlDocumentIFrameViewFactory") DocumentViewFactory viewFactory;
     private @SpringBean DocumentService documentService;
-
-    private final DiamAjaxBehavior diamBehavior;
-    private final Component vis;
-
-    private final String VIEW_FORMAT = "cas+html";
-    private final String EDITOR_FACTORY = "RecogitoEditor";
+    private @SpringBean ServletContext servletContext;
 
     public RecogitoHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-
-        AnnotationDocument annDoc = documentService.getAnnotationDocument(
-                aModel.getObject().getDocument(), aModel.getObject().getUser());
-
-        vis = documentViewExtensionPoint.getExtension(VIEW_FORMAT) //
-                .map(ext -> ext.createView("vis", Model.of(annDoc), null)) //
-                .orElseGet(() -> new Label("Unsupported view"));
-        add(vis);
-
-        add(diamBehavior = new DiamAjaxBehavior());
     }
 
     @Override
-    public void renderHead(IHeaderResponse aResponse)
+    protected void onInitialize()
     {
-        super.renderHead(aResponse);
+        setEditorFactoryId(editorFactory.getBeanName());
 
-        aResponse.render(CssHeaderItem.forReference(RecogitoJsCssResourceReference.get()));
-        aResponse.render(
-                JavaScriptHeaderItem.forReference(RecogitoJsJavascriptResourceReference.get()));
-
-        if (getModelObject().getDocument() != null) {
-            aResponse.render(OnDomReadyHeaderItem.forScript(initScript()));
-        }
+        super.onInitialize();
     }
 
     @Override
-    protected void onRemove()
+    protected Component makeView()
     {
-        super.onRemove();
+        AnnotatorState state = getModelObject();
 
-        getRequestCycle().find(IPartialPageRequestHandler.class)
-                .ifPresent(target -> target.prependJavaScript(destroyScript()));
-    }
+        AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
+                state.getUser());
 
-    private CharSequence destroyScript()
-    {
-        return wrapInTryCatch(EDITOR_FACTORY + ".destroy('" + vis.getMarkupId() + "');");
-    }
-
-    private String initScript()
-    {
-        String callbackUrl = diamBehavior.getCallbackUrl().toString();
-        return wrapInTryCatch(EDITOR_FACTORY + ".getOrInitialize('" + vis.getMarkupId()
-                + "', Diam.factory(), { diamAjaxCallbackUrl: '" + callbackUrl + "' });");
-    }
-
-    private String renderScript()
-    {
-        String callbackUrl = diamBehavior.getCallbackUrl().toString();
-        return wrapInTryCatch(EDITOR_FACTORY + ".getOrInitialize('" + vis.getMarkupId()
-                + "', Diam.factory(), { diamAjaxCallbackUrl: '" + callbackUrl + "' }).then(editor => editor.loadAnnotations());");
+        return viewFactory.createView(MID_VIS, Model.of(annDoc), editorFactory.getBeanName());
     }
 
     @Override
-    protected void render(AjaxRequestTarget aTarget)
+    protected AnnotationEditorProperties getProperties()
     {
-        aTarget.appendJavaScript(renderScript());
+        AnnotationEditorProperties props = new AnnotationEditorProperties();
+        // The factory is the JS call. Cf. the "globalName" in build.js and the factory methoh
+        // defined in main.ts
+        props.setEditorFactory("RecogitoEditor.factory()");
+        props.setDiamAjaxCallbackUrl(diamBehavior.getCallbackUrl().toString());
+        props.setStylesheetSources(
+                asList(referenceToUrl(servletContext, RecogitoJsCssResourceReference.get())));
+        props.setScriptSources(asList(
+                referenceToUrl(servletContext, RecogitoJsJavascriptResourceReference.get())));
+        return props;
     }
 }

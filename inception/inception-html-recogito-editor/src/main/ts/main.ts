@@ -19,4 +19,6 @@ import { RecogitoEditorFactory } from './recogito/RecogitoEditorFactory';
 
 const INSTANCE = new RecogitoEditorFactory()
 
-export = INSTANCE;
+export function factory(): RecogitoEditorFactory {
+  return INSTANCE;
+}

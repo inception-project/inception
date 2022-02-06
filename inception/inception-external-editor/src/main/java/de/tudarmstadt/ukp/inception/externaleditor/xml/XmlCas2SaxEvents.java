@@ -41,8 +41,11 @@ import org.xml.sax.helpers.AttributesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.xml.TextSanitizingContentHandler;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 
-public class XmlCas2SaxEvents extends Cas2SaxEvents
+public class XmlCas2SaxEvents
+    extends Cas2SaxEvents
 {
+    public static final String DATA_CAPTURE_ROOT = "data-capture-root";
+    
     private final XmlDocument xml;
     private final Set<XmlNode> captureRoots;
 
@@ -50,13 +53,13 @@ public class XmlCas2SaxEvents extends Cas2SaxEvents
     {
         super(aHandler);
         xml = aXml;
-        captureRoots = new HashSet<>();
-        
+
         if (xml.getCaptureRoots() != null) {
+            captureRoots = new HashSet<>();
             xml.getCaptureRoots().forEach(captureRoots::add);
         }
         else {
-            captureRoots.add(xml.getRoot());
+            captureRoots = null;
         }
     }
 
@@ -74,19 +77,19 @@ public class XmlCas2SaxEvents extends Cas2SaxEvents
 
         return sh;
     }
-    
+
     @Override
     public void process(XmlElement aElement) throws SAXException
     {
         // HACK: adding a wrapper because otherwise RecogitoJS cannot insert its own
         // wrapper...
-        if (aElement == xml.getRoot() && captureRoots.contains(aElement)) {
+        if (captureRoots != null && aElement == xml.getRoot() && captureRoots.contains(aElement)) {
             handler.startElement(null, null, "wrapper", null);
         }
 
         super.process(aElement);
 
-        if (aElement == xml.getRoot() && captureRoots.contains(aElement)) {
+        if (captureRoots != null && aElement == xml.getRoot() && captureRoots.contains(aElement)) {
             handler.endElement(null, null, "wrapper");
         }
     }
@@ -96,7 +99,7 @@ public class XmlCas2SaxEvents extends Cas2SaxEvents
     {
         AttributesImpl attrs = super.attributes(aElement);
         if (captureRoots != null && captureRoots.contains(aElement)) {
-            attrs.addAttribute(null, null, "data-capture-root", null, "");
+            attrs.addAttribute(null, null, DATA_CAPTURE_ROOT, null, "");
         }
         return attrs;
     }

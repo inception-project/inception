@@ -39,6 +39,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.helpers.AttributesImpl;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -54,6 +56,9 @@ public class XmlDocumentViewControllerImpl
     implements XmlDocumentViewController
 {
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/xml/{documentId}";
+
+    private static final String DOCUMENT = "document";
+    private static final String BODY = "body";
 
     private final DocumentService documentService;
     private final DocumentImportExportService formatRegistry;
@@ -125,10 +130,29 @@ public class XmlDocumentViewControllerImpl
                 renderEditorStylesheets(out, aEditor.get());
             }
 
-            XmlDocument xml = selectSingle(cas.getJCas(), XmlDocument.class);
-            Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml,
-                    XmlCas2SaxEvents.makeSerializer(out));
-            serializer.process(xml);
+            var maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
+            if (maybeXmlDocument.isEmpty()) {
+                // Gracefully handle the case that the CAS does not contain any XML structure at all
+                // and show only the document text in this case.
+                ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
+                ch.startDocument();
+                ch.startElement(null, null, DOCUMENT, null);
+                AttributesImpl attrs = new AttributesImpl();
+                attrs.addAttribute(null, null, XmlCas2SaxEvents.DATA_CAPTURE_ROOT, null, "");
+                ch.startElement(null, null, BODY, attrs);
+                String text = cas.getDocumentText();
+                ch.characters(text.toCharArray(), 0, text.length());
+                ch.endElement(null, null, BODY);
+                ch.endElement(null, null, DOCUMENT);
+                ch.endDocument();
+            }
+            else {
+                XmlDocument xml = selectSingle(cas.getJCas(), XmlDocument.class);
+                Cas2SaxEvents serializer = new XmlCas2SaxEvents(xml,
+                        XmlCas2SaxEvents.makeSerializer(out));
+                serializer.process(xml);
+            }
+            
 
             return ResponseEntity.ok() //
                     .contentType(MediaType.TEXT_XML) //

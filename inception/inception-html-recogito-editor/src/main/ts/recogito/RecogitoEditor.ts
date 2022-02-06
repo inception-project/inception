@@ -16,16 +16,44 @@
  * limitations under the License.
  */
 import '@recogito/recogito-js/dist/recogito.min.css'
-import { Recogito } from '@recogito/recogito-js';
-import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-js-api"
+import { Recogito } from '@recogito/recogito-js/src';
+import type { AnnotationEditor, CompactAnnotatedText, CompactSpan, DiamAjax } from "@inception-project/inception-js-api";
+import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation';
+import "./RecogitoEditor.css"
 
-const ANNOTATIONS_SERIALIZER = "WebAnnotation";
+const ANNOTATIONS_SERIALIZER = "compact";
+
+interface WebAnnotation {
+  id: string;
+  type: string;
+  motivation?: string;
+  target: WebAnnotationTextPositionSelector | Array<WebAnnotationAnnotationTarget>;
+  body: Array<WebAnnotationBodyItem>;
+}
+
+interface WebAnnotationBodyItem {
+  type: string;
+  value: string;
+  purpose: string;
+}
+
+interface WebAnnotationAnnotationTarget {
+  id: string;
+}
+
+interface WebAnnotationTextPositionSelector {
+  selector: {
+    start: number;
+    end: number;
+  }
+}
 
 export class RecogitoEditor implements AnnotationEditor {
   private ajax: DiamAjax;
-  private recogito: typeof Recogito;
+  private recogito: Recogito;
+  private connections: any;
 
-  public constructor(element: HTMLElement, ajax: DiamAjax) {
+  public constructor(element: Element, ajax: DiamAjax) {
     this.ajax = ajax;
 
     this.recogito = new Recogito({
@@ -37,14 +65,84 @@ export class RecogitoEditor implements AnnotationEditor {
     this.recogito.on('createAnnotation', annotation => this.createAnnotation(annotation));
     this.recogito.on('selectAnnotation', annotation => this.selectAnnotation(annotation));
 
+    /* 
+    this.connections = Connections(this.recogito);
+    this.connections.on('createConnection', function(c) {
+      console.log('created', c);
+    });
+    
+    this.connections.on('updateConnection', function(updated, previous) {
+      console.log('updated', updated, previous);
+    });
+  
+    this.connections.on('deleteConnection', function(c) {
+      console.log('deleted', c);
+    });
+    */
+
     this.loadAnnotations();
   }
 
   public loadAnnotations(): void {
-    this.ajax.loadAnnotations(ANNOTATIONS_SERIALIZER).then(a => this.recogito.setAnnotations(a));
+    this.ajax.loadAnnotations(ANNOTATIONS_SERIALIZER).then((doc: CompactAnnotatedText) => {
+      if (!this.recogito) {
+        console.error("No recogito instance found on this", this);
+        return;
+      }
+
+      const webAnnotations: Array<WebAnnotation> = [];
+
+      if (doc.spans) {
+        webAnnotations.push(...this.compactSpansToWebAnnotation(doc.spans));
+      }
+
+      if (doc.relations) {
+        webAnnotations.push(...this.compactRelationsToWebAnnotation(doc.relations));
+      }
+
+      console.info(`Loaded ${webAnnotations.length} annotations from server`);
+      this.recogito.setAnnotations(webAnnotations);
+    });
+  }
+
+  private compactSpansToWebAnnotation(spans: Array<CompactSpan>): Array<WebAnnotation> {
+    return spans.map(span => {
+      return {
+        id: '#' + span[0],
+        type: 'Annotation',
+        body: [{
+          type: 'TextualBody',
+          purpose: 'tagging',
+          value: span[2].l || ""
+        }],
+        target: {
+          selector: { type: "TextPositionSelector", start: span[1][0][0], end: span[1][0][1] }
+        }
+      }
+    })
+  }
+
+  private compactRelationsToWebAnnotation(relations: Array<CompactRelation>): Array<WebAnnotation> {
+    return relations.map(relation => {
+      return {
+        id: '#' + relation[0],
+        type: 'Annotation',
+        body: [{
+          type: 'TextualBody',
+          purpose: 'tagging',
+          value: relation[2].l || ""
+        }],
+        motivation: 'linking',
+        target: [
+          { id: '#' + relation[1][0][0] },
+          { id: '#' + relation[1][1][0] }
+        ]
+      }
+    })
   }
 
   public destroy(): void {
+    // this.connections.destroy();
     this.recogito.destroy();
   }
 

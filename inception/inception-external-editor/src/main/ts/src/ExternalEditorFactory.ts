@@ -54,6 +54,14 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
   loadEditorResources(iframe: HTMLIFrameElement, props: AnnotationEditorProperties): Promise<HTMLIFrameElement> {
     return new Promise(resolve => {
+      // Make sure body is accessible via body property - seems the browser does not always ensure
+      // this...
+      if (iframe.contentDocument instanceof HTMLDocument) {
+        if (!iframe.contentDocument.body) {
+          iframe.contentDocument.body = iframe.contentDocument.getElementsByTagName("body")[0];
+        }
+      }
+
       let target = this.isDocumentJavascriptCapable(iframe.contentDocument)
         ? iframe.contentDocument : document;
       let allPromises: Promise<void>[] = [];

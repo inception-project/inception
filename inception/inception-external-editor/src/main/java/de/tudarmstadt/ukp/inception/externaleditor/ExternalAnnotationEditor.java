@@ -57,7 +57,7 @@ public class ExternalAnnotationEditor
 {
     private static final String PLUGIN_SCHEME = "plugin:";
 
-    private static final String MID_VIS = "vis";
+    protected static final String MID_VIS = "vis";
 
     private static final long serialVersionUID = -3358207848681467993L;
 
@@ -66,10 +66,16 @@ public class ExternalAnnotationEditor
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
     private @SpringBean ServletContext context;
 
-    private final String editorFactoryId;
+    private String editorFactoryId;
 
-    private DiamAjaxBehavior diamBehavior;
+    protected DiamAjaxBehavior diamBehavior;
     private Component vis;
+
+    public ExternalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+    {
+        super(aId, aModel, aActionHandler, aCasProvider);
+    }
 
     public ExternalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -77,9 +83,25 @@ public class ExternalAnnotationEditor
     {
         super(aId, aModel, aActionHandler, aCasProvider);
 
-        setOutputMarkupPlaceholderTag(true);
-
+        setEditorFactoryId(aEditorFactoryId);
+    }
+    
+    public void setEditorFactoryId(String aEditorFactoryId)
+    {
         editorFactoryId = aEditorFactoryId;
+    }
+    
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+        
+        if (editorFactoryId == null) {
+            throw new IllegalStateException(
+                    "Editor factory ID needs to be set before the editor can be used");
+        }
+        
+        setOutputMarkupPlaceholderTag(true);
 
         add(diamBehavior = new DiamAjaxBehavior());
 
@@ -88,7 +110,7 @@ public class ExternalAnnotationEditor
         add(vis);
     }
 
-    private Component makeView()
+    protected Component makeView()
     {
         if (getDescription().getView().startsWith(PLUGIN_SCHEME)) {
             String resPath = StringUtils.substringAfter(getDescription().getView(), PLUGIN_SCHEME);
@@ -150,7 +172,7 @@ public class ExternalAnnotationEditor
                 + aAssetPath;
     }
 
-    private String getProperties()
+    protected AnnotationEditorProperties getProperties()
     {
         AnnotationEditorProperties props = new AnnotationEditorProperties();
         ExternalEditorPluginDescripion pluginDesc = getDescription();
@@ -163,6 +185,12 @@ public class ExternalAnnotationEditor
                 .map(this::getUrlForPluginAsset) //
                 .collect(toList()));
 
+        return props;
+    }
+    
+    private String getPropertiesAsJson()
+    {
+        AnnotationEditorProperties props = getProperties();
         try {
             return JSONUtil.toInterpretableJsonString(props);
         }
@@ -180,13 +208,13 @@ public class ExternalAnnotationEditor
     private String initScript()
     {
         return wrapInTryCatch("ExternalEditor.getOrInitialize(document.getElementById('"
-                + vis.getMarkupId() + "'), Diam.factory(), " + getProperties() + ");");
+                + vis.getMarkupId() + "'), Diam.factory(), " + getPropertiesAsJson() + ");");
     }
 
     private String renderScript()
     {
         return wrapInTryCatch("ExternalEditor.getOrInitialize(document.getElementById('"
-                + vis.getMarkupId() + "'), Diam.factory(), " + getProperties()
+                + vis.getMarkupId() + "'), Diam.factory(), " + getPropertiesAsJson()
                 + ").then(e => e.loadAnnotations());");
     }
 
