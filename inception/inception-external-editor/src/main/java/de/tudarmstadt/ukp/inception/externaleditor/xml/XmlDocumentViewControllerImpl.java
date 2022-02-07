@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.security.Principal;
 import java.util.Optional;
+
 import javax.servlet.ServletContext;
 
 import org.apache.uima.cas.CAS;

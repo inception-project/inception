@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.externaleditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
+
 import java.io.IOException;
 
 import javax.servlet.ServletContext;
