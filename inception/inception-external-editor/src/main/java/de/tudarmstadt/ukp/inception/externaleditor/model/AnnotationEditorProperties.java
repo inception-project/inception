@@ -25,34 +25,42 @@ public class AnnotationEditorProperties
     private String diamAjaxCallbackUrl;
     private List<String> scriptSources;
     private List<String> stylesheetSources;
+
     public String getEditorFactory()
     {
         return editorFactory;
     }
+
     public void setEditorFactory(String aEditorFactory)
     {
         editorFactory = aEditorFactory;
     }
+
     public String getDiamAjaxCallbackUrl()
     {
         return diamAjaxCallbackUrl;
     }
+
     public void setDiamAjaxCallbackUrl(String aDiamAjaxCallbackUrl)
     {
         diamAjaxCallbackUrl = aDiamAjaxCallbackUrl;
     }
+
     public List<String> getScriptSources()
     {
         return scriptSources;
     }
+
     public void setScriptSources(List<String> aScriptSources)
     {
         scriptSources = aScriptSources;
     }
+
     public List<String> getStylesheetSources()
     {
         return stylesheetSources;
     }
+
     public void setStylesheetSources(List<String> aStylesheetSources)
     {
         stylesheetSources = aStylesheetSources;

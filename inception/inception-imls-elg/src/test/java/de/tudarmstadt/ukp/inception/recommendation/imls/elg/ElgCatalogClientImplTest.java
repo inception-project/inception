@@ -55,14 +55,16 @@ public class ElgCatalogClientImplTest
 
         // System.out.println(JSONUtil.toPrettyJsonString(response));
     }
-    
+
     @Disabled("Not really a test")
     @Test
-    public void findNonExecutableServices() throws Exception {
+    public void findNonExecutableServices() throws Exception
+    {
         ElgCatalogSearchResponse response = sut.search("");
         for (ElgCatalogEntity e : response.getResults()) {
             ElgCatalogEntityDetails details = sut.details(e.getDetailUrl());
-            System.out.printf("%s %b %s%n", e.getResourceName(), details.getServiceInfo() != null, e.getDetailUrl());
+            System.out.printf("%s %b %s%n", e.getResourceName(), details.getServiceInfo() != null,
+                    e.getDetailUrl());
         }
     }
 }

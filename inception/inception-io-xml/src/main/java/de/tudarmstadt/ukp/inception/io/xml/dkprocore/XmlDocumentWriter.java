@@ -46,15 +46,11 @@ import org.dkpro.core.api.parameter.MimeTypes;
  */
 @ResourceMetaData(name = "XML Document Writer")
 // @DocumentationResource("${docbase}/format-reference.html#format-${command}")
-@MimeTypeCapability({MimeTypes.APPLICATION_XML, MimeTypes.TEXT_XML})
-@TypeCapability(
-        inputs = {
-                "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
-                "org.dkpro.core.api.xml.type.XmlAttribute",
-                "org.dkpro.core.api.xml.type.XmlDocument", 
-                "org.dkpro.core.api.xml.type.XmlElement", 
-                "org.dkpro.core.api.xml.type.XmlNode",
-                "org.dkpro.core.api.xml.type.XmlTextNode"})
+@MimeTypeCapability({ MimeTypes.APPLICATION_XML, MimeTypes.TEXT_XML })
+@TypeCapability(inputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
+        "org.dkpro.core.api.xml.type.XmlAttribute", "org.dkpro.core.api.xml.type.XmlDocument",
+        "org.dkpro.core.api.xml.type.XmlElement", "org.dkpro.core.api.xml.type.XmlNode",
+        "org.dkpro.core.api.xml.type.XmlTextNode" })
 public class XmlDocumentWriter
     extends JCasFileWriter_ImplBase
 {
@@ -62,11 +58,10 @@ public class XmlDocumentWriter
      * Specify the suffix of output files. Default value <code>.txt</code>. If the suffix is not
      * needed, provide an empty string as value.
      */
-    public static final String PARAM_FILENAME_EXTENSION = 
-            ComponentParameters.PARAM_FILENAME_EXTENSION;
+    public static final String PARAM_FILENAME_EXTENSION = ComponentParameters.PARAM_FILENAME_EXTENSION;
     @ConfigurationParameter(name = PARAM_FILENAME_EXTENSION, mandatory = true, defaultValue = ".xml")
     private String filenameSuffix;
-    
+
     /**
      * Whether to omit the XML preamble.
      */
@@ -101,7 +96,7 @@ public class XmlDocumentWriter
             th.getTransformer().setOutputProperty(METHOD, outputMethod);
             th.getTransformer().setOutputProperty(INDENT, indent ? "yes" : "no");
             th.setResult(new StreamResult(docOS));
-            
+
             Cas2SaxEvents serializer = new Cas2SaxEvents(th);
             serializer.process(aJCas);
         }

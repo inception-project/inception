@@ -26,7 +26,8 @@ import de.tudarmstadt.ukp.inception.io.xml.XmlFormatSupport;
 public class XmlSupportAutoConfiguration
 {
     @Bean
-    public XmlFormatSupport xmlFormatSupport() {
+    public XmlFormatSupport xmlFormatSupport()
+    {
         return new XmlFormatSupport();
     }
 }

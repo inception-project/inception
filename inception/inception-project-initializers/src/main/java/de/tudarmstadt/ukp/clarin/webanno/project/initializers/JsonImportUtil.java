@@ -72,7 +72,7 @@ public class JsonImportUtil
         tagsetInUse.setLanguage(importedTagSet.getLanguage());
         tagsetInUse.setProject(project);
         aAnnotationService.createTagSet(tagsetInUse);
-        
+
         // Add all tags from imported tagset
         int rank = 0;
         for (ExportedTag tag : importedTagSet.getTags()) {

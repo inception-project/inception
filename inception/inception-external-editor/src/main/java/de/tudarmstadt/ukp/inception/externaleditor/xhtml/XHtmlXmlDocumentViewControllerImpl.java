@@ -55,7 +55,7 @@ public class XHtmlXmlDocumentViewControllerImpl
     implements XHtmlXmlDocumentViewController
 {
     private static final String GET_DOCUMENT_PATH = "/p/{projectId}/xml/{documentId}";
-    
+
     private static final String XHTML_NS_URI = "http://www.w3.org/1999/xhtml";
     private static final String HTML = "html";
     private static final String BODY = "body";
@@ -107,14 +107,14 @@ public class XHtmlXmlDocumentViewControllerImpl
 
         try (Writer out = new StringWriter()) {
             ContentHandler ch = XmlCas2SaxEvents.makeSerializer(out);
-            
+
             var maybeXmlDocument = cas.select(XmlDocument.class).findFirst();
-            
+
             var casContainsHtml = maybeXmlDocument.map(XmlDocument::getRoot) //
                     .map(XmlElement::getQName) //
                     .map(qname -> HTML.equals(qname.toLowerCase(Locale.ROOT))) //
                     .orElse(false);
-            
+
             // If the CAS contains an actual HTML structure, then we send that. Mind that we do
             // not inject format-specific CSS then!
             if (casContainsHtml) {
@@ -127,7 +127,7 @@ public class XHtmlXmlDocumentViewControllerImpl
                 ch.endDocument();
                 return toResponse(out);
             }
-            
+
             ch.startDocument();
             ch.startPrefixMapping("", XHTML_NS_URI);
             ch.startElement(null, null, HTML, null);
@@ -161,8 +161,9 @@ public class XHtmlXmlDocumentViewControllerImpl
             return toResponse(out);
         }
     }
-    
-    private ResponseEntity<String> toResponse(Writer out) {
+
+    private ResponseEntity<String> toResponse(Writer out)
+    {
         return ResponseEntity.ok() //
                 .contentType(MediaType.APPLICATION_XHTML_XML) //
                 .body(out.toString());

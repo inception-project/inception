@@ -121,8 +121,7 @@ public class XmlDocumentViewControllerImpl
             renderXmlDeclaration(out);
 
             for (String cssUrl : formatRegistry.getFormatCssStylesheets(doc).stream()
-                    .map(css -> referenceToUrl(servletContext, css))
-                    .collect(toList())) {
+                    .map(css -> referenceToUrl(servletContext, css)).collect(toList())) {
                 renderXmlStylesheet(out, cssUrl);
             }
 
@@ -152,7 +151,6 @@ public class XmlDocumentViewControllerImpl
                         XmlCas2SaxEvents.makeSerializer(out));
                 serializer.process(xml);
             }
-            
 
             return ResponseEntity.ok() //
                     .contentType(MediaType.TEXT_XML) //

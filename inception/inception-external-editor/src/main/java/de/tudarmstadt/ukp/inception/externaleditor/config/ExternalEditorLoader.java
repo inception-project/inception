@@ -72,7 +72,8 @@ public class ExternalEditorLoader
 
         for (Path pluginJsonFile : pluginJsonFiles) {
             try (InputStream is = Files.newInputStream(pluginJsonFile)) {
-                ExternalEditorPluginDescripion desc = fromJsonStream(ExternalEditorPluginDescripion.class, is);
+                ExternalEditorPluginDescripion desc = fromJsonStream(
+                        ExternalEditorPluginDescripion.class, is);
                 desc.setId(pluginJsonFile.getParent().getFileName().toString());
                 desc.setBasePath(pluginJsonFile.getParent());
                 registerEditorPlugin(aRegistry, desc);

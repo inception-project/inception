@@ -61,7 +61,7 @@ public class ExternalAnnotationEditor
 
         editorFactoryId = aEditorFactoryId;
     }
-    
+
     @Override
     protected Component makeView()
     {

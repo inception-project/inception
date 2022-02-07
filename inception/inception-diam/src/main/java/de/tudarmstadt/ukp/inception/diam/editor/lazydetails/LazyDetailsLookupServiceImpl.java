@@ -48,8 +48,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.LazyDetailsResponse;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via
- * {@link DiamAutoConfig#lazyDetailsLookupService}.
+ * This class is exposed as a Spring Component via {@link DiamAutoConfig#lazyDetailsLookupService}.
  * </p>
  */
 public class LazyDetailsLookupServiceImpl
@@ -133,8 +132,8 @@ public class LazyDetailsLookupServiceImpl
                     .renderLazyDetails(feature, keyParam.toString());
         }
 
-        response.setResults(details.stream().map(d -> new LazyDetailQuery(d.getLabel(), d.getValue()))
-                .collect(toList()));
+        response.setResults(details.stream()
+                .map(d -> new LazyDetailQuery(d.getLabel(), d.getValue())).collect(toList()));
 
         return response;
     }

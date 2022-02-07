@@ -31,7 +31,7 @@ public class ExternalAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
     private final ExternalEditorPluginDescripion description;
-    
+
     public ExternalAnnotationEditorFactory(ExternalEditorPluginDescripion aDescription)
     {
         description = aDescription;
@@ -42,7 +42,7 @@ public class ExternalAnnotationEditorFactory
     {
         return description.getName();
     }
-    
+
     public ExternalEditorPluginDescripion getDescription()
     {
         return description;
@@ -53,11 +53,12 @@ public class ExternalAnnotationEditorFactory
     {
         aModelObject.setPagingStrategy(new NoPagingStrategy());
     }
-    
+
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new ExternalAnnotationEditor(aId, aModel, aActionHandler, aCasProvider, getBeanName());
+        return new ExternalAnnotationEditor(aId, aModel, aActionHandler, aCasProvider,
+                getBeanName());
     }
 }

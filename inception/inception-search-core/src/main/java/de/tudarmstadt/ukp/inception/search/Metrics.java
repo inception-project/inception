@@ -25,12 +25,8 @@ import java.util.Map;
 
 public enum Metrics
 {
-    DOC_COUNT("n", "Number of Documents"),
-    SUM("sum", "Sum"),
-    MIN("min", "Minimum"),
-    MAX("max", "Maximum"),
-    MEAN("mean", "Mean"),
-    MEDIAN("median", "Median"),
+    DOC_COUNT("n", "Number of Documents"), SUM("sum", "Sum"), MIN("min", "Minimum"),
+    MAX("max", "Maximum"), MEAN("mean", "Mean"), MEDIAN("median", "Median"),
     STANDARD_DEVIATION("standarddeviation", "Standard Deviation");
 
     private static final Map<String, Metrics> MTAS_TO_INTERNAL = new HashMap<String, Metrics>();

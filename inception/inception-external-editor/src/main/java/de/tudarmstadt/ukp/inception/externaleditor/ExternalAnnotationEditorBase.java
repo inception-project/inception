@@ -64,12 +64,12 @@ public abstract class ExternalAnnotationEditorBase
     {
         super(aId, aModel, aActionHandler, aCasProvider);
     }
-    
+
     @Override
     protected void onInitialize()
     {
         super.onInitialize();
-        
+
         setOutputMarkupPlaceholderTag(true);
 
         add(diamBehavior = new DiamAjaxBehavior());
@@ -111,7 +111,7 @@ public abstract class ExternalAnnotationEditorBase
     }
 
     protected abstract AnnotationEditorProperties getProperties();
-    
+
     private String getPropertiesAsJson()
     {
         AnnotationEditorProperties props = getProperties();

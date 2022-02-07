@@ -45,7 +45,7 @@ public class XmlCas2SaxEvents
     extends Cas2SaxEvents
 {
     public static final String DATA_CAPTURE_ROOT = "data-capture-root";
-    
+
     private final XmlDocument xml;
     private final Set<XmlNode> captureRoots;
 

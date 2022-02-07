@@ -36,8 +36,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via
- * {@link DiamAutoConfig#loadAnnotationsHandler}.
+ * This class is exposed as a Spring Component via {@link DiamAutoConfig#loadAnnotationsHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_RENDER_HANDLER)
