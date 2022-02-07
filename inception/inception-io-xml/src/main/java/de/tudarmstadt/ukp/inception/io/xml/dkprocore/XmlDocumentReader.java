@@ -34,8 +34,8 @@ import org.dkpro.core.api.parameter.MimeTypes;
 import org.dkpro.core.api.resources.CompressionUtils;
 import org.xml.sax.InputSource;
 
-import eu.openminted.share.annotations.api.Component;
-import eu.openminted.share.annotations.api.constants.OperationType;
+// import eu.openminted.share.annotations.api.Component;
+// import eu.openminted.share.annotations.api.constants.OperationType;
 
 /**
  * Simple XML reader which loads all text from the XML file into the CAS document text and generates
@@ -43,7 +43,7 @@ import eu.openminted.share.annotations.api.constants.OperationType;
  * 
  * @see XmlDocumentWriter
  */
-@Component(value = OperationType.READER)
+// @Component(value = OperationType.READER)
 @ResourceMetaData(name = "XML Document Reader")
 // @DocumentationResource("${docbase}/format-reference.html#format-${command}")
 //@Parameters(
