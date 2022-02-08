@@ -46,7 +46,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-external-editor</artifactId>
+      <artifactId>inception-io-xml</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
