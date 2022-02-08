@@ -36,9 +36,10 @@ public class RecogitoHtmlAnnotationEditorSupportAutoConfiguration
     {
         return new RecogitoHtmlAnnotationEditorFactory();
     }
-    
+
     @Bean
-    public WebAnnotationsSerializer recogitoJsSerializer() {
+    public WebAnnotationsSerializer recogitoJsSerializer()
+    {
         return new WebAnnotationsSerializer();
     }
 }

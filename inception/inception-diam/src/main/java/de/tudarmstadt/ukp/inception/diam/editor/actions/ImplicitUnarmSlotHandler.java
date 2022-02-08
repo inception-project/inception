@@ -30,8 +30,7 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
  * slot has been cleared. The handler does the disarming in its {@link #accepts} method as a
  * side-effect.
  * <p>
- * This class is exposed as a Spring Component via
- * {@link DiamAutoConfig#implicitUnarmSlotHandler}.
+ * This class is exposed as a Spring Component via {@link DiamAutoConfig#implicitUnarmSlotHandler}.
  * </p>
  */
 @Order(EditorAjaxRequestHandler.PRIO_UNARM_SLOT_HANDLER)

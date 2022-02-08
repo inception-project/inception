@@ -58,6 +58,6 @@ public class RecogitoJsJavascriptResourceReference
      */
     private RecogitoJsJavascriptResourceReference()
     {
-        super(RecogitoJsJavascriptResourceReference.class, "RecogitoEditor.js");
+        super(RecogitoJsJavascriptResourceReference.class, "RecogitoEditor.min.js");
     }
 }

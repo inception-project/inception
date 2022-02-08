@@ -90,6 +90,16 @@ and CSS stylesheet files required are then injected into this IFrame as well.
 }
 ----
 
+== Views
+
+Currently supported views are:
+
+* `cas+html` (deprecated): Renders HTML contained in the CAS directly into the editor area.
+* `iframe:cas+html`: Renders HTML contained in the CAS into a HTML IFrame in the editor area.
+* `iframe:cas+xml`: Renders XML contained in the CAS into a generic XML IFrame in the editor area.
+* `iframe:cas+xhtml+xml`: Renders XML contained in the CAS into an XHTML+XML IFrame in the editor area.
+HTML head and body elements are added automatically. The XML is rendered into the body.
+
 == Editor implementation
 
 Editors can be implemented in JavaScript or languages that can be compiled to JavaScript such as
@@ -118,7 +128,7 @@ TypeScript and ESBuild as dependencies.
 }
 ----
 
-NOTE: The `@inception-project/inception-js-api` module should be available from the NPMJS. However, if you 
+NOTE: The `@inception-project/inception-js-api` module should eventually be available from the NPMJS. However, if you 
     have INCEpTION checked out locally, you may want to build your editor against the latest local version. To do this, 
     first build INCEpTION once e.g. using `mvn clean install` or within your IDE. Then go to the folder 
     `inception-application/inception/inception-js-api/src/main/ts` in your checkout and run `npm link`. After that, go to the
@@ -131,7 +141,7 @@ The minimal editor implementation consists of three JavaScript/TypeScript files:
 * `MyEditorFactory.ts`: a factory class implementing the `AnnotationEditorFactory` interface which facilitates
   access to your editor for the external editor mechanism. In particular, it provides means of
   instantiating and destroying an editor instance.
-* `MyEditor.ts`: the actual editor class implementoing the `AnnotationEditor` interface.
+* `MyEditor.ts`: the actual editor class implementing the `AnnotationEditor` interface.
 
 .Example `main.ts` file skeleton
 [source,typescript]
@@ -153,11 +163,7 @@ import type { AnnotationEditorFactory, AnnotationEditorProperties, DiamClientFac
 const PROP_EDITOR = "__editor__";
 
 export class MyEditorFactory implements AnnotationEditorFactory {
-  public async getOrInitialize(element: HTMLElement | string, diam : DiamClientFactory, props: AnnotationEditorProperties): Promise<RecogitoEditor> {
-    if (!(element instanceof HTMLElement)) {
-      element = document.getElementById(element)
-    }
-
+  public async getOrInitialize(element: HTMLElement, diam : DiamClientFactory, props: AnnotationEditorProperties): Promise<RecogitoEditor> {
     if (element[PROP_EDITOR] != null) {
       return element[PROP_EDITOR];
     }
@@ -168,11 +174,7 @@ export class MyEditorFactory implements AnnotationEditorFactory {
     return element[PROP_EDITOR];
   }
 
-  public destroy(element: HTMLElement | string) {
-    if (!(element instanceof HTMLElement)) {
-      element = document.getElementById(element)
-    }
-
+  public destroy(element: HTMLElement) {
     if (element[PROP_EDITOR] != null) {
       element[PROP_EDITOR].destroy();
     }

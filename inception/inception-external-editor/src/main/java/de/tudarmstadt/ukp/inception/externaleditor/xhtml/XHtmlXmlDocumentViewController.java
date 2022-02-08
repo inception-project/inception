@@ -15,8 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { RecogitoEditorFactory } from './recogito/RecogitoEditorFactory';
+package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
 
-const INSTANCE = new RecogitoEditorFactory()
+import java.security.Principal;
+import java.util.Optional;
 
-export = INSTANCE;
+import org.springframework.http.ResponseEntity;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+
+public interface XHtmlXmlDocumentViewController
+{
+    String BASE_URL = "/de.tudarmstadt.ukp.inception.htmleditor.docview.XHtmlXmlDocumentViewController";
+
+    String getDocumentUrl(SourceDocument aDoc);
+
+    ResponseEntity<String> getDocument(long aProjectId, long aDocumentId, Optional<String> aEditor,
+            Principal aPrincipal)
+        throws Exception;
+}

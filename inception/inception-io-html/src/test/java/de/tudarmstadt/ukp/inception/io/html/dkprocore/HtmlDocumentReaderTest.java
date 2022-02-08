@@ -32,7 +32,6 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.custommonkey.xmlunit.XMLAssert;
 import org.dkpro.core.io.xmi.XmiWriter;
-import org.dkpro.core.io.xml.XmlDocumentWriter;
 import org.dkpro.core.testing.DkproTestContext;
 import org.dkpro.core.testing.TestOptions;
 import org.junit.Rule;
@@ -42,6 +41,7 @@ import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Heading;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Paragraph;
+import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlDocumentWriter;
 
 public class HtmlDocumentReaderTest
 {

@@ -98,11 +98,13 @@ public class StatisticsProvider
         return list.size();
     }
 
-    public void setData(List<LayerStatistics> aList) {
+    public void setData(List<LayerStatistics> aList)
+    {
         list = aList;
     }
 
-    public List<LayerStatistics> getData() {
+    public List<LayerStatistics> getData()
+    {
         List<LayerStatistics> sortedList = new ArrayList<LayerStatistics>(list);
         Collections.sort(sortedList, comparator);
 

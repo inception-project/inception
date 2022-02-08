@@ -138,8 +138,9 @@ public class AnnotationPreferencesDialogContent
         DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
         editor.setChoices(editorChoices);
-        editor.add(visibleWhen(() -> state.getDefaultEditor() == null && editor.getChoices().size() > 1
-                && ANNOTATION.equals(stateModel.getObject().getMode())));
+        editor.add(
+                visibleWhen(() -> state.getDefaultEditor() == null && editor.getChoices().size() > 1
+                        && ANNOTATION.equals(stateModel.getObject().getMode())));
         form.add(editor);
 
         // Add layer check boxes and combo boxes

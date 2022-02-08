@@ -25,8 +25,7 @@ import java.util.Map;
 
 public enum Formats
 {
-    CSV(".csv"),
-    TXT(".txt");
+    CSV(".csv"), TXT(".txt");
 
     private static final Map<String, Formats> UI_TO_INTERNAL = new HashMap<String, Formats>();
     private static final Map<Formats, String> INTERNAL_TO_UI = new HashMap<Formats, String>();

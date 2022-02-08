@@ -26,7 +26,7 @@ public class ExternalEditorPluginDescripion
     implements Serializable
 {
     private static final long serialVersionUID = 4400329006838299692L;
-    
+
     private String id;
     private Path basePath;
     private String factory;
@@ -40,12 +40,12 @@ public class ExternalEditorPluginDescripion
     {
         id = aId;
     }
-    
+
     public String getId()
     {
         return id;
     }
-    
+
     public void setBasePath(Path aBasePath)
     {
         basePath = aBasePath;

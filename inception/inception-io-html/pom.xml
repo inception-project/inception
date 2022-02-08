@@ -29,6 +29,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-formats</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-xml</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>commons-io</groupId>
@@ -51,10 +55,6 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-html-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-xml-asl</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -96,11 +96,6 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-testing-asl</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-xml-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
