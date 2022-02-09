@@ -2812,8 +2812,8 @@ export class Visualizer {
             .css('stroke', color)
             .stroke({ dasharray: dashArray })
             .attr({
-              markerStart: labelArrowDecl,
-              markerEnd: arrowDecl
+              'marker-start': labelArrowDecl,
+              'marker-end': arrowDecl
             })
             .addTo(arcGroup);
 
