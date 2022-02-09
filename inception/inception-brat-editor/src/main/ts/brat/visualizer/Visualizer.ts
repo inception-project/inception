@@ -2543,7 +2543,8 @@ export class Visualizer {
       const targetSpan = this.data.spans[arc.target];
 
       const leftToRight = originSpan.headFragment.towerId < targetSpan.headFragment.towerId;
-      let left, right;
+      let left : Fragment;
+      let right : Fragment;
       if (leftToRight) {
         left = originSpan.headFragment;
         right = targetSpan.headFragment;
@@ -2594,6 +2595,7 @@ export class Visualizer {
           arrows[arrowHead] = arrow;
         }
       }
+      
       if (!arrows[labelArrowHead]) {
         const arrow = this.makeArrow(labelArrowHead);
         if (arrow) {
@@ -2624,7 +2626,12 @@ export class Visualizer {
       let chunkReverse = false;
       const ufoCatcher = originSpan.headFragment.chunk.index === targetSpan.headFragment.chunk.index;
       if (ufoCatcher) {
-        chunkReverse = leftBox.x + leftBox.width / 2 < rightBox.x + rightBox.width / 2;
+        if (this.rtlmode) {
+          chunkReverse = leftBox.x + leftBox.width / 2 > rightBox.x + rightBox.width / 2;
+        }
+        else {
+          chunkReverse = leftBox.x + leftBox.width / 2 < rightBox.x + rightBox.width / 2;
+        }
       }
       const ufoCatcherMod = ufoCatcher ? chunkReverse ? -0.5 : 0.5 : 1;
 
@@ -2856,11 +2863,19 @@ export class Visualizer {
             let controlx: number;
             let endy: number;
             if (this.rtlmode) {
-              controlx = ufoCatcher ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx;
-              endy = leftBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : leftBox.height / 2);
+              controlx = ufoCatcher ? 
+                cornerx - 2 * ufoCatcherMod * this.reverseArcControlx : 
+                this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx;
+              endy = leftBox.y + (leftToRight && !arc.equiv ? 
+                Configuration.visual.margin.y : 
+                leftBox.height / 2);
             } else {
-              controlx = ufoCatcher ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx;
-              endy = leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y);
+              controlx = ufoCatcher ? 
+                cornerx + 2 * ufoCatcherMod * this.reverseArcControlx : 
+                this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx;
+              endy = leftBox.y + (leftToRight || arc.equiv ? 
+                leftBox.height / 2 : 
+                Configuration.visual.margin.y);
             }
 
             // no curving for short lines covering short vertical
@@ -2907,19 +2922,24 @@ export class Visualizer {
               cornerx = arrowEnd + 1;
             }
           }
+
           if (this.smoothArcCurves) {
             let controlx: number;
             let endy: number;
             if (this.rtlmode) {
               controlx = ufoCatcher ?
-                cornerx - 2 * ufoCatcherMod * this.reverseArcControlx :
+                cornerx + 2 * ufoCatcherMod * this.reverseArcControlx :
                 this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
-              endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
+              endy = rightBox.y + (leftToRight && !arc.equiv ? 
+                Configuration.visual.margin.y : 
+                rightBox.height / 2);
             } else {
               controlx = ufoCatcher ?
                 cornerx - 2 * ufoCatcherMod * this.reverseArcControlx :
                 this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
-              endy = rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2);
+              endy = rightBox.y + (leftToRight && !arc.equiv ? 
+                Configuration.visual.margin.y : 
+                rightBox.height / 2);
             }
 
             // no curving for short lines covering short vertical
@@ -2928,6 +2948,7 @@ export class Visualizer {
               Math.abs(cornerx - to) < 5) {
               endy = -height;
             }
+
             path.push(['L', cornerx, -height]);
             path.push(['Q', controlx, -height, to, endy]);
           } else {
