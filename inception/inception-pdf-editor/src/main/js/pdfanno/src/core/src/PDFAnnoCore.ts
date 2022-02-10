@@ -1,6 +1,6 @@
 import UI from './UI'
 import SpanAnnotation from './annotation/span'
-import RelationAnnotation from './annotation/relation'
+import RelationAnnotation from './annotation/relation.js'
 
 export default {
 

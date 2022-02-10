@@ -2,7 +2,7 @@ import { uuid } from '../../../anno-ui/utils'
 import { fromTomlString } from '../utils/tomlString'
 import { dispatchWindowEvent } from '../utils/event'
 import SpanAnnotation from './span'
-import RelationAnnotation from './relation'
+import RelationAnnotation from './relation.js'
 import semver from 'semver'
 import Ajv from 'ajv'
 /**

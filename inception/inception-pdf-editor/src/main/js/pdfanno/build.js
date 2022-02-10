@@ -30,13 +30,13 @@ defaults = {
 }
 
 esbuild.build(Object.assign({
-  entryPoints: ["src/core/index.js"],
+  entryPoints: ["src/core/index.ts"],
   outfile: "dist/pdfanno/pdfanno.core.bundle.js",
   globalName: "pdfanno.core"
 }, defaults))
 
 esbuild.build(Object.assign({
-  entryPoints: ["src/pdfanno.js"],
+  entryPoints: ["src/pdfanno.ts"],
   outfile: "dist/pdfanno/pdfanno.page.bundle.js",
   globalName: "pdfanno.page",
 }, defaults))

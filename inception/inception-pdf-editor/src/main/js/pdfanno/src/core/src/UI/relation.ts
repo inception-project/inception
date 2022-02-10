@@ -1,5 +1,5 @@
 import $ from 'jquery'
-import RelationAnnotation from '../annotation/relation'
+import RelationAnnotation from '../annotation/relation.js'
 import { scaleDown } from './utils'
 
 /**
