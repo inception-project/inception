@@ -17,7 +17,6 @@
  */
 const esbuild = require('esbuild')
 const fs = require('fs-extra');
-//const { sassPlugin } = require('esbuild-sass-plugin');
 
 fs.emptyDirSync('dist')
 
@@ -28,7 +27,6 @@ defaults = {
   target: "es6",
   loader: { ".ts": "ts" },
   logLevel: 'info'
-//  plugins: [sassPlugin()]
 }
 
 esbuild.build(Object.assign({
@@ -51,12 +49,6 @@ esbuild.build(Object.assign({
 }, defaults))
 
 esbuild.build(Object.assign({
-  entryPoints: ["src/compatibility.js"],
-  outfile: "dist/pdfanno/compatibility.bundle.js",
-  globalName: "compatibility",
-}, defaults))
-
-esbuild.build(Object.assign({
   entryPoints: ["src/l10n.js"],
   outfile: "dist/pdfanno/l10n.bundle.js",
   globalName: "l10n",
@@ -65,9 +57,11 @@ esbuild.build(Object.assign({
 fs.mkdirsSync('dist/pdfanno')
 fs.copySync('index.html', 'dist/pdfanno/index.html')
 fs.copySync('index-debug.html', 'dist/pdfanno/index-debug.html')
-fs.copySync('node_modules/pdfjs-dist/cmaps', 'dist/pdfanno/cmaps')
 fs.copySync('../pdfjs/images', 'dist/pdfanno/images')
 fs.copySync('../pdfjs/locale', 'dist/pdfanno/locale')
+fs.copySync('node_modules/pdfjs-dist/cmaps', 'dist/pdfanno/cmaps')
+fs.copySync('node_modules/pdfjs-dist/web/compatibility.js', 'dist/pdfanno/compatibility.bundle.js')
+fs.copySync('node_modules/pdfjs-dist/web/compatibility.js.map', 'dist/pdfanno/compatibility.bundle.js.map')
 
 fs.mkdirsSync('dist/pdfanno/pdfjs/')
 fs.copySync('node_modules/pdfjs-dist/build/pdf.js', 'dist/pdfanno/pdfjs/pdf.js')
