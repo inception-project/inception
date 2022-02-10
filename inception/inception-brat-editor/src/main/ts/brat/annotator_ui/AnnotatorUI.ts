@@ -307,7 +307,7 @@ export class AnnotatorUI {
     this.arcDragOrigin = originId;
     this.arcDragArc = this.svg.path()
       .fill('none')
-      .attr('markerEnd', 'url(#drag_arrow)')
+      .attr('marker-end', 'url(#drag_arrow)')
       .addClass('drag_stroke');
     this.arcDragOriginGroup = this.data.spans[this.arcDragOrigin].headFragment.group;
     this.arcDragOriginGroup.addClass('highlight');
