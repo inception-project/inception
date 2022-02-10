@@ -1,4 +1,4 @@
-import { uuid } from 'anno-ui/src/utils'
+import { uuid } from '../../../anno-ui/utils'
 import { fromTomlString } from '../utils/tomlString'
 import { dispatchWindowEvent } from '../utils/event'
 import SpanAnnotation from './span'

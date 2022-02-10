@@ -1,3 +1,4 @@
+import $ from 'jquery'
 import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
 

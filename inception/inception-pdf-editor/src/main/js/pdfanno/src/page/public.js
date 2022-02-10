@@ -1,7 +1,7 @@
-import { uuid } from 'anno-ui/src/utils'
+import { uuid } from '../anno-ui/utils'
 import toml from 'toml'
 import { convertFromExportY } from '../shared/coords'
-import * as annoUI from 'anno-ui'
+import * as annoUI from '../anno-ui'
 
 /**
  * Expose public APIs.

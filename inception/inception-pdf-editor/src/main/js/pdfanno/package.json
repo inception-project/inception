@@ -4,11 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build:pdfanno.core": "esbuild src/core/index.js --target=es6 --bundle --sourcemap --global-name=pdfanno.core --outfile=dist/pdfanno/pdfanno.core.bundle.js",
-    "build:pdfanno.page": "esbuild src/pdfanno.js --target=es6 --bundle --sourcemap --global-name=pdfanno.page --outfile=dist/pdfanno/pdfanno.page.bundle.js",
-    "build:viewer": "esbuild src/viewer.js --target=es6 --bundle --sourcemap --global-name=viewer --external:'images/loading-icon.gif' --external:'images/*' --outfile=dist/pdfanno/viewer.bundle.js",
-    "build:compatibility": "esbuild src/compatibility.js --target=es6 --bundle --sourcemap --global-name=compatibility --external:'images/loading-icon.gif' --external:'images/*' --outfile=dist/pdfanno/compatibility.bundle.js",
-    "build:l10n": "esbuild src/l10n.js --target=es6 --bundle --sourcemap --global-name=l10n --external:'images/loading-icon.gif' --external:'images/*' --outfile=dist/pdfanno/l10n.bundle.js"
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",
@@ -26,10 +22,10 @@
   },
   "devDependencies": {
     "esbuild": "^0.13.12",
-    "typescript": "^4.4.2"
+    "typescript": "^4.4.2",
+    "fs-extra": "^10.0.0"
   },
   "dependencies": {
-    "anno-ui": "github:paperai/anno-ui#master",
     "gulp-htmlmin": "^4.0.0",
     "pako": "^1.0.6",
     "events": "^3.3.0",
@@ -38,6 +34,9 @@
     "requirejs": "^2.3.5",
     "semver": "^5.5.0",
     "toml": "github:yoheiMune/toml-node",
-    "urijs": "^1.19.0"
+    "urijs": "^1.19.0",
+    "pdfjs-dist": "^1.10.100",
+    "jquery": "^3.6.0",
+    "jquery-ui": "^1.13.1"
   }
 }

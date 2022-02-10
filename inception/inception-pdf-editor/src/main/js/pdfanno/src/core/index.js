@@ -1,3 +1,4 @@
+import $ from 'jquery'
 /**
  Functions for annotations rendered over a PDF file.
  */

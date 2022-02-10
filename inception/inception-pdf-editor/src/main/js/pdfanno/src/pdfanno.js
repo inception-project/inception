@@ -1,12 +1,10 @@
-//require('file-loader?name=index.html!./index.html')
-//require('file-loader?name=index-debug.html!./index-debug.html')
-// require('!style-loader!css-loader!./pdfanno.css')
 import './pdfanno.css'
+import $ from 'jquery'
 
 import urijs from 'urijs'
 
 // UI parts.
-import * as annoUI from 'anno-ui'
+import * as annoUI from './anno-ui'
 
 import { dispatchWindowEvent } from './shared/util'
 import * as publicApi from './page/public'
@@ -152,7 +150,7 @@ async function displayViewer () {
 
 function setupUI () {
   // resizable.
-  annoUI.util.setupResizableColumns()
+  // annoUI.util.setupResizableColumns()
 
   // Start event listeners.
   annoUI.event.setup()

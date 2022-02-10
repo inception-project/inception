@@ -1,3 +1,4 @@
+import $ from 'jquery'
 /**
  * The utilities for display.
  */

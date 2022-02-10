@@ -3,7 +3,7 @@
  */
 import { paddingBetweenPages } from '../shared/coords'
 import { customizeAnalyzeResult, extractMeta } from './util/analyzer'
-import { searchUI } from 'anno-ui'
+import { searchUI } from '../anno-ui'
 
 /**
  * the Color for search results.

@@ -168,10 +168,6 @@
                   <directory>src/main/js/pdfanno/dist/pdfanno</directory>
                   <targetPath>pdfanno</targetPath>
                 </resource>
-                <resource>
-                  <directory>src/main/js/pdfjs</directory>
-                  <targetPath>pdfanno</targetPath>
-                </resource>
               </resources>
             </configuration>
           </execution>
@@ -205,53 +201,13 @@
             </configuration>
           </execution>
           <execution>
-            <id>npm run build:pdfanno.core</id>
+            <id>npm run build</id>
             <goals>
               <goal>npm</goal>
             </goals>
             <phase>generate-resources</phase>
             <configuration>
-              <arguments>run build:pdfanno.core</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm run build:pdfanno.page</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>run build:pdfanno.page</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm run build:viewer</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>run build:viewer</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm run build:compatibility</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>run build:compatibility</arguments>
-            </configuration>
-          </execution>
-          <execution>
-            <id>npm run build:l10n</id>
-            <goals>
-              <goal>npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-            <configuration>
-              <arguments>run build:l10n</arguments>
+              <arguments>run build</arguments>
             </configuration>
           </execution>
         </executions>

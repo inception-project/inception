@@ -1,4 +1,4 @@
-import * as annoUI from 'anno-ui'
+import * as annoUI from '../../anno-ui'
 import { getSearchHighlight } from '../search'
 import { anyOf, dispatchWindowEvent } from '../../shared/util'
 import { convertToExportY, paddingBetweenPages, nextZIndex } from '../../shared/coords'

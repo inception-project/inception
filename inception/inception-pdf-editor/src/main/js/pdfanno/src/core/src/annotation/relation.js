@@ -1,4 +1,4 @@
-import { uuid } from 'anno-ui/src/utils'
+import { uuid } from '../../../anno-ui/utils'
 import AbstractAnnotation from './abstract'
 import { getRelationTextPosition } from '../utils/relation.js'
 import { anyOf } from '../../../shared/util'
