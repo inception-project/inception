@@ -18,9 +18,6 @@ export function setup ({ createSpanAnnotation, createRelAnnotation, createRectAn
     // Set add button behavior.
     setupAddButton()
 
-    // Set trash button behavior.
-    setupTrashButton()
-
     // Set tab behavior.
     setupTabClick()
 
@@ -183,31 +180,6 @@ function setupAddButton () {
             color    : aColor,
             annoType : core.getCurrentTab()
         })
-    })
-}
-
-/**
- * Set the trash button behavior.
- */
-function setupTrashButton () {
-    $('.js-label-tab-content').on('click', '.js-label-trash', e => {
-        const $this = $(e.currentTarget)
-        const idx = $this.data('index')
-        const type = $this.parents('[data-type]').data('type')
-        const text = $this.siblings('.js-label').text().trim()
-
-        let d = db.getLabelList()
-        let labelObject = d[type] || { labels : [] }
-        labelObject.labels = labelObject.labels.slice(0, idx).concat(labelObject.labels.slice(idx + 1, labelObject.labels.length))
-        d[type] = labelObject
-        db.saveLabelList(d)
-
-        // Re-render.
-        $(`.js-label-tab[data-type="${type}"]`).click()
-
-        // Notify color changed.
-        const aColor = color.find(type, text)
-        color.notifyColorChanged({ text, color : aColor, annoType : type })
     })
 }
 
