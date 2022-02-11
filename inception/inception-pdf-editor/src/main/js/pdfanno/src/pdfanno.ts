@@ -152,4 +152,18 @@ function getPDFName (url) {
   return a[a.length - 1]
 }
 
+/**
+ * Show or hide a loding.
+ */
+ function showLoader (display) {
+  if (display) {
+    $('#pdfLoading').removeClass('close hidden')
+  } else {
+    $('#pdfLoading').addClass('close')
+    setTimeout(function () {
+      $('#pdfLoading').addClass('hidden')
+    }, 1000)
+  }
+}
+
 window.getPDFName = getPDFName
