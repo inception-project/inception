@@ -23,18 +23,17 @@
   "devDependencies": {
     "esbuild": "^0.13.12",
     "typescript": "^4.4.2",
-    "fs-extra": "^10.0.0"
+    "fs-extra": "^10.0.0",
+    "@types/jquery": "^3.5.13",
+    "@types/urijs": "^1.19.7"
   },
   "dependencies": {
-    "gulp-htmlmin": "^4.0.0",
-    "pako": "^1.0.6",
     "events": "^3.3.0",
     "request": "^2.81.0",
     "request-promise": "^4.2.2",
-    "requirejs": "^2.3.5",
     "semver": "^5.5.0",
     "toml": "github:yoheiMune/toml-node",
-    "urijs": "^1.19.0",
+    "urijs": "^1.19.7",
     "pdfjs-dist": "^1.10.100",
     "jquery": "^3.6.0",
     "jquery-ui": "^1.13.1"
