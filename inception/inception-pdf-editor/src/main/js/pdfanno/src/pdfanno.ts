@@ -98,9 +98,6 @@ async function displayViewer () {
     }
     window.addEventListener('pagerendered', listenPageRendered)
 
-    // Set the analyzeResult.
-    annoUI.uploadButton.setResult(analyzeResult)
-
     // Init search function.
     searchUI.setup(analyzeResult)
 

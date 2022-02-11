@@ -461,15 +461,6 @@ export default class PDFAnnoPage {
   }
 
   /**
-   * Get the export data of annotations.
-   *
-   * @return {Promise}
-   */
-  exportData ({exportType = 'toml'} = {}) {
-    return window.iframeWindow.annotationContainer.exportData(...arguments)
-  }
-
-  /**
    * Get the viewport of the viewer.
    */
   getViewerViewport () {

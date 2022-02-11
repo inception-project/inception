@@ -21,9 +21,6 @@ export function setup ({ createSpanAnnotation, createRelAnnotation, createRectAn
     // Set trash button behavior.
     setupTrashButton()
 
-    // Set the action when a label is clicked.
-    setupLabelText(createSpanAnnotation, createRelAnnotation, createRectAnnotation)
-
     // Set tab behavior.
     setupTabClick()
 
@@ -211,26 +208,6 @@ function setupTrashButton () {
         // Notify color changed.
         const aColor = color.find(type, text)
         color.notifyColorChanged({ text, color : aColor, annoType : type })
-    })
-}
-
-/**
- * Set the behavior which a label text is clicked.
- */
-function setupLabelText (createSpanAnnotation, createRelAnnotation, createRectAnnotation) {
-    $('.js-label-tab-content').on('click', '.js-label', e => {
-        let $this = $(e.currentTarget)
-        let text = $this.text().trim()
-        let type = $this.parents('[data-type]').data('type')
-        let color = $this.parent().find('.js-label-palette').spectrum('get').toHexString()
-        console.log('add:', color)
-        if (type === 'span') {
-            createSpanAnnotation({ text, color })
-        } else if (type === 'one-way' || type === 'two-way' || type === 'link') {
-            createRelAnnotation({ type, text, color })
-        } else if (type === 'rectangle') {
-            createRectAnnotation({ text, color })
-        }
     })
 }
 

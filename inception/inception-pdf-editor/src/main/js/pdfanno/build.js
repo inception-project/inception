@@ -49,7 +49,7 @@ esbuild.build(Object.assign({
 }, defaults))
 
 esbuild.build(Object.assign({
-  entryPoints: ["src/l10n.js"],
+  entryPoints: ["src/l10n.ts"],
   outfile: "dist/pdfanno/l10n.bundle.js",
   globalName: "l10n",
 }, defaults))
