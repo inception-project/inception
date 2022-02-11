@@ -8,7 +8,6 @@ import * as annoUI from './anno-ui'
 
 import { dispatchWindowEvent } from './shared/util'
 import * as publicApi from './page/public'
-import * as searchUI from './page/search'
 import * as textLayer from './page/textLayer'
 import { showLoader } from './page/util/display'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
@@ -97,9 +96,6 @@ async function displayViewer () {
       window.removeEventListener('pagerendered', listenPageRendered)
     }
     window.addEventListener('pagerendered', listenPageRendered)
-
-    // Init search function.
-    searchUI.setup(analyzeResult)
 
     // Init textLayers.
     textLayer.setup(analyzeResult)
