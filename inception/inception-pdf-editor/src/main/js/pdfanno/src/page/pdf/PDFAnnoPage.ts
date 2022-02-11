@@ -1,9 +1,7 @@
 import * as annoUI from '../../anno-ui'
-import { getSearchHighlight } from '../search'
 import { anyOf, dispatchWindowEvent } from '../../shared/util'
 import { convertToExportY, paddingBetweenPages, nextZIndex } from '../../shared/coords'
 import {
-  unlistenWindowLeaveEvent,
   adjustViewerSize
 } from '../util/window'
 import * as constants from '../../shared/constants'
@@ -13,11 +11,11 @@ import * as constants from '../../shared/constants'
  */
 export default class PDFAnnoPage {
 
-  constructor () {
+  constructor() {
     this.autoBind()
   }
 
-  autoBind () {
+  autoBind() {
     Object.getOwnPropertyNames(this.constructor.prototype)
       .filter(prop => typeof this[prop] === 'function')
       .forEach(method => {
@@ -28,7 +26,7 @@ export default class PDFAnnoPage {
   /**
    * Start PDFAnno Application.
    */
-  startViewerApplication () {
+  startViewerApplication() {
 
     // Alias for convenience.
     // TODO Remove this alias.
@@ -36,9 +34,6 @@ export default class PDFAnnoPage {
 
     // Adjust the height of viewer.
     adjustViewerSize()
-
-    // Reset the confirm dialog at leaving page.
-    unlistenWindowLeaveEvent()
 
     dispatchWindowEvent('iframeReady')
   }
@@ -49,23 +44,23 @@ export default class PDFAnnoPage {
    * @param {Array<File>} files - files user selected in a file dialog.
    * @return {Promise}
    */
-  loadFiles (files) {
+  loadFiles(files) {
     return loadFiles(files).then(result => {
       this.contentFiles = result.contents.map(c => {
         return Object.assign(c, {
-          selected : false
+          selected: false
         })
       })
       this.annoFiles = result.annos.map(a => {
         return Object.assign(a, {
-          primary   : false,
-          reference : false
+          primary: false,
+          reference: false
         })
       })
     })
   }
 
-  getContentFile (name) {
+  getContentFile(name) {
     const items = this.contentFiles.filter(c => c.name === name)
     if (items.length > 0) {
       return items[0]
@@ -73,7 +68,7 @@ export default class PDFAnnoPage {
     return null
   }
 
-  getAnnoFile (name) {
+  getAnnoFile(name) {
     const items = this.annoFiles.filter(c => c.name === name)
     if (items.length > 0) {
       return items[0]
@@ -81,7 +76,7 @@ export default class PDFAnnoPage {
     return null
   }
 
-  displayContent (contentName) {
+  displayContent(contentName) {
 
     let contentFile = this.contentFiles.filter(c => c.name === contentName)
     if (contentFile.length === 0) {
@@ -92,7 +87,7 @@ export default class PDFAnnoPage {
     this.displayViewer(contentFile[0])
   }
 
-  displayViewer (contentFile) {
+  displayViewer(contentFile) {
 
     // Reset settings.
     this.resetPDFViewerSettings()
@@ -108,18 +103,18 @@ export default class PDFAnnoPage {
     this.currentContentFile = contentFile
   }
 
-  setCurrentContentFile (contentFile) {
+  setCurrentContentFile(contentFile) {
     this.currentContentFile = contentFile
   }
 
-  getCurrentContentFile () {
+  getCurrentContentFile() {
     return this.currentContentFile
   }
 
   /**
    * Start the viewer.
    */
-    initializeViewer (viewerSelector = '#viewer') {
+  initializeViewer(viewerSelector = '#viewer') {
 
     window.pdf = null
     window.pdfName = null
@@ -131,7 +126,7 @@ export default class PDFAnnoPage {
   /**
    * Close the viewer.
    */
-  closePDFViewer () {
+  closePDFViewer() {
     if (window.iframeWindow && window.iframeWindow.PDFViewerApplication) {
       window.iframeWindow.PDFViewerApplication.close()
       $('#numPages', window.iframeWindow.document).text('')
@@ -143,28 +138,25 @@ export default class PDFAnnoPage {
   /**
    * Reset the setting of PDFViewer.
    */
-  resetPDFViewerSettings () {
+  resetPDFViewerSettings() {
     localStorage.removeItem('database')
   }
 
   /**
    * Create a Span annotation.
    */
-  createSpan ({ text = null, color = null } = {}) {
+  createSpan({ text = null, color = null } = {}) {
     // Get user selection.
     const rects = window.iframeWindow.PDFAnnoCore.default.UI.getRectangles()
     console.log('createSpan:rects:', rects)
-
-    // Get a search result, if exists.
-    const highlight = getSearchHighlight()
 
     // Get selected annotations.
     const selectedAnnotations = window.iframeWindow.annotationContainer.getSelectedAnnotations()
 
     // Check empty.
-    if (!rects && !highlight && selectedAnnotations.length === 0) {
+    if (!rects && selectedAnnotations.length === 0) {
       console.log('check:', rects)
-      return annoUI.ui.alertDialog.show({ message : 'Select text span or an annotation.' })
+      return annoUI.ui.alertDialog.show({ message: 'Select text span or an annotation.' })
     }
 
     // Change color and label.
@@ -180,20 +172,8 @@ export default class PDFAnnoPage {
 
       // Create a new rectAnnotation.
     } else if (rects) {
-      window.iframeWindow.PDFAnnoCore.default.UI.createSpan({ text, zIndex : nextZIndex(), color })
+      window.iframeWindow.PDFAnnoCore.default.UI.createSpan({ text, zIndex: nextZIndex(), color })
 
-    } else if (highlight) {
-
-      const span = window.saveSpan({
-        page         : highlight.page,
-        rects        : highlight.rectangles,
-        text,
-        zIndex       : nextZIndex(),
-        color,
-        textRange    : highlight.textRange,
-        selectedText : highlight.selectedText
-      })
-      this.addAnnotation(span)
     }
 
     // Notify annotation added.
@@ -203,7 +183,7 @@ export default class PDFAnnoPage {
   /**
    * Create a Relation annotation.
    */
-  createRelation ({ type, text = null, color = null } = {}) {
+  createRelation({ type, text = null, color = null } = {}) {
 
     // for old style.
     if (arguments.length === 1 && typeof arguments[0] === 'string') {
@@ -233,10 +213,10 @@ export default class PDFAnnoPage {
     })
 
     if (selectedAnnotations.length < 2) {
-      return annoUI.ui.alertDialog.show({ message : 'Two annotated text spans are not selected.\nTo select multiple annotated spans, click the first annotated span, then Ctrl+Click (Windows) or Cmd+Click (OSX) the second span.' })
+      return annoUI.ui.alertDialog.show({ message: 'Two annotated text spans are not selected.\nTo select multiple annotated spans, click the first annotated span, then Ctrl+Click (Windows) or Cmd+Click (OSX) the second span.' })
     }
 
-    const first  = selectedAnnotations[selectedAnnotations.length - 2]
+    const first = selectedAnnotations[selectedAnnotations.length - 2]
     const second = selectedAnnotations[selectedAnnotations.length - 1]
     console.log('first:second,', first, second)
 
@@ -266,8 +246,8 @@ export default class PDFAnnoPage {
 
     window.iframeWindow.PDFAnnoCore.default.UI.createRelation({
       type,
-      anno1 : first,
-      anno2 : second,
+      anno1: first,
+      anno2: second,
       text,
       color
     })
@@ -279,7 +259,7 @@ export default class PDFAnnoPage {
   /**
    * Display annotations an user selected.
    */
-  displayAnnotation (isPrimary) {
+  displayAnnotation(isPrimary) {
 
     // Check the viewer not clised.
     if ($('#numPages', window.iframeWindow.document).text() === '') {
@@ -333,7 +313,7 @@ export default class PDFAnnoPage {
 
     // Create import data.
     let paperData = {
-      primary : primaryIndex,
+      primary: primaryIndex,
       annotations,
       colorMap
     }
@@ -345,7 +325,7 @@ export default class PDFAnnoPage {
   /**
    * Get all annotations.
    */
-  getAllAnnotations () {
+  getAllAnnotations() {
     if (!window.iframeWindow || !window.iframeWindow.annotationContainer) {
       return []
     }
@@ -355,21 +335,21 @@ export default class PDFAnnoPage {
   /**
    * Get selected annotations.
    */
-  getSelectedAnnotations () {
+  getSelectedAnnotations() {
     return window.iframeWindow.annotationContainer.getSelectedAnnotations()
   }
 
   /**
    * Find an annotation by id.
    */
-  findAnnotationById (id) {
+  findAnnotationById(id) {
     return window.iframeWindow.annotationContainer.findById(id)
   }
 
   /**
    * Clear the all annotations from the view and storage.
    */
-  clearAllAnnotations () {
+  clearAllAnnotations() {
     if (window.iframeWindow) {
       window.iframeWindow.annotationContainer.getAllAnnotations().forEach(a => a.destroy())
     }
@@ -378,14 +358,14 @@ export default class PDFAnnoPage {
   /**
    * Add an annotation to the container.
    */
-  addAnnotation  (annotation) {
+  addAnnotation(annotation) {
     window.iframeWindow.annotationContainer.add(annotation)
   }
 
   /**
    * Create a new span annotation.
    */
-  createSpanAnnotation (options) {
+  createSpanAnnotation(options) {
     console.log('createSpanAnnotation:', options)
     return window.iframeWindow.PDFAnnoCore.default.SpanAnnotation.newInstance(options)
   }
@@ -393,11 +373,11 @@ export default class PDFAnnoPage {
   /**
    * Create a new relation annotation.
    */
-  createRelationAnnotation (options) {
+  createRelationAnnotation(options) {
     return window.iframeWindow.PDFAnnoCore.default.RelationAnnotation.newInstance(options)
   }
 
-  validateSchemaErrors (errors) {
+  validateSchemaErrors(errors) {
     let messages = []
     errors.forEach(error => {
       Object.keys(error).forEach(key => {
@@ -413,7 +393,7 @@ export default class PDFAnnoPage {
   /**
    * Import annotations from UI.
    */
-  importAnnotation (paperData, isPrimary) {
+  importAnnotation(paperData, isPrimary) {
     window.iframeWindow.annotationContainer.importAnnotations(paperData, isPrimary).then(() => {
       // Notify annotations added.
       dispatchWindowEvent('annotationrendered')
@@ -429,7 +409,7 @@ export default class PDFAnnoPage {
   /**
    * Scroll window to the annotation.
    */
-  scrollToAnnotation (id) {
+  scrollToAnnotation(id) {
 
     let annotation = window.annoPage.findAnnotationById(id)
 
@@ -463,7 +443,7 @@ export default class PDFAnnoPage {
   /**
    * Get the viewport of the viewer.
    */
-  getViewerViewport () {
+  getViewerViewport() {
     return window.iframeWindow.PDFView.pdfViewer.getPageView(0).viewport
   }
 
@@ -473,18 +453,17 @@ export default class PDFAnnoPage {
    * @returns Promise<Uint8Array>
    * @memberof PDFAnnoPage
    */
-  loadPdf (url) {
+  loadPdf(url) {
     // add noise to the query parameters so caching is prevented
-    var antiCacheUrl= url + "&time=" + new Date().getTime();
+    var antiCacheUrl = url + "&time=" + new Date().getTime();
     return fetch(antiCacheUrl, {
-      method : 'GET',
-      mode   : 'cors'
+      method: 'GET',
+      mode: 'cors'
     }).then(response => {
       if (response.ok) {
         return response.arrayBuffer()
       } else {
-        // throw new Error(`HTTP ${response.status} - ${response.statusText}`)
-        throw new Error(`HTTP ${response.status} - PDFファイルのロードに失敗しました。`)
+        throw new Error(`HTTP ${response.status} - ${response.statusText}`)
       }
     }).then(buffer => {
       return new Uint8Array(buffer)
@@ -493,16 +472,15 @@ export default class PDFAnnoPage {
 
   /**
    * Load pdftxt data from url.
-   * @param {String} url
    * @returns Promise<String>
    * @memberof PDFAnnoPage
    */
-  loadPdftxt (url) {
+  loadPdftxt(url: string) {
     // add noise to the query parameters so caching is prevented
-    var antiCacheUrl= url + "&time=" + new Date().getTime();
+    var antiCacheUrl = url + "&time=" + new Date().getTime();
     return fetch(antiCacheUrl, {
-      method : 'GET',
-      mode   : 'cors'
+      method: 'GET',
+      mode: 'cors'
     }).then(response => {
       if (response.ok) {
         return response.text()
@@ -514,29 +492,25 @@ export default class PDFAnnoPage {
 
   /**
    * Load PDF and pdftxt from url.
-   * @param {String} pdfURL
-   * @param {String} pdftxtURL
-   * @returns Promise<Object>
    * @memberof PDFAnnoPage
    */
-  loadPDFFromServer (pdfURL, pdftxtURL) {
+  loadPDFFromServer(pdfURL: string, pdftxtURL: string): Promise<Object> {
     return Promise.all([
       this.loadPdf(pdfURL),
       this.loadPdftxt(pdftxtURL)
     ]).then(results => {
       return {
-        pdf           : results[0],
-        analyzeResult : results[1]
+        pdf: results[0],
+        analyzeResult: results[1]
       }
     })
   }
 
-  set pdftxt (text) {
+  set pdftxt(text) {
     this._pdftxt = text
   }
 
-  get pdftxt () {
+  get pdftxt() {
     return this._pdftxt
   }
-
 }
