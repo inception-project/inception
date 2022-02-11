@@ -1,7 +1,5 @@
 import './index.css'
 
-import * as browseButton from './components/browseButton'
-import * as contentDropdown from './components/contentDropdown'
 import * as primaryAnnoDropdown from './components/primaryAnnoDropdown'
 import * as referenceAnnoDropdown from './components/referenceAnnoDropdown'
 import * as downloadButton from './components/downloadButton'
@@ -14,8 +12,6 @@ import * as util from './utils'
 import * as core from './core'
 
 export {
-    browseButton,
-    contentDropdown,
     primaryAnnoDropdown,
     referenceAnnoDropdown,
     downloadButton,

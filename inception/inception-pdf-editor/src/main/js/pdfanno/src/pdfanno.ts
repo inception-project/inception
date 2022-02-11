@@ -149,44 +149,8 @@ async function displayViewer () {
 }
 
 function setupUI () {
-  // resizable.
-  // annoUI.util.setupResizableColumns()
-
   // Start event listeners.
   annoUI.event.setup()
-
-  // PDF dropdown.
-  annoUI.contentDropdown.setup({
-    initialText            : 'PDF File',
-    overrideWarningMessage : 'Are you sure to load another PDF ?',
-    contentReloadHandler   : fileName => {
-
-      dispatchWindowEvent('willChangeContent')
-
-      // Disable UI.
-      $('#searchWord, .js-dict-match-file').attr('disabled', 'disabled')
-
-      // Get the content.
-      const content = window.annoPage.getContentFile(fileName)
-
-      // Reset annotations displayed.
-      window.annoPage.clearAllAnnotations()
-
-      // Display the PDF on the viewer.
-      window.annoPage.displayViewer(content)
-
-      // Read pdftxt file.
-      readPdftxt(content.file).then(text => {
-        dispatchWindowEvent('didChangeContent')
-        searchUI.setup(text)
-        textLayer.setup(text)
-        window.annoPage.pdftxt = text
-      }).catch(err => {
-        console.log(err)
-        return annoUI.ui.alertDialog.show({ message : err })
-      })
-    }
-  })
 }
 
 /**
