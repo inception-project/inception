@@ -2,6 +2,7 @@ import { uuid } from '../../../anno-ui/utils'
 import AbstractAnnotation from './abstract'
 import { getRelationTextPosition } from '../utils/relation.js'
 import { anyOf } from '../../../shared/util'
+import SpanAnnotation from './span'
 
 let globalEvent
 
@@ -10,10 +11,26 @@ let globalEvent
  */
 export default class RelationAnnotation extends AbstractAnnotation {
 
+  uuid: string;
+  type: string;
+  direction: unknown;
+  text: string;
+  color: string;
+  readOnly: boolean;
+  $element: JQuery<HTMLElement>;
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  zIndex: number;
+  _rel1Annotation: SpanAnnotation;
+  _rel2Annotation: SpanAnnotation;
+  selected: boolean;
+
   /**
    * Constructor.
    */
-  constructor () {
+  constructor() {
     super()
 
     globalEvent = window.globalEvent
@@ -42,23 +59,23 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from an annotation data.
    */
-  static newInstance (annotation) {
-    let a            = new RelationAnnotation()
-    a.uuid           = annotation.uuid || uuid()
-    a.direction      = 'relation'
+  static newInstance(annotation) {
+    let a = new RelationAnnotation()
+    a.uuid = annotation.uuid || uuid()
+    a.direction = 'relation'
     a.rel1Annotation = AbstractAnnotation.isAnnotation(annotation.rel1) ? annotation.rel1 : window.annotationContainer.findById(annotation.rel1)
     a.rel2Annotation = AbstractAnnotation.isAnnotation(annotation.rel2) ? annotation.rel2 : window.annotationContainer.findById(annotation.rel2)
-    a.text           = annotation.text
-    a.color          = annotation.color
-    a.readOnly       = annotation.readOnly || false
-    a.zIndex         = annotation.zIndex || 10
+    a.text = annotation.text
+    a.color = annotation.color
+    a.readOnly = annotation.readOnly || false
+    a.zIndex = annotation.zIndex || 10
     return a
   }
 
   /**
    * Create an instance from a TOML object.
    */
-  static newInstanceFromTomlObject (d) {
+  static newInstanceFromTomlObject(d) {
     // d.direction = d.dir
     d.direction = 'relation'
     d.text = d.label
@@ -69,7 +86,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Set a hover event.
    */
-  setHoverEvent () {
+  setHoverEvent() {
     this.$element.find('path').hover(
       this.handleHoverInEvent,
       this.handleHoverOutEvent
@@ -79,7 +96,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Setter - rel1Annotation.
    */
-  set rel1Annotation (a) {
+  set rel1Annotation(a) {
     this._rel1Annotation = a
     if (this._rel1Annotation) {
       this._rel1Annotation.on('hoverin', this.handleRelHoverIn)
@@ -92,14 +109,14 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Getter - rel1Annotation.
    */
-  get rel1Annotation () {
+  get rel1Annotation() {
     return this._rel1Annotation
   }
 
   /**
    * Setter - rel2Annotation.
    */
-  set rel2Annotation (a) {
+  set rel2Annotation(a) {
     this._rel2Annotation = a
     if (this._rel2Annotation) {
       this._rel2Annotation.on('hoverin', this.handleRelHoverIn)
@@ -112,38 +129,38 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Getter - rel2Annotation.
    */
-  get rel2Annotation () {
+  get rel2Annotation() {
     return this._rel2Annotation
   }
 
   /**
    * Render the annotation.
    */
-  render () {
+  render() : boolean {
     this.setStartEndPosition()
-    super.render()
+    return super.render()
   }
 
   /**
    * Create an annotation data for save.
    */
-  createAnnotation () {
+  createAnnotation() {
     return {
-      uuid      : this.uuid,
-      type      : this.type,
-      direction : this.direction,
-      rel1      : this._rel1Annotation.uuid,
-      rel2      : this._rel2Annotation.uuid,
-      text      : this.text,
-      color     : this.color,
-      readOnly  : this.readOnly
+      uuid: this.uuid,
+      type: this.type,
+      direction: this.direction,
+      rel1: this._rel1Annotation.uuid,
+      rel2: this._rel2Annotation.uuid,
+      text: this.text,
+      color: this.color,
+      readOnly: this.readOnly
     }
   }
 
   /**
    * Destroy the annotation.
    */
-  destroy () {
+  destroy() {
     let promise = super.destroy()
     if (this._rel1Annotation) {
       this._rel1Annotation.removeListener('hoverin', this.handleRelHoverIn)
@@ -170,15 +187,15 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Delete the annotation if selected.
    */
-  deleteSelectedAnnotation () {
-    super.deleteSelectedAnnotation()
+  deleteSelectedAnnotation(): boolean {
+    return super.deleteSelectedAnnotation()
   }
 
   /**
    * Get the position for text.
    */
   // TODO No need ?
-  getTextPosition () {
+  getTextPosition() {
     this.setStartEndPosition()
     return getRelationTextPosition(this.x1, this.y1, this.x2, this.y2, this.text, this.uuid)
   }
@@ -186,7 +203,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Highlight relations.
    */
-  highlightRelAnnotations () {
+  highlightRelAnnotations() {
     if (this._rel1Annotation) {
       this._rel1Annotation.highlight()
     }
@@ -198,7 +215,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Dehighlight relations.
    */
-  dehighlightRelAnnotations () {
+  dehighlightRelAnnotations() {
     if (this._rel1Annotation) {
       this._rel1Annotation.dehighlight()
     }
@@ -210,21 +227,21 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Handle a selected event on a text.
    */
-  handleTextSelected () {
+  handleTextSelected() {
     this.select()
   }
 
   /**
    * Handle a deselected event on a text.
    */
-  handleTextDeselected () {
+  handleTextDeselected() {
     this.deselect()
   }
 
   /**
    * The callback for the relational text hoverred in.
    */
-  handleTextHoverIn () {
+  handleTextHoverIn() {
     this.highlight()
     this.emit('hoverin')
     this.highlightRelAnnotations()
@@ -233,7 +250,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback for the relational text hoverred out.
    */
-  handleTextHoverOut () {
+  handleTextHoverOut() {
     this.dehighlight()
     this.emit('hoverout')
     this.dehighlightRelAnnotations()
@@ -242,7 +259,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback for the relationals hoverred in.
    */
-  handleRelHoverIn () {
+  handleRelHoverIn() {
     this.highlight()
     this.highlightRelAnnotations()
   }
@@ -250,7 +267,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback for the relationals hoverred out.
    */
-  handleRelHoverOut () {
+  handleRelHoverOut() {
     this.dehighlight()
     this.dehighlightRelAnnotations()
   }
@@ -258,21 +275,21 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback that is called relations has benn deleted.
    */
-  handleRelDelete () {
+  handleRelDelete() {
     this.destroy()
   }
 
   /**
    * The callback that is called relations has been moved.
    */
-  handleRelMove () {
+  handleRelMove() {
     this.render()
   }
 
   /**
    * The callback that is called relations has finished to be moved.
    */
-  handleRelMoveEnd (rectAnnotation) {
+  handleRelMoveEnd(rectAnnotation) {
     if (this._rel1Annotation === rectAnnotation || this._rel2Annotation === rectAnnotation) {
       this.enableViewMode()
     }
@@ -283,7 +300,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
    *
    * @param {String} newText - the content an user changed.
    */
-  handleTextChanged (newText) {
+  handleTextChanged(newText) {
     this.text = newText
     this.save()
   }
@@ -291,7 +308,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback that is called at hoverred in.
    */
-  handleHoverInEvent (e) {
+  handleHoverInEvent(e) {
     super.handleHoverInEvent(e)
     this.highlightRelAnnotations()
   }
@@ -299,7 +316,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback that is called at hoverred out.
    */
-  handleHoverOutEvent (e) {
+  handleHoverOutEvent(e) {
     super.handleHoverOutEvent(e)
     this.dehighlightRelAnnotations()
   }
@@ -307,7 +324,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback that is called at clicked.
    */
-  handleClickEvent (e) {
+  handleClickEvent(e) {
     super.handleClickEvent(e)
     if (this.selected) {
       var data = {
@@ -322,7 +339,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
         "u": window.apiUrl,
         "sh": [],
         "fh": [function () {
-            alert('Something went wrong on selecting a relation annotation for: ' + data)
+          alert('Something went wrong on selecting a relation annotation for: ' + data)
         }]
       });
     }
@@ -332,31 +349,31 @@ export default class RelationAnnotation extends AbstractAnnotation {
    * Export Data for TOML.
    * @returns
    */
-  export () {
+  export() {
     return {
-      head  : this.rel1Annotation.exportId + '',
-      tail  : this.rel2Annotation.exportId + '',
-      label : this.text || ''
+      head: this.rel1Annotation.exportId + '',
+      tail: this.rel2Annotation.exportId + '',
+      label: this.text || ''
     }
   }
 
-    /**
-   * Export Data for TOML.
-   * @returns {{type: string, dir: null, ids: *[], label: *|string}}
-   */
-  export040 () {
+  /**
+ * Export Data for TOML.
+ * @returns {{type: string, dir: null, ids: *[], label: *|string}}
+ */
+  export040() {
     return {
-      type  : this.type,
-      dir   : this.direction,
-      ids   : [ this.rel1Annotation.exportId, this.rel2Annotation.exportId ],
-      label : this.text || ''
+      type: this.type,
+      dir: this.direction,
+      ids: [this.rel1Annotation.exportId, this.rel2Annotation.exportId],
+      label: this.text || ''
     }
   }
 
   /**
    * Enable view mode.
    */
-  enableViewMode () {
+  enableViewMode() {
 
     this.disableViewMode()
 
@@ -370,7 +387,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Disable view mode.
    */
-  disableViewMode () {
+  disableViewMode() {
     super.disableViewMode()
     this.$element.find('path').off('click')
   }
@@ -378,7 +395,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Set the start / end points of the relation.
    */
-  setStartEndPosition () {
+  setStartEndPosition() {
     if (this._rel1Annotation) {
       let p = this._rel1Annotation.getBoundingCirclePosition()
       this.x1 = p.x
@@ -394,7 +411,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * @{inheritDoc}
    */
-  equalTo (anno) {
+  equalTo(anno) {
 
     if (!anno || this.type !== anno) {
       return false
@@ -405,5 +422,4 @@ export default class RelationAnnotation extends AbstractAnnotation {
 
     return isSame
   }
-
 }

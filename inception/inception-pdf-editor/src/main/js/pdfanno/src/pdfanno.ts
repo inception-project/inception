@@ -8,7 +8,6 @@ import * as annoUI from './anno-ui'
 
 import * as publicApi from './page/public'
 import * as textLayer from './page/textLayer'
-import { showLoader } from './page/util/display'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
 
 /**

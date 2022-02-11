@@ -2193,10 +2193,10 @@ var SecondaryToolbar = {
     // Define the toolbar buttons.
     this.toggleButton = options.toggleButton;
     this.presentationModeButton = options.presentationModeButton;
-    this.openFile = options.openFile;
+    // this.openFile = options.openFile;
     this.print = options.print;
-    this.download = options.download;
-    this.viewBookmark = options.viewBookmark;
+    // this.download = options.download;
+    // this.viewBookmark = options.viewBookmark;
     this.firstPage = options.firstPage;
     this.lastPage = options.lastPage;
     this.pageRotateCw = options.pageRotateCw;
@@ -2211,10 +2211,10 @@ var SecondaryToolbar = {
       // (except for toggleHandTool, hand_tool.js is responsible for it):
       { element: this.presentationModeButton,
         handler: this.presentationModeClick },
-      { element: this.openFile, handler: this.openFileClick },
+      // { element: this.openFile, handler: this.openFileClick },
       { element: this.print, handler: this.printClick },
-      { element: this.download, handler: this.downloadClick },
-      { element: this.viewBookmark, handler: this.viewBookmarkClick },
+      // { element: this.download, handler: this.downloadClick },
+      // { element: this.viewBookmark, handler: this.viewBookmarkClick },
       { element: this.firstPage, handler: this.firstPageClick },
       { element: this.lastPage, handler: this.lastPageClick },
       { element: this.pageRotateCw, handler: this.pageRotateCwClick },
@@ -2237,24 +2237,24 @@ var SecondaryToolbar = {
     this.close();
   },
 
-  openFileClick: function secondaryToolbarOpenFileClick(evt) {
-    document.getElementById('fileInput').click();
-    this.close();
-  },
+  // openFileClick: function secondaryToolbarOpenFileClick(evt) {
+  //   document.getElementById('fileInput').click();
+  //   this.close();
+  // },
 
   printClick: function secondaryToolbarPrintClick(evt) {
     window.print();
     this.close();
   },
 
-  downloadClick: function secondaryToolbarDownloadClick(evt) {
-    PDFViewerApplication.download();
-    this.close();
-  },
+  // downloadClick: function secondaryToolbarDownloadClick(evt) {
+  //   PDFViewerApplication.download();
+  //   this.close();
+  // },
 
-  viewBookmarkClick: function secondaryToolbarViewBookmarkClick(evt) {
-    this.close();
-  },
+  // viewBookmarkClick: function secondaryToolbarViewBookmarkClick(evt) {
+  //   this.close();
+  // },
 
   firstPageClick: function secondaryToolbarFirstPageClick(evt) {
     PDFViewerApplication.page = 1;
@@ -5411,12 +5411,11 @@ window.PDFViewerApplication = {
     SecondaryToolbar.initialize({
       toolbar: document.getElementById('secondaryToolbar'),
       toggleButton: document.getElementById('secondaryToolbarToggle'),
-      presentationModeButton:
-        document.getElementById('secondaryPresentationMode'),
-      openFile: document.getElementById('secondaryOpenFile'),
+      presentationModeButton: document.getElementById('secondaryPresentationMode'),
+      // openFile: document.getElementById('secondaryOpenFile'),
       print: document.getElementById('secondaryPrint'),
-      download: document.getElementById('secondaryDownload'),
-      viewBookmark: document.getElementById('secondaryViewBookmark'),
+      // download: document.getElementById('secondaryDownload'),
+      //viewBookmark: document.getElementById('secondaryViewBookmark'),
       firstPage: document.getElementById('firstPage'),
       lastPage: document.getElementById('lastPage'),
       pageRotateCw: document.getElementById('pageRotateCw'),
@@ -6428,14 +6427,14 @@ function webViewerInitialized() {
   document.getElementById('presentationMode').addEventListener('click',
     SecondaryToolbar.presentationModeClick.bind(SecondaryToolbar));
 
-  document.getElementById('openFile').addEventListener('click',
-    SecondaryToolbar.openFileClick.bind(SecondaryToolbar));
+  // document.getElementById('openFile').addEventListener('click',
+  //   SecondaryToolbar.openFileClick.bind(SecondaryToolbar));
 
   document.getElementById('print').addEventListener('click',
     SecondaryToolbar.printClick.bind(SecondaryToolbar));
 
-  document.getElementById('download').addEventListener('click',
-    SecondaryToolbar.downloadClick.bind(SecondaryToolbar));
+  // document.getElementById('download').addEventListener('click',
+  //   SecondaryToolbar.downloadClick.bind(SecondaryToolbar));
 
 
   if (file && file.lastIndexOf('file:', 0) === 0) {
@@ -6539,10 +6538,10 @@ window.addEventListener('updateviewarea', function (evt) {
       // unable to write to storage
     });
   });
-  var href =
-    PDFViewerApplication.pdfLinkService.getAnchorUrl(location.pdfOpenParams);
-  document.getElementById('viewBookmark').href = href;
-  document.getElementById('secondaryViewBookmark').href = href;
+
+  // var href = PDFViewerApplication.pdfLinkService.getAnchorUrl(location.pdfOpenParams);
+  // document.getElementById('viewBookmark').href = href;
+  // document.getElementById('secondaryViewBookmark').href = href;
 
   // Update the current bookmark in the browsing history.
   PDFViewerApplication.pdfHistory.updateCurrentBookmark(location.pdfOpenParams,

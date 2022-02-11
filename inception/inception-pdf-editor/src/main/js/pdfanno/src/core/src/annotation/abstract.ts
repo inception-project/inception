@@ -11,14 +11,14 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Check the argument is an annotation.
    */
-  static isAnnotation (obj) {
+  static isAnnotation(obj) {
     return obj && obj.uuid && obj.type
   }
 
   /**
    * Constructor.
    */
-  constructor () {
+  constructor() {
     super()
     this.autoBind()
     this.deleted = false
@@ -30,7 +30,7 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Bind the `this` scope of instance methods to `this`.
    */
-  autoBind () {
+  autoBind() {
     Object.getOwnPropertyNames(this.constructor.prototype)
       .filter(prop => typeof this[prop] === 'function')
       .forEach(method => {
@@ -41,7 +41,7 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Render annotation(s).
    */
-  render () {
+  render() : boolean {
 
     this.$element.remove()
 
@@ -66,14 +66,14 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Save the annotation data.
    */
-  save () {
+  save() {
     window.annotationContainer.add(this)
   }
 
   /**
    * Delete the annotation from rendering, a container in window, and a container in localStorage.
    */
-  destroy () {
+  destroy() {
     this.deleted = true
     this.$element.remove()
 
@@ -89,14 +89,14 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Judge the point within the element.
    */
-  isHit (x, y) {
+  isHit(x, y) {
     return false
   }
 
   /**
    * Handle a click event.
    */
-  handleClickEvent (e) {
+  handleClickEvent(e) {
     if (!this.selected) {
       this.toggleSelect()
     }
@@ -114,7 +114,7 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Handle a hoverIn event.
    */
-  handleHoverInEvent (e) {
+  handleHoverInEvent(e) {
     console.log('handleHoverInEvent')
     this.highlight()
     this.emit('hoverin')
@@ -124,7 +124,7 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Handle a hoverOut event.
    */
-  handleHoverOutEvent (e) {
+  handleHoverOutEvent(e) {
     console.log('handleHoverOutEvent')
     this.dehighlight()
     this.emit('hoverout')
@@ -134,21 +134,21 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Highlight the annotation.
    */
-  highlight () {
+  highlight() {
     this.$element.addClass('--hover')
   }
 
   /**
    * Dehighlight the annotation.
    */
-  dehighlight () {
+  dehighlight() {
     this.$element.removeClass('--hover')
   }
 
   /**
    * Select the annotation.
    */
-  select () {
+  select() {
     this.selected = true
     this.selectedTime = Date.now()
     this.$element.addClass('--selected')
@@ -157,7 +157,7 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Deselect the annotation.
    */
-  deselect () {
+  deselect() {
     console.log('deselect')
     this.selected = false
     this.selectedTime = null
@@ -167,7 +167,7 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Toggle the selected state.
    */
-  toggleSelect () {
+  toggleSelect() {
 
     if (this.selected) {
       this.deselect()
@@ -180,11 +180,11 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Delete the annotation if selected.
    */
-  deleteSelectedAnnotation () {
+  deleteSelectedAnnotation() : boolean{
 
     if (this.isSelected()) {
       this.destroy().then(() => {
-        dispatchWindowEvent('annotationDeleted', { uuid : this.uuid })
+        dispatchWindowEvent('annotationDeleted', { uuid: this.uuid })
       })
       return true
     }
@@ -194,28 +194,28 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Check whether the annotation is selected.
    */
-  isSelected () {
+  isSelected() {
     return this.$element.hasClass('--selected')
   }
 
   /**
    * Create a dummy DOM element for the timing that a annotation hasn't be specified yet.
    */
-  createDummyElement () {
+  createDummyElement() {
     return $('<div class="dummy"/>')
   }
 
   /**
    * Get the central position of the boundingCircle.
    */
-  getBoundingCirclePosition () {
+  getBoundingCirclePosition() {
     const $circle = this.$element.find('.anno-knob')
     if ($circle.length > 0) {
       return {
         // x : parseFloat($circle.css('left')) + parseFloat($circle.css('width')) / 2,
         // y : parseFloat($circle.css('top')) + parseFloat($circle.css('height')) / 2
-        x : parseFloat($circle.css('left')) + DEFAULT_RADIUS / 2.0,
-        y : parseFloat($circle.css('top')) + DEFAULT_RADIUS / 2.0
+        x: parseFloat($circle.css('left')) + DEFAULT_RADIUS / 2.0,
+        y: parseFloat($circle.css('top')) + DEFAULT_RADIUS / 2.0
       }
     }
     return null
@@ -224,31 +224,31 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Enable a view mode.
    */
-  enableViewMode () {
+  enableViewMode() {
     this.render()
   }
 
   /**
    * Disable a view mode.
    */
-  disableViewMode () {
+  disableViewMode() {
     this.render()
   }
 
-  setDisableHoverEvent () {
+  setDisableHoverEvent() {
     this.hoverEventDisable = true
   }
 
-  setEnableHoverEvent () {
+  setEnableHoverEvent() {
     this.hoverEventDisable = false
   }
 
-  enable () {
+  enable() {
     this.disabled = false
     this.$element.css('pointer-events', 'auto')
   }
 
-  disable () {
+  disable() {
     this.disabled = true
     this.$element.css('pointer-events', 'none')
   }
@@ -256,7 +256,7 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Check the another annotation is equal to `this`.
    */
-  equalTo (anotherAnnotation) {
+  equalTo(anotherAnnotation) {
     // Implement Here.
     return false
   }
