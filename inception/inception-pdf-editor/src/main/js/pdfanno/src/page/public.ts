@@ -1,85 +1,15 @@
-import { uuid } from '../anno-ui/utils'
 import toml from 'toml'
-import { convertFromExportY } from '../shared/coords'
-import * as annoUI from '../anno-ui'
 
 /**
  * Expose public APIs.
  */
 export function expose () {
   window.add = addAnnotation
-  window.addAll = addAllAnnotations
   window.delete = deleteAnnotation
   window.SpanAnnotation = PublicSpanAnnotation
   window.RelationAnnotation = PublicRelationAnnotation
   window.readTOML = readTOML
   window.clear = clear
-}
-
-/**
- * Add all annotations.
- *
- * This method expect to get argument made from a TOML file parsed by `window.readTOML`.
- */
-export function addAllAnnotations (tomlObject) {
-
-  let results = []
-
-  for (const key in tomlObject) {
-
-    let data = tomlObject[key]
-
-    if (typeof data !== 'object') {
-      continue
-    }
-
-    data.id = key
-    data.uuid = uuid()
-
-    setColor(data)
-
-    let a
-    if (data.type === 'span') {
-      a = new PublicSpanAnnotation(data)
-    } else if (data.type === 'relation') {
-      data.ids = data.ids.map(refId => tomlObject[refId].uuid)
-      a = new PublicRelationAnnotation(data)
-    } else {
-      console.log('Unknown: ', key, data)
-    }
-
-    if (a) {
-      addAnnotation(a)
-      results.push(a)
-    }
-  }
-
-  // return result
-  return results
-
-}
-
-/**
- * Set the color to the annotation.
- * @param data - Annotation.
- */
-function setColor (data) {
-
-  const colorMap = annoUI.labelInput.getColorMap()
-
-  let colors = null
-  if (data.type === 'span') {
-    colors = colorMap[data.type]
-  } else {
-    colors = colorMap[data.dir]
-  }
-
-  if (colors) {
-    const color = colors[data.label]
-    if (color) {
-      data.color = color
-    }
-  }
 }
 
 /**
