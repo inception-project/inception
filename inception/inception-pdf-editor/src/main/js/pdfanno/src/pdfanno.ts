@@ -6,12 +6,10 @@ import urijs from 'urijs'
 // UI parts.
 import * as annoUI from './anno-ui'
 
-import { dispatchWindowEvent } from './shared/util'
 import * as publicApi from './page/public'
 import * as textLayer from './page/textLayer'
 import { showLoader } from './page/util/display'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
-import { readPdftxt } from './page/pdf/loadFiles'
 
 /**
  * Global variable.

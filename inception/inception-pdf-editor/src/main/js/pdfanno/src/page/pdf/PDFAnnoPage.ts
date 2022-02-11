@@ -38,28 +38,6 @@ export default class PDFAnnoPage {
     dispatchWindowEvent('iframeReady')
   }
 
-  /**
-   * Load files(contents and annoFiles).
-   *
-   * @param {Array<File>} files - files user selected in a file dialog.
-   * @return {Promise}
-   */
-  loadFiles(files) {
-    return loadFiles(files).then(result => {
-      this.contentFiles = result.contents.map(c => {
-        return Object.assign(c, {
-          selected: false
-        })
-      })
-      this.annoFiles = result.annos.map(a => {
-        return Object.assign(a, {
-          primary: false,
-          reference: false
-        })
-      })
-    })
-  }
-
   getContentFile(name) {
     const items = this.contentFiles.filter(c => c.name === name)
     if (items.length > 0) {
