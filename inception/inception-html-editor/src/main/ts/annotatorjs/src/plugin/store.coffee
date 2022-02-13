@@ -88,7 +88,7 @@ class Annotator.Plugin.Store extends Annotator.Plugin
   #
   # Returns a new instance of Store.
   constructor: (element, options) ->
-    super
+    super()
     @annotations = []
 
   # Public: Initialises the plugin and loads the latest annotations. If the

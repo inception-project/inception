@@ -50,7 +50,8 @@ class Annotator.Editor extends Annotator.Widget
   #
   # Returns a new Editor instance.
   constructor: (options) ->
-    super $(@html)[0], options
+    superHtml= -> @html
+    super($(superHtml)[0], options)
 
     @fields = []
     @annotation = {}
@@ -262,7 +263,7 @@ class Annotator.Editor extends Annotator.Widget
     field.element
 
   checkOrientation: ->
-    super
+    super.checkOrientation()
 
     list = @element.find('ul')
     controls = @element.find('.annotator-controls')

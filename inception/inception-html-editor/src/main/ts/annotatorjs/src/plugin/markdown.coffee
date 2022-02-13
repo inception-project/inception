@@ -17,7 +17,7 @@ class Annotator.Plugin.Markdown extends Annotator.Plugin
   # Returns a new instance of Annotator.Plugin.Markdown.
   constructor: (element, options) ->
     if Showdown?.converter?
-      super
+      super()
       @converter = new Showdown.converter()
     else
       console.error Annotator._t("To use the Markdown plugin, you must include Showdown into the page first.")

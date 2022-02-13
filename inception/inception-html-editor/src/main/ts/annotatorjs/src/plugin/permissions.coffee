@@ -138,7 +138,7 @@ class Annotator.Plugin.Permissions extends Annotator.Plugin
   #
   # Returns an instance of the Permissions object.
   constructor: (element, options) ->
-    super
+    super()
 
     if @options.user
       this.setUser(@options.user)

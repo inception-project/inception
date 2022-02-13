@@ -60,7 +60,7 @@ class Annotator extends Delegator
   #
   # Returns a new instance of the Annotator.
   constructor: (element, options) ->
-    super
+    super()
     @plugins = {}
 
     # Return early if the annotator is not supported.
@@ -181,7 +181,7 @@ class Annotator extends Delegator
   #
   # Returns nothing.
   destroy: ->
-    super
+    super.destroy()
 
     $(document).unbind({
       "mouseup":   this.checkForEndSelection
@@ -770,7 +770,7 @@ class Annotator extends Delegator
 # Create namespace for Annotator plugins
 class Annotator.Plugin extends Delegator
   constructor: (element, options) ->
-    super
+    super()
 
   pluginInit: ->
 

@@ -34,7 +34,8 @@ class Annotator.Notification extends Delegator
   #
   # Returns
   constructor: (options) ->
-    super $(@options.html).appendTo(document.body)[0], options
+    superOptions = -> @options
+    super($(superOptions.html).appendTo(document.body)[0], options)
 
   # Public: Displays the annotation with message and optional status. The
   # message will hide itself after 5 seconds or if the user clicks on it.

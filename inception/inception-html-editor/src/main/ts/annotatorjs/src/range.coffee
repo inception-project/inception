@@ -96,7 +96,8 @@ Range.nodeFromXPath = (xpath, root=document) ->
 
 class Range.RangeError extends Error
   constructor: (@type, @message, @parent=null) ->
-    super(@message)
+    superMessage = -> @message
+    super(superMessage)
 
 # Public: Creates a wrapper around a range object obtained from a DOMSelection.
 class Range.BrowserRange

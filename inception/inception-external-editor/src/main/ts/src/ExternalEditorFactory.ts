@@ -21,58 +21,64 @@ const PROP_EDITOR = "__editor__";
 
 export class ExternalEditorFactory implements AnnotationEditorFactory {
   async getOrInitialize(element: Node, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor> {
-    const iframe = element as HTMLIFrameElement;
-
     if (element[PROP_EDITOR] != null) {
       return element[PROP_EDITOR];
     }
 
-    element[PROP_EDITOR] = await this.loadIFrameContent(iframe)
-      .then(f => this.loadEditorResources(f, props))
-      .then(f => {
-        if (this.isDocumentJavascriptCapable(iframe.contentDocument)) {
-            // On HTML documents provide the body element as target to the editor
-            return this.initEditor(iframe.contentWindow,
-            iframe.contentDocument.getElementsByTagName("body")[0], diam, props);
-        }
+    if (element instanceof HTMLIFrameElement) {
+      const iframe = element as HTMLIFrameElement;
 
-        // On XML documents, provide the document root as target to the editor
-        return this.initEditor(window, f.contentDocument, diam, props);
+      element[PROP_EDITOR] = await this.loadIFrameContent(iframe)
+        .then(win => this.loadEditorResources(win, props))
+        .then(win => {
+          if (this.isDocumentJavascriptCapable(win.document)) {
+            // On HTML documents provide the body element as target to the editor
+            return this.initEditor(win, win.document.getElementsByTagName("body")[0], diam, props);
+          }
+
+          // On XML documents, provide the document root as target to the editor
+          return this.initEditor(window, win.document, diam, props);
+        });
+      return element[PROP_EDITOR];
+    }
+
+    element[PROP_EDITOR] = await this.loadEditorResources(window, props)
+      .then(win => {
+        return this.initEditor(win, element as HTMLElement, diam, props);
       });
     return element[PROP_EDITOR];
   }
 
-  loadIFrameContent(iframe: HTMLIFrameElement): Promise<HTMLIFrameElement> {
+  loadIFrameContent(iframe: HTMLIFrameElement): Promise<Window> {
     return new Promise(resolve => {
       const eventHandler = () => {
         iframe.removeEventListener('load', eventHandler);
-        resolve(iframe);
+        resolve(iframe.contentWindow);
       };
       iframe.addEventListener('load', eventHandler);
     });
   }
 
-  loadEditorResources(iframe: HTMLIFrameElement, props: AnnotationEditorProperties): Promise<HTMLIFrameElement> {
+  loadEditorResources(win: Window, props: AnnotationEditorProperties): Promise<Window> {
     return new Promise(resolve => {
       // Make sure body is accessible via body property - seems the browser does not always ensure
       // this...
-      if (iframe.contentDocument instanceof HTMLDocument) {
-        if (!iframe.contentDocument.body) {
-          iframe.contentDocument.body = iframe.contentDocument.getElementsByTagName("body")[0];
+      if (win.document instanceof HTMLDocument) {
+        if (!document.body) {
+          win.document.body = win.document.getElementsByTagName("body")[0];
         }
       }
 
-      let target = this.isDocumentJavascriptCapable(iframe.contentDocument)
-        ? iframe.contentDocument : document;
+      let target = this.isDocumentJavascriptCapable(win.document) ? win.document : document;
       let allPromises: Promise<void>[] = [];
-      if (this.isDocumentStylesheetCapable(iframe.contentDocument)) {
+      if (this.isDocumentStylesheetCapable(win.document)) {
         allPromises.push(...props.stylesheetSources.map(src => this.loadStylesheet(target, src)));
       }
       allPromises.push(...props.scriptSources.map(src => this.loadScript(target, src)));
 
       Promise.all(allPromises).then(() => {
         console.info(`${allPromises.length} editor resources loaded`);
-        resolve(iframe);
+        resolve(win);
       });
     });
   }
@@ -81,7 +87,7 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
     return new Promise(resolve => {
       const editorFactory = (contextWindow as any).eval(props.editorFactory) as AnnotationEditorFactory;
       editorFactory.getOrInitialize(targetElement, diam, props).then(editor => {
-        console.info("Editor in HTML IFrame initialized");
+        console.info("Editor initialized");
         resolve(editor);
       });
     });
@@ -129,7 +135,7 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
   destroy(element: Node): void {
     if (element[PROP_EDITOR] != null) {
       element[PROP_EDITOR].destroy();
-      console.info('Destroyed editor in IFrame');
+      console.info('Destroyed editor');
     }
   }
 }

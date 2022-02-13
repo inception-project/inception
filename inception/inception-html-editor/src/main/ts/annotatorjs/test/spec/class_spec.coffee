@@ -9,7 +9,7 @@ class DelegatedExample extends Delegator
     bar: (a) -> a
 
   constructor: (elem) ->
-    super
+    super()
     @returns = []
 
   pushA: -> @returns.push("A")

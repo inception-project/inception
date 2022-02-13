@@ -49,7 +49,8 @@ class Annotator.Viewer extends Annotator.Widget
   #
   # Returns a new Viewer instance.
   constructor: (options) ->
-    super $(@html.element)[0], options
+    superHtml= -> @html
+    super($(superHtml.element)[0], options)
 
     @item   = $(@html.item)[0]
     @fields = []

@@ -20,7 +20,7 @@ class Annotator.Widget extends Delegator
   #
   # Returns a new Widget instance.
   constructor: (element, options) ->
-    super
+    super()
     @classes = $.extend {}, Annotator.Widget.prototype.classes, @classes
 
   # Public: Unbind the widget's events and remove its element from the DOM.

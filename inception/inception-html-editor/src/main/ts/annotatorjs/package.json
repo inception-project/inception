@@ -7,8 +7,9 @@
     "url": "https://github.com/okfn/annotator.git"
   },
   "devDependencies": {
+    "esbuild": "^0.13.12",
+    "fs-extra": "^10.0.0",
     "chai": "1.5.0",
-    "coffee-script": "1.7.x",
     "coffeebarx": "0.0.3",
     "coffeescript": "^2.5.1",
     "connect": "~2.10.1",
@@ -19,17 +20,18 @@
     "mocha-phantomjs": "2.0.1",
     "sinon": "1.6.0",
     "uglify-js": "2.4.24",
-    "uglifycss": "0.0.29"
-  },
-  "engines": {
-    "node": "~0.8.0"
+    "uglifycss": "0.0.29",
+    "esbuild-coffeescript": "2.0.0",
+    "@types/jquery": "^3.5.13"
   },
   "scripts": {
     "start": "node ./tools/serve",
     "test": "make REPORTER=spec test",
-    "build": "make"
+    "old-build": "make",
+    "build": "node build.js"
   },
   "dependencies": {
+    "jquery": "^3.6.0",
     "coffee": "^5.4.0"
   }
 }
