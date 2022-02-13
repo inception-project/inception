@@ -1,58 +1,30 @@
-// A simple XPath evaluator using jQuery which can evaluate queries of
-export const simpleXPathJQuery = function(relativeRoot: any) {
-  const jq = this.map(function() {
-    let path = '';
-    let elem = this;
-
-    while (((elem != null ? elem.nodeType : undefined) === Node.ELEMENT_NODE) && (elem !== relativeRoot)) {
-      const tagName = elem.tagName.replace(":", "\\:");
-      let idx = $(elem.parentNode).children(tagName).index(elem) + 1;
-      path = "/" + elem.tagName.toLowerCase() + `[${idx}]` + path;
-      elem = elem.parentNode;
-    }
-
-    return path;
-  });
-
-  return jq.get();
-};
-
-// A simple XPath evaluator using only standard DOM methods which can
-// evaluate queries of the form /tag[index]/tag[index].
-export const simpleXPathPure = function(relativeRoot: any) {
-
-  const getPathSegment = function(node: any) {
-    const name = getNodeName(node);
-    const pos = getNodePosition(node);
-    return `${name}[${pos}]`;
-  };
-
-  const rootNode = relativeRoot;
-
-  const getPathTo = function(node: { parentNode: any; }) {
-    let xpath = '';
-    while (node !== rootNode) {
-      if (node == null) {
-        throw new Error("Called getPathTo on a node which was not a descendant of @rootNode. " + rootNode);
-      }
-      xpath = (getPathSegment(node)) + '/' + xpath;
-      node = node.parentNode;
-    }
-    xpath = '/' + xpath;
-    xpath = xpath.replace(/\/$/, '');
-    return xpath;
-  };
-
-  const jq = this.map(function() {
-    const path = getPathTo(this);
-
-    return path;
-  });
-
-  return jq.get();
-};
-
-export const findChild = function(node: { hasChildNodes: () => any; childNodes: any; }, type: any, index: number) {
+/* 
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Derived under the conditions of the MIT license from below:
+ *
+ * Based on Annotator v.1.2.10 (built at: 26 Feb 2015)
+ * http://annotatorjs.org
+ *
+ * Copyright 2015, the Annotator project contributors.
+ * Dual licensed under the MIT and GPLv3 licenses.
+ * https://github.com/openannotation/annotator/blob/master/LICENSE
+ */
+export function findChild(node: { hasChildNodes: () => any; childNodes: any; }, type: any, index: number) {
   if (!node.hasChildNodes()) {
     throw new Error("XPath error: node has no children!");
   }
@@ -71,25 +43,12 @@ export const findChild = function(node: { hasChildNodes: () => any; childNodes: 
 };
 
 // Get the node name for use in generating an xpath expression.
-export const getNodeName = function(node: { nodeName: { toLowerCase: () => any; }; }) {
-    const nodeName = node.nodeName.toLowerCase();
-    switch (nodeName) {
-      case "#text": return "text()";
-      case "#comment": return "comment()";
-      case "#cdata-section": return "cdata-section()";
-      default: return nodeName;
-    }
-  };
-
-// Get the index of the node as it appears in its parent's child list
-export const getNodePosition = function(node: { nodeName: any; }) {
-  let pos = 0;
-  let tmp = node;
-  while (tmp) {
-    if (tmp.nodeName === node.nodeName) {
-      pos++;
-    }
-    tmp = tmp.previousSibling;
+export function getNodeName(node: { nodeName: { toLowerCase: () => any; }; }) {
+  const nodeName = node.nodeName.toLowerCase();
+  switch (nodeName) {
+    case "#text": return "text()";
+    case "#comment": return "comment()";
+    case "#cdata-section": return "cdata-section()";
+    default: return nodeName;
   }
-  return pos;
 };

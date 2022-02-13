@@ -1,27 +1,34 @@
-import { randomUUID } from "crypto";
-import { findChild, simpleXPathJQuery, simpleXPathPure } from './xpath';
+/* 
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * Derived under the conditions of the MIT license from below:
+ *
+ * Based on Annotator v.1.2.10 (built at: 26 Feb 2015)
+ * http://annotatorjs.org
+ *
+ * Copyright 2015, the Annotator project contributors.
+ * Dual licensed under the MIT and GPLv3 licenses.
+ * https://github.com/openannotation/annotator/blob/master/LICENSE
+ */
+import $ from 'jquery';
+import { findChild } from './xpath';
 
-// I18N
-let gettext = null;
-
-if (typeof Gettext !== 'undefined' && Gettext !== null) {
-  const _gettext = new Gettext({ domain: "annotator" });
-  gettext = (msgid: any) => _gettext.gettext(msgid);
-} else {
-  gettext = (msgid: any) => msgid;
-}
-
-export const _t = (msgid: string) => gettext(msgid);
-
-if (!__guard__(typeof jQuery !== 'undefined' && jQuery !== null ? jQuery.fn : undefined, (x: { jquery: any; }) => x.jquery)) {
-  console.error(_t("Annotator requires jQuery: have you included lib/vendor/jquery.js?"));
-}
-
-if (!JSON || !JSON.parse || !JSON.stringify) {
-  console.error(_t("Annotator requires a JSON implementation: have you included lib/vendor/json2.js?"));
-}
-
-const $ = jQuery;
+// Remants of I18N
+export const _t = (msgid: string) => msgid;
 
 // Public: Flatten a nested array structure
 //
@@ -146,17 +153,6 @@ export function readRangeViaSelection(range: { toRange: () => any; }) {
   return sel.toString();                        // Read out the selection
 };
 
-export function xpathFromNode(el: any, relativeRoot: any) {
-  let result: any;
-  try {
-    result = simpleXPathJQuery.call(el, relativeRoot);
-  } catch (exception) {
-    console.log("jQuery-based XPath construction failed! Falling back to manual.");
-    result = simpleXPathPure.call(el, relativeRoot);
-  }
-  return result;
-};
-
 export function nodeFromXPath(xp: { substring: (arg0: number) => { (): any; new(): any; split: { (arg0: string): any; new(): any; }; }; }, root: any) {
   const steps = xp.substring(1).split("/");
   let node = root;
@@ -184,12 +180,8 @@ export const getGlobal = () => (function () { return this; })();
 // Return the maximum z-index of any element in $elements (a jQuery collection).
 export function maxZIndex($elements: any) {
   const all = Array.from($elements).map((el: any) =>
-    $(el).css('position') === 'static' ?
-      -1
-      :
-      // Use parseFloat since we may get scientific notation for large
-      // values.
-      parseFloat($(el).css('z-index')) || -1);
+    // Use parseFloat since we may get scientific notation for large values.
+    $(el).css('position') === 'static' ? -1 : parseFloat($(el).css('z-index')) || -1);
   return Math.max.apply(Math, all);
 };
 

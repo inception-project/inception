@@ -45,7 +45,7 @@ public class AnnotatorJsHtmlAnnotationEditor
     private static final long serialVersionUID = -3358207848681467993L;
 
     private @SpringBean(name = "recogitoHtmlAnnotationEditorFactory") AnnotationEditorFactory editorFactory;
-    private @SpringBean(name = "htmlDocumentViewFactory") DocumentViewFactory viewFactory;
+    private @SpringBean(name = "xHtmlXmlDocumentIFrameViewFactory") DocumentViewFactory viewFactory;
     private @SpringBean DocumentService documentService;
     private @SpringBean ServletContext servletContext;
 
