@@ -26,7 +26,6 @@ import java.util.Properties;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
-import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -39,7 +38,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
-import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -165,20 +163,6 @@ public abstract class ApplicationPageBase
             return true;
         });
         add(feedbackPanel);
-    }
-
-    @Override
-    protected void onConfigure()
-    {
-        super.onConfigure();
-
-        // Do not cache pages in development mode - allows us to make changes to the HMTL without
-        // having to reload the application
-        if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
-            getApplication().getMarkupSettings().getMarkupFactory().getMarkupCache().clear();
-            getApplication().getResourceSettings()
-                    .setCachingStrategy(NoOpResourceCachingStrategy.INSTANCE);
-        }
     }
 
     public FeedbackPanel getFeedbackPanel()
