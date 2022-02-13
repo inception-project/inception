@@ -369,6 +369,10 @@ public class StringMatchingRecommender
 
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel)
     {
+        if (isBlank(aText)) {
+            return;
+        }
+
         String label = isBlank(aLabel) ? UNKNOWN_LABEL : aLabel;
 
         String text = aText;
@@ -383,7 +387,6 @@ public class StringMatchingRecommender
         }
 
         entry.put(label);
-
     }
 
     private List<Sample> extractData(List<CAS> aCasses, String aLayerName, String aFeatureName)
@@ -403,6 +406,10 @@ public class StringMatchingRecommender
                 List<Span> spans = new ArrayList<>();
 
                 for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
+                    if (isBlank(annotation.getCoveredText())) {
+                        continue;
+                    }
+
                     String label = annotation.getFeatureValueAsString(predictedFeature);
                     if (isNotEmpty(label)) {
                         spans.add(new Span(annotation.getBegin(), annotation.getEnd(),
