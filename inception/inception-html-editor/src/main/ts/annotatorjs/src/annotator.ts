@@ -43,7 +43,6 @@ export class Annotator extends Delegator {
   // User customisable options available.
   static readonly DEFAULT_OPTIONS = { readOnly: false };
 
-  static _instances: any;
   static html = {
     adder: '<div class="annotator-adder"><button>' + _t('Annotate') + '</button></div>',
     wrapper: '<div class="annotator-wrapper"></div>'
@@ -66,9 +65,7 @@ export class Annotator extends Delegator {
   //
   // NOTE: If the Annotator is not supported by the current browser it will not
   // perform any setup and simply return a basic object. This allows plugins
-  // to still be loaded but will not function as expected. It is reccomended
-  // to call Annotator.supported() before creating the instance or using the
-  // Unsupported plugin which will notify users that the Annotator will not work.
+  // to still be loaded but will not function as expected. 
   //
   // element - A DOM Element in which to annotate.
   // options - An options Object. NOTE: There are currently no user options.
@@ -76,17 +73,13 @@ export class Annotator extends Delegator {
   // Examples
   //
   //   annotator = new Annotator(document.body)
-  //
-  //   # Example of checking for support.
-  //   if Annotator.supported()
-  //     annotator = new Annotator(document.body)
-  //   else
-  //     # Fallback for unsupported browsers.
   // 
   // Returns a new instance of the Annotator.
   constructor(element: any, options: any) {
     // Start Annotator in read-only mode. No controls will be shown.
     super(element, { ...Annotator.DEFAULT_OPTIONS, ...options });
+
+    console.info("New AnnotatorJS instance created!");
 
     // Events to be bound on Annotator#element.
     Object.assign(this.events, {
@@ -112,8 +105,6 @@ export class Annotator extends Delegator {
     this.onSelectAnnotation = this.onSelectAnnotation.bind(this);
     this.plugins = {};
 
-    // Return early if the annotator is not supported.
-    //    if (!Annotator.supported()) { return this; }
     if (!this.options.readOnly) { this._setupDocumentEvents(); }
     this._setupWrapper()._setupViewer()._setupEditor();
     this._setupDynamicStyle();
@@ -122,8 +113,6 @@ export class Annotator extends Delegator {
     this.adder = $(Annotator.html.adder).appendTo(this.wrapper).hide();
 
     this.addEvents();
-
-    Annotator._instances.push(this);
   }
 
   // Wraps the children of @element in a @wrapper div. NOTE: This method will also
@@ -253,7 +242,8 @@ export class Annotator extends Delegator {
   //
   // Returns nothing.
   destroy(...params) {
-    super.destroy(...params).destroy();
+    let delegates = super.destroy(...params);
+    delegates.forEach(e => e.destroy());
 
     $(document).off({
       "mouseup": this.checkForEndSelection,
@@ -279,10 +269,7 @@ export class Annotator extends Delegator {
       }
     }
 
-    const idx = Annotator._instances.indexOf(this);
-    if (idx !== -1) {
-      return Annotator._instances.splice(idx, 1);
-    }
+    return [];
   }
 
   // Public: Gets the current selection excluding any nodes that fall outside of
@@ -962,24 +949,6 @@ if ((g.Node == null)) {
     NOTATION_NODE: 12
   };
 }
-
-// Export other modules for use in plugins.
-Annotator.Delegator = Delegator;
-Annotator.Range = Range;
-Annotator.Util = Util;
-
-// Expose a global instance registry
-Annotator._instances = [];
-
-// Returns true if the Annotator can be used in the current browser.
-Annotator.supported = () => (function () { return !!this.getSelection; })();
-
-// Restores the Annotator property on the global object to it's
-// previous value and returns the Annotator.
-Annotator.noConflict = function () {
-  Util.getGlobal().Annotator = _Annotator;
-  return this;
-};
 
 // Create global access for Annotator
 $.fn.annotator = function (options: string) {

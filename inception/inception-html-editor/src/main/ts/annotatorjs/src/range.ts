@@ -40,7 +40,7 @@ import { _t } from './util'; 
 //   # => Returns a BrowserRange instance.
 //
 // Returns a Range object or false.
-export function sniff(r: any) {
+export function sniff(r: any) : BrowserRange | SerializedRange | NormalizedRange {
   if (r.commonAncestorContainer != null) {
     return new BrowserRange(r);
   } else if (typeof r.start === "string") {
@@ -48,8 +48,7 @@ export function sniff(r: any) {
   } else if (r.start && (typeof r.start === "object")) {
     return new NormalizedRange(r);
   } else {
-    console.error(_t("Could not sniff range type"));
-    return false;
+    throw new Error(_t("Could not sniff range type"));
   }
 };
 
