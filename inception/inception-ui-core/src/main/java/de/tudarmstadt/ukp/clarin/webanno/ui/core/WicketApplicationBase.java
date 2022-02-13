@@ -23,6 +23,7 @@ import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.Coep
 import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -42,6 +43,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
+import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.resource.JQueryResourceReference;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
@@ -132,6 +134,22 @@ public abstract class WicketApplicationBase
         initPageRequestTracker();
 
         initServerTimeReporting();
+
+        initNonCachingInDevEnvironment();
+    }
+
+    private void initNonCachingInDevEnvironment()
+    {
+        if (DEVELOPMENT.equals(getConfigurationType())) {
+            // Do not cache pages in development mode - allows us to make changes to the HMTL
+            // without
+            // having to reload the application
+            getMarkupSettings().getMarkupFactory().getMarkupCache().clear();
+            getResourceSettings().setCachingStrategy(NoOpResourceCachingStrategy.INSTANCE);
+
+            // Same for resources
+            getResourceSettings().setDefaultCacheDuration(Duration.ZERO);
+        }
     }
 
     private void initPageRequestTracker()
