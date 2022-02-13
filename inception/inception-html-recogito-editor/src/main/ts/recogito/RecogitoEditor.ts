@@ -86,7 +86,7 @@ export class RecogitoEditor implements AnnotationEditor {
   public loadAnnotations(): void {
     this.ajax.loadAnnotations(ANNOTATIONS_SERIALIZER).then((doc: CompactAnnotatedText) => {
       if (!this.recogito) {
-        console.error("No recogito instance found on this", this);
+        console.error("It seems RecogitoJS has not yet been initialized", this);
         return;
       }
 
