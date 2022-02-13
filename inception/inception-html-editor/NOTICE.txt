@@ -1,12 +1,11 @@
-== Annotator v1.2.10
+== Annotator v1.2.10 (heavily adapted)
 
-https://github.com/okfn/annotator/
+* http://annotatorjs.org
+* https://github.com/openannotation/annotator/
 
 Copyright 2015, the Annotator project contributors.
 Dual licensed under the MIT and GPLv3 licenses.
-https://github.com/okfn/annotator/blob/master/LICENSE
+https://github.com/openannotation/annotator/blob/master/LICENSE
 
 Files:
-- annotator-full.js
-- annotator.min.css
-- src/main/js/annotatorjs
+- src/main/ts/annotatorjs

@@ -2274,7 +2274,7 @@
                     <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
-                    <exclude>.vscode/**/*</exclude>
+                    <exclude>**/.vscode/**/*</exclude>
                     <exclude>suppressions.xml</exclude>
                     <exclude>marker-*</exclude>
                     <!-- maven config files -->
