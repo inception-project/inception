@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -268,6 +269,10 @@ public class OpenNlpPosRecommender
             for (Annotation sampleUnit : cas.<Annotation> select(sampleUnitType)) {
                 if (posSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
+                }
+
+                if (isBlank(sampleUnit.getCoveredText())) {
+                    continue;
                 }
 
                 List<Annotation> tokens = cas.<Annotation> select(tokenType).coveredBy(sampleUnit)
