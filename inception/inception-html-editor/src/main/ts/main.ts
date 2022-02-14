@@ -15,32 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.htmleditor.annotatorjs.resources;
+import { AnnotatorJsEditorFactory } from './AnnotatorJsEditorFactory';
 
-import org.apache.wicket.request.resource.CssResourceReference;
+const INSTANCE = new AnnotatorJsEditorFactory()
 
-public class AnnotatorJsCssResourceReference
-    extends CssResourceReference
-{
-    private static final long serialVersionUID = 1L;
-
-    private static final AnnotatorJsCssResourceReference INSTANCE = new AnnotatorJsCssResourceReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static AnnotatorJsCssResourceReference get()
-    {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private AnnotatorJsCssResourceReference()
-    {
-        super(AnnotatorJsCssResourceReference.class, "AnnotatorJsEditor.min.css");
-    }
+export function factory(): AnnotatorJsEditorFactory {
+  return INSTANCE;
 }

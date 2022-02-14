@@ -30,6 +30,7 @@ html, body {
   margin: 0px;
   padding: 0px;
   flex: none;
+  position: relative;
   z-index: 30000; // Display above modal dialogs
 }
 
