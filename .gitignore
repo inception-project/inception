@@ -6,6 +6,7 @@
 .checkstyle
 target
 */bin
+.vscode
 */*.iml
 *.iml
 .idea
@@ -21,7 +22,7 @@ inception/inception-app-webapp/src/main/resources/log4j2-dev.xml
 */.apt_generated_tests/
 dependency-reduced-pom.xml
 /node
-**/src/main/ts/node_modules
+**/node_modules
 **/src/main/ts/package.json
 **/src/main/ts/package-lock.json
 inception/inception-pdf-editor/src/main/js/pdfanno/dist
