@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -311,6 +312,10 @@ public class OpenNlpNerRecommender
             for (AnnotationFS sampleUnit : cas.<Annotation> select(sampleUnitType)) {
                 if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
+                }
+
+                if (isBlank(sampleUnit.getCoveredText())) {
+                    continue;
                 }
 
                 Collection<Annotation> tokens = cas.<Annotation> select(tokenType)
