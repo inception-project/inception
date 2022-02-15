@@ -29,13 +29,14 @@ import java.util.Random;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled("This worked well for hundreds of builds - turning it off now")
 public class SourceDocumentStateStatsTest
 {
     @Test
     public void testGetProjectState()
     {
-        assertEquals(NEW, new SourceDocumentStateStats(1l, 1l, 0l, 0l, 0l, 0l).getProjectState());
+        // ............................ Total | an | aip | af | cip | cf
+        assertEquals(NEW, //
+                new SourceDocumentStateStats(1l, 1l, 0l, 0l, 0l, 0l).getProjectState());
         assertEquals(ANNOTATION_IN_PROGRESS,
                 new SourceDocumentStateStats(1l, 0l, 1l, 0l, 0l, 0l).getProjectState());
         assertEquals(ANNOTATION_IN_PROGRESS,
@@ -44,18 +45,25 @@ public class SourceDocumentStateStatsTest
                 new SourceDocumentStateStats(3l, 1l, 1l, 1l, 0l, 0l).getProjectState());
         assertEquals(ANNOTATION_FINISHED,
                 new SourceDocumentStateStats(1l, 0l, 0l, 1l, 0l, 0l).getProjectState());
+        assertEquals(ANNOTATION_IN_PROGRESS,
+                new SourceDocumentStateStats(2l, 1l, 0l, 0l, 1l, 0l).getProjectState());
+        assertEquals(ANNOTATION_IN_PROGRESS,
+                new SourceDocumentStateStats(3l, 1l, 1l, 0l, 1l, 0l).getProjectState());
+        assertEquals(ANNOTATION_IN_PROGRESS,
+                new SourceDocumentStateStats(4l, 1l, 1l, 1l, 1l, 0l).getProjectState());
+        assertEquals(CURATION_IN_PROGRESS,
+                new SourceDocumentStateStats(2l, 0l, 0l, 1l, 1l, 0l).getProjectState());
         assertEquals(CURATION_IN_PROGRESS,
                 new SourceDocumentStateStats(1l, 0l, 0l, 0l, 1l, 0l).getProjectState());
         assertEquals(CURATION_IN_PROGRESS,
-                new SourceDocumentStateStats(2l, 1l, 0l, 0l, 1l, 0l).getProjectState());
+                new SourceDocumentStateStats(2l, 0l, 0l, 0l, 1l, 1l).getProjectState());
         assertEquals(CURATION_IN_PROGRESS,
-                new SourceDocumentStateStats(3l, 1l, 1l, 0l, 1l, 0l).getProjectState());
-        assertEquals(CURATION_IN_PROGRESS,
-                new SourceDocumentStateStats(4l, 1l, 1l, 1l, 1l, 0l).getProjectState());
+                new SourceDocumentStateStats(2l, 0l, 0l, 1l, 0l, 1l).getProjectState());
         assertEquals(CURATION_FINISHED,
                 new SourceDocumentStateStats(1l, 0l, 0l, 0l, 0l, 1l).getProjectState());
     }
 
+    @Disabled("When changing the project state logic, it is wise to test these")
     @Test
     public void testGetProjectStateIsDefinedSweep()
     {
@@ -76,6 +84,7 @@ public class SourceDocumentStateStatsTest
         }
     }
 
+    @Disabled("When changing the project state logic, it is wise to test these")
     @Test
     public void testGetProjectStateIsDefinedRandom()
     {
