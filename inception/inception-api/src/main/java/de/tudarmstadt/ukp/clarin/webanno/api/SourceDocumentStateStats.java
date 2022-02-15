@@ -30,7 +30,6 @@ public final class SourceDocumentStateStats
 
     public SourceDocumentStateStats(Long aTotal, Long aAn, Long aAip, Long aAf, Long aCip, Long aCf)
     {
-        super();
         total = aTotal != null ? aTotal : 0l;
         an = aAn != null ? aAn : 0l;
         aip = aAip != null ? aAip : 0l;
@@ -80,11 +79,11 @@ public final class SourceDocumentStateStats
         else if (total == an) {
             return ProjectState.NEW;
         }
-        else if (cip > 0 || cf > 0) {
-            return ProjectState.CURATION_IN_PROGRESS;
-        }
-        else if (aip > 0 || af > 0) {
+        else if (aip > 0 || an > 0) {
             return ProjectState.ANNOTATION_IN_PROGRESS;
+        }
+        else if (af > 0 || cip > 0) {
+            return ProjectState.CURATION_IN_PROGRESS;
         }
         else {
             // This should actually never happen...
