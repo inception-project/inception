@@ -48,10 +48,10 @@ import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.export.ImportUtil;
@@ -184,8 +184,9 @@ public class TagSetImportPanel
                         // to the tagset
                         else {
                             Tag tag = new Tag();
-                            tag.setDescription(tabbedTagsetFromFile.get(key).replace("\\n", "\n"));
                             tag.setName(key);
+                            tag.setDescription(tabbedTagsetFromFile.get(key).replace("\\n", "\n"));
+                            tag.setRank(i);
                             tag.setTagSet(tagSet);
                             annotationService.createTag(tag);
                         }

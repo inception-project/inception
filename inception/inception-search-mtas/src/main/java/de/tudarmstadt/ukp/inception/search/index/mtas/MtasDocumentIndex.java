@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IG
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
+import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
@@ -53,10 +54,12 @@ import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -111,6 +114,9 @@ import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongComparators;
+import it.unimi.dsi.fastutil.longs.LongList;
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasTokenizerFactory;
 import mtas.codec.util.CodecComponent;
@@ -450,7 +456,8 @@ public class MtasDocumentIndex
         allStats.put("Segmentation.sentence", results);
         nonNullStats.put("Segmentation.sentence", results);
 
-        return new StatisticsResult(aStatisticRequest, allStats, nonNullStats, aStatisticRequest.getFeatures());
+        return new StatisticsResult(aStatisticRequest, allStats, nonNullStats,
+                aStatisticRequest.getFeatures());
     }
 
     @Override
@@ -620,11 +627,10 @@ public class MtasDocumentIndex
             resultsMapSentence = resultsPerSentence.rewrite(true);
 
             Long noOfDocsLong = (Long) resultsMapSentence.get("n");
-            LayerStatistics layerStats = new LayerStatistics(
-                    (double) resultsMap.get("sum"),
-                    (double) resultsMap.get("max"),
-                    (double) resultsMap.get("min"), (double) resultsMap.get("mean"),
-                    (double) resultsMap.get("median"), (double) resultsMap.get("standarddeviation"),
+            LayerStatistics layerStats = new LayerStatistics((double) resultsMap.get("sum"),
+                    (double) resultsMap.get("max"), (double) resultsMap.get("min"),
+                    (double) resultsMap.get("mean"), (double) resultsMap.get("median"),
+                    (double) resultsMap.get("standarddeviation"),
                     (double) resultsMapSentence.get("sum"), (double) resultsMapSentence.get("max"),
                     (double) resultsMapSentence.get("min"), (double) resultsMapSentence.get("mean"),
                     (double) resultsMapSentence.get("median"),
@@ -701,9 +707,7 @@ public class MtasDocumentIndex
     {
         String result;
 
-        if (!(aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]")
-                || aQuery.contains("{") || aQuery.contains("}") || aQuery.contains("<")
-                || aQuery.contains(">"))) {
+        if (!(aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]"))) {
             // Convert raw words query to a Mtas CQP query
 
             result = "";
@@ -715,6 +719,14 @@ public class MtasDocumentIndex
             while (end != BreakIterator.DONE) {
                 String word = aQuery.substring(start, end);
                 if (!word.trim().isEmpty()) {
+                    word = word.replace("&", "\\&");
+                    word = word.replace("(", "\\(");
+                    word = word.replace(")", "\\)");
+                    word = word.replace("#", "\\#");
+                    word = word.replace("{", "\\{");
+                    word = word.replace("}", "\\}");
+                    word = word.replace("<", "\\<");
+                    word = word.replace(">", "\\>");
                     // Add the word to the query
                     result += "\"" + word + "\"";
                 }
@@ -837,14 +849,66 @@ public class MtasDocumentIndex
         return annotateableDocuments;
     }
 
+    private List<LeafReaderContext> sortLeaves(List<LeafReaderContext> aLeaves,
+            IndexSearcher aSearcher, MtasSpanQuery aQuery)
+        throws IOException
+    { // This method sorts the LeafReaderContexts according to the document ids
+      // they contain. If one does not contain a document for this search, then
+      // it is discarded. If one contains multiple document ids the smallest
+      // is used for comparison.
+
+        List<Pair<LeafReaderContext, List<Long>>> mapToDocIds = new ArrayList<>();
+
+        // Here, the query comes into play
+        SpanWeight spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
+                false, 0);
+
+        // cycle through all the leaves
+        for (LeafReaderContext leafReaderContext : aLeaves) {
+            Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+            SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
+            LongList idList = new LongArrayList();
+            // no spans -> no docs
+            if (spans != null) {
+                // go through the docs in iterator span
+                while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                    // don't know why this if is needed, just copy/pasted it from method doQuery
+                    // below
+                    if (segmentReader.numDocs() == segmentReader.maxDoc()
+                            || segmentReader.getLiveDocs().get(spans.docID())) {
+                        // get a document
+                        Document document = segmentReader.document(spans.docID());
+
+                        String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                        // go to the next document if the docId is not set
+                        if (rawSourceDocumentId == null) {
+                            continue;
+                        }
+                        // add id to the list of ids for this leafReaderContext
+                        idList.add(Long.parseLong(rawSourceDocumentId));
+                    }
+                }
+            }
+            idList.sort(LongComparators.NATURAL_COMPARATOR);
+            if (!idList.isEmpty()) {
+                mapToDocIds.add(Pair.of(leafReaderContext, idList));
+            }
+        }
+        // Sort according to docId; take the smallest value in the list
+        mapToDocIds.sort(comparingLong(s -> s.getValue().get(0)));
+
+        // Only return the leaves
+        return mapToDocIds.stream().map(Pair::getKey).collect(Collectors.toList());
+    }
+
     private Map<String, List<SearchResult>> doQuery(IndexSearcher searcher,
             SearchQueryRequest aRequest, MtasSpanQuery q)
         throws IOException
     {
         Map<String, List<SearchResult>> results = new LinkedHashMap<>();
 
-        ListIterator<LeafReaderContext> leafReaderContextIterator = searcher.getIndexReader()
-                .leaves().listIterator();
+        ListIterator<LeafReaderContext> leafReaderContextIterator = sortLeaves(
+                searcher.getIndexReader().leaves(), searcher, q).listIterator();
 
         Map<SourceDocument, AnnotationDocument> sourceAnnotationDocPairs = documentService
                 .listAnnotatableDocuments(aRequest.getProject(), aRequest.getUser());
@@ -862,6 +926,7 @@ public class MtasDocumentIndex
 
         resultIteration: while (leafReaderContextIterator.hasNext()) {
             LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
+
             try {
                 Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
                 SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();

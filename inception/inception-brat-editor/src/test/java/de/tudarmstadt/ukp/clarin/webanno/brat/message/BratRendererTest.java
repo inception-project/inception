@@ -47,8 +47,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.LinkFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
@@ -60,16 +60,20 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.TokenWrappingPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorPropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -79,12 +83,17 @@ public class BratRendererTest
     private @Mock AnnotationSchemaService schemaService;
 
     private Project project;
+    private SourceDocument sourceDocument;
     private AnnotationLayer tokenLayer;
     private AnnotationFeature tokenPosFeature;
     private AnnotationLayer posLayer;
     private AnnotationFeature posFeature;
 
     private PreRenderer preRenderer;
+    private LabelRenderer labelRenderer;
+    private ColorRenderer colorRenderer;
+
+    private BratSerializerImpl sut;
 
     @BeforeEach
     public void setup()
@@ -92,6 +101,7 @@ public class BratRendererTest
         MockitoAnnotations.openMocks(this);
 
         project = new Project();
+        sourceDocument = new SourceDocument("test.txt", project, null);
 
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
                 SINGLE_TOKEN, NO_OVERLAP);
@@ -125,7 +135,7 @@ public class BratRendererTest
 
         FeatureSupportRegistryImpl featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new StringFeatureSupport(), new BooleanFeatureSupport(),
-                        new NumberFeatureSupport(), new SlotFeatureSupport(schemaService)));
+                        new NumberFeatureSupport(), new LinkFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
@@ -150,6 +160,9 @@ public class BratRendererTest
         });
 
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
+        labelRenderer = new LabelRenderer();
+        colorRenderer = new ColorRenderer(schemaService, new ColoringServiceImpl(schemaService));
+        sut = new BratSerializerImpl(new BratAnnotationEditorPropertiesImpl());
     }
 
     @Test
@@ -167,17 +180,22 @@ public class BratRendererTest
         state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
-
         state.setProject(project);
+        state.setDocument(sourceDocument, asList(sourceDocument));
+
+        RenderRequest request = RenderRequest.builder() //
+                .withState(state) //
+                .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                .withCas(cas) //
+                .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
+                .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
-                schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, request);
+        labelRenderer.render(vdoc, request);
+        colorRenderer.render(vdoc, request);
 
-        GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer renderer = new BratRenderer(schemaService,
-                new ColoringServiceImpl(schemaService), new BratAnnotationEditorPropertiesImpl());
-        renderer.render(response, state, vdoc, cas);
+        GetDocumentResponse response = sut.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -204,17 +222,22 @@ public class BratRendererTest
         state.setPagingStrategy(new LineOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
-
         state.setProject(project);
+        state.setDocument(sourceDocument, asList(sourceDocument));
+
+        RenderRequest request = RenderRequest.builder() //
+                .withState(state) //
+                .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                .withCas(cas) //
+                .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
+                .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
-                schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, request);
+        labelRenderer.render(vdoc, request);
+        colorRenderer.render(vdoc, request);
 
-        GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer renderer = new BratRenderer(schemaService,
-                new ColoringServiceImpl(schemaService), new BratAnnotationEditorPropertiesImpl());
-        renderer.render(response, state, vdoc, cas);
+        GetDocumentResponse response = sut.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
@@ -241,17 +264,22 @@ public class BratRendererTest
         state.setPagingStrategy(new TokenWrappingPagingStrategy(80));
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
-
         state.setProject(project);
+        state.setDocument(sourceDocument, asList(sourceDocument));
+
+        RenderRequest request = RenderRequest.builder() //
+                .withState(state) //
+                .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                .withCas(cas) //
+                .withVisibleLayers(schemaService.listAnnotationLayer(project)) //
+                .build();
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(), cas,
-                schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, request);
+        labelRenderer.render(vdoc, request);
+        colorRenderer.render(vdoc, request);
 
-        GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer renderer = new BratRenderer(schemaService,
-                new ColoringServiceImpl(schemaService), new BratAnnotationEditorPropertiesImpl());
-        renderer.render(response, state, vdoc, cas);
+        GetDocumentResponse response = sut.render(vdoc, request);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 

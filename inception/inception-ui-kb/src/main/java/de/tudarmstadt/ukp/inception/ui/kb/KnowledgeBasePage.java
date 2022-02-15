@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.sass.KnowledgeBasePageLRR;
+import de.tudarmstadt.ukp.inception.ui.kb.sass.KnowledgeBasePageCssReference;
 
 /**
  * Knowledge Base Page. Current UI/UX issues:
@@ -98,6 +98,6 @@ public class KnowledgeBasePage
     public void renderHead(IHeaderResponse response)
     {
         super.renderHead(response);
-        response.render(CssReferenceHeaderItem.forReference(KnowledgeBasePageLRR.get()));
+        response.render(CssReferenceHeaderItem.forReference(KnowledgeBasePageCssReference.get()));
     }
 }

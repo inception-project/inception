@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
 import static java.lang.System.currentTimeMillis;
 
 import java.lang.reflect.Modifier;
@@ -33,12 +34,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
@@ -51,26 +53,24 @@ public class CasDoctor
 {
     private static Logger LOG = LoggerFactory.getLogger(CasDoctor.class);
 
-    @Value(value = "${debug.casDoctor.checks}")
     private String activeChecks;
-
-    @Value(value = "${debug.casDoctor.fatal}")
-    private boolean fatalChecks = true;
-
-    @Value(value = "${debug.casDoctor.repairs}")
     private String activeRepairs;
+    private boolean fatalChecks = true;
+    private boolean disableAutoScan = false;
 
     private ApplicationContext context;
 
     private List<Class<? extends Check>> checkClasses = new ArrayList<>();
     private List<Class<? extends Repair>> repairClasses = new ArrayList<>();
 
-    @Value(value = "${debug.casDoctor.forceReleaseBehavior}")
-    private boolean disableAutoScan = false;
-
-    public CasDoctor()
+    @Autowired
+    public CasDoctor(CasDoctorProperties aProperties)
     {
         // Bean operation
+        activeChecks = aProperties.getChecks();
+        activeRepairs = aProperties.getRepairs();
+        fatalChecks = aProperties.isFatal();
+        disableAutoScan = aProperties.isForceReleaseBehavior();
     }
 
     /**
@@ -198,6 +198,10 @@ public class CasDoctor
             boolean aFatalChecks)
         throws CasDoctorException
     {
+        if (checkClasses.isEmpty()) {
+            return true;
+        }
+
         long tStart = System.currentTimeMillis();
 
         boolean ok = true;
@@ -228,8 +232,9 @@ public class CasDoctor
             throw new CasDoctorException(aMessages);
         }
 
-        LOG.debug("CasDoctor completed all analyses in " + (System.currentTimeMillis() - tStart)
-                + "ms");
+        long duration = System.currentTimeMillis() - tStart;
+        LOG.debug("CasDoctor completed all analyses in {}ms", duration);
+        serverTiming("Brat-AJAX", "CasDoctor (analyze)", duration);
 
         return ok;
     }

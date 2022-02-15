@@ -27,26 +27,28 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#selectAnnotationHandler}.
+ * This class is exposed as a Spring Component via {@link DiamAutoConfig#selectAnnotationHandler}.
  * </p>
  */
+@Order(EditorAjaxRequestHandler.PRIO_ANNOTATION_HANDLER)
 public class SelectAnnotationHandler
     extends EditorAjaxRequestHandlerBase
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    public static final String COMMAND = "SelectAnnotation";
+    public static final String COMMAND = "selectAnnotation";
 
     private final AnnotationSchemaService schemaService;
 
@@ -62,28 +64,38 @@ public class SelectAnnotationHandler
     }
 
     @Override
-    public void handle(AjaxRequestTarget aTarget, Request aRequest)
+    public boolean accepts(Request aRequest)
     {
-        AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
+        return super.accepts(aRequest) && !getAnnotatorState().isSlotArmed();
+    }
 
-        VID vid = VID.parseOptional(
-                aRequest.getRequestParameters().getParameterValue(PARAM_VID).toOptionalString());
-
-        if (vid.isNotSet() || vid.isSynthetic()) {
-            return;
-        }
-
+    @Override
+    public DefaultAjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+    {
         try {
+            AnnotationPageBase page = getPage();
+
+            VID vid = VID.parseOptional(
+                    aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
+
+            if (vid.isNotSet() || vid.isSynthetic()) {
+                return new DefaultAjaxResponse(getAction(aRequest));
+            }
+
             CAS cas = page.getEditorCas();
             AnnotatorState state = page.getModelObject();
 
             AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
 
             TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
-            adapter.select(state, fs);
+            state.getSelection().set(adapter.select(vid, fs));
+
+            page.getAnnotationActionHandler().actionSelect(aTarget);
+
+            return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            handleError(aTarget, "Unable to load data", e);
+            return handleError("Unable to load data", e);
         }
     }
 }

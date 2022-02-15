@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>22.0-SNAPSHOT</version>
+    <version>23.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-html-recogito-editor</artifactId>
   <name>INCEpTION - Editor - HTML + Recogito JS</name>
@@ -41,26 +41,15 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
-
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-html-editor</artifactId>
+      <artifactId>inception-diam</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-editor</artifactId>
     </dependency>
     
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-collections4</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-core</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
@@ -76,28 +65,12 @@
     </dependency>
     <dependency>
       <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-request</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-spring</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-util</artifactId>
     </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
     </dependency>
 
     <dependency>
@@ -105,115 +78,45 @@
       <artifactId>javax.servlet-api</artifactId>
       <scope>provided</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
   </dependencies>
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>copy-recogito-to-target</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>copy-resources</goal>
-            </goals>
-            <configuration>
-              <outputDirectory>target/js/recogito-js</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/js/recogito-js</directory>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-recogito-resources</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>add-resource</goal>
-            </goals>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>target/js/recogito-js/dist</directory>
-                  <targetPath>de/tudarmstadt/ukp/inception/recogitojseditor/resources</targetPath>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <groupId>com.github.eirslett</groupId>
         <artifactId>frontend-maven-plugin</artifactId>
-        <configuration>
-          <workingDirectory>target/js/recogito-js/</workingDirectory>
-          <installDirectory>target/frontend-maven-plugin</installDirectory>
-          <nodeVersion>v13.14.0</nodeVersion>
-          <npmVersion>6.14.4</npmVersion>
-        </configuration>
         <executions>
           <execution>
-            <id>install node and npm</id>
-            <goals>
-              <goal>install-node-and-npm</goal>
-            </goals>
-            <phase>generate-resources</phase>
-          </execution>
-          <execution>
-            <id>npm install</id>
+            <id>npm link dependency inception-js-api</id>
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>generate-resources</phase>
+            <phase>generate-sources</phase>
             <configuration>
-              <arguments>install</arguments>
+              <arguments>link @inception-project/inception-js-api</arguments>
             </configuration>
           </execution>
           <execution>
-            <id>npm run</id>
+            <id>npm link dependency inception-diam</id>
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>generate-resources</phase>
+            <phase>generate-sources</phase>
             <configuration>
-              <arguments>run build</arguments>
+              <arguments>link @inception-project/inception-diam</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:recogito</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build:recogito</arguments>
             </configuration>
           </execution>
         </executions>
       </plugin>
     </plugins>
-  
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.rat</groupId>
-          <artifactId>apache-rat-plugin</artifactId>
-          <executions>
-            <execution>
-              <id>default</id>
-              <configuration>
-                <excludes combine.children="append">
-                  <exclude>src/main/js/recogito-js/**/*</exclude>
-                  <exclude>src/main/js/recogito-js-upstream/**/*</exclude>
-                  <exclude>cache/**/*</exclude>
-                </excludes>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
   </build>
 </project>

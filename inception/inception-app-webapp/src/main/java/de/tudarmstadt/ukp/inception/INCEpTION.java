@@ -31,6 +31,7 @@ import javax.validation.Validator;
 import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.webresources.StandardRoot;
+import org.dkpro.core.api.resources.ResourceObjectProviderBase;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -89,6 +90,18 @@ public class INCEpTION
     private String ajpAddress;
 
     private StartupNoticeValve startupNoticeValve;
+
+    // /**
+    // * Workaround for <a
+    // href="https://github.com/MarcGiffing/wicket-spring-boot/issues/186">Wicket
+    // * Spring Boot #186</a>
+    // */
+    // @Autowired
+    // public void configureBasePackagesWorkaround(WicketClassCandidatesHolder aHolder)
+    // {
+    // aHolder.getBasePackages().add(INCEPTION_BASE_PACKAGE);
+    // aHolder.getBasePackages().add(WEBANNO_BASE_PACKAGE);
+    // }
 
     @Bean
     @Primary
@@ -168,8 +181,11 @@ public class INCEpTION
 
     private static void init(SpringApplicationBuilder aBuilder)
     {
-        // WebAnno relies on FS IDs being stable, so we need to enable this
+        // We rely on FS IDs being stable, so we need to enable this
         System.setProperty(ALWAYS_HOLD_ONTO_FSS, "true");
+
+        // We do not want DKPro Core to try and auto-download anything
+        System.setProperty(ResourceObjectProviderBase.PROP_REPO_OFFLINE, "true");
 
         aBuilder.banner(new InceptionBanner());
         aBuilder.initializers(new InceptionApplicationContextInitializer());
@@ -181,7 +197,8 @@ public class INCEpTION
         // either located in inception.home or under the user's home directory. Make sure we pick
         // it up from there in addition to reading the built-in application.yml file.
         aBuilder.properties("spring.config.additional-location="
-                + "optional:${inception.home:${user.home}/.inception}/settings.properties");
+                + "optional:${inception.home:${user.home}/.inception}/settings.properties;"
+                + "optional:${inception.home:${user.home}/.inception}/settings.yml");
     }
 
     protected static void run(String[] args, Class<?>... aSources)

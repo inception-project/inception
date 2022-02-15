@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.diam.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -42,7 +43,6 @@ import java.util.concurrent.TimeoutException;
 import javax.persistence.EntityManager;
 import javax.sql.DataSource;
 
-import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +62,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Primary;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
@@ -77,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -103,7 +105,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportInit;
 import de.tudarmstadt.ukp.inception.diam.messages.MViewportUpdate;
-import de.tudarmstadt.ukp.inception.diam.model.ViewportDefinition;
+import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportDefinition;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LambdaStompFrameHandler;
@@ -162,7 +164,8 @@ public class DiamController_ViewportRoutingTest
     public void setup() throws Exception
     {
         // create websocket client
-        websocketUrl = "ws://localhost:" + port + "/ws-endpoint";
+        websocketUrl = "ws://localhost:" + port + WS_ENDPOINT;
+
         StandardWebSocketClient wsClient = new StandardWebSocketClient();
         wsClient.setUserProperties(Map.of( //
                 WS_AUTHENTICATION_USER_NAME, USER, //
@@ -336,19 +339,27 @@ public class DiamController_ViewportRoutingTest
             return manager;
         }
 
+        @Primary
         @Bean
-        public PreRenderer preRenderer()
+        public PreRenderer testPreRenderer()
         {
             return new PreRenderer()
             {
                 @Override
-                public void render(VDocument aResponse, int aWindowBeginOffset,
-                        int aWindowEndOffset, CAS aCas, List<AnnotationLayer> aLayers)
+                public String getId()
+                {
+                    return "TestPreRenderer";
+                }
+
+                @Override
+                public void render(VDocument aResponse, RenderRequest aRequest)
                 {
                     AnnotationLayer layer = new AnnotationLayer();
                     layer.setId(1l);
                     aResponse.add(new VSpan(layer, new VID(1), "dummy",
-                            new VRange(aWindowBeginOffset, aWindowEndOffset), emptyMap()));
+                            new VRange(aRequest.getWindowBeginOffset(),
+                                    aRequest.getWindowEndOffset()),
+                            emptyMap()));
                 }
             };
         }

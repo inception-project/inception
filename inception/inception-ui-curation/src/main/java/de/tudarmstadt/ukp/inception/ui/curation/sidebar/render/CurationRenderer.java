@@ -38,12 +38,13 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -60,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
@@ -71,9 +73,11 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAu
  * {@link CurationSidebarAutoConfiguration#curationRenderer}.
  * </p>
  */
+@Order(RenderStep.RENDER_SYNTHETIC_STRUCTURE)
 public class CurationRenderer
     implements RenderStep
 {
+    public static final String ID = "CurationRenderer";
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final CurationSidebarService curationService;
@@ -94,12 +98,23 @@ public class CurationRenderer
     }
 
     @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
+    public String getId()
+    {
+        return ID;
+    }
+
+    @Override
+    public boolean accepts(RenderRequest aContext)
+    {
+        return aContext.getState().getMode() == Mode.ANNOTATION;
+    }
+
+    @Override
+    public void render(VDocument aVdoc, RenderRequest aRequest)
     {
         String currentUsername = userRepository.getCurrentUsername();
         List<User> selectedUsers = curationService.listUsersReadyForCuration(currentUsername,
-                aState.getProject(), aState.getDocument());
+                aRequest.getProject(), aRequest.getSourceDocument());
 
         if (selectedUsers.isEmpty()) {
             return;
@@ -108,45 +123,46 @@ public class CurationRenderer
         Map<String, CAS> casses = new LinkedHashMap<>();
 
         // This is the CAS that the user can actively edit
-        casses.put(aState.getUser().getUsername(), aCas);
+        casses.put(aRequest.getAnnotationUser().getUsername(), aRequest.getCas());
 
         for (User user : selectedUsers) {
             try {
-                CAS userCas = documentService.readAnnotationCas(aState.getDocument(),
+                CAS userCas = documentService.readAnnotationCas(aRequest.getSourceDocument(),
                         user.getUsername());
                 casses.put(user.getUsername(), userCas);
             }
             catch (IOException e) {
-                log.error("Could not retrieve CAS for user [{}] and project [{}]({})",
-                        user.getUsername(), aState.getProject().getName(),
-                        aState.getProject().getId(), e);
+                log.error("Could not retrieve CAS for user [{}] and project {}", user.getUsername(),
+                        aRequest.getProject(), e);
             }
         }
 
         List<DiffAdapter> adapters = getDiffAdapters(annotationService,
-                aState.getAnnotationLayers());
-        CasDiff casDiff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses, aWindowBeginOffset,
-                aWindowEndOffset);
+                aRequest.getVisibleLayers());
+        CasDiff casDiff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, casses,
+                aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
         DiffResult diff = casDiff.toResult();
 
         // Listing the features once is faster than repeatedly hitting the DB to list features for
         // every layer.
         List<AnnotationFeature> supportedFeatures = annotationService
-                .listSupportedFeatures(aState.getProject());
+                .listSupportedFeatures(aRequest.getProject());
         List<AnnotationFeature> allFeatures = annotationService
-                .listAnnotationFeature(aState.getProject());
+                .listAnnotationFeature(aRequest.getProject());
 
         // Set up a cache for resolving type to layer to avoid hammering the DB as we process each
         // position
         Map<String, AnnotationLayer> type2layer = diff.getPositions().stream()
                 .map(Position::getType).distinct()
-                .map(type -> annotationService.findLayer(aState.getProject(), type))
+                .map(type -> annotationService.findLayer(aRequest.getProject(), type))
                 .collect(toMap(AnnotationLayer::getName, identity()));
 
         Set<VID> generatedCurationVids = new HashSet<>();
-        boolean showAll = curationService.isShowAll(currentUsername, aState.getProject().getId());
+        boolean showAll = curationService.isShowAll(currentUsername, aRequest.getProject().getId());
+        String curationTarget = curationService.retrieveCurationTarget(currentUsername,
+                aRequest.getProject().getId());
         for (ConfigurationSet cfgSet : diff.getConfigurationSets()) {
-            if (!showAll && cfgSet.getCasGroupIds().contains(currentUsername)) {
+            if (!showAll && cfgSet.getCasGroupIds().contains(curationTarget)) {
                 // Hide configuration sets where the curator has already curated (likely)
                 continue;
             }
@@ -171,7 +187,8 @@ public class CurationRenderer
                         .createRenderer(layer, () -> layerAllFeatures);
 
                 List<VObject> objects = renderer.render(aVdoc, (AnnotationFS) fs,
-                        layerSupportedFeatures, aWindowBeginOffset, aWindowEndOffset);
+                        layerSupportedFeatures, aRequest.getWindowBeginOffset(),
+                        aRequest.getWindowEndOffset());
 
                 for (VObject object : objects) {
                     VID curationVid = new CurationVID(user, object.getVid());
@@ -190,8 +207,10 @@ public class CurationRenderer
                     if (object instanceof VArc) {
                         VArc arc = (VArc) object;
                         // Currently works for relations but not for slots
-                        arc.setSource(getCurationVid(aState, diff, cfg, arc.getSource()));
-                        arc.setTarget(getCurationVid(aState, diff, cfg, arc.getTarget()));
+                        arc.setSource(getCurationVid(aRequest.getAnnotationUser(), diff, cfg,
+                                arc.getSource()));
+                        arc.setTarget(getCurationVid(aRequest.getAnnotationUser(), diff, cfg,
+                                arc.getTarget()));
                         log.trace("Rendering curation vid: {} source: {} target: {}", arc.getVid(),
                                 arc.getSource(), arc.getTarget());
                     }
@@ -211,13 +230,12 @@ public class CurationRenderer
      * the curation user by searching the diff for configuration set that contains the annotators
      * annotation and then switching over to the configuration containing the curators annotation.
      */
-    private VID getCurationVid(AnnotatorState aState, DiffResult aDiff, Configuration aCfg,
-            VID aVid)
+    private VID getCurationVid(User aAnnotator, DiffResult aDiff, Configuration aCfg, VID aVid)
     {
         Optional<Configuration> sourceConfiguration = aDiff
                 .findConfiguration(aCfg.getRepresentativeCasGroupId(), new AID(aVid.getId()));
         if (sourceConfiguration.isPresent()) {
-            AID curatedAID = sourceConfiguration.get().getAID(aState.getUser().getUsername());
+            AID curatedAID = sourceConfiguration.get().getAID(aAnnotator.getUsername());
             if (curatedAID != null) {
                 return new VID(curatedAID.addr);
             }

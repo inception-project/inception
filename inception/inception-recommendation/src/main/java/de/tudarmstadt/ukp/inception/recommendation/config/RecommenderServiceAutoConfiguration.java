@@ -51,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.metrics.RecommendationMetricsImpl;
 import de.tudarmstadt.ukp.inception.recommendation.project.ProjectRecommendersMenuItem;
 import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
 import de.tudarmstadt.ukp.inception.recommendation.service.LearningRecordServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 import de.tudarmstadt.ukp.inception.recommendation.service.RecommenderFactoryRegistryImpl;
@@ -151,13 +152,10 @@ public class RecommenderServiceAutoConfiguration
             AnnotationSchemaService aAnnotationService,
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
-            ApplicationEventPublisher aApplicationEventPublisher,
-            FeatureSupportRegistry aFsRegistry, UserDao aUserService,
-            RecommenderProperties aProperties)
+            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserService)
     {
         return new RecommendationEditorExtension(aAnnotationService, aRecommendationService,
-                aLearningRecordService, aApplicationEventPublisher, aFsRegistry, aUserService,
-                aProperties);
+                aLearningRecordService, aApplicationEventPublisher, aUserService);
     }
 
     @Bean
@@ -181,5 +179,18 @@ public class RecommenderServiceAutoConfiguration
     public RecommendationEventFooterItem recommendationEventFooterItem()
     {
         return new RecommendationEventFooterItem();
+    }
+
+    @Bean
+    public RecommendationRenderer recommendationRenderer(AnnotationSchemaService aAnnotationService,
+            RecommendationService aRecommendationService,
+            LearningRecordService aLearningRecordService,
+            ApplicationEventPublisher aApplicationEventPublisher,
+            FeatureSupportRegistry aFsRegistry, RecommenderProperties aRecommenderProperties,
+            UserDao aUserRegistry)
+    {
+        return new RecommendationRenderer(aAnnotationService, aRecommendationService,
+                aLearningRecordService, aApplicationEventPublisher, aFsRegistry,
+                aRecommenderProperties, aUserRegistry);
     }
 }

@@ -1,0 +1,15 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "description": "INCEpTION customized Bootstrap",
+  "keywords": [],
+  "scripts": {
+    "build": "sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.css",
+    "build:minified": "sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.min.css --style compressed"
+  },
+  "external": {},
+  "devDependencies": {
+    "bootstrap": "^5.1.3",
+    "sass": "^1.45.1"
+  }
+}

@@ -1,0 +1,18 @@
+/**
+ * UI - Alert Dialog.
+ */
+
+.alertdialog-danger .modal-header {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+}
+.alertdialog {
+    margin-top: 200px;
+}
+.alertdialog .modal-dialog {
+    width: 50%;
+}
+.alertdialog .modal-footer {
+    border-top: 0px solid rgba(0,0,0,0);
+}

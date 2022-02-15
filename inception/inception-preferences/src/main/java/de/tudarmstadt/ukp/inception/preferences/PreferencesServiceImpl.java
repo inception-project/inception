@@ -93,7 +93,7 @@ public class PreferencesServiceImpl
             preference.setTraits(toJsonString(aTraits));
             entityManager.persist(preference);
 
-            LOG.info("Saved preferences for key {} and user {}: [{}]", aKey, aUser, aTraits);
+            LOG.debug("Saved preferences for key {} and user {}: [{}]", aKey, aUser, aTraits);
         }
         catch (IOException e) {
             LOG.error("Error while writing traits", e);
@@ -130,7 +130,7 @@ public class PreferencesServiceImpl
             if (pref.isPresent()) {
                 String json = pref.get().getTraits();
                 T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
-                LOG.info("Loaded preferences for key {} and user {} and project {}: [{}]", aKey,
+                LOG.debug("Loaded preferences for key {} and user {} and project {}: [{}]", aKey,
                         aUser, aProject, result);
                 return result;
             }
@@ -158,7 +158,7 @@ public class PreferencesServiceImpl
             preference.setTraits(toJsonString(aTraits));
             entityManager.persist(preference);
 
-            LOG.info("Saved preferences for key {} and user {} and project {}: [{}]", aKey, aUser,
+            LOG.debug("Saved preferences for key {} and user {} and project {}: [{}]", aKey, aUser,
                     aProject, aTraits);
         }
         catch (IOException e) {
@@ -199,12 +199,12 @@ public class PreferencesServiceImpl
             if (pref.isPresent()) {
                 String json = pref.get().getTraits();
                 T result = JSONUtil.fromJsonString(aKey.getTraitClass(), json);
-                LOG.info("Loaded default preferences for key {} and project {}: [{}]", aKey,
+                LOG.debug("Loaded default preferences for key {} and project {}: [{}]", aKey,
                         aProject, result);
                 return result;
             }
             else {
-                LOG.debug("No default preferences found for key {} and project {}", aKey, aProject);
+                LOG.trace("No default preferences found for key {} and project {}", aKey, aProject);
                 return buildDefault(aKey.getTraitClass());
             }
         }
@@ -226,12 +226,26 @@ public class PreferencesServiceImpl
             preference.setTraits(toJsonString(aTraits));
             entityManager.persist(preference);
 
-            LOG.info("Saved default preferences for key {} and project {}: [{}]", aKey, aProject,
+            LOG.debug("Saved default preferences for key {} and project {}: [{}]", aKey, aProject,
                     aTraits);
         }
         catch (IOException e) {
             LOG.error("Error while writing traits", e);
         }
+    }
+
+    @Override
+    public <T> void clearDefaultTraitsForProject(Key<T> aKey, Project aProject)
+    {
+        String query = String.join("\n", //
+                "DELETE DefaultProjectPreference ", //
+                "WHERE project = :project", //
+                "AND name = :name");
+
+        entityManager.createQuery(query) //
+                .setParameter("project", aProject) //
+                .setParameter("name", aKey.getName()) //
+                .executeUpdate();
     }
 
     private <T> Optional<DefaultProjectPreference> getDefaultProjectPreference(Key<T> aKey,

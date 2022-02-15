@@ -30,7 +30,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -54,15 +53,6 @@ public interface AnnotationEditorExtension
     }
 
     default void renderRequested(AnnotatorState aState)
-    {
-        // Do nothing by default
-    }
-
-    /**
-     * Post-process the output during rendering.
-     */
-    default void render(CAS aCas, AnnotatorState aState, VDocument vdoc, int aWindowBeginOffset,
-            int aWindowEndOffset)
     {
         // Do nothing by default
     }

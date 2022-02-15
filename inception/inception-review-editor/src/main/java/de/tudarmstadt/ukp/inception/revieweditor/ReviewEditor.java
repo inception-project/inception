@@ -95,7 +95,7 @@ public class ReviewEditor
             getModelObject().getSelection().selectSpan(vid, cas, begin, end);
 
             if (getModelObject().isSlotArmed()) {
-                getActionHandler().actionFillSlot(target, cas, begin, end, vid);
+                getActionHandler().actionFillSlot(target, cas, vid);
             }
             else {
                 getActionHandler().actionSelect(target);

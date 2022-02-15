@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +30,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.wicket.request.resource.CssResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -84,6 +86,18 @@ public interface DocumentImportExportService
     }
 
     FormatSupport getFallbackFormat();
+
+    default List<CssResourceReference> getFormatCssStylesheets(SourceDocument aDoc)
+    {
+        Optional<FormatSupport> maybeFormatSupport = getFormatById(aDoc.getFormat());
+        if (!maybeFormatSupport.isPresent()) {
+            return Collections.emptyList();
+        }
+
+        FormatSupport formatSupport = maybeFormatSupport.get();
+
+        return formatSupport.getCssStylesheets();
+    }
 
     // --------------------------------------------------------------------------------------------
     // Methods related to importing/exporting

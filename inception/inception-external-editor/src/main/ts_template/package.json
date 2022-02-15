@@ -1,0 +1,16 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "scripts": {
+    "build": "esbuild src/main.ts --target=es6 --bundle --sourcemap --global-name=ExternalEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/externaleditor/resources/ExternalEditor.js",
+    "build-minified": "esbuild src/main.ts --minify --target=es6 --bundle --sourcemap --global-name=ExternalEditor --outfile=../../../target/js/de/tudarmstadt/ukp/inception/externaleditor/resources/ExternalEditor.min.js"
+  },
+  "dependencies": {
+    "@inception-project/inception-js-api": "${semver}",
+    "@inception-project/inception-diam": "${semver}"
+  },
+  "devDependencies": {
+    "esbuild": "^0.13.12",
+    "typescript": "^4.4.2"
+  }
+}

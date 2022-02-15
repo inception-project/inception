@@ -315,7 +315,7 @@ public class ConceptFeatureEditor
             // will "forget" to trigger a change event if the label of the newly selected item is
             // the same as the label of the previously selected item!!!
             // Using the default select behavior of AutoCompleteTextField which is coupled to the
-            // onSelected(AjaxRequestTarget aTarget) callback does unfortunatle not work well
+            // onSelected(AjaxRequestTarget aTarget) callback does unfortunately not work well
             // because onSelected does not tell us when the auto-complete field is CLEARED!
             aBehavior.setOption("select", String.join(" ", //
                     "function (e) {", //

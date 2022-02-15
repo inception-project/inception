@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamEditorBase;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptApiReference;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 
 public class DiamDebugEditor
     extends DiamEditorBase
@@ -51,6 +51,6 @@ public class DiamDebugEditor
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
-        aResponse.render(forReference(DiamJavaScriptApiReference.get()));
+        aResponse.render(forReference(DiamJavaScriptReference.get()));
     }
 }

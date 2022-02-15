@@ -18,18 +18,19 @@
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.request.Request;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
-import de.tudarmstadt.ukp.inception.diam.editor.config.DiamEditorAutoConfig;
+import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DiamEditorAutoConfig#editorAjaxRequestHandlerExtensionPoint}.
+ * {@link DiamAutoConfig#editorAjaxRequestHandlerExtensionPoint}.
  * </p>
  */
 public class EditorAjaxRequestHandlerExtensionPointImpl
@@ -40,5 +41,13 @@ public class EditorAjaxRequestHandlerExtensionPointImpl
             @Lazy @Autowired(required = false) List<EditorAjaxRequestHandler> aExtensions)
     {
         super(aExtensions);
+    }
+
+    @Override
+    public Optional<EditorAjaxRequestHandler> getHandler(Request aRequest)
+    {
+        return getExtensions().stream() //
+                .filter(handler -> handler.accepts(aRequest)) //
+                .findFirst();
     }
 }

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -245,6 +246,10 @@ public class OpenNlpDoccatRecommender
                 for (AnnotationFS annotation : selectCovered(annotationType, sampleUnit)) {
                     if (samples.size() >= traits.getTrainingSetSizeLimit()) {
                         break casses;
+                    }
+
+                    if (isBlank(annotation.getCoveredText())) {
+                        continue;
                     }
 
                     String label = annotation.getFeatureValueAsString(feature);

@@ -23,7 +23,13 @@
       <div class="card-header">
         <wicket:message key="tags" />
         <div class="actions">
-          <button wicket:id="create" class="btn btn-primary">
+          <button wicket:id="moveUp" class="btn btn-secondary" type="button" wicket:message="title:moveUp">
+            <i class="fas fa-arrow-up"></i>
+          </button>
+          <button wicket:id="moveDown" class="btn btn-secondary" type="button" wicket:message="title:moveDown">
+            <i class="fas fa-arrow-down"></i>
+          </button>
+          <button wicket:id="create" class="btn btn-primary" type="button">
             <i class="fas fa-plus-square"></i>&nbsp;
             <wicket:message key="create"/>
           </button>

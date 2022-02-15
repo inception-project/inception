@@ -44,7 +44,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -82,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
@@ -222,6 +225,31 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
+    public void updateTagRanks(TagSet aTagSet, List<Tag> aTags)
+    {
+        Map<Tag, Tag> dbTags = new HashMap<Tag, Tag>();
+        for (Tag t : listTags(aTagSet)) {
+            dbTags.put(t, t);
+        }
+
+        int n = 0;
+        for (Tag t : aTags) {
+            if (!aTagSet.equals(t.getTagSet())) {
+                throw new IllegalArgumentException("All tags to be updated must belong to "
+                        + aTagSet + ", but [" + t + "] belongs to " + t.getTagSet());
+            }
+
+            Tag dbTag = dbTags.get(t);
+            if (dbTag != null) {
+                dbTag.setRank(n);
+                t.setRank(n);
+                n++;
+            }
+        }
+    }
+
+    @Override
+    @Transactional
     public void createTagSet(TagSet aTagSet)
     {
         try (var logCtx = withProjectLogger(aTagSet.getProject())) {
@@ -280,8 +308,10 @@ public class AnnotationSchemaServiceImpl
     public Tag getTag(String aTagName, TagSet aTagSet)
     {
         return entityManager
-                .createQuery("FROM Tag WHERE name = :name AND" + " tagSet =:tagSet", Tag.class)
-                .setParameter("name", aTagName).setParameter("tagSet", aTagSet).getSingleResult();
+                .createQuery("FROM Tag WHERE name = :name AND" + " tagSet = :tagSet", Tag.class)
+                .setParameter("name", aTagName) //
+                .setParameter("tagSet", aTagSet) //
+                .getSingleResult();
     }
 
     @Override
@@ -557,11 +587,12 @@ public class AnnotationSchemaServiceImpl
             layer = findLayer(aProject, layerName);
         }
         catch (NoResultException e) {
-            if (layerName.endsWith("Chain")) {
-                layerName = layerName.substring(0, layerName.length() - 5);
+            if (layerName.endsWith(ChainAdapter.CHAIN)) {
+                layerName = layerName.substring(0,
+                        layerName.length() - ChainAdapter.CHAIN.length());
             }
-            if (layerName.endsWith("Link")) {
-                layerName = layerName.substring(0, layerName.length() - 4);
+            if (layerName.endsWith(ChainAdapter.LINK)) {
+                layerName = layerName.substring(0, layerName.length() - ChainAdapter.LINK.length());
             }
             layer = findLayer(aProject, layerName);
         }
@@ -793,7 +824,8 @@ public class AnnotationSchemaServiceImpl
         }
 
         return entityManager
-                .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY name ASC", Tag.class)
+                .createQuery("FROM Tag WHERE tagSet = :tagSet ORDER BY rank ASC, name ASC",
+                        Tag.class)
                 .setParameter("tagSet", aTagSet) //
                 .getResultList();
     }
@@ -1307,7 +1339,7 @@ public class AnnotationSchemaServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public TypeAdapter findAdapter(Project aProject, FeatureStructure aFS)
     {
-        AnnotationLayer layer = findLayer(aProject, aFS.getType().getName());
+        AnnotationLayer layer = findLayer(aProject, aFS);
         return getAdapter(layer);
     }
 

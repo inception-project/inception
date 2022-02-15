@@ -81,6 +81,11 @@ public class Selection
         selectArc(new VID(aFS), originFS, targetFS);
     }
 
+    public void selectArc(AnnotationFS aOriginFs, AnnotationFS aTargetFs)
+    {
+        selectArc(VID.NONE_ID, aOriginFs, aTargetFs);
+    }
+
     public void selectArc(VID aVid, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
         selectedAnnotationId = aVid;
@@ -291,6 +296,8 @@ public class Selection
         sel.endOffset = endOffset;
         sel.selectedAnnotationId = selectedAnnotationId;
         sel.text = text;
+        sel.originText = originText;
+        sel.targetText = targetText;
         return sel;
     }
 
@@ -302,5 +309,7 @@ public class Selection
         endOffset = aSelection.endOffset;
         selectedAnnotationId = aSelection.selectedAnnotationId;
         text = aSelection.text;
+        originText = aSelection.originText;
+        targetText = aSelection.targetText;
     }
 }

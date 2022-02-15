@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>22.0-SNAPSHOT</version>
+    <version>23.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-ui-core</artifactId>
   <name>INCEpTION - UI - Core</name>
@@ -44,7 +44,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-support-jsass</artifactId>
+      <artifactId>inception-bootstrap</artifactId>
     </dependency>
 
     <dependency>
@@ -153,10 +153,6 @@
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-sass</artifactId>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>

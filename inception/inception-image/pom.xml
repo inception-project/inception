@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>22.0-SNAPSHOT</version>
+    <version>23.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-image</artifactId>
   <name>INCEpTION - Image Support</name>
@@ -116,19 +116,10 @@
     <dependency>
       <groupId>org.webjars.npm</groupId>
       <artifactId>color-thief</artifactId>
-      <version>2.2.1</version>
-      <exclusions>
-        <!-- The versions of canvas referenced by color-thief are not available on Maven Central -->
-        <exclusion>
-          <groupId>org.webjars.npm</groupId>
-          <artifactId>canvas</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.webjars.npm</groupId>
       <artifactId>canvas</artifactId>
-      <version>1.4.0</version>
     </dependency>
   </dependencies>
   <build>

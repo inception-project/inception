@@ -55,10 +55,9 @@ public class CurationSidebarAutoConfiguration
 
     @Bean(CurationEditorExtension.EXTENSION_ID)
     public CurationEditorExtension curationEditorExtension(
-            AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
-            CurationRenderer aCurationRenderer)
+            AnnotationSchemaService aAnnotationService, DocumentService aDocumentService)
     {
-        return new CurationEditorExtension(aAnnotationService, aDocumentService, aCurationRenderer);
+        return new CurationEditorExtension(aAnnotationService, aDocumentService);
     }
 
     @Bean("curationSidebar")

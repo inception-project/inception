@@ -22,7 +22,7 @@
   <parent>
     <artifactId>inception-app</artifactId>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    <version>22.0-SNAPSHOT</version>
+    <version>23.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>inception-diam</artifactId>
@@ -47,6 +47,12 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-dao</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-js-api</artifactId>
+      <!-- JS-only dependency that we have here only for a correct build order -->
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -145,6 +151,10 @@
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
@@ -208,8 +218,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -231,37 +241,53 @@
         <artifactId>frontend-maven-plugin</artifactId>
         <executions>
           <execution>
+            <id>npm link dependency inception-js-api</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-link-dependency-phase}</phase>
+            <configuration>
+              <arguments>link @inception-project/inception-js-api</arguments>
+            </configuration>
+          </execution>
+          <execution>
             <id>npm build</id>
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>compile</phase>
+            <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build</arguments>
             </configuration>
           </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
           <execution>
-            <id>add-js-resources</id>
-            <phase>generate-resources</phase>
+            <id>npm build:minified</id>
             <goals>
-              <goal>add-resource</goal>
+              <goal>npm</goal>
             </goals>
+            <phase>${ts-build-phase}</phase>
             <configuration>
-              <resources>
-                <resource>
-                  <directory>target/js</directory>
-                </resource>
-              </resources>
+              <arguments>run build:minified</arguments>
             </configuration>
           </execution>
         </executions>
       </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <ignoredDependencies>
+              <!--
+               - Pure JS dependency
+               -->
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-js-api</ignoredDependency>
+            </ignoredDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
 </project>

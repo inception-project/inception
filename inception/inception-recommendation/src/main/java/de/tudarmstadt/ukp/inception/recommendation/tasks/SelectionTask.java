@@ -92,7 +92,7 @@ public class SelectionTask
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             Project project = getProject();
-            User user = getUser();
+            User user = getUser().orElseThrow();
             String userName = user.getUsername();
 
             // Read the CASes only when they are accessed the first time. This allows us to skip

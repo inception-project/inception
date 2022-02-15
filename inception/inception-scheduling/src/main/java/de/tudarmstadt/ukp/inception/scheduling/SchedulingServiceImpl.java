@@ -32,6 +32,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -259,7 +260,10 @@ public class SchedulingServiceImpl
     @Override
     public void stopAllTasksForUser(String aUserName)
     {
-        stopAllTasksMatching(t -> t.getUser().getUsername().equals(aUserName));
+        Validate.notNull(aUserName, "User name must be specified");
+
+        stopAllTasksMatching(
+                t -> t.getUser().map(_user -> aUserName.equals(_user.getUsername())).orElse(false));
     }
 
     @Override

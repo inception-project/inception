@@ -6,12 +6,6 @@ The file is from xbsoftware and is licensed under the MIT.
 
 Original source: https://github.com/xbsoftware/enjoyhint
 
-== CSS Browser Selector
-
-The following files are under the Creative Commons Attribution 2.5 license (licences/CC_BY_2_5.txt)
-src/main/webapp/js/css_browser_selector.js
-
-
 == wicket-jquery-focus-patch.js
 
 The file wicket-jquery-focus-patch.js is a stripped-down version of Apache Wicket's 

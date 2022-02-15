@@ -19,9 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.h2.util.IOUtils.getInputStreamFromString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -203,7 +204,7 @@ public class DocumentServiceImplDatabaseTest
                 .createAnnotationDocument(new AnnotationDocument(annotator1.getUsername(), doc));
 
         try (var session = CasStorageSession.open()) {
-            sut.uploadSourceDocument(getInputStreamFromString("This is a test."), doc);
+            sut.uploadSourceDocument(toInputStream("This is a test.", UTF_8), doc);
         }
 
         sut.setAnnotationDocumentState(ann, AnnotationDocumentState.IN_PROGRESS,

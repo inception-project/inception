@@ -25,8 +25,7 @@ import java.util.Map;
 
 public enum Granularities
 {
-    PER_DOCUMENT("per Document"),
-    PER_SENTENCE("per Sentence");
+    PER_DOCUMENT("per Document"), PER_SENTENCE("per Sentence");
 
     private static final Map<String, Granularities> UI_TO_INTERNAL = new HashMap<String, Granularities>();
     private static final Map<Granularities, String> INTERNAL_TO_UI = new HashMap<Granularities, String>();

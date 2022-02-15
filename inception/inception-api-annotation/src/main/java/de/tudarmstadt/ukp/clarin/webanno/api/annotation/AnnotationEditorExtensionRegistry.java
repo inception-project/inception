@@ -29,7 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 public interface AnnotationEditorExtensionRegistry
 {
@@ -42,9 +41,6 @@ public interface AnnotationEditorExtensionRegistry
         throws IOException, AnnotationException;
 
     void fireRenderRequested(AnnotatorState aState);
-
-    void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc, int aWindowBeginOffset,
-            int aWindowEndOffset);
 
     void generateContextMenuItems(List<IMenuItem> aItems);
 }

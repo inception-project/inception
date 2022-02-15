@@ -41,6 +41,6 @@ public class RecogitoJsCssResourceReference
      */
     private RecogitoJsCssResourceReference()
     {
-        super(RecogitoJsCssResourceReference.class, "recogito.min.css");
+        super(RecogitoJsCssResourceReference.class, "RecogitoEditor.min.css");
     }
 }

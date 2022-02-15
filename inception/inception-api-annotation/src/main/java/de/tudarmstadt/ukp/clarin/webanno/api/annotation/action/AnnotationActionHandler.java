@@ -43,6 +43,11 @@ public interface AnnotationActionHandler
      */
     void actionSelect(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
+    /**
+     * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
+     *             {@link #actionSelect(AjaxRequestTarget, VID)}
+     */
+    @Deprecated
     void actionSelect(AjaxRequestTarget aTarget, AnnotationFS aAnnoFs)
         throws IOException, AnnotationException;
 
@@ -53,9 +58,19 @@ public interface AnnotationActionHandler
 
     void actionJump(AjaxRequestTarget aTarget, VID aVid) throws IOException, AnnotationException;
 
+    /**
+     * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
+     *             {@link #actionSelectAndJump(AjaxRequestTarget, VID)}
+     */
+    @Deprecated
     void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException;
 
+    /**
+     * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
+     *             {@link #actionJump(AjaxRequestTarget, VID)}
+     */
+    @Deprecated
     void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException;
 
@@ -75,6 +90,22 @@ public interface AnnotationActionHandler
     void actionReverse(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
     /**
+     * @deprecated Use either of the other two {@link #actionFillSlot} variants instead.
+     */
+    @Deprecated
+    default void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
+            int aSlotFillerEnd, VID aExistingSlotFillerId)
+        throws IOException, AnnotationException
+    {
+        if (aExistingSlotFillerId.isNotSet()) {
+            actionFillSlot(aTarget, aCas, aSlotFillerBegin, aSlotFillerEnd);
+        }
+        else {
+            actionFillSlot(aTarget, aCas, aExistingSlotFillerId);
+        }
+    }
+
+    /**
      * Fill the currently armed slot with the given annotation.
      * 
      * @param aTarget
@@ -86,13 +117,22 @@ public interface AnnotationActionHandler
      *            of the span of the selected existing annotation.
      * @param aSlotFillerEnd
      *            the corresponding end.
-     * @param aExistingSlotFillerId
-     *            the {@link VID} of a selected existing annotation. If no annotation has been
-     *            selected, this is {@link VID#NONE_ID} and {@link VID#isSet()} returns
-     *            {@code false}.
      */
     void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
-            int aSlotFillerEnd, VID aExistingSlotFillerId)
+            int aSlotFillerEnd)
+        throws IOException, AnnotationException;
+
+    /**
+     * Fill the currently armed slot with the given annotation.
+     * 
+     * @param aTarget
+     *            the AJAX request target.
+     * @param aCas
+     *            the CAS in which the slot is going to be filled.
+     * @param aExistingSlotFillerId
+     *            ID of the existing span annotation to be filled into the armed slot
+     */
+    void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, VID aExistingSlotFillerId)
         throws IOException, AnnotationException;
 
     CAS getEditorCas() throws IOException;

@@ -30,11 +30,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -47,15 +49,15 @@ public class CurationRendererImpl
     private final PreRenderer preRenderer;
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
-    private final BratAnnotationEditorProperties bratProperties;
+    private final BratSerializer bratSerializer;
 
     public CurationRendererImpl(PreRenderer aPreRenderer, AnnotationSchemaService aSchemaService,
-            ColoringService aColoringService, BratAnnotationEditorProperties aBratProperties)
+            ColoringService aColoringService, BratSerializer aBratSerializer)
     {
         preRenderer = aPreRenderer;
         schemaService = aSchemaService;
         coloringService = aColoringService;
-        bratProperties = aBratProperties;
+        bratSerializer = aBratSerializer;
     }
 
     @Override
@@ -73,13 +75,24 @@ public class CurationRendererImpl
             }
         }
 
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aState.getWindowBeginOffset(), aState.getWindowEndOffset(), aCas,
-                layersToRender);
+        RenderRequest request = RenderRequest.builder() //
+                .withState(aState) //
+                .withWindow(aState.getWindowBeginOffset(), aState.getWindowEndOffset()) //
+                .withCas(aCas) //
+                .withVisibleLayers(layersToRender) //
+                .withColoringStrategyOverride(aColoringStrategy) //
+                .build();
 
-        GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer renderer = new BratRenderer(schemaService, coloringService, bratProperties);
-        renderer.render(response, aState, vdoc, aCas, aColoringStrategy);
+        VDocument vdoc = new VDocument();
+        preRenderer.render(vdoc, request);
+
+        new LabelRenderer().render(vdoc, request);
+
+        ColorRenderer colorRenderer = new ColorRenderer(schemaService, coloringService);
+        colorRenderer.render(vdoc, request);
+
+        GetDocumentResponse response = bratSerializer.render(vdoc, request);
+
         return JSONUtil.toInterpretableJsonString(response);
     }
 }

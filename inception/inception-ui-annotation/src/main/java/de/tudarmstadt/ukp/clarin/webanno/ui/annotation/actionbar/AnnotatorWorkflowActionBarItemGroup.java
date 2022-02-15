@@ -21,7 +21,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FI
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
+import java.io.IOException;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -34,6 +37,8 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameMod
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -105,10 +110,18 @@ public class AnnotatorWorkflowActionBarItemGroup
     }
 
     protected void actionFinishDocument(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
     {
-        finishDocumentDialog.setConfirmAction((_target) -> {
-            page.actionValidateDocument(_target, page.getEditorCas());
+        try {
+            page.actionValidateDocument(aTarget, page.getEditorCas());
+        }
+        catch (ValidationException e) {
+            page.error("Document cannot be marked as finished: " + e.getMessage());
+            aTarget.addChildren(page, IFeedback.class);
+            return;
+        }
 
+        finishDocumentDialog.setConfirmAction((_target) -> {
             AnnotatorState state = page.getModelObject();
             AnnotationDocument annotationDocument = documentService
                     .getAnnotationDocument(state.getDocument(), state.getUser());

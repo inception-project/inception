@@ -20,14 +20,10 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>22.0-SNAPSHOT</version>
+    <version>23.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-brat-editor</artifactId>
   <name>INCEpTION - Editor - brat</name>
-  <packaging>jar</packaging>
-  <properties>
-    <maven.surefire.argLine>-Djdk.attach.allowAttachSelf</maven.surefire.argLine>
-  </properties>
   <dependencies>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -47,11 +43,15 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-preferences</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-support</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-security</artifactId>
+      <artifactId>inception-diam</artifactId>
     </dependency>
 
     <dependency>
@@ -113,6 +113,10 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
     <dependency>
@@ -122,6 +126,10 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
 
     <!-- Wicket dependencies -->
@@ -149,10 +157,6 @@
     <dependency>
       <groupId>de.agilecoders.wicket.webjars</groupId>
       <artifactId>wicket-webjars</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.agilecoders.wicket</groupId>
-      <artifactId>wicket-bootstrap-sass</artifactId>
     </dependency>
     <dependency>
       <groupId>org.webjars</groupId>
@@ -192,6 +196,95 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    
+    <plugins>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>npm link dependency inception-js-api</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-link-dependency-phase}</phase>
+            <configuration>
+              <arguments>link @inception-project/inception-js-api</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm link dependency inception-diam</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-link-dependency-phase}</phase>
+            <configuration>
+              <arguments>link @inception-project/inception-diam</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build:brat</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-minified</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build:brat-minified</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-curation</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build:brat-curation</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-curation-minified</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build:brat-curation-minified</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-css</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build:brat-css</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build:brat-css-minified</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build:brat-css-minified</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
   <profiles>
     <profile>
@@ -209,9 +302,7 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
-                  <!-- MIT License -->
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource/fast-json-patch.js</exclude>
-                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/brat/resource/fast-json-patch.min.js</exclude>
+                  <exclude>**/.eslintrc.js</exclude>
                 </excludes>
               </configuration>
             </plugin>

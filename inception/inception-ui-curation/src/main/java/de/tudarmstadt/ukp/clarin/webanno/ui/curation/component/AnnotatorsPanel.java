@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosit
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer.buildEntityTypes;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
@@ -79,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
@@ -131,6 +131,7 @@ public class AnnotatorsPanel
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean UserDao userService;
     private @SpringBean CurationRenderer curationRenderer;
+    private @SpringBean BratSchemaGenerator bratSchemaGenerator;
 
     public AnnotatorsPanel(String id, IModel<List<AnnotatorSegment>> aModel)
     {
@@ -404,8 +405,8 @@ public class AnnotatorsPanel
         throws IOException
     {
         GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-        info.setEntityTypes(buildEntityTypes(aState.getProject(), aState.getAnnotationLayers(),
-                aAnnotationService));
+        info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(aState.getProject(),
+                aState.getAnnotationLayers()));
 
         return JSONUtil.toInterpretableJsonString(info);
     }

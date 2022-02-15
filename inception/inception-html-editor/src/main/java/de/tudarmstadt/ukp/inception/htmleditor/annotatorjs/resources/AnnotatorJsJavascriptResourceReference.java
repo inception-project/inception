@@ -41,6 +41,6 @@ public class AnnotatorJsJavascriptResourceReference
      */
     private AnnotatorJsJavascriptResourceReference()
     {
-        super(AnnotatorJsJavascriptResourceReference.class, "annotator-full.js");
+        super(AnnotatorJsJavascriptResourceReference.class, "AnnotatorJsEditor.min.js");
     }
 }

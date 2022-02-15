@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>22.0-SNAPSHOT</version>
+    <version>23.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -41,6 +41,10 @@
     </dependency>
   
     <!-- INCEPTION - CORE DEPENDENCIES -->
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-resources-asl</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-core</artifactId>
@@ -111,6 +115,13 @@
         </exclusion>
       </exclusions>
     </dependency>
+    
+    <!-- INCEPTION - FACT LINKING FUNCTIONALITY (deprecated) 
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-kb-fact-linking</artifactId>
+    </dependency>
+    -->
 
     <!-- INCEPTION - ANNOTATION RECOMMENDATION FUNCTIONALITY -->
     <dependency>
@@ -130,6 +141,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-external</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-elg</artifactId>
     </dependency>
     <!--  
     <dependency>
@@ -191,6 +206,10 @@
     </dependency>
 
     <!-- INCEPTION - ADDITIONAL EDITORS -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-editor</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-html-editor</artifactId>
@@ -269,16 +288,6 @@
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-xml-asl</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.xml.stream</groupId>
-          <artifactId>stax-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>stax</groupId>
-          <artifactId>stax-api</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -310,7 +319,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-project</artifactId>
+      <artifactId>inception-project-initializers</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -358,10 +367,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-diam-word-alignment-editor</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-workload-ui</artifactId>
     </dependency>
     <dependency>
@@ -405,7 +410,6 @@
     <dependency>
       <groupId>org.mozilla</groupId>
       <artifactId>rhino-runtime</artifactId>
-      <version>1.7.12</version>
     </dependency>
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
@@ -771,14 +775,14 @@
                   </fileset>
                 </sync>
 
-                <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
+                <replace dir="src/main/resources/public/doc">
                   <include name="**/*.html" />
                   <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
                   <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
                   <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
                   <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
+                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference/webjars/font-awesome/5.15.3/css/all.css" />
                 </replace>
-
               </target>
             </configuration>
           </execution>
@@ -859,9 +863,11 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-elg</usedDependency>
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
+              <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-kb-fact-linking</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency> -->
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency> -->
@@ -874,7 +880,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-diam-word-alignment-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
@@ -892,6 +897,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-preferences</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-recogito-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>

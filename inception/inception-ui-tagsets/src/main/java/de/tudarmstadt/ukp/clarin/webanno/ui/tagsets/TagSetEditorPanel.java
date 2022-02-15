@@ -145,6 +145,8 @@ public class TagSetEditorPanel
 
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
+
+        success("Settings saved");
     }
 
     private void actionDelete(AjaxRequestTarget aTarget)
@@ -208,7 +210,6 @@ public class TagSetEditorPanel
                     exportedTag.setDescription(tag.getDescription());
                     exportedTag.setName(tag.getName());
                     exportedTags.add(exportedTag);
-
                 }
                 exTagSet.setTags(exportedTags);
 

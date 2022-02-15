@@ -34,8 +34,10 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.SelectFSs;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.cas.TOP;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
@@ -54,10 +56,13 @@ import org.wicketstuff.urlfragment.UrlFragment;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -71,11 +76,15 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.preferences.Key;
 
 public abstract class AnnotationPageBase
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -1133219266479577443L;
+
+    public static final Key<AnnotationEditorState> KEY_EDITOR_STATE = new Key<>(
+            AnnotationEditorState.class, "annotation/editor");
 
     public static final String PAGE_PARAM_DOCUMENT = "d";
     public static final String PAGE_PARAM_USER = "u";
@@ -268,6 +277,8 @@ public abstract class AnnotationPageBase
 
     public abstract CAS getEditorCas() throws IOException;
 
+    public abstract AnnotationActionHandler getAnnotationActionHandler();
+
     public abstract void writeEditorCas(CAS aCas) throws IOException, AnnotationException;
 
     /**
@@ -291,9 +302,8 @@ public abstract class AnnotationPageBase
      */
     protected void validateRequiredFeatures(AjaxRequestTarget aTarget, CAS aCas,
             TypeAdapter aAdapter)
+        throws ValidationException, IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
-
         CAS editorCas = aCas;
         AnnotationLayer layer = aAdapter.getLayer();
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
@@ -306,32 +316,28 @@ public abstract class AnnotationPageBase
         // Check each feature structure of this layer
         Type layerType = aAdapter.getAnnotationType(editorCas);
         Type annotationFsType = editorCas.getAnnotationType();
-        for (FeatureStructure fs : editorCas.select(layerType)) {
-            for (AnnotationFeature f : features) {
-                if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
-                    // If it is an annotation, then we jump to it if it has required empty features
-                    if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
-                        // Find the sentence that contains the annotation with the missing
-                        // required feature value
-                        AnnotationFS s = WebAnnoCasUtil.selectSentenceCovering(aCas,
-                                ((AnnotationFS) fs).getBegin());
-                        // Put this sentence into the focus
-                        state.setFirstVisibleUnit(s);
-                        actionRefreshDocument(aTarget);
-                    }
+        try (SelectFSs<TOP> fses = editorCas.select(layerType)) {
+            for (FeatureStructure fs : fses) {
+                for (AnnotationFeature f : features) {
+                    if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
+                        // If it is an annotation, then we jump to it if it has required empty
+                        // features
+                        if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
+                            getAnnotationActionHandler().actionSelectAndJump(aTarget, new VID(fs));
+                        }
 
-                    // Inform the user
-                    throw new IllegalStateException(
-                            "Document cannot be marked as finished. Annotation with ID ["
-                                    + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
-                                    + layer.getUiName() + "] is missing value for feature ["
-                                    + f.getUiName() + "].");
+                        // Inform the user
+                        throw new ValidationException("Annotation with ID ["
+                                + WebAnnoCasUtil.getAddr(fs) + "] on layer [" + layer.getUiName()
+                                + "] is missing value for feature [" + f.getUiName() + "].");
+                    }
                 }
             }
         }
     }
 
     public void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
+        throws ValidationException, IOException, AnnotationException
     {
         AnnotatorState state = getModelObject();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
@@ -355,17 +361,12 @@ public abstract class AnnotationPageBase
                 LogMessage message = messages.get(0).getLeft();
                 AnnotationFS fs = messages.get(0).getRight();
 
-                // Find the sentence that contains the annotation with the missing
-                // required feature value and put this sentence into the focus
-                AnnotationFS s = WebAnnoCasUtil.selectSentenceCovering(aCas, fs.getBegin());
-                state.setFirstVisibleUnit(s);
-                actionRefreshDocument(aTarget);
+                getAnnotationActionHandler().actionSelectAndJump(aTarget, new VID(fs));
 
                 // Inform the user
-                throw new IllegalStateException(
-                        "Document cannot be marked as finished. Annotation with ID ["
-                                + WebAnnoCasUtil.getAddr(fs) + "] on layer [" + layer.getUiName()
-                                + "] is invalid: " + message.getMessage());
+                throw new ValidationException(
+                        "Annotation with ID [" + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
+                                + layer.getUiName() + "] is invalid: " + message.getMessage());
             }
         }
     }

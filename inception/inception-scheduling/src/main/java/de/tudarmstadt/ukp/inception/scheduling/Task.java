@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging.KEY_USER
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.MDC;
@@ -60,9 +61,9 @@ public abstract class Task
         id = nextId.getAndIncrement();
     }
 
-    public User getUser()
+    public Optional<User> getUser()
     {
-        return user;
+        return Optional.ofNullable(user);
     }
 
     public Project getProject()
@@ -99,9 +100,7 @@ public abstract class Task
                 MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
             }
 
-            if (getUser() != null) {
-                MDC.put(KEY_USERNAME, getUser().getUsername());
-            }
+            getUser().ifPresent(_user -> MDC.put(KEY_USERNAME, _user.getUsername()));
 
             if (getProject() != null) {
                 MDC.put(KEY_PROJECT_ID, String.valueOf(getProject().getId()));

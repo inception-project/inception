@@ -21,11 +21,13 @@ package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import javax.persistence.EntityManager;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LambdaModel;
@@ -36,6 +38,8 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameMod
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -45,8 +49,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
 /**
  * This is only enabled for annotators of a project with the dynamic workload enabled. An annotator
@@ -63,7 +69,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
 
     protected ConfirmationDialog finishDocumentDialog;
 
-    private final AnnotatorState annotatorState;
     private final LambdaAjaxLink finishDocumentLink;
 
     // SpringBeans
@@ -74,15 +79,11 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean WorkflowExtensionPoint workflowExtensionPoint;
 
-    /**
-     * Constructor of the ActionBar
-     */
     public DynamicAnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
     {
         super(aId);
 
         page = aPage;
-        annotatorState = aPage.getModelObject();
 
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
                 new StringResourceModel("FinishDocumentDialog.title", this, null),
@@ -95,6 +96,11 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
         finishDocumentLink.add(enabledWhen(page::isEditable));
         finishDocumentLink.add(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
+    }
+
+    public AnnotatorState getModelObject()
+    {
+        return page.getModelObject();
     }
 
     protected AnnotationPageBase getAnnotationPage()
@@ -110,40 +116,60 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     /**
      * This method represents the opening dialog upon clicking "Finish" for the current document.
      */
-    protected void actionFinishDocument(AjaxRequestTarget aTarget)
+    private void actionFinishDocument(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
     {
-        finishDocumentDialog.setConfirmAction((_target) -> {
-            page.actionValidateDocument(_target, page.getEditorCas());
+        WorkloadManager manager = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(getModelObject().getProject());
+        DynamicWorkloadTraits traits = dynamicWorkloadExtension.readTraits(manager);
 
-            // Needed often, therefore assigned in the beginning of the method
-            User user = annotatorState.getUser();
-            Project project = annotatorState.getProject();
-            SourceDocument document = annotatorState.getDocument();
+        try {
+            page.actionValidateDocument(aTarget, page.getEditorCas());
+        }
+        catch (ValidationException e) {
+            page.error("Document cannot be marked as finished: " + e.getMessage());
+            aTarget.addChildren(page, IFeedback.class);
+            return;
+        }
 
-            // On finishing, the current AnnotationDocument is put to the new state FINISHED
-            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(document,
-                    user);
-            documentService.setAnnotationDocumentState(annotationDocument, FINISHED);
-
-            _target.add(page);
-
-            // Assign a new document with actionLoadDocument
-            Optional<SourceDocument> nextDocument = dynamicWorkloadExtension
-                    .nextDocumentToAnnotate(project, user);
-            if (nextDocument.isPresent()) {
-                // This was the case, so load the document and return
-                page.getModelObject().setDocument(nextDocument.get(),
-                        documentService.listSourceDocuments(nextDocument.get().getProject()));
-                page.actionLoadDocument(_target);
-            }
-            else {
-                // Nothing left, so returning to homepage and showing hint
-                page.getSession()
-                        .info("There are no more documents to annotate available for you.");
-                page.setResponsePage(getAnnotationPage().getApplication().getHomePage());
-            }
-        });
+        if (traits.isConfirmFinishingDocuments()) {
+            finishDocumentDialog
+                    .setConfirmAction(_target -> this.actionFinishDocumentConfirmed(_target));
+        }
+        else {
+            actionFinishDocumentConfirmed(aTarget);
+        }
 
         finishDocumentDialog.show(aTarget);
+    }
+
+    private void actionFinishDocumentConfirmed(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        AnnotatorState state = getModelObject();
+        User user = state.getUser();
+        Project project = state.getProject();
+
+        // On finishing, the current AnnotationDocument is put to the new state FINISHED
+        AnnotationDocument annotationDocument = documentService
+                .getAnnotationDocument(state.getDocument(), user);
+        documentService.setAnnotationDocumentState(annotationDocument, FINISHED);
+
+        aTarget.add(page);
+
+        Optional<SourceDocument> nextDocument = dynamicWorkloadExtension
+                .nextDocumentToAnnotate(project, user);
+
+        if (!nextDocument.isPresent()) {
+            // Nothing left, so returning to homepage and showing hint
+            page.getSession().info("There are no more documents to annotate available for you.");
+            page.setResponsePage(getAnnotationPage().getApplication().getHomePage());
+            return;
+        }
+
+        // Assign a new document with actionLoadDocument
+        page.getModelObject().setDocument(nextDocument.get(),
+                documentService.listSourceDocuments(nextDocument.get().getProject()));
+        page.actionLoadDocument(aTarget);
     }
 }

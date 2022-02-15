@@ -1,0 +1,4109 @@
+/*
+ * ## INCEpTION ##
+ * Licensed to the Technische Universität Darmstadt under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The Technische Universität Darmstadt 
+ * licenses this file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.
+ *  
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ## brat ##
+ * Copyright (C) 2010-2012 The brat contributors, all rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of
+ * this software and associated documentation files (the "Software"), to deal in
+ * the Software without restriction, including without limitation the rights to
+ * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+ * of the Software, and to permit persons to whom the Software is furnished to do
+ * so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+import { Sizes } from "./Sizes";
+import { Measurements } from "./Measurements";
+import { DocumentData } from "./DocumentData";
+import { ENTITY, Entity, TRIGGER } from "./Entity";
+import { EQUIV, EventDesc, RELATION } from "./EventDesc";
+import { Chunk } from "./Chunk";
+import { Fragment } from "./Fragment";
+import { Arc } from "./Arc";
+import { Row } from "./Row";
+import { RectBox } from "./RectBox";
+import { AttributeType } from "./AttributeType";
+import { CollectionLoadedResponse } from "./CollectionLoadedResponse";
+import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from "../protocol/Protocol";
+import type { Dispatcher } from "../dispatcher/Dispatcher";
+import * as jsonpatch from 'fast-json-patch';
+import { Operation } from "fast-json-patch";
+import { scrollbarWidth } from "../util/ScrollbarWidth";
+import "@svgdotjs/svg.filter.js";
+import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathCommand, Rect } from "@svgdotjs/svg.js";
+import { INSTANCE as Configuration } from "../configuration/Configuration";
+import { INSTANCE as Util } from "../util/Util";
+import { ArrayXY } from "@svgdotjs/svg.js";
+import { SVGTypeMapping } from "@svgdotjs/svg.js";
+import { Defs } from "@svgdotjs/svg.js";
+import { Offsets } from "@inception-project/inception-js-api";
+declare const $: JQueryStatic;
+
+/** 
+ * [lastRow, textDesc[3], lastX - boxX, textDesc[4]] 
+ */
+type MarkedRow = [Row, unknown, number, unknown];
+
+type MarkedText = [begin: number, end: number, type: string];
+
+/**
+ * Sets default values for a wide range of optional attributes.
+ *
+ * @param {SourceData} sourceData
+ */
+function setSourceDataDefaults(sourceData: SourceData) {
+  // The following are empty lists if not set
+  $.each([
+    'attributes',
+    'comments',
+    'entities',
+    'equivs',
+    'events',
+    'normalizations',
+    'relations',
+    'triggers',
+  ], (attrNo, attr) => {
+    if (sourceData[attr] === undefined) {
+      sourceData[attr] = [];
+    }
+  });
+
+  // Avoid exception due to undefined text in tokenise and sentenceSplit
+  if (sourceData.text === undefined) {
+    sourceData.text = "";
+  }
+
+  // If we lack sentence offsets we fall back on naive sentence splitting
+  if (sourceData.sentence_offsets === undefined) {
+    sourceData.sentence_offsets = sentenceSplit(sourceData.text);
+  }
+
+  // Similarily we fall back on whitespace tokenisation
+  if (sourceData.token_offsets === undefined) {
+    sourceData.token_offsets = tokenise(sourceData.text);
+  }
+}
+
+// Set default values for a variety of collection attributes
+function setCollectionDefaults(collectionData) {
+  // The following are empty lists if not set
+  $.each([
+    'entity_attribute_types',
+    'entity_types',
+    'event_attribute_types',
+    'event_types',
+    'relation_attribute_types',
+    'relation_types',
+    'unconfigured_types',
+  ], (attrNo, attr) => {
+    if (collectionData[attr] === undefined) {
+      collectionData[attr] = [];
+    }
+  });
+}
+
+export class Visualizer {
+  private dispatcher: Dispatcher;
+
+  private rtlmode = false;
+  private fontZoom = 100;
+
+  svg: Svg;
+  private svgContainer: HTMLElement;
+  private highlightGroup: SVGTypeMapping<SVGGElement>;
+
+  private baseCanvasWidth = 0;
+  private canvasWidth = 0;
+
+  private data: DocumentData = null;
+  private sourceData: SourceData = null;
+  private requestedData: SourceData = null; // FIXME Do we really need requestedData AND sourceData?
+
+  private args: Record<MarkerType, MarkerDto> = null;
+
+  private isRenderRequested = false;
+  private drawing = false;
+  private redraw = false;
+  private arcDragOrigin; // Seems this field is declared and checked in this file but never set!
+
+  private entityTypes: Record<string, EntityTypeDto> = {};
+  private relationTypes: Record<string, RelationTypeDto> = {};
+  private entityAttributeTypes: Record<string, AttributeType> = {};
+  private eventAttributeTypes: Record<string, AttributeType> = {};
+  private isCollectionLoaded = false;
+
+  private markedText: Array<MarkedText> = [];
+  private highlight: Array<Rect> | undefined;
+  private highlightArcs;
+  private highlightSpans;
+
+  // OPTIONS
+  private forceWidth: number = undefined;
+  private collapseArcs = false;
+  private collapseArcSpace = false;
+  private roundCoordinates = true; // try to have exact pixel offsets
+  private boxTextMargin = { x: 0, y: 1.5 }; // effect is inverse of "margin" for some reason
+  private highlightRounding = { x: 3, y: 3 }; // rx, ry for highlight boxes
+  private spaceWidths: Record<string, number> = {
+    ' ': 4,
+    '\u00a0': 4,
+    '\u200b': 0,
+    '\u3000': 8,
+    '\t': 12,
+    '\n': 4
+  };
+  private coloredCurlies = true; // color curlies by box BG
+  private arcSlant = 15; //10;
+  private minArcSlant = 8;
+  private arcHorizontalSpacing = 10; // min space boxes with connecting arc
+  private rowSpacing = -5; // for some funny reason approx. -10 gives "tight" packing.
+
+  private sentNumMargin = 40;
+  private smoothArcCurves = true; // whether to use curves (vs lines) in arcs
+  private smoothArcSteepness = 0.5; // steepness of smooth curves (control point)
+  private reverseArcControlx = 5; // control point distance for "UFO catchers"
+
+  // "shadow" effect settings (note, error, incompelete)
+  rectShadowSize = 3;
+  rectShadowRounding = 2.5;
+  arcLabelShadowSize = 1;
+  arcLabelShadowRounding = 5;
+  shadowStroke = 2.5; // TODO XXX: this doesn't affect anything..?
+
+  // "marked" effect settings (edited, focus, match)
+  markedSpanSize = 6;
+  markedArcSize = 2;
+  markedArcStroke = 7; // TODO XXX: this doesn't seem to do anything..?
+
+  rowPadding = 2;
+  nestingAdjustYStepSize = 2; // size of height adjust for nested/nesting spans
+  nestingAdjustXStepSize = 1; // size of height adjust for nested/nesting spans
+
+  shadowClassPattern = 'True_positive|False_positive|False_negative|AnnotationError|AnnotationWarning|AnnotatorNotes|Normalized|AnnotationIncomplete|AnnotationUnconfirmed|rectEditHighlight|EditHighlight_arc|MissingAnnotation|ChangedAnnotation';
+
+  highlightSpanSequence: string;
+  highlightArcSequence: string;
+  highlightTextSequence: string;
+  // different sequence for "mere" matches (as opposed to "focus" and "edited" highlights)
+  highlightMatchSequence = '#FFFF00'; // plain yellow
+
+  fragmentConnectorDashArray = '1,3,3,3';
+  fragmentConnectorColor = '#000000';
+  // END OPTIONS
+
+  commentPrioLevels: string[] = [
+    'Unconfirmed', 'Incomplete', 'Warning', 'Error', 'AnnotatorNotes',
+    'AddedAnnotation', 'MissingAnnotation', 'ChangedAnnotation'
+  ];
+
+  renderErrors: Record<string, boolean> = {
+    unableToReadTextFile: true,
+    annotationFileNotFound: true,
+    isDirectoryError: true
+  };
+
+  constructor(dispatcher, svgId: string) {
+    this.dispatcher = dispatcher;
+
+    this.svgContainer = document.getElementById(svgId);
+    if (!document.getElementById(svgId)) {
+      throw Error('Could not find container with id="' + svgId + '"');
+    }
+
+    //var highlightSequence = '#FFFC69;#FFCC00;#FFFC69'; // a bit toned town
+    const highlightSequence = '#FF9632;#FFCC00;#FF9632'; // yellow - deep orange
+    this.highlightSpanSequence = highlightSequence;
+    this.highlightArcSequence = highlightSequence;
+    this.highlightTextSequence = highlightSequence;
+
+    // create the svg wrapper
+    this.svgContainer.style.visibility = 'hidden';
+
+    this.svg = SVG().addTo(this.svgContainer);
+    this.triggerRender();
+
+    this.registerHandlers($(this.svgContainer), [
+      'mouseover', 'mouseout', 'mousemove', 'mouseup', 'mousedown',
+      'dragstart', 'dblclick', 'click',
+      'contextmenu'
+    ]);
+
+    this.registerHandlers($(document), [
+      'keydown', 'keypress',
+      'touchstart', 'touchend'
+    ]);
+
+    this.registerHandlers($(window), [
+      'resize'
+    ]);
+
+    this.dispatcher //
+      .on('collectionChanged', this, this.collectionChanged) //
+      .on('collectionLoaded', this, this.collectionLoaded) //
+      .on('renderData', this, this.renderData) //
+      .on('rerender', this, this.rerender) //
+      .on('renderDataPatch', this, this.renderDataPatch) //
+      .on('triggerRender', this, this.triggerRender) //
+      .on('requestRenderData', this, this.requestRenderData) //
+      .on('isReloadOkay', this, this.isReloadOkay) //
+      .on('resetData', this, this.resetData) //
+      .on('abbrevs', this, this.setAbbrevs) //
+      .on('textBackgrounds', this, this.setTextBackgrounds) //
+      .on('layoutDensity', this, this.setLayoutDensity) //
+      .on('svgWidth', this, this.setSvgWidth) //
+      .on('current', this, this.gotCurrent) //
+      .on('mouseover', this, this.onMouseOver) //
+      .on('mouseout', this, this.onMouseOut);
+
+    // Object.seal(this);
+  }
+
+  /**
+   * Get the priority of the given comment class.
+   *
+   * @returns a numerical value representing the priority.
+   */
+  commentPriority(commentClass: string) {
+    if (commentClass === undefined) {
+      return -1;
+    }
+
+    const len = this.commentPrioLevels.length;
+    for (let i = 0; i < len; i++) {
+      if (commentClass.indexOf(this.commentPrioLevels[i]) !== -1) {
+        return i;
+      }
+    }
+
+    return 0;
+  }
+
+  setMarked(markedType: MarkerType) {
+    if (!this.args[markedType]) {
+      return;
+    }
+
+    this.args[markedType].map(marked => {
+      if (marked[0] === 'sent') {
+        this.data.markedSent[marked[1]] = true;
+        return;
+      }
+
+      if (marked[0] === 'equiv') { // [equiv, Equiv, T1]
+        $.each(this.sourceData.equivs, (equivNo, equiv) => {
+          if (equiv[1] === marked[1]) {
+            let len = equiv.length;
+            for (let i = 2; i < len; i++) {
+              if (equiv[i] === marked[2]) {
+                // found it
+                len -= 3;
+                for (let n = 1; n <= len; n++) {
+                  const arc = this.data.eventDescs[equiv[0] + "*" + n].equivArc;
+                  arc.marked = markedType;
+                }
+                return; // next equiv
+              }
+            }
+          }
+        });
+        return;
+      }
+
+      if (marked.length === 2) {
+        this.markedText.push([parseInt(marked[0], 10), parseInt(marked[1], 10), markedType]);
+        return;
+      }
+
+      const span = this.data.spans[marked[0]];
+      if (span) {
+        if (marked.length === 3) { // arc
+          $.each(span.outgoing, (arcNo, arc) => {
+            if (arc.target === marked[2] && arc.type === marked[1]) {
+              arc.marked = markedType;
+            }
+          });
+        } else { // span
+          span.marked = markedType;
+        }
+
+        return;
+      }
+
+      const eventDesc = this.data.eventDescs[marked[0]];
+      if (eventDesc) { // relation
+        $.each(this.data.spans[eventDesc.triggerId].outgoing, (arcNo, arc) => {
+          if (arc.eventDescId === marked[0]) {
+            arc.marked = markedType;
+          }
+        });
+        return;
+      }
+
+      // try for trigger
+      $.each(this.data.eventDescs, (eventDescNo, eventDesc) => {
+        if (eventDesc.triggerId === marked[0]) {
+          this.data.spans[eventDesc.id].marked = markedType;
+        }
+      });
+    });
+  }
+
+  findArcHeight(fromIndex: number, toIndex: number, fragmentHeights: number[]) {
+    let height = 0;
+    for (let i = fromIndex; i <= toIndex; i++) {
+      if (fragmentHeights[i] > height)
+        height = fragmentHeights[i];
+    }
+    height += Configuration.visual.arcSpacing * (this.fontZoom/50.0);
+    return height;
+  }
+
+  adjustFragmentHeights(fromIndex: number, toIndex: number, fragmentHeights: number[], height: number) {
+    for (let i = fromIndex; i <= toIndex; i++) {
+      if (fragmentHeights[i] < height)
+        fragmentHeights[i] = height;
+    }
+  }
+
+  applyHighlighting() {
+    this.markedText = [];
+    this.setMarked(EDITED); // set by editing process
+    this.setMarked(FOCUS); // set by URL
+    this.setMarked(MATCH_FOCUS); // set by search process, focused match
+    this.setMarked(MATCH); // set by search process, other (non-focused) match
+  }
+
+  /**
+   * Calculate average arc distances. Average distance of arcs (0 for no arcs).
+   */
+  calculateAverageArcDistances(spans: Entity[]) {
+    spans.map(span => span.avgDist = span.numArcs ? span.totalDist / span.numArcs : 0);
+  }
+
+  /**
+   * Collect fragment texts into span texts
+   */
+  collectFragmentTextsIntoSpanTexts(spans: Entity[]) {
+    spans.map(span => {
+      const fragmentTexts = [];
+      span.fragments && span.fragments.map(fragment => fragmentTexts.push(fragment.text));
+      span.text = fragmentTexts.join('');
+    });
+  }
+
+  /**
+   * @returns list of span IDs in the order they should be drawn.
+   */
+  determineDrawOrder(spans: Record<VID, Entity>): Array<VID> {
+    const spanDrawOrderPermutation = Object.keys(spans);
+    spanDrawOrderPermutation.sort((a, b) => {
+      const spanA = spans[a];
+      const spanB = spans[b];
+
+      // We're jumping all over the chunks, but it's enough that we're doing everything inside
+      // each chunk in the right order. Should it become necessary to actually do these in
+      // linear order, put in a similar condition for spanX.headFragment.chunk.index; but it
+      // should not be needed.
+      const tmp = spanA.headFragment.drawOrder - spanB.headFragment.drawOrder;
+      if (tmp) {
+        return tmp < 0 ? -1 : 1;
+      }
+
+      return 0;
+    });
+    return spanDrawOrderPermutation;
+  }
+
+  organizeFragmentsIntoTowers(sortedFragments: Array<Fragment>) {
+    let lastFragment = null;
+    let towerId = -1;
+
+    sortedFragments.map(fragment => {
+      if (!lastFragment || (lastFragment.from !== fragment.from || lastFragment.to !== fragment.to)) {
+        towerId++;
+      }
+      fragment.towerId = towerId;
+      lastFragment = fragment;
+    });
+  }
+
+  applyMarkedTextToChunks(markedText: Array<MarkedText>, chunks: Array<Chunk>) {
+    const numChunks = chunks.length;
+    // note the location of marked text with respect to chunks
+    let startChunk = 0;
+    let currentChunk: number;
+    $.each(markedText, (textNo, textPos) => {
+      let from = textPos[0];
+      let to = textPos[1];
+      const markedType = textPos[2];
+
+      if (from < 0)
+        from = 0;
+      if (to < 0)
+        to = 0;
+      if (to >= this.data.text.length)
+        to = this.data.text.length - 1;
+      if (from > to)
+        from = to;
+
+      while (startChunk < numChunks) {
+        const chunk = chunks[startChunk];
+        if (from <= chunk.to) {
+          chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
+          break;
+        }
+        startChunk++;
+      }
+
+      if (startChunk === numChunks) {
+        this.dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
+        return;
+      }
+
+      currentChunk = startChunk;
+      while (currentChunk < numChunks) {
+        const chunk = chunks[currentChunk];
+        if (to <= chunk.to) {
+          chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
+          break;
+        }
+        currentChunk++;
+      }
+
+      if (currentChunk === numChunks) {
+        this.dispatcher.post('messages', [[['Wrong text offset', 'error']]]);
+        const chunk = chunks[chunks.length - 1];
+        chunk.markedTextEnd.push([textNo, false, chunk.text.length]);
+      }
+    }); // markedText
+  }
+
+  applyNormalizations(normalizations: Array<NormalizationDto>) {
+    if (!normalizations) {
+      return;
+    }
+
+    normalizations.map(norm => {
+      const target = norm[0];
+      const refdb = norm.length > 1 ? norm[1] : "#"; // See Renderer.QUERY_LAYER_LEVEL_DETAILS
+      const refid = norm.length > 2 ? norm[2] : "";
+      const reftext = norm.length > 3 ? norm[3] : null;
+
+      const span = this.data.spans[target];
+      if (span) {
+        span.normalizations.push([refdb, refid, reftext]);
+        return;
+      }
+
+      const arc = this.data.arcById[target];
+      if (arc) {
+        arc.normalizations.push([refdb, refid, reftext]);
+        return;
+      }
+
+      this.dispatcher.post('messages', [[['Annotation ' + target + ' does not exist.', 'error']]]);
+    });
+  }
+
+  buildSpansFromEntities(documentText: string, entities: Array<EntityDto>): Record<VID, Entity> {
+    if (!entities) {
+      return {};
+    }
+
+    const spans: Record<VID, Entity> = {};
+    entities.map(entity => {
+      const id = entity[0];
+      const type = entity[1];
+      const offsets = entity[2]; // offsets given as array of (start, end) pairs
+      const span = new Entity(id, type, offsets, ENTITY);
+
+      if (entity[3]) {
+        const attributes = entity[3];
+        if (Object.prototype.hasOwnProperty.call(attributes, 'l')) {
+          span.labelText = attributes.l;
+        }
+        if (Object.prototype.hasOwnProperty.call(attributes, 'c')) {
+          span.color = attributes.c;
+        }
+        if (Object.prototype.hasOwnProperty.call(attributes, 'h')) {
+          span.hovertext = attributes.h;
+        }
+        if (Object.prototype.hasOwnProperty.call(attributes, 'a')) {
+          span.actionButtons = !!(attributes.a);
+        }
+        if (Object.prototype.hasOwnProperty.call(attributes, 'cl') && attributes.cl) {
+          span.clippedAtStart = attributes.cl.startsWith("s");
+          span.clippedAtEnd = attributes.cl.endsWith("e");
+        }
+      }
+
+      span.splitMultilineOffsets(documentText);
+
+      spans[id] = span;
+    });
+
+    return spans;
+  }
+
+  /**
+   * @deprecated Triggers are not used by INCEptION
+   */
+  buildSpansFromTriggers(triggers: Array<TriggerDto>): Record<string, [Entity, Array<EventDesc>]> {
+    if (!triggers) {
+      return {};
+    }
+
+    const triggerHash: Record<string, [Entity, Array<EventDesc>]> = {};
+    triggers.map(trigger => {
+      //                          (id,         type,       offsets,    generalType)
+      const triggerSpan = new Entity(trigger[0], trigger[1], trigger[2], TRIGGER);
+
+      triggerSpan.splitMultilineOffsets(this.data.text);
+
+      triggerHash[trigger[0]] = [triggerSpan, []]; // triggerSpan, eventlist
+    });
+    return triggerHash;
+  }
+
+  /**
+   * @deprecated Not used by INCEpTION
+   */
+  buildEventDescsFromTriggers(triggerHash: Record<string, [Entity, Array<EventDesc>]>) {
+    if (!triggerHash) {
+      return;
+    }
+
+    this.sourceData.events.map(eventRow => {
+      const id = eventRow[0];
+      const triggerId = eventRow[1];
+      const roles = eventRow[2]
+
+      const eventDesc = this.data.eventDescs[id] = new EventDesc(id, triggerId, roles);
+      const trigger = triggerHash[eventDesc.triggerId];
+      const span = trigger[0].copy(eventDesc.id);
+      trigger[1].push(span);
+      this.data.spans[eventDesc.id] = span;
+    });
+  }
+
+  splitSpansIntoFragments(spans: Entity[]) {
+    if (!spans) {
+      return;
+    }
+
+    spans.map(span => span.buildFragments());
+  }
+
+  /**
+   * @deprecated INCEpTION does not use equivs
+   */
+  buildEventDescsFromEquivs(equivs: Array<EquivDto>, spans: Record<VID, Entity>, eventDescs: Record<VID, EventDesc>) {
+    if (!equivs) {
+      return;
+    }
+
+    $.each(equivs, (equivNo, equiv) => {
+      // equiv: ['*', 'Equiv', spanId...]
+      equiv[0] = "*" + equivNo;
+      const equivSpans = equiv.slice(2);
+      const okEquivSpans: Array<VID> = [];
+
+      // collect the equiv spans in an array
+      equivSpans.map(equivSpan => {
+        if (spans[equivSpan]) {
+          okEquivSpans.push(equivSpan);
+        }
+        // TODO: #404, inform the user with a message?
+      });
+
+      // sort spans in the equiv by their midpoint
+      okEquivSpans.sort((a, b) => Entity.compare(spans, a, b));
+
+      // generate the arcs
+      const len = okEquivSpans.length;
+      for (let i = 1; i < len; i++) {
+        const id = okEquivSpans[i - 1];
+        const tiggerId = okEquivSpans[i - 1];
+        const roles: Array<RoleDto> = [[equiv[1], okEquivSpans[i]]];
+        const eventDesc = eventDescs[equiv[0] + '*' + i] = new EventDesc(id, tiggerId, roles, EQUIV);
+        eventDesc.leftSpans = okEquivSpans.slice(0, i);
+        eventDesc.rightSpans = okEquivSpans.slice(i);
+      }
+    });
+  }
+
+  buildEventDescsFromRelations(relations: Array<RelationDto>, eventDescs: Record<string, EventDesc>) {
+    if (!relations) {
+      return;
+    }
+
+    relations.map(rel => {
+      // rel[2] is args, rel[2][a][0] is role and rel[2][a][1] is value for a in (0,1)
+      let argsDesc = this.relationTypes[rel[1]];
+      argsDesc = argsDesc && argsDesc.args;
+
+      let t1, t2;
+      if (argsDesc) {
+        // sort the arguments according to the config
+        const args = {};
+        args[rel[2][0][0]] = rel[2][0][1];
+        args[rel[2][1][0]] = rel[2][1][1];
+        t1 = args[argsDesc[0].role];
+        t2 = args[argsDesc[1].role];
+      } else {
+        // (or leave as-is in its absence)
+        t1 = rel[2][0][1];
+        t2 = rel[2][1][1];
+      }
+
+      //                                (id, triggerId, roles,   klass)
+      eventDescs[rel[0]] = new EventDesc(t1, t1, [[rel[1], t2]], RELATION);
+
+      if (rel[3]) {
+        eventDescs[rel[0]].labelText = rel[3];
+      }
+
+      if (rel[4]) {
+        eventDescs[rel[0]].color = rel[4];
+      }
+    });
+  }
+
+  /**
+   * @deprecated INCEpTION does not use attributes
+   */
+  assignAttributesToSpans(attributes: Array<AttributeDto>, spans: Record<VID, Entity>) {
+    if (!attributes) {
+      return;
+    }
+
+    attributes.map(attr => {
+      const id = attr[0];
+      const name = attr[1];
+      const spanId = attr[2];
+      const value = attr[3];
+
+      // TODO: might wish to check what's appropriate for the type
+      // instead of using the first attribute def found
+      const attrType = (this.eventAttributeTypes[name] || this.entityAttributeTypes[name]);
+      const attrValue = attrType && attrType.values[attrType.bool || value];
+      const span = spans[spanId];
+
+      if (!span) {
+        this.dispatcher.post('messages', [[['Annotation ' + spanId + ', referenced from attribute ' + id + ', does not exist.', 'error']]]);
+        return;
+      }
+
+      const valText = (attrValue && attrValue.name) || value;
+      const attrText = attrType
+        ? (attrType.bool ? attrType.name : (attrType.name + ': ' + valText))
+        : (value ? name : name + ': ' + value);
+      span.attributeText.push(attrText);
+      span.attributes[name] = value;
+
+      $.extend(span.attributeMerge, attrValue);
+    });
+  }
+
+  assignComments(comments: Array<CommentDto>, triggerHash: Record<string, unknown>) {
+    if (!comments) {
+      return;
+    }
+
+    comments.map(comment => {
+      // comment: [entityId, type, text]
+      // TODO error handling
+      // sentence id: ['sent', sentId]
+      if (comment[0] instanceof Array && comment[0][0] === 'sent') {
+        // sentence comment
+        const sent = comment[0][1];
+        let text = comment[2];
+        if (this.data.sentComment[sent]) {
+          text = this.data.sentComment[sent].text + '<br/>' + text;
+        }
+        this.data.sentComment[sent] = { type: comment[1], text: text };
+        return;
+      }
+
+      const id = (comment[0] as string);
+      const trigger = triggerHash[id];
+      const commentEntities = trigger
+        ? trigger[1] // trigger: [span, ...]
+        : id in this.data.spans
+          ? [this.data.spans[id]] // span: [span]
+          : id in this.data.eventDescs
+            ? [this.data.eventDescs[id]] // arc: [eventDesc]
+            : [];
+
+      commentEntities.map((entity: Entity) => {
+        // if duplicate comment for entity:
+        // overwrite type, concatenate comment with a newline
+        if (!entity.comment) {
+          entity.comment = { type: comment[1], text: comment[2] };
+        } else {
+          entity.comment.type = comment[1];
+          entity.comment.text += "\n" + comment[2];
+        }
+
+        // partially duplicate marking of annotator note comments
+        if (comment[1] === "AnnotatorNotes") {
+          entity.annotatorNotes = comment[2];
+        }
+
+        // prioritize type setting when multiple comments are present
+        if (this.commentPriority(comment[1]) > this.commentPriority(entity.shadowClass)) {
+          entity.shadowClass = comment[1];
+        }
+      });
+    });
+  }
+
+  buildSortedFragments(spans: Record<string, Entity>): Fragment[] {
+    if (!spans) {
+      return [];
+    }
+
+    const sortedFragments = [];
+
+    Object.values(spans).map((span: Entity) => span.fragments.map(
+      fragment => sortedFragments.push(fragment)));
+
+    sortedFragments.sort(function (a, b) {
+      let x = a.from;
+      let y = b.from;
+      if (x === y) {
+        x = a.to;
+        y = b.to;
+      }
+      return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+    });
+
+    return sortedFragments;
+  }
+
+  /**
+   * @param {number[][]} tokenOffsets
+   * @param {Fragment[]} sortedFragments
+   * @return {Chunk[]}
+   */
+  buildChunksFromTokenOffsets(tokenOffsets: number[][], sortedFragments: Fragment[]): Chunk[] {
+    if (!tokenOffsets) {
+      return [];
+    }
+
+    let currentFragmentId = 0;
+    let startFragmentId = 0;
+    const numFragments = sortedFragments.length;
+    let lastTo = 0;
+    let firstFrom = null;
+    let chunkNo = 0;
+    let space;
+    let chunk = null;
+    const chunks = [];
+
+    tokenOffsets.map(offset => {
+      const from = offset[0];
+      const to = offset[1];
+      if (firstFrom === null) {
+        firstFrom = from;
+      }
+
+      // Is the token end inside a span?
+      if (startFragmentId && to > sortedFragments[startFragmentId - 1].to) {
+        while (startFragmentId < numFragments && to > sortedFragments[startFragmentId].from) {
+          startFragmentId++;
+        }
+      }
+      currentFragmentId = startFragmentId;
+      while (currentFragmentId < numFragments && to >= sortedFragments[currentFragmentId].to) {
+        currentFragmentId++;
+      }
+      // if yes, the next token is in the same chunk
+      if (currentFragmentId < numFragments && to > sortedFragments[currentFragmentId].from) {
+        return;
+      }
+
+      // otherwise, create the chunk found so far
+      space = this.data.text.substring(lastTo, firstFrom);
+      const text = this.data.text.substring(firstFrom, to);
+      if (chunk) {
+        chunk.nextSpace = space;
+      }
+      //               (index,     text, from,      to, space) {
+      chunk = new Chunk(chunkNo++, text, firstFrom, to, space);
+      chunk.lastSpace = space;
+      chunks.push(chunk);
+      lastTo = to;
+      firstFrom = null;
+    });
+
+    return chunks;
+  }
+
+  assignSentenceNumbersToChunks(firstSentence, sentenceOffsets, chunks) {
+    if (!sentenceOffsets) {
+      return;
+    }
+
+    const numChunks = chunks.length;
+    let chunkNo = 0;
+    let sentenceNo = firstSentence;
+
+    sentenceOffsets.map(offset => {
+      const from = offset[0];
+      const to = offset[1];
+
+      // Skip all chunks that belonged to the previous sentence
+      let chunk;
+      while (chunkNo < numChunks && (chunk = chunks[chunkNo]).from < from) {
+        chunkNo++;
+      }
+
+      // No more chunks
+      if (chunkNo >= numChunks) {
+        return false;
+      }
+
+      // If the current chunk is not within the current sentence, then it was an empty sentence
+      if (chunks[chunkNo].from >= to) {
+        sentenceNo++;
+        return;
+      }
+
+      sentenceNo++;
+      chunk.sentence = sentenceNo;
+      // console.trace("ASSIGN: line break ", sentenceNo ," at ", chunk);
+      // increase chunkNo counter for next seek iteration
+      chunkNo++;
+    });
+  }
+
+  assignFragmentsToChunks(sortedFragments: Fragment[]) {
+    if (!sortedFragments) {
+      return;
+    }
+
+    let currentChunkId = 0;
+    let chunk;
+    sortedFragments.map((fragment: Fragment) => {
+      while (fragment.to > (chunk = this.data.chunks[currentChunkId]).to) {
+        currentChunkId++;
+      }
+      chunk.fragments.push(fragment);
+      fragment.text = chunk.text.substring(fragment.from - chunk.from, fragment.to - chunk.from);
+      fragment.chunk = chunk;
+    });
+  }
+
+  /**
+   * Builds the args based on the EventDescs and links them up to the spans.
+   *
+   * Side effects:
+   * - Fields on spans are changed: totalDist, numArcs, outgoing, incoming
+   * - data.arcById index is populated.
+   */
+  assignArcsToSpans(eventDescs: Record<string, EventDesc>, spans: Record<string, Entity>): Arc[] {
+    if (!eventDescs || !spans) {
+      return [];
+    }
+
+    const arcs = [];
+
+    Object.entries(eventDescs).map(([eventNo, eventDesc]) => {
+      const origin = spans[eventDesc.id];
+
+      if (!origin) {
+        // TODO: include missing trigger ID in error message
+        this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found <br/>(please correct the source data)', 'error', 5]]]);
+        return;
+      }
+
+      const here = origin.headFragment.from + origin.headFragment.to;
+      eventDesc.roles.map(role => {
+        const target = spans[role.targetId];
+        if (!target) {
+          this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found <br/>(please correct the source data)', 'error', 5]]]);
+          return;
+        }
+
+        const there = target.headFragment.from + target.headFragment.to;
+        const dist = Math.abs(here - there);
+        const arc = new Arc(eventDesc, role, dist, eventNo);
+
+        origin.totalDist += dist;
+        origin.numArcs++;
+        origin.outgoing.push(arc);
+
+        target.totalDist += dist;
+        target.numArcs++;
+        target.incoming.push(arc);
+
+        arcs.push(arc);
+        this.data.arcById[arc.eventDescId] = arc;
+      }); // roles
+    }); // eventDescs
+
+    return arcs;
+  }
+
+  /**
+   * Populates the "data" field based on the "sourceData" JSON that we recieved from the server.
+   */
+  setData(sourceData: SourceData) {
+    this.sourceData = sourceData;
+    this.rtlmode = this.sourceData.rtl_mode;
+    this.fontZoom = this.sourceData.font_zoom;
+    this.args = this.sourceData.args ?? {};
+
+    this.dispatcher.post('newSourceData', [this.sourceData]);
+
+    this.data = new DocumentData(this.sourceData.text);
+
+    // collect annotation data
+    this.data.spans = this.buildSpansFromEntities(this.data.text, this.sourceData.entities);
+
+    // REC 2021-06-29: Not sure if we need this at all since INCEpTION only uses "entities" and
+    // doesn't do brat-style events/trigger. We prepare spans-with-slots on the server side
+    // already and render them as brat-entities and brat-relations
+    const triggerHash = this.buildSpansFromTriggers(this.sourceData.triggers);
+    this.buildEventDescsFromTriggers(triggerHash);
+
+    // split spans into span fragments (for discontinuous spans)
+    this.splitSpansIntoFragments(Object.values(this.data.spans));
+    this.buildEventDescsFromEquivs(this.sourceData.equivs, this.data.spans, this.data.eventDescs);
+    this.buildEventDescsFromRelations(this.sourceData.relations, this.data.eventDescs);
+    this.assignAttributesToSpans(this.sourceData.attributes, this.data.spans);
+    this.assignComments(this.sourceData.comments, triggerHash);
+
+    // prepare span boundaries for token containment testing
+    // sort fragments by beginning, then by end
+    const sortedFragments = this.buildSortedFragments(this.data.spans);
+
+    // token containment testing (chunk recognition)
+    this.data.chunks = this.buildChunksFromTokenOffsets(this.sourceData.token_offsets, sortedFragments);
+
+    this.assignSentenceNumbersToChunks(this.sourceData.sentence_number_offset - 1,
+      this.sourceData.sentence_offsets, this.data.chunks);
+    this.assignFragmentsToChunks(sortedFragments);
+    this.data.arcs = this.assignArcsToSpans(this.data.eventDescs, this.data.spans);
+    this.applyNormalizations(this.sourceData.normalizations);
+    this.applyHighlighting();
+
+    if (this.data.spans) {
+      this.calculateAverageArcDistances(Object.values(this.data.spans));
+      this.collectFragmentTextsIntoSpanTexts(Object.values(this.data.spans));
+    }
+
+    for (let i = 0; i < 2; i++) {
+      // preliminary sort to assign heights for basic cases
+      // (first round) and cases resolved in the previous round(s).
+      this.data.chunks.map(chunk => {
+        // sort and then re-number
+        chunk.fragments.sort(Fragment.compare);
+        chunk.fragments.map((fragment, fragmentNo) => fragment.indexNumber = fragmentNo);
+      });
+
+      // nix the sums, so we can sum again
+      Object.values(this.data.spans).map(span => span.refedIndexSum = 0);
+
+      // resolved cases will now have indexNumber set to indicate their relative order. Sum those
+      // for referencing cases for use in iterative resorting
+      this.data.arcs.map(arc => {
+        this.data.spans[arc.origin].refedIndexSum += this.data.spans[arc.target].headFragment.indexNumber;
+      });
+    }
+
+    // Final sort of fragments in chunks for drawing purposes
+    // Also identify the marked text boundaries regarding chunks
+    this.data.chunks.map(chunk => {
+      // and make the next sort take this into account. Note that this will
+      // now resolve first-order dependencies between sort orders but not
+      // second-order or higher.
+      chunk.fragments.sort(Fragment.compare);
+      chunk.fragments.map((fragment, fragmentNo) => fragment.drawOrder = fragmentNo);
+    });
+
+    this.data.spanDrawOrderPermutation = this.determineDrawOrder(this.data.spans);
+
+    // resort the fragments for linear order by center so we can organize them into towers
+    sortedFragments.sort(Fragment.midpointComparator);
+    // sort fragments into towers, calculate average arc distances
+    this.organizeFragmentsIntoTowers(sortedFragments);
+
+    // find curlies (only the first fragment drawn in a tower)
+    this.data.spanDrawOrderPermutation.map(spanId => {
+      const span = this.data.spans[spanId];
+
+      span.fragments.map(fragment => {
+        if (!this.data.towers[fragment.towerId]) {
+          this.data.towers[fragment.towerId] = [];
+          fragment.drawCurly = true;
+          fragment.span.drawCurly = true;
+        }
+        this.data.towers[fragment.towerId].push(fragment);
+      });
+    });
+
+    const spanAnnTexts = {};
+    this.data.chunks.map(chunk => {
+      chunk.markedTextStart = [];
+      chunk.markedTextEnd = [];
+
+      $.each(chunk.fragments, (fragmentNo, fragment) => {
+        if (chunk.firstFragmentIndex === undefined) {
+          chunk.firstFragmentIndex = fragment.towerId;
+        }
+        chunk.lastFragmentIndex = fragment.towerId;
+
+        const spanLabels = Util.getSpanLabels(this.entityTypes, fragment.span.type);
+        fragment.labelText = Util.spanDisplayForm(this.entityTypes, fragment.span.type);
+        // Find the most appropriate label according to text width
+        if (Configuration.abbrevsOn && spanLabels) {
+          let labelIdx = 1; // first abbrev
+          const maxLength = (fragment.to - fragment.from) / 0.8;
+          while (fragment.labelText.length > maxLength &&
+            spanLabels[labelIdx]) {
+            fragment.labelText = spanLabels[labelIdx];
+            labelIdx++;
+          }
+        }
+
+        fragment.labelText = "(" + fragment.labelText + ")";
+        if (fragment.span.labelText) {
+          fragment.labelText = fragment.span.labelText;
+        }
+        const svgtext = this.svg.plain("").build(true); // one "text" element per row
+        const postfixArray = [];
+        let prefix = '';
+        let postfix = '';
+        let warning = false;
+        $.each(fragment.span.attributes, (attrType, valType) => {
+          // TODO: might wish to check what's appropriate for the type
+          // instead of using the first attribute def found
+          const attr = (this.eventAttributeTypes[attrType] || this.entityAttributeTypes[attrType]);
+          if (!attr) {
+            // non-existent type
+            warning = true;
+            return;
+          }
+          const val = attr.values[attr.bool || valType];
+          if (!val) {
+            // non-existent value
+            warning = true;
+            return;
+          }
+          if ($.isEmptyObject(val)) {
+            // defined, but lacks any visual presentation
+            warning = true;
+            return;
+          }
+          if (val.glyph) {
+            if (val.position === "left") {
+              prefix = val.glyph + prefix;
+
+              const t = svgtext.tspan(val.glyph);
+              t.addClass('glyph');
+              if (val.glyphColor) {
+                t.fill(val.glyphColor);
+              }
+            } else { // XXX right is implied - maybe change
+              postfixArray.push([attr, val]);
+              postfix += val.glyph;
+            }
+          }
+        });
+        let text = fragment.labelText;
+        if (prefix !== '') {
+          text = prefix + ' ' + text;
+          svgtext.plain(' ');
+        }
+        svgtext.plain(fragment.labelText);
+        if (postfixArray.length) {
+          text += ' ' + postfix;
+          svgtext.plain(' ');
+          $.each(postfixArray, function (elNo, el) {
+            const t = svgtext.tspan(el[1].glyph);
+            t.addClass('glyph');
+            if (el[1].glyphColor) {
+              t.fill(el[1].glyphColor);
+            }
+          });
+        }
+        if (warning) {
+          svgtext.tspan("#").addClass('glyph').addClass('attribute_warning');
+          text += ' #';
+        }
+        fragment.glyphedLabelText = text;
+
+        if (!spanAnnTexts[text]) {
+          spanAnnTexts[text] = true;
+          this.data.spanAnnTexts[text] = svgtext;
+        }
+      }); // chunk.fragments
+    }); // chunks
+
+    // sort by "from"; we don't need to sort by "to" as well,
+    // because unlike spans, chunks are disjunct
+    this.markedText.sort((a, b) => Util.cmp(a[0], b[0]));
+    this.applyMarkedTextToChunks(this.markedText, this.data.chunks);
+
+    this.dispatcher.post('dataReady', [this.data]);
+  }
+
+  resetData() {
+    this.setData(this.sourceData);
+    this.renderData(undefined);
+  }
+
+  fastTranslateGroup(element: SVGTypeMapping<SVGGElement>, x: number, y: number) {
+    element.attr('transform', 'translate(' + x + ', ' + y + ')');
+    // element.translate(x, y);
+  }
+
+  fastTranslate(element: Row | Chunk, x: number, y: number) {
+    this.fastTranslateGroup(element.group, x, y);
+    element.translation = { x: x, y: y };
+  }
+
+  addHeaderAndDefs(): Defs {
+    const defs = this.svg.defs();
+
+    const filter = defs.filter();
+    filter.id('Gaussian_Blur')
+    filter.gaussianBlur(2, 2);
+    filter.addTo(defs);
+
+    this.renderDragArcMarker(defs);
+
+    return defs;
+  }
+
+  /**
+   * @param cssClass arguments to the {@link SVGWrapper.group}} call creating the temporary group used for measurement
+   */
+  getTextMeasurements(textsHash: Record<string, Array<unknown>>, cssClass: string, callback?): Measurements {
+    // make some text elements, find out the dimensions
+    const textMeasureGroup: Container = this.svg.group().addTo(this.svg);
+    if (cssClass) {
+      textMeasureGroup.addClass(cssClass);
+    }
+
+    // changed from $.each because of #264 ('length' can appear)
+    for (const text in textsHash) {
+      if (Object.prototype.hasOwnProperty.call(textsHash, text)) {
+        this.svg.plain(text).addTo(textMeasureGroup);
+      }
+    }
+
+    // measuring goes on here
+    const widths: Record<string, number> = {};
+    textMeasureGroup.children().map(svgText => {
+      const text = (svgText as SVGText).text();
+      widths[text] = (svgText.node as SVGTextContentElement).getComputedTextLength();
+
+      if (callback) {
+        textsHash[text].map(object => callback(object, svgText.node));
+      }
+    });
+
+    const bbox = textMeasureGroup.bbox();
+    textMeasureGroup.remove();
+
+    return new Measurements(widths, bbox.height, bbox.y);
+  }
+
+  /**
+   * @return {Sizes}
+   */
+  calculateTextMeasurements(): Sizes {
+    const textSizes = this.calculateChunkTextMeasures();
+    const fragmentSizes = this.calculateFragmentTextMeasures();
+    const arcSizes = this.calculateArcTextMeasurements();
+
+    return new Sizes(textSizes, arcSizes, fragmentSizes);
+  }
+
+  calculateChunkTextMeasures(): Measurements {
+    // get the span text sizes
+    const chunkTexts: Record<string, Array<unknown>> = {}; // set of span texts
+    this.data.chunks.map(chunk => {
+      chunk.row = undefined; // reset
+      if (!Object.prototype.hasOwnProperty.call(chunkTexts, chunk.text)) {
+        chunkTexts[chunk.text] = [];
+      }
+
+      // here we also need all the spans that are contained in chunks with this text, because we
+      // need to know the position of the span text within the respective chunk text
+      const chunkText = chunkTexts[chunk.text];
+      chunkText.push(...chunk.fragments);
+      // and also the markedText boundaries
+      chunkText.push(...chunk.markedTextStart);
+      chunkText.push(...chunk.markedTextEnd);
+    });
+
+    return this.getTextMeasurements(chunkTexts, undefined, (fragment, text) =>
+      this.calculateChunkTextElementMeasure(fragment, text));
+  }
+
+  calculateChunkTextElementMeasure(fragment: Fragment | number[], text: SVGTextElement) {
+    if (!(fragment instanceof Fragment)) {
+      // it's markedText [id, start?, char#, offset]
+      if (fragment[2] < 0)
+        fragment[2] = 0;
+      if (!fragment[2]) { // start
+        fragment[3] = text.getStartPositionOfChar(fragment[2]).x;
+      } else {
+        fragment[3] = text.getEndPositionOfChar(fragment[2] - 1).x + 1;
+      }
+      return;
+    }
+
+    // measure the fragment text position in pixels
+    let firstChar = fragment.from - fragment.chunk.from;
+    if (firstChar < 0) {
+      firstChar = 0;
+      this.dispatcher.post('messages', [[['<strong>WARNING</strong>' +
+        '<br/> ' +
+        'The fragment [' + fragment.from + ', ' + fragment.to + '] (' + fragment.text + ') is not ' +
+        'contained in its designated chunk [' +
+        fragment.chunk.from + ', ' + fragment.chunk.to + '] most likely ' +
+        'due to the fragment starting or ending with a space, please ' +
+        'verify the sanity of your data since we are unable to ' +
+        'visualise this fragment correctly and will drop leading ' +
+        'space characters',
+        'warning', 15]]]);
+    }
+    let lastChar = fragment.to - fragment.chunk.from - 1;
+
+    // Adjust for XML whitespace (#832, #1009)
+    const textUpToFirstChar = fragment.chunk.text.substring(0, firstChar);
+    const textUpToLastChar = fragment.chunk.text.substring(0, lastChar);
+    const textUpToFirstCharUnspaced = textUpToFirstChar.replace(/\s\s+/g, ' ');
+    const textUpToLastCharUnspaced = textUpToLastChar.replace(/\s\s+/g, ' ');
+    firstChar -= textUpToFirstChar.length - textUpToFirstCharUnspaced.length;
+    lastChar -= textUpToLastChar.length - textUpToLastCharUnspaced.length;
+
+    let startPos: number, endPos: number;
+    if (this.rtlmode) {
+      // This rendering is much slower than the "old" version that brat uses, but it is more reliable in RTL mode.
+      [startPos, endPos] = this.calculateSubstringWidthRobust(fragment, text, firstChar, lastChar);
+      // In RTL mode, positions are negative (left to right)
+      startPos = -startPos;
+      endPos = -endPos;
+    } else {
+      // Using the old faster method in LTR mode. YES, this means that subtoken annotations of RTL 
+      // tokens in LTR mode will render incorrectly. If somebody needs that, we should do a smarter
+      // selection of the rendering mode. This is the old measurement code which doesn't work
+      // properly because browsers treat the x coordinate very differently. Our width-based
+      // measurement is more reliable.
+      // Cannot use fragment.chunk.text.length here because invisible
+      // characters do not count. Using text.getNumberOfChars() instead.
+      [startPos, endPos] = this.calculateSubstringWidthFast(text, firstChar, lastChar);
+    }
+
+    // Make sure that startPos and endPos are properly ordered on the X axis
+    fragment.curly = {
+      from: Math.min(startPos, endPos),
+      to: Math.max(startPos, endPos)
+    };
+  }
+
+  calculateSubstringWidthRobust(fragment: Fragment, text: SVGTextElement, firstChar: number, lastChar: number) {
+    let charDirection: Array<"rtl" | "ltr">;
+    let charAttrs: Array<{ order: number, width: number, direction: "rtl" | "ltr" }>;
+    let corrFactor = 1;
+
+    if (fragment.chunk.rtlsizes) {
+      // Use cached metrics
+      charDirection = fragment.chunk.rtlsizes.charDirection;
+      charAttrs = fragment.chunk.rtlsizes.charAttrs;
+      corrFactor = fragment.chunk.rtlsizes.corrFactor;
+    } else {
+      // Calculate metrics
+      charDirection = [];
+      charAttrs = [];
+
+      // Cannot use fragment.chunk.text.length here because invisible characters do not count. 
+      // Using text.getNumberOfChars() instead.
+      for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
+        const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x;
+        const dir = isRTL(text.textContent.charCodeAt(idx)) ? "rtl" : "ltr";
+        charAttrs.push({
+          order: idx,
+          width: Math.abs(cw),
+          direction: dir
+        });
+        charDirection.push(dir);
+        //		            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
+        //		            	  		"begin:" + text.getStartPositionOfChar(idx).x +
+        //		            	  		" end:" + text.getEndPositionOfChar(idx).x +
+        //		            	  		" width:" + Math.abs(cw) +
+        //		            	  		" dir:" + charDirection[charDirection.length-1]);
+      }
+      // Re-order widths if necessary
+      if (charAttrs.length > 1) {
+        const idx = 0;
+        let blockBegin = idx;
+        let blockEnd = idx;
+
+        // Figure out next block
+        while (blockEnd < charAttrs.length) {
+          while (charDirection[blockBegin] === charDirection[blockEnd]) {
+            blockEnd++;
+          }
+
+          if (charDirection[blockBegin] === (this.rtlmode ? "ltr" : "rtl")) {
+            charAttrs = charAttrs.slice(0, blockBegin)
+              .concat(charAttrs.slice(blockBegin, blockEnd).reverse())
+              .concat(charAttrs.slice(blockEnd));
+          }
+
+          blockBegin = blockEnd;
+        }
+      }
+      //	          console.log("order: " + charOrder);
+      // The actual character width on screen is not necessarily the width that can be
+      // obtained by subtracting start from end position. In particular Arabic connects
+      // characters quite a bit such that the width on screen may be less. Here we
+      // try to compensate for this using a correction factor.
+      let widthsSum = 0;
+      for (let idx = 0; idx < charAttrs.length; idx++) {
+        widthsSum += charAttrs[idx].width;
+      }
+      corrFactor = text.getComputedTextLength() / widthsSum;
+      //	          	  console.log("width sums: " + widthsSum);
+      //	          	  console.log("computed length: " + text.getComputedTextLength());
+      //	          	  console.log("corrFactor: " + corrFactor);
+      fragment.chunk.rtlsizes = {
+        charDirection: charDirection,
+        charAttrs: charAttrs,
+        corrFactor: corrFactor
+      };
+    }
+
+    // startPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
+    let startPos = 0;
+    // console.log("startPos[initial]: " + startPos);
+    for (let i = 0; i < charAttrs.length && i < firstChar; i++) {
+      // In RTL mode on RTL chars, for some reason we should not add the width of the first char.
+      // But if we are in RTL mode and hit an LTR char (i.e. displaying normal LTR text in RTL mode)
+      // when we need to include it... don't ask me why... REC 2021-11-27
+      if (charDirection[i] === "ltr" || charAttrs[i].order !== firstChar) {
+        startPos += charAttrs[i].width;
+      }
+      // console.log("startPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + startPos);
+    }
+
+    // endPos = Math.min(0, Math.min(text.getStartPositionOfChar(charOrder[0]).x, text.getEndPositionOfChar(charOrder[0]).x));
+    let endPos = 0;
+    // console.log("endPos[initial]: " + endPos);
+    let i = 0;
+    for (; charAttrs[i].order !== lastChar && i < charAttrs.length; i++) {
+      endPos += charAttrs[i].width;
+      // console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
+    }
+
+    if (charDirection[i] === (this.rtlmode ? "rtl" : "ltr")) {
+      // console.log("endPos["+i+"]  "+text.textContent[charOrder[i]]+" width "+charWidths[i]+" : " + endPos);
+      endPos += charAttrs[i].width;
+    }
+    
+    startPos = startPos * corrFactor;
+    endPos = endPos * corrFactor;
+    // console.log("startPos: " + startPos);
+    // console.log("endPos: " + endPos);
+    return [startPos, endPos];
+  }
+
+  calculateSubstringWidthFast(text, firstChar, lastChar) {
+    let startPos;
+    if (firstChar < text.getNumberOfChars()) {
+      startPos = text.getStartPositionOfChar(firstChar).x;
+    } else {
+      startPos = text.getComputedTextLength();
+    }
+    const endPos = (lastChar < firstChar)
+      ? startPos
+      : text.getEndPositionOfChar(lastChar).x;
+    return [startPos, endPos];
+  }
+
+  /**
+   * Get the fragment annotation text sizes.
+   *
+   * @return {Measurements}
+   */
+  calculateFragmentTextMeasures(): Measurements {
+    const fragmentTexts = {};
+
+    let noSpans = true;
+    if (this.data.spans) {
+      Object.values(this.data.spans).map(span => {
+        if (span.fragments) {
+          span.fragments.map(fragment => {
+            fragmentTexts[fragment.glyphedLabelText] = true;
+            noSpans = false;
+          });
+        }
+      });
+    }
+
+    if (noSpans) {
+      fragmentTexts['$'] = true; // dummy so we can at least get the height
+    }
+
+    return this.getTextMeasurements(fragmentTexts, 'span');
+  }
+
+  /**
+   * Get the arc annotation text sizes (for all labels).
+   *
+   * @return {Measurements}
+   */
+  calculateArcTextMeasurements(): Measurements {
+    const arcs = this.data.arcs;
+    const spans = this.data.spans;
+    const eventDescs = this.data.eventDescs;
+
+    const arcTexts = {};
+    if (arcs) {
+      arcs.map(arc => {
+        let labels = Util.getArcLabels(this.entityTypes, spans[arc.origin].type, arc.type, this.relationTypes);
+        if (!labels.length) {
+          labels = [arc.type];
+        }
+
+        if (arc.eventDescId && eventDescs[arc.eventDescId] && eventDescs[arc.eventDescId].labelText) {
+          labels = [eventDescs[arc.eventDescId].labelText];
+        }
+
+        labels.map(label => arcTexts[label] = true);
+      });
+    }
+
+    return this.getTextMeasurements(arcTexts, 'arcs');
+  }
+
+  /**
+   * Adjust all fragments in a tower so they have the same width.
+   */
+  adjustTowerAnnotationSizes() {
+    const fragmentWidths = this.data.sizes.fragments.widths;
+    Object.values(this.data.towers).map(tower => {
+      let maxWidth = 0;
+      tower.map(fragment => maxWidth = Math.max(maxWidth, fragmentWidths[fragment.glyphedLabelText]));
+      tower.map(fragment => fragment.width = maxWidth);
+    });
+  }
+
+  /**
+   * @return {string|undefined}
+   */
+  makeArrow(spec: string): string | undefined {
+    const parsedSpec = spec.split(',');
+    const type = parsedSpec[0];
+    if (type === 'none') {
+      return;
+    }
+
+    let width = 5;
+    let height = 5;
+    let color = "black";
+    if ($.isNumeric(parsedSpec[1]) && parsedSpec[2]) {
+      if ($.isNumeric(parsedSpec[2]) && parsedSpec[3]) {
+        // 3 args, 2 numeric: assume width, height, color
+        width = parseFloat(parsedSpec[1]);
+        height = parseFloat(parsedSpec[2]);
+        color = parsedSpec[3] || 'black';
+      } else {
+        // 2 args, 1 numeric: assume width/height, color
+        width = height = parseFloat(parsedSpec[1]);
+        color = parsedSpec[2] || 'black';
+      }
+    } else {
+      // other: assume color only
+      color = parsedSpec[1] || 'black';
+    }
+
+    // hash needs to be replaced as IDs don't permit it.
+    const arrowId = 'arrow_' + spec.replace(/#/g, '').replace(/,/g, '_');
+
+    // FIXME Looks like we create a new arrow definition for every arc, overriding previous defs
+    // if necessary - maybe we should remember if an arrow type has already been declared and if
+    // so not re-declare it.
+    if (type === 'triangle') {
+      const arrow = this.svg.marker(width, height)
+        .id(arrowId)
+        .ref(width, height / 2)
+        .orient('auto')
+        .attr({
+          markerUnits: 'strokeWidth',
+          'fill': color,
+        })
+        .addTo(this.svg.defs());
+
+      this.svg.polygon([[0, 0], [width, height / 2], [0, height], [width / 12, height / 2]])
+        .addTo(arrow);
+    }
+
+    return arrowId;
+  }
+
+  /**
+   * @return {number}
+   */
+  calculateMaxTextWidth(sizes: Sizes): number {
+    let maxTextWidth = 0;
+    for (const text in sizes.texts.widths) {
+      if (Object.prototype.hasOwnProperty.call(sizes.texts.widths, text)) {
+        maxTextWidth = Math.max(maxTextWidth, sizes.texts.widths[text]);
+      }
+    }
+    return maxTextWidth;
+  }
+
+  renderLayoutFloorsAndCurlies(spanDrawOrderPermutation: string[]) {
+    // reserve places for spans
+    const floors = [];
+    const reservations = []; // reservations[chunk][floor] = [[from, to, headroom]...]
+    const inf = 1.0 / 0.0;
+
+    $.each(spanDrawOrderPermutation, (spanIdNo, spanId) => {
+      const span = this.data.spans[spanId];
+      const spanDesc = this.entityTypes[span.type];
+      const bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
+
+      if (bgColor === "hidden") {
+        span.hidden = true;
+        return;
+      }
+
+      const f1 = span.fragments[0];
+      const f2 = span.fragments[span.fragments.length - 1];
+
+      const x1 = (f1.curly.from + f1.curly.to - f1.width) / 2 -
+        Configuration.visual.margin.x - (this.data.sizes.fragments.height / 2);
+      const i1 = f1.chunk.index;
+
+      const x2 = (f2.curly.from + f2.curly.to + f2.width) / 2 +
+        Configuration.visual.margin.x + (this.data.sizes.fragments.height / 2);
+      const i2 = f2.chunk.index;
+
+      // Start from the ground level, going up floor by floor.
+      // If no more floors, make a new available one.
+      // If a floor is available and there is no carpet, mark it as carpet.
+      // If a floor is available and there is carpet and height
+      //   difference is at least fragment height + curly, OK.
+      // If a floor is not available, forget about carpet.
+      // --
+      // When OK, calculate exact ceiling.
+      // If there isn't one, make a new floor, copy reservations
+      //   from floor below (with decreased ceiling)
+      // Make the reservation from the carpet to just below the
+      //   current floor.
+      //
+      // TODO drawCurly and height could be prettified to only check
+      // actual positions of curlies
+      let carpet = 0;
+      const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0;
+      const height = this.data.sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
+        2 * Configuration.visual.margin.y - 3;
+      $.each(floors, (floorNo, floor) => {
+        let floorAvailable = true;
+        for (let i = i1; i <= i2; i++) {
+          if (!(reservations[i] && reservations[i][floor])) {
+            continue;
+          }
+          const from = (i === i1) ? x1 : -inf;
+          const to = (i === i2) ? x2 : inf;
+          $.each(reservations[i][floor], (resNo, res) => {
+            if (res[0] < to && from < res[1]) {
+              floorAvailable = false;
+              return false;
+            }
+          });
+        }
+        if (floorAvailable) {
+          if (carpet === null) {
+            carpet = floor;
+          } else if (height + carpet <= floor) {
+            // found our floor!
+            return false;
+          }
+        } else {
+          carpet = null;
+        }
+      });
+
+      const reslen = reservations.length;
+      const makeNewFloorIfNeeded = function (floor) {
+        let floorNo = $.inArray(floor, floors);
+        if (floorNo === -1) {
+          floors.push(floor);
+          floors.sort(Util.cmp);
+          floorNo = $.inArray(floor, floors);
+          if (floorNo !== 0) {
+            // copy reservations from the floor below
+            const parquet = floors[floorNo - 1];
+            for (let i = 0; i <= reslen; i++) {
+              if (reservations[i]) {
+                if (!reservations[i][parquet]) {
+                  reservations[i][parquet] = [];
+                }
+                const footroom = floor - parquet;
+                $.each(reservations[i][parquet], function (resNo, res) {
+                  if (res[2] > footroom) {
+                    if (!reservations[i][floor]) {
+                      reservations[i][floor] = [];
+                    }
+                    reservations[i][floor].push([res[0], res[1], res[2] - footroom]);
+                  }
+                });
+              }
+            }
+          }
+        }
+        return floorNo;
+      };
+      const ceiling = carpet + height;
+      makeNewFloorIfNeeded(ceiling);
+      const carpetNo = makeNewFloorIfNeeded(carpet);
+      // make the reservation
+      let floor, floorNo;
+      for (floorNo = carpetNo; (floor = floors[floorNo]) !== undefined && floor < ceiling; floorNo++) {
+        const headroom = ceiling - floor;
+        for (let i = i1; i <= i2; i++) {
+          const from = (i === i1) ? x1 : 0;
+          const to = (i === i2) ? x2 : inf;
+          if (!reservations[i])
+            reservations[i] = {};
+          if (!reservations[i][floor])
+            reservations[i][floor] = [];
+          reservations[i][floor].push([from, to, headroom]); // XXX maybe add fragment; probably unnecessary
+        }
+      }
+      span.floor = carpet + thisCurlyHeight;
+    });
+  }
+
+  renderChunks(sourceData: SourceData, chunks: Chunk[], maxTextWidth: number): [Row[], number[], unknown[]] {
+    let currentX: number;
+    if (this.rtlmode) {
+      currentX = this.canvasWidth - (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding);
+    } else {
+      currentX = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
+    }
+
+    const rows: Row[] = [];
+    const fragmentHeights: number[] = [];
+    const openTextHighlights = {};
+
+    let sentenceToggle = 0;
+    let sentenceNumber = sourceData.sentence_number_offset;
+
+    let row = new Row(this.svg);
+    row.sentence = sentenceNumber;
+    row.backgroundIndex = sentenceToggle;
+    row.index = 0;
+
+    const textMarkedRows: Array<MarkedRow> = [];
+    let rowIndex = 0;
+
+    chunks.map((chunk: Chunk) => {
+      let spaceWidth = 0;
+      if (chunk.lastSpace) {
+        const spaceLen = chunk.lastSpace.length || 0;
+        let spacePos: number;
+        if (chunk.sentence) {
+          // If this is line-initial spacing, fetch the sentence to which the chunk belongs
+          // so we can determine where it begins
+          const sentFrom = sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
+          spacePos = spaceLen - (chunk.from - sentFrom);
+        } else {
+          spacePos = 0;
+        }
+        for (let i = spacePos; i < spaceLen; i++) {
+          spaceWidth += this.spaceWidths[chunk.lastSpace[i]] * (this.fontZoom / 100.0) || 0;
+        }
+        currentX += this.rtlmode ? -spaceWidth : spaceWidth;
+      }
+
+      chunk.group = this.svg.group().addTo(row.group);
+      chunk.highlightGroup = this.svg.group().addTo(chunk.group);
+
+      let y = 0;
+      let hasLeftArcs: boolean, hasRightArcs: boolean, hasInternalArcs: boolean;
+      let hasAnnotations: boolean;
+      let chunkFrom = Infinity;
+      let chunkTo = 0;
+      let chunkHeight = 0;
+      let spacing = 0;
+      let spacingChunkId: number;
+      let spacingRowBreak = 0;
+
+      chunk.fragments.map(fragment => {
+        const span = fragment.span;
+
+        if (span.hidden) {
+          return;
+        }
+
+        const spanDesc = this.entityTypes[span.type];
+        let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
+        let fgColor = ((spanDesc && spanDesc.fgColor) || '#000000');
+        let borderColor = ((spanDesc && spanDesc.borderColor) || '#000000');
+
+        if (span.color) {
+          bgColor = span.color;
+          fgColor = bgToFgColor(bgColor);
+          borderColor = 'darken';
+        }
+
+        // special case: if the border 'color' value is 'darken',
+        // then just darken the BG color a bit for the border.
+        if (borderColor === 'darken') {
+          borderColor = Util.adjustColorLightness(bgColor, -0.6);
+        }
+
+        fragment.group = this.svg.group().addTo(chunk.group).addClass('span');
+
+        if (!y) {
+          y = -this.data.sizes.texts.height;
+        }
+        // x : center of fragment on x axis
+        let x = (fragment.curly.from + fragment.curly.to) / 2;
+
+        // XXX is it maybe sizes.texts?
+        let yy = y + this.data.sizes.fragments.y;
+        // hh : fragment height
+        let hh = this.data.sizes.fragments.height;
+        // ww : fragment width
+        let ww = fragment.width;
+        // xx : left edge of fragment
+        let xx = x - ww / 2;
+
+        // text margin fine-tuning
+        yy += this.boxTextMargin.y;
+        hh -= 2 * this.boxTextMargin.y;
+        xx += this.boxTextMargin.x;
+        ww -= 2 * this.boxTextMargin.x;
+        let rectClass = 'span_' + (span.cue || span.type) + ' span_default'; // TODO XXX first part unneeded I think; remove
+
+        // attach e.g. "False_positive" into the type
+        if (span.comment && span.comment.type) {
+          rectClass += ' ' + span.comment.type;
+        }
+
+        // inner coordinates of fragment (excluding margins)
+        let bx = xx - Configuration.visual.margin.x - this.boxTextMargin.x;
+        const by = yy - Configuration.visual.margin.y;
+        const bw = ww + 2 * Configuration.visual.margin.x;
+        const bh = hh + 2 * Configuration.visual.margin.y;
+
+        if (this.roundCoordinates) {
+          x = (x | 0) + 0.5;
+          bx = (bx | 0) + 0.5;
+        }
+
+        if (span.marked) {
+          this.renderSpanMarkedRect(yy, bx, by, bw, bh, fragment);
+        }
+
+        // Nicely spread out labels/text and leave space for mark highlight such that adding
+        // the mark doesn't change the overall layout
+        chunkFrom = Math.min(bx - this.markedSpanSize, chunkFrom);
+        chunkTo = Math.max(bx + bw + this.markedSpanSize, chunkTo);
+        let fragmentHeight = bh + 2 * this.markedSpanSize;
+        if (span.shadowClass && span.shadowClass.match(this.shadowClassPattern)) {
+          this.renderFragmentShadowRect(yy, bx, by, bw, bh, fragment);
+          chunkFrom = Math.min(bx - this.rectShadowSize, chunkFrom);
+          chunkTo = Math.max(bx + bw + this.rectShadowSize, chunkTo);
+          fragmentHeight = Math.max(bh + 2 * this.rectShadowSize, fragmentHeight);
+        }
+
+        fragment.rect = this.renderFragmentRect(bx, by, bw, bh, yy, fragment, rectClass, bgColor, borderColor);
+        fragment.left = bx; // TODO put it somewhere nicer?
+        fragment.right = bx + bw; // TODO put it somewhere nicer?
+        if (!(span.shadowClass || span.marked)) {
+          chunkFrom = Math.min(bx, chunkFrom);
+          chunkTo = Math.max(bx + bw, chunkTo);
+          fragmentHeight = Math.max(bh, fragmentHeight);
+        }
+
+        fragment.rectBox = new RectBox(bx, by - span.floor, bw, bh);
+        fragment.height = span.floor + hh + 
+          3 * Configuration.visual.margin.y + 
+          Configuration.visual.curlyHeight + 
+          (Configuration.visual.arcSpacing * (this.fontZoom / 100.0));
+        const spacedTowerId = fragment.towerId * 2;
+        if (!fragmentHeights[spacedTowerId] || fragmentHeights[spacedTowerId] < fragment.height) {
+          fragmentHeights[spacedTowerId] = fragment.height;
+        }
+
+        if (span.attributeMerge.box === "crossed") {
+          this.renderFragmentCrossOut(xx, yy, hh, fragment);
+        }
+
+        fragment.group.add(this.data.spanAnnTexts[fragment.glyphedLabelText].clone()
+          .amove(x, y - span.floor)
+          .fill(fgColor));
+
+        // Make curlies to show the fragment
+        if (fragment.drawCurly) {
+          this.renderCurly(fragment, x, yy, hh);
+          chunkFrom = Math.min(fragment.curly.from, chunkFrom);
+          chunkTo = Math.max(fragment.curly.to, chunkTo);
+          fragmentHeight = Math.max(Configuration.visual.curlyHeight, fragmentHeight);
+        }
+
+        if (fragment === span.headFragment) {
+          const checkLeftRightArcs = (arc: Arc, refSpan: Entity, leftSpan: Entity) => {
+            const refChunk = leftSpan.headFragment.chunk;
+            if (!refChunk.row) {
+              hasRightArcs = true;
+              return;
+            }
+
+            let border: number;
+            if (refChunk.row.index === rowIndex) {
+              border = refChunk.translation.x + leftSpan.fragments[refSpan.fragments.length - 1].right;
+            } else {
+              if (this.rtlmode) {
+                border = 0;
+              } else {
+                border = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding;
+              }
+            }
+
+            let labels = Util.getArcLabels(this.entityTypes, refSpan.type, arc.type, this.relationTypes);
+            if (!labels.length)
+              labels = [arc.type];
+
+            if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
+              if (this.data.eventDescs[arc.eventDescId].labelText) {
+                labels = [this.data.eventDescs[arc.eventDescId].labelText];
+              }
+            }
+
+            const labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0;
+            const smallestLabelWidth = this.data.sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant;
+
+            const gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border);
+
+            let arcSpacing = smallestLabelWidth - gap;
+            if (!hasLeftArcs || spacing < arcSpacing) {
+              spacing = arcSpacing;
+              spacingChunkId = refChunk.index + 1;
+            }
+            arcSpacing = smallestLabelWidth - bx;
+            if (!hasLeftArcs || spacingRowBreak < arcSpacing) {
+              spacingRowBreak = arcSpacing;
+            }
+            hasLeftArcs = true;
+          }
+
+          // find the gap to fit the backwards arcs, but only on
+          // head fragment - other fragments don't have arcs
+          span.incoming.map(arc => {
+            const leftSpan = this.data.spans[arc.origin];
+            checkLeftRightArcs(arc, leftSpan, leftSpan);
+          });
+
+          span.outgoing.map(arc => {
+            const leftSpan = this.data.spans[arc.target];
+            checkLeftRightArcs(arc, span, leftSpan);
+          });
+
+          span.incoming.map(arc => {
+            const origin = this.data.spans[arc.origin].headFragment.chunk;
+            if (chunk.index === origin.index) {
+              hasInternalArcs = true;
+            }
+          });
+        }
+
+        fragmentHeight += span.floor || Configuration.visual.curlyHeight;
+        if (fragmentHeight > chunkHeight) {
+          chunkHeight = fragmentHeight;
+        }
+
+        hasAnnotations = true;
+      }); // fragments
+
+      // positioning of the chunk
+      chunk.right = chunkTo;
+      const textWidth = this.data.sizes.texts.widths[chunk.text];
+      chunkHeight += this.data.sizes.texts.height;
+      // If chunkFrom becomes negative (LTR) or chunkTo becomes positive (RTL), then boxX becomes positive
+      const boxX = this.rtlmode ? chunkTo : -Math.min(chunkFrom, 0);
+
+      let boxWidth;
+      if (this.rtlmode) {
+        boxWidth = Math.max(textWidth, -chunkFrom) - Math.min(0, -chunkTo);
+      } else {
+        boxWidth = Math.max(textWidth, chunkTo) - Math.min(0, chunkFrom);
+      }
+
+      if (spacing > 0) {
+        currentX += this.rtlmode ? -spacing : spacing;
+      }
+
+      const rightBorderForArcs = hasRightArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0);
+      const leftBorderForArcs = hasLeftArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0);
+      const lastX = currentX;
+      const lastRow = row;
+
+      // Is there a sentence break at the current chunk (i.e. it is the first chunk in a new
+      // sentence) - if yes and the current sentence is not the same as the sentence to which
+      // the chunk belongs, then fill in additional rows
+      if (chunk.sentence) {
+        while (sentenceNumber < chunk.sentence - 1) {
+          sentenceNumber++;
+          row.arcs = this.svg.group().addTo(row.group).addClass('arcs');
+          rows.push(row);
+
+          row = new Row(this.svg);
+          row.sentence = sentenceNumber;
+          sentenceToggle = 1 - sentenceToggle;
+          row.backgroundIndex = sentenceToggle;
+          row.index = ++rowIndex;
+        }
+        // Not changing row background color here anymore - we do this later now when the next
+        // row is added
+      }
+
+      let chunkDoesNotFit;
+      if (this.rtlmode) {
+        chunkDoesNotFit = currentX - boxWidth - leftBorderForArcs <=
+          2 * Configuration.visual.margin.x;
+      } else {
+        chunkDoesNotFit = currentX + boxWidth + rightBorderForArcs >=
+          this.canvasWidth - 2 * Configuration.visual.margin.x;
+      }
+
+      if (chunk.sentence > sourceData.sentence_number_offset || chunkDoesNotFit) {
+        // the chunk does not fit
+        row.arcs = this.svg.group().addTo(row.group).addClass('arcs');
+        let indent = 0;
+        if (chunk.lastSpace) {
+          const spaceLen = chunk.lastSpace.length || 0;
+          let spacePos;
+          if (chunk.sentence) {
+            // If this is line-initial spacing, fetch the sentence to which the chunk belongs
+            // so we can determine where it begins
+            const sentFrom = sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
+            spacePos = spaceLen - (chunk.from - sentFrom);
+          } else {
+            spacePos = 0;
+          }
+          for (let i = spacePos; i < spaceLen; i++) {
+            indent += this.spaceWidths[chunk.lastSpace[i]] * (this.fontZoom / 100.0) || 0;
+          }
+        }
+
+        if (this.rtlmode) {
+          currentX = this.canvasWidth - (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding +
+            (hasRightArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0)) /* +
+                          spaceWidth*/
+            - indent);
+        } else {
+          currentX = Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding +
+            (hasLeftArcs ? this.arcHorizontalSpacing : (hasInternalArcs ? this.arcSlant : 0)) /*+
+                        spaceWidth*/
+            + indent;
+        }
+
+        if (hasLeftArcs) {
+          const adjustedCurTextWidth = this.data.sizes.texts.widths[chunk.text] + this.arcHorizontalSpacing;
+          if (adjustedCurTextWidth > maxTextWidth) {
+            maxTextWidth = adjustedCurTextWidth;
+          }
+        }
+
+        if (spacingRowBreak > 0) {
+          currentX += this.rtlmode ? -spacingRowBreak : spacingRowBreak;
+          spacing = 0; // do not center intervening elements
+        }
+
+        // new row
+        rows.push(row);
+
+        chunk.group.remove();
+        row = new Row(this.svg);
+        // Change row background color if a new sentence is starting
+        if (chunk.sentence) {
+          sentenceToggle = 1 - sentenceToggle;
+        }
+        row.backgroundIndex = sentenceToggle;
+        row.index = ++rowIndex;
+        chunk.group.addTo(row.group);
+        chunk.group = SVG(row.group.node.lastElementChild as SVGGElement);
+        $(chunk.group).children("g[class='span']").each((index, element) => {
+          chunk.fragments[index].group = SVG(element as SVGGElement);
+        });
+        $(chunk.group).find("rect[data-span-id]").each((index, element) => {
+          chunk.fragments[index].rect = SVG(element as SVGElement);
+        });
+      }
+
+      // break the text highlights when the row breaks
+      if (row.index !== lastRow.index) {
+        $.each(openTextHighlights, (textId, textDesc) => {
+          if (textDesc[3] !== lastX) {
+            let newDesc: MarkedRow;
+            if (this.rtlmode) {
+              newDesc = [lastRow, textDesc[3], lastX - boxX, textDesc[4]];
+            } else {
+              newDesc = [lastRow, textDesc[3], lastX + boxX, textDesc[4]];
+            }
+            textMarkedRows.push(newDesc);
+          }
+          textDesc[3] = currentX;
+        });
+      }
+
+      // open text highlights
+      $.each(chunk.markedTextStart, (textNo, textDesc) => {
+        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
+        openTextHighlights[textDesc[0]] = textDesc;
+      });
+
+      // close text highlights
+      $.each(chunk.markedTextEnd, (textNo, textDesc) => {
+        textDesc[3] += currentX + (this.rtlmode ? -boxX : boxX);
+        const startDesc = openTextHighlights[textDesc[0]];
+        delete openTextHighlights[textDesc[0]];
+        textMarkedRows.push([row, startDesc[3], textDesc[3], startDesc[4]]);
+      });
+
+      // XXX check this - is it used? should it be lastRow?
+      if (hasAnnotations) {
+        row.hasAnnotations = true;
+      }
+
+      if (chunk.sentence > sourceData.sentence_number_offset) {
+        row.sentence = ++sentenceNumber;
+      }
+
+      if (spacing > 0) {
+        // if we added a gap, center the intervening elements
+        spacing /= 2;
+        const firstChunkInRow = row.chunks[row.chunks.length - 1];
+        if (firstChunkInRow === undefined) {
+          console.log('warning: firstChunkInRow undefined, chunk:', chunk);
+        } else { // valid firstChunkInRow
+          if (spacingChunkId < firstChunkInRow.index) {
+            spacingChunkId = firstChunkInRow.index + 1;
+          }
+          for (let chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
+            const movedChunk = this.data.chunks[chunkIndex];
+            this.fastTranslate(movedChunk, movedChunk.translation.x + spacing, 0);
+            movedChunk.textX += spacing;
+          }
+        }
+      }
+
+      row.chunks.push(chunk);
+      chunk.row = row;
+
+      this.fastTranslate(chunk, currentX + (this.rtlmode ? -boxX : boxX), 0);
+      chunk.textX = currentX + (this.rtlmode ? -boxX : boxX);
+      currentX += this.rtlmode ? -boxWidth : boxWidth;
+    }); // chunks
+
+    // Add trailing empty rows
+    while (sentenceNumber < (sourceData.sentence_offsets.length + sourceData.sentence_number_offset - 1)) {
+      sentenceNumber++;
+      row.arcs = this.svg.group().addTo(row.group).addClass('arcs');
+      rows.push(row);
+      row = new Row(this.svg);
+      row.sentence = sentenceNumber;
+      sentenceToggle = 1 - sentenceToggle;
+      row.backgroundIndex = sentenceToggle;
+      row.index = ++rowIndex;
+    }
+
+    // finish the last row
+    row.arcs = this.svg.group().addTo(row.group).addClass('arcs');
+    rows.push(row);
+
+    return [rows, fragmentHeights, textMarkedRows];
+  }
+
+  renderChunksPass2(textGroup: SVGTypeMapping<SVGGElement>, textMarkedRows) {
+    // chunk index sort functions for overlapping fragment drawing
+    // algorithm; first for left-to-right pass, sorting primarily
+    // by start offset, second for right-to-left pass by end
+    // offset. Secondary sort by fragment length in both cases.
+    let currentChunk: Chunk;
+
+    const lrChunkComp = (a: number, b: number) => {
+      const ac = currentChunk.fragments[a];
+      const bc = currentChunk.fragments[b];
+      const startDiff = Util.cmp(ac.from, bc.from);
+      return startDiff !== 0 ? startDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
+    };
+
+    const rlChunkComp = (a: number, b: number) => {
+      const ac = currentChunk.fragments[a];
+      const bc = currentChunk.fragments[b];
+      const endDiff = Util.cmp(bc.to, ac.to);
+      return endDiff !== 0 ? endDiff : Util.cmp(bc.to - bc.from, ac.to - ac.from);
+    };
+
+    let prevChunk: Chunk = null;
+    let rowTextGroup: SVGTypeMapping<SVGGElement> = null;
+    $.each(this.data.chunks, (chunkNo, chunk) => {
+      // context for sort
+      currentChunk = chunk;
+
+      // Add spacers to reduce jumpyness of selection
+      if (!rowTextGroup || prevChunk.row !== chunk.row) {
+        if (rowTextGroup) {
+          this.horizontalSpacer(rowTextGroup, 0, prevChunk.row.textY, 1, {
+            'data-chunk-id': prevChunk.index,
+            'class': 'row-final spacing'
+          });
+        }
+        rowTextGroup = this.svg.group().addTo(textGroup).addClass('text-row');
+      }
+      prevChunk = chunk;
+
+      const nextChunk = this.data.chunks[chunkNo + 1];
+
+      if (this.rtlmode) {
+        // Render every text chunk as a SVG text so we maintain control over the layout. When
+        // rendering as a SVG span (as brat does), then the browser changes the layout on the
+        // X-axis as it likes in RTL mode.
+        if (!rowTextGroup.node.firstChild) {
+          this.horizontalSpacer(rowTextGroup, 0, chunk.row.textY, 1, {
+            'class': 'row-initial spacing',
+            'data-chunk-id': chunk.index
+          });
+        }
+
+        chunk.renderText(this.svg, rowTextGroup);
+
+        // If there needs to be space between this chunk and the next one, add a spacer
+        // item that stretches across the entire inter-chunk space. This ensures a
+        // smooth selection.
+        if (nextChunk) {
+          const spaceX = chunk.textX - this.data.sizes.texts.widths[chunk.text];
+          const spaceWidth = chunk.textX - this.data.sizes.texts.widths[chunk.text] - nextChunk.textX;
+          this.horizontalSpacer(rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+            'data-chunk-id': chunk.index
+          });
+        }
+      } else {
+        // Original rendering using tspan in ltr mode as it play nicer with selection
+        if (!rowTextGroup.node.firstChild) {
+          this.horizontalSpacer(rowTextGroup, 0, chunk.row.textY, 1, {
+            'class': 'row-initial spacing',
+            'data-chunk-id': chunk.index
+          });
+        }
+
+        chunk.renderText(this.svg, rowTextGroup);
+
+        // If there needs to be space between this chunk and the next one, add a spacer
+        // item that stretches across the entire inter-chunk space. This ensures a
+        // smooth selection.
+        if (nextChunk) {
+          const spaceX = chunk.textX + this.data.sizes.texts.widths[chunk.text];
+          const spaceWidth = nextChunk.textX - spaceX;
+          this.horizontalSpacer(rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
+            'data-chunk-id': chunk.index
+          });
+        }
+      }
+
+      // chunk backgrounds
+      if (chunk.fragments.length) {
+        const orderedIdx = [];
+        for (let i = chunk.fragments.length - 1; i >= 0; i--) {
+          orderedIdx.push(i);
+        }
+
+        // Mark entity nesting height/depth (number of
+        // nested/nesting entities). To account for crossing
+        // brackets in a (mostly) reasonable way, determine
+        // depth/height separately in a left-to-right traversal
+        // and a right-to-left traversal.
+        orderedIdx.sort(lrChunkComp);
+
+        {
+          let openFragments = [];
+          for (let i = 0; i < orderedIdx.length; i++) {
+            const current = chunk.fragments[orderedIdx[i]];
+            current.nestingHeightLR = 0;
+            current.nestingDepthLR = 0;
+            const stillOpen = [];
+            for (let o = 0; o < openFragments.length; o++) {
+              if (openFragments[o].to > current.from) {
+                stillOpen.push(openFragments[o]);
+                openFragments[o].nestingHeightLR++;
+              }
+            }
+            openFragments = stillOpen;
+            current.nestingDepthLR = openFragments.length;
+            openFragments.push(current);
+          }
+        }
+
+        // re-sort for right-to-left traversal by end position
+        orderedIdx.sort(rlChunkComp);
+
+        {
+          let openFragments = [];
+          for (let i = 0; i < orderedIdx.length; i++) {
+            const current = chunk.fragments[orderedIdx[i]];
+            current.nestingHeightRL = 0;
+            current.nestingDepthRL = 0;
+            const stillOpen = [];
+            for (let o = 0; o < openFragments.length; o++) {
+              if (openFragments[o].from < current.to) {
+                stillOpen.push(openFragments[o]);
+                openFragments[o].nestingHeightRL++;
+              }
+            }
+            openFragments = stillOpen;
+            current.nestingDepthRL = openFragments.length;
+            openFragments.push(current);
+          }
+        }
+
+        // the effective depth and height are the max of those
+        // for the left-to-right and right-to-left traversals.
+        for (let i = 0; i < orderedIdx.length; i++) {
+          const c = chunk.fragments[orderedIdx[i]];
+          c.nestingHeight = c.nestingHeightLR > c.nestingHeightRL ? c.nestingHeightLR : c.nestingHeightRL;
+          c.nestingDepth = c.nestingDepthLR > c.nestingDepthRL ? c.nestingDepthLR : c.nestingDepthRL;
+        }
+
+        // Re-order by nesting height and draw in order
+        orderedIdx.sort(function (a, b) {
+          return Util.cmp(chunk.fragments[b].nestingHeight, chunk.fragments[a].nestingHeight);
+        });
+
+        for (let i = 0; i < chunk.fragments.length; i++) {
+          const fragment = chunk.fragments[orderedIdx[i]];
+          if (fragment.span.hidden) {
+            continue;
+          }
+
+          const spanDesc = this.entityTypes[fragment.span.type];
+          let bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff');
+
+
+          if (fragment.span.color) {
+            bgColor = fragment.span.color;
+          }
+
+          // Tweak for nesting depth/height. Recognize just three
+          // levels for now: normal, nested, and nesting, where
+          // nested+nesting yields normal. (Currently testing
+          // minor tweak: don't shrink for depth 1 as the nesting
+          // highlight will grow anyway [check nestingDepth > 1])
+          let shrink = 0;
+          if (fragment.nestingDepth > 1 && fragment.nestingHeight === 0) {
+            shrink = 1;
+          } else if (fragment.nestingDepth === 0 && fragment.nestingHeight > 0) {
+            shrink = -1;
+          }
+
+          const yShrink = shrink * this.nestingAdjustYStepSize;
+          const xShrink = shrink * this.nestingAdjustXStepSize;
+          // bit lighter
+          const lightBgColor = Util.adjustColorLightness(bgColor, 0.8);
+          // tweak for Y start offset (and corresponding height
+          // reduction): text rarely hits font max height, so this
+          // tends to look better
+          const yStartTweak = 1;
+
+          // Store highlight coordinates
+          fragment.highlightPos = {
+            x: chunk.textX + (this.rtlmode ? (fragment.curly.from - xShrink) : (fragment.curly.from + xShrink)),
+            y: chunk.row.textY + this.data.sizes.texts.y + yShrink + yStartTweak,
+            w: fragment.curly.to - fragment.curly.from - 2 * xShrink,
+            h: this.data.sizes.texts.height - 2 * yShrink - yStartTweak,
+          };
+
+          // Avoid exception because width < 0 is not allowed
+          if (fragment.highlightPos.w <= 0) {
+            fragment.highlightPos.w = 1;
+          }
+
+          // Render highlight
+          this.svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
+            .move(fragment.highlightPos.x, fragment.highlightPos.y)
+            .attr({
+              fill: lightBgColor,
+              rx: this.highlightRounding.x,
+              ry: this.highlightRounding.y
+            })
+            .addTo(this.highlightGroup);
+        }
+      }
+    });
+
+    // Prevent text selection from being jumpy
+    if (rowTextGroup) {
+      this.horizontalSpacer(rowTextGroup, 0, currentChunk.row.textY, 1, {
+        'data-chunk-id': currentChunk.index,
+        'class': 'row-final spacing'
+      });
+    }
+
+    // draw the markedText
+    textMarkedRows.map(textRowDesc => {
+      this.svg.rect(textRowDesc[2] - textRowDesc[1] + 4, this.data.sizes.fragments.height + 4)
+        .translate(textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height)
+        .addClass(textRowDesc[3])
+        .addTo(this.highlightGroup);
+    });
+  }
+
+  renderBumpFragmentHeightsMinimumToArcStartHeight(fragmentHeights: number[]) {
+    const actStartHeight = Configuration.visual.arcStartHeight * (this.fontZoom/100.0);
+    for (let i = 0; i < fragmentHeights.length; i++) {
+      if (!fragmentHeights[i] || fragmentHeights[i] < actStartHeight) {
+        fragmentHeights[i] = actStartHeight;
+      }
+    }
+  }
+
+  renderCalculateArcJumpHeight(fragmentHeights: number[]) {
+    // find out how high the arcs have to go
+    $.each(this.data.arcs, (arcNo, arc) => {
+      arc.jumpHeight = 0;
+      let fromFragment = this.data.spans[arc.origin].headFragment;
+      let toFragment = this.data.spans[arc.target].headFragment;
+      if (fromFragment.span.hidden || toFragment.span.hidden) {
+        arc.hidden = true;
+        return;
+      }
+
+      if (fromFragment.towerId > toFragment.towerId) {
+        const tmp = fromFragment;
+        fromFragment = toFragment;
+        toFragment = tmp;
+      }
+
+      let from: number, to: number;
+      if (fromFragment.chunk.index === toFragment.chunk.index) {
+        from = fromFragment.towerId;
+        to = toFragment.towerId;
+      } else {
+        from = fromFragment.towerId + 1;
+        to = toFragment.towerId - 1;
+      }
+
+      for (let i = from; i <= to; i++) {
+        const targetJumpHeight = fragmentHeights[i * 2];
+        if (arc.jumpHeight < targetJumpHeight) {
+          arc.jumpHeight = targetJumpHeight;
+        }
+      }
+    });
+  }
+
+  renderSortArcs() {
+    // sort the arcs
+    this.data.arcs.sort((a, b) => {
+      // first write those that have less to jump over
+      let tmp = a.jumpHeight - b.jumpHeight;
+      if (tmp)
+        return tmp < 0 ? -1 : 1;
+      // if equal, then those that span less distance
+      tmp = a.dist - b.dist;
+      if (tmp)
+        return tmp < 0 ? -1 : 1;
+      // if equal, then those where heights of the targets are smaller
+      tmp = this.data.spans[a.origin].headFragment.height + this.data.spans[a.target].headFragment.height -
+        this.data.spans[b.origin].headFragment.height - this.data.spans[b.target].headFragment.height;
+      if (tmp)
+        return tmp < 0 ? -1 : 1;
+      // if equal, then those with the lower origin
+      tmp = this.data.spans[a.origin].headFragment.height - this.data.spans[b.origin].headFragment.height;
+      if (tmp)
+        return tmp < 0 ? -1 : 1;
+      // if equal, they're just equal.
+      return 0;
+    });
+  }
+
+  renderAssignFragmentsToRows(rows: Row[], fragmentHeights: number[]) {
+    const arcStartHeight = Configuration.visual.arcStartHeight * (this.fontZoom / 100.0);
+
+    // see which fragments are in each row
+    let heightsStart = 0;
+    let heightsRowsAdded = 0;
+    $.each(rows, (rowId, row) => {
+      let seenFragment = false;
+      row.heightsStart = row.heightsEnd = heightsStart;
+      $.each(row.chunks, (chunkId, chunk) => {
+        if (chunk.lastFragmentIndex !== undefined) {
+          // fragmentful chunk
+          seenFragment = true;
+          const heightsEndIndex = chunk.lastFragmentIndex * 2 + heightsRowsAdded;
+          if (row.heightsEnd < heightsEndIndex) {
+            row.heightsEnd = heightsEndIndex;
+          }
+          const heightsStartIndex = chunk.firstFragmentIndex * 2 + heightsRowsAdded;
+          if (row.heightsStart > heightsStartIndex) {
+            row.heightsStart = heightsStartIndex;
+          }
+        }
+      });
+      fragmentHeights.splice(row.heightsStart, 0, arcStartHeight);
+      heightsRowsAdded++;
+
+      row.heightsAdjust = heightsRowsAdded;
+      if (seenFragment) {
+        row.heightsEnd += 2;
+      }
+      heightsStart = row.heightsEnd + 1;
+    });
+  }
+
+  renderDragArcMarker(defs: Defs) {
+    // draw the drag arc marker
+    const arrowhead = this.svg.marker(5, 5)
+      .id('drag_arrow')
+      .ref(5, 2.5)
+      .orient('auto')
+      .addClass('drag_fill')
+      .attr('markerUnits', 'strokeWidth')
+      .addTo(defs);
+
+    this.svg.polyline([[0, 0], [5, 2.5], [0, 5], [0.2, 2.5]]).addTo(arrowhead);
+  }
+
+  renderArcs(rows: Row[], fragmentHeights: number[]) {
+    const arrows = {};
+    const arrow = this.makeArrow('none');
+    if (arrow) {
+      arrows['none'] = arrow;
+    }
+
+    const arcCache = {};
+
+    // add the arcs
+    $.each(this.data.arcs, (arcNo, arc) => {
+      if (arc.hidden) {
+        return;
+      }
+
+      const originSpan = this.data.spans[arc.origin];
+      const targetSpan = this.data.spans[arc.target];
+
+      const leftToRight = originSpan.headFragment.towerId < targetSpan.headFragment.towerId;
+      let left : Fragment;
+      let right : Fragment;
+      if (leftToRight) {
+        left = originSpan.headFragment;
+        right = targetSpan.headFragment;
+      } else {
+        left = targetSpan.headFragment;
+        right = originSpan.headFragment;
+      }
+
+      // fall back on relation types in case we still don't have
+      // an arc description, with final fallback to unnumbered relation
+      let arcDesc = this.relationTypes[arc.type];
+
+      // if it's not a relationship, see if we can find it in span descriptions
+      // TODO: might make more sense to reformat this as dict instead of searching through the list every type
+      const spanDesc = this.entityTypes[originSpan.type];
+      if (!arcDesc && spanDesc && spanDesc.arcs) {
+        $.each(spanDesc.arcs, (arcDescNo, arcDescIter) => {
+          if (arcDescIter.type === arc.type) {
+            arcDesc = arcDescIter;
+          }
+        });
+      }
+
+      let color = ((arcDesc && arcDesc.color) || '#000000');
+      if (color === 'hidden') {
+        return;
+      }
+
+      if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
+        if (this.data.eventDescs[arc.eventDescId].color) {
+          color = this.data.eventDescs[arc.eventDescId].color;
+        }
+      }
+
+      const symmetric = arcDesc && arcDesc.properties && arcDesc.properties.symmetric;
+      const dashArray = arcDesc && arcDesc.dashArray;
+      const arrowHead = ((arcDesc && arcDesc.arrowHead) || 'triangle,5') + ',' + color;
+      const labelArrowHead = ((arcDesc && arcDesc.labelArrow) || 'triangle,5') + ',' + color;
+
+      const leftBox = left.rowBBox();
+      const rightBox = right.rowBBox();
+      const leftRow = left.chunk.row.index;
+      const rightRow = right.chunk.row.index;
+
+      if (!arrows[arrowHead]) {
+        const arrow = this.makeArrow(arrowHead);
+        if (arrow) {
+          arrows[arrowHead] = arrow;
+        }
+      }
+      
+      if (!arrows[labelArrowHead]) {
+        const arrow = this.makeArrow(labelArrowHead);
+        if (arrow) {
+          arrows[labelArrowHead] = arrow;
+        }
+      }
+
+      // find the next height
+      let height: number;
+      let fromIndex2: number, toIndex2: number;
+      if (left.chunk.index === right.chunk.index) {
+        fromIndex2 = left.towerId * 2 + left.chunk.row.heightsAdjust;
+        toIndex2 = right.towerId * 2 + right.chunk.row.heightsAdjust;
+      } else {
+        fromIndex2 = left.towerId * 2 + 1 + left.chunk.row.heightsAdjust;
+        toIndex2 = right.towerId * 2 - 1 + right.chunk.row.heightsAdjust;
+      }
+
+      if (!this.collapseArcSpace) {
+        height = this.findArcHeight(fromIndex2, toIndex2, fragmentHeights);
+        this.adjustFragmentHeights(fromIndex2, toIndex2, fragmentHeights, height);
+
+        // Adjust the height to align with pixels when rendered
+        // TODO: on at least Chrome, it doesn't make a difference: lines come out pixel-width even without it. Check.
+        height += 0.5;
+      }
+
+      let chunkReverse = false;
+      const ufoCatcher = originSpan.headFragment.chunk.index === targetSpan.headFragment.chunk.index;
+      if (ufoCatcher) {
+        if (this.rtlmode) {
+          chunkReverse = leftBox.x + leftBox.width / 2 > rightBox.x + rightBox.width / 2;
+        }
+        else {
+          chunkReverse = leftBox.x + leftBox.width / 2 < rightBox.x + rightBox.width / 2;
+        }
+      }
+      const ufoCatcherMod = ufoCatcher ? chunkReverse ? -0.5 : 0.5 : 1;
+
+      for (let rowIndex = leftRow; rowIndex <= rightRow; rowIndex++) {
+        const row = rows[rowIndex];
+        if (!row.chunks.length) {
+          continue;
+        }
+
+        row.hasAnnotations = true;
+
+        const fromIndex2R = rowIndex === leftRow ? fromIndex2 : row.heightsStart;
+        const toIndex2R = rowIndex === rightRow ? toIndex2 : row.heightsEnd;
+        if (this.collapseArcSpace) {
+          height = this.findArcHeight(fromIndex2R, toIndex2R, fragmentHeights);
+        }
+
+        const arcGroup = this.svg.group()
+          .attr('data-from', arc.origin)
+          .attr('data-to', arc.target)
+          .attr('data-id', arc.eventDescId)
+          .addTo(row.arcs);
+
+        let from: number;
+        if (rowIndex === leftRow) {
+          if (this.rtlmode) {
+            from = leftBox.x + (chunkReverse ? leftBox.width : 0);
+          } else {
+            from = leftBox.x + (chunkReverse ? 0 : leftBox.width);
+          }
+        } else {
+          from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin;
+        }
+
+        let to: number;
+        if (rowIndex === rightRow) {
+          if (this.rtlmode) {
+            to = rightBox.x + (chunkReverse ? 0 : rightBox.width);
+          } else {
+            to = rightBox.x + (chunkReverse ? rightBox.width : 0);
+          }
+        } else {
+          to = this.rtlmode ? 0 : this.canvasWidth - 2 * Configuration.visual.margin.y;
+        }
+
+        let adjustHeight = true;
+        if (this.collapseArcs) {
+          let arcCacheKey = arc.type + ' ' + rowIndex + ' ' + from + ' ' + to;
+          if (rowIndex === leftRow)
+            arcCacheKey = left.span.id + ' ' + arcCacheKey;
+          if (rowIndex === rightRow)
+            arcCacheKey += ' ' + right.span.id;
+          const rowHeight = arcCache[arcCacheKey];
+          if (rowHeight !== undefined) {
+            height = rowHeight;
+            adjustHeight = false;
+          } else {
+            arcCache[arcCacheKey] = height;
+          }
+        }
+
+        if (this.collapseArcSpace && adjustHeight) {
+          this.adjustFragmentHeights(fromIndex2R, toIndex2R, fragmentHeights, height);
+
+          // Adjust the height to align with pixels when rendered
+          // TODO: on at least Chrome, this doesn't make a difference:
+          // the lines come out pixel-width even without it. Check.
+          height += 0.5;
+        }
+
+        const originType = this.data.spans[arc.origin].type;
+        const arcLabels = Util.getArcLabels(this.entityTypes, originType, arc.type, this.relationTypes);
+        let labelText = Util.arcDisplayForm(this.entityTypes, originType, arc.type, this.relationTypes);
+        // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
+        if (Configuration.abbrevsOn && arcLabels) {
+          let labelIdx = 1; // first abbreviation
+
+          // strictly speaking 2*arcSlant would be needed to allow for
+          // the full-width arcs to fit, but judged abbreviated text
+          // to be more important than the space for arcs.
+          const maxLength = (to - from) - (this.arcSlant);
+          while (this.data.sizes.arcs.widths[labelText] > maxLength && arcLabels[labelIdx]) {
+            labelText = arcLabels[labelIdx];
+            labelIdx++;
+          }
+        }
+
+        if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
+          if (this.data.eventDescs[arc.eventDescId].labelText) {
+            labelText = this.data.eventDescs[arc.eventDescId].labelText;
+          }
+        }
+
+        let shadowGroup: SVGTypeMapping<SVGGElement>;
+        if (arc.shadowClass || arc.marked) {
+          shadowGroup = this.svg.group().addTo(arcGroup);
+        }
+
+        // guess at the correct baseline shift to get vertical centering.
+        // (CSS dominant-baseline can't be used as not all SVG renders support it.)
+        const baseline_shift = this.data.sizes.arcs.height / 4;
+        this.svg.plain(labelText)
+          .amove((from + to) / 2, -height + baseline_shift)
+          .attr({
+            //'fill': color,
+            'fill': '#000000',
+            'data-arc-role': arc.type,
+            'data-arc-origin': arc.origin,
+            'data-arc-target': arc.target,
+            // TODO: confirm this is unused and remove.
+            //'data-arc-id': arc.id,
+            'data-arc-ed': arc.eventDescId,
+          })
+          .addTo(arcGroup);
+
+        const width = this.data.sizes.arcs.widths[labelText];
+        const textBox = {
+          x: (from + to - width) / 2,
+          width: width,
+          y: -height - this.data.sizes.arcs.height / 2,
+          height: this.data.sizes.arcs.height,
+        };
+
+        if (arc.marked) {
+          this.svg.rect()
+            .move(textBox.x - this.markedArcSize, textBox.y - this.markedArcSize)
+            .width(textBox.width + 2 * this.markedArcSize)
+            .height(textBox.height + 2 * this.markedArcSize)
+            .attr({
+              filter: 'url(#Gaussian_Blur)',
+              'class': "shadow_EditHighlight",
+              rx: this.markedArcSize,
+              ry: this.markedArcSize,
+            })
+            .addTo(shadowGroup);
+        }
+
+        if (arc.shadowClass) {
+          this.renderArcShadow(arc, shadowGroup, textBox);
+        }
+        let textStart = textBox.x;
+        let textEnd = textBox.x + textBox.width;
+
+        // adjust by margin for arc drawing
+        textStart -= Configuration.visual.arcTextMargin * (this.fontZoom / 100.0);
+        textEnd += Configuration.visual.arcTextMargin * (this.fontZoom / 100.0);
+
+        if (from > to) {
+          const tmp = textStart;
+          textStart = textEnd;
+          textEnd = tmp;
+        }
+
+
+        if (this.roundCoordinates) {
+          // don't ask
+          height = (height | 0) + 0.5;
+        }
+        if (height > row.maxArcHeight)
+          row.maxArcHeight = height;
+
+        let myArrowHead = (arcDesc && arcDesc.arrowHead);
+        let arrowName = (symmetric ? myArrowHead || 'none' :
+          (leftToRight ? 'none' : myArrowHead || 'triangle,5')
+        ) + ',' + color;
+        let arrowType = arrows[arrowName];
+        let arrowDecl = arrowType && ('url(#' + arrowType + ')');
+
+        let arrowAtLabelAdjust = 0;
+        const labelArrowDecl = null;
+        const myLabelArrowHead = (arcDesc && arcDesc.labelArrow);
+        if (myLabelArrowHead) {
+          const labelArrowName = (leftToRight ?
+            symmetric && myLabelArrowHead || 'none' :
+            myLabelArrowHead || 'triangle,5') + ',' + color;
+          const labelArrowSplit = labelArrowName.split(',');
+          arrowAtLabelAdjust = labelArrowSplit[0] !== 'none' && parseInt(labelArrowSplit[1], 10) || 0;
+          if (ufoCatcher) {
+            arrowAtLabelAdjust = -arrowAtLabelAdjust;
+          }
+        }
+
+        const renderCurlyPath = (path: PathCommand[]) => {
+          this.svg.path(path)
+            .css('stroke', color)
+            .stroke({ dasharray: dashArray })
+            .attr({
+              'marker-start': labelArrowDecl,
+              'marker-end': arrowDecl
+            })
+            .addTo(arcGroup);
+
+          if (arc.marked) {
+            this.svg.path(path)
+              .addClass('shadow_EditHighlight_arc')
+              .stroke({
+                width: this.markedArcStroke,
+                dasharray: dashArray
+              })
+              .addTo(shadowGroup);
+          }
+
+          if (arc.shadowClass) {
+            this.svg.path(path)
+              .addClass(`shadow_${arc.shadowClass}`)
+              .stroke({
+                width: this.shadowStroke,
+                dasharray: dashArray
+              })
+              .addTo(shadowGroup);
+          }
+        }
+
+        const arrowStart = textStart - arrowAtLabelAdjust;
+        let path: PathCommand[] = [['M', arrowStart, -height]];
+        if (rowIndex === leftRow) {
+          let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant;
+          if (this.rtlmode) {
+            if (!ufoCatcher && cornerx < arrowStart + 1) {
+              cornerx = arrowStart + 1;
+            }
+          } else {
+            if (!ufoCatcher && cornerx > arrowStart - 1) {
+              cornerx = arrowStart - 1;
+            }
+          }
+
+          if (this.smoothArcCurves) {
+            let controlx: number;
+            let endy: number;
+            if (this.rtlmode) {
+              controlx = ufoCatcher ? 
+                cornerx - 2 * ufoCatcherMod * this.reverseArcControlx : 
+                this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx;
+              endy = leftBox.y + (leftToRight && !arc.equiv ? 
+                Configuration.visual.margin.y : 
+                leftBox.height / 2);
+            } else {
+              controlx = ufoCatcher ? 
+                cornerx + 2 * ufoCatcherMod * this.reverseArcControlx : 
+                this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx;
+              endy = leftBox.y + (leftToRight || arc.equiv ? 
+                leftBox.height / 2 : 
+                Configuration.visual.margin.y);
+            }
+
+            // no curving for short lines covering short vertical
+            // distances, the arrowheads can go off (#925)
+            if (Math.abs(-height - endy) < 2 &&
+              Math.abs(cornerx - from) < 5) {
+              endy = -height;
+            }
+            path.push(['L', cornerx, -height]);
+            path.push(['Q', controlx, -height, from, endy]);
+          } else {
+            path.push(['L', cornerx, -height]);
+            path.push(['L', from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y)]);
+          }
+        } else {
+          path.push(['L', from, -height]);
+        }
+
+        renderCurlyPath(path);
+
+        if (!symmetric) {
+          myArrowHead = (arcDesc && arcDesc.arrowHead);
+          arrowName = (leftToRight ?
+            myArrowHead || 'triangle,5' :
+            'none') + ',' + color;
+        }
+
+        arrowType = arrows[arrowName];
+        arrowDecl = arrowType && ('url(#' + arrowType + ')');
+
+        const arrowEnd = textEnd + arrowAtLabelAdjust;
+        path = [['M', arrowEnd, -height]];
+        if (rowIndex === rightRow) {
+          let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant;
+
+          // TODO: duplicates above in part, make funcs
+          // for normal cases, should not be past textEnd even if narrow
+          if (this.rtlmode) {
+            if (!ufoCatcher && cornerx > arrowEnd - 1) {
+              cornerx = arrowEnd - 1;
+            }
+          } else {
+            if (!ufoCatcher && cornerx < arrowEnd + 1) {
+              cornerx = arrowEnd + 1;
+            }
+          }
+
+          if (this.smoothArcCurves) {
+            let controlx: number;
+            let endy: number;
+            if (this.rtlmode) {
+              controlx = ufoCatcher ?
+                cornerx + 2 * ufoCatcherMod * this.reverseArcControlx :
+                this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
+              endy = rightBox.y + (leftToRight && !arc.equiv ? 
+                Configuration.visual.margin.y : 
+                rightBox.height / 2);
+            } else {
+              controlx = ufoCatcher ?
+                cornerx - 2 * ufoCatcherMod * this.reverseArcControlx :
+                this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx;
+              endy = rightBox.y + (leftToRight && !arc.equiv ? 
+                Configuration.visual.margin.y : 
+                rightBox.height / 2);
+            }
+
+            // no curving for short lines covering short vertical
+            // distances, the arrowheads can go off (#925)
+            if (Math.abs(-height - endy) < 2 &&
+              Math.abs(cornerx - to) < 5) {
+              endy = -height;
+            }
+
+            path.push(['L', cornerx, -height]);
+            path.push(['Q', controlx, -height, to, endy]);
+          } else {
+            path.push(['L', cornerx, -height]);
+            path.push(['L', to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2)]);
+          }
+        } else {
+          path.push(['L', to, -height]);
+        }
+
+        renderCurlyPath(path);
+      } // arc rows
+    }); // arcs
+  }
+
+  renderFragmentConnectors(rows) {
+    $.each(this.data.spans, (spanNo, span) => {
+      const numConnectors = span.fragments.length - 1;
+      for (let connectorNo = 0; connectorNo < numConnectors; connectorNo++) {
+        const left = span.fragments[connectorNo];
+        const right = span.fragments[connectorNo + 1];
+
+        const leftBox = left.rowBBox();
+        const rightBox = right.rowBBox();
+        const leftRow = left.chunk.row.index;
+        const rightRow = right.chunk.row.index;
+
+        for (let rowIndex = leftRow; rowIndex <= rightRow; rowIndex++) {
+          const row = rows[rowIndex];
+          if (row.chunks.length) {
+            row.hasAnnotations = true;
+
+            let from: number;
+            if (rowIndex === leftRow) {
+              from = this.rtlmode ? leftBox.x : leftBox.x + leftBox.width;
+            } else {
+              from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin;
+            }
+
+            let to: number;
+            if (rowIndex === rightRow) {
+              to = this.rtlmode ? rightBox.x + rightBox.width : rightBox.x;
+            } else {
+              to = this.rtlmode ? 0 : this.canvasWidth - 2 * Configuration.visual.margin.y;
+            }
+
+            let height = leftBox.y + leftBox.height - Configuration.visual.margin.y;
+            if (this.roundCoordinates) {
+              // don't ask
+              height = (height | 0) + 0.5;
+            }
+
+            this.svg.path([['M', from, height], ['L', to, height]])
+              .css('stroke', this.fragmentConnectorColor)
+              .stroke({ dasharray: this.fragmentConnectorDashArray })
+              .addTo(row.arcs);
+          }
+        } // rowIndex
+      } // connectorNo
+    }); // spans
+  }
+
+  /**
+   * @return {number} how much the actual horizontal space required extends over the allocated space
+   */
+  renderResizeSvg(y: number, textGroup: SVGTypeMapping<SVGGElement>, maxTextWidth: number): number {
+    // resize the SVG
+    let width = maxTextWidth + this.sentNumMargin + 2 * Configuration.visual.margin.x + 1;
+
+    // Loops over the rows to check if the width calculated so far is still not enough. This
+    // currently happens sometimes if there is a single annotation on many words preventing
+    // wrapping within the annotation (aka oversizing).
+    textGroup.children().filter(e => e.hasClass('text-row')).map(textRow => {
+      // const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
+      const rowFinalSpacing = textRow.children().filter(e => e.hasClass('row-final'))[0];
+      const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev().node.textContent];
+      const lastChunkOffset = parseFloat(rowFinalSpacing.prev().node.getAttribute('x'));
+      if (this.rtlmode) {
+        // Not sure what to calculate here
+      } else {
+        if (lastChunkOffset + lastChunkWidth > width) {
+          width = lastChunkOffset + lastChunkWidth;
+        }
+      }
+    });
+
+    let oversized = Math.max(width - this.canvasWidth, 0);
+    if (oversized > 0) {
+      this.svg.attr('width', `${this.baseCanvasWidth}`);
+      this.canvasWidth = width;
+      // Allow some extra space for arcs
+      this.canvasWidth += 32;
+      oversized += 32;
+    }
+
+    this.svg.attr('width', `${this.canvasWidth}`);
+    Util.profileStart('height');
+    this.svg.attr('height', `${y}`);
+    Util.profileEnd('height');
+    this.svg.attr('viewBox', `0 0 ${this.canvasWidth} ${y}`);
+
+    // Originally, this code was within the oversized > 0 block above, but we moved it here
+    // to prevent erratic jumping
+    this.svg.attr('height', `${y + 4}`); // Need to take the hairline border into account here
+
+    return oversized;
+  }
+
+  renderRows(rows: Row[], sentNumGroup: SVGTypeMapping<SVGGElement>, backgroundGroup: SVGTypeMapping<SVGGElement>): number {
+    // position the rows
+    let y = Configuration.visual.margin.y;
+    let currentSent: number;
+    rows.map(row => {
+      // find the maximum fragment height
+      row.updateFragmentHeight();
+      row.updateRowBoxHeight(this.rowSpacing, this.rowPadding);
+
+      if (row.sentence) {
+        currentSent = row.sentence;
+      }
+
+      this.renderRowBackground(backgroundGroup, row, y, currentSent);
+
+      y += row.boxHeight;
+      y += this.data.sizes.texts.height;
+      row.textY = y - this.rowPadding;
+
+      this.renderRowNumber(sentNumGroup, row, y);
+
+      let rowY = y - this.rowPadding;
+      if (this.roundCoordinates) {
+        rowY = rowY | 0;
+      }
+      this.fastTranslate(row, 0, rowY);
+
+      y += Configuration.visual.margin.y;
+    });
+
+    y += Configuration.visual.margin.y;
+
+    return y;
+  }
+
+  renderRowBackground(backgroundGroup: SVGTypeMapping<SVGGElement>, row: Row, y: number, currentSent: number) {
+    let bgClass: string;
+    if (Configuration.textBackgrounds === "striped") {
+      // give every other sentence a different bg class
+      bgClass = 'background' + row.backgroundIndex;
+    } else {
+      // plain "standard" bg
+      bgClass = 'background0';
+    }
+
+    const textSizes = this.data.sizes.texts;
+    this.svg.rect(this.canvasWidth, row.boxHeight + textSizes.height + 1)
+      .move(0, y + textSizes.y + textSizes.height)
+      .addClass(bgClass)
+      .addTo(backgroundGroup);
+
+    if (row.sentence && this.data.markedSent[currentSent]) {
+      this.svg.rect()
+        .move(this.rtlmode ? this.canvasWidth - this.sentNumMargin : 0, y + textSizes.y + textSizes.height)
+        .width(this.sentNumMargin)
+        .height(row.boxHeight + textSizes.height + 1)
+        .addClass('backgroundHighlight')
+        .addTo(backgroundGroup);
+    }
+  }
+
+  renderRowNumber(sentNumGroup: SVGTypeMapping<SVGGElement>, row: Row, y: number) {
+    if (row.sentence) {
+      // Render sentence number as link
+      let textX: number;
+      if (this.rtlmode) {
+        textX = (this.canvasWidth - this.sentNumMargin + Configuration.visual.margin.x);
+      } else {
+        textX = (this.sentNumMargin - Configuration.visual.margin.x);
+      }
+      const text = this.svg.plain(`${row.sentence}`)
+        .attr('data-sent', row.sentence)
+        .css('cursor', 'pointer');
+      // Setting the attributes directly is faster than calling amove() since the latter internally
+      // triggers a relayout
+      text.node.setAttribute('x', `${textX}`);
+      text.node.setAttribute('y', `${y - this.rowPadding}`);
+      text.addTo(sentNumGroup);
+
+      const sentComment = this.data.sentComment[row.sentence];
+      if (sentComment) {
+        const box = text.rbox(sentNumGroup);
+        // TODO: using rectShadowSize, but this shadow should probably have its own setting for shadow size
+        const highlight = this.svg.rect()
+          .move(
+            this.rtlmode ? box.x - this.rectShadowSize : box.x - this.rectShadowSize,
+            box.y - this.rectShadowSize)
+          .width(box.width + 2 * this.rectShadowSize)
+          .height(box.height + 2 * this.rectShadowSize)
+          .attr({
+            'class': 'shadow_' + sentComment.type,
+            filter: 'url(#Gaussian_Blur)',
+            rx: this.rectShadowRounding,
+            ry: this.rectShadowRounding,
+            'data-sent': row.sentence,
+          })
+          .addTo(sentNumGroup);
+
+        text.insertAfter(highlight);
+        text.css('fill', '#000');
+      }
+    }
+  }
+
+  renderAdjustLayoutForScriptDirection(oversized, rows: Row[], textGroup: SVGTypeMapping<SVGGElement>, sentNumGroup: SVGTypeMapping<SVGGElement>) {
+    if (oversized <= 0) {
+      return;
+    }
+
+    const scrollable = findClosestHorizontalScrollable($(this.svg.node));
+    if (this.rtlmode) {
+      rows.map(row => this.fastTranslate(row, oversized, row.translation.y));
+
+      this.fastTranslateGroup(this.highlightGroup, oversized, 0);
+      this.fastTranslateGroup(textGroup, oversized, 0);
+      this.fastTranslateGroup(sentNumGroup, oversized, 0);
+
+      if (scrollable) {
+        scrollable.scrollLeft(oversized + 4);
+      }
+    }
+    else {
+      if (scrollable) {
+        scrollable.scrollLeft(0);
+      }
+    }
+  }
+
+  /**
+   * @param backgroundGroup
+   */
+  renderAdjustBackgroundsForOversize(oversized: number, backgroundGroup: SVGTypeMapping<SVGGElement>) {
+    if (oversized <= 0) {
+      return;
+    }
+
+    // Allow some extra space for arcs
+    backgroundGroup.width(this.canvasWidth);
+    //$(backgroundGroup).attr('width', this.canvasWidth);
+    backgroundGroup.children().map(element => {
+      // We render the backgroundHighlight only in the margin, so we have to translate
+      // it instead of transforming it.
+
+      if (element.hasClass('backgroundHighlight')) {
+        if (this.rtlmode) {
+          element.translate(oversized, 0);
+        }
+      } else {
+        element.width(this.canvasWidth);
+      }
+    });
+  }
+
+  renderAdjustLayoutRowSpacing(textGroup: SVGTypeMapping<SVGGElement>) {
+    // Go through each row and adjust the row-initial and row-final spacing
+    textGroup.children().filter(c => c.hasClass('text-row')).map(textRow => {
+      const rowInitialSpacing = textRow.children().filter(c => c.hasClass('row-initial'))[0];
+      const rowFinalSpacing = textRow.children().filter(c => c.hasClass('row-final'))[0];
+      // const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
+      const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev().node.textContent];
+      const lastChunkOffset = parseFloat(rowFinalSpacing.prev().node.getAttribute('x'));
+
+      if (this.rtlmode) {
+        const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
+        const initialSpacingX = this.canvasWidth - this.sentNumMargin - initialSpacingWidth;
+        rowInitialSpacing.attr('x', initialSpacingX); // Faster than x() which calls bbox()
+        rowInitialSpacing.attr('textLength', initialSpacingWidth);
+
+        const finalSpacingX = Math.max(lastChunkOffset - lastChunkWidth, 0);
+        const finalSpacingWidth = finalSpacingX;
+        rowFinalSpacing.attr('x', finalSpacingX); // Faster than x() which calls bbox()
+        rowFinalSpacing.attr('textLength', finalSpacingWidth);
+      } else {
+        const initialSpacingX = this.sentNumMargin;
+        const initialSpacingWidth = Configuration.visual.margin.x + this.rowPadding + 1;
+        rowInitialSpacing.attr('x', initialSpacingX); // Faster than x() which calls bbox()
+        rowInitialSpacing.attr('textLength', initialSpacingWidth);
+
+        const finalSpacingX = lastChunkOffset + lastChunkWidth + 1;
+        const finalSpacingWidth = this.canvasWidth - finalSpacingX;
+        rowFinalSpacing.attr('x', finalSpacingX); // Faster than x() which calls bbox()
+        rowFinalSpacing.attr('textLength', finalSpacingWidth);
+      }
+    });
+  }
+
+  renderAdjustLayoutInterRowSpacers(y: number, textGroup: SVGTypeMapping<SVGGElement>) {
+    // Go through each row and add an unselectable spacer between this row and the next row
+    // While the space is unselectable, it will still help in guiding the browser into which
+    // direction the selection should in principle go and thus avoids jumpyness.
+    let prevRowRect = { y: 0, height: 0 };
+
+    const textRows = $(textGroup.node).children(".text-row");
+    textRows.each((rowIndex, textRow) => {
+      const rowRect = {
+        y: parseFloat($(textRow).children()[0].getAttribute('y')) + 2, height: this.data.sizes.texts.height
+      };
+      const spaceHeight = rowRect.y - (prevRowRect.y + rowRect.height) + 2;
+
+      // Adding a spacer between the rows. We make is a *little* bit larger than necessary
+      // to avoid exposing areas where the background shines through and which would again
+      // cause jumpyness during selection.
+      textRow.before(this.verticalSpacer(
+        Math.floor(prevRowRect.y),
+        Math.ceil(spaceHeight)));
+
+      prevRowRect = rowRect;
+
+      // Add a spacer below the final row until the end of the canvas
+      if (rowIndex === textRows.length - 1) {
+        const lastSpacerY = Math.floor(rowRect.y + rowRect.height);
+        textRow.after(this.verticalSpacer(
+          Math.floor(rowRect.y + rowRect.height),
+          Math.ceil(y - lastSpacerY) + 1));
+      }
+    });
+  }
+
+  /**
+   * @param {SourceData} sourceData
+   */
+  renderDataReal(sourceData: SourceData) {
+    Util.profileEnd('before render');
+    Util.profileStart('render');
+
+    if (!sourceData && !this.data) {
+      this.dispatcher.post('doneRendering', [this.args]);
+      return;
+    }
+
+    this.svgContainer.style.visibility = 'visible';
+    if (this.drawing) {
+      this.redraw = true;
+      this.dispatcher.post('doneRendering', [this.args]);
+      return;
+    }
+
+    this.redraw = false;
+    this.drawing = true;
+
+    if (sourceData) {
+      this.setData(sourceData);
+    }
+
+    this.svg.clear();
+    this.svg.attr('direction', null);
+
+    if (!this.data) {
+      return;
+    }
+
+    Util.profileStart('init');
+    if (this.rtlmode) {
+      this.svg.attr('direction', 'rtl');
+    }
+
+    this.svg.attr('style', `font-size: ${this.fontZoom}%;`);
+    this.sentNumMargin = 40 * (this.fontZoom / 100.0);
+
+    const scrollable = findClosestVerticalScrollable($(this.svg.node));
+    const svgWidth = $(this.svgContainer).width();
+    this.baseCanvasWidth = this.forceWidth || svgWidth;
+    this.canvasWidth = this.forceWidth || (svgWidth - (!scrollable ? scrollbarWidth() : 0));
+
+    this.addHeaderAndDefs();
+
+    const backgroundGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
+      .addClass('background')
+      .attr('pointer-events', 'none');
+
+    const sentNumGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
+      .addClass('sentnum').addClass('unselectable');
+
+    this.highlightGroup = this.svg.group().addClass('highlight');
+
+    const textGroup: SVGTypeMapping<SVGGElement> = this.svg.group().addClass('text');
+    Util.profileEnd('init');
+
+    Util.profileStart('measures');
+    this.data.sizes = this.calculateTextMeasurements();
+    this.adjustTowerAnnotationSizes();
+    const maxTextWidth = this.calculateMaxTextWidth(this.data.sizes);
+    Util.profileEnd('measures');
+
+    Util.profileStart('chunks');
+    this.renderLayoutFloorsAndCurlies(this.data.spanDrawOrderPermutation);
+    const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(sourceData, this.data.chunks, maxTextWidth);
+    Util.profileEnd('chunks');
+
+    Util.profileStart('arcsPrep');
+    this.renderBumpFragmentHeightsMinimumToArcStartHeight(fragmentHeights);
+    this.renderCalculateArcJumpHeight(fragmentHeights);
+    this.renderSortArcs();
+    this.renderAssignFragmentsToRows(rows, fragmentHeights);
+    Util.profileEnd('arcsPrep');
+
+    Util.profileStart('arcsPrep');
+    this.renderArcs(rows, fragmentHeights);
+    Util.profileEnd('arcs');
+
+    Util.profileStart('fragmentConnectors');
+    this.renderFragmentConnectors(rows);
+    Util.profileEnd('fragmentConnectors');
+
+    Util.profileStart('rows');
+    const y = this.renderRows(rows, sentNumGroup, backgroundGroup);
+    Util.profileEnd('rows');
+
+    Util.profileStart('chunkFinish');
+    this.renderChunksPass2(textGroup, textMarkedRows);
+    Util.profileEnd('chunkFinish');
+
+    Util.profileStart('finish');
+
+    Util.profileStart('adjust margin');
+    this.renderAdjustMargin(y, sentNumGroup);
+    Util.profileEnd('adjust margin');
+
+    Util.profileStart('resize SVG');
+    const oversized = this.renderResizeSvg(y, textGroup, maxTextWidth);
+    Util.profileEnd('resize SVG');
+
+    Util.profileStart('adjust for oversize depending on script');
+    this.renderAdjustLayoutForScriptDirection(oversized, rows, textGroup, sentNumGroup);
+    Util.profileEnd('adjust for oversize depending on script');
+
+    Util.profileStart('adjust backgrounds');
+    this.renderAdjustBackgroundsForOversize(oversized, backgroundGroup);
+    Util.profileEnd('adjust backgrounds');
+
+    Util.profileStart('row-spacing-adjust');
+    this.renderAdjustLayoutRowSpacing(textGroup);
+    Util.profileEnd('row-spacing-adjust');
+
+    Util.profileStart('inter-row space');
+    this.renderAdjustLayoutInterRowSpacers(y, textGroup);
+    Util.profileEnd('inter-row space');
+
+    Util.profileEnd('finish');
+    Util.profileEnd('render');
+    Util.profileReport();
+
+    this.drawing = false;
+    if (this.redraw) {
+      this.redraw = false;
+    }
+
+    this.dispatcher.post('doneRendering', [this.args]);
+  }
+
+  private renderAdjustMargin(y: number, sentNumGroup: SVGTypeMapping<SVGGElement>) {
+    let path: PathCommand[];
+    if (this.rtlmode) {
+      path = [['M', this.canvasWidth - this.sentNumMargin, 0],
+      ['L', this.canvasWidth - this.sentNumMargin, y]];
+    } else {
+      path = [['M', this.sentNumMargin, 0],
+      ['L', this.sentNumMargin, y]];
+    }
+    this.svg.path(path).addTo(sentNumGroup);
+  }
+
+
+  /**
+   * @param {SourceData} sourceData
+   */
+  renderData(sourceData: SourceData) {
+    Util.profileEnd('invoke getDocument');
+
+    // Fill in default values that don't necessarily go over the protocol
+    if (sourceData) {
+      setSourceDataDefaults(sourceData);
+    }
+
+    this.dispatcher.post('startedRendering', [this.args]);
+    this.dispatcher.post('spin');
+
+    setTimeout(() => {
+      try {
+        this.renderDataReal(sourceData);
+      } catch (e) {
+        // We are sure not to be drawing anymore, reset the state
+        this.drawing = false;
+        console.error('Rendering terminated due to: ' + e, e.stack);
+        this.dispatcher.post('renderError: Fatal', [sourceData, e]);
+      }
+
+      this.dispatcher.post('unspin');
+    }, 0);
+  }
+
+  /**
+   * Re-render using the known source data. This is necessary if the source data has changed e.g.
+   * due to a partial update from the server.
+   */
+  rerender() {
+    this.dispatcher.post('startedRendering', [this.args]);
+    this.dispatcher.post('spin');
+
+    try {
+      this.renderDataReal(this.sourceData);
+    } catch (e) {
+      // We are sure not to be drawing anymore, reset the state
+      this.drawing = false;
+      // TODO: Hook printout into dispatch elsewhere?
+      console.warn('Rendering terminated due to: ' + e, e.stack);
+      this.dispatcher.post('renderError: Fatal', [this.sourceData, e]);
+    }
+
+    this.dispatcher.post('unspin');
+  }
+
+  /**
+   * Differential updates for brat view.
+   *
+   * @param {*} patchData
+   */
+  renderDataPatch(patchData: ReadonlyArray<Operation>) {
+    Util.profileEnd('invoke getDocument');
+    this.sourceData = jsonpatch.applyPatch(this.sourceData, patchData).newDocument;
+    this.rerender();
+  }
+
+  renderDocument() {
+    Util.profileStart('invoke getDocument');
+    this.dispatcher.post('ajax', [
+      { action: 'getDocument' }, 
+      'renderData' ]);
+  }
+
+  triggerRender() {
+    if (this.svg && ((this.isRenderRequested && this.isCollectionLoaded) || this.requestedData)) {
+      this.isRenderRequested = false;
+
+      if (this.requestedData) {
+        Util.profileClear();
+        Util.profileStart('before render');
+        this.renderData(this.requestedData);
+        return;
+      }
+
+      Util.profileClear();
+      Util.profileStart('before render');
+      this.renderDocument();
+      return;
+    }
+  }
+
+  requestRenderData(sourceData) {
+    this.requestedData = sourceData;
+    this.triggerRender();
+  }
+
+  collectionChanged() {
+    this.isCollectionLoaded = false;
+  }
+
+  gotCurrent(args, reloadData) {
+    this.args = args;
+
+    if (reloadData) {
+      this.isRenderRequested = true;
+      this.triggerRender();
+    }
+  }
+
+  onMouseOverSpan(evt: MouseEvent) {
+    const target = $(evt.target);
+    const id = target.attr('data-span-id');
+    const span = this.data.spans[id];
+    this.dispatcher.post('displaySpanComment', [
+      evt, target, id, span.type, span.attributeText,
+      span.text,
+      span.hovertext,
+      span.comment && span.comment.text,
+      span.comment && span.comment.type,
+      span.normalizations
+    ]);
+
+    if (span.actionButtons) {
+      this.dispatcher.post('displaySpanButtons', [evt, target]);
+    }
+
+    if (span.hidden)
+      return;
+
+    const spanDesc = this.entityTypes[span.type];
+    const bgColor = span.color || ((spanDesc && spanDesc.bgColor) || '#ffffff');
+
+    this.highlight = [];
+    span.fragments.map(fragment => {
+      const highlightBox = this.svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
+        .translate(fragment.highlightPos.x, fragment.highlightPos.y)
+        .fill(bgColor)
+        .opacity(0.75)
+        .attr({
+          rx: this.highlightRounding.x,
+          ry: this.highlightRounding.y,
+        })
+        .addTo(this.highlightGroup);
+      this.highlight.push(highlightBox);
+    });
+
+    if (this.arcDragOrigin) {
+      target.parent().addClass('highlight');
+      return;
+    }
+
+    const equivs: Record<string, boolean> = {};
+    const spans: Record<string, boolean> = {};
+    spans[id] = true;
+    // find all arcs, normal and equiv. Equivs need to go far (#1023)
+    const addArcAndSpan = (arc: Arc) => {
+      if (arc.equiv) {
+        equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true;
+        const eventDesc = this.data.eventDescs[arc.eventDescId];
+        $.each(eventDesc.leftSpans.concat(eventDesc.rightSpans), (ospanId, ospan) => spans[ospan] = true);
+      } else {
+        spans[arc.origin] = true;
+      }
+    };
+    span.incoming.map(arc => addArcAndSpan(arc));
+    span.outgoing.map(arc => addArcAndSpan(arc));
+
+    this.highlightArcs = this.svg
+      .find(`g[data-from="${id}"], g[data-to="${id}"]`)
+      .map(e => e.addClass('highlight'));
+
+    const equivSelector = Object.keys(equivs).map(equiv => `[data-arc-ed^="${equiv}"]`);
+    if (equivSelector.length) {
+      this.highlightArcs.push(...this.svg
+        .find(equivSelector.join(', '))
+        .map(e => e.parent().addClass('highlight')));
+    }
+
+    const spanIds = Object.keys(spans).map(spanId => `[data-span-id="${spanId}"]`);
+    if (spanIds.length) {
+      this.highlightSpans = this.svg
+        .find(spanIds.join(', '))
+        .map(e => e.parent().addClass('highlight'));
+    }
+  }
+
+  onMouseOverArc(evt: MouseEvent) {
+    const target = $(evt.target);
+    const originSpanId = target.attr('data-arc-origin');
+    const targetSpanId = target.attr('data-arc-target');
+    const role = target.attr('data-arc-role');
+    const symmetric = (this.relationTypes &&
+      this.relationTypes[role] &&
+      this.relationTypes[role].properties &&
+      this.relationTypes[role].properties.symmetric);
+
+      // NOTE: no commentText, commentType for now
+      /** @type {string} */ const arcEventDescId: string = target.attr('data-arc-ed');
+    let commentText = '';
+    let commentType = '';
+    let arcId;
+
+    if (arcEventDescId) {
+      const eventDesc = this.data.eventDescs[arcEventDescId];
+      const comment = eventDesc.comment;
+      if (comment) {
+        commentText = comment.text;
+        commentType = comment.type;
+        if (commentText === '' && commentType) {
+          // default to type if missing text
+          commentText = commentType;
+        }
+      }
+      if (eventDesc.relation) {
+        // among arcs, only ones corresponding to relations have "independent" IDs
+        arcId = arcEventDescId;
+      }
+    }
+
+    const originSpanType = this.data.spans[originSpanId].type || '';
+    const targetSpanType = this.data.spans[targetSpanId].type || '';
+    let normalizations = [];
+    if (arcId) {
+      normalizations = this.data.arcById[arcId].normalizations;
+    }
+
+    this.dispatcher.post('displayArcComment', [
+      evt, target, symmetric, arcId,
+      originSpanId, originSpanType, role,
+      targetSpanId, targetSpanType,
+      commentText, commentType, normalizations
+    ]);
+
+    if (arcId) {
+      this.highlightArcs = this.svg
+        .find(`g[data-id="${arcId}"]`)
+        .map(e => e.addClass('highlight'));
+    } else {
+      this.highlightArcs = this.svg
+        .find(`g[data-from="${originSpanId}"][data-to="${targetSpanId}"]`)
+        .map(e => e.addClass('highlight'));
+    }
+
+    this.highlightSpans = this.svg
+      .find(`[data-span-id="${originSpanId}"], [data-span-id="${targetSpanId}"]`)
+      .map(e => e.parent().addClass('highlight'));
+  }
+
+  onMouseOverSentence(evt: MouseEvent) {
+    const target = $(evt.target);
+    const id = target.attr('data-sent');
+    const comment = this.data.sentComment[id];
+    if (comment) {
+      this.dispatcher.post('displaySentComment', [evt, target, comment.text, comment.type]);
+    }
+  }
+
+  onMouseOver(evt: MouseEvent) {
+    const target = $(evt.target);
+    if (target.attr('data-span-id')) {
+      this.onMouseOverSpan(evt);
+      return;
+    }
+
+    if (!this.arcDragOrigin && target.attr('data-arc-role')) {
+      this.onMouseOverArc(evt);
+      return;
+    }
+
+    if (target.attr('data-sent')) {
+      this.onMouseOverSentence(evt);
+    }
+  }
+
+  onMouseOut(evt: MouseEvent) {
+    const target = $(evt.target);
+    target.removeClass('badTarget');
+    this.dispatcher.post('hideComment');
+
+    if (this.highlight) {
+      this.highlight.map(h => h.remove());
+      this.highlight = undefined;
+    }
+
+    if (this.highlightSpans) {
+      this.highlightArcs.removeClass('highlight');
+      this.highlightSpans.removeClass('highlight');
+      this.highlightSpans = undefined;
+    }
+  }
+
+  setAbbrevs(_abbrevsOn) {
+    // TODO: this is a slightly weird place to tweak the configuration
+    Configuration.abbrevsOn = _abbrevsOn;
+    this.dispatcher.post('configurationChanged');
+  }
+
+  setTextBackgrounds(_textBackgrounds) {
+    Configuration.textBackgrounds = _textBackgrounds;
+    this.dispatcher.post('configurationChanged');
+  }
+
+  setLayoutDensity(_density) {
+    //dispatcher.post('messages', [[['Setting layout density ' + _density, 'comment']]]);
+    // TODO: store standard settings instead of hard-coding
+    // them here (again)
+    if (_density < 2) {
+      // dense
+      Configuration.visual.margin = { x: 1, y: 0 };
+      Configuration.visual.boxSpacing = 1;
+      Configuration.visual.curlyHeight = 1;
+      Configuration.visual.arcSpacing = 7;
+      Configuration.visual.arcStartHeight = 18;
+    } else if (_density > 2) {
+      // spacious
+      Configuration.visual.margin = { x: 2, y: 1 };
+      Configuration.visual.boxSpacing = 3;
+      Configuration.visual.curlyHeight = 6;
+      Configuration.visual.arcSpacing = 12;
+      Configuration.visual.arcStartHeight = 23;
+    } else {
+      // standard
+      Configuration.visual.margin = { x: 2, y: 1 };
+      Configuration.visual.boxSpacing = 1;
+      Configuration.visual.curlyHeight = 4;
+      Configuration.visual.arcSpacing = 9;
+      Configuration.visual.arcStartHeight = 19;
+    }
+    this.dispatcher.post('configurationChanged');
+  }
+
+  setSvgWidth(_width) {
+    this.svg.attr('width', `${_width}`);
+    if (Configuration.svgWidth !== _width) {
+      Configuration.svgWidth = _width;
+      this.dispatcher.post('configurationChanged');
+    }
+  }
+
+  // register event listeners
+  registerHandlers(element, events) {
+    $.each(events, (eventNo, eventName) => {
+      element.bind(eventName, (evt) => this.dispatcher.post(eventName, [evt], 'all'));
+    });
+  }
+
+  loadSpanTypes(types) {
+    $.each(types, (typeNo, type) => {
+      if (type) {
+        this.entityTypes[type.type] = type;
+        const children = type.children;
+        if (children && children.length) {
+          this.loadSpanTypes(children);
+        }
+      }
+    });
+  }
+
+  loadAttributeTypes(response_types) {
+    const processed = {};
+    $.each(response_types, (aTypeNo, aType) => {
+      processed[aType.type] = aType;
+      // count the values; if only one, it's a boolean attribute
+      const values = [];
+      for (const i in aType.values) {
+        if (Object.prototype.hasOwnProperty.call(aType.values, i)) {
+          values.push(i);
+        }
+      }
+      if (values.length === 1) {
+        aType.bool = values[0];
+      }
+    });
+    return processed;
+  }
+
+  loadRelationTypes(relation_types) {
+    $.each(relation_types, (relTypeNo, relType) => {
+      if (relType) {
+        this.relationTypes[relType.type] = relType;
+        const children = relType.children;
+        if (children && children.length) {
+          this.loadRelationTypes(children);
+        }
+      }
+    });
+  }
+
+  collectionLoaded(response: CollectionLoadedResponse) {
+    setCollectionDefaults(response);
+    this.eventAttributeTypes = this.loadAttributeTypes(response.event_attribute_types);
+    this.entityAttributeTypes = this.loadAttributeTypes(response.entity_attribute_types);
+
+    this.entityTypes = {};
+    this.loadSpanTypes(response.entity_types);
+    this.loadSpanTypes(response.event_types);
+    this.loadSpanTypes(response.unconfigured_types);
+
+    this.relationTypes = {};
+    this.loadRelationTypes(response.relation_types);
+    this.loadRelationTypes(response.unconfigured_types);
+
+    // TODO XXX: isn't the following completely redundant with
+    // loadRelationTypes?
+    $.each(response.relation_types, (relTypeNo, relType) => this.relationTypes[relType.type] = relType);
+    const arcBundle = (response.visual_options || {}).arc_bundle || 'none';
+    this.collapseArcs = arcBundle === "all";
+    this.collapseArcSpace = arcBundle !== "none";
+
+    this.dispatcher.post('spanAndAttributeTypesLoaded', [
+      this.entityTypes, this.entityAttributeTypes, this.eventAttributeTypes, this.relationTypes]);
+
+    this.isCollectionLoaded = true;
+    this.triggerRender();
+  }
+
+  isReloadOkay() {
+    // do not reload while the user is in the dialog
+    return !this.drawing;
+  }
+
+  verticalSpacer(y: number, height: number) {
+    if (height > 0) {
+      const foreignObject = document.createElementNS('http://www.w3.org/2000/svg', 'foreignObject');
+      const spacer = document.createElement('span');
+      $(spacer)
+        .addClass('unselectable')
+        .css('display', 'inline-block')
+        .css('width', '100%')
+        .css('height', '100%')
+        .text('\u00a0');
+      $(foreignObject)
+        .attr("x", this.rtlmode ? 0 : this.sentNumMargin)
+        .attr("y", y)
+        .attr("width", this.rtlmode ? this.canvasWidth - this.sentNumMargin : this.canvasWidth)
+        .attr("height", height)
+        .append(spacer);
+      return foreignObject;
+    }
+  }
+
+  horizontalSpacer(group: SVGTypeMapping<SVGGElement>, x: number, y: number, width: number, attrs: Record<string, unknown>) {
+    if (width <= 0) {
+      return
+    }
+
+    // To visualize the spacing use \u2588, otherwise \u00a0
+    this.svg.plain(this.rtlmode ? '\u200f\u00a0' : '\u00a0')
+      .amove(x, y)
+      .addClass('spacing')
+      .attr({
+        textLength: width,
+        lengthAdjust: 'spacingAndGlyphs',
+      })
+      .attr(attrs)
+      .addTo(group);
+  }
+
+  renderArcShadow(arc: Arc, shadowGroup: SVGTypeMapping<SVGGElement>, textBox: { x: number; y: number; width: number; height: number; }) {
+    return this.svg.rect()
+      .move(textBox.x - this.arcLabelShadowSize, textBox.y - this.arcLabelShadowSize)
+      .width(textBox.width + 2 * this.arcLabelShadowSize)
+      .height(textBox.height + 2 * this.arcLabelShadowSize)
+      .attr({
+        'class': 'shadow_' + arc.shadowClass,
+        filter: 'url(#Gaussian_Blur)',
+        rx: this.arcLabelShadowRounding,
+        ry: this.arcLabelShadowRounding,
+      })
+      .addTo(shadowGroup);
+  }
+
+  renderSpanMarkedRect(yy: number, bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
+    return this.svg.rect(bw + 2 * this.markedSpanSize, bh + 2 * this.markedSpanSize)
+      .move(bx - this.markedSpanSize, yy - this.markedSpanSize - Configuration.visual.margin.y - fragment.span.floor)
+      .attr({
+        filter: 'url(#Gaussian_Blur)',
+        'class': "shadow_EditHighlight",
+        rx: this.markedSpanSize,
+        ry: this.markedSpanSize,
+      })
+      .addTo(fragment.chunk.highlightGroup);
+  }
+
+  renderFragmentShadowRect(yy: number, bx: number, by: number, bw: number, bh: number, fragment: Fragment): SVGJSElement {
+    return this.svg.rect()
+      .move(bx - this.rectShadowSize, yy - this.rectShadowSize - Configuration.visual.margin.y - fragment.span.floor)
+      .width(bw + 2 * this.rectShadowSize)
+      .height(bh + 2 * this.rectShadowSize)
+      .attr({
+        'class': 'shadow_' + fragment.span.shadowClass,
+        filter: 'url(#Gaussian_Blur)',
+        rx: this.rectShadowRounding,
+        ry: this.rectShadowRounding,
+      })
+      .addTo(fragment.group);
+  }
+
+  renderFragmentRect(bx: number, by: number, bw: number, bh: number, yy: number, fragment: Fragment, rectClass: string, bgColor: string, borderColor: string): SVGTypeMapping<SVGElement> {
+    const span = fragment.span;
+    const bx1 = bx;
+    const bx2 = bx1 + bw;
+    const by1 = yy - Configuration.visual.margin.y - span.floor;
+    const by2 = by1 + bh;
+    const poly: ArrayXY[] = [];
+
+    if (span.clippedAtStart && span.fragments[0] === fragment) {
+      poly.push([bx1, by2]);
+      poly.push([bx1 - bh / 2, (by1 + by2) / 2]);
+      poly.push([bx1, by1]);
+    } else {
+      poly.push([bx1, by2]);
+      poly.push([bx1, by1]);
+    }
+
+    if (span.clippedAtEnd && span.fragments[span.fragments.length - 1] === fragment) {
+      poly.push([bx2, by1]);
+      poly.push([bx2 + bh / 2, (by1 + by2) / 2]);
+      poly.push([bx2, by2]);
+    } else {
+      poly.push([bx2, by1]);
+      poly.push([bx2, by2]);
+    }
+
+    return this.svg.polygon(poly)
+      .addClass(rectClass)
+      .fill(bgColor)
+      .stroke({
+        color: borderColor,
+        dasharray: span.attributeMerge.dashArray as string
+      })
+      .attr({
+        rx: Configuration.visual.margin.x,
+        ry: Configuration.visual.margin.y,
+        'data-span-id': span.id,
+        'data-fragment-id': span.segmentedOffsetsMap[fragment.id]
+      })
+      .addTo(fragment.group);
+  }
+
+  renderFragmentCrossOut(xx: number, yy: number, hh: number, fragment: Fragment) {
+    const span = fragment.span;
+
+    this.svg.path([['M', xx, yy - Configuration.visual.margin.y - span.floor],
+    ['L', xx + fragment.width, yy + hh + Configuration.visual.margin.y - span.floor]])
+      .addClass('boxcross')
+      .addTo(fragment.group);
+
+    this.svg.path([['M', xx + fragment.width, yy - Configuration.visual.margin.y - span.floor],
+    ['L', xx, yy + hh + Configuration.visual.margin.y - span.floor]])
+      .addClass('boxcross')
+      .addTo(fragment.group);
+  }
+
+  renderCurly(fragment: Fragment, x: number, yy: number, hh: number) {
+    const span = fragment.span;
+
+    let curlyColor = 'grey';
+    if (this.coloredCurlies) {
+      const spanDesc = this.entityTypes[span.type];
+      let bgColor: string;
+      if (span.color) {
+        bgColor = span.color;
+      }
+      else {
+        bgColor = ((spanDesc && spanDesc.bgColor) || '#000000');
+      }
+
+      curlyColor = Util.adjustColorLightness(bgColor, -0.6);
+    }
+
+    const bottom = yy + hh + Configuration.visual.margin.y - span.floor + 1;
+    const curlyHeight = Configuration.visual.curlyHeight;
+    this.svg.path([
+      ['M', fragment.curly.from, bottom + curlyHeight],
+      ['C', fragment.curly.from, bottom,
+        x, bottom + curlyHeight,
+        x, bottom],
+      ['C', x, bottom + curlyHeight,
+        fragment.curly.to, bottom,
+        fragment.curly.to, bottom + curlyHeight]])
+      .attr({
+        'class': 'curly',
+        'stroke': curlyColor,
+      })
+      .addTo(fragment.group);
+  }
+}
+
+function isRTL(charCode: number): boolean {
+  const t1 = (0x0591 <= charCode && charCode <= 0x07FF);
+  const t2 = (charCode === 0x200F);
+  const t3 = (charCode === 0x202E);
+  const t4 = (0xFB1D <= charCode && charCode <= 0xFDFD);
+  const t5 = (0xFE70 <= charCode && charCode <= 0xFEFC);
+  return t1 || t2 || t3 || t4 || t5;
+}
+
+// http://24ways.org/2010/calculating-color-contrast/
+// http://stackoverflow.com/questions/11867545/change-text-color-based-on-brightness-of-the-covered-background-area
+function bgToFgColor(hexcolor: ColorCode) {
+  const r = parseInt(hexcolor.substr(1, 2), 16);
+  const g = parseInt(hexcolor.substr(3, 2), 16);
+  const b = parseInt(hexcolor.substr(5, 2), 16);
+  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return (yiq >= 128) ? '#000000' : '#ffffff';
+}
+
+function findClosestHorizontalScrollable(node: JQuery) {
+  if (node === null || node.is('html')) {
+    return null;
+  }
+
+  if (
+    (node.css('overflow-x') === 'auto' && node.prop('scrollWidth') > node.prop('clientWidth')) ||
+    (node.css('overflow-x') === 'scroll')
+  ) {
+    return node;
+  }
+
+  // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
+  // to avoid that we consider scrollbars too far out
+  if (node.hasClass('scrollable')) {
+    return null;
+  }
+
+  return findClosestHorizontalScrollable(node.parent());
+}
+
+function findClosestVerticalScrollable(node: JQuery) {
+  if (node === null || node.is('html')) {
+    return null;
+  }
+
+  if (
+    (node.css('overflow-y') === 'auto' && node.prop('scrollHeight') > node.prop('clientHeight')) ||
+    (node.css('overflow-y') === 'scroll')
+  ) {
+    return node;
+  }
+
+  // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
+  // to avoid that we consider scrollbars too far out
+  if (node.hasClass('scrollable')) {
+    return null;
+  }
+
+  return findClosestVerticalScrollable(node.parent());
+}
+
+
+/**
+ * A naive whitespace tokeniser
+ */
+function tokenise(text: string): Array<Offsets> {
+  const tokenOffsets: Array<Offsets> = [];
+  let tokenStart: number = null;
+  let lastCharPos: number = null;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    // Have we found the start of a token?
+    if (tokenStart == null && !/\s/.test(c)) {
+      tokenStart = i;
+      lastCharPos = i;
+      // Have we found the end of a token?
+    } else if (/\s/.test(c) && tokenStart != null) {
+      tokenOffsets.push([tokenStart, i]);
+      tokenStart = null;
+      // Is it a non-whitespace character?
+    } else if (!/\s/.test(c)) {
+      lastCharPos = i;
+    }
+  }
+  // Do we have a trailing token?
+  if (tokenStart != null) {
+    tokenOffsets.push([tokenStart, lastCharPos + 1]);
+  }
+
+  return tokenOffsets;
+}
+
+/**
+ * A naive newline sentence splitter
+ */
+function sentenceSplit(text: string): Array<Offsets> {
+  const sentenceOffsets: Array<Offsets> = [];
+  let sentStart: number = null;
+  let lastCharPos: number = null;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    // Have we found the start of a sentence?
+    if (sentStart == null && !/\s/.test(c)) {
+      sentStart = i;
+      lastCharPos = i;
+      // Have we found the end of a sentence?
+    } else if (c === '\n' && sentStart != null) {
+      sentenceOffsets.push([sentStart, i]);
+      sentStart = null;
+      // Is it a non-whitespace character?
+    } else if (!/\s/.test(c)) {
+      lastCharPos = i;
+    }
+  }
+  // Do we have a trailing sentence without a closing newline?
+  if (sentStart != null) {
+    sentenceOffsets.push([sentStart, lastCharPos + 1]);
+  }
+
+  return sentenceOffsets;
+}

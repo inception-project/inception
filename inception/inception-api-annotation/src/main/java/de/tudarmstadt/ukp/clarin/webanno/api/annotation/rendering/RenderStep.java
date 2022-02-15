@@ -17,13 +17,24 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 
 public interface RenderStep
+    extends Extension<RenderRequest>
 {
-    void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
-            int aWindowEndOffset);
+    public static final int RENDER_STRUCTURE = 100;
+    public static final int RENDER_SYNTHETIC_STRUCTURE = 200;
+    public static final int RENDER_NOTIFICATION = 300;
+    public static final int RENDER_FOCUS = 400;
+    public static final int RENDER_LABELS = 500;
+    public static final int RENDER_COLORS = 600;
+
+    @Override
+    default boolean accepts(RenderRequest aContext)
+    {
+        return true;
+    }
+
+    void render(VDocument aVdoc, RenderRequest aRequest);
 }

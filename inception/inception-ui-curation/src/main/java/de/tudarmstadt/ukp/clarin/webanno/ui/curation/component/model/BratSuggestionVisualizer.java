@@ -46,23 +46,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLazyDetailsLookupService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratConfigurationResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationUiResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratDispatcherResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratUtilResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratVisualizerUiResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
-import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 
 /**
  * Wicket panel for visualizing an annotated sentence in brat. When a user clicks on a span or an
@@ -78,8 +68,8 @@ public abstract class BratSuggestionVisualizer
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userService;
-    private @SpringBean BratLazyDetailsLookupService lazyDetailsLookupService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean LazyDetailsLookupService lazyDetailsLookupService;
 
     private AbstractDefaultAjaxBehavior controller;
     private final int position;
@@ -104,7 +94,7 @@ public abstract class BratSuggestionVisualizer
                     String action = BratRequestUtils.getActionFromRequest(request);
                     final VID paramId = BratRequestUtils.getVidFromRequest(request);
 
-                    if (NormDataResponse.is(action)) {
+                    if (LazyDetailsHandler.COMMAND.equals(action)) {
                         AnnotatorSegment segment = getModelObject();
                         AnnotatorState state = segment.getAnnotatorState();
                         CasProvider casProvider = () -> documentService.readAnnotationCas(
@@ -174,47 +164,13 @@ public abstract class BratSuggestionVisualizer
         // MUST NOT CALL super.renderHead here because that would call Util.embedByUrl again!
         // super.renderHead(aResponse);
 
-        // Libraries
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQuerySvgDomResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(JQueryJsonResourceReference.get()));
-
-        // BRAT helpers
-        aResponse.render(
-                JavaScriptHeaderItem.forReference(BratConfigurationResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratUtilResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(
-        // BratAnnotationLogResourceReference.get()));
-        // aResponse.render(JavaScriptHeaderItem.forReference(BratSpinnerResourceReference.get()));
-
-        // BRAT modules
-        aResponse.render(JavaScriptHeaderItem.forReference(BratDispatcherResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAjaxResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratVisualizerResourceReference.get()));
-        aResponse
-                .render(JavaScriptHeaderItem.forReference(BratVisualizerUiResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratAnnotatorUiResourceReference.get()));
-        aResponse.render(JavaScriptHeaderItem.forReference(BratCurationUiResourceReference.get()));
-        // aResponse.render(
-        // JavaScriptHeaderItem.forReference(BratUrlMonitorResourceReference.get()));
+        aResponse.render(JavaScriptHeaderItem.forReference(BratCurationResourceReference.get()));
 
         // BRAT call to load the BRAT JSON from our collProvider and docProvider.
-        // @formatter:off
-        String script = 
-                "Util.embedByURL(" 
-                + "  '" + vis.getMarkupId() + "'," 
-                + "  '" + collProvider.getCallbackUrl() + "', " 
-                + "  '" + docProvider.getCallbackUrl() + "', " 
-                + "  function(dispatcher) {" 
-                + "    dispatcher.wicketId = '" + vis.getMarkupId() + "'; " 
-                + "    dispatcher.ajaxUrl = '" + controller.getCallbackUrl() + "'; " 
-                + "    var ajax = new Ajax(dispatcher);"
-                + "    var curation_mod = new CurationMod(dispatcher, '" + vis.getMarkupId() + "');"
-                + "    Wicket.$('" + vis.getMarkupId() + "').dispatcher = dispatcher;"
-                // + " dispatcher.post('clearSVG', []);"
-                + "  });";
-        // @formatter:on
+        String script = "BratCuration('" + vis.getMarkupId() + "', '" + controller.getCallbackUrl()
+                + "', '" + collProvider.getCallbackUrl() + "', '" + docProvider.getCallbackUrl()
+                + "')";
         aResponse.render(OnLoadHeaderItem.forScript("\n" + script));
     }
 

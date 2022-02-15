@@ -77,6 +77,9 @@ public class StatisticRequest
         features.add(aFeature);
     }
 
-    public String getQuery() { return query; }
+    public String getQuery()
+    {
+        return query;
+    }
 
 }

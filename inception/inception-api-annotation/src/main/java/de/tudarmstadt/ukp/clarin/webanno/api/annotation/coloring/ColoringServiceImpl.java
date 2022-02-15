@@ -40,19 +40,24 @@ import java.util.Queue;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationAutoConfiguration#coloringService}.
+ * </p>
+ */
 public class ColoringServiceImpl
     implements ColoringService
 {
@@ -65,8 +70,10 @@ public class ColoringServiceImpl
     {
         schemaService = aSchemaService;
 
-        hasLinkFeatureCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024).build(this::loadHasLinkFeature);
+        hasLinkFeatureCache = Caffeine.newBuilder() //
+                .expireAfterAccess(5, MINUTES) //
+                .maximumSize(10 * 1024) //
+                .build(this::loadHasLinkFeature);
     }
 
     @Override

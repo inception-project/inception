@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>22.0-SNAPSHOT</version>
+    <version>23.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-imls-stringmatch</artifactId>
   <name>INCEpTION - ML - String Matching</name>
@@ -196,8 +196,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.h2database</groupId>
-      <artifactId>h2</artifactId>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -214,7 +214,7 @@
           <configuration>
             <usedDependencies>
               <!-- Testing - used via reflection -->
-              <usedDependency>com.h2database:h2</usedDependency>
+              <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-test</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
             </usedDependencies>

@@ -17,13 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
-import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
-import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -50,50 +47,6 @@ public class CasMetadataUtils
     {
         return createTypeSystemDescription(
                 "de/tudarmstadt/ukp/clarin/webanno/api/type/webanno-internal");
-    }
-
-    public static void failOnConcurrentModification(CAS aCas, File aCasFile,
-            SourceDocument aDocument, String aUsername)
-        throws IOException
-    {
-        // If the type system of the CAS does not yet support CASMetadata, then we do not add it
-        // and wait for the next regular CAS upgrade before we include this data.
-        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
-            LOG.info("Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
-                    + "does not support CASMetadata yet - unable to detect concurrent modifications",
-                    aCasFile.getName(), aUsername, aDocument.getName(), aDocument.getId(),
-                    aDocument.getProject().getName(), aDocument.getProject().getId());
-            return;
-        }
-
-        List<AnnotationFS> cmds = new ArrayList<>(
-                CasUtil.select(aCas, getType(aCas, CASMetadata.class)));
-        if (cmds.size() > 1) {
-            throw new IOException("CAS contains more than one CASMetadata instance");
-        }
-        else if (cmds.size() == 1) {
-            AnnotationFS cmd = cmds.get(0);
-            long lastKnownUpdate = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
-            long diskLastModified = aCasFile.lastModified();
-            if (diskLastModified != lastKnownUpdate) {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                throw new IOException(
-                        "There was a concurrent modification to the annotation CAS for user ["
-                                + aUsername + "] in document " + aDocument + " (expected: "
-                                + sdf.format(lastKnownUpdate) + " actual on storage: "
-                                + sdf.format(diskLastModified) + ", delta: "
-                                + formatDurationHMS(diskLastModified - lastKnownUpdate) + ")");
-
-            }
-        }
-        else {
-            LOG.info(
-                    "Annotation file [{}] of user [{}] for document [{}]({}) in project "
-                            + "[{}]({}) does not contain CASMetadata yet - unable to check for "
-                            + "concurrent modifications",
-                    aCasFile.getName(), aUsername, aDocument.getName(), aDocument.getId(),
-                    aDocument.getProject().getName(), aDocument.getProject().getId());
-        }
     }
 
     public static void clearCasMetadata(CAS aCas) throws IllegalStateException

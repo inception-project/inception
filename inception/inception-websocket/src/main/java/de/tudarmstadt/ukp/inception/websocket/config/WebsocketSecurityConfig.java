@@ -78,6 +78,8 @@ public class WebsocketSecurityConfig
             .simpMessageDestMatchers(annotationEditorTopic)
                 .access("@documentAccess.canEditAnnotationDocument(#" + PARAM_PROJECT + 
                     ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")")
+            // permissions for export canceling are currently managed in the controller
+            .simpMessageDestMatchers("/**/export/*/cancel").hasRole("USER")
             // all other messages are denied (if you later want users to send messages,
             // you need to allow it for specific channels)
             .anyMessage().denyAll();

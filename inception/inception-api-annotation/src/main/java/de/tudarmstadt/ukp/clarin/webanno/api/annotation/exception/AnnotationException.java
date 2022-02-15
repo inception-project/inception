@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
 
-/**
- * throw an exception if the a span annotation is not in the same sentence
- */
 public class AnnotationException
     extends Exception
 {

@@ -15,16 +15,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>22.0-SNAPSHOT</version>
+    <version>23.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-html-editor</artifactId>
   <name>INCEpTION - Editor - HTML + Annotator JS</name>
-  
+
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -44,16 +46,24 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-xml</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-diam</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-html</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-external-editor</artifactId>
     </dependency>
 
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-segmentation-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-xml-asl</artifactId>
     </dependency>
 
     <dependency>
@@ -75,6 +85,18 @@
       <artifactId>spring-context</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
@@ -82,10 +104,6 @@
     <dependency>
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-request</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.wicket</groupId>
@@ -101,17 +119,14 @@
     </dependency>
 
     <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.core</groupId>
-      <artifactId>jackson-databind</artifactId>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
     </dependency>
 
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -126,9 +141,7 @@
               <id>default</id>
               <configuration>
                 <excludes combine.children="append">
-                  <exclude>src/main/js/annotatorjs/**/*</exclude>
-                  <exclude>src/main/js/annotatorjs-prebuilt/**/*</exclude>
-                  <exclude>cache/**/*</exclude>
+                  <exclude>src/main/ts/annotatorjs/**/*</exclude>
                 </excludes>
               </configuration>
             </execution>
@@ -136,180 +149,43 @@
         </plugin>
       </plugins>
     </pluginManagement>
-  </build>
-
-  <profiles>
-    <profile>
-      <id>jenkins</id>
-      <activation>
-        <property>
-          <name>JENKINS_HOME</name>
-        </property>
-      </activation>
-      <properties>
-        <frontend.install.path>${WORKSPACE}/cache/maven-frontend-plugin</frontend.install.path>
-      </properties>
-    </profile>
-
-    <profile>
-      <id>use-prebuilt-annotatorjs</id>
-      <activation>
-        <property>
-          <name>!build-annotatorjs</name>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>add-annotatorjs-resources</id>
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>add-resource</goal>
-                </goals>
-                <configuration>
-                  <resources>
-                    <resource>
-                      <directory>src/main/js/annotatorjs-prebuilt</directory>
-                      <targetPath>de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources</targetPath>
-                      <includes>
-                        <include>annotator.css</include>
-                        <include>annotator.min.css</include>
-                        <include>annotator-full.js</include>
-                        <include>annotator-full.map</include>
-                        <include>annotator-full.min.js</include>
-                        <include>annotator-full.min.map</include>
-                      </includes>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>build-annotatorjs</id>
-      <activation>
-        <property>
-          <name>build-annotatorjs</name>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>copy-annotatorjs-to-target</id>
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>target/js/annotatorjs</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>src/main/js/annotatorjs</directory>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-              <execution>
-                <id>copy-annotatorjs-to-prebuilt-location</id>
-                <phase>prepare-package</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>src/main/js/annotatorjs-prebuilt</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>target/classes/de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources</directory>
-                      <include>*.css</include>
-                      <include>*.js</include>
-                      <include>*.map</include>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>build-helper-maven-plugin</artifactId>
-            <executions>
-              <execution>
-                <id>add-annotatorjs-resources</id>
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>add-resource</goal>
-                </goals>
-                <configuration>
-                  <resources>
-                    <resource>
-                      <directory>target/js/annotatorjs/pkg</directory>
-                      <targetPath>de/tudarmstadt/ukp/inception/htmleditor/annotatorjs/resources</targetPath>
-                      <includes>
-                        <include>annotator.css</include>
-                        <include>annotator.min.css</include>
-                        <include>annotator-full.js</include>
-                        <include>annotator-full.map</include>
-                        <include>annotator-full.min.js</include>
-                        <include>annotator-full.min.map</include>
-                      </includes>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>com.github.eirslett</groupId>
-            <artifactId>frontend-maven-plugin</artifactId>
+    <plugins>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>npm link dependency inception-js-api</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-sources</phase>
             <configuration>
-              <workingDirectory>target/js/annotatorjs/</workingDirectory>
-              <installDirectory>target/frontend-maven-plugin</installDirectory>
-              <nodeVersion>v13.14.0</nodeVersion>
-              <npmVersion>6.14.4</npmVersion>
+              <arguments>link @inception-project/inception-js-api</arguments>
             </configuration>
-            <executions>
-              <execution>
-                <id>install node and npm</id>
-                <goals>
-                  <goal>install-node-and-npm</goal>
-                </goals>
-                <phase>generate-resources</phase>
-              </execution>
-              <execution>
-                <id>npm install</id>
-                <goals>
-                  <goal>npm</goal>
-                </goals>
-                <phase>generate-resources</phase>
-                <configuration>
-                  <arguments>install</arguments>
-                </configuration>
-              </execution>
-              <execution>
-                <id>npm run</id>
-                <goals>
-                  <goal>npm</goal>
-                </goals>
-                <phase>generate-resources</phase>
-                <configuration>
-                  <arguments>run build</arguments>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
+          </execution>
+          <execution>
+            <id>npm link dependency inception-diam</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>
+              <arguments>link @inception-project/inception-diam</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <arguments>run build</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

@@ -17,15 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
-import static io.bit3.jsass.OutputStyle.EXPANDED;
-import static io.bit3.jsass.OutputStyle.NESTED;
 import static java.lang.System.currentTimeMillis;
-import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.CoepMode.ENFORCING;
 import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
 
 import java.io.File;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -45,6 +43,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
+import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.resource.JQueryResourceReference;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
@@ -53,21 +52,16 @@ import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplicatio
 
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
-import de.agilecoders.wicket.sass.BootstrapSass;
-import de.agilecoders.wicket.sass.SassCacheManager;
-import de.agilecoders.wicket.sass.SassCompilerOptionsFactory;
 import de.agilecoders.wicket.webjars.WicketWebjars;
 import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
-import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.bootstrap.CustomBootstrapSassReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
-import io.bit3.jsass.Options;
+import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -140,6 +134,22 @@ public abstract class WicketApplicationBase
         initPageRequestTracker();
 
         initServerTimeReporting();
+
+        initNonCachingInDevEnvironment();
+    }
+
+    private void initNonCachingInDevEnvironment()
+    {
+        if (DEVELOPMENT.equals(getConfigurationType())) {
+            // Do not cache pages in development mode - allows us to make changes to the HMTL
+            // without
+            // having to reload the application
+            getMarkupSettings().getMarkupFactory().getMarkupCache().clear();
+            getResourceSettings().setCachingStrategy(NoOpResourceCachingStrategy.INSTANCE);
+
+            // Same for resources
+            getResourceSettings().setDefaultCacheDuration(Duration.ZERO);
+        }
     }
 
     private void initPageRequestTracker()
@@ -160,29 +170,16 @@ public abstract class WicketApplicationBase
         addJQueryUIResourcesToAllPages();
 
         addFontAwesomeToAllPages();
-
-        addCssBrowserSelectorToAllPages();
     }
 
     protected void initBootstrap()
     {
-        SassCompilerOptionsFactory sassOptionsFactory = () -> {
-            Options options = new Options();
-            options.setOutputStyle(DEPLOYMENT == getConfigurationType() ? EXPANDED : NESTED);
-            return options;
-        };
-
         WicketWebjars.install(this);
-
-        BootstrapSass.install(this, sassOptionsFactory);
-        // Install a customized cache manager which can deal with SCSS files in JARs
-        SassCacheManager cacheManager = new SassCacheManager(sassOptionsFactory);
-        cacheManager.install(this);
 
         Bootstrap.install(this);
 
         IBootstrapSettings settings = Bootstrap.getSettings(this);
-        settings.setCssResourceReference(CustomBootstrapSassReference.get());
+        settings.setCssResourceReference(InceptionBootstrapCssReference.get());
     }
 
     protected void addKendoResourcesToAllPages()
@@ -200,15 +197,6 @@ public abstract class WicketApplicationBase
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
                 component.add(new FontAwesomeResourceBehavior());
-            }
-        });
-    }
-
-    protected void addCssBrowserSelectorToAllPages()
-    {
-        getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
-                component.add(new CssBrowserSelectorResourceBehavior());
             }
         });
     }
@@ -251,10 +239,7 @@ public abstract class WicketApplicationBase
 
     protected void initJQueryResourceReference()
     {
-        // See:
-        // https://github.com/webanno/webanno/issues/1397
-        // https://github.com/sebfz1/wicket-jquery-ui/issues/311
-        getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV2());
+        getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV3());
     }
 
     protected void initNestedStringResourceLoader()

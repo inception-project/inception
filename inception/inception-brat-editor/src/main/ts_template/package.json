@@ -1,0 +1,28 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "scripts": {
+    "build:brat": "esbuild brat/brat.ts --target=esnext --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.js",
+    "build:brat-minified": "esbuild brat/brat.ts --target=esnext --minify --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.js",
+    "build:brat-curation": "esbuild brat/brat_curation.ts --target=esnext --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.js",
+    "build:brat-curation-minified": "esbuild brat/brat_curation.ts --target=esnext --minify --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.min.js",
+    "build:brat-css": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.css",
+    "build:brat-css-minified": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.css --style compressed"
+  },
+  "dependencies": {
+    "@inception-project/inception-js-api": "${semver}",
+    "@inception-project/inception-diam": "${semver}",
+    "fast-json-patch": "^3.1.0",
+    "@types/jquery": "^2.0.46",
+    "@svgdotjs/svg.js": "^3.1.1",
+    "@svgdotjs/svg.filter.js": "^3.0.8"
+  },
+  "devDependencies": {
+    "sass": "^1.45.1",
+    "esbuild": "^0.13.13",
+    "eslint": "^7.32.0",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "typescript": "^4.4.2"
+  }
+}
