@@ -23,6 +23,18 @@
       </features>
     </typeDescription>
     <typeDescription>
+      <name>webanno.custom.SpanMultiValue</name>
+      <description/>
+      <supertypeName>uima.tcas.Annotation</supertypeName>
+      <features>
+        <featureDescription>
+          <name>values</name>
+          <description/>
+          <rangeTypeName>uima.cas.StringArray</rangeTypeName>
+        </featureDescription>
+      </features>
+    </typeDescription>
+    <typeDescription>
       <name>webanno.custom.SimpleRelation</name>
       <description/>
       <supertypeName>uima.tcas.Annotation</supertypeName>
