@@ -221,12 +221,11 @@ public class LinkFeatureSupport
                         throw new IllegalArgumentException("[" + link.role
                                 + "] is not in the tag list. Please choose from the existing tags");
                     }
-                    else {
-                        Tag selectedTag = new Tag();
-                        selectedTag.setName(link.role);
-                        selectedTag.setTagSet(aFeature.getTagset());
-                        annotationService.createTag(selectedTag);
-                    }
+
+                    Tag selectedTag = new Tag();
+                    selectedTag.setName(link.role);
+                    selectedTag.setTagSet(aFeature.getTagset());
+                    annotationService.createTag(selectedTag);
                 }
             }
         }
@@ -312,5 +311,12 @@ public class LinkFeatureSupport
         catch (IOException e) {
             log.error("Unable to write traits", e);
         }
+    }
+
+    @Override
+    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
+    {
+        // Never render link feature labels
+        return null;
     }
 }

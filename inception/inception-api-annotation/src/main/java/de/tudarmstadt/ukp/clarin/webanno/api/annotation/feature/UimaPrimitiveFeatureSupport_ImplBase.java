@@ -61,20 +61,4 @@ public abstract class UimaPrimitiveFeatureSupport_ImplBase<T>
     {
         aTD.addFeature(aFeature.getName(), aFeature.getDescription(), aFeature.getType());
     }
-
-    @Override
-    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
-    {
-        if (CAS.TYPE_NAME_BOOLEAN.equals(aFeature.getType()) && aLabel != null) {
-            if ("true".equals(aLabel)) {
-                return "+" + aFeature.getUiName();
-            }
-            else {
-                return "-" + aFeature.getUiName();
-            }
-        }
-        else {
-            return FeatureSupport.super.renderFeatureValue(aFeature, aLabel);
-        }
-    }
 }

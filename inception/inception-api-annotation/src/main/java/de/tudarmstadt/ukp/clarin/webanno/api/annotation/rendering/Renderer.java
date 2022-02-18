@@ -83,8 +83,7 @@ public interface Renderer
         Map<String, String> features = new LinkedHashMap<>();
 
         for (AnnotationFeature feature : aFeatures) {
-            if (!feature.isEnabled() || !feature.isVisible()
-                    || !MultiValueMode.NONE.equals(feature.getMultiValueMode())) {
+            if (!feature.isEnabled() || !feature.isVisible()) {
                 continue;
             }
 
