@@ -37,6 +37,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -115,6 +116,7 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
             AnnotationFeature aFeature, Object aValue)
+        throws AnnotationException
     {
         FeatureStructure fs = selectFsByAddr(aCas, aAddress);
 

@@ -39,6 +39,7 @@ import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -279,7 +280,12 @@ public interface FeatureSupport<T>
      *            the value.
      */
     default void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+        throws AnnotationException
     {
+        if (!accepts(aFeature)) {
+            throw unsupportedFeatureTypeException(aFeature);
+        }
+
         FeatureStructure fs = selectFsByAddr(aCas, aAddress);
 
         Object value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
@@ -390,5 +396,17 @@ public interface FeatureSupport<T>
     default boolean suppressAutoFocus(AnnotationFeature aFeature)
     {
         return false;
+    }
+
+    default FeatureStructure getFS(CAS aCas, AnnotationFeature aFeature, int aAddress)
+    {
+        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
+        Feature feature = fs.getType().getFeatureByBaseName(aFeature.getName());
+
+        if (feature == null) {
+            throw new IllegalArgumentException("On [" + fs.getType().getName() + "] the feature ["
+                    + aFeature.getName() + "] does not exist.");
+        }
+        return fs;
     }
 }
