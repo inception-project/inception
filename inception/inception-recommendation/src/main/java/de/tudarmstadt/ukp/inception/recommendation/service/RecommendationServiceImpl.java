@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentSpanAnnotation;
@@ -66,6 +67,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
@@ -92,7 +94,6 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
@@ -1522,6 +1523,8 @@ public class RecommendationServiceImpl
         Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
         Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
         Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
+        boolean isStringMultiValue = CAS.TYPE_NAME_STRING_ARRAY
+                .equals(predictedFeature.getRange().getName());
 
         Feature scoreFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
@@ -1539,51 +1542,61 @@ public class RecommendationServiceImpl
                 continue;
             }
 
-            String label = predictedAnnotation.getFeatureValueAsString(predictedFeature);
+            String[] labels;
+            if (isStringMultiValue) {
+                labels = FSUtil.getFeature(predictedAnnotation, predictedFeature, String[].class);
+            }
+            else {
+                labels = new String[] {
+                        predictedAnnotation.getFeatureValueAsString(predictedFeature) };
+            }
             double score = predictedAnnotation.getDoubleValue(scoreFeature);
             String scoreExplanation = predictedAnnotation.getStringValue(scoreExplanationFeature);
             String name = aRecommender.getName();
 
-            AnnotationSuggestion suggestion;
+            for (String label : labels) {
+                AnnotationSuggestion suggestion;
 
-            switch (layer.getType()) {
-            case SPAN_TYPE: {
-                Optional<Offset> targetOffsets = getOffsets(layer, aOriginalCas,
-                        predictedAnnotation);
+                switch (layer.getType()) {
+                case SPAN_TYPE: {
+                    Optional<Offset> targetOffsets = getOffsets(layer, aOriginalCas,
+                            predictedAnnotation);
 
-                if (!targetOffsets.isPresent()) {
-                    continue;
+                    if (!targetOffsets.isPresent()) {
+                        continue;
+                    }
+
+                    suggestion = new SpanSuggestion(id, aRecommender.getId(), name, layer.getId(),
+                            featureName, aDocument.getName(), targetOffsets.get().getBegin(),
+                            targetOffsets.get().getEnd(), predictedAnnotation.getCoveredText(),
+                            label, label, score, scoreExplanation);
+                    break;
+                }
+                case RELATION_TYPE: {
+                    AnnotationFS governor = (AnnotationFS) predictedAnnotation
+                            .getFeatureValue(governorFeature);
+                    AnnotationFS dependent = (AnnotationFS) predictedAnnotation
+                            .getFeatureValue(dependentFeature);
+
+                    AnnotationFS originalGovernor = findEquivalent(aOriginalCas, governor).get();
+                    AnnotationFS originalDependent = findEquivalent(aOriginalCas, dependent).get();
+
+                    suggestion = new RelationSuggestion(id, aRecommender.getId(), name,
+                            layer.getId(), featureName, aDocument.getName(),
+                            originalGovernor.getBegin(), originalGovernor.getEnd(),
+                            originalDependent.getBegin(), originalDependent.getEnd(), label, label,
+                            score, scoreExplanation);
+                    break;
+                }
+                default:
+                    throw new IllegalStateException(
+                            "Unsupport layer type [" + layer.getType() + "]");
                 }
 
-                suggestion = new SpanSuggestion(id, aRecommender.getId(), name, layer.getId(),
-                        featureName, aDocument.getName(), targetOffsets.get().getBegin(),
-                        targetOffsets.get().getEnd(), predictedAnnotation.getCoveredText(), label,
-                        label, score, scoreExplanation);
-                break;
+                result.add(suggestion);
+                id++;
+                predictionCount++;
             }
-            case WebAnnoConst.RELATION_TYPE: {
-                AnnotationFS governor = (AnnotationFS) predictedAnnotation
-                        .getFeatureValue(governorFeature);
-                AnnotationFS dependent = (AnnotationFS) predictedAnnotation
-                        .getFeatureValue(dependentFeature);
-
-                AnnotationFS originalGovernor = findEquivalent(aOriginalCas, governor).get();
-                AnnotationFS originalDependent = findEquivalent(aOriginalCas, dependent).get();
-
-                suggestion = new RelationSuggestion(id, aRecommender.getId(), name, layer.getId(),
-                        featureName, aDocument.getName(), originalGovernor.getBegin(),
-                        originalGovernor.getEnd(), originalDependent.getBegin(),
-                        originalDependent.getEnd(), label, label, score, scoreExplanation);
-
-                break;
-            }
-            default:
-                throw new IllegalStateException("Unsupport layer type [" + layer.getType() + "]");
-            }
-
-            result.add(suggestion);
-            id++;
-            predictionCount++;
         }
 
         log.debug(

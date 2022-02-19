@@ -106,22 +106,26 @@ public class MultiValueStringFeatureSupport
                 && CAS.TYPE_NAME_STRING_ARRAY.equals(aFeature.getType());
     }
 
-    // @SuppressWarnings("unchecked")
-    // @Override
-    // public List<String> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
-    // {
-    // if (aValue instanceof List) {
-    // return (List<String>) aValue;
-    // }
-    // else if (aValue == null) {
-    // return null;
-    // }
-    // else {
-    // throw new IllegalArgumentException(
-    // "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
-    // }
-    // }
-    //
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<String> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    {
+        if (aValue instanceof String) {
+            return asList((String) aValue);
+        }
+
+        if (aValue instanceof List) {
+            return (List<String>) aValue;
+        }
+
+        if (aValue == null) {
+            return null;
+        }
+
+        throw new IllegalArgumentException(
+                "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
+    }
+
     // @Override
     // public ArrayList<String> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object
     // aValue)
