@@ -678,6 +678,14 @@ public class CasDiff
             // When we get here, f1 or f2 can still be null
 
             switch (range.getName()) {
+            case CAS.TYPE_NAME_STRING_ARRAY: {
+                Set<?> value1 = FSUtil.getFeature(aFS1, f1, Set.class);
+                Set<?> value2 = FSUtil.getFeature(aFS2, f2, Set.class);
+                if (!value1.equals(value2)) {
+                    return false;
+                }
+                break;
+            }
             case CAS.TYPE_NAME_BOOLEAN: {
                 boolean value1 = f1 != null ? aFS1.getBooleanValue(f1) : false;
                 boolean value2 = f2 != null ? aFS2.getBooleanValue(f2) : false;
