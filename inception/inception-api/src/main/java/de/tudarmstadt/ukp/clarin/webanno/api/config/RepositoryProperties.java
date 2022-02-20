@@ -35,6 +35,18 @@ public class RepositoryProperties
 {
     private File path;
 
+    private boolean traceAccess = false;
+
+    public void setTraceAccess(boolean aTraceAccess)
+    {
+        traceAccess = aTraceAccess;
+    }
+
+    public boolean isTraceAccess()
+    {
+        return traceAccess;
+    }
+
     public File getPath()
     {
         if (path != null) {

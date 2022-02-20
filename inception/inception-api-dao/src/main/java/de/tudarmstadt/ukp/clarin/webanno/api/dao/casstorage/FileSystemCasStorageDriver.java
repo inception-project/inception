@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -53,6 +54,9 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
@@ -74,12 +78,22 @@ public class FileSystemCasStorageDriver
 
     private final RepositoryProperties repositoryProperties;
     private final BackupProperties backupProperties;
+    private final LoadingCache<File, InternalMetadata> metadataCache;
 
     public FileSystemCasStorageDriver(RepositoryProperties aRepositoryProperties,
             BackupProperties aBackupProperties)
     {
         repositoryProperties = aRepositoryProperties;
         backupProperties = aBackupProperties;
+
+        if (repositoryProperties.isTraceAccess()) {
+            metadataCache = Caffeine.newBuilder() //
+                    .expireAfterWrite(Duration.ofHours(1)) //
+                    .build(k -> new InternalMetadata());
+        }
+        else {
+            metadataCache = null;
+        }
 
         if (backupProperties.getInterval() > 0) {
             log.info("CAS backups enabled - interval: {}sec  max-backups: {}  max-age: {}sec",
@@ -96,6 +110,10 @@ public class FileSystemCasStorageDriver
     {
         File casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
         File oldCasFile = new File(casFile.getPath() + OLD_EXTENSION);
+
+        if (metadataCache != null) {
+            metadataCache.get(casFile).readAttempt();
+        }
 
         String msgOldExists = "";
         if (oldCasFile.exists()) {
@@ -134,6 +152,10 @@ public class FileSystemCasStorageDriver
                     + " cannot be read from file [" + casFile + "]. " + msgOldExists, e);
         }
 
+        if (metadataCache != null) {
+            metadataCache.get(casFile).readSuccess();
+        }
+
         return cas;
     }
 
@@ -149,6 +171,10 @@ public class FileSystemCasStorageDriver
         File currentVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION);
         File oldVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION + OLD_EXTENSION);
 
+        if (metadataCache != null) {
+            metadataCache.get(currentVersion).writeAttempt();
+        }
+
         // Check if there was a concurrent change to the file on disk
         if (currentVersion.exists()) {
             failOnConcurrentModification(aCas, currentVersion, aDocument, aUserName);
@@ -163,7 +189,7 @@ public class FileSystemCasStorageDriver
 
             // Now write the new version to "<username>.ser" or CURATION_USER.ser
             setDocumentId(aCas, aUserName);
-            writeSerializedCas(aCas, currentVersion);
+            CasPersistenceUtils.writeSerializedCas(aCas, currentVersion);
         }
         catch (Exception e) {
             log.error("There was an error while trying to write the CAS to [" + currentVersion
@@ -209,6 +235,9 @@ public class FileSystemCasStorageDriver
         // save.
         long lastModified = currentVersion.lastModified();
         CasMetadataUtils.addOrUpdateCasMetadata(aCas, lastModified, aDocument, aUserName);
+        if (metadataCache != null) {
+            metadataCache.get(currentVersion).writeSuccess(lastModified);
+        }
 
         manageHistory(currentVersion, aDocument, aUserName);
 
@@ -374,15 +403,14 @@ public class FileSystemCasStorageDriver
         return new File(getAnnotationFolder(aProjectId, aDocumentId), aUser + SER_CAS_EXTENSION);
     }
 
-    private void writeSerializedCas(CAS aCas, File aFile) throws IOException
-    {
-        CasPersistenceUtils.writeSerializedCas(aCas, aFile);
-    }
-
     @Override
     public boolean deleteCas(SourceDocument aDocument, String aUser) throws IOException
     {
-        return new File(getAnnotationFolder(aDocument), aUser + SER_CAS_EXTENSION).delete();
+        File casFile = getCasFile(aDocument.getProject().getId(), aDocument.getId(), aUser);
+        if (metadataCache != null) {
+            metadataCache.invalidate(casFile);
+        }
+        return casFile.delete();
     }
 
     @Override
@@ -427,13 +455,31 @@ public class FileSystemCasStorageDriver
             long lastKnownUpdate = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
             long diskLastModified = aCasFile.lastModified();
             if (diskLastModified != lastKnownUpdate) {
+                StringBuilder lastWriteMsg = new StringBuilder();
+                if (metadataCache != null) {
+                    InternalMetadata meta = metadataCache.get(aCasFile);
+                    if (meta.lastWriteSuccessTrace != null) {
+                        lastWriteMsg.append("\n");
+                        lastWriteMsg.append("Last known successful write was at ");
+                        lastWriteMsg
+                                .append(TIMESTAMP_FORMATTER.format(meta.lastWriteSuccessTimestamp));
+                        lastWriteMsg.append("by:\n");
+                        for (StackTraceElement e : meta.lastWriteSuccessTrace) {
+                            lastWriteMsg.append("    ");
+                            lastWriteMsg.append(e);
+                            lastWriteMsg.append("\n");
+                        }
+                    }
+                }
                 throw new IOException(
                         "The file system storage detected a concurrent modification to the annotation CAS for user ["
-                                + aUsername + "] in document " + aDocument + " (expected: "
+                                + aUsername + "] in document " + aDocument + " or project "
+                                + aDocument.getProject() + " (expected: "
                                 + TIMESTAMP_FORMATTER.format(lastKnownUpdate)
                                 + " actual on storage: "
                                 + TIMESTAMP_FORMATTER.format(diskLastModified) + ", delta: "
-                                + formatDurationHMS(diskLastModified - lastKnownUpdate) + ")");
+                                + formatDurationHMS(diskLastModified - lastKnownUpdate) + ")"
+                                + lastWriteMsg);
 
             }
         }
@@ -443,6 +489,36 @@ public class FileSystemCasStorageDriver
                             + "{} does not contain CASMetadata yet - unable to check for "
                             + "concurrent modifications",
                     aCasFile.getName(), aUsername, aDocument, aDocument.getProject());
+        }
+    }
+
+    private static class InternalMetadata
+    {
+        private StackTraceElement[] lastWriteAttemptTrace;
+        private StackTraceElement[] lastWriteSuccessTrace;
+        private long lastWriteSuccessTimestamp;
+        private StackTraceElement[] lastReadAttemptTrace;
+        private StackTraceElement[] lastReadSuccessTrace;
+
+        private void writeAttempt()
+        {
+            lastWriteAttemptTrace = Thread.currentThread().getStackTrace();
+        }
+
+        private void writeSuccess(long aTimestamp)
+        {
+            lastWriteSuccessTrace = Thread.currentThread().getStackTrace();
+            lastWriteSuccessTimestamp = aTimestamp;
+        }
+
+        private void readAttempt()
+        {
+            lastReadAttemptTrace = Thread.currentThread().getStackTrace();
+        }
+
+        private void readSuccess()
+        {
+            lastReadSuccessTrace = Thread.currentThread().getStackTrace();
         }
     }
 

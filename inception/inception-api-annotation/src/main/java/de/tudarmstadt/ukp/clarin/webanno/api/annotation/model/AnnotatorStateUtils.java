@@ -25,6 +25,9 @@ import java.util.Optional;
 
 public class AnnotatorStateUtils
 {
+    private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat(
+            "yyyy-MM-dd HH:mm:ss.SSS");
+
     public static void verifyAndUpdateDocumentTimestamp(AnnotatorState aState,
             Optional<Long> aDiskTimestamp)
         throws IOException
@@ -33,13 +36,11 @@ public class AnnotatorStateUtils
         Optional<Long> stateTimestamp = aState.getAnnotationDocumentTimestamp();
         if (stateTimestamp.isPresent() && aDiskTimestamp.isPresent()
                 && aDiskTimestamp.get() > stateTimestamp.get()) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-            throw new IOException(
-                    "There was a change to the document from outside this annotation editor window. "
-                            + "Re-open the document to continue editing (expected: "
-                            + sdf.format(stateTimestamp.get()) + " actual on storage: "
-                            + sdf.format(aDiskTimestamp.get()) + ", delta: "
-                            + formatDurationHMS(aDiskTimestamp.get() - stateTimestamp.get()) + ")");
+            throw new IOException("The editor detected a concurrent change to the document. "
+                    + "Re-open the document to continue editing (expected: "
+                    + TIMESTAMP_FORMATTER.format(stateTimestamp.get()) + " actual on storage: "
+                    + TIMESTAMP_FORMATTER.format(aDiskTimestamp.get()) + ", delta: "
+                    + formatDurationHMS(aDiskTimestamp.get() - stateTimestamp.get()) + ")");
         }
 
         if (aDiskTimestamp.isPresent()) {
