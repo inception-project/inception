@@ -147,8 +147,10 @@ public class AnnotationSchemaServiceImpl
         applicationEventPublisher = aApplicationEventPublisher;
         entityManager = aEntityManager;
 
-        immutableTagsCache = Caffeine.newBuilder().expireAfterAccess(5, MINUTES)
-                .maximumSize(10 * 1024).build(this::loadImmutableTags);
+        immutableTagsCache = Caffeine.newBuilder() //
+                .expireAfterAccess(5, MINUTES) //
+                .maximumSize(10 * 1024) //
+                .build(this::loadImmutableTags);
 
         try {
             builtInTypes = createTypeSystemDescription();
@@ -832,7 +834,9 @@ public class AnnotationSchemaServiceImpl
 
     private List<ImmutableTag> loadImmutableTags(TagSet aTagSet)
     {
-        return listTags(aTagSet).stream().map(ImmutableTag::new).collect(toList());
+        return listTags(aTagSet).stream() //
+                .map(ImmutableTag::new) //
+                .collect(toList());
     }
 
     private void flushImmutableTagCache(TagSet aTagSet)
@@ -855,15 +859,17 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public List<ReorderableTag> listTagsReorderable(TagSet aTagSet)
     {
-        return listTagsImmutable(aTagSet).stream().map(ReorderableTag::new).collect(toList());
+        return listTagsImmutable(aTagSet).stream() //
+                .map(ReorderableTag::new) //
+                .collect(toList());
     }
 
     @Override
     @Transactional
     public List<TagSet> listTagSets()
     {
-        return entityManager.createQuery("FROM TagSet ORDER BY name ASC", TagSet.class)
-                .getResultList();
+        return entityManager //
+                .createQuery("FROM TagSet ORDER BY name ASC", TagSet.class).getResultList();
     }
 
     @Override
