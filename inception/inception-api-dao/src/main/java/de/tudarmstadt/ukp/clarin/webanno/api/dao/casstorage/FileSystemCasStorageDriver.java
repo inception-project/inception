@@ -24,8 +24,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static java.lang.System.currentTimeMillis;
 import static java.nio.file.Files.move;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
+import static java.util.regex.Pattern.compile;
+import static java.util.regex.Pattern.quote;
+import static org.apache.commons.io.comparator.LastModifiedFileComparator.LASTMODIFIED_COMPARATOR;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationHMS;
-import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -36,22 +38,18 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.TOP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +57,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
@@ -177,7 +176,7 @@ public class FileSystemCasStorageDriver
 
         // Check if there was a concurrent change to the file on disk
         if (currentVersion.exists()) {
-            failOnConcurrentModification(aCas, currentVersion, aDocument, aUserName);
+            failOnConcurrentModification(aCas, currentVersion, aDocument, aUserName, "writing");
         }
 
         // Save current version
@@ -287,8 +286,8 @@ public class FileSystemCasStorageDriver
         // Get all history files for the current user
         File[] history = annotationFolder.listFiles(new FileFilter()
         {
-            private final Matcher matcher = Pattern
-                    .compile(Pattern.quote(aUserName) + "\\.ser\\.[0-9]+\\.bak").matcher("");
+            private final Matcher matcher = compile(quote(aUserName) + "\\.ser\\.[0-9]+\\.bak")
+                    .matcher("");
 
             @Override
             public boolean accept(File aFile)
@@ -299,7 +298,7 @@ public class FileSystemCasStorageDriver
         });
 
         // Sort the files (oldest one first)
-        Arrays.sort(history, LastModifiedFileComparator.LASTMODIFIED_COMPARATOR);
+        Arrays.sort(history, LASTMODIFIED_COMPARATOR);
 
         // Check if we need to make a new history file
         boolean historyFileCreated = false;
@@ -432,64 +431,77 @@ public class FileSystemCasStorageDriver
         }
     }
 
-    public void failOnConcurrentModification(CAS aCas, File aCasFile, SourceDocument aDocument,
-            String aUsername)
+    @Override
+    public Optional<Long> verifyCasTimestamp(SourceDocument aDocument, String aUser,
+            long aExpectedTimeStamp, String aContextAction)
+        throws IOException, ConcurentCasModificationException
+    {
+        File casFile = getCasFile(aDocument, aUser);
+
+        if (!casFile.exists()) {
+            return Optional.empty();
+        }
+
+        long diskLastModified = casFile.lastModified();
+        if (diskLastModified != aExpectedTimeStamp) {
+            StringBuilder lastWriteMsg = new StringBuilder();
+            if (metadataCache != null) {
+                InternalMetadata meta = metadataCache.get(casFile);
+                if (meta.lastWriteSuccessTrace != null) {
+                    lastWriteMsg.append("\n");
+                    lastWriteMsg.append("Last known successful write was at ");
+                    lastWriteMsg.append(TIMESTAMP_FORMATTER.format(meta.lastWriteSuccessTimestamp));
+                    lastWriteMsg.append("by:\n");
+                    for (StackTraceElement e : meta.lastWriteSuccessTrace) {
+                        lastWriteMsg.append("    ");
+                        lastWriteMsg.append(e);
+                        lastWriteMsg.append("\n");
+                    }
+                }
+            }
+            throw new ConcurentCasModificationException("While " + aContextAction
+                    + ", the file system CAS storage detected a concurrent modification to the annotation CAS for user ["
+                    + aUser + "] in document " + aDocument + " or project " + aDocument.getProject()
+                    + " (expected: " + TIMESTAMP_FORMATTER.format(aExpectedTimeStamp)
+                    + " actual on storage: " + TIMESTAMP_FORMATTER.format(diskLastModified)
+                    + ", delta: " + formatDurationHMS(diskLastModified - aExpectedTimeStamp) + ")"
+                    + lastWriteMsg);
+
+        }
+
+        return Optional.of(diskLastModified);
+    }
+
+    private void failOnConcurrentModification(CAS aCas, File aCasFile, SourceDocument aDocument,
+            String aUsername, String aContextAction)
         throws IOException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
-        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
-            log.info("Annotation file [{}] of user [{}] for document {} in project {} "
+        if (aCas.getTypeSystem().getType(CASMetadata._TypeName) == null) {
+            log.warn("Annotation file [{}] of user [{}] for document {} in project {} "
                     + "does not support CASMetadata yet - unable to detect concurrent modifications",
                     aCasFile.getName(), aUsername, aDocument, aDocument.getProject());
             return;
         }
 
-        List<AnnotationFS> cmds = new ArrayList<>(
-                CasUtil.select(aCas, getType(aCas, CASMetadata.class)));
-        if (cmds.size() > 1) {
-            throw new IOException("CAS contains more than one CASMetadata instance");
-        }
-        else if (cmds.size() == 1) {
-            AnnotationFS cmd = cmds.get(0);
-            long lastKnownUpdate = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
-            long diskLastModified = aCasFile.lastModified();
-            if (diskLastModified != lastKnownUpdate) {
-                StringBuilder lastWriteMsg = new StringBuilder();
-                if (metadataCache != null) {
-                    InternalMetadata meta = metadataCache.get(aCasFile);
-                    if (meta.lastWriteSuccessTrace != null) {
-                        lastWriteMsg.append("\n");
-                        lastWriteMsg.append("Last known successful write was at ");
-                        lastWriteMsg
-                                .append(TIMESTAMP_FORMATTER.format(meta.lastWriteSuccessTimestamp));
-                        lastWriteMsg.append("by:\n");
-                        for (StackTraceElement e : meta.lastWriteSuccessTrace) {
-                            lastWriteMsg.append("    ");
-                            lastWriteMsg.append(e);
-                            lastWriteMsg.append("\n");
-                        }
-                    }
-                }
-                throw new IOException(
-                        "The file system storage detected a concurrent modification to the annotation CAS for user ["
-                                + aUsername + "] in document " + aDocument + " or project "
-                                + aDocument.getProject() + " (expected: "
-                                + TIMESTAMP_FORMATTER.format(lastKnownUpdate)
-                                + " actual on storage: "
-                                + TIMESTAMP_FORMATTER.format(diskLastModified) + ", delta: "
-                                + formatDurationHMS(diskLastModified - lastKnownUpdate) + ")"
-                                + lastWriteMsg);
-
-            }
-        }
-        else {
-            log.info(
+        List<TOP> cmds = aCas.select(CASMetadata._TypeName).asList();
+        if (cmds.isEmpty()) {
+            log.warn(
                     "Annotation file [{}] of user [{}] for document {} in project "
                             + "{} does not contain CASMetadata yet - unable to check for "
                             + "concurrent modifications",
                     aCasFile.getName(), aUsername, aDocument, aDocument.getProject());
+            return;
         }
+
+        if (cmds.size() > 1) {
+            throw new IOException("CAS contains more than one CASMetadata instance");
+        }
+
+        TOP cmd = cmds.get(0);
+        long lastKnownUpdate = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
+        verifyCasTimestamp(aDocument, aUsername, lastKnownUpdate, aContextAction);
     }
 
     private static class InternalMetadata

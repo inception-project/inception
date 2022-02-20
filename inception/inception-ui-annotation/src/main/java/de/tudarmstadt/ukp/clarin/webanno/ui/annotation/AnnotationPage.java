@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
@@ -38,7 +36,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
@@ -76,7 +73,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
@@ -356,10 +352,13 @@ public class AnnotationPage
             throw new IllegalStateException("Please open a document first!");
         }
 
-        if (isEditable()) {
-            // If we have a timestamp, then use it to detect if there was a concurrent access
-            verifyAndUpdateDocumentTimestamp(state, documentService
-                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
+        // If we have a timestamp, then use it to detect if there was a concurrent access
+        if (isEditable() && state.getAnnotationDocumentTimestamp().isPresent()) {
+            documentService
+                    .verifyAnnotationCasTimestamp(state.getDocument(),
+                            state.getUser().getUsername(),
+                            state.getAnnotationDocumentTimestamp().get(), "reading")
+                    .ifPresent(state::setAnnotationDocumentTimestamp);
         }
 
         return documentService.readAnnotationCas(state.getDocument(),
@@ -374,9 +373,9 @@ public class AnnotationPage
         documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
         // Update timestamp in state
-        Optional<Long> diskTimestamp = documentService
-                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
-        AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
+        documentService
+                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername())
+                .ifPresent(state::setAnnotationDocumentTimestamp);
     }
 
     @Override
@@ -432,8 +431,10 @@ public class AnnotationPage
                         AnnotationDocumentState.NEW.equals(annotationDocument.getState()));
 
                 // Initialize timestamp in state
-                updateDocumentTimestampAfterWrite(state, documentService.getAnnotationCasTimestamp(
-                        state.getDocument(), state.getUser().getUsername()));
+                documentService
+                        .getAnnotationCasTimestamp(state.getDocument(),
+                                state.getUser().getUsername())
+                        .ifPresent(state::setAnnotationDocumentTimestamp);
             }
 
             // Load constraints

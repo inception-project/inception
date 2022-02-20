@@ -49,7 +49,8 @@ public interface CurationSidebarService
     /**
      * Write to CAS associated with curation doc for the given user and update timestamp
      */
-    void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId);
+    void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId)
+        throws IOException;
 
     /**
      * Store the users that were selected to be shown for curation by the given user
