@@ -40,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureTraits;
@@ -211,6 +212,7 @@ public class LinkFeatureSupport
 
     @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+        throws AnnotationException
     {
         if (aValue instanceof List && aFeature.getTagset() != null) {
             for (LinkWithRoleModel link : (List<LinkWithRoleModel>) aValue) {
@@ -219,12 +221,11 @@ public class LinkFeatureSupport
                         throw new IllegalArgumentException("[" + link.role
                                 + "] is not in the tag list. Please choose from the existing tags");
                     }
-                    else {
-                        Tag selectedTag = new Tag();
-                        selectedTag.setName(link.role);
-                        selectedTag.setTagSet(aFeature.getTagset());
-                        annotationService.createTag(selectedTag);
-                    }
+
+                    Tag selectedTag = new Tag();
+                    selectedTag.setName(link.role);
+                    selectedTag.setTagSet(aFeature.getTagset());
+                    annotationService.createTag(selectedTag);
                 }
             }
         }
@@ -310,5 +311,12 @@ public class LinkFeatureSupport
         catch (IOException e) {
             log.error("Unable to write traits", e);
         }
+    }
+
+    @Override
+    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
+    {
+        // Never render link feature labels
+        return null;
     }
 }

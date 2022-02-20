@@ -819,9 +819,7 @@ public class WebAnnoCasUtil
             // remove duplicate links
             Set<LinkWithRoleModel> links = new HashSet<>(aValue);
             for (LinkWithRoleModel e : links) {
-                // Skip links that have been added in the UI but where the target has not
-                // yet been
-                // set
+                // Skip empty slots that have been added where the target has not yet been set
                 if (e.targetAddr == -1) {
                     continue;
                 }

@@ -65,9 +65,6 @@ public class StringFeatureTraitsEditor
     {
         super(aId, aFeature);
 
-        // We cannot retain a reference to the actual SlotFeatureSupport instance because that
-        // is not serializable, but we can retain its ID and look it up again from the registry
-        // when required.
         featureSupportId = aFS.getId();
         feature = aFeature;
 

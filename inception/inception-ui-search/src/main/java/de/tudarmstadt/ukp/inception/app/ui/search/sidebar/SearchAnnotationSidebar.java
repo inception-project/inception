@@ -683,6 +683,7 @@ public class SearchAnnotationSidebar
 
     private void setFeatureValues(SourceDocument aDocument, CAS aCas, SpanAdapter aAdapter,
             AnnotatorState state, AnnotationFS annoFS)
+        throws AnnotationException
     {
         int addr = getAddr(annoFS);
         List<FeatureState> featureStates = state.getFeatureStates();

@@ -25,7 +25,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
 public enum MultiValueMode
     implements PersistentEnum
 {
-    NONE("none"), ARRAY("array");
+    NONE("none"), //
+    ARRAY("array");
 
     private final String id;
 

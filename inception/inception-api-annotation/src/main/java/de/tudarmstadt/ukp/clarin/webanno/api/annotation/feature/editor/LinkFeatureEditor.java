@@ -390,22 +390,8 @@ public class LinkFeatureEditor
 
     private AbstractTextComponent makeAutoComplete(String aId)
     {
-        return new ReorderableTagAutoCompleteField(aId, PropertyModel.of(this, "newRole"))
-        {
-            private static final long serialVersionUID = 311286735004237737L;
-
-            @Override
-            protected List<ReorderableTag> getChoices(String aTerm)
-            {
-                FeatureState state = LinkFeatureEditor.this.getModelObject();
-
-                TagRanker ranker = new TagRanker();
-                ranker.setMaxResults(properties.getAutoCompleteMaxResults());
-                ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
-
-                return ranker.rank(aTerm, state.tagset);
-            }
-        };
+        return new ReorderableTagAutoCompleteField(aId, PropertyModel.of(this, "newRole"),
+                getModel(), properties.getAutoCompleteMaxResults());
     }
 
     private AbstractTextComponent makeComboBox(String aId)
