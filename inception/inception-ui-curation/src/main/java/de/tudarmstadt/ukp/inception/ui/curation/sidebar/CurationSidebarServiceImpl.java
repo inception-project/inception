@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -294,31 +293,27 @@ public class CurationSidebarServiceImpl
     }
 
     @Override
-    public synchronized void writeCurationCas(CAS aTargetCas, AnnotatorState aState,
-            long aProjectId)
+    public void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId)
+        throws IOException
     {
-        SourceDocument doc = aState.getDocument();
-        String curatorName = getCurationState(aState.getUser().getUsername(), aProjectId)
-                .getCurationName();
-        try {
-            User curator;
+        User curator;
+        synchronized (curationStates) {
+            String curatorName = getCurationState(aState.getUser().getUsername(), aProjectId)
+                    .getCurationName();
+
             if (curatorName.equals(CURATION_USER)) {
                 curator = new User(CURATION_USER);
             }
             else {
                 curator = userRegistry.get(curatorName);
             }
-            AnnotationDocument annoDoc = documentService.createOrGetAnnotationDocument(doc,
-                    curator);
-            documentService.writeAnnotationCas(aTargetCas, annoDoc, true);
-            AnnotatorStateUtils.updateDocumentTimestampAfterWrite(aState,
-                    casStorageService.getCasTimestamp(doc, curatorName));
         }
-        catch (IOException e) {
-            log.warn(String.format("Could not write CAS for user %s and document %d", curatorName,
-                    doc.getId()));
-            e.printStackTrace();
-        }
+
+        SourceDocument doc = aState.getDocument();
+        AnnotationDocument annoDoc = documentService.createOrGetAnnotationDocument(doc, curator);
+        documentService.writeAnnotationCas(aTargetCas, annoDoc, true);
+        casStorageService.getCasTimestamp(doc, curator.getUsername())
+                .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 
     @Override

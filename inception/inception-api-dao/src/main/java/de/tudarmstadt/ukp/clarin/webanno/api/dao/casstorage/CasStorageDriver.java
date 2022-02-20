@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface CasStorageDriver
@@ -42,4 +43,8 @@ public interface CasStorageDriver
 
     Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, String aUser)
         throws IOException;
+
+    Optional<Long> verifyCasTimestamp(SourceDocument aDocument, String aUser,
+            long aExpectedTimeStamp, String aContextAction)
+        throws IOException, ConcurentCasModificationException;
 }
