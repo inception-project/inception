@@ -119,9 +119,8 @@ public class FileSystemCasStorageDriver
 
         if (!casFile.exists()) {
             throw new FileNotFoundException("Annotation document of user [" + aUser
-                    + "] for source document [" + aDocument.getName() + "] (" + aDocument.getId()
-                    + ") not found in project [" + aDocument.getProject().getName() + "] ("
-                    + aDocument.getProject().getId() + "). " + msgOldExists);
+                    + "] for source document " + aDocument + " not found in project ["
+                    + aDocument.getProject() + "). " + msgOldExists);
         }
 
         try {
@@ -130,11 +129,9 @@ public class FileSystemCasStorageDriver
             CasMetadataUtils.addOrUpdateCasMetadata(cas, casFile.lastModified(), aDocument, aUser);
         }
         catch (Exception e) {
-            throw new IOException("Annotation document of user [" + aUser
-                    + "] for source document [" + aDocument.getName() + "] (" + aDocument.getId()
-                    + ") in project [" + aDocument.getProject().getName() + "] ("
-                    + aDocument.getProject().getId() + ") cannot be read from file [" + casFile
-                    + "]. " + msgOldExists, e);
+            throw new IOException("Annotation document of user [" + aUser + "] for source document "
+                    + aDocument + " in project [" + aDocument.getProject()
+                    + " cannot be read from file [" + casFile + "]. " + msgOldExists, e);
         }
 
         return cas;
@@ -145,9 +142,8 @@ public class FileSystemCasStorageDriver
     {
         long t0 = currentTimeMillis();
 
-        log.debug("Preparing to update annotations for user [{}] on document [{}]({}) " //
-                + "in project [{}]({})", aUserName, aDocument.getName(), aDocument.getId(),
-                aDocument.getProject().getName(), aDocument.getProject().getId());
+        log.debug("Preparing to update annotations for user [{}] on document {} " //
+                + "in project {}", aUserName, aDocument, aDocument.getProject());
 
         File annotationFolder = getAnnotationFolder(aDocument);
         File currentVersion = new File(annotationFolder, aUserName + SER_CAS_EXTENSION);
@@ -180,10 +176,9 @@ public class FileSystemCasStorageDriver
                 throw e;
             }
 
-            log.error("Restoring previous annotations for user [{}] on document [{}]({}) in " //
-                    + "project [{}]({}) due exception when trying to write new "
-                    + "annotations: [{}]", aUserName, aDocument.getName(), aDocument.getId(),
-                    aDocument.getProject().getName(), aDocument.getProject().getId(), oldVersion);
+            log.error("Restoring previous annotations for user [{}] on document {} in " //
+                    + "project {} due exception when trying to write new " + "annotations: [{}]",
+                    aUserName, aDocument, aDocument.getProject(), oldVersion);
             try {
                 move(oldVersion.toPath(), currentVersion.toPath(), REPLACE_EXISTING);
             }
@@ -197,12 +192,10 @@ public class FileSystemCasStorageDriver
 
         if (oldVersion.exists() && (currentVersion.length() < oldVersion.length())) {
             log.debug(
-                    "Annotations truncated for user [{}] on document [{}]({}) in project "
-                            + "[{}]({}): {} -> {} bytes ({} bytes removed)",
-                    aUserName, aDocument.getName(), aDocument.getId(),
-                    aDocument.getProject().getName(), aDocument.getProject().getId(),
-                    oldVersion.length(), currentVersion.length(),
-                    currentVersion.length() - oldVersion.length());
+                    "Annotations truncated for user [{}] on document {} in project "
+                            + "{}: {} -> {} bytes ({} bytes removed)",
+                    aUserName, aDocument, aDocument.getProject(), oldVersion.length(),
+                    currentVersion.length(), currentVersion.length() - oldVersion.length());
         }
 
         // If the saving was successful, we delete the old version
@@ -222,9 +215,8 @@ public class FileSystemCasStorageDriver
         long duration = currentTimeMillis() - t0;
         if (log.isDebugEnabled()) {
             log.debug(
-                    "Updated annotations for user [{}] on document [{}]({}) in project [{}]({}) in {}ms (file timestamp: {})",
-                    aUserName, aDocument.getName(), aDocument.getId(),
-                    aDocument.getProject().getName(), aDocument.getProject().getId(), duration,
+                    "Updated annotations for user [{}] on document {} in project {} in {}ms (file timestamp: {})",
+                    aUserName, aDocument, aDocument.getProject(), duration,
                     TIMESTAMP_FORMATTER.format(lastModified));
         }
 
@@ -337,9 +329,8 @@ public class FileSystemCasStorageDriver
 
                     log.debug(
                             "Removed outdated history file [{}] of user [{}] for "
-                                    + "document [{}]({}) in project [{}]({})",
-                            file.getName(), aUserName, aDocument.getName(), aDocument.getId(),
-                            aDocument.getProject().getName(), aDocument.getProject().getId());
+                                    + "document {} in project {}",
+                            file.getName(), aUserName, aDocument, aDocument.getProject());
                 }
             }
         }
@@ -420,10 +411,9 @@ public class FileSystemCasStorageDriver
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
         if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
-            log.info("Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
+            log.info("Annotation file [{}] of user [{}] for document {} in project {} "
                     + "does not support CASMetadata yet - unable to detect concurrent modifications",
-                    aCasFile.getName(), aUsername, aDocument.getName(), aDocument.getId(),
-                    aDocument.getProject().getName(), aDocument.getProject().getId());
+                    aCasFile.getName(), aUsername, aDocument, aDocument.getProject());
             return;
         }
 
@@ -438,7 +428,7 @@ public class FileSystemCasStorageDriver
             long diskLastModified = aCasFile.lastModified();
             if (diskLastModified != lastKnownUpdate) {
                 throw new IOException(
-                        "There was a concurrent modification to the annotation CAS for user ["
+                        "The file system storage detected a concurrent modification to the annotation CAS for user ["
                                 + aUsername + "] in document " + aDocument + " (expected: "
                                 + TIMESTAMP_FORMATTER.format(lastKnownUpdate)
                                 + " actual on storage: "
@@ -449,11 +439,10 @@ public class FileSystemCasStorageDriver
         }
         else {
             log.info(
-                    "Annotation file [{}] of user [{}] for document [{}]({}) in project "
-                            + "[{}]({}) does not contain CASMetadata yet - unable to check for "
+                    "Annotation file [{}] of user [{}] for document {} in project "
+                            + "{} does not contain CASMetadata yet - unable to check for "
                             + "concurrent modifications",
-                    aCasFile.getName(), aUsername, aDocument.getName(), aDocument.getId(),
-                    aDocument.getProject().getName(), aDocument.getProject().getId());
+                    aCasFile.getName(), aUsername, aDocument, aDocument.getProject());
         }
     }
 
