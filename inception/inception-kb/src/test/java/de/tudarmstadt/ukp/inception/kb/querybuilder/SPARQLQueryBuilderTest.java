@@ -1406,6 +1406,7 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
 
+    @Disabled("Seems like the endpoint has problems: https://github.com/zbw/sparql-queries/issues/9")
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {
