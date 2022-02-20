@@ -34,6 +34,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
@@ -717,6 +718,10 @@ public interface DocumentService
      */
     Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, String aUsername)
         throws IOException;
+
+    Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, String aUsername,
+            long aExpectedTimeStamp, String aContextAction)
+        throws IOException, ConcurentCasModificationException;
 
     boolean existsInitialCas(SourceDocument aDocument) throws IOException;
 

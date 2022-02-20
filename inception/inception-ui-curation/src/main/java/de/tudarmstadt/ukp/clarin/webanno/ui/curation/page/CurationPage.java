@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
@@ -50,7 +48,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.uima.UIMAException;
@@ -89,7 +86,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
@@ -460,8 +456,12 @@ public class CurationPage
         }
 
         // If we have a timestamp, then use it to detect if there was a concurrent access
-        verifyAndUpdateDocumentTimestamp(state,
-                curationDocumentService.getCurationCasTimestamp(state.getDocument()));
+        if (isEditable() && state.getAnnotationDocumentTimestamp().isPresent()) {
+            curationDocumentService
+                    .verifyCurationCasTimestamp(state.getDocument(),
+                            state.getAnnotationDocumentTimestamp().get(), "reading")
+                    .ifPresent(state::setAnnotationDocumentTimestamp);
+        }
 
         return curationDocumentService.readCurationCas(state.getDocument());
     }
@@ -475,9 +475,8 @@ public class CurationPage
         curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
         // Update timestamp in state
-        Optional<Long> diskTimestamp = curationDocumentService
-                .getCurationCasTimestamp(state.getDocument());
-        AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
+        curationDocumentService.getCurationCasTimestamp(state.getDocument())
+                .ifPresent(state::setAnnotationDocumentTimestamp);
     }
 
     @Override
@@ -531,8 +530,8 @@ public class CurationPage
             state.reset();
 
             // Initialize timestamp in state
-            updateDocumentTimestampAfterWrite(state,
-                    curationDocumentService.getCurationCasTimestamp(state.getDocument()));
+            curationDocumentService.getCurationCasTimestamp(state.getDocument())
+                    .ifPresent(state::setAnnotationDocumentTimestamp);
 
             // Initialize the visible content
             state.moveToUnit(mergeCas, aFocus + 1, TOP);
@@ -839,8 +838,8 @@ public class CurationPage
             }
         }
 
-        updateDocumentTimestampAfterWrite(aState,
-                curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
+        curationDocumentService.getCurationCasTimestamp(aState.getDocument())
+                .ifPresent(aState::setAnnotationDocumentTimestamp);
 
         return mergeCas;
     }

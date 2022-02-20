@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGR
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
@@ -375,9 +374,8 @@ public class AnnotatorsPanel
     private void writeEditorCas(AnnotatorState state, CAS aCas) throws IOException
     {
         curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
-
-        updateDocumentTimestampAfterWrite(state,
-                curationDocumentService.getCurationCasTimestamp(state.getDocument()));
+        curationDocumentService.getCurationCasTimestamp(state.getDocument())
+                .ifPresent(state::setAnnotationDocumentTimestamp);
     }
 
     private CAS readAnnotatorCas(AnnotatorSegment aSegment) throws IOException

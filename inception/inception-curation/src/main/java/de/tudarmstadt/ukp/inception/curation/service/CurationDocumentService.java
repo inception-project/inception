@@ -25,6 +25,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.springframework.security.access.prepost.PreAuthorize;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -68,6 +69,10 @@ public interface CurationDocumentService
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 
     Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException;
+
+    Optional<Long> verifyCurationCasTimestamp(SourceDocument aDocument, long aTimeStamp,
+            String aContextAction)
+        throws IOException, ConcurentCasModificationException;
 
     /**
      * List all curated source documents.

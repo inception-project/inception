@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -140,6 +141,15 @@ public class CurationDocumentServiceImpl
         Validate.notNull(aDocument, "Source document must be specified");
 
         return casStorageService.getCasTimestamp(aDocument, CURATION_USER);
+    }
+
+    @Override
+    public Optional<Long> verifyCurationCasTimestamp(SourceDocument aDocument, long aTimeStamp,
+            String aContextAction)
+        throws IOException, ConcurentCasModificationException
+    {
+        return casStorageService.verifyCasTimestamp(aDocument, CURATION_USER, aTimeStamp,
+                aContextAction);
     }
 
     @Override

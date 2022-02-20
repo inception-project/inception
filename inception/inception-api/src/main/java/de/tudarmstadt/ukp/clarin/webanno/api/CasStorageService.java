@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface CasStorageService
@@ -159,6 +160,10 @@ public interface CasStorageService
     void analyzeAndRepair(SourceDocument aDocument, String aUsername, CAS aCas);
 
     Optional<Long> getCasTimestamp(SourceDocument aDocument, String aUser) throws IOException;
+
+    Optional<Long> verifyCasTimestamp(SourceDocument aDocument, String aUser,
+            long aExpectedTimeStamp, String aContextAction)
+        throws IOException, ConcurentCasModificationException;
 
     /**
      * Upgrades the given CAS in the storage.

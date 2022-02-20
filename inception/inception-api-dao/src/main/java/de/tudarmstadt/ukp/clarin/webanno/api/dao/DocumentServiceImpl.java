@@ -91,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
@@ -892,6 +893,18 @@ public class DocumentServiceImpl
         Validate.notNull(aUsername, "Username must be specified");
 
         return casStorageService.getCasTimestamp(aDocument, aUsername);
+    }
+
+    @Override
+    public Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, String aUsername,
+            long aExpectedTimeStamp, String aContextAction)
+        throws IOException, ConcurentCasModificationException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aUsername, "Username must be specified");
+
+        return casStorageService.verifyCasTimestamp(aDocument, aUsername, aExpectedTimeStamp,
+                aContextAction);
     }
 
     @Override
