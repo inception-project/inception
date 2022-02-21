@@ -36,7 +36,7 @@ public class ReorderableTag
 
     public ReorderableTag(String aName, String aDescription)
     {
-        tag = new ImmutableTag(null, aName, aDescription);
+        tag = new ImmutableTag(aName, aDescription);
     }
 
     public ReorderableTag(String aName, boolean aReordered)

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaun
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -117,8 +118,17 @@ public class KrippendorffAlphaUnitizingAgreementMeasure
                     Feature f = t.getFeatureByBaseName(getFeature().getName());
                     int currentDocOffset = docOffset;
                     cas.select(t).map(fs -> (AnnotationFS) fs).forEach(fs -> {
-                        study.addUnit(currentDocOffset + fs.getBegin(), fs.getEnd() - fs.getBegin(),
-                                raterIdx, FSUtil.getFeature(fs, f, Object.class));
+                        Object featureValue = FSUtil.getFeature(fs, f, Object.class);
+                        if (featureValue instanceof Collection) {
+                            for (Object value : (Collection<?>) featureValue) {
+                                study.addUnit(currentDocOffset + fs.getBegin(),
+                                        fs.getEnd() - fs.getBegin(), raterIdx, value);
+                            }
+                        }
+                        else {
+                            study.addUnit(currentDocOffset + fs.getBegin(),
+                                    fs.getEnd() - fs.getBegin(), raterIdx, featureValue);
+                        }
                     });
                 }
 

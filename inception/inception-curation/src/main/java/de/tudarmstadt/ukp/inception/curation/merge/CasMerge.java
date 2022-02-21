@@ -409,7 +409,7 @@ public class CasMerge
     {
         return selectAt(aCas, aFs.getType(), aFs.getBegin(), aFs.getEnd()).stream() //
                 .filter(cand -> aAdapter.equivalents(aFs, cand,
-                        (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_fs, _f))) //
+                        (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f))) //
                 .findAny().isPresent();
     }
 
@@ -447,7 +447,7 @@ public class CasMerge
                         + "] does not define a feature named [" + feature.getName() + "]");
             }
 
-            if (shouldIgnoreFeatureOnMerge(aSourceFs, sourceFeature)) {
+            if (shouldIgnoreFeatureOnMerge(sourceFeature)) {
                 continue;
             }
 
@@ -472,7 +472,7 @@ public class CasMerge
         Type targetType = CasUtil.getType(aTargetCas, aSource.getType().getName());
         return selectCovered(aTargetCas, targetType, aSource.getBegin(), aSource.getEnd()).stream()
                 .filter(fs -> aAdapter.equivalents(fs, aSource,
-                        (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_fs, _f)))
+                        (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f)))
                 .collect(toList());
     }
 
@@ -677,7 +677,7 @@ public class CasMerge
                 aOldTarget.getEnd())
                         .stream()
                         .filter(fs -> isEquivalentSpanAnnotation(fs, aOldTarget,
-                                (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_fs, _f)))
+                                (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f)))
                         .collect(Collectors.toList());
 
         if (targets.size() == 0) {
@@ -694,8 +694,14 @@ public class CasMerge
         return targets;
     }
 
-    public static boolean shouldIgnoreFeatureOnMerge(FeatureStructure aFS, Feature aFeature)
+    public static boolean shouldIgnoreFeatureOnMerge(Feature aFeature)
     {
+        if (aFeature.getRange().isArray()) {
+            // Allow multi-value features as long as the value is a primitive (i.e. not a link
+            // feature)
+            return !aFeature.getRange().getComponentType().isPrimitive();
+        }
+
         return !isPrimitiveType(aFeature.getRange()) || isBasicFeature(aFeature)
                 || aFeature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
                 || aFeature.getName().equals(CAS.FEATURE_FULL_NAME_END);

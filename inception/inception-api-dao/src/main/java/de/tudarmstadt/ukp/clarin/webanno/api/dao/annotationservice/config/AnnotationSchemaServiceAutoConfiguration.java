@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -42,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.LinkFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.MultiValueStringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.LinkFeatureSupportPropertiesImpl;
@@ -100,6 +102,15 @@ public class AnnotationSchemaServiceAutoConfiguration
             AnnotationSchemaService aSchemaService)
     {
         return new StringFeatureSupport(aProperties, aSchemaService);
+    }
+
+    @ConditionalOnProperty(prefix = "annotation.feature-support.multi-value-string", //
+            name = "enabled", havingValue = "true")
+    @Bean
+    public MultiValueStringFeatureSupport multiValueStringFeatureSupport(
+            StringFeatureSupportProperties aProperties, AnnotationSchemaService aSchemaService)
+    {
+        return new MultiValueStringFeatureSupport(aProperties, aSchemaService);
     }
 
     @Bean

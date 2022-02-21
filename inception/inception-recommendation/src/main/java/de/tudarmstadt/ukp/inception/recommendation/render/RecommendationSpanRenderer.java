@@ -18,13 +18,13 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 
@@ -110,7 +110,7 @@ public class RecommendationSpanRenderer
             return;
         }
 
-        String bratTypeName = typeAdapter.getEncodedTypeName();
+        String type = typeAdapter.getEncodedTypeName();
 
         recommendationService.calculateSpanSuggestionVisibility(cas,
                 aRequest.getAnnotationUser().getUsername(), layer, groups,
@@ -121,8 +121,7 @@ public class RecommendationSpanRenderer
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
         Map<String, AnnotationFeature> features = annotationService.listSupportedFeatures(layer)
-                .stream()
-                .collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
+                .stream().collect(toMap(AnnotationFeature::getName, identity()));
 
         for (SuggestionGroup<SpanSuggestion> suggestionGroup : groups) {
             // Render annotations for each label
@@ -148,8 +147,7 @@ public class RecommendationSpanRenderer
                 Map<String, String> featureAnnotation = new HashMap<>();
                 featureAnnotation.put(ao.getFeature(), annotation);
 
-                VSpan v = new VSpan(layer, vid, bratTypeName, range.get(), featureAnnotation,
-                        COLOR);
+                VSpan v = new VSpan(layer, vid, type, range.get(), featureAnnotation, COLOR);
 
                 v.setActionButtons(recommenderProperties.isActionButtonsEnabled());
 

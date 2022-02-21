@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.Evaluat
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -46,6 +46,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,9 +170,19 @@ public class StringMatchingRecommender
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);
             Feature predictedFeature = getPredictedFeature(cas);
+            boolean isStringMultiValue = CAS.TYPE_NAME_STRING_ARRAY
+                    .equals(predictedFeature.getRange().getName());
 
             for (AnnotationFS ann : select(cas, predictedType)) {
-                learn(dict, ann.getCoveredText(), ann.getFeatureValueAsString(predictedFeature));
+                if (isStringMultiValue) {
+                    for (String label : FSUtil.getFeature(ann, predictedFeature, String[].class)) {
+                        learn(dict, ann.getCoveredText(), label);
+                    }
+                }
+                else {
+                    learn(dict, ann.getCoveredText(),
+                            ann.getFeatureValueAsString(predictedFeature));
+                }
             }
         }
 
@@ -198,7 +209,10 @@ public class StringMatchingRecommender
             for (Span span : sample.getSpans()) {
                 AnnotationFS annotation = aCas.createAnnotation(predictedType, span.getBegin(),
                         span.getEnd());
-                annotation.setStringValue(predictedFeature, span.getLabel());
+                // Not using setStringValue because we want to handle the case that the predicted
+                // feature is a multi-valued feature. Unfortunately, uimaFIT doesn't have a
+                // setFeature(..., Feature, ...) call yet...
+                FSUtil.setFeature(annotation, predictedFeature.getShortName(), span.getLabel());
                 annotation.setDoubleValue(scoreFeature, span.getScore());
                 annotation.setBooleanValue(isPredictionFeature, true);
                 aCas.addFsToIndexes(annotation);
@@ -401,6 +415,8 @@ public class StringMatchingRecommender
             Type tokenType = getType(cas, Token.class);
             Type annotationType = getType(cas, aLayerName);
             Feature predictedFeature = annotationType.getFeatureByBaseName(aFeatureName);
+            boolean isStringMultiValue = CAS.TYPE_NAME_STRING_ARRAY
+                    .equals(predictedFeature.getRange().getName());
 
             for (AnnotationFS sentence : select(cas, sentenceType)) {
                 List<Span> spans = new ArrayList<>();
@@ -410,11 +426,21 @@ public class StringMatchingRecommender
                         continue;
                     }
 
-                    String label = annotation.getFeatureValueAsString(predictedFeature);
-                    if (isNotEmpty(label)) {
-                        spans.add(new Span(annotation.getBegin(), annotation.getEnd(),
-                                annotation.getCoveredText(),
-                                annotation.getFeatureValueAsString(predictedFeature), -1.0));
+                    if (isStringMultiValue) {
+                        for (String label : FSUtil.getFeature(annotation, predictedFeature,
+                                String[].class)) {
+                            if (isEmpty(label)) {
+                                continue;
+                            }
+                            spans.add(new Span(annotation, label, -1.0));
+                        }
+                    }
+                    else {
+                        String label = annotation.getFeatureValueAsString(predictedFeature);
+                        if (isEmpty(label)) {
+                            continue;
+                        }
+                        spans.add(new Span(annotation, label, -1.0));
                     }
                 }
 
@@ -554,6 +580,11 @@ public class StringMatchingRecommender
         private final String text;
         private final String label;
         private final double score;
+
+        public Span(AnnotationFS aAnn, String aLabel, double aScore)
+        {
+            this(aAnn.getBegin(), aAnn.getEnd(), aAnn.getCoveredText(), aLabel, aScore);
+        }
 
         public Span(int aBegin, int aEnd, String aText, String aLabel, double aScore)
         {
