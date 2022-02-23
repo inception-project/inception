@@ -1,0 +1,57 @@
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt 
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+   
+  http://www.apache.org/licenses/LICENSE-2.0
+  
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+  <form wicket:id="form">
+    <div class="row form-row" wicket:enclosure="apiToken">
+      <label class="col-sm-3 col-form-label" wicket:for="apiToken">
+        <wicket:message key="apiToken"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="apiToken" type="text" class="form-control"></input>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="search">
+      <label class="col-sm-3 col-form-label" wicket:for="search">
+        <wicket:message key="search"/>
+      </label>
+      <div class="col-sm-9">
+        <input wicket:id="search" type="text" class="form-control w-100"></input>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="modelId">
+      <label class="col-sm-3 col-form-label" wicket:for="modelId">
+        <wicket:message key="modelId"/>
+      </label>
+      <div class="col-sm-9">
+        <div class="btn-group w-100" role="group">
+          <input wicket:id="modelId" type="text" class="form-control"></input>
+          <button wicket:id="changeService" class="btn btn-outline-secondary">Change</button>
+        </div>
+        <div class="text-muted small pt-2">
+          <div wicket:id="serviceDescription"/>
+          <a wicket:id="catalogLink" class="float-end" target="_blank">
+            <i class="fas fa-external-link-alt"></i>&nbsp;Open in Hugging Face Hub
+          </a>
+        </div>
+      </div>
+    </div>
+  </form>
+</wicket:panel>
+</html>
