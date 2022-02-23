@@ -26,7 +26,7 @@ public class HfRecommenderTraits
     implements Serializable
 {
     private static final long serialVersionUID = 4735528852387210053L;
-    
+
     private String modelId;
     private String apiToken;
 

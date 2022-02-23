@@ -70,8 +70,7 @@ public class HfHubClientImpl
         return queryCatalog(queryParameters);
     }
 
-    public HfModelCard[] queryCatalog(Map<String, String> aQueryParameters)
-        throws IOException
+    public HfModelCard[] queryCatalog(Map<String, String> aQueryParameters) throws IOException
     {
         StringBuilder uriBuilder = new StringBuilder(searchUrl);
         if (!aQueryParameters.isEmpty()) {

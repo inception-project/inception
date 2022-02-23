@@ -29,7 +29,7 @@ public class HfModelCard
     implements Serializable
 {
     private static final long serialVersionUID = -4720916277027846468L;
-    
+
     private @JsonProperty("private") boolean privateAccess;
     private @JsonProperty("pipeline_tag") String pipelineTag;
     // private @JsonProperty("cardData") String pipelineTag;

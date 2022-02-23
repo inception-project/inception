@@ -41,7 +41,7 @@ public class HfInferenceClientImpl
     implements HfInferenceClient
 {
     private String inferenceUrl = "https://api-inference.huggingface.co/models";
-    
+
     public HfInferenceClientImpl()
     {
         super();
@@ -58,7 +58,7 @@ public class HfInferenceClientImpl
     {
         HfTokenClassificationTaskRequest hfRequest = new HfTokenClassificationTaskRequest();
         hfRequest.setInputs(aCas.getDocumentText());
-        
+
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(URI.create(inferenceUrl + "/" + aModelId)) //
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + aToken) //

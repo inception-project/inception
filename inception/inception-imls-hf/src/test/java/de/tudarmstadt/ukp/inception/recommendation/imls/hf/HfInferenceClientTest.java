@@ -47,7 +47,8 @@ public class HfInferenceClientTest
         String modelId = "dbmdz/bert-large-cased-finetuned-conll03-english";
         var token = "Muahahhaa!";
         CAS cas = CasFactory.createCas();
-        cas.setDocumentText("John works for ACME Company in Alaska. He studied at the University of California in Los Angeles.");
+        cas.setDocumentText(
+                "John works for ACME Company in Alaska. He studied at the University of California in Los Angeles.");
         List<HfEntityGroup> response = sut.invokeService(modelId, token, cas);
 
         System.out.println(JSONUtil.toPrettyJsonString(response));
