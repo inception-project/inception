@@ -24,8 +24,8 @@ import org.junit.jupiter.api.Test;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfHubClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfHubClientImpl;
-import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelDetails;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelCard;
+import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelDetails;
 
 public class HfHubClientImplTest
 {

@@ -22,10 +22,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.HfRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfInferenceClient;
-import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfInferenceClientImpl;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfHubClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfHubClientImpl;
+import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfInferenceClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfInferenceClientImpl;
 
 @Configuration
 @ConditionalOnProperty(prefix = "recommender.hf", name = "enabled", havingValue = "true", matchIfMissing = false)

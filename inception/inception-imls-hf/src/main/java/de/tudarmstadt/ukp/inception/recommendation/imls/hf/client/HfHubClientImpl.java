@@ -26,8 +26,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelDetails;
+
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelCard;
+import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelDetails;
 
 public class HfHubClientImpl
     extends HfClientImplBase

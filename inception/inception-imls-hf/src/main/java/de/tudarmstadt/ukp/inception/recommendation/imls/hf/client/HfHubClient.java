@@ -18,8 +18,9 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.hf.client;
 
 import java.io.IOException;
-import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelDetails;
+
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelCard;
+import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelDetails;
 
 public interface HfHubClient
 {

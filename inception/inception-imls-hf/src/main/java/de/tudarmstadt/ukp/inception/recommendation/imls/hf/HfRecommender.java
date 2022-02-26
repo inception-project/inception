@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.hf;
 
 import java.io.IOException;
 import java.util.List;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
