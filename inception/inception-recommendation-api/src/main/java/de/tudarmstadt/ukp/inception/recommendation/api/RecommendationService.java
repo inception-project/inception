@@ -90,6 +90,8 @@ public interface RecommendationService
 
     boolean hasActiveRecommenders(String aUser, Project aProject);
 
+    List<EvaluatedRecommender> getActiveRecommenders(User aUser, Project aProject);
+
     void setEvaluatedRecommenders(User aUser, AnnotationLayer layer,
             List<EvaluatedRecommender> selectedClassificationTools);
 

@@ -312,6 +312,15 @@ public class RecommendationServiceImpl
     }
 
     @Override
+    public List<EvaluatedRecommender> getActiveRecommenders(User aUser, Project aProject)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aProject);
+        synchronized (state) {
+            return new ArrayList<>(state.getActiveRecommenders().values());
+        }
+    }
+
+    @Override
     @Transactional
     public void createOrUpdateRecommender(Recommender aRecommender)
     {
@@ -1357,24 +1366,23 @@ public class RecommendationServiceImpl
             SourceDocument aDocument, User aUser, int aPredictionBegin, int aPredictionEnd)
     {
         try {
+            List<EvaluatedRecommender> recommenders = getActiveRecommenders(aUser,
+                    aDocument.getProject());
+            if (recommenders.isEmpty()) {
+                aPredictions.log(LogMessage.info(this, "No active recommenders"));
+                log.trace("[{}]: No active recommenders", aUser);
+                return;
+            }
+
             LazyCas originalCas = new LazyCas(aDocument, aUser);
-            for (AnnotationLayer layer : annoService.listAnnotationLayer(aDocument.getProject())) {
+            for (EvaluatedRecommender r : recommenders) {
+                AnnotationLayer layer = annoService.getLayer(r.getRecommender().getLayer().getId());
                 if (!layer.isEnabled()) {
                     continue;
                 }
 
-                List<EvaluatedRecommender> recommenders = getActiveRecommenders(aUser, layer);
-                if (recommenders.isEmpty()) {
-                    aPredictions.log(LogMessage.info(this, "No active recommenders on layer [%s]",
-                            layer.getUiName()));
-                    log.trace("[{}]: No active recommenders on layer {}", aUser, layer.getUiName());
-                    continue;
-                }
-
-                for (EvaluatedRecommender r : recommenders) {
-                    computePredictions(originalCas, r, aPredictions, aPredictionCas, aDocument,
-                            aUser, aPredictionBegin, aPredictionEnd);
-                }
+                computePredictions(originalCas, r, aPredictions, aPredictionCas, aDocument, aUser,
+                        aPredictionBegin, aPredictionEnd);
             }
         }
         catch (IOException e) {
