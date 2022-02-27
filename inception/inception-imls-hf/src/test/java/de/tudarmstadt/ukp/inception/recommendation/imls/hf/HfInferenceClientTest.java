@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.hf;
 
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.fit.factory.CasFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -46,10 +44,9 @@ public class HfInferenceClientTest
     {
         String modelId = "dbmdz/bert-large-cased-finetuned-conll03-english";
         var token = "Muahahhaa!";
-        CAS cas = CasFactory.createCas();
-        cas.setDocumentText(
-                "John works for ACME Company in Alaska. He studied at the University of California in Los Angeles.");
-        List<HfEntityGroup> response = sut.invokeService(modelId, token, cas);
+        String text = "John works for ACME Company in Alaska. He studied at the University of "
+                + "California in Los Angeles.";
+        List<HfEntityGroup> response = sut.invokeService(modelId, token, text);
 
         System.out.println(JSONUtil.toPrettyJsonString(response));
     }

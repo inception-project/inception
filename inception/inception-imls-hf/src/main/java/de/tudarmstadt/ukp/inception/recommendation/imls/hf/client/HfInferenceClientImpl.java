@@ -29,7 +29,6 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.springframework.http.HttpHeaders;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -53,11 +52,11 @@ public class HfInferenceClientImpl
     }
 
     @Override
-    public List<HfEntityGroup> invokeService(String aModelId, String aToken, CAS aCas)
+    public List<HfEntityGroup> invokeService(String aModelId, String aToken, String aText)
         throws IOException
     {
         HfTokenClassificationTaskRequest hfRequest = new HfTokenClassificationTaskRequest();
-        hfRequest.setInputs(aCas.getDocumentText());
+        hfRequest.setInputs(aText);
 
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(URI.create(inferenceUrl + "/" + aModelId)) //

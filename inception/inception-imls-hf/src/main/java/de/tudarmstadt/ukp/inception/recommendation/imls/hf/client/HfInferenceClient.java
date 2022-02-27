@@ -20,12 +20,10 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.hf.client;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
-
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfEntityGroup;
 
 public interface HfInferenceClient
 {
-    List<HfEntityGroup> invokeService(String aServiceSync, String aToken, CAS aCas)
+    List<HfEntityGroup> invokeService(String aServiceSync, String aToken, String aText)
         throws IOException;
 }

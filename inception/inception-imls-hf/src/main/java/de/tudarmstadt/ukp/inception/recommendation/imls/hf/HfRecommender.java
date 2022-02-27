@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.hf;
 
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
+
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -55,16 +56,18 @@ public class HfRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         List<HfEntityGroup> response;
         try {
+            String text = aCas.getDocumentLanguage().substring(aBegin, aEnd);
             response = hfInferenceClient.invokeService(traits.getModelId(), traits.getApiToken(),
-                    aCas);
+                    text);
         }
         catch (IOException e) {
             throw new RecommendationException(
-                    "Error invoking HF service: " + ExceptionUtils.getRootCauseMessage(e), e);
+                    "Error invoking HF service: " + getRootCauseMessage(e), e);
         }
 
         Type predictedType = getPredictedType(aCas);
@@ -74,8 +77,8 @@ public class HfRecommender
 
         for (HfEntityGroup group : response) {
             String tag = group.getEntityGroup();
-            AnnotationFS ann = aCas.createAnnotation(predictedType, group.getStart(),
-                    group.getEnd());
+            AnnotationFS ann = aCas.createAnnotation(predictedType, aBegin + group.getStart(),
+                    aBegin + group.getEnd());
             ann.setStringValue(predictedFeature, tag);
             ann.setBooleanValue(isPredictionFeature, true);
             ann.setDoubleValue(scoreFeature, group.getScore());
