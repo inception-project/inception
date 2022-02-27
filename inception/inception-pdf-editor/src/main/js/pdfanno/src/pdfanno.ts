@@ -42,13 +42,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Start application.
   window.annoPage.startViewerApplication()
 
-  // initial tab.
-  const q        = urijs(document.URL).query(true)
-  const tabIndex = q.tab && parseInt(q.tab, 10)
-  if (tabIndex) {
-    $(`.nav-tabs a[href="#tab${tabIndex}"]`).click()
-  }
-
   // Show a content.
   displayViewer()
 })
