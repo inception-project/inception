@@ -868,6 +868,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-elg</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-hf</usedDependency>
               <!-- <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency> -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
