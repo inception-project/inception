@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.elg.service;
 import java.io.IOException;
 import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
@@ -36,8 +34,8 @@ public interface ElgService
 
     void refreshSession(ElgSession aSession) throws IOException;
 
-    ElgServiceResponse invokeService(ElgSession aSession, String aServiceSync, CAS aCas)
-        throws IOException;
-
     ElgSession createOrUpdateSession(ElgSession aSession);
+
+    ElgServiceResponse invokeService(ElgSession aSession, String aServiceSync, String aText)
+        throws IOException;
 }

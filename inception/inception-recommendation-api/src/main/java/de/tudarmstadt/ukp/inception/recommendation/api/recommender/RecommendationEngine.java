@@ -69,16 +69,39 @@ public abstract class RecommendationEngine
         throws RecommendationException;
 
     /**
-     * Given text in {@code aCas}, predict target annotations. These should be written into
-     * {@code aCas}. In order to restore data from e.g. previous training, the {@code aContext} can
-     * be used.
+     * Given text in a {@link CAS}, predict target annotations. These should be written into
+     * {@link CAS}. In order to restore data from e.g. previous training, the
+     * {@link RecommenderContext} can be used.
      * 
      * @param aContext
      *            The context of the recommender
      * @param aCas
      *            The training data
      */
-    public abstract void predict(RecommenderContext aContext, CAS aCas)
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    {
+        predict(aContext, aCas, 0, aCas.getDocumentText().length());
+    }
+
+    /**
+     * Given text in a {@link CAS}, predict target annotations. These should be written into
+     * {@link CAS}. In order to restore data from e.g. previous training, the
+     * {@link RecommenderContext} can be used.
+     * <p>
+     * Depending on the recommender, it may be necessary to internally extend the range in which
+     * recommendations are generated so that recommendations that partially overlap the prediction
+     * range may also be generated.
+     * 
+     * @param aContext
+     *            The context of the recommender
+     * @param aCas
+     *            The training data
+     * @param aBegin
+     *            Begin of the range in which predictions should be generated.
+     * @param aEnd
+     *            End of the range in which predictions should be generated.
+     */
+    public abstract void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException;
 
     /**
@@ -117,9 +140,19 @@ public abstract class RecommendationEngine
      * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
      * training is skipped or fails - this is meant only for engines that use pre-trained models.
      */
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_SUPPORTED;
+        return TrainingCapability.TRAINING_SUPPORTED;
+    }
+
+    /**
+     * Returns which prediction capabilities this engine has. If a recommender uses annotations and
+     * not only the text, then this method should be overwritten to return
+     * {@link PredictionCapability#PREDICTION_USES_ANNOTATIONS}
+     */
+    public PredictionCapability getPredictionCapability()
+    {
+        return PredictionCapability.PREDICTION_USES_TEXT_ONLY;
     }
 
     /**

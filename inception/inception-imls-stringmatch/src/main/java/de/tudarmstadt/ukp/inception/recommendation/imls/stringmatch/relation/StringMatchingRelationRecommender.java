@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -92,7 +93,8 @@ public class StringMatchingRelationRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         MultiValuedMap<Pair<String, String>, String> model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
@@ -108,7 +110,7 @@ public class StringMatchingRelationRecommender
         Feature attachFeature = getAttachFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
 
-        for (AnnotationFS sampleUnit : select(aCas, sampleUnitType)) {
+        for (AnnotationFS sampleUnit : selectOverlapping(aCas, sampleUnitType, aBegin, aEnd)) {
             Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sampleUnit);
             for (AnnotationFS governor : baseAnnotations) {
                 for (AnnotationFS dependent : baseAnnotations) {
