@@ -33,7 +33,7 @@
     "request-promise": "^4.2.2",
     "semver": "^5.5.0",
     "toml": "github:yoheiMune/toml-node",
-    "urijs": "^1.19.7",
+    "urijs": "^1.19.8",
     "pdfjs-dist": "^1.10.100",
     "jquery": "^3.6.0",
     "jquery-ui": "^1.13.1"
