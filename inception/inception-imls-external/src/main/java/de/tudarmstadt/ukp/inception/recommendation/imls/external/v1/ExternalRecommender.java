@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external.v1;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.appendIfMissing;
@@ -61,10 +61,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.config.ExternalRecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionRequest;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v1.messages.PredictionResponse;
@@ -156,7 +156,8 @@ public class ExternalRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         String typeSystem = serializeTypeSystem(aCas);
 
@@ -307,7 +308,7 @@ public class ExternalRecommender
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
         if (traits.isTrainable()) {
             //

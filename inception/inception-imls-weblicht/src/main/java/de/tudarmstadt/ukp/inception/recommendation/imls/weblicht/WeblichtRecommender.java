@@ -56,9 +56,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.WeblichtChainService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.converter.DKPro2Tcf;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.converter.Tcf2DKPro;
@@ -107,8 +107,12 @@ public class WeblichtRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
+        // Begin and end are not used here because we do not know what kind of WebLicht pipeline
+        // the user calls and whether it actually makes sense to limit it in scope.
+
         if (!chainService.existsChain(getRecommender())) {
             return;
         }
@@ -117,7 +121,7 @@ public class WeblichtRecommender
             String documentText = aCas.getDocumentText();
             String documentLanguage = aCas.getDocumentLanguage();
 
-            // build http request and assign multipart upload data
+            // Build http request and assign multipart upload data
             MultipartEntityBuilder builder = MultipartEntityBuilder.create() //
                     .setMode(HttpMultipartMode.BROWSER_COMPATIBLE) //
                     .addTextBody("apikey", traits.getApiKey(), MULTIPART_FORM_DATA) //
@@ -164,7 +168,8 @@ public class WeblichtRecommender
             }
 
             HttpUriRequest request = RequestBuilder.post(traits.getUrl())//
-                    .addHeader("Accept", "*/*").setEntity(builder.build()) //
+                    .addHeader("Accept", "*/*") //
+                    .setEntity(builder.build()) //
                     .build();
 
             HttpResponse response = sendRequest(request);
@@ -234,9 +239,9 @@ public class WeblichtRecommender
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+        return TrainingCapability.TRAINING_NOT_SUPPORTED;
     }
 
     private HttpResponse sendRequest(HttpUriRequest aRequest) throws RecommendationException

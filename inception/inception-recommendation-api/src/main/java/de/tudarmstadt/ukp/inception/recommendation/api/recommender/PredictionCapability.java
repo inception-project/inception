@@ -17,25 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-public enum RecommendationEngineCapability
+public enum PredictionCapability
 {
     /**
-     * {@link RecommendationEngine} does not support training. Calling
-     * {@link RecommendationEngine#train} may be a no-op at best or result in an exception at worst.
+     * Predictions are based on the (immutable) text only. This means that predictions need to be
+     * done only once per document and can be cached.
      */
-    TRAINING_NOT_SUPPORTED,
+    PREDICTION_USES_TEXT_ONLY,
 
     /**
-     * {@link RecommendationEngine} supports training but does not require it. Thus,
-     * {@link RecommendationEngine#predict} can be called even if there was not training data.
-     * {@link RecommendationEngine#isReadyForPrediction} may return {@code true}, even if
-     * {@link RecommendationEngine#train} has not been called before.
+     * Predictions make take annotations into account. When there are changes to annotations, new
+     * predictions need to be generated. If the recommender is also trainable, then recommendations
+     * should only be generated once a training phase has completed.
      */
-    TRAINING_SUPPORTED,
-
-    /**
-     * {@link RecommendationEngine} requires training. {@link RecommendationEngine#train} must be
-     * called to initialize a context before {@link RecommendationEngine#predict} can be used.
-     */
-    TRAINING_REQUIRED
+    PREDICTION_USES_ANNOTATIONS;
 }

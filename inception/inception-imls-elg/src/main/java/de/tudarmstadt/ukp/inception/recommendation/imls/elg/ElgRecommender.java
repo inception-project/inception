@@ -67,11 +67,13 @@ public class ElgRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         ElgServiceResponse response;
         try {
-            response = elgService.invokeService(session, traits.getServiceUrlSync(), aCas);
+            String text = aCas.getDocumentText().substring(aBegin, aEnd);
+            response = elgService.invokeService(session, traits.getServiceUrlSync(), text);
         }
         catch (IOException e) {
             throw new RecommendationException(
@@ -86,8 +88,8 @@ public class ElgRecommender
         for (Entry<String, List<ElgAnnotation>> group : getAnnotationGroups(response).entrySet()) {
             String tag = group.getKey();
             for (ElgAnnotation elgAnn : group.getValue()) {
-                AnnotationFS ann = aCas.createAnnotation(predictedType, elgAnn.getStart(),
-                        elgAnn.getEnd());
+                AnnotationFS ann = aCas.createAnnotation(predictedType, elgAnn.getStart() + aBegin,
+                        elgAnn.getEnd() + aBegin);
                 ann.setStringValue(predictedFeature, tag);
                 ann.setBooleanValue(isPredictionFeature, true);
                 if (!elgAnn.getFeatures().isEmpty()) {

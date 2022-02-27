@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
@@ -49,10 +49,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import opennlp.tools.ml.BeamSearch;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
@@ -110,13 +110,14 @@ public class OpenNlpPosRecommender
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_REQUIRED;
+        return TrainingCapability.TRAINING_REQUIRED;
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         POSModel model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
@@ -132,14 +133,15 @@ public class OpenNlpPosRecommender
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         int predictionCount = 0;
-        for (AnnotationFS sampleUnit : select(aCas, sampleUnitType)) {
+        for (AnnotationFS sampleUnit : selectOverlapping(aCas, sampleUnitType, aBegin, aEnd)) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
             predictionCount++;
 
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sampleUnit);
-            String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
+            String[] tokens = tokenAnnotations.stream() //
+                    .map(AnnotationFS::getCoveredText) //
                     .toArray(String[]::new);
 
             Sequence[] bestSequences = tagger.topKSequences(tokens);

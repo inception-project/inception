@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,10 +31,11 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -43,10 +45,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 
 public class NamedEntityLinker
     extends RecommendationEngine
@@ -87,12 +89,16 @@ public class NamedEntityLinker
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         Type predictedType = getPredictedType(aCas);
 
-        for (AnnotationFS sentence : selectSentences(aCas)) {
-            for (AnnotationFS annotation : CasUtil.selectCovered(aCas, predictedType, sentence)) {
+        for (AnnotationFS sentence : selectOverlapping(aCas, getType(aCas, Sentence.class), aBegin,
+                aEnd)) {
+
+            for (Annotation annotation : aCas.<Annotation> select(predictedType)
+                    .coveredBy(sentence)) {
                 int begin = annotation.getBegin();
                 int end = annotation.getEnd();
                 predictSingle(annotation.getCoveredText(), begin, end, aCas);
@@ -145,9 +151,9 @@ public class NamedEntityLinker
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_SUPPORTED;
+        return TrainingCapability.TRAINING_SUPPORTED;
     }
 
     @Override

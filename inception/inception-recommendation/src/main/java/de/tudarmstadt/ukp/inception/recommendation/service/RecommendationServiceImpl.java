@@ -29,7 +29,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -1494,7 +1494,7 @@ public class RecommendationServiceImpl
         throws RecommendationException
     {
         // Perform the actual prediction
-        engine.predict(ctx, predictionCas);
+        engine.predict(ctx, predictionCas, 0, predictionCas.getDocumentText().length());
 
         // Extract the suggestions from the data which the recommender has written into the CAS
         List<AnnotationSuggestion> suggestions = extractSuggestions(aUsername, originalCas,

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static java.util.Arrays.asList;
@@ -193,7 +194,8 @@ public class StringMatchingRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
@@ -203,7 +205,7 @@ public class StringMatchingRecommender
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
 
-        List<Sample> data = predict(0, aCas, dict);
+        List<Sample> data = predict(aCas, aBegin, aEnd, dict);
 
         for (Sample sample : data) {
             for (Span span : sample.getSpans()) {
@@ -220,7 +222,7 @@ public class StringMatchingRecommender
         }
     }
 
-    private List<Sample> predict(int aDocNo, CAS aCas, Trie<DictEntry> aDict)
+    private List<Sample> predict(CAS aCas, int aBegin, int aEnd, Trie<DictEntry> aDict)
     {
         boolean requireEndAtTokenBoundary = !CHARACTERS
                 .equals(getRecommender().getLayer().getAnchoringMode());
@@ -236,9 +238,10 @@ public class StringMatchingRecommender
             text = text.toLowerCase(Locale.ROOT);
         }
 
-        for (Annotation sampleUnit : aCas.<Annotation> select(sampleUnitType)) {
+        for (AnnotationFS sampleUnit : selectOverlapping(aCas, sampleUnitType, aBegin, aEnd)) {
             List<Span> spans = new ArrayList<>();
-            List<Annotation> tokens = aCas.<Annotation> select(tokenType).coveredBy(sampleUnit)
+            List<Annotation> tokens = aCas.<Annotation> select(tokenType) //
+                    .coveredBy(sampleUnit) //
                     .asList();
             for (Annotation token : tokens) {
                 Trie<DictEntry>.MatchedNode match = aDict.getNode(text, token.getBegin());
@@ -269,7 +272,7 @@ public class StringMatchingRecommender
                 }
             }
 
-            data.add(new Sample(aDocNo, aCas.getDocumentText(), tokens, spans));
+            data.add(new Sample(0, aCas.getDocumentText(), tokens, spans));
         }
 
         return data;
