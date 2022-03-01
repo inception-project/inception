@@ -32,6 +32,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -41,6 +42,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -107,6 +109,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -145,6 +148,7 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.model.DirtySpot;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
@@ -187,8 +191,8 @@ public class RecommendationServiceImpl
      * Marks user/projects to which annotations were added during this request.
      */
     @SuppressWarnings("serial")
-    private static final MetaDataKey<Set<RecommendationStateKey>> DIRTIES = //
-            new MetaDataKey<Set<RecommendationStateKey>>()
+    private static final MetaDataKey<Set<DirtySpot>> DIRTIES = //
+            new MetaDataKey<Set<DirtySpot>>()
             {
             };
 
@@ -197,7 +201,7 @@ public class RecommendationServiceImpl
      * annotations have been added above).
      */
     @SuppressWarnings("serial")
-    private static final MetaDataKey<Set<RecommendationStateKey>> COMMITTED = new MetaDataKey<>()
+    private static final MetaDataKey<Set<CommittedDocument>> COMMITTED = new MetaDataKey<>()
     {
     };
 
@@ -522,13 +526,13 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Set<RecommendationStateKey> dirties = requestCycle.getMetaData(DIRTIES);
+        Set<DirtySpot> dirties = requestCycle.getMetaData(DIRTIES);
         if (dirties == null) {
             dirties = new HashSet<>();
             requestCycle.setMetaData(DIRTIES, dirties);
         }
 
-        dirties.add(new RecommendationStateKey(aEvent.getUser(), aEvent.getProject()));
+        dirties.add(new DirtySpot(aEvent));
     }
 
     /*
@@ -545,14 +549,13 @@ public class RecommendationServiceImpl
             return;
         }
 
-        Set<RecommendationStateKey> committed = requestCycle.getMetaData(COMMITTED);
+        Set<CommittedDocument> committed = requestCycle.getMetaData(COMMITTED);
         if (committed == null) {
             committed = new HashSet<>();
             requestCycle.setMetaData(COMMITTED, committed);
         }
 
-        committed.add(new RecommendationStateKey(aEvent.getDocument().getUser(),
-                aEvent.getDocument().getProject()));
+        committed.add(new CommittedDocument(aEvent.getDocument()));
 
         boolean containsTrainingTrigger = false;
         for (IRequestCycleListener listener : requestCycle.getListeners()) {
@@ -628,18 +631,18 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndPrediction(String aUser, Project aProject, String aEventName,
             SourceDocument aCurrentDocument)
     {
-        triggerRun(aUser, aProject, aEventName, aCurrentDocument, false);
+        triggerRun(aUser, aProject, aEventName, aCurrentDocument, false, null);
     }
 
     @Override
     public void triggerSelectionTrainingAndPrediction(String aUser, Project aProject,
             String aEventName, SourceDocument aCurrentDocument)
     {
-        triggerRun(aUser, aProject, aEventName, aCurrentDocument, true);
+        triggerRun(aUser, aProject, aEventName, aCurrentDocument, true, null);
     }
 
     private void triggerRun(String aUser, Project aProject, String aEventName,
-            SourceDocument aCurrentDocument, boolean aForceSelection)
+            SourceDocument aCurrentDocument, boolean aForceSelection, Set<DirtySpot> aDirties)
     {
         User user = userRepository.get(aUser);
         // do not trigger training during when viewing others' work
@@ -670,17 +673,18 @@ public class RecommendationServiceImpl
                 state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - 1);
                 state.setPredictionsSinceLastEvaluation(0);
             }
-        }
-        else {
-            Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument);
-            schedulingService.enqueue(task);
 
-            RecommendationState state = getState(aUser, aProject);
-            synchronized (state) {
-                int predictions = state.getPredictionsSinceLastEvaluation() + 1;
-                state.setPredictionsSinceLastEvaluation(predictions);
-                state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - predictions - 1);
-            }
+            return;
+        }
+
+        Task task = new TrainingTask(user, aProject, aEventName, aCurrentDocument);
+        schedulingService.enqueue(task);
+
+        RecommendationState state = getState(aUser, aProject);
+        synchronized (state) {
+            int predictions = state.getPredictionsSinceLastEvaluation() + 1;
+            state.setPredictionsSinceLastEvaluation(predictions);
+            state.setPredictionsUntilNextEvaluation(TRAININGS_PER_SELECTION - predictions - 1);
         }
     }
 
@@ -947,6 +951,58 @@ public class RecommendationServiceImpl
                 aSuggestion.getLabel());
 
         return address;
+    }
+
+    private static class CommittedDocument
+    {
+        private final long projectId;
+        private final long documentId;
+        private final String user;
+
+        public CommittedDocument(AnnotationDocument aDocument)
+        {
+            projectId = aDocument.getProject().getId();
+            documentId = aDocument.getId();
+            user = aDocument.getUser();
+        }
+
+        public long getDocumentId()
+        {
+            return documentId;
+        }
+
+        public long getProjectId()
+        {
+            return projectId;
+        }
+
+        public String getUser()
+        {
+            return user;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(documentId, projectId, user);
+        }
+
+        @Override
+        public boolean equals(Object obj)
+        {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            CommittedDocument other = (CommittedDocument) obj;
+            return documentId == other.documentId && projectId == other.projectId
+                    && Objects.equals(user, other.user);
+        }
     }
 
     private static class RecommendationStateKey
@@ -2114,27 +2170,40 @@ public class RecommendationServiceImpl
         @Override
         public void onEndRequest(RequestCycle cycle)
         {
-            Set<RecommendationStateKey> dirties = cycle.getMetaData(DIRTIES);
-            Set<RecommendationStateKey> committed = cycle.getMetaData(COMMITTED);
+            Set<DirtySpot> dirties = cycle.getMetaData(DIRTIES);
+            Set<CommittedDocument> committed = cycle.getMetaData(COMMITTED);
 
             if (dirties == null || committed == null) {
                 return;
             }
 
-            for (RecommendationStateKey committedKey : committed) {
-                if (!dirties.contains(committedKey)) {
-                    // Committed but not dirty, so nothing to do.
-                    continue;
-                }
+            // Any dirties which have not been committed can be ignored
+            for (CommittedDocument committedDocument : committed) {
+                dirties.removeIf(dirty -> dirty.affectsDocument(committedDocument.getDocumentId(),
+                        committedDocument.getUser()));
+            }
 
-                Project project = projectService.getProject(committedKey.getProjectId());
-                if (project == null) {
-                    // Concurrent action has deleted project, so we can ignore this
-                    continue;
+            // Concurrent action has deleted project, so we can ignore this
+            var affectedProjects = dirties.stream() //
+                    .collect(toMap(d -> d.getProject().getId(), d -> d.getProject()));
+            for (Project project : affectedProjects.values()) {
+                if (projectService.getProject(project.getId()) == null) {
+                    dirties.removeIf(dirty -> dirty.getProject().equals(project));
                 }
+            }
 
-                triggerTrainingAndPrediction(committedKey.getUser(), project,
-                        "Committed dirty CAS at end of request", currentDocument);
+            Map<RecommendationStateKey, Set<DirtySpot>> dirtiesByContext = new LinkedHashMap<>();
+            for (DirtySpot spot : dirties) {
+                RecommendationStateKey key = new RecommendationStateKey(spot.getUser(),
+                        spot.getProject().getId());
+                dirtiesByContext.computeIfAbsent(key, k -> new HashSet<>()).add(spot);
+            }
+
+            for (var contextDirties : dirtiesByContext.entrySet()) {
+                var key = contextDirties.getKey();
+                triggerRun(key.getUser(), affectedProjects.get(key.getProjectId()),
+                        "Committed dirty CAS at end of request", currentDocument, false,
+                        contextDirties.getValue());
             }
         }
     }
