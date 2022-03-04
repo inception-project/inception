@@ -29,6 +29,8 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 public interface WorkloadManagerExtension<T>
     extends Extension<Project>
 {
+    public static final String WORKLOAD_ACTION_BAR_ROLE = "Workload";
+
     @Override
     default boolean accepts(Project project)
     {
