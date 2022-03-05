@@ -25,8 +25,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.DefaultWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
@@ -52,7 +52,7 @@ public class DynamicWorkflowActionBarExtension
     @Override
     public String getRole()
     {
-        return DefaultWorkflowActionBarExtension.class.getName();
+        return WorkloadManagerExtension.WORKLOAD_ACTION_BAR_ROLE;
     }
 
     @Override

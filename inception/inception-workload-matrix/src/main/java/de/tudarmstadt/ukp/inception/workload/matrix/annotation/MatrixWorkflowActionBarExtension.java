@@ -15,24 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
+package de.tudarmstadt.ukp.inception.workload.matrix.annotation;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.AnnotatorWorkflowActionBarItemGroup;
+import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
+import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link MatrixWorkloadManagerAutoConfiguration#matrixWorkflowActionBarExtension}
+ * </p>
+ */
 @Order(1000)
-@Component
-public class DefaultWorkflowActionBarExtension
+public class MatrixWorkflowActionBarExtension
     implements ActionBarExtension
 {
     @Override
     public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
     {
-        return new AnnotatorWorkflowActionBarItemGroup(aId, aPage);
+        return new MatrixWorkflowActionBarItemGroup(aId, aPage);
+    }
+
+    @Override
+    public String getRole()
+    {
+        return WorkloadManagerExtension.WORKLOAD_ACTION_BAR_ROLE;
     }
 }

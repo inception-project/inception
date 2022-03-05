@@ -730,6 +730,7 @@
                 <toc>left</toc>
                 <include-dir>./admin-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./admin-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>

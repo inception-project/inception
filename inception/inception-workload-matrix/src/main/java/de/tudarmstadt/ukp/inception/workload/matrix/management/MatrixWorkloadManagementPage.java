@@ -58,6 +58,9 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -82,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
@@ -90,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
+import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellOpenContextMenuEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnSelectionChangedEvent;
@@ -107,6 +112,8 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDoc
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentSelectColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentStateColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.UserSelectToolbar;
+import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/monitoring")
 public class MatrixWorkloadManagementPage
@@ -123,6 +130,8 @@ public class MatrixWorkloadManagementPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationService;
+    private @SpringBean WorkloadManagementService workloadManagementService;
+    private @SpringBean MatrixWorkloadExtension matrixWorkloadExtension;
     private @SpringBean(name = "matrixWorkloadManagementPageMenuItem") ProjectMenuItem pageMenuItem;
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
@@ -167,6 +176,8 @@ public class MatrixWorkloadManagementPage
 
         add(documentMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode));
 
+        add(createSettingsForm());
+
         add(new LambdaAjaxLink("refresh", this::actionRefresh));
 
         actionContainer = new WebMarkupContainer("actionContainer");
@@ -197,6 +208,34 @@ public class MatrixWorkloadManagementPage
 
         add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
         add(contextMenu = new ContextMenu("contextMenu"));
+    }
+
+    /**
+     * @return the "Settings" dropdown menu form
+     */
+    public Form<MatrixWorkloadTraits> createSettingsForm()
+    {
+        MatrixWorkloadTraits traits = matrixWorkloadExtension.readTraits(
+                workloadManagementService.loadOrCreateWorkloadManagerConfiguration(getProject()));
+
+        Form<MatrixWorkloadTraits> settingsForm = new Form<>("settingsForm",
+                new CompoundPropertyModel<>(traits));
+        settingsForm.setOutputMarkupId(true);
+
+        settingsForm.add(new CheckBox("reopenableByAnnotator"));
+
+        settingsForm.add(new LambdaAjaxButton<>("save", this::actionConfirm));
+
+        return settingsForm;
+    }
+
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<MatrixWorkloadTraits> aForm)
+    {
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        // Writes the new traits into the DB
+        matrixWorkloadExtension.writeTraits(aForm.getModelObject(), getProject());
+        success("Changes saved");
     }
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> createDocumentMatrix(
