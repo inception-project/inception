@@ -64,9 +64,11 @@ wrong and misplaced).
 image::curation_1.png[align="center"]
 
 The center part of the annotation page is divided into the *Annotation* pane which is a full-scale
-annotation editor and contains the final data from the curation step. Below it are multiple read-only
-panes containing the annotations from individual annotators. Clicking on an annotation in any of the
-annotator's panes transfers the respective annotation to the *Annotation* pane.
+annotation editor and contains the final data from the curation step. 
+
+Below it are multiple read-only panes containing the annotations from individual annotators. 
+Clicking on an annotation in any of the annotator's panes transfers the respective annotation to the *Annotation* pane.
+There is also a small state icon for each annotator. If you click on that icon, you can change the state, e.g. from *finished* back to *in progress*. Note if you do that, the respective annotators document will no longer be available for curation. When the last finished annotation for a document is reopened, you will be forced to leave curation.
 
 When a document is opened for the first time in the curation page, the application analyzes agreements
 and disagreements between annotators. All annotations on which all annotators agree are automatically

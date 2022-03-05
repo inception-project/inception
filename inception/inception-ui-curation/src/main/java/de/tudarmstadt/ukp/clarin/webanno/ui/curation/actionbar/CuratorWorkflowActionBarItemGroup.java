@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
 import java.io.IOException;
@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
@@ -65,8 +64,8 @@ public class CuratorWorkflowActionBarItemGroup
     private @SpringBean UserDao userRepository;
 
     private final AnnotationPageBase page;
-    protected final ConfirmationDialog finishDocumentDialog;
-    private final LambdaAjaxLink finishDocumentLink;
+    // private final ConfirmationDialog finishDocumentDialog;
+    private final LambdaAjaxLink toggleCurationStateLink;
     private final IModel<CurationWorkflow> curationWorkflowModel;
     private MergeDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
@@ -77,15 +76,14 @@ public class CuratorWorkflowActionBarItemGroup
 
         page = aPage;
 
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
+        // add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
+        // new StringResourceModel("FinishDocumentDialog.title", this, null),
+        // new StringResourceModel("FinishDocumentDialog.text", this, null)));
 
-        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-                this::actionFinishDocument));
-        finishDocumentLink.setOutputMarkupId(true);
-        finishDocumentLink.add(enabledWhen(this::isEditable));
-        finishDocumentLink.add(new Label("state")
+        add(toggleCurationStateLink = new LambdaAjaxLink("toggleCurationState",
+                this::actionToggleCurationState));
+        toggleCurationStateLink.setOutputMarkupId(true);
+        toggleCurationStateLink.add(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
 
         curationWorkflowModel = Model.of(
@@ -118,12 +116,16 @@ public class CuratorWorkflowActionBarItemGroup
     protected boolean isEditable()
     {
         AnnotatorState state = page.getModelObject();
-        return state.getProject() != null && state.getDocument() != null && !documentService
-                .getSourceDocument(state.getDocument().getProject(), state.getDocument().getName())
-                .getState().equals(CURATION_FINISHED);
+        if (state.getProject() == null || state.getDocument() == null) {
+            return false;
+        }
+
+        SourceDocument sourceDocument = documentService
+                .getSourceDocument(state.getDocument().getProject(), state.getDocument().getName());
+        return sourceDocument.getState() != CURATION_FINISHED;
     }
 
-    protected void actionFinishDocument(AjaxRequestTarget aTarget)
+    protected void actionToggleCurationState(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
         try {
@@ -135,18 +137,25 @@ public class CuratorWorkflowActionBarItemGroup
             return;
         }
 
-        finishDocumentDialog.setConfirmAction((_target) -> {
-            AnnotatorState state = page.getModelObject();
-            SourceDocument sourceDocument = state.getDocument();
+        AnnotatorState state = page.getModelObject();
+        SourceDocument sourceDocument = state.getDocument();
+        var docState = sourceDocument.getState();
 
-            if (!curationDocumentService.isCurationFinished(sourceDocument)) {
-                documentService.transitionSourceDocumentState(sourceDocument,
-                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
-            }
-
-            _target.add(page);
-        });
-        finishDocumentDialog.show(aTarget);
+        switch (docState) {
+        case CURATION_IN_PROGRESS:
+            documentService.setSourceDocumentState(sourceDocument, CURATION_FINISHED);
+            aTarget.add(page);
+            break;
+        case CURATION_FINISHED:
+            documentService.setSourceDocumentState(sourceDocument, CURATION_IN_PROGRESS);
+            aTarget.add(page);
+            break;
+        default:
+            error("Can only change document state for documents that are finished or in progress, "
+                    + "but document is in state [" + docState + "]");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            break;
+        }
     }
 
     protected void actionResetDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)
