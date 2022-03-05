@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -32,6 +34,8 @@ import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -49,8 +53,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 
@@ -71,7 +79,9 @@ public abstract class BratSuggestionVisualizer
     private @SpringBean DocumentService documentService;
     private @SpringBean LazyDetailsLookupService lazyDetailsLookupService;
 
-    private AbstractDefaultAjaxBehavior controller;
+    private final ConfirmationDialog stateChangeConfirmationDialog;
+    private final AbstractDefaultAjaxBehavior controller;
+
     private final int position;
 
     public BratSuggestionVisualizer(String aId, IModel<AnnotatorSegment> aModel, int aPosition)
@@ -81,6 +91,19 @@ public abstract class BratSuggestionVisualizer
         position = aPosition;
 
         add(new Label("username", getModel().map(this::maybeAnonymizeUsername)));
+
+        add(stateChangeConfirmationDialog = new ConfirmationDialog("stateChangeConfirmationDialog",
+                new StringResourceModel("StateChangeConfirmationDialog.title", this, null),
+                new StringResourceModel("StateChangeConfirmationDialog.text", this, null)));
+        stateChangeConfirmationDialog.setConfirmAction(this::actionToggleAnnotationDocumentState);
+
+        LambdaAjaxLink stateToggle = new LambdaAjaxLink("stateToggle",
+                stateChangeConfirmationDialog::show);
+        stateToggle.setOutputMarkupId(true);
+        stateToggle.add(new Label("state",
+                LoadableDetachableModel.of(() -> getAnnotationDocumentState().symbol()))
+                        .setEscapeModelStrings(false));
+        add(stateToggle);
 
         controller = new AbstractDefaultAjaxBehavior()
         {
@@ -124,6 +147,37 @@ public abstract class BratSuggestionVisualizer
 
         };
         add(controller);
+    }
+
+    private void actionToggleAnnotationDocumentState(AjaxRequestTarget aTarget)
+    {
+        var username = getModelObject().getUser().getUsername();
+        var doc = getModelObject().getAnnotatorState().getDocument();
+        var annDoc = documentService.getAnnotationDocument(doc, username);
+        var annDocState = annDoc.getState();
+
+        switch (annDocState) {
+        case IN_PROGRESS:
+            documentService.setAnnotationDocumentState(annDoc, FINISHED);
+            break;
+        case FINISHED:
+            documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS);
+            break;
+        default:
+            error("Can only change document state for documents that are finished or in progress, "
+                    + "but document is in state [" + annDocState + "]");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            break;
+        }
+
+        ((CurationPage) getPage()).actionLoadDocument(aTarget);
+    }
+
+    private AnnotationDocumentState getAnnotationDocumentState()
+    {
+        var username = getModelObject().getUser().getUsername();
+        var doc = getModelObject().getAnnotatorState().getDocument();
+        return documentService.getAnnotationDocument(doc, username).getState();
     }
 
     private String maybeAnonymizeUsername(AnnotatorSegment aSegment)

@@ -53,6 +53,7 @@ import java.util.Set;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -575,7 +576,9 @@ public class CurationPage
                     + "administration dashboard and if none of the imported users have been "
                     + "enabled via the users management page after the import (also something "
                     + "that only administrators can do).");
-            backToProjectPage();
+            PageParameters pageParameters = new PageParameters();
+            setProjectPageParameter(pageParameters, getProject());
+            throw new RestartResponseException(CurationPage.class, pageParameters);
         }
 
         Map<String, CAS> casses = documentService

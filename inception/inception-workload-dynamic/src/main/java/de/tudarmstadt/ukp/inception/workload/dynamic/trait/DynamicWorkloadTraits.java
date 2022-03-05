@@ -22,12 +22,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IG
 import java.io.Serializable;
 import java.time.Duration;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.types.DefaultWorkflowExtension;
 
 /**
  * Trait class for dynamic workload
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DynamicWorkloadTraits
     implements Serializable
 {

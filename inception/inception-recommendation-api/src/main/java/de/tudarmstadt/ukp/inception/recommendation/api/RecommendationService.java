@@ -90,6 +90,8 @@ public interface RecommendationService
 
     boolean hasActiveRecommenders(String aUser, Project aProject);
 
+    List<EvaluatedRecommender> getActiveRecommenders(User aUser, Project aProject);
+
     void setEvaluatedRecommenders(User aUser, AnnotationLayer layer,
             List<EvaluatedRecommender> selectedClassificationTools);
 
@@ -159,12 +161,29 @@ public interface RecommendationService
      *            the project to compute the predictions for.
      * @param aDocuments
      *            the documents to compute the predictions for.
-     * @param aInherit
-     *            any documents for which to inherit the predictions from a previous run
      * @return the new predictions.
      */
-    Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments,
-            List<SourceDocument> aInherit);
+    Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments);
+
+    /**
+     * Compute predictions.
+     *
+     * @param aUser
+     *            the user to compute the predictions for.
+     * @param aProject
+     *            the project to compute the predictions for.
+     * @param aCurrentDocument
+     *            the document to compute the predictions for.
+     * @param aInherit
+     *            any documents for which to inherit the predictions from a previous run
+     * @param aPredictionBegin
+     *            begin of the prediction range (negative to predict from 0)
+     * @param aPredictionEnd
+     *            end of the prediction range (negative to predict until the end of the document)
+     * @return the new predictions.
+     */
+    Predictions computePredictions(User aUser, Project aProject, SourceDocument aCurrentDocument,
+            List<SourceDocument> aInherit, int aPredictionBegin, int aPredictionEnd);
 
     void calculateSpanSuggestionVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup<SpanSuggestion>> aRecommendations, int aWindowBegin,
@@ -178,11 +197,11 @@ public interface RecommendationService
 
     void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument);
 
-    void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
+    void triggerTrainingAndPrediction(String aUser, Project aProject, String aEventName,
             SourceDocument aCurrentDocument);
 
-    void triggerSelectionTrainingAndClassification(String aUser, Project aProject,
-            String aEventName, SourceDocument aCurrentDocument);
+    void triggerSelectionTrainingAndPrediction(String aUser, Project aProject, String aEventName,
+            SourceDocument aCurrentDocument);
 
     boolean isPredictForAllDocuments(String aUser, Project aProject);
 

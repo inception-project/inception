@@ -110,4 +110,15 @@ filter text field. For example, with the checkbox enabled, you could search for 
 all documents whose name starts with `chapter01` or for `train|test` to match all documents containing
 `train` or `test` in their name.
 
- 
+== Allow annotators to re-open documents
+
+When an annotator marks a document as **Finished**, the document becomes uneditable for them. 
+By default, the only way to re-open a document for further annotation is that a curator or project manager opens the workload management page and changes the state of the document there.
+
+However, in some cases, it is more convenient if annotators themselves can re-open a document and continue editing it. 
+The option **Reopenable by annotators** in the **Settings** dialog on the workload management can be enabled to allow annotators put finished documents back into the **in progress** state directly from the annotation page by clicking on the **Finish/lock** button in the action bar. 
+If this option is enabled, the dialog that asks users to confirm that they wish to mark a document is finished is not shown.
+
+NOTE: This option only allows annotators to re-open documents that they have closed themselves. 
+    If a document has been marked as finished by a project manager or curator, the annotators can not re-open it. 
+    On the workload management page, documents that have been explicitly closed by a curator/manager bear a double icon in their state column (e.g. **finished (in progress)**).

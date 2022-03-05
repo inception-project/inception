@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
 import org.apache.wicket.markup.html.form.Button;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.danekja.java.misc.serializable.SerializableRunnable;
 import org.danekja.java.util.function.serializable.SerializableConsumer;
 import org.slf4j.LoggerFactory;
@@ -70,6 +71,10 @@ public class LambdaButton
     {
         try {
             action.run();
+        }
+        catch (ReplaceHandlerException e) {
+            // Let Wicket redirects still work
+            throw e;
         }
         catch (Exception e) {
             if (exceptionHandler != null) {

@@ -43,6 +43,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.flow.RedirectToUrlException;
@@ -266,6 +267,11 @@ public abstract class AnnotationPageBase
 
     protected void handleException(AjaxRequestTarget aTarget, Exception aException)
     {
+        if (aException instanceof ReplaceHandlerException) {
+            // Let Wicket redirects still work
+            throw (ReplaceHandlerException) aException;
+        }
+
         LoggerFactory.getLogger(getClass()).error("Error: " + aException.getMessage(), aException);
         error("Error: " + aException.getMessage());
         if (aTarget != null) {
