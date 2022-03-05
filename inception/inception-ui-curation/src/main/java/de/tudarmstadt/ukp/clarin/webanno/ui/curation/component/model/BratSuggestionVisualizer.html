@@ -20,8 +20,12 @@
 <body>
   <wicket:panel>
     <div class="flex-content card">
+      <div wicket:id="stateChangeConfirmationDialog"></div>
       <div class="card-header">
         <wicket:container wicket:id="username"/>
+        <a wicket:id="stateToggle" class="btn btn-sm p-0 float-end">
+          <i wicket:id="state"></i>
+        </a>
       </div>
       <div class="card-body text-center" style="overflow-x: auto">
         <div wicket:id="vis" class="brat"></div>

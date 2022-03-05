@@ -21,6 +21,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
 public class LambdaAjaxFormComponentUpdatingBehavior
@@ -61,6 +62,10 @@ public class LambdaAjaxFormComponentUpdatingBehavior
             if (action != null) {
                 action.accept(aTarget);
             }
+        }
+        catch (ReplaceHandlerException e) {
+            // Let Wicket redirects still work
+            throw e;
         }
         catch (Exception e) {
             if (exceptionHandler != null) {

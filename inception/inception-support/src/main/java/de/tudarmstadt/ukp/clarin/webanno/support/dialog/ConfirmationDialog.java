@@ -30,6 +30,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
@@ -182,6 +183,10 @@ public class ConfirmationDialog
         if (confirmAction != null) {
             try {
                 confirmAction.accept(aTarget);
+            }
+            catch (ReplaceHandlerException e) {
+                // Let Wicket redirects still work
+                throw e;
             }
             catch (Exception e) {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
