@@ -346,8 +346,10 @@ public class DocumentServiceImpl
         return entityManager
                 .createQuery("FROM AnnotationDocument WHERE document = :document AND "
                         + "user =:user" + " AND project = :project", AnnotationDocument.class)
-                .setParameter("document", aDocument).setParameter("user", aUser)
-                .setParameter("project", aDocument.getProject()).getSingleResult();
+                .setParameter("document", aDocument) //
+                .setParameter("user", aUser) //
+                .setParameter("project", aDocument.getProject()) //
+                .getSingleResult();
     }
 
     @Override
