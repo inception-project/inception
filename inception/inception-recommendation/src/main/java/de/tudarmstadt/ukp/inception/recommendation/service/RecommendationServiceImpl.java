@@ -29,10 +29,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup.groupsOfType;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
@@ -66,6 +68,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -138,7 +141,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -1275,12 +1277,9 @@ public class RecommendationServiceImpl
         if (!context.isPresent()) {
             predictions.log(LogMessage.info(recommender.getName(),
                     "Recommender has no context... skipping"));
-            log.info(
-                    "No context available for recommender [{}]({}) for user {} "
-                            + "on document [{}]({}) in project [{}]({}) - skipping recommender",
-                    recommender.getName(), recommender.getId(), aUser, aDocument.getName(),
-                    aDocument.getId(), aDocument.getProject().getName(),
-                    aDocument.getProject().getId());
+            log.info("No context available for recommender {} for user {} on document {} in " //
+                    + "project {} - skipping recommender", recommender, aUser, aDocument,
+                    aDocument.getProject());
             return;
         }
 
@@ -1321,68 +1320,43 @@ public class RecommendationServiceImpl
             if (!engine.isReadyForPrediction(ctx)) {
                 predictions.log(LogMessage.info(recommender.getName(),
                         "Recommender context is not ready... skipping"));
-                log.info(
-                        "Recommender context [{}]({}) for user {} in project "
-                                + "[{}]({}) is not ready for prediction - skipping recommender",
-                        recommender.getName(), recommender.getId(), aUser,
-                        aDocument.getProject().getName(), aDocument.getProject().getId());
+                log.info("Recommender context {} for user {} in project {} is not ready for " //
+                        + "prediction - skipping recommender", recommender, aUser,
+                        aDocument.getProject());
 
                 // If possible, we inherit recommendations from a previous run while
                 // the recommender is still busy
                 if (activePredictions != null) {
-                    List<AnnotationSuggestion> suggestions = inheritSuggestions(originalCas,
-                            recommender, activePredictions, aDocument, aUser.getUsername());
-                    if (!suggestions.isEmpty()) {
-                        predictions.putPredictions(suggestions);
-                    }
-
-                    predictions.log(LogMessage.info(recommender.getName(),
-                            "Inherited [%d] predictions from previous run", suggestions.size()));
+                    inheritSuggestions(predictions, originalCas, recommender, activePredictions,
+                            aDocument, aUser);
                 }
 
                 return;
             }
 
-            predictions.log(LogMessage.info(recommender.getName(),
-                    "Generating predictions for layer [%s]...",
-                    recommender.getLayer().getUiName()));
-            log.trace("{}[{}]: Generating predictions for layer [{}]", aUser, recommender.getName(),
-                    recommender.getLayer().getUiName());
-
             cloneAndMonkeyPatchCAS(project, originalCas, predictionCas);
-
-            List<AnnotationSuggestion> suggestions;
 
             // If the recommender is not trainable and not sensitive to annotations,
             // we can actually re-use the predictions.
-            if (TRAINING_NOT_SUPPORTED.equals(engine.getTrainingCapability())
+            if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
                     && activePredictions != null
                     && activePredictions.hasRunPredictionOnDocument(aDocument)) {
-                suggestions = inheritSuggestions(originalCas, engine.getRecommender(),
-                        activePredictions, aDocument, aUser.getUsername());
-                predictions.log(LogMessage.info(recommender.getName(),
-                        "Inherited [%d] predictions from previous run", suggestions.size()));
+                inheritSuggestions(predictions, originalCas, engine.getRecommender(),
+                        activePredictions, aDocument, aUser);
             }
             else {
-                suggestions = generateSuggestions(ctx, engine, activePredictions, aDocument,
-                        originalCas, predictionCas, aUser.getUsername(), predictionBegin,
-                        predictionEnd);
-                predictions.log(LogMessage.info(recommender.getName(), "Generated [%d] predictions",
-                        suggestions.size()));
+                generateSuggestions(predictions, ctx, engine, activePredictions, aDocument,
+                        originalCas, predictionCas, aUser, predictionBegin, predictionEnd);
             }
-
-            predictions.putPredictions(suggestions);
         }
         // Catching Throwable is intentional here as we want to continue the
         // execution even if a particular recommender fails.
         catch (Throwable e) {
             predictions.log(LogMessage.error(recommender.getName(), "Failed: %s", e.getMessage()));
-            log.error(
-                    "Error applying recommender [{}]({}) for user {} to document "
-                            + "[{}]({}) in project [{}]({}) - skipping recommender",
-                    recommender.getName(), recommender.getId(), aUser, aDocument.getName(),
-                    aDocument.getId(), aDocument.getProject().getName(),
-                    aDocument.getProject().getId(), e);
+            log.error("Error applying recommender {} for user {} to document {} in project {} - " //
+                    + "skipping recommender", recommender, aUser, aDocument, aDocument.getProject(),
+                    e);
+
             applicationEventPublisher.publishEvent(new RecommenderTaskEvent(this,
                     aUser.getUsername(), e.getMessage(), recommender));
 
@@ -1390,14 +1364,8 @@ public class RecommendationServiceImpl
             // its suggestions to avoid that all the suggestions of the recommender
             // simply disappear.
             if (activePredictions != null) {
-                List<AnnotationSuggestion> suggestions = inheritSuggestions(originalCas,
-                        recommender, activePredictions, aDocument, aUser.getUsername());
-                if (!suggestions.isEmpty()) {
-                    predictions.putPredictions(suggestions);
-                }
-
-                predictions.log(LogMessage.info(recommender.getName(),
-                        "Inherited [%d] predictions from previous run", suggestions.size()));
+                inheritSuggestions(predictions, originalCas, recommender, activePredictions,
+                        aDocument, aUser);
             }
 
             return;
@@ -1520,21 +1488,30 @@ public class RecommendationServiceImpl
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private List<AnnotationSuggestion> inheritSuggestions(CAS aOriginalCas,
+    private void inheritSuggestions(Predictions predictions, CAS aOriginalCas,
             Recommender aRecommender, Predictions activePredictions, SourceDocument document,
-            String aUsername)
+            User aUser)
     {
         List<AnnotationSuggestion> suggestions = activePredictions
                 .getPredictionsByRecommenderAndDocument(aRecommender, document.getName());
 
-        log.debug(
-                "[{}]({}) for user [{}] on document "
-                        + "[{}]({}) in project [{}]({}) inherited {} predictions.",
-                aRecommender.getName(), aRecommender.getId(), aUsername, document.getName(),
-                document.getId(), aRecommender.getProject().getName(),
-                aRecommender.getProject().getId(), suggestions.size());
+        if (suggestions.isEmpty()) {
+            log.debug("{} for user {} on document {} in project {} there " //
+                    + "are no inheritable predictions.", aRecommender, aUser, document,
+                    aRecommender.getProject());
+            predictions.log(LogMessage.info(aRecommender.getName(),
+                    "No inheritable suggestions from previous run"));
+            return;
+        }
 
-        return suggestions;
+        log.debug("{} for user {} on document {} in project {} inherited {} " //
+                + "predictions.", aRecommender, aUser, document, aRecommender.getProject(),
+                suggestions.size());
+
+        predictions.log(LogMessage.info(aRecommender.getName(),
+                "Inherited [%d] predictions from previous run", suggestions.size()));
+
+        predictions.putPredictions(suggestions);
     }
 
     private void inheritSuggestionsAtDocumentLevel(Project aProject, SourceDocument aDocument,
@@ -1577,105 +1554,98 @@ public class RecommendationServiceImpl
     /**
      * Invokes the engine to produce new suggestions.
      */
-    private List<AnnotationSuggestion> generateSuggestions(RecommenderContext ctx,
-            RecommendationEngine engine, Predictions activePredictions, SourceDocument document,
-            CAS originalCas, CAS predictionCas, String aUsername, int aPredictionBegin,
+    void generateSuggestions(Predictions aPredictions, RecommenderContext aCtx,
+            RecommendationEngine aEngine, Predictions aActivePredictions, SourceDocument aDocument,
+            CAS aOriginalCas, CAS aPredictionCas, User aUser, int aPredictionBegin,
             int aPredictionEnd)
         throws RecommendationException
     {
+        Recommender recommender = aEngine.getRecommender();
+
+        aPredictions.log(LogMessage.info(recommender.getName(),
+                "Generating predictions for layer [%s]...", recommender.getLayer().getUiName()));
+        log.trace("{}[{}]: Generating predictions for layer [{}]", aUser, recommender.getName(),
+                recommender.getLayer().getUiName());
+
         // Perform the actual prediction
-        engine.predict(ctx, predictionCas, aPredictionBegin, aPredictionEnd);
+        aEngine.predict(aCtx, aPredictionCas, aPredictionBegin, aPredictionEnd);
 
         // Extract the suggestions from the data which the recommender has written into the CAS
-        List<AnnotationSuggestion> suggestions = extractSuggestions(aUsername, originalCas,
-                predictionCas, document, engine.getRecommender());
+        var suggestions = extractSuggestions(aOriginalCas, aPredictionCas, aDocument, recommender);
 
-        // Calculate the visibility of the suggestions. This happens via the
-        // original CAS which contains only the manually created annotations
-        // and *not* the suggestions.
-        SuggestionDocumentGroup<SpanSuggestion> groups = SuggestionDocumentGroup
-                .filter(SpanSuggestion.class, suggestions);
-        calculateSpanSuggestionVisibility(originalCas, aUsername,
-                engine.getRecommender().getLayer(), groups, 0,
-                originalCas.getDocumentText().length());
+        log.debug("{} for user {} on document {} in project {} generated {} predictions.",
+                recommender, aUser, aDocument, recommender.getProject(), suggestions.size());
+        aPredictions.log(LogMessage.info(recommender.getName(), "Generated [%d] predictions",
+                suggestions.size()));
 
-        return suggestions;
+        // Calculate the visibility of the suggestions. This happens via the original CAS which
+        // contains only the manually created annotations and *not* the suggestions.
+        var groupedSuggestions = groupsOfType(SpanSuggestion.class, suggestions);
+        calculateSpanSuggestionVisibility(aOriginalCas, aUser.getUsername(),
+                aEngine.getRecommender().getLayer(), groupedSuggestions, 0,
+                aOriginalCas.getDocumentText().length());
+
+        aPredictions.putPredictions(suggestions);
     }
 
-    private List<AnnotationSuggestion> extractSuggestions(String aUsername, CAS aOriginalCas,
-            CAS aPredictionCas, SourceDocument aDocument, Recommender aRecommender)
+    private List<AnnotationSuggestion> extractSuggestions(CAS aOriginalCas, CAS aPredictionCas,
+            SourceDocument aDocument, Recommender aRecommender)
     {
         AnnotationLayer layer = aRecommender.getLayer();
         String typeName = layer.getName();
         String featureName = aRecommender.getFeature().getName();
 
         Type predictedType = CasUtil.getType(aPredictionCas, typeName);
-        Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
-        Feature governorFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
-        Feature dependentFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
-        boolean isStringMultiValue = CAS.TYPE_NAME_STRING_ARRAY
-                .equals(predictedFeature.getRange().getName());
-
+        Feature labelFeature = predictedType.getFeatureByBaseName(featureName);
+        Feature sourceFeature = predictedType.getFeatureByBaseName(FEAT_REL_SOURCE);
+        Feature targetFeature = predictedType.getFeatureByBaseName(FEAT_REL_TARGET);
         Feature scoreFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
         Feature scoreExplanationFeature = predictedType
                 .getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
         Feature predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
-
-        int predictionCount = 0;
+        var isMultiLabels = TYPE_NAME_STRING_ARRAY.equals(labelFeature.getRange().getName());
 
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
 
-        for (Annotation predictedAnnotation : aPredictionCas.<Annotation> select(predictedType)) {
-            if (!predictedAnnotation.getBooleanValue(predictionFeature)) {
+        for (FeatureStructure predictedFS : aPredictionCas.select(predictedType)) {
+            if (!predictedFS.getBooleanValue(predictionFeature)) {
                 continue;
             }
 
-            String[] labels;
-            if (isStringMultiValue) {
-                labels = FSUtil.getFeature(predictedAnnotation, predictedFeature, String[].class);
-            }
-            else {
-                labels = new String[] {
-                        predictedAnnotation.getFeatureValueAsString(predictedFeature) };
-            }
-            double score = predictedAnnotation.getDoubleValue(scoreFeature);
-            String scoreExplanation = predictedAnnotation.getStringValue(scoreExplanationFeature);
-            String name = aRecommender.getName();
+            String[] labels = getPredictedLabels(predictedFS, labelFeature, isMultiLabels);
+            double score = predictedFS.getDoubleValue(scoreFeature);
+            String scoreExplanation = predictedFS.getStringValue(scoreExplanationFeature);
 
             for (String label : labels) {
                 AnnotationSuggestion suggestion;
 
                 switch (layer.getType()) {
                 case SPAN_TYPE: {
-                    Optional<Offset> targetOffsets = getOffsets(layer, aOriginalCas,
-                            predictedAnnotation);
+                    var predictedAnnotation = (Annotation) predictedFS;
+                    var targetOffsets = getOffsets(layer, aOriginalCas, predictedAnnotation);
 
                     if (!targetOffsets.isPresent()) {
                         continue;
                     }
 
-                    suggestion = new SpanSuggestion(id, aRecommender.getId(), name, layer.getId(),
-                            featureName, aDocument.getName(), targetOffsets.get().getBegin(),
-                            targetOffsets.get().getEnd(), predictedAnnotation.getCoveredText(),
-                            label, label, score, scoreExplanation);
+                    suggestion = new SpanSuggestion(id, aRecommender, layer.getId(), featureName,
+                            aDocument.getName(), targetOffsets.get(),
+                            predictedAnnotation.getCoveredText(), label, label, score,
+                            scoreExplanation);
                     break;
                 }
                 case RELATION_TYPE: {
-                    AnnotationFS governor = (AnnotationFS) predictedAnnotation
-                            .getFeatureValue(governorFeature);
-                    AnnotationFS dependent = (AnnotationFS) predictedAnnotation
-                            .getFeatureValue(dependentFeature);
+                    var source = (AnnotationFS) predictedFS.getFeatureValue(sourceFeature);
+                    var target = (AnnotationFS) predictedFS.getFeatureValue(targetFeature);
 
-                    AnnotationFS originalGovernor = findEquivalent(aOriginalCas, governor).get();
-                    AnnotationFS originalDependent = findEquivalent(aOriginalCas, dependent).get();
+                    var originalSource = findEquivalent(aOriginalCas, source).get();
+                    var originalTarget = findEquivalent(aOriginalCas, target).get();
 
-                    suggestion = new RelationSuggestion(id, aRecommender.getId(), name,
-                            layer.getId(), featureName, aDocument.getName(),
-                            originalGovernor.getBegin(), originalGovernor.getEnd(),
-                            originalDependent.getBegin(), originalDependent.getEnd(), label, label,
-                            score, scoreExplanation);
+                    suggestion = new RelationSuggestion(id, aRecommender, layer.getId(),
+                            featureName, aDocument.getName(), originalSource, originalTarget, label,
+                            label, score, scoreExplanation);
                     break;
                 }
                 default:
@@ -1685,18 +1655,23 @@ public class RecommendationServiceImpl
 
                 result.add(suggestion);
                 id++;
-                predictionCount++;
             }
         }
 
-        log.debug(
-                "[{}]({}) for user [{}] on document "
-                        + "[{}]({}) in project [{}]({}) generated {} predictions.",
-                aRecommender.getName(), aRecommender.getId(), aUsername, aDocument.getName(),
-                aDocument.getId(), aRecommender.getProject().getName(),
-                aRecommender.getProject().getId(), predictionCount);
-
         return result;
+    }
+
+    private String[] getPredictedLabels(FeatureStructure predictedFS, Feature predictedFeature,
+            boolean isStringMultiValue)
+    {
+        String[] labels;
+        if (isStringMultiValue) {
+            labels = FSUtil.getFeature(predictedFS, predictedFeature, String[].class);
+        }
+        else {
+            labels = new String[] { predictedFS.getFeatureValueAsString(predictedFeature) };
+        }
+        return labels;
     }
 
     /**
@@ -2124,7 +2099,7 @@ public class RecommendationServiceImpl
                 .collect(toList());
     }
 
-    public CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
+    CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
         throws UIMAException, IOException
     {
         try (StopWatch watch = new StopWatch(log, "adding score features")) {

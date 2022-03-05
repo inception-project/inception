@@ -1102,7 +1102,7 @@ public class ActiveLearningSidebar
 
             // Update visibility in case the that was created/deleted overlaps with any suggestions
             CAS cas = documentService.readAnnotationCas(aDocument, user.getUsername());
-            SuggestionDocumentGroup<SpanSuggestion> group = SuggestionDocumentGroup.filter(
+            SuggestionDocumentGroup<SpanSuggestion> group = SuggestionDocumentGroup.groupsOfType(
                     SpanSuggestion.class,
                     predictions.getPredictionsByDocument(aDocument.getName()));
             recommendationService.calculateSpanSuggestionVisibility(cas, user.getUsername(), aLayer,

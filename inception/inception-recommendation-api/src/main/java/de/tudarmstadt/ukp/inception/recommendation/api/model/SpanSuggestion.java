@@ -30,6 +30,15 @@ public class SpanSuggestion
     private final Offset position;
     private final String coveredText;
 
+    public SpanSuggestion(int aId, Recommender aRecommender, long aLayerId, String aFeature,
+            String aDocumentName, Offset aOffset, String aCoveredText, String aLabel,
+            String aUiLabel, double aScore, String aScoreExplanation)
+    {
+        this(aId, aRecommender.getId(), aRecommender.getName(), aLayerId, aFeature, aDocumentName,
+                aOffset.getBegin(), aOffset.getEnd(), aCoveredText, aLabel, aUiLabel, aScore,
+                aScoreExplanation);
+    }
+
     public SpanSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
             String aFeature, String aDocumentName, int aBegin, int aEnd, String aCoveredText,
             String aLabel, String aUiLabel, double aScore, String aScoreExplanation)
