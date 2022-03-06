@@ -105,6 +105,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -1497,7 +1498,7 @@ public class RecommendationServiceImpl
 
         if (suggestions.isEmpty()) {
             log.debug("{} for user {} on document {} in project {} there " //
-                    + "are no inheritable predictions.", aRecommender, aUser, document,
+                    + "are no inheritable predictions", aRecommender, aUser, document,
                     aRecommender.getProject());
             predictions.log(LogMessage.info(aRecommender.getName(),
                     "No inheritable suggestions from previous run"));
@@ -1505,7 +1506,7 @@ public class RecommendationServiceImpl
         }
 
         log.debug("{} for user {} on document {} in project {} inherited {} " //
-                + "predictions.", aRecommender, aUser, document, aRecommender.getProject(),
+                + "predictions", aRecommender, aUser, document, aRecommender.getProject(),
                 suggestions.size());
 
         predictions.log(LogMessage.info(aRecommender.getName(),
@@ -1528,7 +1529,7 @@ public class RecommendationServiceImpl
         List<AnnotationSuggestion> suggestions1 = aOldPredictions
                 .getPredictionsByDocument(aDocument.getName());
 
-        log.debug("[{}]({}) for user [{}] on document {} in project {} inherited {} predictions.",
+        log.debug("[{}]({}) for user [{}] on document {} in project {} inherited {} predictions",
                 "ALL", "--", aUser.getUsername(), aDocument, aProject, suggestions1.size());
 
         List<AnnotationSuggestion> suggestions = suggestions1;
@@ -1553,20 +1554,35 @@ public class RecommendationServiceImpl
                 recommender.getLayer().getUiName());
 
         // Perform the actual prediction
-        aEngine.predict(aCtx, aPredictionCas, aPredictionBegin, aPredictionEnd);
+        Range predictedRange = aEngine.predict(aCtx, aPredictionCas, aPredictionBegin,
+                aPredictionEnd);
 
         // Extract the suggestions from the data which the recommender has written into the CAS
         var suggestions = extractSuggestions(aOriginalCas, aPredictionCas, aDocument, recommender);
 
-        // FIXME We need to inherit annotations that are outside the range which was predicted.
-        // Note that the engine might actually predict a different range from what was requested.
-        List<AnnotationSuggestion> inheritableSuggestions = aActivePredictions
-                .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName());
+        log.debug(
+                "{} for user {} on document {} in project {} generated {} predictions within range {}",
+                recommender, aUser, aDocument, recommender.getProject(), suggestions.size(),
+                predictedRange);
+        aPredictions.log(LogMessage.info(recommender.getName(), //
+                "Generated [%d] predictions within range %s", suggestions.size(), predictedRange));
 
-        log.debug("{} for user {} on document {} in project {} generated {} predictions.",
-                recommender, aUser, aDocument, recommender.getProject(), suggestions.size());
-        aPredictions.log(LogMessage.info(recommender.getName(), "Generated [%d] predictions",
-                suggestions.size()));
+        if (aActivePredictions != null) {
+            // Inherit annotations that are outside the range which was predicted. Note that the
+            // engine might actually predict a different range from what was requested.
+            List<AnnotationSuggestion> inheritableSuggestions = aActivePredictions
+                    .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName())
+                    .stream().filter(s -> !s.coveredBy(predictedRange)) //
+                    .collect(toList());
+
+            log.debug("{} for user {} on document {} in project {} inherited {} " //
+                    + "predictions", recommender, aUser, aDocument, recommender.getProject(),
+                    inheritableSuggestions.size());
+            aPredictions.log(LogMessage.info(recommender.getName(),
+                    "Inherited [%d] predictions from previous run", inheritableSuggestions.size()));
+
+            suggestions.addAll(inheritableSuggestions);
+        }
 
         // Calculate the visibility of the suggestions. This happens via the original CAS which
         // contains only the manually created annotations and *not* the suggestions.

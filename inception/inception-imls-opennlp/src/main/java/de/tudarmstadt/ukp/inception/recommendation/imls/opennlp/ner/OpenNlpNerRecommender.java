@@ -38,6 +38,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -117,7 +118,7 @@ public class OpenNlpNerRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         TokenNameFinderModel model = aContext.get(KEY_MODEL).orElseThrow(
@@ -133,8 +134,9 @@ public class OpenNlpNerRecommender
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
 
+        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
         int predictionCount = 0;
-        for (AnnotationFS sampleUnit : selectOverlapping(aCas, sampleUnitType, aBegin, aEnd)) {
+        for (AnnotationFS sampleUnit : units) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
@@ -164,6 +166,8 @@ public class OpenNlpNerRecommender
                 aCas.addFsToIndexes(annotation);
             }
         }
+
+        return new Range(units);
     }
 
     @Override

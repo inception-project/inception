@@ -53,6 +53,7 @@ import org.xml.sax.SAXException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -156,7 +157,7 @@ public class ExternalRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         String typeSystem = serializeTypeSystem(aCas);
@@ -192,6 +193,8 @@ public class ExternalRecommender
         catch (SAXException | IOException e) {
             throw new RecommendationException("Error while deserializing CAS!", e);
         }
+
+        return new Range(aCas);
     }
 
     private String serializeTypeSystem(CAS aCas) throws RecommendationException

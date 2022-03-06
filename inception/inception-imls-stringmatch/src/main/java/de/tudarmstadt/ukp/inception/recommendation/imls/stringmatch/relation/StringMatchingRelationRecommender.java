@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -44,6 +45,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -93,7 +95,7 @@ public class StringMatchingRelationRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         MultiValuedMap<Pair<String, String>, String> model = aContext.get(KEY_MODEL).orElseThrow(
@@ -113,7 +115,8 @@ public class StringMatchingRelationRecommender
         // Relations are predicted only within the sample units - thus instead of looking at the
         // whole document for potential relations, we only need to look at those units that overlap
         // with the current prediction request area
-        for (AnnotationFS sampleUnit : selectOverlapping(aCas, sampleUnitType, aBegin, aEnd)) {
+        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
+        for (AnnotationFS sampleUnit : units) {
             Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sampleUnit);
             for (AnnotationFS governor : baseAnnotations) {
                 for (AnnotationFS dependent : baseAnnotations) {
@@ -147,6 +150,8 @@ public class StringMatchingRelationRecommender
                 }
             }
         }
+
+        return new Range(units);
     }
 
     @Override

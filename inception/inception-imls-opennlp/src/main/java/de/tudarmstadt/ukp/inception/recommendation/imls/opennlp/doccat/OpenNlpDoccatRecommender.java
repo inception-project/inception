@@ -40,6 +40,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -117,7 +118,7 @@ public class OpenNlpDoccatRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         DoccatModel model = aContext.get(KEY_MODEL).orElseThrow(
@@ -132,8 +133,9 @@ public class OpenNlpDoccatRecommender
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
+        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
         int predictionCount = 0;
-        for (AnnotationFS sampleUnit : selectOverlapping(aCas, sampleUnitType, aBegin, aEnd)) {
+        for (AnnotationFS sampleUnit : units) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
@@ -154,6 +156,8 @@ public class OpenNlpDoccatRecommender
             annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
+
+        return new Range(units);
     }
 
     @Override

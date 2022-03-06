@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.Feature;
@@ -33,6 +32,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
@@ -67,7 +67,7 @@ public class ElgRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         ElgServiceResponse response;
@@ -77,7 +77,7 @@ public class ElgRecommender
         }
         catch (IOException e) {
             throw new RecommendationException(
-                    "Error invoking ELG service: " + ExceptionUtils.getRootCauseMessage(e), e);
+                    "Error invoking ELG service: " + getRootCauseMessage(e), e);
         }
 
         Type predictedType = getPredictedType(aCas);
@@ -107,6 +107,8 @@ public class ElgRecommender
                 aCas.addFsToIndexes(ann);
             }
         }
+
+        return new Range(aBegin, aEnd);
     }
 
     private Map<String, List<ElgAnnotation>> getAnnotationGroups(ElgServiceResponse aResponse)

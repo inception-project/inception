@@ -42,6 +42,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -116,7 +117,7 @@ public class OpenNlpPosRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         POSModel model = aContext.get(KEY_MODEL).orElseThrow(
@@ -132,8 +133,9 @@ public class OpenNlpPosRecommender
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
+        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
         int predictionCount = 0;
-        for (AnnotationFS sampleUnit : selectOverlapping(aCas, sampleUnitType, aBegin, aEnd)) {
+        for (AnnotationFS sampleUnit : units) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
@@ -179,6 +181,8 @@ public class OpenNlpPosRecommender
                 }
             }
         }
+
+        return new Range(units);
     }
 
     @Override

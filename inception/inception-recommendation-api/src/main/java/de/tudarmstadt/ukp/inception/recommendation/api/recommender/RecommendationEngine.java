@@ -30,6 +30,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -100,8 +101,10 @@ public abstract class RecommendationEngine
      *            Begin of the range in which predictions should be generated.
      * @param aEnd
      *            End of the range in which predictions should be generated.
+     * @return Range in which the recommender generated predictions. No suggestions in this range
+     *         should be inherited.
      */
-    public abstract void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public abstract Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException;
 
     /**

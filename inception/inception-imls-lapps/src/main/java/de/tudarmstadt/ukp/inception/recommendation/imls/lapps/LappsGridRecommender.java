@@ -37,6 +37,7 @@ import org.lappsgrid.serialization.lif.Container;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -70,7 +71,7 @@ public class LappsGridRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         // FIXME: Ignores begin/end - always fetches predictions for the entire CAS
@@ -109,6 +110,8 @@ public class LappsGridRecommender
                             aCas.addFsToIndexes(t);
                         });
             }
+
+            return new Range(aCas);
         }
         catch (Exception e) {
             throw new RecommendationException("Cannot predict", e);
