@@ -1327,8 +1327,8 @@ public class RecommendationServiceImpl
                 // If possible, we inherit recommendations from a previous run while
                 // the recommender is still busy
                 if (activePredictions != null) {
-                    inheritSuggestions(predictions, originalCas, recommender, activePredictions,
-                            aDocument, aUser);
+                    inheritSuggestionsAtRecommenderLevel(predictions, originalCas, recommender,
+                            activePredictions, aDocument, aUser);
                 }
 
                 return;
@@ -1341,8 +1341,8 @@ public class RecommendationServiceImpl
             if (TRAINING_NOT_SUPPORTED == engine.getTrainingCapability()
                     && activePredictions != null
                     && activePredictions.hasRunPredictionOnDocument(aDocument)) {
-                inheritSuggestions(predictions, originalCas, engine.getRecommender(),
-                        activePredictions, aDocument, aUser);
+                inheritSuggestionsAtRecommenderLevel(predictions, originalCas,
+                        engine.getRecommender(), activePredictions, aDocument, aUser);
             }
             else {
                 generateSuggestions(predictions, ctx, engine, activePredictions, aDocument,
@@ -1364,8 +1364,8 @@ public class RecommendationServiceImpl
             // its suggestions to avoid that all the suggestions of the recommender
             // simply disappear.
             if (activePredictions != null) {
-                inheritSuggestions(predictions, originalCas, recommender, activePredictions,
-                        aDocument, aUser);
+                inheritSuggestionsAtRecommenderLevel(predictions, originalCas, recommender,
+                        activePredictions, aDocument, aUser);
             }
 
             return;
@@ -1488,7 +1488,7 @@ public class RecommendationServiceImpl
      * Extracts existing predictions from the last prediction run so we do not have to recalculate
      * them. This is useful when the engine is not trainable.
      */
-    private void inheritSuggestions(Predictions predictions, CAS aOriginalCas,
+    private void inheritSuggestionsAtRecommenderLevel(Predictions predictions, CAS aOriginalCas,
             Recommender aRecommender, Predictions activePredictions, SourceDocument document,
             User aUser)
     {
@@ -1514,6 +1514,10 @@ public class RecommendationServiceImpl
         predictions.putPredictions(suggestions);
     }
 
+    /**
+     * Extracts existing predictions from the last prediction run so we do not have to recalculate
+     * them. This is useful when the engine is not trainable.
+     */
     private void inheritSuggestionsAtDocumentLevel(Project aProject, SourceDocument aDocument,
             User aUser, Predictions aOldPredictions, Predictions aNewPredictions)
     {
@@ -1521,34 +1525,15 @@ public class RecommendationServiceImpl
             return;
         }
 
-        List<AnnotationSuggestion> suggestions = inheritSuggestions(aProject, aOldPredictions,
-                aDocument, aUser.getUsername());
+        List<AnnotationSuggestion> suggestions1 = aOldPredictions
+                .getPredictionsByDocument(aDocument.getName());
+
+        log.debug("[{}]({}) for user [{}] on document {} in project {} inherited {} predictions.",
+                "ALL", "--", aUser.getUsername(), aDocument, aProject, suggestions1.size());
+
+        List<AnnotationSuggestion> suggestions = suggestions1;
         aNewPredictions.putPredictions(suggestions);
         aNewPredictions.markDocumentAsPredictionCompleted(aDocument);
-    }
-
-    /**
-     * Extracts existing predictions from the last prediction run so we do not have to recalculate
-     * them. This is useful when the engine is not trainable.
-     */
-    private List<AnnotationSuggestion> inheritSuggestions(Project aProject,
-            Predictions activePredictions, SourceDocument document, String aUsername)
-    {
-        List<AnnotationSuggestion> suggestions = activePredictions
-                .getPredictionsByDocument(document.getName());
-
-        log.debug(
-                "[{}]({}) for user [{}] on document "
-                        + "[{}]({}) in project [{}]({}) inherited {} predictions.",
-                "ALL", "--", aUsername, document.getName(), document.getId(), aProject.getName(),
-                aProject.getId(), suggestions.size());
-
-        // -----------------------------------------------------------------------------------------
-        // REC: Do we really have to show all here - after all, we are inheriting?
-        // suggestions.forEach(s -> s.show(FLAG_ALL));
-        // -----------------------------------------------------------------------------------------
-
-        return suggestions;
     }
 
     /**
@@ -1572,6 +1557,11 @@ public class RecommendationServiceImpl
 
         // Extract the suggestions from the data which the recommender has written into the CAS
         var suggestions = extractSuggestions(aOriginalCas, aPredictionCas, aDocument, recommender);
+
+        // FIXME We need to inherit annotations that are outside the range which was predicted.
+        // Note that the engine might actually predict a different range from what was requested.
+        List<AnnotationSuggestion> inheritableSuggestions = aActivePredictions
+                .getPredictionsByRecommenderAndDocument(recommender, aDocument.getName());
 
         log.debug("{} for user {} on document {} in project {} generated {} predictions.",
                 recommender, aUser, aDocument, recommender.getProject(), suggestions.size());

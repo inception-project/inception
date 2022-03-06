@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
+import static java.util.stream.Collectors.counting;
+import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -31,8 +33,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
@@ -110,6 +110,9 @@ public class StringMatchingRelationRecommender
         Feature attachFeature = getAttachFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
 
+        // Relations are predicted only within the sample units - thus instead of looking at the
+        // whole document for potential relations, we only need to look at those units that overlap
+        // with the current prediction request area
         for (AnnotationFS sampleUnit : selectOverlapping(aCas, sampleUnitType, aBegin, aEnd)) {
             Collection<AnnotationFS> baseAnnotations = selectCovered(attachType, sampleUnit);
             for (AnnotationFS governor : baseAnnotations) {
@@ -125,8 +128,7 @@ public class StringMatchingRelationRecommender
                     Pair<String, String> key = Pair.of(governorLabel, dependentLabel);
                     Collection<String> occurrences = model.get(key);
                     Map<String, Long> numberOfOccurrencesPerLabel = occurrences.stream() //
-                            .collect(Collectors.groupingBy(Function.identity(),
-                                    Collectors.counting()));
+                            .collect(groupingBy(identity(), counting()));
 
                     double totalNumberOfOccurrences = occurrences.size();
 
