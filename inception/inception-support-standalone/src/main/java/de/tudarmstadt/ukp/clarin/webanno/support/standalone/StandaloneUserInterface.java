@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getGlobalLogFile;
 import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getGlobalLogFolder;
+import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getSettingsFileLocation;
 import static java.awt.Desktop.getDesktop;
 import static java.awt.Font.BOLD;
 import static java.awt.Font.SANS_SERIF;
@@ -47,6 +48,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.time.Year;
@@ -83,6 +85,26 @@ public class StandaloneUserInterface
     private static void actionShutdown()
     {
         System.exit(0);
+    }
+
+    public static void actionLocateSettingsProperties()
+    {
+        if (!Desktop.isDesktopSupported()) {
+            return;
+        }
+
+        try {
+            File file = getSettingsFileLocation();
+            file.getParentFile().mkdirs();
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            getDesktop().browseFileDirectory(file);
+        }
+        catch (Exception e) {
+            LOG.error("Unable to open settings file", e);
+            showMessageDialog(null, "Unable to open settings file: " + getRootCauseMessage(e));
+        }
     }
 
     public static void actionShowLog(String applicationName)
@@ -266,6 +288,12 @@ public class StandaloneUserInterface
         MenuItem logItem = new MenuItem("Log...");
         logItem.addActionListener(e -> actionShowLog(applicationName));
         popupMenu.add(logItem);
+
+        if (getSettingsFileLocation() != null) {
+            MenuItem settingsPropertiesItem = new MenuItem("Locate settings file");
+            settingsPropertiesItem.addActionListener(e -> actionLocateSettingsProperties());
+            popupMenu.add(settingsPropertiesItem);
+        }
 
         MenuItem aboutItem = new MenuItem("About...");
         aboutItem.addActionListener(e -> actionShowAbout(applicationName));

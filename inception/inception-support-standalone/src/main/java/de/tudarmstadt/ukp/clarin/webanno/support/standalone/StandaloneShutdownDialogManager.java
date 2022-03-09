@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.standalone;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getSettingsFileLocation;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_OPEN_BROWSER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.ACTION_SHUTDOWN;
+import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionLocateSettingsProperties;
+import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionShowAbout;
+import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.actionShowLog;
 import static de.tudarmstadt.ukp.clarin.webanno.support.standalone.StandaloneUserInterface.bringToFront;
 import static java.awt.BorderLayout.CENTER;
 import static java.awt.Component.CENTER_ALIGNMENT;
@@ -119,6 +123,8 @@ public class StandaloneShutdownDialogManager
                 log.info("You can close INCEpTION from the command line by pressing Ctrl+C");
             }
         }
+
+        log.info("You can now access INCEpTION at http://localhost:{}", port);
     }
 
     @EventListener
@@ -215,11 +221,17 @@ public class StandaloneShutdownDialogManager
         popupMenu.add(browseItem);
 
         MenuItem logItem = new MenuItem("Log...");
-        logItem.addActionListener(e -> StandaloneUserInterface.actionShowLog(applicationName));
+        logItem.addActionListener(e -> actionShowLog(applicationName));
         popupMenu.add(logItem);
 
+        if (getSettingsFileLocation() != null) {
+            MenuItem settingsPropertiesItem = new MenuItem("Locate settings file");
+            settingsPropertiesItem.addActionListener(e -> actionLocateSettingsProperties());
+            popupMenu.add(settingsPropertiesItem);
+        }
+
         MenuItem aboutItem = new MenuItem("About...");
-        aboutItem.addActionListener(e -> StandaloneUserInterface.actionShowAbout(applicationName));
+        aboutItem.addActionListener(e -> actionShowAbout(applicationName));
         popupMenu.add(aboutItem);
 
         MenuItem shutdownItem = new MenuItem(ACTION_SHUTDOWN);

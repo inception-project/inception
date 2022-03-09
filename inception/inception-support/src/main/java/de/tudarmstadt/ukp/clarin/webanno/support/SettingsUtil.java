@@ -50,6 +50,7 @@ public class SettingsUtil
     private static final String PROP_USER_HOME = "user.home";
 
     private static final String SETTINGS_FILE = "settings.properties";
+    private static final String SETTINGS_YAML_FILE = "settings.yml";
 
     public static final String CFG_LOCALE = "locale";
     public static final String CFG_STYLE_LOGO = "style.logo";
@@ -149,19 +150,52 @@ public class SettingsUtil
      * 
      * @return the location of the settings file or {@code null} if none could be found.
      */
+    public static File getSettingsFileLocation()
+    {
+        // Locate settings, first in application, then in user home
+        String appHome = System.getProperty(propApplicationHome);
+        if (appHome != null) {
+            File propertiesFile = new File(appHome, SETTINGS_FILE);
+            if (propertiesFile.exists()) {
+                return propertiesFile;
+            }
+
+            File yamlFile = new File(appHome, SETTINGS_YAML_FILE);
+            if (yamlFile.exists()) {
+                return yamlFile;
+            }
+
+            return null;
+        }
+
+        String userHome = System.getProperty(PROP_USER_HOME);
+        if (userHome != null) {
+            File propertiesFile = new File(userHome + "/" + applicationUserHomeSubdir,
+                    SETTINGS_FILE);
+            if (propertiesFile.exists()) {
+                return propertiesFile;
+            }
+
+            File yamlFile = new File(userHome + "/" + applicationUserHomeSubdir,
+                    SETTINGS_YAML_FILE);
+            if (yamlFile.exists()) {
+                return yamlFile;
+            }
+
+            return null;
+        }
+
+        return null;
+    }
+
+    /**
+     * Locate the settings file and return its location if it exists.
+     * 
+     * @return the location of the settings file or {@code null} if none could be found.
+     */
     public static File getSettingsFile()
     {
-        String appHome = System.getProperty(propApplicationHome);
-        String userHome = System.getProperty(PROP_USER_HOME);
-
-        // Locate settings, first in application, then in user home
-        File settings = null;
-        if (appHome != null) {
-            settings = new File(appHome, SETTINGS_FILE);
-        }
-        else if (userHome != null) {
-            settings = new File(userHome + "/" + applicationUserHomeSubdir, SETTINGS_FILE);
-        }
+        File settings = getSettingsFileLocation();
 
         if (settings.exists()) {
             return settings;
