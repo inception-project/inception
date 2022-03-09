@@ -1,0 +1,32 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+== European Language Grid
+
+This recommender allows to use some European Language Grid (ELG) web-services to generate predictions. 
+
+In order to use the recommender, you need to have an ELG account. When you add an ELG recommender to a project and the project has not yet signed in to an ELG account, you will see three steps offered in the *ELG session* panel:
+
+1. A link to through which you can obtain an ELG authentication token. 
+  When you follow the link, you have to log in using your ELG account and then a token
+  is shown to you. 
+2. Copy that token into the **Success code** field.
+3. Finally, press the **sign in** button.
+
+Then you can find a service via the **Service** auto-complete field. E.g. if you enter `entity` into the field, you will get various services related to entity detection. Choose one to configure the recommender to use it.
+
+NOTE: ELG services have a quota. If the recommender suddenly stops working, it might
+      be that your account has exceeded its quota.
