@@ -51,11 +51,13 @@ public class InceptionApplicationContextInitializer
 
         ConfigurableEnvironment aEnvironment = aApplicationContext.getEnvironment();
 
-        File settings = SettingsUtil.getSettingsFile();
+        File settings = SettingsUtil.getSettingsFileLocation();
+
+        log.info("Settings: {} {}", settings,
+                settings.exists() ? "(file exists)" : "(file does not exist)");
 
         // If settings were found, add them to the environment
-        if (settings != null) {
-            log.info("Settings: " + settings);
+        if (settings.exists()) {
             try {
                 aEnvironment.getPropertySources()
                         .addFirst(new ResourcePropertySource(new FileSystemResource(settings)));
@@ -77,6 +79,5 @@ public class InceptionApplicationContextInitializer
 
         Runtime rt = Runtime.getRuntime();
         log.info("Max. application memory: {}MB", DataSize.ofBytes(rt.maxMemory()).toMegabytes());
-
     }
 }
