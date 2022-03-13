@@ -149,18 +149,6 @@ public class SettingsUtil
      * 
      * @return the location of the settings file or {@code null} if none could be found.
      */
-    public static File getSettingsFile()
-    {
-        File settingsFile = getSettingsFileLocation();
-
-        if (settingsFile.exists()) {
-            return settingsFile;
-        }
-        else {
-            return null;
-        }
-    }
-
     public static File getSettingsFileLocation()
     {
         String appHome = System.getProperty(propApplicationHome);
@@ -174,7 +162,24 @@ public class SettingsUtil
         else if (userHome != null) {
             settingsFile = new File(userHome + "/" + applicationUserHomeSubdir, SETTINGS_FILE);
         }
+        
         return settingsFile;
+    }
+
+    /**
+     * Locate the settings file and return its location if it exists.
+     * 
+     * @return the location of the settings file or {@code null} if none could be found.
+     */
+    public static File getSettingsFile()
+    {
+        File settingsFile = getSettingsFileLocation();
+
+        if (settingsFile != null && settingsFile.exists()) {
+            return settingsFile;
+        }
+        
+        return null;
     }
 
     /**
