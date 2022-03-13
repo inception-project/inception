@@ -50,6 +50,7 @@ public class SettingsUtil
     private static final String PROP_USER_HOME = "user.home";
 
     private static final String SETTINGS_FILE = "settings.properties";
+    private static final String SETTINGS_YAML_FILE = "settings.yml";
 
     public static final String CFG_LOCALE = "locale";
     public static final String CFG_STYLE_LOGO = "style.logo";
@@ -151,19 +152,29 @@ public class SettingsUtil
      */
     public static File getSettingsFileLocation()
     {
-        String appHome = System.getProperty(propApplicationHome);
-        String userHome = System.getProperty(PROP_USER_HOME);
-
         // Locate settings, first in application, then in user home
-        File settingsFile = null;
+        String appHome = System.getProperty(propApplicationHome);
         if (appHome != null) {
-            settingsFile = new File(appHome, SETTINGS_FILE);
+            File yamlFile = new File(appHome, SETTINGS_YAML_FILE);
+            if (yamlFile.exists()) {
+                return yamlFile;
+            }
+
+            return new File(appHome, SETTINGS_FILE);
         }
-        else if (userHome != null) {
-            settingsFile = new File(userHome + "/" + applicationUserHomeSubdir, SETTINGS_FILE);
+
+        String userHome = System.getProperty(PROP_USER_HOME);
+        if (userHome != null) {
+            File yamlFile = new File(userHome + "/" + applicationUserHomeSubdir,
+                    SETTINGS_YAML_FILE);
+            if (yamlFile.exists()) {
+                return yamlFile;
+            }
+
+            return new File(userHome + "/" + applicationUserHomeSubdir, SETTINGS_FILE);
         }
-        
-        return settingsFile;
+
+        return null;
     }
 
     /**
@@ -178,7 +189,7 @@ public class SettingsUtil
         if (settingsFile != null && settingsFile.exists()) {
             return settingsFile;
         }
-        
+
         return null;
     }
 
