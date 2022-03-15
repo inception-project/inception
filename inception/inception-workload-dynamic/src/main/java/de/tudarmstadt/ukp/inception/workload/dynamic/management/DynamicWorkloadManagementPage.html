@@ -77,26 +77,25 @@
                       </div>
                     </div>
                     <div class="row form-row">
-                      <label class="col-form-label col-sm-3"> <wicket:message
-                          key="documentFilterText" />
+                      <label class="col-form-label col-sm-3"> 
+                        <wicket:message key="documentFilterText" />
                       </label>
                       <div class="col-sm-9">
                         <input wicket:id="documentFilter" type="text" class="form-control" />
                       </div>
                     </div>
                     <div class="row form-row">
-                      <label class="col-form-label col-sm-3"> <wicket:message
-                          key="dateFilterText" />
+                      <label class="col-form-label col-sm-3"> 
+                        <wicket:message key="dateFilterText" />
                       </label>
-                      <div class="col-sm-9">
+                      <div class="col-sm-9 align-self-center">
                         <span wicket:id="date"></span>
                       </div>
                     </div>
                     <div class="row form-row">
-                      <div class="offset-sm-3 col-sm-9">
-                        <input class="bootstrap-datetimepicker-widget" wicket:id="from"
-                          type="date" /> <input class="bootstrap-datetimepicker-widget"
-                          wicket:id="to" type="date" />
+                      <div class="offset-sm-3 col-sm-9 d-flex">
+                        <input wicket:id="from" class="form-control me-2" type="date" /> 
+                        <input wicket:id="to" class="form-control" type="date" />
                       </div>
                     </div>
                     <div class="row form-row">
