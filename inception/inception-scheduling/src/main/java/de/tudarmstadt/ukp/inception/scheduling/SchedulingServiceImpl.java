@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -156,26 +155,30 @@ public class SchedulingServiceImpl
     @Override
     public synchronized void enqueue(Task aTask)
     {
-        // Check if the incoming task should be discarded
+        List<Task> tasksToUnqueue = new ArrayList<>();
         for (Task enqueuedTask : enqueuedTasks) {
-            if (matchTask(aTask, enqueuedTask) == DISCARD_OR_QUEUE_THIS) {
+            switch (matchTask(aTask, enqueuedTask)) {
+            case DISCARD_OR_QUEUE_THIS:
+                // Check if the incoming task should be discarded
                 log.debug("Matching task already queued - keeping existing: [{}] and discarding "
                         + "incoming [{}]", enqueuedTask, aTask);
                 return;
+            case UNQUEUE_EXISTING_AND_QUEUE_THIS:
+                // Check if any existing tasks should be replaced with the new incoming task (i.e.
+                // the incoming task supersedes them).
+                tasksToUnqueue.add(enqueuedTask);
+                break;
+            case NO_MATCH:
+                // Ignore
+                break;
             }
         }
 
-        // Check if any existing tasks should be replaced with the new incoming task (i.e. the
-        // incoming task supersedes them).
-        List<Task> tasksToUnqueue = new ArrayList<>();
-        for (Task enqueuedTask : enqueuedTasks) {
-            if (matchTask(aTask, enqueuedTask) == UNQUEUE_EXISTING_AND_QUEUE_THIS) {
-                tasksToUnqueue.add(enqueuedTask);
-                log.debug("Matching task already queued - unqueuing exsting: [{}] in favor of "
-                        + "incoming [{}]", enqueuedTask, aTask);
-            }
+        for (Task taskToUnqueue : tasksToUnqueue) {
+            log.debug("Matching task already queued - unqueuing exsting: [{}] in favor of "
+                    + "incoming [{}]", taskToUnqueue, aTask);
+            enqueuedTasks.remove(taskToUnqueue);
         }
-        enqueuedTasks.removeAll(tasksToUnqueue);
 
         if (containsMatchingTask(getScheduledTasks(), aTask)) {
             log.debug("Matching task already scheduled - adding to queue: [{}]", aTask);

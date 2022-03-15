@@ -25,6 +25,7 @@ import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.Set;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
@@ -76,22 +77,31 @@ public class AnnotatorColumn
                 .orElse(NEW.symbol()));
         stateLabel.setEscapeModelStrings(false);
         stateLabel.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
-        stateLabel.add(onEvent("click", //
-                _target -> stateLabel.send(stateLabel, BUBBLE,
-                        new AnnotatorColumnCellClickEvent(_target,
-                                aRowModel.map(DocumentMatrixRow::getSourceDocument).getObject(),
-                                user))));
-        stateLabel.add(new LambdaAjaxEventBehavior("contextmenu", _target -> stateLabel.send(
-                stateLabel, BUBBLE,
-                new AnnotatorColumnCellOpenContextMenuEvent(_target, stateLabel,
-                        aRowModel.map(DocumentMatrixRow::getSourceDocument).getObject(), user,
-                        annDocument.map(AnnotationDocument::getState).orElse(NEW).getObject())))
-                                .setPreventDefault(true));
+        stateLabel.add(onEvent("click", _t -> actionClickCell(aRowModel, stateLabel, _t)));
+        stateLabel.add(new LambdaAjaxEventBehavior("contextmenu",
+                _t -> actionContextMenu(aRowModel, annDocument, stateLabel, _t))
+                        .setPreventDefault(true));
 
         aItem.add(new CssClassNameAppender(aRowModel.map(this::isSelected).orElse(false).getObject()
                 ? MatrixWorkloadManagementPage.CSS_CLASS_SELECTED
                 : ""));
         aItem.add(stateLabel);
+    }
+
+    private void actionContextMenu(IModel<DocumentMatrixRow> aRowModel,
+            IModel<AnnotationDocument> annDocument, Label stateLabel, AjaxRequestTarget _target)
+    {
+        stateLabel.send(stateLabel, BUBBLE,
+                new AnnotatorColumnCellOpenContextMenuEvent(_target, stateLabel,
+                        aRowModel.map(DocumentMatrixRow::getSourceDocument).getObject(), user,
+                        annDocument.map(AnnotationDocument::getState).orElse(NEW).getObject()));
+    }
+
+    private void actionClickCell(IModel<DocumentMatrixRow> aRowModel, Label stateLabel,
+            AjaxRequestTarget _target)
+    {
+        stateLabel.send(stateLabel, BUBBLE, new AnnotatorColumnCellClickEvent(_target,
+                aRowModel.map(DocumentMatrixRow::getSourceDocument).getObject(), user));
     }
 
     private boolean isSelected(DocumentMatrixRow aRow)
