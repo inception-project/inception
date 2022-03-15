@@ -56,6 +56,7 @@ import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.markup.html.form.DateTextField;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.HeaderlessColumn;
@@ -94,7 +95,6 @@ import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 import com.googlecode.wicket.kendo.ui.KendoDataSource;
-import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
@@ -171,8 +171,8 @@ public class DynamicWorkloadManagementPage
     // Input Fields
     private TextField<String> userFilterTextField;
     private TextField<String> documentFilterTextField;
-    private AjaxDatePicker dateFrom;
-    private AjaxDatePicker dateTo;
+    private DateTextField dateFrom;
+    private DateTextField dateTo;
     private AjaxCheckBox unused;
     private BootstrapRadioChoice<DateSelection> dateChoices;
     private DropDownChoice<User> userSelection;
@@ -336,11 +336,10 @@ public class DynamicWorkloadManagementPage
         searchForm.add(documentFilterTextField);
 
         // Input dates
-        dateFrom = new AjaxDatePicker("from", PropertyModel.of(dataProvider, "filter.from"),
-                "MM/dd/yyyy");
+        dateFrom = new DateTextField("from", PropertyModel.of(dataProvider, "filter.from"),
+                "yyyy-MM-dd");
         dateFrom.setOutputMarkupId(true);
-        dateTo = new AjaxDatePicker("to", PropertyModel.of(dataProvider, "filter.to"),
-                "MM/dd/yyyy");
+        dateTo = new DateTextField("to", PropertyModel.of(dataProvider, "filter.to"), "yyyy-MM-dd");
         dateTo.setOutputMarkupId(true);
 
         searchForm.add(dateFrom);
