@@ -1211,7 +1211,7 @@ public class DocumentServiceImpl
 
     @Override
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument,
-            List<AnnotationDocument> aAllAnnotationDocumentsInProject,
+            List<AnnotationDocument> aRelevantAnnotationDocuments,
             List<User> aUsersWithPermission)
     {
         Set<String> users = aUsersWithPermission.stream() //
@@ -1219,7 +1219,7 @@ public class DocumentServiceImpl
                 .collect(toSet());
 
         Map<AnnotationDocumentState, AtomicLong> counts = new LinkedHashMap<>();
-        aAllAnnotationDocumentsInProject.stream()
+        aRelevantAnnotationDocuments.stream()
                 .filter(annDoc -> annDoc.getDocument().equals(aDocument)) //
                 .forEach(aDoc -> {
                     AtomicLong count = counts.computeIfAbsent(aDoc.getState(),
