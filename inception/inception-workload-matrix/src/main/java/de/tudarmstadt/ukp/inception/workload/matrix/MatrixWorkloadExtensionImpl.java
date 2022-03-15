@@ -132,7 +132,7 @@ public class MatrixWorkloadExtensionImpl
         var annDocs = documentService.listAnnotationDocuments(aProject);
 
         for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
-            if (!isInCuration(doc)) {
+            if (isInCuration(doc)) {
                 continue;
             }
 
@@ -160,7 +160,7 @@ public class MatrixWorkloadExtensionImpl
         // Update the annotation document and source document states for the abandoned documents
         for (var doc : documentService.listSourceDocumentsInState(aProject,
                 ANNOTATION_IN_PROGRESS)) {
-            if (!isInCuration(doc)) {
+            if (isInCuration(doc)) {
                 continue;
             }
 
