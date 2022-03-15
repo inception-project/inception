@@ -77,26 +77,25 @@
                       </div>
                     </div>
                     <div class="row form-row">
-                      <label class="col-form-label col-sm-3"> <wicket:message
-                          key="documentFilterText" />
+                      <label class="col-form-label col-sm-3"> 
+                        <wicket:message key="documentFilterText" />
                       </label>
                       <div class="col-sm-9">
                         <input wicket:id="documentFilter" type="text" class="form-control" />
                       </div>
                     </div>
                     <div class="row form-row">
-                      <label class="col-form-label col-sm-3"> <wicket:message
-                          key="dateFilterText" />
+                      <label class="col-form-label col-sm-3"> 
+                        <wicket:message key="dateFilterText" />
                       </label>
-                      <div class="col-sm-9">
+                      <div class="col-sm-9 align-self-center">
                         <span wicket:id="date"></span>
                       </div>
                     </div>
                     <div class="row form-row">
-                      <div class="offset-sm-3 col-sm-9">
-                        <input class="bootstrap-datetimepicker-widget" wicket:id="from"
-                          type="date" /> <input class="bootstrap-datetimepicker-widget"
-                          wicket:id="to" type="date" />
+                      <div class="offset-sm-3 col-sm-9 d-flex">
+                        <input wicket:id="from" class="form-control me-2" type="date" /> 
+                        <input wicket:id="to" class="form-control" type="date" />
                       </div>
                     </div>
                     <div class="row form-row">
@@ -138,10 +137,10 @@
                       <wicket:message key="userSelection" />
                     </div>
                     <div class="card-body flex-h-container">
-                      <label class="col-form-label col-sm-3"> <wicket:message
-                          key="userSelect" />
-                      </label> <select wicket:id="userSelection" class="w-100" 
-                        data-container="body"></select>
+                      <label class="col-form-label col-sm-3">
+                        <wicket:message key="userSelect" />
+                      </label>
+                      <select wicket:id="userSelection" class="form-select"/>
                     </div>
                   </form>
                   <div class="flex-content flex-h-container">
@@ -153,7 +152,7 @@
                         <div class="card-body flex-content" style="height: 200px">
                           <div class="">
                             <select wicket:id="documentsToAdd" class="form-control"
-                              data-container="body" style="display: inline-block"></select>
+                              style="display: inline-block"></select>
                           </div>
                         </div>
                         <div class="card-footer">
@@ -170,10 +169,10 @@
                         </div>
                         <div class="card-body flex-content">
                           <div class="">
-                            <select wicket:id="resetDocument" class="w-100" data-container="body"/>
+                            <select wicket:id="resetDocument" class="form-select"/>
                           </div>
                           <div class="">
-                            <select wicket:id="documentState" class="w-100" data-container="body"/>
+                            <select wicket:id="documentState" class="form-select"/>
                           </div>
                         </div>
                         <div class="card-footer">
@@ -227,7 +226,7 @@
                         <a wicket:id="workflowHelpLink"/>
                       </label>
                       <div class="col-sm-5">
-                        <select wicket:id="workflowType" data-container="body" class="w-100"/>
+                        <select wicket:id="workflowType" class="form-select"/>
                       </div>
                     </div>
                     <div class="row form-row">
@@ -260,7 +259,7 @@
                         <wicket:message key="abandonationState" />
                       </label>
                       <div class="col-sm-5">
-                        <select wicket:id="abandonationState" data-container="body" class="w-100"/>
+                        <select wicket:id="abandonationState" class="form-select"/>
                       </div>
                     </div>
                   </div>
