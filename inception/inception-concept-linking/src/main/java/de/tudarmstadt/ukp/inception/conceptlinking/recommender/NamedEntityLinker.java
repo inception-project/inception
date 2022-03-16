@@ -43,7 +43,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
@@ -145,9 +145,9 @@ public class NamedEntityLinker
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_SUPPORTED;
+        return TrainingCapability.TRAINING_SUPPORTED;
     }
 
     @Override

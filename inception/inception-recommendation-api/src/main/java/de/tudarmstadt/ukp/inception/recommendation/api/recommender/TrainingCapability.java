@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-public enum RecommendationEngineCapability
+public enum TrainingCapability
 {
     /**
      * {@link RecommendationEngine} does not support training. Calling

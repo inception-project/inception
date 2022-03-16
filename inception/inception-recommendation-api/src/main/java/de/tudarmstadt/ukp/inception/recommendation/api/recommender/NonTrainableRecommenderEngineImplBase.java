@@ -60,8 +60,8 @@ public abstract class NonTrainableRecommenderEngineImplBase
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+        return TrainingCapability.TRAINING_NOT_SUPPORTED;
     }
 }

@@ -29,7 +29,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getType;

@@ -117,9 +117,9 @@ public abstract class RecommendationEngine
      * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
      * training is skipped or fails - this is meant only for engines that use pre-trained models.
      */
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_SUPPORTED;
+        return TrainingCapability.TRAINING_SUPPORTED;
     }
 
     /**

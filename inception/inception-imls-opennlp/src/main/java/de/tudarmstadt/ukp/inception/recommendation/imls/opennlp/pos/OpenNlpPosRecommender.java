@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
@@ -110,9 +110,9 @@ public class OpenNlpPosRecommender
     }
 
     @Override
-    public RecommendationEngineCapability getTrainingCapability()
+    public TrainingCapability getTrainingCapability()
     {
-        return RecommendationEngineCapability.TRAINING_REQUIRED;
+        return TrainingCapability.TRAINING_REQUIRED;
     }
 
     @Override
