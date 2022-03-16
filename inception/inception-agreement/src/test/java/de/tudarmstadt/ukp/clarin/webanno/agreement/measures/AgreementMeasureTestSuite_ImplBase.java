@@ -110,6 +110,7 @@ public class AgreementMeasureTestSuite_ImplBase
         when(annotationService.listAnnotationLayer(any())).thenReturn(layers);
         when(annotationService.listSupportedFeatures(any(AnnotationLayer.class)))
                 .thenReturn(features);
+        when(annotationService.listSupportedFeatures(any(Project.class))).thenReturn(features);
         when(annotationService.listAnnotationFeature(any(AnnotationLayer.class)))
                 .thenReturn(features);
         when(annotationService.getAdapter(any(AnnotationLayer.class))).then(_call -> {

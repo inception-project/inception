@@ -127,10 +127,18 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public ProjectState recalculate(Project aProject)
     {
-        int annotatorCount = projectService.listProjectUsersWithPermissions(aProject).size();
+        var projectUsers = projectService.listProjectUsersWithPermissions(aProject);
+        int annotatorCount = projectUsers.size();
+        var annDocs = documentService.listAnnotationDocuments(aProject);
 
         for (SourceDocument doc : documentService.listSourceDocuments(aProject)) {
-            updateDocumentState(doc, annotatorCount);
+            if (isInCuration(doc)) {
+                continue;
+            }
+
+            var stats = documentService.getAnnotationDocumentStats(doc, annDocs, projectUsers);
+
+            setSourceDocumentStateBasedOnStats(doc, annotatorCount, stats);
         }
 
         // Refresh the project stats and recalculate them
@@ -145,12 +153,20 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public ProjectState freshenStatus(Project aProject)
     {
-        int annotatorCount = projectService.listProjectUsersWithPermissions(aProject).size();
+        var projectUsers = projectService.listProjectUsersWithPermissions(aProject);
+        int annotatorCount = projectUsers.size();
+        var annDocs = documentService.listAnnotationDocuments(aProject);
 
         // Update the annotation document and source document states for the abandoned documents
-        for (SourceDocument doc : documentService.listSourceDocumentsInState(aProject,
+        for (var doc : documentService.listSourceDocumentsInState(aProject,
                 ANNOTATION_IN_PROGRESS)) {
-            updateDocumentState(doc, annotatorCount);
+            if (isInCuration(doc)) {
+                continue;
+            }
+
+            var stats = documentService.getAnnotationDocumentStats(doc, annDocs, projectUsers);
+
+            setSourceDocumentStateBasedOnStats(doc, annotatorCount, stats);
         }
 
         // Refresh the project stats and recalculate them
@@ -165,14 +181,27 @@ public class MatrixWorkloadExtensionImpl
     @Transactional
     public void updateDocumentState(SourceDocument aDocument, int aAnnotatorCount)
     {
-        // If the SOURCE document is already in curation, we do not touch the state anymore
-        if (aDocument.getState() == CURATION_FINISHED
-                || aDocument.getState() == CURATION_IN_PROGRESS) {
+        if (isInCuration(aDocument)) {
             return;
         }
 
-        Map<AnnotationDocumentState, Long> stats = documentService
-                .getAnnotationDocumentStats(aDocument);
+        var stats = documentService.getAnnotationDocumentStats(aDocument);
+
+        setSourceDocumentStateBasedOnStats(aDocument, aAnnotatorCount, stats);
+    }
+
+    /**
+     * If the SOURCE document is already in curation, we do not touch the state anymore
+     */
+    private boolean isInCuration(SourceDocument aDocument)
+    {
+        return aDocument.getState() == CURATION_FINISHED
+                || aDocument.getState() == CURATION_IN_PROGRESS;
+    }
+
+    private void setSourceDocumentStateBasedOnStats(SourceDocument aDocument, int aAnnotatorCount,
+            Map<AnnotationDocumentState, Long> stats)
+    {
         long ignoreCount = stats.get(AnnotationDocumentState.IGNORE);
         long finishedCount = stats.get(AnnotationDocumentState.FINISHED);
         long newCount = stats.get(AnnotationDocumentState.NEW);
