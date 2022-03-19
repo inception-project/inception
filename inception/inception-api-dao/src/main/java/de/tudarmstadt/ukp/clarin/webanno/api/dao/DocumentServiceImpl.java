@@ -1211,8 +1211,7 @@ public class DocumentServiceImpl
 
     @Override
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument,
-            List<AnnotationDocument> aRelevantAnnotationDocuments,
-            List<User> aUsersWithPermission)
+            List<AnnotationDocument> aRelevantAnnotationDocuments, List<User> aUsersWithPermission)
     {
         Set<String> users = aUsersWithPermission.stream() //
                 .map(User::getUsername) //

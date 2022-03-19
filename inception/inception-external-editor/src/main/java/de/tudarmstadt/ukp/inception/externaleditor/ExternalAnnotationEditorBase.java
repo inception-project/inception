@@ -79,8 +79,9 @@ public abstract class ExternalAnnotationEditorBase
         vis.setOutputMarkupPlaceholderTag(true);
         add(vis);
     }
-    
-    protected Component getViewComponent() {
+
+    protected Component getViewComponent()
+    {
         return vis;
     }
 
