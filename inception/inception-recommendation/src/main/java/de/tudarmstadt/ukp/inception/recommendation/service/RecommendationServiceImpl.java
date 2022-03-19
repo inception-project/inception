@@ -1504,7 +1504,7 @@ public class RecommendationServiceImpl
         // original CAS which contains only the manually created annotations
         // and *not* the suggestions.
         SuggestionDocumentGroup<SpanSuggestion> groups = SuggestionDocumentGroup
-                .filter(SpanSuggestion.class, suggestions);
+                .groupsOfType(SpanSuggestion.class, suggestions);
         calculateSpanSuggestionVisibility(originalCas, aUsername,
                 engine.getRecommender().getLayer(), groups, 0,
                 originalCas.getDocumentText().length());

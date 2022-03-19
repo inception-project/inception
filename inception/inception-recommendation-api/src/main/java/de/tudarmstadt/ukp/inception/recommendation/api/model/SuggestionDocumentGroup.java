@@ -53,8 +53,8 @@ public class SuggestionDocumentGroup<T extends AnnotationSuggestion>
      * Returns a SuggestionDocumentGroup where only suggestions of type V are added
      */
     @SuppressWarnings("unchecked")
-    public static <V extends AnnotationSuggestion> SuggestionDocumentGroup<V> filter(Class<V> type,
-            List<AnnotationSuggestion> aSuggestions)
+    public static <V extends AnnotationSuggestion> SuggestionDocumentGroup<V> groupsOfType(
+            Class<V> type, List<AnnotationSuggestion> aSuggestions)
     {
         List<AnnotationSuggestion> filteredSuggestions = aSuggestions.stream()
                 .filter(type::isInstance) //
