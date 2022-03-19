@@ -181,8 +181,8 @@ public interface RecommendationService
     void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName,
             SourceDocument aCurrentDocument);
 
-    void triggerSelectionTrainingAndClassification(String aUser, Project aProject,
-            String aEventName, SourceDocument aCurrentDocument);
+    void triggerSelectionTrainingAndPrediction(String aUser, Project aProject, String aEventName,
+            SourceDocument aCurrentDocument);
 
     boolean isPredictForAllDocuments(String aUser, Project aProject);
 

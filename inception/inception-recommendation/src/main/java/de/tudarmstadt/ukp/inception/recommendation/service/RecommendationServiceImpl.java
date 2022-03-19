@@ -623,7 +623,7 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public void triggerSelectionTrainingAndClassification(String aUser, Project aProject,
+    public void triggerSelectionTrainingAndPrediction(String aUser, Project aProject,
             String aEventName, SourceDocument aCurrentDocument)
     {
         triggerRun(aUser, aProject, aEventName, aCurrentDocument, true);
