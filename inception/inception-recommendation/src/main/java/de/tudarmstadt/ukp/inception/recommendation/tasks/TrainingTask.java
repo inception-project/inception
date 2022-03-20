@@ -222,6 +222,11 @@ public class TrainingTask
                             logMessages.add(warn(this,
                                     "There are no [%s] annotations available to train on.",
                                     layer.getUiName()));
+                            // This can happen if there were already predictions based on existing
+                            // annotations, but all annotations have been removed/deleted. To ensure
+                            // that the prediction run removes the stale predictions, we need to
+                            // call it a success here.
+                            seenSuccessfulTraining = true;
                             continue;
                         }
 

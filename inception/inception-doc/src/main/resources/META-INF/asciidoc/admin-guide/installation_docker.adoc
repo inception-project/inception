@@ -179,4 +179,14 @@ you mount the data to folders on your host.
 
 NOTE: Mind that you cannot arbitrarily switch between volume-managed and host-stored data. Choose wisely.
 
+=== Java options
+
+You can pass additional options to the Java runtime by extending the `JAVA_OPTS` variable in the
+Docker Compose script. To increase the available memory (RAM) to e.g. 4Gb, append `-Xmx4g`.
+
+[source,shell,subs="+attributes"]
+----
+- JAVA_OPTS=-Dspring.jpa.properties.hibernate.dialect.storage_engine=innodb -Xmx4g
+----
+
 There is a lot more that you can do using Docker and Docker Compose. Please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.

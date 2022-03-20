@@ -188,9 +188,8 @@ public class RecommendationSidebar
     {
         AnnotatorState state = getModelObject();
         recommendationService.clearState(state.getUser().getUsername());
-        recommendationService.triggerSelectionTrainingAndPrediction(
-                state.getUser().getUsername(), state.getProject(), "User request via sidebar",
-                state.getDocument());
+        recommendationService.triggerSelectionTrainingAndPrediction(state.getUser().getUsername(),
+                state.getProject(), "User request via sidebar", state.getDocument());
         info("Annotation state cleared - re-training from scratch...");
         getAnnotationPage().actionRefreshDocument(aTarget);
         aTarget.add(recommenderInfos);

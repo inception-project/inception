@@ -23,7 +23,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -104,8 +103,6 @@ public class AnnotationSchemaServiceAutoConfiguration
         return new StringFeatureSupport(aProperties, aSchemaService);
     }
 
-    @ConditionalOnProperty(prefix = "annotation.feature-support.multi-value-string", //
-            name = "enabled", havingValue = "true")
     @Bean
     public MultiValueStringFeatureSupport multiValueStringFeatureSupport(
             StringFeatureSupportProperties aProperties, AnnotationSchemaService aSchemaService)
