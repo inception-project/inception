@@ -9,7 +9,7 @@ networks:
 
 services:
   db:
-    image: "mariadb:10.5"
+    image: "mariadb:10.7"
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=inception
