@@ -47,6 +47,8 @@ public class LoadAnnotationsHandler
 
     public static final String PARAM_FORMAT = "format";
     public static final String PARAM_TOKEN = "token";
+    public static final String PARAM_BEGIN = "begin";
+    public static final String PARAM_END = "end";
 
     private final RenderingPipeline renderingPipeline;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
@@ -69,12 +71,17 @@ public class LoadAnnotationsHandler
     {
         try {
             AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
-
             AnnotatorState state = getAnnotatorState();
+
+            int begin = aRequest.getRequestParameters().getParameterValue(PARAM_BEGIN)
+                    .toInt(state.getWindowBeginOffset());
+            int end = aRequest.getRequestParameters().getParameterValue(PARAM_END)
+                    .toInt(state.getWindowEndOffset());
+
             RenderRequest request = RenderRequest.builder() //
                     .withState(state) //
                     .withCas(page.getEditorCas()) //
-                    .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                    .withWindow(begin, end) //
                     .withVisibleLayers(state.getAnnotationLayers()) //
                     .build();
 

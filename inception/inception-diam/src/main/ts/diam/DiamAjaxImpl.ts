@@ -88,17 +88,25 @@ export class DiamAjaxImpl implements DiamAjax {
     return undefined;
   }
 
-  loadAnnotations(format: string): Promise<any> {
+  loadAnnotations(format: string, range?: Offsets): Promise<any> {
     const token = DiamAjaxImpl.newToken();
+
+    let params : Record<string, any> = {
+      "action": 'loadAnnotations',
+      "token": token,
+      "format": format,
+    };
+
+    if (range) {
+      params.begin = range[0];
+      params.end = range[1];
+    }
+
     return new Promise((resolve, reject) => {
       Wicket.Ajax.ajax({
         "m": "POST",
         "u": this.ajaxEndpoint,
-        "ep": {
-          "action": 'loadAnnotations',
-          "token": token,
-          "format": format
-        },
+        "ep": params,
         "sh": [() => {
           const result = DiamAjaxImpl.clearResult(token);
           if (result === undefined) {
