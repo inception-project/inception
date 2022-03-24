@@ -36,6 +36,7 @@ public class RenderRequest
     private final User annotationUser;
     private final int windowBeginOffset;
     private final int windowEndOffset;
+    private final boolean includeText;
     private final List<AnnotationLayer> allLayers;
     private final List<AnnotationLayer> visibleLayers;
     private final CAS cas;
@@ -45,6 +46,7 @@ public class RenderRequest
     {
         this.windowBeginOffset = builder.windowBeginOffset;
         this.windowEndOffset = builder.windowEndOffset;
+        this.includeText = builder.includeText;
         this.state = builder.state;
         this.sourceDocument = builder.sourceDocument;
         this.annotationUser = builder.annotationUser;
@@ -67,6 +69,11 @@ public class RenderRequest
     public int getWindowEndOffset()
     {
         return windowEndOffset;
+    }
+
+    public boolean isIncludeText()
+    {
+        return includeText;
     }
 
     public User getAnnotationUser()
@@ -119,6 +126,7 @@ public class RenderRequest
     {
         private int windowBeginOffset;
         private int windowEndOffset;
+        private boolean includeText;
         private AnnotatorState state;
         private SourceDocument sourceDocument;
         private User annotationUser;
@@ -129,6 +137,7 @@ public class RenderRequest
 
         private Builder()
         {
+            // No instances without a CAS!
         }
 
         public Builder withCas(CAS aCas)
@@ -155,6 +164,12 @@ public class RenderRequest
         {
             sourceDocument = aDocument;
             annotationUser = aUser;
+            return this;
+        }
+
+        public Builder withText(boolean aIncludeText)
+        {
+            includeText = aIncludeText;
             return this;
         }
 

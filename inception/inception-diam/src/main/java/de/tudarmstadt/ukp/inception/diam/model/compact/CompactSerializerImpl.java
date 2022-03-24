@@ -106,6 +106,10 @@ public class CompactSerializerImpl
 
     private void renderText(CAS aCas, CompactAnnotatedText aResponse, RenderRequest aRequest)
     {
+        if (!aRequest.isIncludeText()) {
+            return;
+        }
+
         int windowBegin = aRequest.getWindowBeginOffset();
         int windowEnd = aRequest.getWindowEndOffset();
 

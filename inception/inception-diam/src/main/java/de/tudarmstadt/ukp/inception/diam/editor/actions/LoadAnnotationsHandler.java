@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
 
 /**
  * <p>
@@ -49,6 +50,7 @@ public class LoadAnnotationsHandler
     public static final String PARAM_TOKEN = "token";
     public static final String PARAM_BEGIN = "begin";
     public static final String PARAM_END = "end";
+    public static final String PARAM_TEXT = "text";
 
     private final RenderingPipeline renderingPipeline;
     private final VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint;
@@ -77,18 +79,21 @@ public class LoadAnnotationsHandler
                     .toInt(state.getWindowBeginOffset());
             int end = aRequest.getRequestParameters().getParameterValue(PARAM_END)
                     .toInt(state.getWindowEndOffset());
+            boolean includeText = aRequest.getRequestParameters().getParameterValue(PARAM_TEXT)
+                    .toBoolean(true);
 
             RenderRequest request = RenderRequest.builder() //
                     .withState(state) //
                     .withCas(page.getEditorCas()) //
                     .withWindow(begin, end) //
+                    .withText(includeText) //
                     .withVisibleLayers(state.getAnnotationLayers()) //
                     .build();
 
             VDocument vdoc = renderingPipeline.render(request);
 
             String format = aRequest.getRequestParameters().getParameterValue(PARAM_FORMAT)
-                    .toString();
+                    .toString(CompactSerializerImpl.ID);
 
             VDocumentSerializer<?> ser = vDocumentSerializerExtensionPoint.getExtension(format)
                     .orElseThrow(() -> new IllegalArgumentException(

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 import { DiamAjax, Offsets, VID } from '@inception-project/inception-js-api';
+import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax';
 
 declare const Wicket: any;
 
@@ -88,18 +89,25 @@ export class DiamAjaxImpl implements DiamAjax {
     return undefined;
   }
 
-  loadAnnotations(format: string, range?: Offsets): Promise<any> {
+  loadAnnotations(options: DiamLoadAnnotationsOptions): Promise<any> {
     const token = DiamAjaxImpl.newToken();
 
     let params : Record<string, any> = {
       "action": 'loadAnnotations',
-      "token": token,
-      "format": format,
+      "token": token
     };
 
-    if (range) {
-      params.begin = range[0];
-      params.end = range[1];
+    if (options.includeText === false) {
+      params.text = options.includeText;
+    }
+
+    if (options.format) {
+      params.format = options.format;
+    }
+
+    if (options.range) {
+      params.begin = options.range[0];
+      params.end = options.range[1];
     }
 
     return new Promise((resolve, reject) => {

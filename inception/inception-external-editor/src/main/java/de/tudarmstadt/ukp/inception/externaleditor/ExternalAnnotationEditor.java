@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.externaleditor;
 
 import static de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorLoader.PLUGINS_EDITOR_BASE_URL;
+import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 import javax.servlet.ServletContext;
@@ -27,6 +29,8 @@ import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -108,6 +112,7 @@ public class ExternalAnnotationEditor
         ExternalEditorPluginDescripion pluginDesc = getDescription();
         props.setEditorFactory(pluginDesc.getFactory());
         props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
+        props.setDiamWsUrl(constructWsEndpointUrl());
         props.setStylesheetSources(pluginDesc.getStylesheets().stream() //
                 .map(this::getUrlForPluginAsset) //
                 .collect(toList()));
@@ -116,5 +121,12 @@ public class ExternalAnnotationEditor
                 .collect(toList()));
 
         return props;
+    }
+    
+    private String constructWsEndpointUrl()
+    {
+        Url endPointUrl = Url.parse(format("%s%s", context.getContextPath(), WS_ENDPOINT));
+        endPointUrl.setProtocol("ws");
+        return RequestCycle.get().getUrlRenderer().renderFullUrl(endPointUrl);
     }
 }
