@@ -126,7 +126,7 @@ public class RenderRequest
     {
         private int windowBeginOffset;
         private int windowEndOffset;
-        private boolean includeText;
+        private boolean includeText = true;
         private AnnotatorState state;
         private SourceDocument sourceDocument;
         private User annotationUser;
