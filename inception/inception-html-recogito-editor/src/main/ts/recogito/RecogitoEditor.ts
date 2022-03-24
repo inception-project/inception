@@ -21,8 +21,6 @@ import type { AnnotationEditor, CompactAnnotatedText, CompactSpan, DiamAjax } fr
 import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation';
 import "./RecogitoEditor.css"
 
-const ANNOTATIONS_SERIALIZER = "compact";
-
 interface WebAnnotation {
   id: string;
   type: string;
@@ -84,7 +82,7 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public loadAnnotations(): void {
-    this.ajax.loadAnnotations(ANNOTATIONS_SERIALIZER).then((doc: CompactAnnotatedText) => {
+    this.ajax.loadAnnotations().then((doc: CompactAnnotatedText) => {
       if (!this.recogito) {
         console.error("It seems RecogitoJS has not yet been initialized", this);
         return;
