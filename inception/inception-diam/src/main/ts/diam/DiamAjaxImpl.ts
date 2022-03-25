@@ -89,7 +89,7 @@ export class DiamAjaxImpl implements DiamAjax {
     return undefined;
   }
 
-  loadAnnotations(options?: DiamLoadAnnotationsOptions): Promise<any> {
+  loadAnnotations(options?: DiamLoadAnnotationsOptions | string): Promise<any> {
     const token = DiamAjaxImpl.newToken();
 
     let params : Record<string, any> = {
@@ -97,7 +97,11 @@ export class DiamAjaxImpl implements DiamAjax {
       "token": token
     };
 
-    if (options) {
+    if (typeof options === 'string' || options instanceof String) {
+      // Backwards compatibility with INCEpTION 23.x
+      params.format = options;
+    }
+    else if (options) {
       if (options.includeText === false) {
         params.text = options.includeText;
       }
