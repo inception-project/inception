@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
 
 /**
  * <p>
@@ -81,7 +82,7 @@ public class LoadAnnotationsHandler
             VDocument vdoc = renderingPipeline.render(request);
 
             String format = aRequest.getRequestParameters().getParameterValue(PARAM_FORMAT)
-                    .toString();
+                    .toString(CompactSerializerImpl.ID);
 
             VDocumentSerializer<?> ser = vDocumentSerializerExtensionPoint.getExtension(format)
                     .orElseThrow(() -> new IllegalArgumentException(
