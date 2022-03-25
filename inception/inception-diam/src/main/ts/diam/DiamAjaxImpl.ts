@@ -89,7 +89,7 @@ export class DiamAjaxImpl implements DiamAjax {
     return undefined;
   }
 
-  loadAnnotations(options?: DiamLoadAnnotationsOptions | string): Promise<any> {
+  loadAnnotations(options?: DiamLoadAnnotationsOptions): Promise<any> {
     const token = DiamAjaxImpl.newToken();
 
     let params : Record<string, any> = {
