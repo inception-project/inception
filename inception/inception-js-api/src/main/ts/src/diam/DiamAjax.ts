@@ -26,10 +26,7 @@ export interface DiamAjax {
 
   createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void;
 
-  /**
-   * @param options use the object form - supplying only the format string is deprecated!
-   */
-  loadAnnotations(options?: DiamLoadAnnotationsOptions | string): Promise<any>;
+  loadAnnotations(options?: DiamLoadAnnotationsOptions): Promise<any>;
 }
 
 export type DiamLoadAnnotationsOptions = {
