@@ -262,6 +262,10 @@ public class BratSerializerImpl
 
     private void renderText(CAS aCas, GetDocumentResponse aResponse, RenderRequest aRequest)
     {
+        if (!aRequest.isIncludeText()) {
+            return;
+        }
+
         int windowBegin = aRequest.getWindowBeginOffset();
         int windowEnd = aRequest.getWindowEndOffset();
 
