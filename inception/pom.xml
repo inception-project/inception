@@ -109,7 +109,7 @@
     <solr.version>7.7.3</solr.version> <!-- 8.11.0 -->
     <mtas.version>7.7.1.0</mtas.version> <!-- 8.9.0.0 -->
     <elasticsearch.version>6.8.21</elasticsearch.version> <!-- 7.16.1 -->
-    <rdf4j.version>3.7.5</rdf4j.version>
+    <rdf4j.version>3.7.6</rdf4j.version>
     <jena.version>3.17.0</jena.version>
 
     <asciidoctor.plugin.version>2.2.1</asciidoctor.plugin.version>
