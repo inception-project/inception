@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
+import java.util.Iterator;
 import java.util.Objects;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
 public class Range
@@ -27,6 +29,12 @@ public class Range
 
     private final int begin;
     private final int end;
+
+    public Range(CAS aCas)
+    {
+        begin = 0;
+        end = aCas.getDocumentText().length();
+    }
 
     public Range(int aBegin, int aEnd)
     {
@@ -40,6 +48,29 @@ public class Range
         end = aAnnotation.getEnd();
     }
 
+    public Range(Iterable<AnnotationFS> aAnnotations)
+    {
+        Iterator<AnnotationFS> i = aAnnotations.iterator();
+        if (!i.hasNext()) {
+            begin = -1;
+            end = -1;
+            return;
+        }
+
+        AnnotationFS current = i.next();
+        int b = current.getBegin();
+        int e = current.getEnd();
+
+        while (i.hasNext()) {
+            current = i.next();
+            b = Math.min(current.getBegin(), b);
+            e = Math.max(current.getEnd(), e);
+        }
+
+        begin = b;
+        end = e;
+    }
+
     public int getBegin()
     {
         return begin;
@@ -48,6 +79,12 @@ public class Range
     public int getEnd()
     {
         return end;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "[" + begin + "-" + end + "]";
     }
 
     @Override

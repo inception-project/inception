@@ -18,13 +18,14 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils.getSourceDocumentName;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -40,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -99,7 +99,7 @@ public class RecommendationRelationRenderer
         AnnotationLayer layer = typeAdapter.getLayer();
 
         // TODO #176 use the document Id once it it available in the CAS
-        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(cas)
+        String sourceDocumentName = getSourceDocumentName(cas)
                 .orElseGet(() -> getDocumentTitle(cas));
         SuggestionDocumentGroup<RelationSuggestion> groupedPredictions = predictions
                 .getGroupedPredictions(RelationSuggestion.class, sourceDocumentName, layer,
@@ -117,14 +117,13 @@ public class RecommendationRelationRenderer
         Preferences pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
                 layer.getProject());
 
-        String bratTypeName = typeAdapter.getEncodedTypeName();
+        String typeName = typeAdapter.getEncodedTypeName();
 
         Type attachType = CasUtil.getType(cas, layer.getAttachType().getName());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later
-        Map<String, AnnotationFeature> features = annotationService.listSupportedFeatures(layer)
-                .stream()
-                .collect(Collectors.toMap(AnnotationFeature::getName, Function.identity()));
+        var features = annotationService.listSupportedFeatures(layer).stream()
+                .collect(toMap(AnnotationFeature::getName, identity()));
 
         for (SuggestionGroup<RelationSuggestion> group : groupedPredictions) {
             for (RelationSuggestion suggestion : group.bestSuggestions(pref)) {
@@ -159,7 +158,7 @@ public class RecommendationRelationRenderer
                 Map<String, String> featureAnnotation = new HashMap<>();
                 featureAnnotation.put(suggestion.getFeature(), annotation);
 
-                VArc arc = new VArc(layer, suggestion.getVID(), bratTypeName, new VID(source),
+                VArc arc = new VArc(layer, suggestion.getVID(), typeName, new VID(source),
                         new VID(target), "\uD83E\uDD16 " + suggestion.getUiLabel(),
                         featureAnnotation, COLOR);
 

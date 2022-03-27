@@ -51,6 +51,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -107,14 +108,14 @@ public class WeblichtRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         // Begin and end are not used here because we do not know what kind of WebLicht pipeline
         // the user calls and whether it actually makes sense to limit it in scope.
 
         if (!chainService.existsChain(getRecommender())) {
-            return;
+            return new Range(aCas);
         }
 
         try {
@@ -205,6 +206,8 @@ public class WeblichtRecommender
         catch (Exception e) {
             throw new RecommendationException("Cannot predict", e);
         }
+
+        return new Range(aCas);
     }
 
     private File getChainFile() throws IOException

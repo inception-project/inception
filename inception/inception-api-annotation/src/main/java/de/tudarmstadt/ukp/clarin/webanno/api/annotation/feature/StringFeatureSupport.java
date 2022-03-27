@@ -183,7 +183,7 @@ public class StringFeatureSupport
             return new KendoComboboxTextFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
         case AUTOCOMPLETE:
             return new KendoAutoCompleteTextFeatureEditor(aId, aOwner, aFeatureStateModel,
-                    properties.getAutoCompleteMaxResults(), aHandler);
+                    aHandler);
         default:
             throw new IllegalStateException(
                     "Unknown editor type: [" + traits.getEditorType() + "]");

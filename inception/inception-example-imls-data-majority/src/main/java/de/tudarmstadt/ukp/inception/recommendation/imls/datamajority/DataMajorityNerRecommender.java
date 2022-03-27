@@ -37,6 +37,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -132,7 +133,7 @@ public class DataMajorityNerRecommender
 
     // tag::predict1[]
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         DataMajorityModel model = aContext.get(KEY_MODEL).orElseThrow(
@@ -158,6 +159,8 @@ public class DataMajorityNerRecommender
             annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
+
+        return new Range(candidates);
     }
     // end::predict1[]
 

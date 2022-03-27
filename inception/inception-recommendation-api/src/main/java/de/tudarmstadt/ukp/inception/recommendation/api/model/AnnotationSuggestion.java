@@ -23,6 +23,9 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import org.apache.uima.cas.text.AnnotationPredicates;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public abstract class AnnotationSuggestion
@@ -252,4 +255,13 @@ public abstract class AnnotationSuggestion
 
     public abstract int getWindowEnd();
 
+    public boolean coveredBy(Range aRange)
+    {
+        if (Range.UNDEFINED.equals(aRange)) {
+            return false;
+        }
+
+        return AnnotationPredicates.coveredBy(getWindowBegin(), getWindowEnd(), aRange.getBegin(),
+                aRange.getEnd());
+    }
 }

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.uima.cas.text.AnnotationFS;
 
 public class RelationSuggestion
     extends AnnotationSuggestion
@@ -28,6 +29,15 @@ public class RelationSuggestion
     private static final long serialVersionUID = -1904645143661843249L;
 
     private final RelationPosition position;
+
+    public RelationSuggestion(int aId, Recommender aRecommender, long aLayerId, String aFeature,
+            String aDocumentName, AnnotationFS aSource, AnnotationFS aTarget, String aLabel,
+            String aUiLabel, double aScore, String aScoreExplanation)
+    {
+        this(aId, aRecommender.getId(), aRecommender.getName(), aLayerId, aFeature, aDocumentName,
+                aSource.getBegin(), aSource.getEnd(), aTarget.getBegin(), aTarget.getEnd(), aLabel,
+                aUiLabel, aScore, aScoreExplanation);
+    }
 
     public RelationSuggestion(int aId, long aRecommenderId, String aRecommenderName, long aLayerId,
             String aFeature, String aDocumentName, int aSourceBegin, int aSourceEnd,

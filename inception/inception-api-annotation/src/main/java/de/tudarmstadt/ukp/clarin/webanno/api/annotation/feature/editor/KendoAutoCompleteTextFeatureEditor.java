@@ -24,8 +24,10 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -58,17 +60,15 @@ public class KendoAutoCompleteTextFeatureEditor
 {
     private static final long serialVersionUID = 8686646370500180943L;
 
-    private final int maxResults;
+    private @SpringBean StringFeatureSupportProperties properties;
 
     public KendoAutoCompleteTextFeatureEditor(String aId, MarkupContainer aItem,
-            IModel<FeatureState> aModel, int aMaxResults, AnnotationActionHandler aHandler)
+            IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, aModel);
 
         AnnotationFeature feat = getModelObject().feature;
         StringFeatureTraits traits = readFeatureTraits(feat);
-
-        maxResults = aMaxResults;
 
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the
@@ -88,6 +88,7 @@ public class KendoAutoCompleteTextFeatureEditor
     @Override
     protected AbstractTextComponent createInputField()
     {
-        return new ReorderableTagAutoCompleteField("value", getModel(), maxResults);
+        return new ReorderableTagAutoCompleteField("value", getModel(),
+                properties.getAutoCompleteMaxResults());
     }
 }
