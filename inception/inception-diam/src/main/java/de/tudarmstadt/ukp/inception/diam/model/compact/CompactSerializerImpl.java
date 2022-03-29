@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -91,6 +92,13 @@ public class CompactSerializerImpl
                         getArgument(varc.getSource(), varc.getTarget()), varc.getLabelHint(),
                         varc.getColorHint());
                 aResponse.addRelation(arc);
+            }
+        }
+
+        for (var marker : aVDoc.getMarkers()) {
+            if (marker instanceof VAnnotationMarker) {
+                aResponse.addAnnotationMarker(
+                        new CompactAnnotationMarker((VAnnotationMarker) marker));
             }
         }
     }
