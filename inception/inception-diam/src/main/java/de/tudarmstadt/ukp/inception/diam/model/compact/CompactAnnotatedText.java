@@ -35,6 +35,7 @@ public class CompactAnnotatedText
 
     private @JsonInclude(NON_EMPTY) List<CompactRelation> relations = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<CompactSpan> spans = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<CompactAnnotationMarker> annotationMarkers = new ArrayList<>();
 
     public CompactAnnotatedText()
     {
@@ -79,5 +80,20 @@ public class CompactAnnotatedText
     public void addSpan(CompactSpan aEntity)
     {
         spans.add(aEntity);
+    }
+
+    public List<CompactAnnotationMarker> getAnnotationMarkers()
+    {
+        return annotationMarkers;
+    }
+
+    public void setAnnotationMarkers(List<CompactAnnotationMarker> aMarkers)
+    {
+        annotationMarkers = aMarkers;
+    }
+
+    public void addAnnotationMarker(CompactAnnotationMarker aMarker)
+    {
+        annotationMarkers.add(aMarker);
     }
 }
