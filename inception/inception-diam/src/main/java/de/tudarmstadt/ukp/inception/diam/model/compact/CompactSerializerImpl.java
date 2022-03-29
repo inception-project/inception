@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotat
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.Offsets;
@@ -99,6 +100,9 @@ public class CompactSerializerImpl
             if (marker instanceof VAnnotationMarker) {
                 aResponse.addAnnotationMarker(
                         new CompactAnnotationMarker((VAnnotationMarker) marker));
+            }
+            else if (marker instanceof VTextMarker) {
+                aResponse.addTextMarker(new CompactTextMarker((VTextMarker) marker));
             }
         }
     }

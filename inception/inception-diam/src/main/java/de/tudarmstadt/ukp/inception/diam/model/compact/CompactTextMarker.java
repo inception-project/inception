@@ -24,43 +24,43 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
+import de.tudarmstadt.ukp.inception.diam.model.Offsets;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "type", "vids" })
-public class CompactAnnotationMarker
+@JsonPropertyOrder(value = { "type", "offsets" })
+public class CompactTextMarker
 {
-    private List<VID> vids;
+    private List<Offsets> offsets;
     private String type;
 
-    public CompactAnnotationMarker(VID aVid, String aType)
+    public CompactTextMarker(Offsets aVid, String aType)
     {
-        vids = asList(aVid);
+        offsets = asList(aVid);
         type = aType;
     }
 
-    public CompactAnnotationMarker(List<VID> aVid, String aType)
+    public CompactTextMarker(List<Offsets> aVid, String aType)
     {
-        vids = aVid;
+        offsets = aVid;
         type = aType;
     }
 
-    public CompactAnnotationMarker(VAnnotationMarker aAnnotationMarker)
+    public CompactTextMarker(VTextMarker aTextMarker)
     {
-        vids = asList(aAnnotationMarker.getVid());
-        type = aAnnotationMarker.getType();
+        offsets = asList(new Offsets(aTextMarker.getBegin(), aTextMarker.getEnd()));
+        type = aTextMarker.getType();
     }
 
-    public void setVids(List<VID> aVid)
+    public void setOffsets(List<Offsets> aVid)
     {
-        vids = aVid;
+        offsets = aVid;
     }
 
-    public List<VID> getVids()
+    public List<Offsets> getVid()
     {
-        return vids;
+        return offsets;
     }
 
     public void setType(String aType)
