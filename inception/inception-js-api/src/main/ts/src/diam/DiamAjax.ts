@@ -22,6 +22,8 @@ declare const Wicket: any;
 export interface DiamAjax {
   selectAnnotation(id: VID): void;
 
+  deleteAnnotation(id: VID): void;
+
   createSpanAnnotation(offsets: Array<Offsets>, spanText: string): void;
 
   createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void;

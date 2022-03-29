@@ -71,6 +71,17 @@ export class DiamAjaxImpl implements DiamAjax {
     });
   }
 
+  deleteAnnotation(id: VID) {
+    Wicket.Ajax.ajax({
+      "m": "POST",
+      "u": this.ajaxEndpoint,
+      "ep": {
+        action: 'deleteAnnotation',
+        id: id
+      }
+    });
+  }
+
   static newToken(): string {
     return btoa(String.fromCharCode(...window.crypto.getRandomValues(new Uint8Array(16))));
   }
