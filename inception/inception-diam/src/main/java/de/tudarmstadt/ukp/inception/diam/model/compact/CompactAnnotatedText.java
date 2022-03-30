@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.diam.model.compact;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
+import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,11 +32,12 @@ public class CompactAnnotatedText
 {
     public static final String COMMAND = "getAnnotatedDocument";
 
-    private String text;
+    private @JsonInclude(NON_NULL) String text;
 
     private @JsonInclude(NON_EMPTY) List<CompactRelation> relations = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<CompactSpan> spans = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<CompactAnnotationMarker> annotationMarkers = new ArrayList<>();
+    private @JsonInclude(NON_EMPTY) List<CompactTextMarker> textMarkers = new ArrayList<>();
 
     public CompactAnnotatedText()
     {
@@ -95,5 +97,20 @@ public class CompactAnnotatedText
     public void addAnnotationMarker(CompactAnnotationMarker aMarker)
     {
         annotationMarkers.add(aMarker);
+    }
+
+    public List<CompactTextMarker> getTextMarkers()
+    {
+        return textMarkers;
+    }
+
+    public void setTextMarkers(List<CompactTextMarker> aTextMarkers)
+    {
+        textMarkers = aTextMarkers;
+    }
+
+    public void addTextMarker(CompactTextMarker aMarker)
+    {
+        textMarkers.add(aMarker);
     }
 }
