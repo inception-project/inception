@@ -50,8 +50,7 @@ public class DiamAjaxBehavior
         LOG.trace("AJAX request recieved");
 
         Request request = RequestCycle.get().getRequest();
-        handlers.getExtensions(request).stream() //
-                .findFirst() //
-                .ifPresent(handler -> handler.handle(aTarget, request));
+        handlers.getHandler(request) //
+                .ifPresent(h -> h.handle(aTarget, request));
     }
 }
