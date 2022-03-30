@@ -79,14 +79,17 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     @Override
     public List<E> getExtensions(C aContext)
     {
-        return getExtensions().stream().filter(e -> e.accepts(aContext)).collect(toList());
+        return getExtensions().stream() //
+                .filter(e -> e.accepts(aContext)) //
+                .collect(toList());
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <X extends E> Optional<X> getExtension(String aId)
     {
-        return (Optional<X>) getExtensions().stream().filter(fs -> fs.getId().equals(aId))
+        return (Optional<X>) getExtensions().stream() //
+                .filter(fs -> fs.getId().equals(aId)) //
                 .findFirst();
     }
 }
