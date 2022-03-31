@@ -136,6 +136,12 @@
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.13.2</jackson.version>
     <okhttp.version>4.9.3</okhttp.version>
+    
+    <typescript.version>^4.6.3</typescript.version>
+    <typescript-eslint.version>^5.17.0</typescript-eslint.version>
+    <esbuild.version>^0.14.29</esbuild.version>
+    <esbuild-sass-plugin.version>^2.2.6</esbuild-sass-plugin.version>
+    <eslint.version>^8.12.0</eslint.version>
   </properties>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->
