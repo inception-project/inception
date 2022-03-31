@@ -70,7 +70,7 @@
     <uimafit.version>3.2.0</uimafit.version>
 
     <spring.version>5.3.18</spring.version>
-    <spring.boot.version>2.6.5</spring.boot.version>
+    <spring.boot.version>2.6.6</spring.boot.version>
     <spring.security.version>5.6.2</spring.security.version>
     <springdoc.version>1.6.6</springdoc.version>
     <swagger.version>2.1.12</swagger.version>
