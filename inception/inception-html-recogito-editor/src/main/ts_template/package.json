@@ -10,11 +10,11 @@
     "@recogito/recogito-client-core": "1.6.0"
   },
   "devDependencies": {
-    "esbuild": "^0.14.29",
-    "typescript": "^4.6.3",
-    "@typescript-eslint/eslint-plugin": "^5.17.0",
-    "@typescript-eslint/parser": "^5.17.0",
-    "eslint": "^8.12.0",
-    "esbuild-sass-plugin": "^2.2.6"
+    "esbuild": "${esbuild.version}",
+    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
+    "eslint": "${eslint.version}",
+    "typescript": "${typescript.version}",
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
+    "@typescript-eslint/parser": "${typescript-eslint.version}"
   }
 }
