@@ -83,7 +83,7 @@
 
     <groovy.version>3.0.10</groovy.version>
 
-    <tomcat.version>9.0.60</tomcat.version>
+    <tomcat.version>9.0.62</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.4</mariadb.driver.version>
