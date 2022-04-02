@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSeria
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CustomActionHandler;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.DeleteAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPointImpl;
@@ -87,6 +88,13 @@ public class DiamAutoConfig
     public CreateRelationAnnotationHandler createRelationAnnotationHandler()
     {
         return new CreateRelationAnnotationHandler();
+    }
+
+    @Bean
+    public DeleteAnnotationHandler deleteAnnotationHandler(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new DeleteAnnotationHandler(aAnnotationService);
     }
 
     @Bean

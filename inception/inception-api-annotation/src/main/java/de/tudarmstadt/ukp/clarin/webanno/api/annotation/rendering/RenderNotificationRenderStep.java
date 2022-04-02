@@ -55,7 +55,7 @@ public class RenderNotificationRenderStep
             page.send(page, Broadcast.BREADTH,
                     new RenderAnnotationsEvent(
                             RequestCycle.get().find(IPartialPageRequestHandler.class).get(),
-                            aRequest.getCas(), aRequest.getState(), aVDoc));
+                            aRequest.getCas(), aRequest, aVDoc));
         });
     }
 }
