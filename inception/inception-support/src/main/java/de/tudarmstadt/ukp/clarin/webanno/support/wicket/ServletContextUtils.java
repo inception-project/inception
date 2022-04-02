@@ -31,7 +31,17 @@ public class ServletContextUtils
     {
         ResourceReferenceRequestHandler handler = new ResourceReferenceRequestHandler(
                 aResourceReference, new PageParameters());
-        return "/" + aServletContext.getContextPath()
-                + Application.get().getRootRequestMapper().mapHandler(handler).toString();
+
+        var contextPath = aServletContext.getContextPath();
+        if (!contextPath.startsWith("/")) {
+            contextPath = '/' + contextPath;
+        }
+
+        var resourcePath = Application.get().getRootRequestMapper().mapHandler(handler).toString();
+        if (!contextPath.endsWith("/")) {
+            resourcePath = '/' + resourcePath;
+        }
+
+        return contextPath + resourcePath;
     }
 }
