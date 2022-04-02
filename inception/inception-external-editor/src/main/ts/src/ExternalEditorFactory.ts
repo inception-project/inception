@@ -28,6 +28,11 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
     if (element instanceof HTMLIFrameElement) {
       const iframe = element as HTMLIFrameElement;
 
+      // Hiding editor because loading the editor resources and in particular CSS files for large
+      // documents can take a while. This might cause the browser to render the document first
+      // without CSS and then re-render with CSS - which causes an undesired "flickering"
+      iframe.style.visibility = "hidden";
+
       element[PROP_EDITOR] = await this.loadIFrameContent(iframe)
         .then(win => this.loadEditorResources(win, props))
         .then(win => {
@@ -39,6 +44,10 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
           // On XML documents, provide the document root as target to the editor
           return this.initEditor(window, win.document, diam, props);
         });
+
+        // Restoring visibility
+        iframe.style.visibility = "visible";
+      
       return element[PROP_EDITOR];
     }
 
@@ -46,6 +55,7 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
       .then(win => {
         return this.initEditor(win, element as HTMLElement, diam, props);
       });
+
     return element[PROP_EDITOR];
   }
 

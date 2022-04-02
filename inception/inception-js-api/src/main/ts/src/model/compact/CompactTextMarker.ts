@@ -15,11 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { CompactRelation } from "./CompactRelation";
-import { CompactSpan } from "./CompactSpan";
+import { Offsets } from "../Offsets";
 
-export interface CompactAnnotatedText {
-  text?: string;
-  relations?: Array<CompactRelation>;
-  spans?: Array<CompactSpan>;
-}
+export type CompactTextMarker = [
+  type: string,
+  offsets: Array<Offsets>
+]

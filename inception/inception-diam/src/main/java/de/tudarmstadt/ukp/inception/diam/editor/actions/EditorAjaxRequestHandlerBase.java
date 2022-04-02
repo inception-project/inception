@@ -81,8 +81,9 @@ public abstract class EditorAjaxRequestHandlerBase
 
         target.addChildren(target.getPage(), IFeedback.class);
 
+        String fullMessage = aMessage + ": " + e.getMessage();
+
         if (e instanceof AnnotationException) {
-            String fullMessage = aMessage + ": " + e.getMessage();
             // These are common exceptions happening as part of the user interaction. We do
             // not really need to log their stack trace to the log.
             target.getPage().error(fullMessage);
@@ -95,7 +96,7 @@ public abstract class EditorAjaxRequestHandlerBase
         }
 
         LOG.error("{}", aMessage, e);
-        target.getPage().error(aMessage);
+        target.getPage().error(fullMessage);
         return new DefaultAjaxResponse(getAction(RequestCycle.get().getRequest()),
                 asList(aMessage));
     }
