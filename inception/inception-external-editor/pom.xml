@@ -120,7 +120,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>generate-sources</phase>
+            <phase>${ts-link-dependency-phase}</phase>
             <configuration>
               <arguments>link @inception-project/inception-js-api</arguments>
             </configuration>
@@ -130,7 +130,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>generate-sources</phase>
+            <phase>${ts-link-dependency-phase}</phase>
             <configuration>
               <arguments>link @inception-project/inception-diam</arguments>
             </configuration>
@@ -140,7 +140,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>compile</phase>
+            <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build</arguments>
             </configuration>
@@ -150,7 +150,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>compile</phase>
+            <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build-minified</arguments>
             </configuration>
