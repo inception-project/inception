@@ -24,24 +24,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
-import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.ClassAttributeModifier;
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.StyleAttributeModifier;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
@@ -50,20 +38,16 @@ import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 
 public class MultiSelectTextFeatureEditor
     extends FeatureEditor
 {
-    private static final Logger LOG = LoggerFactory.getLogger(LinkFeatureEditor.class);
-
     private static final long serialVersionUID = 7469241620229001983L;
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -75,7 +59,6 @@ public class MultiSelectTextFeatureEditor
     // private RulesIndicator indicator = new RulesIndicator();
 
     private final MultiSelect<ReorderableTag> field;
-    private boolean hideUnconstrainedFeature;
 
     public MultiSelectTextFeatureEditor(String aId, MarkupContainer aOwner,
             final IModel<FeatureState> aFeatureStateModel, AnnotationActionHandler aHandler)
@@ -192,9 +175,7 @@ public class MultiSelectTextFeatureEditor
         };
         add(field);
 
-        // Checks whether hide un-constraint feature is enabled or not
-        hideUnconstrainedFeature = getModelObject().feature.isHideUnconstraintFeature();
-        add(createConstraintsInUseIndicatorContainer());
+        add(new ConstraintsInUseIndicator("textIndicator", getModel()));
     }
 
     @SuppressWarnings("rawtypes")
@@ -214,64 +195,9 @@ public class MultiSelectTextFeatureEditor
         super.onConfigure();
 
         // if enabled and constraints rule execution returns anything other than green
-        setVisible(!hideUnconstrainedFeature || (getModelObject().indicator.isAffected()
-                && getModelObject().indicator.getStatusColor().equals("green")));
-    }
-
-    private Component createConstraintsInUseIndicatorContainer()
-    {
-        // Shows whether constraints are triggered or not also shows state of constraints use.
-        Component indicator = new WebMarkupContainer("textIndicator");
-        indicator.add(LambdaBehavior.visibleWhen(() -> getModelObject().indicator.isAffected()));
-        indicator.add(new ClassAttributeModifier()
-        {
-            private static final long serialVersionUID = 4623544241209220039L;
-
-            @Override
-            protected Set<String> update(Set<String> aOldClasses)
-            {
-                aOldClasses.add(getModelObject().indicator.getStatusSymbol());
-                return aOldClasses;
-            }
-        });
-        indicator.add(new StyleAttributeModifier()
-        {
-            private static final long serialVersionUID = 3627596292626670610L;
-
-            @Override
-            protected Map<String, String> update(Map<String, String> aStyles)
-            {
-                aStyles.put("color", getModelObject().indicator.getStatusColor());
-                return aStyles;
-            }
-        });
-        indicator.add(
-                new AttributeModifier("title", getModelObject().indicator.getStatusDescription()));
-        return indicator;
-    }
-
-    public static void handleException(Component aComponent, AjaxRequestTarget aTarget,
-            Exception aException)
-    {
-        try {
-            throw aException;
-        }
-        catch (AnnotationException e) {
-            if (aTarget != null) {
-                aTarget.prependJavaScript("alert('Error: " + e.getMessage() + "')");
-            }
-            else {
-                aComponent.error("Error: " + e.getMessage());
-            }
-            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
-        }
-        catch (UIMAException e) {
-            aComponent.error("Error: " + ExceptionUtils.getRootCauseMessage(e));
-            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
-        }
-        catch (Exception e) {
-            aComponent.error("Error: " + e.getMessage());
-            LOG.error("Error: " + e.getMessage(), e);
-        }
+        var featState = getModelObject();
+        setVisible(!featState.feature.isHideUnconstraintFeature() || //
+                (featState.indicator.isAffected()
+                        && featState.indicator.getStatusColor().equals("green")));
     }
 }
