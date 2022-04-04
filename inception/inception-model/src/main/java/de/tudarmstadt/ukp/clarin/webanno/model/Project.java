@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.containsNone;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
@@ -136,7 +137,8 @@ public class Project
 
     public void setSlug(String aSlug)
     {
-        Validate.isTrue(isValidProjectSlug(aSlug), format("Invalid project URL slug: [%s]", aSlug));
+        Validate.isTrue(isBlank(aSlug) || isValidProjectSlug(aSlug),
+                format("Invalid project URL slug: [%s]", aSlug));
         slug = aSlug;
     }
 
