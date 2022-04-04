@@ -203,7 +203,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>${ts-build-phase}</phase>
+            <phase>generate-resources</phase>
             <configuration>
               <arguments>run build</arguments>
             </configuration>
