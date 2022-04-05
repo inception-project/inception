@@ -46,6 +46,7 @@ import java.awt.TrayIcon;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -56,14 +57,17 @@ import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.border.Border;
 import javax.swing.text.DefaultCaret;
@@ -74,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.RingBufferAppender;
+import liquibase.pro.packaged.J;
 
 public class StandaloneUserInterface
 {
@@ -99,7 +104,34 @@ public class StandaloneUserInterface
             if (!file.exists()) {
                 file.createNewFile();
             }
-            getDesktop().browseFileDirectory(file);
+
+            if (getDesktop().isSupported(Desktop.Action.BROWSE_FILE_DIR)) {
+                getDesktop().browseFileDirectory(file);
+            } else {
+                JLabel label = new JLabel("Path to the settings properties file:");
+
+                JTextField textField = new JTextField(file.getAbsolutePath());
+                textField.setEditable(false);
+
+                JButton copyButton = new JButton("Copy");
+                copyButton.addActionListener(le -> {
+                    StringSelection stringSelection = new StringSelection (textField.getText());
+                    Clipboard clipboard = Toolkit.getDefaultToolkit ().getSystemClipboard ();
+                    clipboard.setContents (stringSelection, null);
+                });
+
+                JPanel panel = new JPanel();
+                panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+                panel.add(label);
+                panel.add(Box.createVerticalGlue());
+                JPanel row = new JPanel();
+                row.add(textField);
+                row.add(copyButton);
+                panel.add(row);
+
+                String title = "Settings Properties";
+                JOptionPane.showMessageDialog(null, panel, title, JOptionPane.INFORMATION_MESSAGE);
+            }
         }
         catch (Exception e) {
             LOG.error("Unable to open settings file", e);
