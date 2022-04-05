@@ -153,25 +153,15 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>build-helper-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-pdfanno-resources</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>add-resource</goal>
-            </goals>
-            <configuration>
-              <resources>
-                <resource>
-                  <directory>src/main/js/pdfanno/dist/pdfanno</directory>
-                  <targetPath>pdfanno</targetPath>
-                </resource>
-              </resources>
-            </configuration>
-          </execution>
-        </executions>
+        <artifactId>maven-clean-plugin</artifactId>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>src/main/js/pdfanno/dist</directory>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
+          </filesets>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>com.github.eirslett</groupId>
@@ -205,9 +195,30 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>${ts-build-phase}</phase>
+            <phase>generate-resources</phase>
             <configuration>
               <arguments>run build</arguments>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>add-pdfanno-resources</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>add-resource</goal>
+            </goals>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>src/main/js/pdfanno/dist/pdfanno</directory>
+                  <targetPath>pdfanno</targetPath>
+                </resource>
+              </resources>
             </configuration>
           </execution>
         </executions>

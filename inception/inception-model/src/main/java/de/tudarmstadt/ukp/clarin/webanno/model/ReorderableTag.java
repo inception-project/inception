@@ -27,7 +27,7 @@ public class ReorderableTag
 
     private final ImmutableTag tag;
     private boolean reordered;
-    private String detail;
+    private String score;
 
     public ReorderableTag(ImmutableTag aTag)
     {
@@ -76,14 +76,14 @@ public class ReorderableTag
         return tag.getName();
     }
 
-    public String getDetail()
+    public String getScore()
     {
-        return detail;
+        return score;
     }
 
-    public void setDetail(String aDetail)
+    public void setScore(String aScore)
     {
-        detail = aDetail;
+        score = aScore;
     }
 
     @Override
