@@ -19,14 +19,16 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.schema;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.persistence.NoResultException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -71,7 +73,7 @@ public class BratSchemaGeneratorImpl
     {
         // Sort layers
         List<AnnotationLayer> layers = new ArrayList<>(aAnnotationLayers);
-        layers.sort(Comparator.comparing(AnnotationLayer::getName));
+        layers.sort(comparing(AnnotationLayer::getName));
 
         // Look up all the features once to avoid hammering the database in the loop below
         Map<AnnotationLayer, List<AnnotationFeature>> layerToFeatures = annotationService
@@ -130,8 +132,13 @@ public class BratSchemaGeneratorImpl
         // determine which layers attach to with other layers. Currently we only use attachType,
         // but do not follow attachFeature if it is set.
         if (aTarget.isBuiltIn() && aTarget.getName().equals(POS.class.getName())) {
-            attachingLayers.add(
-                    annotationService.findLayer(aTarget.getProject(), Dependency.class.getName()));
+            try {
+                attachingLayers.add(annotationService.findLayer(aTarget.getProject(),
+                        Dependency.class.getName()));
+            }
+            catch (NoResultException e) {
+                // If the Dependency layer does not exist in the project, we do not care.
+            }
         }
 
         // Custom layers
