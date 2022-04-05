@@ -197,7 +197,8 @@ public class CasMerge
         // Set up a cache for resolving type to layer to avoid hammering the DB as we process each
         // position
         Map<String, AnnotationLayer> type2layer = aDiff.getPositions().stream()
-                .map(Position::getType).distinct()
+                .map(Position::getType) //
+                .distinct() //
                 .map(type -> schemaService.findLayer(aTargetDocument.getProject(), type))
                 .collect(toMap(AnnotationLayer::getName, identity()));
 
@@ -222,9 +223,11 @@ public class CasMerge
         for (String layerName : layerNames) {
             List<SpanPosition> positions = aDiff.getPositions().stream()
                     .filter(pos -> layerName.equals(pos.getType()))
-                    .filter(pos -> pos instanceof SpanPosition).map(pos -> (SpanPosition) pos)
+                    .filter(pos -> pos instanceof SpanPosition) //
+                    .map(pos -> (SpanPosition) pos)
                     // We don't process slot features here (they are span sub-positions)
-                    .filter(pos -> pos.getFeature() == null).collect(Collectors.toList());
+                    .filter(pos -> pos.getFeature() == null) //
+                    .collect(Collectors.toList());
 
             if (positions.isEmpty()) {
                 continue;
@@ -315,7 +318,8 @@ public class CasMerge
             List<RelationPosition> positions = aDiff.getPositions().stream()
                     .filter(pos -> layerName.equals(pos.getType()))
                     .filter(pos -> pos instanceof RelationPosition)
-                    .map(pos -> (RelationPosition) pos).collect(Collectors.toList());
+                    .map(pos -> (RelationPosition) pos) //
+                    .collect(Collectors.toList());
 
             if (positions.isEmpty()) {
                 continue;
