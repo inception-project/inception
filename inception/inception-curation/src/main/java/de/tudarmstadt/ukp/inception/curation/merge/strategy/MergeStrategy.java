@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
-import java.util.Optional;
+import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
@@ -25,6 +25,6 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 
 public interface MergeStrategy
 {
-    Optional<Configuration> chooseConfigurationToMerge(DiffResult aDiff,
+    List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff,
             ConfigurationSet aConfigurationSet);
 }

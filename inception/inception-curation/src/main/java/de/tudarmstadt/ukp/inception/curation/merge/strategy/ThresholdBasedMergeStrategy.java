@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
@@ -64,8 +66,7 @@ public class ThresholdBasedMergeStrategy
     }
 
     @Override
-    public Optional<Configuration> chooseConfigurationToMerge(DiffResult aDiff,
-            ConfigurationSet aCfgs)
+    public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs)
     {
         List<Configuration> cfgsAboveUserThreshold = aCfgs.getConfigurations().stream() //
                 .filter(cfg -> cfg.getCasGroupIds().size() >= userThreshold) //
@@ -75,7 +76,7 @@ public class ThresholdBasedMergeStrategy
         if (cfgsAboveUserThreshold.isEmpty()) {
             LOG.trace(" `-> Not merging as no configuration meets the user threshold [{}]",
                     userThreshold);
-            return Optional.empty();
+            return emptyList();
         }
 
         Configuration best = cfgsAboveUserThreshold.get(0);
@@ -89,13 +90,13 @@ public class ThresholdBasedMergeStrategy
         double confidence = ((bestVoteCount - secondBestVoteCount) / bestVoteCount);
 
         if (confidence > 0.0 && confidence >= confidenceThreshold) {
-            return Optional.of(best);
+            return asList(best);
         }
 
         // DISPUTED
         LOG.trace(" `-> Not merging as confidence [{}] is zero or does not meet the threshold [{}]",
                 confidence, confidenceThreshold);
-        return Optional.empty();
+        return emptyList();
     }
 
     @Override

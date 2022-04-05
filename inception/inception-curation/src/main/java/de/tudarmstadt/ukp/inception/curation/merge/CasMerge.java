@@ -48,7 +48,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -145,10 +144,10 @@ public class CasMerge
         return mergeStrategy;
     }
 
-    private Optional<Configuration> chooseConfigurationToMerge(DiffResult aDiff,
-            ConfigurationSet cfgs, Map<String, List<CAS>> aCasMap)
+    private List<Configuration> chooseConfigurationToMerge(DiffResult aDiff, ConfigurationSet cfgs,
+            Map<String, List<CAS>> aCasMap)
     {
-        return mergeStrategy.chooseConfigurationToMerge(aDiff, cfgs);
+        return mergeStrategy.chooseConfigurationsToMerge(aDiff, cfgs);
     }
 
     /**
@@ -241,33 +240,33 @@ public class CasMerge
                 LOG.trace(" |   processing {}", position);
                 ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
-                Optional<Configuration> cfgToMerge = chooseConfigurationToMerge(aDiff, cfgs,
-                        casMap);
+                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(aDiff, cfgs, casMap);
 
-                if (cfgToMerge.isEmpty()) {
+                if (cfgsToMerge.isEmpty()) {
                     continue;
                 }
 
-                try {
-                    AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.get()
-                            .getRepresentative(casMap);
-                    CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
-                            aTargetUsername, type2layer.get(position.getType()), aTargetCas,
-                            sourceFS, false);
-                    LOG.trace(" `-> merged annotation with agreement");
+                for (Configuration cfgToMerge : cfgsToMerge) {
+                    try {
+                        AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(casMap);
+                        CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
+                                aTargetUsername, type2layer.get(position.getType()), aTargetCas,
+                                sourceFS, false);
+                        LOG.trace(" `-> merged annotation with agreement");
 
-                    switch (result.getState()) {
-                    case CREATED:
-                        created++;
-                        break;
-                    case UPDATED:
-                        updated++;
-                        break;
+                        switch (result.getState()) {
+                        case CREATED:
+                            created++;
+                            break;
+                        case UPDATED:
+                            updated++;
+                            break;
+                        }
                     }
-                }
-                catch (AnnotationException e) {
-                    LOG.trace(" `-> not merged annotation: {}", e.getMessage());
-                    messages.add(LogMessage.error(this, "%s", e.getMessage()));
+                    catch (AnnotationException e) {
+                        LOG.trace(" `-> not merged annotation: {}", e.getMessage());
+                        messages.add(LogMessage.error(this, "%s", e.getMessage()));
+                    }
                 }
             }
         }
@@ -290,25 +289,25 @@ public class CasMerge
                 LOG.trace(" |   processing {}", position);
                 ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
-                Optional<Configuration> cfgToMerge = chooseConfigurationToMerge(aDiff, cfgs,
-                        casMap);
+                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(aDiff, cfgs, casMap);
 
-                if (cfgToMerge.isEmpty()) {
+                if (cfgsToMerge.isEmpty()) {
                     continue;
                 }
 
-                try {
-                    AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.get()
-                            .getRepresentative(casMap);
-                    AID sourceFsAid = cfgs.getConfigurations().get(0).getRepresentativeAID();
-                    mergeSlotFeature(aTargetDocument, aTargetUsername,
-                            type2layer.get(position.getType()), aTargetCas, sourceFS,
-                            sourceFsAid.feature, sourceFsAid.index);
-                    LOG.trace(" `-> merged annotation with agreement");
-                }
-                catch (AnnotationException e) {
-                    LOG.trace(" `-> not merged annotation: {}", e.getMessage());
-                    messages.add(LogMessage.error(this, "%s", e.getMessage()));
+                for (Configuration cfgToMerge : cfgsToMerge) {
+                    try {
+                        AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(casMap);
+                        AID sourceFsAid = cfgs.getConfigurations().get(0).getRepresentativeAID();
+                        mergeSlotFeature(aTargetDocument, aTargetUsername,
+                                type2layer.get(position.getType()), aTargetCas, sourceFS,
+                                sourceFsAid.feature, sourceFsAid.index);
+                        LOG.trace(" `-> merged annotation with agreement");
+                    }
+                    catch (AnnotationException e) {
+                        LOG.trace(" `-> not merged annotation: {}", e.getMessage());
+                        messages.add(LogMessage.error(this, "%s", e.getMessage()));
+                    }
                 }
             }
         }
@@ -332,33 +331,33 @@ public class CasMerge
                 LOG.trace(" |   processing {}", position);
                 ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
-                Optional<Configuration> cfgToMerge = chooseConfigurationToMerge(aDiff, cfgs,
-                        casMap);
+                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(aDiff, cfgs, casMap);
 
-                if (cfgToMerge.isEmpty()) {
+                if (cfgsToMerge.isEmpty()) {
                     continue;
                 }
 
-                try {
-                    AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.get()
-                            .getRepresentative(casMap);
-                    CasMergeOperationResult result = mergeRelationAnnotation(aTargetDocument,
-                            aTargetUsername, type2layer.get(position.getType()), aTargetCas,
-                            sourceFS, false);
-                    LOG.trace(" `-> merged annotation with agreement");
+                for (Configuration cfgToMerge : cfgsToMerge) {
+                    try {
+                        AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(casMap);
+                        CasMergeOperationResult result = mergeRelationAnnotation(aTargetDocument,
+                                aTargetUsername, type2layer.get(position.getType()), aTargetCas,
+                                sourceFS, false);
+                        LOG.trace(" `-> merged annotation with agreement");
 
-                    switch (result.getState()) {
-                    case CREATED:
-                        created++;
-                        break;
-                    case UPDATED:
-                        updated++;
-                        break;
+                        switch (result.getState()) {
+                        case CREATED:
+                            created++;
+                            break;
+                        case UPDATED:
+                            updated++;
+                            break;
+                        }
                     }
-                }
-                catch (AnnotationException e) {
-                    LOG.trace(" `-> not merged annotation: {}", e.getMessage());
-                    messages.add(LogMessage.error(this, "%s", e.getMessage()));
+                    catch (AnnotationException e) {
+                        LOG.trace(" `-> not merged annotation: {}", e.getMessage());
+                        messages.add(LogMessage.error(this, "%s", e.getMessage()));
+                    }
                 }
             }
         }

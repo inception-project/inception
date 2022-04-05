@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Optional;
+import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
@@ -38,8 +40,7 @@ public class MergeIncompleteStrategy
     public static final String BEAN_NAME = "incompleteAgreementNonStacked";
 
     @Override
-    public Optional<Configuration> chooseConfigurationToMerge(DiffResult aDiff,
-            ConfigurationSet aCfgs)
+    public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs)
     {
         boolean stacked = aCfgs.getConfigurations().stream() //
                 .filter(Configuration::isStacked) //
@@ -47,15 +48,15 @@ public class MergeIncompleteStrategy
 
         if (stacked) {
             LOG.trace(" `-> Not merging stacked annotation");
-            return Optional.empty();
+            return emptyList();
         }
 
         if (!aDiff.isAgreement(aCfgs)) {
             LOG.trace(" `-> Not merging annotation with disagreement");
-            return Optional.empty();
+            return emptyList();
         }
 
-        return Optional.of(aCfgs.getConfigurations().get(0));
+        return asList(aCfgs.getConfigurations().get(0));
     }
 
     @Override

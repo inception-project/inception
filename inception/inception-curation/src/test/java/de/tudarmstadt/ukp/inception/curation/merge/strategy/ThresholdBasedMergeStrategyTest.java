@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Optional;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +41,8 @@ class ThresholdBasedMergeStrategyTest
         {
             var best = makeConfiguration("A", "B");
             var secondBest = makeConfiguration("C");
-            assertThat(calculate(minUsers, minConfidence, best, secondBest)).containsSame(best);
+            assertThat(calculate(minUsers, minConfidence, best, secondBest)) //
+                    .containsExactly(best);
         }
 
         {
@@ -54,7 +55,8 @@ class ThresholdBasedMergeStrategyTest
 
         {
             var best = makeConfiguration("A");
-            assertThat(calculate(minUsers, minConfidence, best)).containsSame(best);
+            assertThat(calculate(minUsers, minConfidence, best)) //
+                    .containsExactly(best);
         }
 
         {
@@ -86,7 +88,8 @@ class ThresholdBasedMergeStrategyTest
 
         {
             var best = makeConfiguration("A");
-            assertThat(calculate(minUsers, minConfidence, best)).containsSame(best);
+            assertThat(calculate(minUsers, minConfidence, best)) //
+                    .containsExactly(best);
         }
 
         {
@@ -105,7 +108,7 @@ class ThresholdBasedMergeStrategyTest
             var secondBest = makeConfiguration("C");
             assertThat(calculate(minUsers, minConfidence, best, secondBest)) //
                     .as("Best has twice the votes of second best") //
-                    .containsSame(best);
+                    .containsExactly(best);
         }
 
         {
@@ -126,7 +129,8 @@ class ThresholdBasedMergeStrategyTest
 
         {
             var best = makeConfiguration("A");
-            assertThat(calculate(minUsers, minConfidence, best)).containsSame(best);
+            assertThat(calculate(minUsers, minConfidence, best)) //
+                    .containsExactly(best);
         }
 
         {
@@ -134,7 +138,7 @@ class ThresholdBasedMergeStrategyTest
         }
     }
 
-    private Optional<Configuration> calculate(int aUserThreshold, double aConfidenceThreshold,
+    private List<Configuration> calculate(int aUserThreshold, double aConfidenceThreshold,
             Configuration... aConfigurations)
     {
         ConfigurationSet cfgSet = new ConfigurationSet(position);
@@ -144,7 +148,7 @@ class ThresholdBasedMergeStrategyTest
 
         ThresholdBasedMergeStrategy sut = new ThresholdBasedMergeStrategy(aUserThreshold,
                 aConfidenceThreshold);
-        return sut.chooseConfigurationToMerge(null, cfgSet);
+        return sut.chooseConfigurationsToMerge(null, cfgSet);
     }
 
     private Configuration makeConfiguration(String... aAnnototors)
