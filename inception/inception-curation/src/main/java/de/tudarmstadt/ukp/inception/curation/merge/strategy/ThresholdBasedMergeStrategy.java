@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
@@ -58,11 +58,14 @@ public class ThresholdBasedMergeStrategy
      */
     private final double confidenceThreshold;
 
-    public ThresholdBasedMergeStrategy(int aUserThreshold, double aConfidenceThreshold)
+    private final int maxResults;
+
+    public ThresholdBasedMergeStrategy(int aUserThreshold, double aConfidenceThreshold,
+            int aMaxResults)
     {
-        super();
         userThreshold = aUserThreshold;
         confidenceThreshold = aConfidenceThreshold;
+        maxResults = aMaxResults;
     }
 
     @Override
@@ -71,7 +74,7 @@ public class ThresholdBasedMergeStrategy
         List<Configuration> cfgsAboveUserThreshold = aCfgs.getConfigurations().stream() //
                 .filter(cfg -> cfg.getCasGroupIds().size() >= userThreshold) //
                 .sorted(comparing((Configuration cfg) -> cfg.getCasGroupIds().size()).reversed()) //
-                .collect(Collectors.toList());
+                .collect(toList());
 
         if (cfgsAboveUserThreshold.isEmpty()) {
             LOG.trace(" `-> Not merging as no configuration meets the user threshold [{}]",
