@@ -24,6 +24,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 
 public class ThresholdBasedMergeStrategyTraitsEditor
@@ -57,8 +58,11 @@ public class ThresholdBasedMergeStrategyTraitsEditor
 
         form.add(new NumberTextField<>("userThreshold", Integer.class).setMinimum(0));
 
-        form.add(new NumberTextField<>("confidenceThreshold", Double.class).setMinimum(0.0d)
-                .setMaximum(1.0d).setStep(0.1d));
+        form.add(new NumberTextField<>("confidenceThreshold", Double.class) //
+                .setMinimum(0.0d).setMaximum(100.0d).setStep(0.1d) //
+                .setModel(LambdaModelAdapter.of( //
+                        () -> traits.getConfidenceThreshold() * 100.0d,
+                        (v) -> traits.setConfidenceThreshold(v / 100.0d))));
 
         add(form);
     }
