@@ -226,8 +226,7 @@ export class VisualizerUI {
         const cateogory = norm[0]
         const key = norm[1];
         const value = norm[2];
-        // no DB, just attach "human-readable" text provided
-        // with the annotation, if any
+        // no DB, just attach "human-readable" text provided with the annotation, if any
         if (cateogory) {
           comment += `<hr/>
                       <span class="comment_id">${Util.escapeHTML(cateogory)}</span>'
@@ -243,29 +242,30 @@ export class VisualizerUI {
                     <br/>
                     `;
       } else {
-        // DB available, add drop-off point to HTML and store
-        // query parameters
+        // DB available, add drop-off point to HTML and store query parameters
         const dbName = norm[0];
         const dbKey = norm[1];
         this.commentPopupNormInfoSeqId++;
         if (dbKey) {
-          comment += ('<hr/>' + '<span class="comment_id">' + Util.escapeHTML(dbName) + ': ' + Util.escapeHTML(dbKey) + '</span><br/>');
+          comment += `<hr/>
+                      <span class="comment_id">${Util.escapeHTML(dbName)}: ${Util.escapeHTML(dbKey)}</span>
+                      <br/>`;
         }
         else {
           comment += '<hr/>';
         }
-        comment += ('<div id="norm_info_drop_point_' + this.commentPopupNormInfoSeqId + '"/>');
+        comment += `<div id="norm_info_drop_point_${this.commentPopupNormInfoSeqId}"></div>`;
         normsToQuery.push([dbName, dbKey, this.commentPopupNormInfoSeqId]);
       }
     });
-    return comment;
+    return comment.replace(/^\s*/gm, "");
   }
 
   initiateNormalizationAjaxCall(id, type, normq) {
     // TODO: cache some number of most recent norm_get_data results
-    const dbName = normq[0],
-      dbKey = normq[1],
-      infoSeqId = normq[2];
+    const dbName = normq[0];
+    const dbKey = normq[1];
+    const infoSeqId = normq[2];
     this.dispatcher.post('ajax', [{
       action: 'normData',
       database: dbName,
@@ -298,16 +298,16 @@ export class VisualizerUI {
           if (label && value) {
             // special treatment for some label values
             if (label.toLowerCase() == '<img>') {
-              // image
-              norminfo += ('<img class="norm_info_img" src="' + value + '"/>');
+              norminfo += `<img class="norm_info_img" src="${value}"/>`;
             } else {
-              // normal, as text
-              // max length restriction
+              // normal, as text max length restriction
               if (value.length > 300) {
                 value = value.substr(0, 300) + ' ...';
               }
 
-              norminfo += ('<span class="norm_info_label">' + Util.escapeHTML(label) + '</span>' + '<span class="norm_info_value">' + ': ' + Util.escapeHTML(value).replace(/\n/g, "<br/>") + '</span>' + '<br/>');
+              norminfo += `<span class="norm_info_label">${Util.escapeHTML(label)}</span>
+                           <span class="norm_info_value">: ${Util.escapeHTML(value).replace(/\n/g, '<br/>')}</span>
+                           <br/>`;
             }
           }
         }
