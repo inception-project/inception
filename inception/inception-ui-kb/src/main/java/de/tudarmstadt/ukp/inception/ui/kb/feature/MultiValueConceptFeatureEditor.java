@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
@@ -87,7 +88,25 @@ public class MultiValueConceptFeatureEditor
         @Override
         protected List<KBHandle> getChoices(String aInput)
         {
-            return getCandidates(stateModel, handler, aInput);
+            var selected = new ArrayList<>(getModelObject());
+            var candidates = getCandidates(stateModel, handler, aInput);
+
+            var choices = new ArrayList<KBHandle>();
+            // First any items that were ranked
+            candidates.removeIf(h -> {
+                if (selected.contains(h)) {
+                    choices.add(h);
+                    selected.remove(h);
+                    return true;
+                }
+                return false;
+            });
+            // Then any remaining unranked but selected items
+            choices.addAll(selected);
+            // Now the remaining ranked items
+            choices.addAll(candidates);
+
+            return choices;
         }
 
         @Override

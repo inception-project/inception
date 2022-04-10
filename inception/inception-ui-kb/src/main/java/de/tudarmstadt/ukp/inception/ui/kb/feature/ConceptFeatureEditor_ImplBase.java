@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -157,7 +158,8 @@ public abstract class ConceptFeatureEditor_ImplBase
         }
 
         if (labelFilter) {
-            choices = choices.stream().filter(kb -> containsIgnoreCase(kb.getUiLabel(), finalInput))
+            choices = choices.stream() //
+                    .filter(kb -> containsIgnoreCase(kb.getUiLabel(), finalInput))
                     .collect(Collectors.toList());
         }
 
@@ -167,8 +169,9 @@ public abstract class ConceptFeatureEditor_ImplBase
                     .collect(Collectors.toList());
         }
 
-        return choices.stream().limit(entityLinkingProperties.getCandidateDisplayLimit())
-                .collect(Collectors.toList());
+        return choices.stream() //
+                .limit(entityLinkingProperties.getCandidateDisplayLimit()) //
+                .collect(toList());
     }
 
     protected abstract ConceptFeatureTraits_ImplBase readFeatureTraits(
