@@ -214,7 +214,6 @@ public class ConceptFeatureEditor
         {
             return new IConverter<KBHandle>()
             {
-
                 private static final long serialVersionUID = 1L;
 
                 @Override

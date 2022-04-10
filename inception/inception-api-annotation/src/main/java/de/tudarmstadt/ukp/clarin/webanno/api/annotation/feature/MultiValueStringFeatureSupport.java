@@ -110,16 +110,16 @@ public class MultiValueStringFeatureSupport
     @Override
     public List<String> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
+        if (aValue == null) {
+            return null;
+        }
+
         if (aValue instanceof String) {
             return asList((String) aValue);
         }
 
         if (aValue instanceof List) {
             return (List<String>) aValue;
-        }
-
-        if (aValue == null) {
-            return null;
         }
 
         throw new IllegalArgumentException(

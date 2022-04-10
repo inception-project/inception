@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptLabelCache;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.ui.kb.project.ProjectKnowledgeBaseMenuItem;
@@ -61,7 +62,6 @@ import de.tudarmstadt.ukp.inception.ui.kb.value.ValueTypeSupportRegistryImpl;
 public class KnowledgeBaseServiceUIAutoConfiguration
 {
     @Bean
-    @Autowired
     public NamedEntityIdentifierFeatureInitializer namedEntityIdentifierFeatureInitializer(
             AnnotationSchemaService aAnnotationSchemaService)
     {
@@ -75,15 +75,19 @@ public class KnowledgeBaseServiceUIAutoConfiguration
     }
 
     @Bean
-    @Autowired
-    public ConceptFeatureSupport conceptFeatureSupport(KnowledgeBaseService aKbService,
-            KnowledgeBaseProperties aKBProperties)
+    public ConceptFeatureSupport conceptFeatureSupport(ConceptLabelCache aConceptLabelCache)
     {
-        return new ConceptFeatureSupport(aKbService, aKBProperties);
+        return new ConceptFeatureSupport(aConceptLabelCache);
     }
 
     @Bean
-    @Autowired
+    public ConceptLabelCache conceptLabelCache(KnowledgeBaseService aKbService,
+            KnowledgeBaseProperties aKBProperties)
+    {
+        return new ConceptLabelCache(aKbService, aKBProperties);
+    }
+
+    @Bean
     public ConceptFeatureIndexingSupport conceptFeatureIndexingSupport(
             FeatureSupportRegistry aFeatureSupportRegistry, KnowledgeBaseService aKbService)
     {

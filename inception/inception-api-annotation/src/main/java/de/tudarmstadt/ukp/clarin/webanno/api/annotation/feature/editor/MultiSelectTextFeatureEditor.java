@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
@@ -72,70 +72,7 @@ public class MultiSelectTextFeatureEditor
             @Override
             protected List<ReorderableTag> getChoices(String aInput)
             {
-                String input = aInput != null ? aInput.trim() : "";
-
-                FeatureState featureState = aFeatureStateModel.getObject();
-                TagSet tagset = featureState.getFeature().getTagset();
-                List<ReorderableTag> choices = new ArrayList<>();
-
-                Collection<String> values;
-                if (featureState.getValue() instanceof Collection) {
-                    values = (Collection<String>) featureState.getValue();
-                }
-                else {
-                    values = Collections.emptyList();
-                }
-
-                // If there is a tagset, add it to the choices - this may include descriptions
-                if (tagset != null) {
-                    featureState.tagset.stream() //
-                            .filter(t -> input.isEmpty() //
-                                    || startsWithIgnoreCase(t.getName(), input)
-                                    || values.contains(t.getName())) //
-                            .limit(properties.getAutoCompleteMaxResults()) //
-                            .forEach(choices::add);
-                }
-
-                // If the currently selected values contain any values not covered by the tagset,
-                // add virtual entries for them as well
-                for (String value : values) {
-                    if (!choices.stream().anyMatch(t -> t.getName().equals(value))) {
-                        choices.add(new ReorderableTag(value, false));
-                    }
-                }
-
-                if (!input.isEmpty()) {
-                    // Move any entries that match the input case-insensitive to the top
-                    List<ReorderableTag> inputMatchesInsensitive = choices.stream() //
-                            .filter(t -> t.getName().equalsIgnoreCase(input)) //
-                            .collect(toList());
-                    for (ReorderableTag t : inputMatchesInsensitive) {
-                        choices.remove(t);
-                        choices.add(0, t);
-                    }
-
-                    // Move any entries that match the input case-sensitive to the top
-                    List<ReorderableTag> inputMatchesSensitive = choices.stream() //
-                            .filter(t -> t.getName().equals(input)) //
-                            .collect(toList());
-                    if (inputMatchesSensitive.isEmpty()) {
-                        // If the input does not match any tagset entry, add a new virtual entry for
-                        // the
-                        // input so that we can select that and add it - this has no description.
-                        // If the input matches an existing entry, move it to the top.
-                        if ((tagset == null || tagset.isCreateTag())) {
-                            choices.add(0, new ReorderableTag(input, false));
-                        }
-                    }
-                    else {
-                        for (ReorderableTag t : inputMatchesSensitive) {
-                            choices.remove(t);
-                            choices.add(0, t);
-                        }
-                    }
-                }
-
-                return choices;
+                return MultiSelectTextFeatureEditor.this.getChoices(aFeatureStateModel, aInput);
             }
 
             @Override
@@ -199,5 +136,74 @@ public class MultiSelectTextFeatureEditor
         setVisible(!featState.feature.isHideUnconstraintFeature() || //
                 (featState.indicator.isAffected()
                         && featState.indicator.getStatusColor().equals("green")));
+    }
+
+    private List<ReorderableTag> getChoices(final IModel<FeatureState> aFeatureStateModel,
+            String aInput)
+    {
+        String input = aInput != null ? aInput.trim() : "";
+
+        FeatureState featureState = aFeatureStateModel.getObject();
+        TagSet tagset = featureState.getFeature().getTagset();
+        List<ReorderableTag> choices = new ArrayList<>();
+
+        Collection<String> values;
+        if (featureState.getValue() instanceof Collection) {
+            values = (Collection<String>) featureState.getValue();
+        }
+        else {
+            values = emptyList();
+        }
+
+        // If there is a tagset, add it to the choices - this may include descriptions
+        if (tagset != null) {
+            featureState.tagset.stream() //
+                    .filter(t -> input.isEmpty() //
+                            || startsWithIgnoreCase(t.getName(), input)
+                            || values.contains(t.getName())) //
+                    .limit(properties.getAutoCompleteMaxResults()) //
+                    .forEach(choices::add);
+        }
+
+        // If the currently selected values contain any values not covered by the tagset,
+        // add virtual entries for them as well
+        for (String value : values) {
+            if (!choices.stream().anyMatch(t -> t.getName().equals(value))) {
+                choices.add(new ReorderableTag(value, false));
+            }
+        }
+
+        if (!input.isEmpty()) {
+            // Move any entries that match the input case-insensitive to the top
+            List<ReorderableTag> inputMatchesInsensitive = choices.stream() //
+                    .filter(t -> t.getName().equalsIgnoreCase(input)) //
+                    .collect(toList());
+            for (ReorderableTag t : inputMatchesInsensitive) {
+                choices.remove(t);
+                choices.add(0, t);
+            }
+
+            // Move any entries that match the input case-sensitive to the top
+            List<ReorderableTag> inputMatchesSensitive = choices.stream() //
+                    .filter(t -> t.getName().equals(input)) //
+                    .collect(toList());
+            if (inputMatchesSensitive.isEmpty()) {
+                // If the input does not match any tagset entry, add a new virtual entry for
+                // the
+                // input so that we can select that and add it - this has no description.
+                // If the input matches an existing entry, move it to the top.
+                if (tagset == null || tagset.isCreateTag()) {
+                    choices.add(0, new ReorderableTag(input, false));
+                }
+            }
+            else {
+                for (ReorderableTag t : inputMatchesSensitive) {
+                    choices.remove(t);
+                    choices.add(0, t);
+                }
+            }
+        }
+
+        return choices;
     }
 }

@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser;
 import de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptLabelCache;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
 
@@ -83,8 +84,8 @@ public class ConceptFeatureIndexingSupportTest
         kb = new KnowledgeBase();
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList(new StringFeatureSupport(),
-                new BooleanFeatureSupport(), new NumberFeatureSupport(),
-                new ConceptFeatureSupport(kbService, new KnowledgeBasePropertiesImpl())));
+                new BooleanFeatureSupport(), new NumberFeatureSupport(), new ConceptFeatureSupport(
+                        new ConceptLabelCache(kbService, new KnowledgeBasePropertiesImpl()))));
         featureSupportRegistry.init();
 
         featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(
