@@ -18,29 +18,39 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.FormComponent;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.http.WebRequest;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.convert.IConverter;
 import org.apache.wicket.util.string.StringValue;
 import org.danekja.java.util.function.serializable.SerializableFunction;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
@@ -49,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
 
 /**
  * Component for editing knowledge-base-related features on annotations.
@@ -58,7 +69,13 @@ public class ConceptFeatureEditor
 {
     private static final long serialVersionUID = 7763348613632105600L;
 
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+
     private AutoCompleteField focusComponent;
+    private WebMarkupContainer descriptionContainer;
+    private Label description;
+    private IriInfoBadge iriBadge;
+    private ExternalLink openIriLink;
 
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
@@ -68,6 +85,27 @@ public class ConceptFeatureEditor
         AnnotationFeature feat = getModelObject().feature;
         ConceptFeatureTraits traits = readFeatureTraits(feat);
 
+        IModel<String> iriModel = LoadableDetachableModel.of(this::iriTooltipValue);
+
+        iriBadge = new IriInfoBadge("iriInfoBadge", iriModel);
+        iriBadge.setOutputMarkupPlaceholderTag(true);
+        iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
+        add(iriBadge);
+
+        openIriLink = new ExternalLink("openIri", iriModel);
+        openIriLink.setOutputMarkupPlaceholderTag(true);
+        openIriLink.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
+        add(openIriLink);
+
+        descriptionContainer = new WebMarkupContainer("descriptionContainer");
+        descriptionContainer.setOutputMarkupPlaceholderTag(true);
+        descriptionContainer.add(visibleWhen(
+                () -> getLabelComponent().isVisible() && getModelObject().getValue() != null));
+        add(descriptionContainer);
+
+        description = new Label("description", LoadableDetachableModel.of(this::descriptionValue));
+        descriptionContainer.add(description);
+
         add(focusComponent = new AutoCompleteField(MID_VALUE,
                 _query -> getCandidates(aStateModel, aHandler, _query)));
 
@@ -76,6 +114,31 @@ public class ConceptFeatureEditor
                 // editor is used in a "normal" context and not e.g. in the keybindings
                 // configuration panel
                 .add(visibleWhen(() -> getLabelComponent().isVisible())));
+    }
+
+    private String descriptionValue()
+    {
+        return getModel().map(FeatureState::getValue)//
+                .map(value -> (KBHandle) value)//
+                .map(KBHandle::getDescription)//
+                .map(value -> StringUtils.abbreviate(value, 130))//
+                .orElse("no description")//
+                .getObject();
+    }
+
+    private String iriTooltipValue()
+    {
+        return getModel().map(FeatureState::getValue)//
+                .map(value -> (KBHandle) value)//
+                .map(KBHandle::getIdentifier)//
+                .orElse("")//
+                .getObject();
+    }
+
+    @OnEvent
+    public void onFeatureEditorValueChanged(FeatureEditorValueChangedEvent aEvent)
+    {
+        aEvent.getTarget().add(descriptionContainer, iriBadge, openIriLink);
     }
 
     @Override
@@ -109,6 +172,14 @@ public class ConceptFeatureEditor
                         new FeatureEditorValueChangedEvent(ConceptFeatureEditor.this, aTarget));
             }
         });
+    }
+
+    @Override
+    protected ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
+    {
+        FeatureSupport<?> fs = featureSupportRegistry.findExtension(aAnnotationFeature)
+                .orElseThrow();
+        return (ConceptFeatureTraits) fs.readTraits(aAnnotationFeature);
     }
 
     @Override

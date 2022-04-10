@@ -19,7 +19,7 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <form wicket:id="form">
-    <div wicket:id="disabledKBWarning" class="col-sm-offset-7"></div>
+    <div  wicket:id="disabledKBWarning" class="col-sm-offset-7"></div>
     <div class="row form-row" wicket:enclosure="allowedValueType">
       <label wicket:for="allowedValueType" class="col-sm-4 col-form-label">
         <wicket:label key="allowedValueType"/>
@@ -41,17 +41,9 @@
         <wicket:label key="scope"/>
       </label>
       <div class="col-sm-8">
-        <input wicket:id="scope" class="form-control w-100"/>
+        <input wicket:id="scope" class="w-100"></input>
       </div>
     </div>
   </form>
-  <div class="row form-row">
-    <label class="col-sm-4 col-form-label">
-      Key bindings
-    </label>
-    <div class="col-sm-8">
-      <div wicket:id="keyBindings"/>
-    </div>
-  </div>
 </wicket:panel>
 </html>

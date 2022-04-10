@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -37,34 +36,26 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits_ImplBase;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
 
 /**
  * Component for editing knowledge-base-related features on annotations.
@@ -75,11 +66,6 @@ public abstract class ConceptFeatureEditor_ImplBase
     private static final long serialVersionUID = 6118093030106338883L;
 
     private static final Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
-
-    private WebMarkupContainer descriptionContainer;
-    private Label description;
-    private IriInfoBadge iriBadge;
-    private ExternalLink openIriLink;
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
@@ -92,28 +78,11 @@ public abstract class ConceptFeatureEditor_ImplBase
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
 
-        IModel<String> iriModel = LoadableDetachableModel.of(this::iriTooltipValue);
+        AnnotationFeature feat = getModelObject().feature;
+        ConceptFeatureTraits_ImplBase traits = readFeatureTraits(feat);
 
-        iriBadge = new IriInfoBadge("iriInfoBadge", iriModel);
-        iriBadge.setOutputMarkupPlaceholderTag(true);
-        iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
-        add(iriBadge);
-
-        openIriLink = new ExternalLink("openIri", iriModel);
-        openIriLink.setOutputMarkupPlaceholderTag(true);
-        openIriLink.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
-        add(openIriLink);
-
-        add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
-
-        descriptionContainer = new WebMarkupContainer("descriptionContainer");
-        descriptionContainer.setOutputMarkupPlaceholderTag(true);
-        descriptionContainer.add(visibleWhen(
-                () -> getLabelComponent().isVisible() && getModelObject().getValue() != null));
-        add(descriptionContainer);
-
-        description = new Label("description", LoadableDetachableModel.of(this::descriptionValue));
-        descriptionContainer.add(description);
+        add(new DisabledKBWarning("disabledKBWarning", Model.of(feat),
+                Model.of(traits.getRepositoryId())));
     }
 
     @Override
@@ -122,25 +91,6 @@ public abstract class ConceptFeatureEditor_ImplBase
         super.renderHead(aResponse);
 
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
-    }
-
-    private String descriptionValue()
-    {
-        return getModel().map(FeatureState::getValue)//
-                .map(value -> (KBHandle) value)//
-                .map(KBHandle::getDescription)//
-                .map(value -> StringUtils.abbreviate(value, 130))//
-                .orElse("no description")//
-                .getObject();
-    }
-
-    private String iriTooltipValue()
-    {
-        return getModel().map(FeatureState::getValue)//
-                .map(value -> (KBHandle) value)//
-                .map(KBHandle::getIdentifier)//
-                .orElse("")//
-                .getObject();
     }
 
     protected List<KBHandle> getCandidates(IModel<AnnotatorState> aStateModel,
@@ -177,7 +127,7 @@ public abstract class ConceptFeatureEditor_ImplBase
         try {
             AnnotationFeature feat = getModelObject().feature;
 
-            ConceptFeatureTraits traits = readFeatureTraits(feat);
+            ConceptFeatureTraits_ImplBase traits = readFeatureTraits(feat);
             String repoId = traits.getRepositoryId();
             // Check if kb is actually enabled
             if (!(repoId == null || kbService.isKnowledgeBaseEnabled(feat.getProject(), repoId))) {
@@ -221,16 +171,6 @@ public abstract class ConceptFeatureEditor_ImplBase
                 .collect(Collectors.toList());
     }
 
-    protected ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
-    {
-        FeatureSupport<?> fs = featureSupportRegistry.findExtension(aAnnotationFeature)
-                .orElseThrow();
-        return (ConceptFeatureTraits) fs.readTraits(aAnnotationFeature);
-    }
-
-    @OnEvent
-    public void onFeatureEditorValueChanged(FeatureEditorValueChangedEvent aEvent)
-    {
-        aEvent.getTarget().add(descriptionContainer, iriBadge, openIriLink);
-    }
+    protected abstract ConceptFeatureTraits_ImplBase readFeatureTraits(
+            AnnotationFeature aAnnotationFeature);
 }

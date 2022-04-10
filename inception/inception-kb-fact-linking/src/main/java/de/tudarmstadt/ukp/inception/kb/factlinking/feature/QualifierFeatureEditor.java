@@ -81,7 +81,6 @@ import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.DisabledKBWarning;
 
 @Deprecated
 public class QualifierFeatureEditor
@@ -114,10 +113,6 @@ public class QualifierFeatureEditor
         stateModel = aStateModel;
         actionHandler = aHandler;
         project = stateModel.getObject().getProject();
-
-        // Add warning that shows up if the knowledge base that is used by the concept feature
-        // is disabled
-        add(new DisabledKBWarning("disabledKBWarning", Model.of(getLinkedAnnotationFeature())));
 
         // Most of the content is inside this container such that we can refresh it independently
         // from the rest of the form

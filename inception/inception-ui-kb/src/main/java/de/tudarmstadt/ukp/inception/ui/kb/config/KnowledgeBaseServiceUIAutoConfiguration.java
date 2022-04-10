@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfigurat
 import de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptLabelCache;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.MultiValueConceptFeatureSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.ui.kb.project.ProjectKnowledgeBaseMenuItem;
@@ -78,6 +79,13 @@ public class KnowledgeBaseServiceUIAutoConfiguration
     public ConceptFeatureSupport conceptFeatureSupport(ConceptLabelCache aConceptLabelCache)
     {
         return new ConceptFeatureSupport(aConceptLabelCache);
+    }
+
+    @Bean
+    public MultiValueConceptFeatureSupport multiValueConceptFeatureSupport(
+            ConceptLabelCache aConceptLabelCache)
+    {
+        return new MultiValueConceptFeatureSupport(aConceptLabelCache);
     }
 
     @Bean

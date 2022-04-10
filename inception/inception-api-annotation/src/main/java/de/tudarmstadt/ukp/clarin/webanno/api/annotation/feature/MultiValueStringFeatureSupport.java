@@ -126,24 +126,6 @@ public class MultiValueStringFeatureSupport
                 "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
     }
 
-    // @Override
-    // public ArrayList<String> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object
-    // aValue)
-    // {
-    // if (aValue == null) {
-    // return new ArrayList<>();
-    // }
-    //
-    // if (!(aValue instanceof StringArrayFS)) {
-    // throw new IllegalArgumentException(
-    // "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
-    // }
-    //
-    // StringArrayFS array = (StringArrayFS) aValue;
-    //
-    // return new ArrayList<>(asList(array.toStringArray()));
-    // }
-
     @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
         throws IllegalFeatureValueException
