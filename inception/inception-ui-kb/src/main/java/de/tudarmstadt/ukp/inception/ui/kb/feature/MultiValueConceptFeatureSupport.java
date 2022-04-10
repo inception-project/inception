@@ -299,6 +299,17 @@ public class MultiValueConceptFeatureSupport
     }
 
     @Override
+    public String renderFeatureValue(AnnotationFeature aFeature, String aIdentifier)
+    {
+        if (aIdentifier == null) {
+            return null;
+        }
+
+        MultiValueConceptFeatureTraits traits = readTraits(aFeature);
+        return labelCache.get(aFeature, traits.getRepositoryId(), aIdentifier).getUiLabel();
+    }
+
+    @Override
     public String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
