@@ -1,7 +1,3 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
 // Licensed to the Technische Universität Darmstadt under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -18,18 +14,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_systemproperties]]
-= System Properties
+= Running {product-name}
 
-[cols="4*", options="header"]
+To run {product-name} from your IDE, locate the class `de.tudarmstadt.ukp.inception.INCEpTION` and run it
+as a Java application. This runs {product-name} as a Spring Boot application using an embedded
+web server - similar to running the compiled JAR file from the command line. You may want to define
+the following system properties in your launch configuration:
+
+[cols="3*", options="header"]
 |===
 | Setting
+| Value
 | Description
-| Default
-| Example
 
-| wicket.core.settings.general.configuration-type
-| Enable Wicket debug mode
-| deployment
-| development
+| `inception.home`
+| `/home/username/inception-dev` (adjust to your situation)
+| Location to store the application data
+
+| `wicket.core.settings.general.configuration-type`
+| `development`
+| Enable the development mode. This e.g. disables caches so that changes to HTML files in the IDE directly reflect in the running application.
 |===

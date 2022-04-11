@@ -21,7 +21,15 @@ This document targets developers working on {product-name}.
 
 include::{include-dir}introduction.adoc[]
 
+include::common/systemrequirements.adoc[leveloffset=+1]
+
 include::{include-dir}setup.adoc[]
+
+include::{include-dir}setup_eclipse.adoc[leveloffset=+1]
+
+include::{include-dir}setup_intellij.adoc[leveloffset=+1]
+
+include::{include-dir}running.adoc[leveloffset=+1]
 
 include::{include-dir}architecture.adoc[]
 
@@ -77,9 +85,7 @@ include::{include-dir}repository.adoc[leveloffset=+1]
 
 <<<
 
-= {product-name} Development
-
-include::{include-dir}release.adoc[leveloffset=+1]
+include::{include-dir}release.adoc
 
 <<<
 
