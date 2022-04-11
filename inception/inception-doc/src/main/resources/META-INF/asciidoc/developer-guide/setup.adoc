@@ -1,7 +1,3 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-// Technische Universität Darmstadt
-// 
 // Licensed to the Technische Universität Darmstadt under one
 // or more contributor license agreements.  See the NOTICE file
 // distributed with this work for additional information
@@ -26,20 +22,20 @@ This section covers setting up a development environment.
 == Source code management
 
 We use git as our source code management system and collaborate via the {product-name}
-repository on https://github.com/inception-project/inception[Github].
+repository on https://github.com/inception-project/inception[GitHub].
 
 === Development workflow
 
-Every feature or bugfix needs to be tracked in an issue on Github. Development is done in branches. 
-Based on the milestone (see the issue description on Github), the new branch is either created from
+Every feature or bug fix needs to be tracked in an issue on GitHub. Development is done in branches. 
+Based on the milestone (see the issue description on GitHub), the new branch is either created from
 master (if the code should be in the next major release) or from a bugfix release branch
 (if the code should be in the next minor release). In order to get the code in production,
-you need to create a pull request on Github of your branch into the target branch (as described before).
+you need to create a pull request on GitHub of your branch into the target branch (as described before).
 
 In order to contribute to {product-name}, you need to create a pull request. This section briefly
 guides you through the best way of doing this:
 
-- Every feature or bugfix needs to be tracked in an issue on Github. If there is no issue for the
+- Every feature or bug fix needs to be tracked in an issue on GitHub. If there is no issue for the
 feature yet, create an issue first.
 - Create a branch based on the branch to which you wish to contribute. Normally, you should create
 this branch from the master branch of the respective project. In the case that you want to fix a bug in
@@ -81,7 +77,7 @@ C:\> git config --global core.autocrlf input
 
 After changing this setting, best do a fresh clone and check-out of the project.
 
-== Checkstyle and Formatting
+== Code style
 
 We use a style for formatting the source code in {product-name}. Our approach consists of two steps:
 
@@ -99,187 +95,3 @@ Here is a brief summary of the formatting rules:
 * curly braces on the next line for class/method declarations, same line for logic blocks (if/for/...)
 * parameter names start with `a` (e.g. `void foo(String aValue)`)
 
-== Setting up for the development in Eclipse
-
-This is a guide to setting up a development environment using Eclipse on Mac OS X. The 
-procedure should be similar for other operation systems.  
-
-First, you need to follow some steps of the <<admin-guide.adoc#sect_installation,Administrator Installation Guide>>. 
-It is recommended to configure a MySQL-server.
-
-We recommend you start from a *Eclipse IDE for Java Developers* package.
-
-=== Use a JDK
-
-On Linux or OS X, the following setting is not necessary. Having a full JDK installed on your
-system is generally sufficient. You can skip on to the next section.
-
-On Windows, you need to edit the `eclipse.ini` file and directly before the `-vmargs` line, you
-have to add the following two lines. Mind to replace `C:/Program Files/Java/jdk1.8.0_144` with the actual
-location of the JDK on your system. Without this, Eclipse will complain that the 
-`jdk.tools:jdk.tools` artifact would be missing.
-
-.Force Eclipse to run on a JDK
-[source,text]
-----
--vm
-C:/Program Files/Java/jdk1.8.0_144/jre/bin/server/jvm.dll
-----
-
-=== Eclipse Plug-ins
-
-* *Maven Integration:* m2e , already comes pre-installed with the Eclipse IDE for Java Developers.
-  If you use another edition of Eclipse which does not have m2e pre-installed, go to *Help->Install
-  New Software*, select "--All available sites--" and choose *Collaboration -> m2e - Maven Integration
-  for Eclipse*
-
-* *Apache UIMA tools:* go to *Help->Install New Software*, select "Add..." and add the update site: `http://www.apache.org/dist/uima/eclipse-update-site/` as a location. Install the *Apache UIMA Eclipse tooling and runtime support*.
-
-* *Eclipse Web Development Tooling:* go to *Help->Install New Software*, select "--All available
-  sites--" and select the following plug-ins for installation from the section *Web, XML, Java EE
-  and OSGi Enterprise Development*:
-** Eclipse Java Web Developer Tools
-** Eclipse Web Developer Tools
-** Eclipse XML Editors and Tools: already comes pre-installed in newer eclipse versions
-** JST Server Adapters
-** JST Server Adapters Extensions
-** JST Server UI
-** m2e-wtp - Maven Integration for WTP
-** WST Server Adapters
-
-=== Eclipse Workspace Settings
-
-* You should check that Text file encoding is UTF-8  in *Preferences -> General -> Workspace* of 
-  your Eclipse install.
-
-=== Importing {product-name} into the Workspace
-
-Checkout out the {product-name} git repository with your favorite git client. If you use the command-line
-client, use the command
-
-[source,text]
-----
-$ git clone https://github.com/inception-project/inception.git
-----
-
-In Eclipse, go to *File -> Import*, choose *Existing Maven projects*, and select the folder to which
-you have cloned {product-name}. Eclipse should automatically detect all modules.
-
-=== Eclipse Tomcat Integration
-
-Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 9.0). Then, you need to
-add the Tomcat server to your runtime configuration. Go to preferences and go to
-*Servers -> Runtime environments*:
-
-When prompted for an installation path, specify the folder where you extracted (or installed) Apache
-Tomcat v9.0 into. 
-
-Change the runtime configuration for the project. On the left side of the dialog, you should now be
-able to select Apache Tomcat. Change its VM arguments and include the definition 
-`-Dinception.home="/srv/inception"` to specify the home directory for the application. Also add
-`-Dwicket.core.settings.general.configuration-type=development` to enable the development mode. 
-This adds additional debugging features to the UI and disables UI caches.
-
-Head to the servers pane. If you cannot locate it in your eclipse window, add it by going to
-*Window -> Show View -> Other...* and select *Servers*. Right click on *Tomcat v8.5 localhost* and
-click on *Add and remove...*:
-
-{product-name} should now be configured to start with Tomcat.
-
-In the *Servers* view, double-click on the Tomcat instance you have configured. Activate the
-checkbox *Serve modules without publishing*. Go to the *Modules* tab, select the {product-name} module
-and disable auto-reloading. After these changes, you will have to manually restart the Tomcat
-server in order for changes to Java class files to take effect. However, as a benefit, changes to
-HTML, CSS or JavaScript files take effect immediately and you just have to refresh the browser to
-see the changes.
-
-=== Setting up Checkstyle and Formatting
-
-We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
-The following section describes how to use it with Eclipse.
-
-First, obtain the DKPro code formatting profile from the link:https://dkpro.github.io/contributing/[DKPro website] (Section "Code style"). In Eclipse, go to **Preferences -> Java -> Code Style -> Formatter** to import the file. Apparently, the files can also be used with IntelliJ via the [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin.
-
-NOTE: The parameter prefix `a` needs to be configured manually. In Eclipse go to 
-       *Preferences -> Java -> Code Style* set the *prefix list* column in the *parameters* row to `a`.
-
-Second, install the Checkstyle plugin for Eclipse as well as the Maven Checkstyle plugin for Eclipse.
-These plugins make Eclipse automatically pick up the checkstyle configuration from the Maven project
-and highlight formatting problems directly in the source code editor.
-
-* Install *Checkstyle Eclipse plugin*: `https://checkstyle.org/eclipse-cs/#!/install` e.g. via the update site: `https://checkstyle.org/eclipse-cs/update`.
-* Install the *Checkstyle configuration plugin for M2Eclipse*: via the update site `http://m2e-code-quality.github.com/m2e-code-quality/site/latest/`
-* Select all {product-name} projects, right click and do a *Maven -> Update project*
-
-NOTE: Should the steps mentioned above not have been sufficient, close all the {product-name} projects
-      in Eclipse, then remove them form the workspace (not from the disk), delete any `.checkstyle` files
-      in the {product-name} modules, and then re-import them into Eclipse again using *Import->Existing Maven
-      projects*. During the project import, the Checkstyle configuration plugin for M2Eclipse should
-      properly set up the `.checkstyle` files and activate checkstyle. +
-      If the Maven project update cannot be completed due to missing .jars, execute a Maven install via right click on the inception project *Run as ->
-      Maven build...*, enter the goal `install` and check *Skip Tests*. Alternatively, use the command `mvn clean install -DskipTests`.
-
-== Setting up for the development in IntelliJ IDEA
-
-This is a guide to setting up a development environment using IntelliJ IDEA. We assume that the
-Community Version is used, but this guide should also apply to the Enterprise Version.
-
-After checking out {product-name} from Github, open Intellij and import the project. The easiest
-way is to go to `File -> Open` and the select the `pom.xml` in the {product-name} root directory.
-IntelliJ IDEA will then guide you through the import process, the defaults work out of the box.
-INCEpTION can now be started via running `inception-app-webapp/src/main/java/de/tudarmstadt/ukp/inception/INCEpTION.java`.
-
-If you get errors that certain classes are not found, then open a terminal, go to the INCEpTION
-repository root and run
-
-    mvn clean install -DskipTests=true -Dcheckstyle.skip=true
-
-Alternatively, you can run the `clean` and `install` Maven goals from IntelliJ manually.
-
-If you get an error that the command line is too long, please go to `Run -> Edit Configurations -> Modify Options -> Shorten Command Line` in IntelliJ IDEA and select the option `@argfile (Java 9+) - java @argfile className [args]`.
-
-=== Checkstyle and Formatting
-
-We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
-The following section describes how to use it with IntelliJ IDEA.
-
-First, install the https://plugins.jetbrains.com/plugin/1065-checkstyle-idea[Checkstyle-IDEA plugin].
-In `File | Settings | Other Settings | Checkstyle`, navigate to the *Checkstyle* tab. Start to add
-a new configuration file by clicking on the `+` on the right, navigate to
-`inception-build/src/main/resources/inception/checkstyle.xml` and apply the changes. Make sure to
-check the box next to the newly created configuration and apply it as well.
-
-In order to achieve the same formatting and import order as Eclipse, install the
-https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter/versions[Eclipse Code Formatter].
-Download the https://dkpro.github.io/files/DKProStyle_latest.xml[DKPro Eclipse Code Style file].
-In `File | Settings | Other Settings | Eclipse Code Formatter`, create a new profile using this
-file.
-
-Also make sure to enable auto import optimization in `File | Settings | Editor | General | Auto Import`.
-
-To format your source code on save, we also recommend to install the
-https://plugins.jetbrains.com/plugin/7642-save-actions[Save Actions] plugin and configure it
-accordingly.
-
-=== IntelliJ IDEA Tomcat Integration
-
-This requires IntelliJ IDEA Ultimate. Using Tomcat allows editing HTML,CSS and JavaScript on the fly without restarting
-the application. First, download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 8.5).
-Then, you need to create a Tomcat server runtime configuration in `Run | Edit Configurations…`. Click on the `+` icon,
-select `Tomcat Server -> Local`.  Click on the `Deployment` tab and then on the `+` icon to select an artifact to deploy.
-Choose the exploded war version. Select the `Server` tab, navigate to the path of your Tomcat server, and update the
-`on Update` action to `Update classes and resources` for both. Make sure that all port settings are different.
-You now can start or debug your web application via Tomcat. If starting throws a permission error, make sure that
-the mentioned file, e.g. `catalina.sh` is marked as executable.
-
-*Experimental:* If desired, you can also use hot-code replacement via http://hotswapagent.org[HotswapAgent].
-This allows you to change code, e.g. adding methods without needing to restart the Tomcat server.
-For this, follow the excellent https://github.com/dmitry-zhuravlev/hotswap-agent-intellij-plugin[HotSwap IntelliJ IDEA plugin guide].
-
-=== Building documentation
-
-The documentation can be built using a support class in `inception-doc/src/test/java/de/tudarmstadt/ukp/inception/doc/GenerateDocumentation.java`.
-To make it usable from Intellij IDEA, you need to build the whole project at least once. Run the
-class. If it fails, alter the run configuration and add a new environment variable `INTELLIJ=true`
-and check that the working directory is the {product-name} root directory. The resulting documentation
-will be in `target/doc-out`.
