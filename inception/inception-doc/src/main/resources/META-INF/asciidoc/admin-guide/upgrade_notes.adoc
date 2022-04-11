@@ -1,0 +1,77 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Upgrade notes
+
+This section summarizes important upgrade notes from the release history of INCEpTION. If you upgrade from any version `X`, carefully read all the upgrade notes for versions later than `X`. In particular, if any of the upgrade notes mentions that an intermediate upgrade to that version must be made before going to a higher version, then first perform all required intermediate upgrades in order. 
+
+NOTE: It is a good idea to back up your installation and data before an upgrade.
+
+== INCEpTION 22.0
+
+This version brings a new project export page which uses WebSocket. If INCEpTION is deployed behind a reverse proxy, this technical changes requires updating the reverse proxy configuration. The admin guide includes an updated section on deploying behind nginx and Apache HTTPD reverse proxies. Additionally, the CSRF settings in the INCEpTION `settings.properties` file need to be updated. The required settings are also described in the admin guide in the section for deploying behind a reverse proxy.
+
+If you have trouble reconfiguring your reverse proxy for WebSocket, it is still possible to switch back to the old export page by adding the following line to the `settings.properties` file:
+
+----
+dashboard.legacy-export=true
+----
+
+NOTE: The setting to switch back to the old export page will be removed in later versions. Also, INCEpTION will make more use of the WebSocket protocol in the future. If you have trouble updating your reverse proxy configuration to support WebSocket, please let us know.
+
+== INCEpTION 21.0.1 
+
+If you are using MySQL or MariaDB, please ensure that default row format is set to `dynamic`, otherwise, you may get an error like this during upgrade:
+
+----
+Error creating bean with name 'liquibase' defined in class path resource 
+[org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: 
+Invocation of init method failed; nested exception is liquibase.exception.LiquibaseException: 
+liquibase.exception.MigrationFailedException: 
+Migration failed for change set de/tudarmstadt/ukp/inception/preferences/model/db-changelog.xml::20210925-1::INCEpTION Team:
+Reason: liquibase.exception.DatabaseException: (conn=242839) Index column size too large. The maximum column size is 767 bytes. 
+[Failed SQL: (1709) ALTER TABLE `inception-testing`.default_project_preference ADD CONSTRAINT UK_default_project_preference_name_project UNIQUE (project, name)]
+----
+
+To set the default row format, you can add these settings to your MySQL/MariaDB config file and then restart the database:
+
+----
+innodb_strict_mode=1
+innodb_default_row_format='dynamic'
+----
+
+
+If you upgrade from a version older than 20.0, please check the update notes for INCEpTION 20.0.
+
+== INCEpTION 20.0
+
+* 🎉 **New versioning.** INCEpTION has come a long way and the time has come to reflect that in the version. So as of this release, we are dropping the the zero from the version!
+* ⚠️ **Database driver changed.** The MySQL driver is no longer bundled, only the MariaDB driver is shipped. If you have manually configured a DB driver and dialect in the `settings.properties`, comment them out. In the JDBC connection string replace `mysql` with `mariadb`. The MariaDB driver should also work with a MySQL database. If you use Docker Compose, make sure to remove the `INCEPTION_DB_DIALECT` and `INCEPTION_DB_DRIVER` and update the `INCEPTION_DB_URL` to start with `jdbc:mariadb:` instead of `jdbc:mysql:`. For additional details, please check the section on MariaDB configuration in the admin guide.
+* ⚠️ **Increased disk usage.** Internal backup for CAS (annotation) files enabled to keep 2 backups with min 24h in between - this change increases disk usage! If you operate with low disk space, consider disabling the internal backup.
+
+== INCEpTION 0.16.0
+
+For deployments using AJP and Apache Webserver 2.5 or higher: to use the advanced AJP secret, see the updated section on running INCEpTION behind a reverse proxy in the admin guide..
+For deployments using AJP and Apache Webserver 2.4 or lower: you need to disable the AJP secret by setting `server.ajp.port` (replaces `tomcat.ajp.port`) and `server.ajp.address` properties as described in the admin guide and also set `server.ajp.secret-required=false`.
+
+== INCEpTION 0.15.2
+
+For deployments via WAR-file on Apache Tomcat, Apache Tomcat 9.0. is now necessary. Note that we do not recommend a WAR deployment and do not distribute a pre-built WAR file.
+
+== INCEpTION 0.12.0
+
+If you are running INCEpTION behind a reverse proxy and have so far had a line like `server.contextPath=/XXX` in your `settings.properties` file, please replace it with `server.servlet.context-path=/XXX`.
+
