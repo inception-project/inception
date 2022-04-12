@@ -705,40 +705,37 @@ public class MtasDocumentIndex
 
     private String preprocessQuery(String aQuery)
     {
-        String result;
-
-        if (!(aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]"))) {
-            // Convert raw words query to a Mtas CQP query
-
-            result = "";
-            BreakIterator words = BreakIterator.getWordInstance();
-            words.setText(aQuery);
-
-            int start = words.first();
-            int end = words.next();
-            while (end != BreakIterator.DONE) {
-                String word = aQuery.substring(start, end);
-                if (!word.trim().isEmpty()) {
-                    word = word.replace("&", "\\&");
-                    word = word.replace("(", "\\(");
-                    word = word.replace(")", "\\)");
-                    word = word.replace("#", "\\#");
-                    word = word.replace("{", "\\{");
-                    word = word.replace("}", "\\}");
-                    word = word.replace("<", "\\<");
-                    word = word.replace(">", "\\>");
-                    // Add the word to the query
-                    result += "\"" + word + "\"";
-                }
-                start = end;
-                end = words.next();
-                if (end != BreakIterator.DONE) {
-                    result += " ";
-                }
-            }
+        if (aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]")
+                || aQuery.contains("<") || aQuery.contains(">")) {
+            return aQuery;
         }
-        else {
-            result = aQuery;
+
+        // Convert raw words query to a Mtas CQP query
+        String result = "";
+        BreakIterator words = BreakIterator.getWordInstance();
+        words.setText(aQuery);
+
+        int start = words.first();
+        int end = words.next();
+        while (end != BreakIterator.DONE) {
+            String word = aQuery.substring(start, end);
+            if (!word.trim().isEmpty()) {
+                word = word.replace("&", "\\&");
+                word = word.replace("(", "\\(");
+                word = word.replace(")", "\\)");
+                word = word.replace("#", "\\#");
+                word = word.replace("{", "\\{");
+                word = word.replace("}", "\\}");
+                word = word.replace("<", "\\<");
+                word = word.replace(">", "\\>");
+                // Add the word to the query
+                result += "\"" + word + "\"";
+            }
+            start = end;
+            end = words.next();
+            if (end != BreakIterator.DONE) {
+                result += " ";
+            }
         }
 
         return result;
