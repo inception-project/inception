@@ -126,8 +126,8 @@ public class PdfAnnoSerializer
                     int begin = emit.getStart() + renderSpan.getWindowBeforeText().length();
                     int end = emit.getEnd() - renderSpan.getWindowAfterText().length() + 1;
                     // get according PDFExtract file lines for begin and end of annotation
-                    Offset beginOffset = aPdfExtractFile.getExtractIndex(begin);
-                    Offset endOffset = aPdfExtractFile.getExtractIndex(end);
+                    Offset beginOffset = aPdfExtractFile.getSanitizedIndex(begin);
+                    Offset endOffset = aPdfExtractFile.getSanitizedIndex(end);
                     PdfExtractLine firstLine = aPdfExtractFile
                             .getStringPdfExtractLine(beginOffset.getBegin());
                     PdfExtractLine lastLine = aPdfExtractFile
@@ -208,6 +208,7 @@ public class PdfAnnoSerializer
             Offset end = aPdfExtractFile.getStringIndex(offset.getEnd());
             iterList.add(new RenderSpan(new Offset(begin.getBegin(), end.getEnd())));
         }
+
         List<RenderSpan> ambiguous = new ArrayList<>();
         List<Offset> processed = new ArrayList<>();
         int windowSize = WINDOW_SIZE_INCREMENT;
