@@ -24,17 +24,18 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
+import static java.lang.invoke.MethodHandles.lookup;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static org.apache.commons.io.IOUtils.toCharArray;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAll;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.xml.sax.SAXException;
@@ -85,7 +85,7 @@ public class MtasUimaParser
      * Using a static logger here because many instances of this class may be created during
      * indexing and we do not want to waste time in setting up a separate logger for every one.
      */
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     /**
      * Lucene can only index terms of a size of up to 32k characters - so we filter out very long
@@ -231,6 +231,8 @@ public class MtasUimaParser
             }
             mtasId = indexAnnotation(tokenCollection, annotation, mtasId);
         }
+
+        // MtasUtils.print(tokenCollection);
 
         return tokenCollection;
     }
@@ -405,35 +407,40 @@ public class MtasUimaParser
 
     private void indexTokenText(AnnotationFS aAnnotation, Range aRange, int aMtasId)
     {
-        MtasToken mtasToken = new MtasTokenString(aMtasId, MTAS_TOKEN_LABEL,
-                aAnnotation.getCoveredText(), aRange.getBegin());
-        mtasToken.setOffset(aAnnotation.getBegin(), aAnnotation.getEnd());
-        mtasToken.addPositionRange(aRange.getBegin(), aRange.getEnd());
-        tokenCollection.add(mtasToken);
+        String field = MTAS_TOKEN_LABEL;
+        String value = aAnnotation.getCoveredText();
+        MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
+        mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
+        mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
+        tokenCollection.add(mt);
+
+        LOG.trace("TOKN[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, value);
     }
 
     private void indexSentenceText(AnnotationFS aAnnotation, Range aRange, int aMtasId)
     {
-        MtasToken mtasSentence = new MtasTokenString(aMtasId, MTAS_SENTENCE_LABEL,
-                aAnnotation.getCoveredText(), aRange.getBegin());
-        mtasSentence.setOffset(aAnnotation.getBegin(), aAnnotation.getEnd());
-        mtasSentence.addPositionRange(aRange.getBegin(), aRange.getEnd());
-        tokenCollection.add(mtasSentence);
+        String field = MTAS_SENTENCE_LABEL;
+        String value = aAnnotation.getCoveredText();
+        MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
+        mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
+        mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
+        tokenCollection.add(mt);
+
+        LOG.trace("SENT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, value);
     }
 
     private void indexAnnotationText(String aField, String aValue, Range aRange, int aMtasId,
             int aFSAddress)
     {
         String field = getIndexedName(aField);
-
-        MtasToken mtasSentence = new MtasTokenString(aMtasId, field, aValue, aRange.getBegin());
-        mtasSentence.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
-        mtasSentence.addPositionRange(aRange.getBegin(), aRange.getEnd());
+        MtasToken mt = new MtasTokenString(aMtasId, field, aValue, aRange.getBegin());
+        mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
+        mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
         // Store the FS address as payload so we can identify which MtasTokens were generated from
         // the same FS - this is not really meant to be used to look up the FS through the stored
         // address as the CAS may be out-of-sync with the index and thus the IDs may not match
-        mtasSentence.setPayload(encodeFSAddress(aFSAddress));
-        tokenCollection.add(mtasSentence);
+        mt.setPayload(encodeFSAddress(aFSAddress));
+        tokenCollection.add(mt);
 
         LOG.trace("TEXT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, aValue);
     }
@@ -441,15 +448,17 @@ public class MtasUimaParser
     private void indexFeatureValue(String aField, String aValue, int aMtasId, int aBeginOffset,
             int aEndOffset, Range aRange, int aFSAddress)
     {
-        MtasToken mtasAnnotationTypeFeatureLabel = new MtasTokenString(aMtasId,
-                getIndexedName(aField), aValue, aRange.getBegin());
-        mtasAnnotationTypeFeatureLabel.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
-        mtasAnnotationTypeFeatureLabel.addPositionRange(aRange.getBegin(), aRange.getEnd());
+        String field = getIndexedName(aField);
+        MtasToken mt = new MtasTokenString(aMtasId, field, aValue, aRange.getBegin());
+        mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
+        mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
         // Store the FS address as payload so we can identify which MtasTokens were generated from
         // the same FS - this is not really meant to be used to look up the FS through the stored
         // address as the CAS may be out-of-sync with the index and thus the IDs may not match
-        mtasAnnotationTypeFeatureLabel.setPayload(encodeFSAddress(aFSAddress));
-        tokenCollection.add(mtasAnnotationTypeFeatureLabel);
+        mt.setPayload(encodeFSAddress(aFSAddress));
+        tokenCollection.add(mt);
+
+        LOG.trace("FEAT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, aValue);
     }
 
     /**
