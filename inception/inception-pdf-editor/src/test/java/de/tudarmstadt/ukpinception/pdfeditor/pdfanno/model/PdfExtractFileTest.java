@@ -43,33 +43,28 @@ public class PdfExtractFileTest
     }
 
     @Test
-    public void testGetStringContent()
-    {
-        assertThat("2abc[4]dﬁeg`A").isEqualTo(pdfExtractFile.getStringContent());
-    }
-
-    @Test
     public void testGetSanitizedContent()
     {
-        assertThat("2abc[4]dfiegÀ").isEqualTo(pdfExtractFile.getSanitizedContent());
+        assertThat(pdfExtractFile.getStringContent()).isEqualTo("2abc[4]dﬁeg`A");
+        assertThat(pdfExtractFile.getSanitizedContent()).isEqualTo("2abc[4]dfiegÀ");
     }
 
     @Test
     public void testGetStringPdfExtractLines()
     {
-        assertThat(new Offset(4, 4)).isEqualTo(pdfExtractFile.getExtractIndex(0));
-        assertThat(new Offset(5, 5)).isEqualTo(pdfExtractFile.getExtractIndex(1));
-        assertThat(new Offset(6, 6)).isEqualTo(pdfExtractFile.getExtractIndex(2));
-        assertThat(new Offset(7, 7)).isEqualTo(pdfExtractFile.getExtractIndex(3));
-        assertThat(new Offset(11, 11)).isEqualTo(pdfExtractFile.getExtractIndex(4));
-        assertThat(new Offset(12, 12)).isEqualTo(pdfExtractFile.getExtractIndex(5));
-        assertThat(new Offset(13, 13)).isEqualTo(pdfExtractFile.getExtractIndex(6));
-        assertThat(new Offset(14, 14)).isEqualTo(pdfExtractFile.getExtractIndex(7));
-        assertThat(new Offset(15, 15)).isEqualTo(pdfExtractFile.getExtractIndex(8));
-        assertThat(new Offset(15, 15)).isEqualTo(pdfExtractFile.getExtractIndex(9));
-        assertThat(new Offset(16, 16)).isEqualTo(pdfExtractFile.getExtractIndex(10));
-        assertThat(new Offset(17, 17)).isEqualTo(pdfExtractFile.getExtractIndex(11));
-        assertThat(new Offset(18, 19)).isEqualTo(pdfExtractFile.getExtractIndex(12));
+        assertThat(new Offset(4, 4)).isEqualTo(pdfExtractFile.getSanitizedIndex(0));
+        assertThat(new Offset(5, 5)).isEqualTo(pdfExtractFile.getSanitizedIndex(1));
+        assertThat(new Offset(6, 6)).isEqualTo(pdfExtractFile.getSanitizedIndex(2));
+        assertThat(new Offset(7, 7)).isEqualTo(pdfExtractFile.getSanitizedIndex(3));
+        assertThat(new Offset(11, 11)).isEqualTo(pdfExtractFile.getSanitizedIndex(4));
+        assertThat(new Offset(12, 12)).isEqualTo(pdfExtractFile.getSanitizedIndex(5));
+        assertThat(new Offset(13, 13)).isEqualTo(pdfExtractFile.getSanitizedIndex(6));
+        assertThat(new Offset(14, 14)).isEqualTo(pdfExtractFile.getSanitizedIndex(7));
+        assertThat(new Offset(15, 15)).isEqualTo(pdfExtractFile.getSanitizedIndex(8));
+        assertThat(new Offset(15, 15)).isEqualTo(pdfExtractFile.getSanitizedIndex(9));
+        assertThat(new Offset(16, 16)).isEqualTo(pdfExtractFile.getSanitizedIndex(10));
+        assertThat(new Offset(17, 17)).isEqualTo(pdfExtractFile.getSanitizedIndex(11));
+        assertThat(new Offset(18, 19)).isEqualTo(pdfExtractFile.getSanitizedIndex(12));
     }
 
     @Test
