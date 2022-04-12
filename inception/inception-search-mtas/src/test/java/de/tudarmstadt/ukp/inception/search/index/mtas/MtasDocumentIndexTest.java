@@ -545,6 +545,41 @@ public class MtasDocumentIndexTest
     }
 
     @Test
+    public void testAnnotationQueryMultiTokenWithoutConditions() throws Exception
+    {
+        Project project = new Project("annotation-query-multi-token-no-cond");
+
+        createProject(project);
+
+        SourceDocument sourceDocument = new SourceDocument("Annotation document", project, "text");
+
+        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(Pair.of(sourceDocument, fileContent));
+        annotateDocument(project, user, sourceDocument);
+
+        String query = "<Named_entity/>";
+
+        List<SearchResult> results = searchService.query(user, project, query);
+
+        // Test results
+        SearchResult expectedResult = new SearchResult();
+        expectedResult.setDocumentId(sourceDocument.getId());
+        expectedResult.setDocumentTitle("Annotation document");
+        // When searching for an annotation, we don't get the matching
+        // text back... not sure why...
+        expectedResult.setText("");
+        expectedResult.setLeftContext("");
+        expectedResult.setRightContext("");
+        expectedResult.setOffsetStart(15);
+        expectedResult.setOffsetEnd(22);
+        expectedResult.setTokenStart(3);
+        expectedResult.setTokenLength(1);
+
+        assertThat(results).containsExactly(expectedResult);
+    }
+
+    @Test
     public void testKeepResultsOrdering() throws Exception
     {
         Project project = new Project("keep-results-ordering");
