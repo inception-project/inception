@@ -82,7 +82,8 @@ public class MultiSelectTextFeatureEditor
 
                 aBehavior.setOption("autoWidth", true);
                 aBehavior.setOption("animation", false);
-                aBehavior.setOption("delay", 0);
+                aBehavior.setOption("delay", 250);
+                aBehavior.setOption("height", 300);
             }
 
             @Override

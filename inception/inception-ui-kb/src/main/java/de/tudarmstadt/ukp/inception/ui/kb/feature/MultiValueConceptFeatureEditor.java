@@ -26,6 +26,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
@@ -107,7 +108,13 @@ public class MultiValueConceptFeatureEditor
 
             aBehavior.setOption("autoWidth", true);
             aBehavior.setOption("animation", false);
-            aBehavior.setOption("delay", 0);
+            aBehavior.setOption("delay", 250);
+            aBehavior.setOption("height", 300);
+            aBehavior.setOption("tagTemplate",
+                    Options.asString(
+                            "<span title=\"#: data.description + '\\n' + data.identifier #\" "
+                                    + "onmouseover=\"javascript:applyTooltip(this)\">"
+                                    + "#: data.uiLabel #</span>\n"));
         }
 
         @Override
