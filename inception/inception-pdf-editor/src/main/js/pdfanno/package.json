@@ -16,16 +16,12 @@
     "url": "https://github.com/paperai/pdfanno/issues"
   },
   "homepage": "https://github.com/paperai/pdfanno#readme",
-  "pdfextract": {
-    "version": "0.3.0",
-    "url": "https://github.com/paperai/pdfextract/releases/download/v0.3.0/pdfextract-0.3.0.jar"
-  },
   "devDependencies": {
     "esbuild": "^0.13.12",
     "typescript": "^4.4.2",
     "fs-extra": "^10.0.0",
     "@types/jquery": "^3.5.13",
-    "@types/urijs": "^1.19.9"
+    "@types/urijs": "^1.19.11"
   },
   "dependencies": {
     "events": "^3.3.0",
@@ -33,7 +29,7 @@
     "request-promise": "^4.2.2",
     "semver": "^5.5.0",
     "toml": "github:yoheiMune/toml-node",
-    "urijs": "^1.19.9",
+    "urijs": "^1.19.11",
     "pdfjs-dist": "^1.10.100",
     "jquery": "^3.6.0",
     "jquery-ui": "^1.13.1"
