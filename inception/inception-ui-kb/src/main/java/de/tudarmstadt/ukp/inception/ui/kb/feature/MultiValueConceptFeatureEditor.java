@@ -112,7 +112,7 @@ public class MultiValueConceptFeatureEditor
             aBehavior.setOption("height", 300);
             aBehavior.setOption("tagTemplate",
                     Options.asString(
-                            "<span title=\"#: data.description + '\\n' + data.identifier #\" "
+                            "<span title=\"#: data.description + '\\n\\n' + data.identifier #\" "
                                     + "onmouseover=\"javascript:applyTooltip(this)\">"
                                     + "#: data.uiLabel #</span>\n"));
         }
