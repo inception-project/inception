@@ -21,10 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokensCovered;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toCollection;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -358,7 +361,9 @@ public class ConceptLinkingServiceImpl
             CAS aCas, int aBegin)
     {
         candidate.put(KEY_MENTION, aMention);
+        candidate.put(KEY_MENTION_NC, aMention.toLowerCase(candidate.getLocale()));
         candidate.put(KEY_QUERY, aQuery);
+        candidate.put(KEY_QUERY_NC, aQuery.toLowerCase(candidate.getLocale()));
 
         if (aCas != null) {
             AnnotationFS sentence = selectSentenceCovering(aCas, aBegin);
@@ -392,24 +397,28 @@ public class ConceptLinkingServiceImpl
         long startTime = currentTimeMillis();
 
         // Set the feature values
-        List<CandidateEntity> candidates = aCandidates.stream().map(CandidateEntity::new)
+        List<CandidateEntity> candidates = aCandidates.stream() //
+                .map(CandidateEntity::new) //
                 .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBegin))
                 .map(candidate -> {
                     for (EntityRankingFeatureGenerator generator : featureGenerators) {
                         generator.apply(candidate);
                     }
                     return candidate;
-                }).collect(Collectors.toCollection(ArrayList::new));
+                }) //
+                .collect(toCollection(ArrayList::new));
 
         // Do the main ranking
         // Sort candidates by multiple keys.
         candidates.sort(BaselineRankingStrategy.getInstance());
 
-        List<KBHandle> results = candidates.stream().map(candidate -> {
-            KBHandle handle = candidate.getHandle();
-            handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
-            return handle;
-        }).collect(Collectors.toList());
+        List<KBHandle> results = candidates.stream() //
+                .map(candidate -> {
+                    KBHandle handle = candidate.getHandle();
+                    handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
+                    return handle;
+                }) //
+                .collect(Collectors.toList());
 
         int rank = 1;
         for (KBHandle handle : results) {

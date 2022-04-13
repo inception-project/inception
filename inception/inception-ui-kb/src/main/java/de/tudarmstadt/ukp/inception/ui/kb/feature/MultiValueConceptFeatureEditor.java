@@ -88,23 +88,14 @@ public class MultiValueConceptFeatureEditor
         @Override
         protected List<KBHandle> getChoices(String aInput)
         {
-            var selected = new ArrayList<>(getModelObject());
             var candidates = getCandidates(stateModel, handler, aInput);
 
+            var selected = new ArrayList<>(getModelObject());
+            selected.removeAll(candidates);
+
             var choices = new ArrayList<KBHandle>();
-            // First any items that were ranked
-            candidates.removeIf(h -> {
-                if (selected.contains(h)) {
-                    choices.add(h);
-                    selected.remove(h);
-                    return true;
-                }
-                return false;
-            });
-            // Then any remaining unranked but selected items
-            choices.addAll(selected);
-            // Now the remaining ranked items
             choices.addAll(candidates);
+            choices.addAll(selected);
 
             return choices;
         }
