@@ -28,16 +28,20 @@ import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.handler.TextRequestHandler;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,24 +55,19 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 
-/**
- * Wicket panel for visualizing an annotated sentence in brat. When a user clicks on a span or an
- * arc, the Method onSelectAnnotationForMerge() is called. Override that method to receive the
- * result in another Wicket panel.
- */
 public abstract class BratSuggestionVisualizer
-    extends BratVisualizer
+    extends Panel
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -79,8 +78,11 @@ public abstract class BratSuggestionVisualizer
     private @SpringBean DocumentService documentService;
     private @SpringBean LazyDetailsLookupService lazyDetailsLookupService;
 
+    private final WebMarkupContainer vis;
     private final ConfirmationDialog stateChangeConfirmationDialog;
     private final AbstractDefaultAjaxBehavior controller;
+    private final AbstractAjaxBehavior collProvider;
+    private final AbstractAjaxBehavior docProvider;
 
     private final int position;
 
@@ -89,6 +91,38 @@ public abstract class BratSuggestionVisualizer
         super(aId, aModel);
 
         position = aPosition;
+
+        vis = new WebMarkupContainer("vis");
+        vis.setOutputMarkupId(true);
+
+        // Provides collection-level information like type definitions, styles, etc.
+        collProvider = new AbstractAjaxBehavior()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onRequest()
+            {
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(
+                        new TextRequestHandler("application/json", "UTF-8", getCollectionData()));
+            }
+        };
+
+        // Provides the actual document contents
+        docProvider = new AbstractAjaxBehavior()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onRequest()
+            {
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(
+                        new TextRequestHandler("application/json", "UTF-8", getDocumentData()));
+            }
+        };
+
+        add(vis);
+        add(collProvider, docProvider);
 
         add(new Label("username", getModel().map(this::maybeAnonymizeUsername)));
 
@@ -228,15 +262,13 @@ public abstract class BratSuggestionVisualizer
         aResponse.render(OnLoadHeaderItem.forScript("\n" + script));
     }
 
-    @Override
     public String getDocumentData()
     {
         return getModelObject().getDocumentResponse() == null ? "{}"
                 : getModelObject().getDocumentResponse();
     }
 
-    @Override
-    protected String getCollectionData()
+    private String getCollectionData()
     {
         return getModelObject().getCollectionData();
     }
@@ -260,6 +292,40 @@ public abstract class BratSuggestionVisualizer
 
         LOG.error("{}", aMessage, e);
         error(aMessage);
+    }
+
+    private String bratRenderCommand(String aJson)
+    {
+        String str = WicketUtil.wrapInTryCatch("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('renderData', [" + aJson + "]);");
+        return str;
+    }
+
+    public void render(AjaxRequestTarget aTarget)
+    {
+        LOG.debug("[{}][{}] render", getMarkupId(), vis.getMarkupId());
+
+        // Controls whether rendering should happen within the AJAX request or after the AJAX
+        // request. Doing it within the request has the benefit of the browser only having to
+        // recalculate the layout once at the end of the AJAX request (at least theoretically)
+        // while deferring the rendering causes the AJAX request to complete faster, but then
+        // the browser needs to recalculate its layout twice - once of any Wicket components
+        // being re-rendered and once for the brat view to re-render.
+        final boolean deferredRendering = false;
+
+        StringBuilder js = new StringBuilder();
+
+        if (deferredRendering) {
+            js.append("setTimeout(function() {");
+        }
+
+        js.append(bratRenderCommand(getDocumentData()));
+
+        if (deferredRendering) {
+            js.append("}, 0);");
+        }
+
+        aTarget.appendJavaScript(js);
     }
 
     protected abstract void onClientEvent(AjaxRequestTarget aTarget) throws Exception;

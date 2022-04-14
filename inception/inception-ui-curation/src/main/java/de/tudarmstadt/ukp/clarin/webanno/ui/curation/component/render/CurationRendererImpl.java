@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
@@ -50,14 +51,17 @@ public class CurationRendererImpl
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
     private final BratSerializer bratSerializer;
+    private final AnnotationEditorProperties annotationEditorProperties;
 
     public CurationRendererImpl(PreRenderer aPreRenderer, AnnotationSchemaService aSchemaService,
-            ColoringService aColoringService, BratSerializer aBratSerializer)
+            ColoringService aColoringService, BratSerializer aBratSerializer,
+            AnnotationEditorProperties aAnnotationEditorProperties)
     {
         preRenderer = aPreRenderer;
         schemaService = aSchemaService;
         coloringService = aColoringService;
         bratSerializer = aBratSerializer;
+        annotationEditorProperties = aAnnotationEditorProperties;
     }
 
     @Override
@@ -66,11 +70,14 @@ public class CurationRendererImpl
     {
         List<AnnotationLayer> layersToRender = new ArrayList<>();
         for (AnnotationLayer layer : aState.getAnnotationLayers()) {
-            boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName());
+            boolean isNonEditableTokenLayer = layer.getName().equals(Token.class.getName())
+                    && !annotationEditorProperties.isTokenLayerEditable();
+            boolean isNonEditableSentenceLayer = layer.getName().equals(Sentence.class.getName())
+                    && !annotationEditorProperties.isSentenceLayerEditable();
             boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE);
 
-            if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
+            if (layer.isEnabled() && !isNonEditableTokenLayer && !isNonEditableSentenceLayer
+                    && !isUnsupportedLayer) {
                 layersToRender.add(layer);
             }
         }

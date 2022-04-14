@@ -71,6 +71,7 @@ import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -131,6 +132,7 @@ public class AnnotatorsPanel
     private @SpringBean UserDao userService;
     private @SpringBean CurationRenderer curationRenderer;
     private @SpringBean BratSchemaGenerator bratSchemaGenerator;
+    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 
     public AnnotatorsPanel(String id, IModel<List<AnnotatorSegment>> aModel)
     {
@@ -214,7 +216,8 @@ public class AnnotatorsPanel
             }
 
             // check if clicked on a span
-            CasMerge casMerge = new CasMerge(schemaService);
+            CasMerge casMerge = new CasMerge(schemaService, annotationEditorProperties,
+                    applicationEventPublisher.get());
             if (ACTION_SELECT_SPAN_FOR_MERGE.equals(action.toString())) {
                 mergeSpan(casMerge, targetCas, sourceCas, sourceVid, sourceState.getDocument(),
                         sourceState.getUser().getUsername(), layer);
@@ -259,7 +262,8 @@ public class AnnotatorsPanel
         int created = 0;
         Set<String> otherErrors = new LinkedHashSet<>();
 
-        CasMerge casMerge = new CasMerge(schemaService);
+        CasMerge casMerge = new CasMerge(schemaService, annotationEditorProperties,
+                applicationEventPublisher.get());
         casMerge.setSilenceEvents(true);
 
         nextAnnotation: for (AnnotationFS ann : select(sourceCas,
