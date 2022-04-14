@@ -167,6 +167,10 @@ class UserSelectionPanel
                 }
 
                 final String[] values = this.getInputAsArray();
+                if (values == null) {
+                    return;
+                }
+
                 List<User> result = new ArrayList<>();
                 for (String value : values) {
                     if (isBlank(value)) {
