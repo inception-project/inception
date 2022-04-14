@@ -71,11 +71,11 @@
     <uima.version>3.2.0</uima.version>
     <uimafit.version>3.2.0</uimafit.version>
 
-    <spring.version>5.3.18</spring.version>
+    <spring.version>5.3.19</spring.version>
     <spring.boot.version>2.6.6</spring.boot.version>
     <spring.security.version>5.6.2</spring.security.version>
-    <springdoc.version>1.6.6</springdoc.version>
-    <swagger.version>2.1.13</swagger.version>
+    <springdoc.version>1.6.7</springdoc.version>
+    <swagger.version>2.2.0</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
     <log4j2.version>2.17.2</log4j2.version>
@@ -86,9 +86,9 @@
     <tomcat.version>9.0.62</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
-    <mariadb.driver.version>2.7.4</mariadb.driver.version>
-    <hibernate.version>5.6.5.Final</hibernate.version>
-    <hibernate.validator.version>6.2.0.Final</hibernate.validator.version>
+    <mariadb.driver.version>2.7.5</mariadb.driver.version>
+    <hibernate.version>5.6.8.Final</hibernate.version>
+    <hibernate.validator.version>7.0.4.Final</hibernate.validator.version>
 
     <wicket.version>9.9.1</wicket.version>
     <wicketstuff.version>9.9.0</wicketstuff.version>
