@@ -214,12 +214,6 @@ public class CurationPage
         splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
                 new Options("orientation", Options.asString("vertical")), new SplitterAdapter()));
 
-        splitter.add(getModelObject().getPagingStrategy()
-                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
-                .add(visibleWhen(() -> getModelObject().getDocument() != null))
-                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
-                        (c, e) -> e.getRequestHandler().add(c))));
-
         List<AnnotatorSegment> segments = new LinkedList<>();
 
         AnnotatorSegment annotatorSegment = new AnnotatorSegment();
@@ -277,6 +271,19 @@ public class CurationPage
                 this::getEditorCas);
         editor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         editor.setOutputMarkupPlaceholderTag(true);
+
+        // Give the new editor an opportunity to configure the current paging strategy, this does
+        // not configure the paging for a document yet this would require loading the CAS which
+        // might not have been upgraded yet
+        factory.initState(state);
+
+        // Use the proper position labels for the current paging strategy
+        splitter.addOrReplace(getModelObject().getPagingStrategy()
+                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
+                .add(visibleWhen(() -> getModelObject().getDocument() != null))
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
+                        (c, e) -> e.getRequestHandler().add(c))));
+
         return editor;
     }
 
