@@ -110,6 +110,10 @@ public class MultiValueStringFeatureSupport
     @Override
     public List<String> unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
+        if (aValue == null) {
+            return null;
+        }
+
         if (aValue instanceof String) {
             return asList((String) aValue);
         }
@@ -118,31 +122,9 @@ public class MultiValueStringFeatureSupport
             return (List<String>) aValue;
         }
 
-        if (aValue == null) {
-            return null;
-        }
-
         throw new IllegalArgumentException(
                 "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
     }
-
-    // @Override
-    // public ArrayList<String> wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object
-    // aValue)
-    // {
-    // if (aValue == null) {
-    // return new ArrayList<>();
-    // }
-    //
-    // if (!(aValue instanceof StringArrayFS)) {
-    // throw new IllegalArgumentException(
-    // "Unable to handle value [" + aValue + "] of type [" + aValue.getClass() + "]");
-    // }
-    //
-    // StringArrayFS array = (StringArrayFS) aValue;
-    //
-    // return new ArrayList<>(asList(array.toStringArray()));
-    // }
 
     @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)

@@ -21,8 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapt
 import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.util.string.StringValue;
@@ -100,40 +100,37 @@ public class LazyDetailsLookupServiceImpl
                 .orElseThrow(() -> new AnnotationException(
                         "Layer with ID [" + layerId + "] does not exist in project " + project));
 
-        // Check where the query needs to be routed: to an editor extension or to a feature support
-        if (paramId.isSynthetic()) {
-            if (keyParam.isEmpty()) {
-                return response;
-            }
+        List<VLazyDetailResult> details = new ArrayList<>();
 
+        // Check where the query needs to be routed: to an editor extension or to a feature support
+        if (paramId.isSynthetic() && !keyParam.isEmpty()) {
             AnnotationFeature feature = annotationService.getFeature(database, layer);
 
             String extensionId = paramId.getExtensionId();
-            response.setResults(extensionRegistry.getExtension(extensionId)
+            extensionRegistry.getExtension(extensionId)
                     .renderLazyDetails(aSourceDocument, aUser, paramId, feature,
-                            keyParam.toString())
-                    .stream().map(d -> new LazyDetailQuery(d.getLabel(), d.getValue()))
-                    .collect(Collectors.toList()));
-            return response;
+                            keyParam.toString()) //
+                    .forEach(details::add);
         }
-
-        List<VLazyDetailResult> details;
 
         // Is it a layer-level lazy detail?
         if (Renderer.QUERY_LAYER_LEVEL_DETAILS.equals(database)) {
-            details = layerSupportRegistry.getLayerSupport(layer)
+            layerSupportRegistry.getLayerSupport(layer)
                     .createRenderer(layer, () -> annotationService.listAnnotationFeature(layer))
-                    .renderLazyDetails(aCas.get(), paramId, windowBeginOffset, windowEndOffset);
+                    .renderLazyDetails(aCas.get(), paramId, windowBeginOffset, windowEndOffset)
+                    .forEach(details::add);
         }
         // Is it a feature-level lazy detail?
-        else {
+        else if (!keyParam.isEmpty()) {
             AnnotationFeature feature = annotationService.getFeature(database, layer);
-            details = featureSupportRegistry.findExtension(feature).orElseThrow()
-                    .renderLazyDetails(feature, keyParam.toString());
+            featureSupportRegistry.findExtension(feature).orElseThrow()
+                    .renderLazyDetails(feature, keyParam.toString()) //
+                    .forEach(details::add);
         }
 
-        response.setResults(details.stream()
-                .map(d -> new LazyDetailQuery(d.getLabel(), d.getValue())).collect(toList()));
+        response.setResults(details.stream() //
+                .map(d -> new LazyDetailQuery(d.getLabel(), d.getValue())) //
+                .collect(toList()));
 
         return response;
     }

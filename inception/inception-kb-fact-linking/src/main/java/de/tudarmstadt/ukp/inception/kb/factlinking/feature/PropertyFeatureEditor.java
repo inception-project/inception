@@ -91,7 +91,7 @@ public class PropertyFeatureEditor
         add(createStatementIndicatorLabel());
         add(createNoStatementLabel());
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature),
-                Model.of(traits)));
+                Model.of(traits.getRepositoryId())));
     }
 
     @Override

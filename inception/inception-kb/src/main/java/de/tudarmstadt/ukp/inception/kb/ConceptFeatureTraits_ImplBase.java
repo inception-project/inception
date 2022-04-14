@@ -17,42 +17,52 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTrait;
+import java.io.Serializable;
 
 /**
  * Traits for knowledge-base-related features.
  */
-public class ConceptFeatureTraits
-    extends ConceptFeatureTraits_ImplBase
-    implements KeyBindingTrait
+public abstract class ConceptFeatureTraits_ImplBase
+    implements Serializable
 {
     private static final long serialVersionUID = 6303541487449965932L;
 
-    private List<KeyBinding> keyBindings = new ArrayList<>();
+    private String repositoryId;
+    private String scope;
+    private ConceptFeatureValueType allowedValueType;
 
-    public ConceptFeatureTraits()
+    public ConceptFeatureTraits_ImplBase()
     {
         // Nothing to do
     }
 
-    @Override
-    public List<KeyBinding> getKeyBindings()
+    public String getRepositoryId()
     {
-        return keyBindings;
+        return repositoryId;
     }
 
-    @Override
-    public void setKeyBindings(List<KeyBinding> aKeyBindings)
+    public void setRepositoryId(String aKnowledgeBaseId)
     {
-        if (aKeyBindings == null) {
-            keyBindings = new ArrayList<>();
-        }
-        else {
-            keyBindings = aKeyBindings;
-        }
+        repositoryId = aKnowledgeBaseId;
+    }
+
+    public String getScope()
+    {
+        return scope;
+    }
+
+    public void setScope(String aScope)
+    {
+        scope = aScope;
+    }
+
+    public ConceptFeatureValueType getAllowedValueType()
+    {
+        return allowedValueType != null ? allowedValueType : ConceptFeatureValueType.ANY_OBJECT;
+    }
+
+    public void setAllowedValueType(ConceptFeatureValueType aAllowedType)
+    {
+        allowedValueType = aAllowedType;
     }
 }
