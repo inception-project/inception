@@ -18,10 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
+import static java.lang.String.format;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Objects;
-import java.util.Optional;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -46,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 /**
  * String feature editor using a Kendo ComboBox field.
@@ -149,13 +149,11 @@ public class KendoComboboxTextFeatureEditor
 
                 // Trigger a re-loading of the tagset from the server as constraints may have
                 // changed the ordering
-                Optional<AjaxRequestTarget> target = RequestCycle.get()
-                        .find(AjaxRequestTarget.class);
+                var target = RequestCycle.get().find(AjaxRequestTarget.class);
                 if (target.isPresent()) {
-                    target.get()
-                            .appendJavaScript(WicketUtil.wrapInTryCatch(String.format(
-                                    "var $w = %s; if ($w) { $w.dataSource.read(); }",
-                                    KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
+                    target.get().appendJavaScript(wrapInTryCatch(format( //
+                            "var $w = %s; if ($w) { $w.dataSource.read(); }",
+                            KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD))));
                 }
             }
         };

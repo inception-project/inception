@@ -22,8 +22,10 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_QUERY_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_NUM_RELATIONS;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_IS_LOWER_CASE;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_SIGNATURE_OVERLAP_SCORE;
 
 import java.util.Comparator;
@@ -37,7 +39,7 @@ public class BaselineRankingStrategy
     private static final Comparator<CandidateEntity> INSTANCE = (e1, e2) -> new CompareToBuilder()
             // Did the user enter an URI and does the candidate exactly match it?
             // Note that the comparator sorts ascending by value, so a match is represented using
-            // a 0 while a mistmatch is represented using 1. The typical case is that neither
+            // a 0 while a mismatch is represented using 1. The typical case is that neither
             // candidate matches the query which causes the next ranking criteria to be evaluated
             .append(e1.get(KEY_QUERY).map(q -> q.equals(e1.getIRI()) ? 0 : 1).orElse(1),
                     e2.get(KEY_QUERY).map(q -> q.equals(e2.getIRI()) ? 0 : 1).orElse(1))
@@ -45,6 +47,10 @@ public class BaselineRankingStrategy
             // since both are important and a very close similarity in say the mention outweighs
             // a not so close similarity in the query
             .append(weightedLevenshteinDistance(e1), weightedLevenshteinDistance(e2))
+            // Prefer good matches on the query over good matches on the mention
+            .append(queryOverMention(e1), queryOverMention(e2))
+            // Cased over caseless
+            .append(casedOverCaseless(e1), casedOverCaseless(e2))
             // A high signature overlap score is preferred.
             .append(e2.get(KEY_SIGNATURE_OVERLAP_SCORE).get(),
                     e1.get(KEY_SIGNATURE_OVERLAP_SCORE).get())
@@ -62,9 +68,30 @@ public class BaselineRankingStrategy
                     e2.getLabel().toLowerCase(e2.getLocale()))
             .toComparison();
 
+    private static double casedOverCaseless(CandidateEntity aCandidate)
+    {
+        int queryNC = aCandidate.get(KEY_LEVENSHTEIN_QUERY_NC).get();
+        int query = aCandidate.get(KEY_LEVENSHTEIN_QUERY).get();
+
+        return queryNC <= query ? 0 : 1;
+    }
+
+    private static double queryOverMention(CandidateEntity aCandidate)
+    {
+        boolean caseInsensitive = aCandidate.get(KEY_QUERY_IS_LOWER_CASE).orElse(true);
+        int query = aCandidate
+                .get(caseInsensitive ? KEY_LEVENSHTEIN_QUERY_NC : KEY_LEVENSHTEIN_QUERY).get();
+        int mention = aCandidate.get(KEY_LEVENSHTEIN_MENTION).get();
+
+        return query <= mention ? 0 : 1;
+    }
+
     private static double weightedLevenshteinDistance(CandidateEntity aCandidate)
     {
-        int query = aCandidate.get(KEY_LEVENSHTEIN_QUERY).get();
+        boolean caseInsensitive = aCandidate.get(KEY_QUERY_IS_LOWER_CASE).orElse(true);
+
+        int query = aCandidate
+                .get(caseInsensitive ? KEY_LEVENSHTEIN_QUERY_NC : KEY_LEVENSHTEIN_QUERY).get();
         int mention = aCandidate.get(KEY_LEVENSHTEIN_MENTION).get();
 
         if (query == Integer.MAX_VALUE && mention == Integer.MAX_VALUE) {
@@ -77,12 +104,6 @@ public class BaselineRankingStrategy
 
         if (mention == Integer.MAX_VALUE) {
             return Math.sqrt(query);
-        }
-
-        // If the distance of the query and mention is the same, then give the query a slight
-        // benefit so the user see's items matching the query he/she entered first
-        if (query > 0 && query == mention) {
-            query = query - 1;
         }
 
         return Math.sqrt(query * mention);

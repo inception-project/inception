@@ -825,6 +825,7 @@
               <product-name>INCEpTION</product-name>
               <product-website-url>https://inception-project.github.io</product-website-url>
               <icons>font</icons>
+              <experimental>true</experimental>
             </attributes>
             <requires>
               <require>asciidoctor-diagram</require>

@@ -17,11 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
-import static org.apache.commons.io.FilenameUtils.separatorsToUnix;
-
 import java.io.File;
-import java.nio.file.Path;
 import java.time.Duration;
 
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -39,7 +35,6 @@ import org.apache.wicket.request.resource.ContentDisposition;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
-import org.apache.wicket.util.string.StringValue;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -53,13 +48,10 @@ public class PdfAnnoPanel
     private static final long serialVersionUID = 4202869513273132875L;
 
     private @SpringBean DocumentService documentService;
-
     private @SpringBean PdfEditorProperties pdfEditorProperties;
 
     private AbstractAjaxBehavior pdfProvider;
-
     private AbstractAjaxBehavior pdftxtProvider;
-
     private AbstractAjaxBehavior apiProvider;
 
     public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel,
@@ -148,25 +140,10 @@ public class PdfAnnoPanel
                 String viewerUrl = urlRenderer
                         .renderContextRelativeUrl("resources/pdfanno/" + indexFile);
 
-                String pdfUrl = toRelativeUrl(viewerUrl, pdfProvider.getCallbackUrl());
-                String pdftxtUrl = toRelativeUrl(viewerUrl, pdftxtProvider.getCallbackUrl());
-                String apiUrl = toRelativeUrl(viewerUrl, apiProvider.getCallbackUrl());
-
-                // When accessing the annotator page using a URL in the form with the last
-                // path element being the document ID, then the AnnotationPageBase rewrites
-                // the URL, stripping the last path element and instead rendering it as a
-                // fragment. However, the URLRenderer does not notice this and does not get
-                // updated. Thus, we get the wrong relative URL for the viewer and need to
-                // fix it here.
-                StringValue documentParameter = getPage().getPageParameters()
-                        .get(PAGE_PARAM_DOCUMENT);
-                if (!documentParameter.isEmpty()) {
-                    // Why only the apiUrl? Timing probably. The text and PDF load ok
-                    // but at the time when the annotations are loaded, they URL has already
-                    // been updated by the AnnotationPageBase causing the client-side JS
-                    // to resolve the API URL against the wrong page URL...
-                    apiUrl = "../" + apiUrl;
-                }
+                String pdfUrl = urlRenderer.renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));
+                String pdftxtUrl = urlRenderer
+                        .renderFullUrl(Url.parse(pdftxtProvider.getCallbackUrl()));
+                String apiUrl = urlRenderer.renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
 
                 viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&api=" + apiUrl;
 
@@ -175,22 +152,5 @@ public class PdfAnnoPanel
                 super.onComponentTag(aTag);
             }
         });
-    }
-
-    private String toRelativeUrl(String aViewerUrl, CharSequence aCallbackUrl)
-    {
-        UrlRenderer urlRenderer = RequestCycle.get().getUrlRenderer();
-
-        Url fullViewerUrl = Url.parse(urlRenderer.renderFullUrl(Url.parse(aViewerUrl)));
-        Path fullViewerPath = Path.of(fullViewerUrl.getPath()).getParent();
-
-        Url fullCallbackUrl = Url.parse(urlRenderer.renderFullUrl(Url.parse(aCallbackUrl)));
-        Path fullCallbackPath = Path.of(fullCallbackUrl.getPath());
-
-        Path relativeCallbackPath = fullViewerPath.relativize(fullCallbackPath);
-        String relativeCallbackUrl = separatorsToUnix(relativeCallbackPath.toString()) + "?"
-                + fullCallbackUrl.getQueryString();
-
-        return relativeCallbackUrl;
     }
 }

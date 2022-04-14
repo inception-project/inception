@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static java.util.Arrays.asList;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.apache.wicket.markup.head.HeaderItem;
@@ -86,7 +86,7 @@ public class KendoChoiceDescriptionScriptReference
             @Override
             public List<String> getTextProperties()
             {
-                return Arrays.asList("name", "description");
+                return asList("name", "description");
             }
         };
     }
@@ -100,22 +100,31 @@ public class KendoChoiceDescriptionScriptReference
             @Override
             public String getText()
             {
-                // Some docs on how the templates work in Kendo, in case we need
-                // more fancy dropdowns
+                // Docs on how the templates work in Kendo, in case we need more fancy dropdowns
                 // http://docs.telerik.com/kendo-ui/framework/templates/overview
-                return "# if (data.reordered == 'true') { #"
-                        + "<div title=\"#: data.description #\" "
-                        + "onmouseover=\"javascript:applyTooltip(this)\">"
-                        + "<b>#: data.name #</b></div>\n" + "# } else { #"
-                        + "<div title=\"#: data.description #\" "
-                        + "onmouseover=\"javascript:applyTooltip(this)\">"
-                        + "#: data.name #</div>\n" + "# } #";
+                // @formatter:off
+                StringBuilder sb = new StringBuilder();
+                sb.append("<div title='#: data.description #' onmouseover='javascript:applyTooltip(this)'>");
+                sb.append("# if (data.reordered == 'true') { #");
+                sb.append("  <b>#: data.name #</b>");
+                sb.append("# } else { #");
+                sb.append("  #: data.name #");
+                sb.append("# } #");
+                sb.append("# if (data.score) { #");
+                sb.append("  <div class='item-description'>");
+                sb.append("    Score: ${ data.score }");
+                sb.append("  </div>");
+                sb.append("# } #");
+                sb.append("</div>");
+                // @formatter:on
+
+                return sb.toString();
             }
 
             @Override
             public List<String> getTextProperties()
             {
-                return Arrays.asList("name", "description", "reordered");
+                return asList("name", "description", "reordered", "score");
             }
         };
     }

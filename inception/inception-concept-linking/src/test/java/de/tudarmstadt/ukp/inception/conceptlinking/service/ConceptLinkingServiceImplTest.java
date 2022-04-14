@@ -102,7 +102,8 @@ public class ConceptLinkingServiceImplTest
         List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "soc", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
-                .as("Check whether \"Socke\" has been retrieved.").contains("Socke");
+                .as("Check whether \"Socke\" has been retrieved.") //
+                .contains("Socke");
 
         kbService.removeKnowledgeBase(kb);
     }
@@ -119,7 +120,8 @@ public class ConceptLinkingServiceImplTest
         List<KBHandle> handles = sut.disambiguate(kb, null, ANY_OBJECT, "man", null, 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
-                .as("Check whether \"manatee\" has been retrieved.").contains("manatee");
+                .as("Check whether \"manatee\" has been retrieved.") //
+                .contains("manatee");
 
         kbService.removeKnowledgeBase(kb);
     }

@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
-import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.Validate;
@@ -115,50 +112,6 @@ public class KnowledgeBaseItemAutoCompleteField
     @Override
     protected IJQueryTemplate newTemplate()
     {
-        return new IJQueryTemplate()
-        {
-            private static final long serialVersionUID = 8656996525796349138L;
-
-            @Override
-            public String getText()
-            {
-                StringBuilder sb = new StringBuilder();
-                sb.append("<div>");
-                sb.append("  <div class=\"item-title\">");
-                sb.append("  # if (data.rank) { #");
-                sb.append("  <span class=\"item-rank\">");
-                sb.append("    [${ data.rank }]");
-                sb.append("  </span>");
-                sb.append("  # } #");
-                sb.append("    ${ data.uiLabel }");
-                sb.append("  </div>");
-                sb.append("  <div class=\"item-identifier\">");
-                sb.append("    ${ data.identifier }");
-                sb.append("  </div>");
-                sb.append("  <div class=\"item-description\">");
-                sb.append("    ${ data.description }");
-                sb.append("  </div>");
-                if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
-                    sb.append("  <div class=\"item-description\">");
-                    sb.append("    ${ data.debugInfo }");
-                    sb.append("  </div>");
-                }
-                sb.append("</div>");
-                return sb.toString();
-            }
-
-            @Override
-            public List<String> getTextProperties()
-            {
-                List<String> properties = new ArrayList<>();
-                properties.add("identifier");
-                properties.add("description");
-                properties.add("rank");
-                if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
-                    properties.add("debugInfo");
-                }
-                return properties;
-            }
-        };
+        return new KBHandleTemplate();
     }
 }

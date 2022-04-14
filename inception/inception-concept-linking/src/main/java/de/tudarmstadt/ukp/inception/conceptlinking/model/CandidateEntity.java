@@ -41,11 +41,18 @@ public class CandidateEntity
      * The query entered by the user.
      */
     public static final Key<String> KEY_QUERY = new Key<>("query");
+    public static final Key<String> KEY_QUERY_NC = new Key<>("queryNC");
+
+    /**
+     * Whether the query entered by the user is completely in lower case.
+     */
+    public static final Key<Boolean> KEY_QUERY_IS_LOWER_CASE = new Key<>("queryIsLowerCase");
 
     /**
      * The mention in the text which is to be linked.
      */
     public static final Key<String> KEY_MENTION = new Key<>("mention");
+    public static final Key<String> KEY_MENTION_NC = new Key<>("mentionNC");
 
     /**
      * The context of the mention.
@@ -60,6 +67,9 @@ public class CandidateEntity
      * be calculated.
      */
     public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMention",
+            Integer.MAX_VALUE);
+
+    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_NC = new Key<>("levMentionNC",
             Integer.MAX_VALUE);
 
     /**
@@ -80,6 +90,9 @@ public class CandidateEntity
      * be calculated.
      */
     public static final Key<Integer> KEY_LEVENSHTEIN_QUERY = new Key<>("levQuery",
+            Integer.MAX_VALUE);
+
+    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY_NC = new Key<>("levQueryNC",
             Integer.MAX_VALUE);
 
     /**

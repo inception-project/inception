@@ -17,15 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.ClassAttributeModifier;
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.StyleAttributeModifier;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -37,7 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 
 public abstract class TextFeatureEditorBase
     extends FeatureEditor
@@ -61,42 +52,10 @@ public abstract class TextFeatureEditorBase
 
         // Checks whether hide un-constraint feature is enabled or not
         hideUnconstrainedFeature = getModelObject().feature.isHideUnconstraintFeature();
-        add(createConstraintsInUseIndicatorContainer());
+        add(new ConstraintsInUseIndicator("textIndicator", getModel()));
     }
 
     protected abstract FormComponent createInputField();
-
-    private Component createConstraintsInUseIndicatorContainer()
-    {
-        // Shows whether constraints are triggered or not also shows state of constraints use.
-        Component indicator = new WebMarkupContainer("textIndicator");
-        indicator.add(LambdaBehavior.visibleWhen(() -> getModelObject().indicator.isAffected()));
-        indicator.add(new ClassAttributeModifier()
-        {
-            private static final long serialVersionUID = 4623544241209220039L;
-
-            @Override
-            protected Set<String> update(Set<String> aOldClasses)
-            {
-                aOldClasses.add(getModelObject().indicator.getStatusSymbol());
-                return aOldClasses;
-            }
-        });
-        indicator.add(new StyleAttributeModifier()
-        {
-            private static final long serialVersionUID = 3627596292626670610L;
-
-            @Override
-            protected Map<String, String> update(Map<String, String> aStyles)
-            {
-                aStyles.put("color", getModelObject().indicator.getStatusColor());
-                return aStyles;
-            }
-        });
-        indicator.add(
-                new AttributeModifier("title", getModelObject().indicator.getStatusDescription()));
-        return indicator;
-    }
 
     @Override
     protected void onInitialize()

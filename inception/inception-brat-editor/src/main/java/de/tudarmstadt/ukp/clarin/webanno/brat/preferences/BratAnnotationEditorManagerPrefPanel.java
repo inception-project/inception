@@ -65,7 +65,7 @@ public class BratAnnotationEditorManagerPrefPanel
         defaultPageSize.setMinimum(1);
         form.add(defaultPageSize);
 
-        form.add(new CheckBox("changingScriptDirectionAllowed"));
+        form.add(new CheckBox("changingScriptDirectionAllowed").setOutputMarkupId(true));
 
         // Historically, the script direction setting is on the project entity - maybe move it
         // one day...

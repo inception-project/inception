@@ -30,8 +30,9 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Attributes;
-import org.asciidoctor.AttributesBuilder;
+import org.asciidoctor.Options;
 import org.asciidoctor.OptionsBuilder;
+import org.asciidoctor.Placement;
 import org.asciidoctor.SafeMode;
 
 public class GenerateDocumentation
@@ -50,24 +51,28 @@ public class GenerateDocumentation
 
     private static void buildDoc(String type, Path outputDir) throws IOException
     {
-        Attributes attributes = AttributesBuilder.attributes()
+        Attributes attributes = Attributes.builder()
                 .attribute("source-dir", getInceptionDir() + "/")
                 .attribute("include-dir",
                         outputDir.resolve("asciidoc").resolve(type).toString() + "/")
                 .attribute("imagesdir",
                         outputDir.resolve("asciidoc").resolve(type).resolve("images").toString()
                                 + "/")
-                .attribute("doctype", "book") //
+                .docType("book") //
                 .attribute("toclevels", "8") //
-                .attribute("sectanchors", "true") //
+                .setAnchors(true) //
                 .attribute("docinfo1", "true") //
                 .attribute("project-version", "DEVELOPER BUILD") //
                 .attribute("revnumber", "DEVELOPER BUILD").attribute("product-name", "INCEpTION") //
                 .attribute("product-website-url", "https://inception-project.github.io") //
-                .attribute("icons", "font") //
-                .attribute("toc", "left").get();
-        OptionsBuilder options = OptionsBuilder.options().toDir(outputDir.toFile())
-                .safe(SafeMode.UNSAFE).attributes(attributes);
+                .icons(Attributes.FONT_ICONS) //
+                .tableOfContents(Placement.LEFT) //
+                .experimental(true) //
+                .build();
+        OptionsBuilder options = Options.builder() //
+                .toDir(outputDir.toFile()) //
+                .safe(SafeMode.UNSAFE) //
+                .attributes(attributes);
         Asciidoctor asciidoctor = Asciidoctor.Factory.create();
         asciidoctor.requireLibrary("asciidoctor-diagram");
         File f = new File(outputDir.resolve("asciidoc").resolve(type).toString() + ".adoc");

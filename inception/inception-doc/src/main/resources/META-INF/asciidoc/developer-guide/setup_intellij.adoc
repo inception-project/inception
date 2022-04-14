@@ -1,0 +1,80 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Setting up for the development in IntelliJ IDEA
+
+This is a guide to setting up a development environment using IntelliJ IDEA. We assume that the
+Community Version is used, but this guide should also apply to the Enterprise Version.
+
+After checking out {product-name} from GitHub, open IntelliJ and import the project. The easiest
+way is to go to `File -> Open` and the select the `pom.xml` in the {product-name} root directory.
+IntelliJ IDEA will then guide you through the import process, the defaults work out of the box.
+INCEpTION can now be started via running `inception-app-webapp/src/main/java/de/tudarmstadt/ukp/inception/INCEpTION.java`.
+
+If you get errors that certain classes are not found, then open a terminal, go to the INCEpTION
+repository root and run
+
+    mvn clean install -DskipTests=true -Dcheckstyle.skip=true
+
+Alternatively, you can run the `clean` and `install` Maven goals from IntelliJ manually.
+
+If you get an error that the command line is too long, please go to `Run -> Edit Configurations -> Modify Options -> Shorten Command Line` in IntelliJ IDEA and select the option `@argfile (Java 9+) - java @argfile className [args]`.
+
+== Checkstyle and Formatting
+
+We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
+The following section describes how to use it with IntelliJ IDEA.
+
+First, install the https://plugins.jetbrains.com/plugin/1065-checkstyle-idea[Checkstyle-IDEA plugin].
+In `File | Settings | Other Settings | Checkstyle`, navigate to the *Checkstyle* tab. Start to add
+a new configuration file by clicking on the `+` on the right, navigate to
+`inception-build/src/main/resources/inception/checkstyle.xml` and apply the changes. Make sure to
+check the box next to the newly created configuration and apply it as well.
+
+In order to achieve the same formatting and import order as Eclipse, install the
+https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter/versions[Eclipse Code Formatter].
+Download the https://dkpro.github.io/files/DKProStyle_latest.xml[DKPro Eclipse Code Style file].
+In `File | Settings | Other Settings | Eclipse Code Formatter`, create a new profile using this
+file.
+
+Also make sure to enable auto import optimization in `File | Settings | Editor | General | Auto Import`.
+
+To format your source code on save, we also recommend to install the
+https://plugins.jetbrains.com/plugin/7642-save-actions[Save Actions] plugin and configure it
+accordingly.
+
+== IntelliJ IDEA Tomcat Integration
+
+This requires IntelliJ IDEA Ultimate. Using Tomcat allows editing HTML,CSS and JavaScript on the fly without restarting
+the application. First, download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 8.5).
+Then, you need to create a Tomcat server runtime configuration in `Run | Edit Configurations…`. Click on the `+` icon,
+select `Tomcat Server -> Local`.  Click on the `Deployment` tab and then on the `+` icon to select an artifact to deploy.
+Choose the exploded war version. Select the `Server` tab, navigate to the path of your Tomcat server, and update the
+`on Update` action to `Update classes and resources` for both. Make sure that all port settings are different.
+You now can start or debug your web application via Tomcat. If starting throws a permission error, make sure that
+the mentioned file, e.g. `catalina.sh` is marked as executable.
+
+*Experimental:* If desired, you can also use hot-code replacement via http://hotswapagent.org[HotswapAgent].
+This allows you to change code, e.g. adding methods without needing to restart the Tomcat server.
+For this, follow the excellent https://github.com/dmitry-zhuravlev/hotswap-agent-intellij-plugin[HotSwap IntelliJ IDEA plugin guide].
+
+== Building documentation
+
+The documentation can be built using a support class in `inception-doc/src/test/java/de/tudarmstadt/ukp/inception/doc/GenerateDocumentation.java`.
+To make it usable from Intellij IDEA, you need to build the whole project at least once. Run the
+class. If it fails, alter the run configuration and add a new environment variable `INTELLIJ=true`
+and check that the working directory is the {product-name} root directory. The resulting documentation
+will be in `target/doc-out`.
