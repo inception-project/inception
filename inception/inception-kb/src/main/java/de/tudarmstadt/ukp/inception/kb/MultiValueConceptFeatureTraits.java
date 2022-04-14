@@ -17,42 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTrait;
+import java.io.Serializable;
 
 /**
  * Traits for knowledge-base-related features.
  */
-public class ConceptFeatureTraits
+public class MultiValueConceptFeatureTraits
     extends ConceptFeatureTraits_ImplBase
-    implements KeyBindingTrait
+    implements Serializable
 {
-    private static final long serialVersionUID = 6303541487449965932L;
+    private static final long serialVersionUID = -7104243059568629203L;
 
-    private List<KeyBinding> keyBindings = new ArrayList<>();
-
-    public ConceptFeatureTraits()
+    public MultiValueConceptFeatureTraits()
     {
         // Nothing to do
-    }
-
-    @Override
-    public List<KeyBinding> getKeyBindings()
-    {
-        return keyBindings;
-    }
-
-    @Override
-    public void setKeyBindings(List<KeyBinding> aKeyBindings)
-    {
-        if (aKeyBindings == null) {
-            keyBindings = new ArrayList<>();
-        }
-        else {
-            keyBindings = aKeyBindings;
-        }
     }
 }

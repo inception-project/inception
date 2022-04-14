@@ -263,17 +263,16 @@ public class PdfExtractFile
     /**
      * Get the Offset for a given index in the sanitizedContent string
      */
-    public Offset getExtractIndex(int aSanitizedIndex)
+    public Offset getSanitizedIndex(int aSanitizedIndex)
     {
         if (sanitizedToStringSequence.containsKey(aSanitizedIndex)) {
             Offset offset = sanitizedToStringSequence.get(aSanitizedIndex);
             return new Offset(stringToExtract.get(offset.getBegin()),
                     stringToExtract.get(offset.getEnd()));
         }
-        else {
-            int extractIndex = stringToExtract.get(sanitizedToString.get(aSanitizedIndex));
-            return new Offset(extractIndex, extractIndex);
-        }
+
+        int extractIndex = stringToExtract.get(sanitizedToString.get(aSanitizedIndex));
+        return new Offset(extractIndex, extractIndex);
     }
 
     /**
@@ -285,10 +284,9 @@ public class PdfExtractFile
         if (stringToSanitizedSequence.containsKey(stringIndex)) {
             return stringToSanitizedSequence.get(stringIndex);
         }
-        else {
-            int sanitizedIndex = stringToSanitized.get(stringIndex);
-            return new Offset(sanitizedIndex, sanitizedIndex);
-        }
+
+        int sanitizedIndex = stringToSanitized.get(stringIndex);
+        return new Offset(sanitizedIndex, sanitizedIndex);
     }
 
     /**

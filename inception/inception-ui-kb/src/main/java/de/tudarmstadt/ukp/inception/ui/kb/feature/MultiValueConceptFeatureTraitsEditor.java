@@ -32,21 +32,20 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsConfigurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.MultiValueConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -54,15 +53,12 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
  * Component for editing the traits of knowledge-base-related features in the feature detail editor
  * of the project settings.
  */
-public class ConceptFeatureTraitsEditor
+public class MultiValueConceptFeatureTraitsEditor
     extends Panel
 {
     private static final String MID_FORM = "form";
-
     private static final String MID_KNOWLEDGE_BASE = "knowledgeBase";
-
     private static final String MID_SCOPE = "scope";
-
     private static final String MID_ALLOWED_VALUE_TYPE = "allowedValueType";
 
     private static final long serialVersionUID = 2129000875921279514L;
@@ -76,7 +72,7 @@ public class ConceptFeatureTraitsEditor
     private IModel<AnnotationFeature> feature;
     private CompoundPropertyModel<Traits> traits;
 
-    public ConceptFeatureTraitsEditor(String aId, ConceptFeatureSupport aFS,
+    public MultiValueConceptFeatureTraitsEditor(String aId, MultiValueConceptFeatureSupport aFS,
             IModel<AnnotationFeature> aFeatureModel)
     {
         super(aId, aFeatureModel);
@@ -101,21 +97,21 @@ public class ConceptFeatureTraitsEditor
         };
 
         form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
-                _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
+                _query -> listSearchResults(_query, CONCEPT)) //
+                        .setOutputMarkupPlaceholderTag(true));
 
-        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE, LambdaModel.of(this::listKnowledgeBases),
-                new LambdaChoiceRenderer<>(KnowledgeBase::getName)).setNullValid(true)
+        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE,
+                LoadableDetachableModel.of(this::listKnowledgeBases),
+                new LambdaChoiceRenderer<>(KnowledgeBase::getName)) //
+                        .setNullValid(true)
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
-        form.add(
-                new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes))
+        form.add(new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE,
+                LoadableDetachableModel.of(this::listAllowedTypes))
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
 
         form.add(new DisabledKBWarning("disabledKBWarning", feature,
                 traits.bind("knowledgeBase.repositoryId")));
         add(form);
-
-        add(new KeyBindingsConfigurationPanel("keyBindings", aFeatureModel,
-                traits.bind("keyBindings")));
     }
 
     private void refresh(AjaxRequestTarget aTarget)
@@ -156,7 +152,7 @@ public class ConceptFeatureTraitsEditor
 
         Traits result = new Traits();
 
-        ConceptFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
+        MultiValueConceptFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
 
         if (t.getRepositoryId() != null) {
             kbService.getKnowledgeBaseById(project, t.getRepositoryId())
@@ -173,8 +169,6 @@ public class ConceptFeatureTraitsEditor
 
         result.setScope(loadConcept(result.getKnowledgeBase(), t.getScope()));
 
-        result.setKeyBindings(t.getKeyBindings());
-
         return result;
     }
 
@@ -184,7 +178,7 @@ public class ConceptFeatureTraitsEditor
      */
     private void writeTraits()
     {
-        ConceptFeatureTraits t = new ConceptFeatureTraits();
+        MultiValueConceptFeatureTraits t = new MultiValueConceptFeatureTraits();
         if (traits.getObject().knowledgeBase != null) {
             t.setRepositoryId(traits.getObject().knowledgeBase.getRepositoryId());
 
@@ -195,7 +189,6 @@ public class ConceptFeatureTraitsEditor
         }
 
         t.setAllowedValueType(traits.getObject().allowedValueType);
-        t.setKeyBindings(traits.getObject().getKeyBindings());
 
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -210,10 +203,10 @@ public class ConceptFeatureTraitsEditor
         return Arrays.asList(ConceptFeatureValueType.values());
     }
 
-    private ConceptFeatureSupport getFeatureSupport()
+    private MultiValueConceptFeatureSupport getFeatureSupport()
     {
-        return (ConceptFeatureSupport) featureSupportRegistry.getExtension(featureSupportId)
-                .orElseThrow();
+        return (MultiValueConceptFeatureSupport) featureSupportRegistry
+                .getExtension(featureSupportId).orElseThrow();
     }
 
     /**
@@ -234,8 +227,9 @@ public class ConceptFeatureTraitsEditor
 
     /**
      * A UI model holding the traits while the user is editing them. They are read/written to the
-     * actual {@link ConceptFeatureTraits} via {@link ConceptFeatureTraitsEditor#readTraits()} and
-     * {@link ConceptFeatureTraitsEditor#writeTraits()}.
+     * actual {@link MultiValueConceptFeatureTraits} via
+     * {@link MultiValueConceptFeatureTraitsEditor#readTraits()} and
+     * {@link MultiValueConceptFeatureTraitsEditor#writeTraits()}.
      */
     private static class Traits
         implements Serializable
@@ -245,7 +239,6 @@ public class ConceptFeatureTraitsEditor
         private KnowledgeBase knowledgeBase;
         private KBHandle scope;
         private ConceptFeatureValueType allowedValueType;
-        private List<KeyBinding> keyBindings;
 
         public KBHandle getScope()
         {
@@ -276,16 +269,6 @@ public class ConceptFeatureTraitsEditor
         public void setAllowedValueType(ConceptFeatureValueType aAllows)
         {
             allowedValueType = aAllows;
-        }
-
-        public List<KeyBinding> getKeyBindings()
-        {
-            return keyBindings;
-        }
-
-        public void setKeyBindings(List<KeyBinding> aKeyBindings)
-        {
-            keyBindings = aKeyBindings;
         }
     }
 }
