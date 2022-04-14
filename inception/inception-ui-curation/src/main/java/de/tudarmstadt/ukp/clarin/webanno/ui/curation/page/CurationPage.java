@@ -81,6 +81,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
@@ -92,7 +94,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedP
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
@@ -147,6 +148,7 @@ public class CurationPage
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean CurationService curationService;
     private @SpringBean CurationMergeService curationMergeService;
+    private @SpringBean AnnotationEditorRegistry editorRegistry;
 
     private long currentprojectId;
 
@@ -158,7 +160,7 @@ public class CurationPage
     private WebMarkupContainer curationUnitOverview;
 
     private WebMarkupContainer rightSidebar;
-    private AnnotationDetailEditorPanel detailPanel;
+    private AnnotationDetailEditorPanel detailEditor;
 
     private WebMarkupContainer centerArea;
     private WebMarkupContainer splitter;
@@ -229,16 +231,12 @@ public class CurationPage
         annotatorsPanel.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         splitter.add(annotatorsPanel);
 
-        rightSidebar = makeRightSidebar("rightSidebar");
-        rightSidebar
-                .add(detailPanel = makeAnnotationDetailEditorPanel("annotationDetailEditorPanel"));
+        detailEditor = createDetailEditor("annotationDetailEditorPanel");
+        rightSidebar = createRightSidebar("rightSidebar");
+        rightSidebar.add(detailEditor);
         add(rightSidebar);
 
-        getModelObject().setEditorFactoryId("bratEditor");
-        annotationEditor = new BratAnnotationEditor("annotationEditor", getModel(), detailPanel,
-                this::getEditorCas);
-        annotationEditor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
-        annotationEditor.setOutputMarkupPlaceholderTag(true);
+        annotationEditor = createAnnotationEditor("editor");
         splitter.add(annotationEditor);
 
         curationUnitOverview = new WebMarkupContainer("unitOverview");
@@ -255,10 +253,31 @@ public class CurationPage
             }
         });
 
-        leftSidebar = makeLeftSidebar("leftSidebar");
+        leftSidebar = createLeftSidebar("leftSidebar");
         leftSidebar.add(curationUnitOverview);
         leftSidebar.add(new LambdaAjaxLink("refresh", this::actionRefresh));
         add(leftSidebar);
+    }
+
+    private AnnotationEditorBase createAnnotationEditor(String aId)
+    {
+        AnnotatorState state = getModelObject();
+        AnnotationEditorFactory factory = editorRegistry.getEditorFactory("bratEditor");
+        if (factory == null) {
+            if (state.getDocument() != null) {
+                factory = editorRegistry.getPreferredEditorFactory(state.getDocument().getFormat());
+            }
+            else {
+                factory = editorRegistry.getDefaultEditorFactory();
+            }
+        }
+
+        state.setEditorFactoryId(factory.getBeanName());
+        AnnotationEditorBase editor = factory.create(aId, getModel(), detailEditor,
+                this::getEditorCas);
+        editor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
+        editor.setOutputMarkupPlaceholderTag(true);
+        return editor;
     }
 
     private void actionRefresh(AjaxRequestTarget aTarget)
@@ -272,7 +291,7 @@ public class CurationPage
         }
     }
 
-    private WebMarkupContainer makeLeftSidebar(String aId)
+    private WebMarkupContainer createLeftSidebar(String aId)
     {
         WebMarkupContainer sidebar = new WebMarkupContainer("leftSidebar");
         sidebar.setOutputMarkupPlaceholderTag(true);
@@ -287,7 +306,7 @@ public class CurationPage
         return sidebar;
     }
 
-    private WebMarkupContainer makeRightSidebar(String aId)
+    private WebMarkupContainer createRightSidebar(String aId)
     {
         WebMarkupContainer sidebar = new WebMarkupContainer(aId);
         sidebar.setOutputMarkupPlaceholderTag(true);
@@ -300,7 +319,7 @@ public class CurationPage
         return sidebar;
     }
 
-    private AnnotationDetailEditorPanel makeAnnotationDetailEditorPanel(String aId)
+    private AnnotationDetailEditorPanel createDetailEditor(String aId)
     {
         AnnotationDetailEditorPanel panel = new AnnotationDetailEditorPanel(aId, this, getModel())
         {
@@ -483,7 +502,7 @@ public class CurationPage
     @Override
     public AnnotationActionHandler getAnnotationActionHandler()
     {
-        return detailPanel;
+        return detailEditor;
     }
 
     @Override
@@ -540,7 +559,7 @@ public class CurationPage
             currentprojectId = state.getProject().getId();
 
             curationUnits.setObject(buildUnitOverview(state));
-            detailPanel.reset(aTarget);
+            detailEditor.reset(aTarget);
 
             annotatorsPanel.init(aTarget, getModelObject());
 

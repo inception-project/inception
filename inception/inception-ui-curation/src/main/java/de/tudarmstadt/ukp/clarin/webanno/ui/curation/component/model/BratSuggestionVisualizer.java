@@ -249,9 +249,6 @@ public abstract class BratSuggestionVisualizer
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
-        // MUST NOT CALL super.renderHead here because that would call Util.embedByUrl again!
-        // super.renderHead(aResponse);
-
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratCurationResourceReference.get()));
 
