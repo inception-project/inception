@@ -27,13 +27,13 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toCollection;
 
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -360,10 +360,14 @@ public class ConceptLinkingServiceImpl
     private CandidateEntity initCandidate(CandidateEntity candidate, String aQuery, String aMention,
             CAS aCas, int aBegin)
     {
-        candidate.put(KEY_MENTION, aMention);
-        candidate.put(KEY_MENTION_NC, aMention.toLowerCase(candidate.getLocale()));
-        candidate.put(KEY_QUERY, aQuery);
-        candidate.put(KEY_QUERY_NC, aQuery.toLowerCase(candidate.getLocale()));
+        if (aMention != null) {
+            candidate.put(KEY_MENTION, aMention);
+            candidate.put(KEY_MENTION_NC, aMention.toLowerCase(candidate.getLocale()));
+        }
+        if (aQuery != null) {
+            candidate.put(KEY_QUERY, aQuery);
+            candidate.put(KEY_QUERY_NC, aQuery.toLowerCase(candidate.getLocale()));
+        }
 
         if (aCas != null) {
             AnnotationFS sentence = selectSentenceCovering(aCas, aBegin);
@@ -372,15 +376,17 @@ public class ConceptLinkingServiceImpl
                 Collection<AnnotationFS> tokens = selectTokensCovered(sentence);
                 // Collect left context
                 tokens.stream().filter(t -> t.getEnd() <= aBegin)
-                        .sorted(Comparator.comparingInt(AnnotationFS::getBegin).reversed())
+                        .sorted(comparingInt(AnnotationFS::getBegin).reversed())
                         .limit(properties.getMentionContextSize())
                         .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
-                        .filter(s -> !stopwords.contains(s)).forEach(mentionContext::add);
+                        .filter(s -> !stopwords.contains(s)) //
+                        .forEach(mentionContext::add);
                 // Collect right context
                 tokens.stream().filter(t -> t.getBegin() >= (aBegin + aMention.length()))
                         .limit(properties.getMentionContextSize())
                         .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
-                        .filter(s -> !stopwords.contains(s)).forEach(mentionContext::add);
+                        .filter(s -> !stopwords.contains(s)) //
+                        .forEach(mentionContext::add);
                 candidate.put(KEY_MENTION_CONTEXT, mentionContext);
             }
             else {
