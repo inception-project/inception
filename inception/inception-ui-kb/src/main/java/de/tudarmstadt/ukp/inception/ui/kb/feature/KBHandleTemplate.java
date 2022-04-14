@@ -37,7 +37,7 @@ final class KBHandleTemplate
         StringBuilder sb = new StringBuilder();
         sb.append("<div>");
         sb.append("  <div class=\"item-title\">");
-        sb.append("  # if (data.rank) { #");
+        sb.append("  # if (data.rank && data.rank != '0') { #");
         sb.append("  <span class=\"item-rank\">");
         sb.append("    [${ data.rank }]");
         sb.append("  </span>");

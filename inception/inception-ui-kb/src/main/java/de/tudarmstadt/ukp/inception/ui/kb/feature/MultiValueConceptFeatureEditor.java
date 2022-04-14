@@ -89,6 +89,10 @@ public class MultiValueConceptFeatureEditor
         @Override
         protected List<KBHandle> getChoices(String aInput)
         {
+            if (aInput == null || aInput.length() == 0) {
+                return new ArrayList<>(getModelObject());
+            }
+
             var candidates = getCandidates(stateModel, handler, aInput);
 
             var selected = new ArrayList<>(getModelObject());
@@ -110,6 +114,11 @@ public class MultiValueConceptFeatureEditor
             aBehavior.setOption("animation", false);
             aBehavior.setOption("delay", 250);
             aBehavior.setOption("height", 300);
+            // These three settings should avoid a query when simply clicking into the multiselect
+            // field, but they seem to have no effect
+            // aBehavior.setOption("autoBind", false);
+            // aBehavior.setOption("minLength", 1);
+            // aBehavior.setOption("enforceMinLength", true);
             aBehavior.setOption("tagTemplate",
                     Options.asString(
                             "<span title=\"#: data.description + '\\n\\n' + data.identifier #\" "

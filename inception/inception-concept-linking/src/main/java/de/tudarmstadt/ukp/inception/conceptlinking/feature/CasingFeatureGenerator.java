@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.inception.conceptlinking.feature;
 
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_IS_LOWER_CASE;
-import static org.apache.commons.lang3.StringUtils.isAllLowerCase;
+import static java.lang.Character.isAlphabetic;
+import static java.lang.Character.isLowerCase;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
@@ -37,7 +39,23 @@ public class CasingFeatureGenerator
     public void apply(CandidateEntity aCandidate)
     {
         aCandidate.get(KEY_QUERY) //
-                .map(query -> isAllLowerCase(query)) //
+                .map(query -> allAlphabeticCharactersAreLowerCase(query)) //
                 .ifPresent(isLower -> aCandidate.put(KEY_QUERY_IS_LOWER_CASE, isLower));
+    }
+
+    public static boolean allAlphabeticCharactersAreLowerCase(final CharSequence cs)
+    {
+        if (isEmpty(cs)) {
+            return false;
+        }
+
+        int len = cs.length();
+        for (int i = 0; i < len; i++) {
+            if (isAlphabetic(i) && !isLowerCase(cs.charAt(i))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
