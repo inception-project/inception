@@ -156,7 +156,7 @@ public class RadioGroupStringFeatureEditor
 
                 String descriptionText = item.getModel().getObject().getDescription();
 
-                Label detail = new Label("detail", item.getModel().map(ReorderableTag::getDetail));
+                Label score = new Label("score", item.getModel().map(ReorderableTag::getScore));
 
                 WebMarkupContainer description = new WebMarkupContainer("description");
                 description.add(visibleWhen(() -> isNotBlank(descriptionText)));
@@ -171,7 +171,7 @@ public class RadioGroupStringFeatureEditor
 
                 add(description);
 
-                item.add(radio, label, detail, description);
+                item.add(radio, label, score, description);
             }
         };
     }

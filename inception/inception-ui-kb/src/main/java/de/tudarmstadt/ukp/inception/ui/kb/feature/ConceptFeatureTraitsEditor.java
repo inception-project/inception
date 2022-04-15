@@ -110,7 +110,8 @@ public class ConceptFeatureTraitsEditor
                 new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes))
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
 
-        form.add(new DisabledKBWarning("disabledKBWarning", feature));
+        form.add(new DisabledKBWarning("disabledKBWarning", feature,
+                traits.bind("knowledgeBase.repositoryId")));
         add(form);
 
         add(new KeyBindingsConfigurationPanel("keyBindings", aFeatureModel,

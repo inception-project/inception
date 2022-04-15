@@ -1,7 +1,22 @@
 = Concept features
 
-Concept features are shown as an auto-complete field. Typing into the field triggers a query against
-the knowledge base and displays candidates in a dropdown list.
+Concept features allow linking an annotation to a concept (class, instance, property) from a 
+knowledge base. 
+
+There are two types of concept features: single-value and multi-value. A single
+value feature can only link an annotation to a single concept. The single-value feature is displayed
+using an auto-complete field. When a concept has been linked, its description is shown below the
+auto-complete field. A multi-value concept feature allows linking the annotation up to more than
+one concept. It is shown as a multi-select auto-complete field. When hovering with the mouse over
+one of the linked concepts, its description is displayed as a tooltip. 
+
+.Searching for concepts
+Typing into the field triggers a query against the knowledge base and displays candidates in a
+dropdown list. The query takes into account not only what is typed into the input field, but also
+the annotated text.
+
+TIP: Just press kbd:[SPACEBAR] instead of writing anything into the field to search the knowledge
+     base for concepts matching the annotated text.
 
 .Filtering by description
 The query entered into the field only matches against the label of the knowledge base items, not
@@ -20,3 +35,10 @@ IRIs by substrings or short forms is not possible. The entire IRI as used by the
 be entered. This allows linking to concepts which have no label - however, it is quite inconvenient.
 It is much more convenient if you can ensure that your knowledge base offers labels for all its
 concepts.
+
+.Not finding the expected results?
+The number of results displayed in the dropdown is limited. If you do not find
+what you are looking for, try typing in a longer search string. If you know the IRI of the concept
+you are looking for, try entering the IRI. Some knowledge bases (e.g. Wikidata) are not making a
+proper distinction between classes and instances. Try configuring the *Allowed values* in
+the feature settings to *any* to compensate.

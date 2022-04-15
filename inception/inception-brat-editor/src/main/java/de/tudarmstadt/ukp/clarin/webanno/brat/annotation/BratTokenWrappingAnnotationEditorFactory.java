@@ -52,7 +52,7 @@ public class BratTokenWrappingAnnotationEditorFactory
     @Override
     public int getOrder()
     {
-        return 1;
+        return 2;
     }
 
     @Override

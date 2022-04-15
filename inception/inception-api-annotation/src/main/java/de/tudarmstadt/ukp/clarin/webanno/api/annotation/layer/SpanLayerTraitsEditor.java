@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -31,8 +32,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.Anchorin
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.ValidationModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class SpanLayerTraitsEditor
     extends LayerTraitsEditor_ImplBase<SpanLayerTraits, SpanLayerSupport>
@@ -48,52 +50,29 @@ public class SpanLayerTraitsEditor
     @Override
     protected void initializeForm(Form<SpanLayerTraits> aForm)
     {
-        aForm.add(new ColoringRulesConfigurationPanel("coloringRules", getLayerModel(),
-                getTraitsModel().bind("coloringRules.rules")));
+        var coloringRules = new ColoringRulesConfigurationPanel("coloringRules", getLayerModel(),
+                getTraitsModel().bind("coloringRules.rules"));
+        coloringRules.add(visibleWhen(this::isColoringRulesVisible));
+        aForm.add(coloringRules);
 
         aForm.add(new ValidationModeSelect("validationMode", getLayerModel()));
 
-        OverlapModeSelect overlapMode = new OverlapModeSelect("overlapMode", getLayerModel());
-        overlapMode.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotationLayer layer = getLayerModelObject();
-            _this.setEnabled(
-                    // Surface form must be non-stacking for CONLL-U writer to work.
-                    !SurfaceForm.class.getName().equals(layer.getName()) &&
-            // Not configurable for layers that attach to tokens (currently that is
-            // the only layer on which we use the attach feature)
-            layer.getAttachFeature() == null);
-        }));
+        var overlapMode = new OverlapModeSelect("overlapMode", getLayerModel());
+        overlapMode.add(enabledWhen(this::isOverlapModeEditable));
         aForm.add(overlapMode);
 
-        AnchoringModeSelect anchoringMode = new AnchoringModeSelect("anchoringMode",
-                getLayerModel());
-        anchoringMode.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotationLayer layer = getLayerModelObject();
-            _this.setEnabled(
-                    // Surface form must be locked to token boundaries for CONLL-U writer to work.
-                    !SurfaceForm.class.getName().equals(layer.getName()) &&
-            // Not configurable for layers that attach to tokens (currently
-            // that is the only layer on which we use the attach feature)
-            layer.getAttachFeature() == null);
-        }));
+        var anchoringMode = new AnchoringModeSelect("anchoringMode", getLayerModel());
+        anchoringMode.add(enabledWhen(this::isAnchoringModeEditable));
         aForm.add(anchoringMode);
 
-        CheckBox crossSentence = new CheckBox("crossSentence");
+        var crossSentence = new CheckBox("crossSentence");
         crossSentence.setOutputMarkupPlaceholderTag(true);
         crossSentence.setModel(PropertyModel.of(getLayerModel(), "crossSentence"));
-        crossSentence.add(LambdaBehavior.onConfigure(_this -> {
-            AnnotationLayer layer = getLayerModelObject();
-            _this.setEnabled(
-                    // Surface form must be locked to token boundaries for CONLL-U writer
-                    // to work.
-                    !SurfaceForm.class.getName().equals(layer.getName()) &&
-            // Not configurable for layers that attach to tokens (currently that
-            // is the only layer on which we use the attach feature)
-            layer.getAttachFeature() == null);
-        }));
+        crossSentence.add(enabledWhen(this::isCrossSentenceModeEditable));
+        crossSentence.add(visibleWhen(this::isCrossSentenceModeVisible));
         aForm.add(crossSentence);
 
-        TextArea<String> onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
+        var onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
         onClickJavascriptAction
                 .setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
         onClickJavascriptAction.add(new AttributeModifier("placeholder",
@@ -101,12 +80,108 @@ public class SpanLayerTraitsEditor
                         + "$PARAM.DOCNAME + ' ' + $PARAM.fieldname);"));
         aForm.add(onClickJavascriptAction);
 
-        CheckBox showTextInHover = new CheckBox("showTextInHover");
+        var showTextInHover = new CheckBox("showTextInHover");
         showTextInHover.setOutputMarkupPlaceholderTag(true);
         showTextInHover.setModel(PropertyModel.of(getLayerModel(), "showTextInHover"));
-        // Surface form must be locked to token boundaries for CONLL-U writer to work.
-        showTextInHover.add(enabledWhen(
-                () -> !SurfaceForm.class.getName().equals(getLayerModelObject().getName())));
         aForm.add(showTextInHover);
+    }
+
+    private boolean isColoringRulesVisible()
+    {
+        AnnotationLayer layer = getLayerModelObject();
+
+        // Segmentation layers do not really have a label, so maybe we do not need coloring rules
+        // for them
+        if (Sentence.class.getName().equals(layer.getName())
+                || Token.class.getName().equals(layer.getName())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isCrossSentenceModeVisible()
+    {
+        AnnotationLayer layer = getLayerModelObject();
+
+        // For segmentation layers, we do not allow changing the cross-sentence mode
+        if (Sentence.class.getName().equals(layer.getName())
+                || Token.class.getName().equals(layer.getName())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isCrossSentenceModeEditable()
+    {
+        AnnotationLayer layer = getLayerModelObject();
+
+        // Surface form must be locked to token boundaries for CONLL-U writer to work.
+        if (SurfaceForm.class.getName().equals(layer.getName())) {
+            return false;
+        }
+
+        // Not configurable for layers that attach to tokens (currently that is the only layer on
+        // which we use the attach feature)
+        if (layer.getAttachFeature() != null) {
+            return false;
+        }
+
+        // For segmentation layers, we do not allow changing the cross-sentence mode
+        if (Sentence.class.getName().equals(layer.getName())
+                || Token.class.getName().equals(layer.getName())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isOverlapModeEditable()
+    {
+        AnnotationLayer layer = getLayerModelObject();
+
+        // Surface form must be non-stacking for CONLL-U writer to work.
+        if (SurfaceForm.class.getName().equals(layer.getName())) {
+            return false;
+        }
+
+        // Not configurable for layers that attach to tokens (currently that is the only layer on
+        // which we use the attach feature)
+        if (layer.getAttachFeature() != null) {
+            return false;
+        }
+
+        // For segmentation layers, we do not allow changing the overlap mode
+        if (Sentence.class.getName().equals(layer.getName())
+                || Token.class.getName().equals(layer.getName())) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean isAnchoringModeEditable()
+    {
+        AnnotationLayer layer = getLayerModelObject();
+
+        // Surface form must be locked to token boundaries for CONLL-U writer to work.
+        if (SurfaceForm.class.getName().equals(layer.getName())) {
+            return false;
+        }
+
+        // Not configurable for layers that attach to tokens (currently that is the only layer on
+        // which we use the attach feature)
+        if (layer.getAttachFeature() != null) {
+            return false;
+        }
+
+        // For segmentation layers, we do not allow changing the anchoring mode
+        if (Sentence.class.getName().equals(layer.getName())
+                || Token.class.getName().equals(layer.getName())) {
+            return false;
+        }
+
+        return true;
     }
 }

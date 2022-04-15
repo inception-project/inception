@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,48 +27,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingTr
  * Traits for knowledge-base-related features.
  */
 public class ConceptFeatureTraits
-    implements Serializable, KeyBindingTrait
+    extends ConceptFeatureTraits_ImplBase
+    implements KeyBindingTrait
 {
     private static final long serialVersionUID = 6303541487449965932L;
 
-    private String repositoryId;
-    private String scope;
-    private ConceptFeatureValueType allowedValueType;
     private List<KeyBinding> keyBindings = new ArrayList<>();
 
     public ConceptFeatureTraits()
     {
         // Nothing to do
-    }
-
-    public String getRepositoryId()
-    {
-        return repositoryId;
-    }
-
-    public void setRepositoryId(String aKnowledgeBaseId)
-    {
-        repositoryId = aKnowledgeBaseId;
-    }
-
-    public String getScope()
-    {
-        return scope;
-    }
-
-    public void setScope(String aScope)
-    {
-        scope = aScope;
-    }
-
-    public ConceptFeatureValueType getAllowedValueType()
-    {
-        return allowedValueType != null ? allowedValueType : ConceptFeatureValueType.ANY_OBJECT;
-    }
-
-    public void setAllowedValueType(ConceptFeatureValueType aAllowedType)
-    {
-        allowedValueType = aAllowedType;
     }
 
     @Override

@@ -543,18 +543,17 @@ public class AnnotationSchemaServiceImpl
             }
 
             // If there is a super-type then see if there is layer definition for it
-            type = tsd.getType(type.getSupertypeName());
+            var superType = tsd.getType(type.getSupertypeName());
 
             // If the super-type is not covered by the type system, then it is most likely a
             // UIMA built-in type. In this case we can stop the search since we do not have
             // layer definitions for UIMA built-in types.
-            if (type == null) {
-                throw new NoResultException(
-                        "Super-type not in type system - no suitable layer definition found for type ["
-                                + aName + "]");
+            if (superType == null) {
+                throw new NoResultException("Super-type [" + type.getSupertypeName() + "] of type ["
+                        + aName + "] not in type system - no suitable layer definition found");
             }
 
-            layer = getLayerInternal(type.getName(), aProject);
+            layer = getLayerInternal(superType.getName(), aProject);
 
             // If the a layer definition of the given type was found, return it
             if (layer.isPresent()) {
@@ -1528,5 +1527,16 @@ public class AnnotationSchemaServiceImpl
             }
         }
         return result;
+    }
+
+    @Override
+    public boolean isSentencesEditable(Project aProject)
+    {
+        try {
+            return !findLayer(aProject, Sentence.class.getName()).isReadonly();
+        }
+        catch (NoResultException e) {
+            return false;
+        }
     }
 }

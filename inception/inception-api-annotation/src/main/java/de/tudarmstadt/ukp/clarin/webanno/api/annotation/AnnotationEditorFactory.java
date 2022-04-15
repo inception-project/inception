@@ -24,6 +24,7 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public interface AnnotationEditorFactory
 {
@@ -38,7 +39,7 @@ public interface AnnotationEditorFactory
 
     String getDisplayName();
 
-    default int accepts(String aFormat)
+    default int accepts(Project aProject, String aFormat)
     {
         return DEFAULT;
     }

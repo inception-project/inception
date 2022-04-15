@@ -17,25 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -53,8 +50,6 @@ public class SpanLayerSupport
     extends LayerSupport_ImplBase<SpanAdapter, SpanLayerTraits>
     implements InitializingBean
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private final ApplicationEventPublisher eventPublisher;
     private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
@@ -86,7 +81,7 @@ public class SpanLayerSupport
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(WebAnnoConst.SPAN_TYPE, "Span", layerSupportId));
+        types = asList(new LayerType(SPAN_TYPE, "Span", layerSupportId));
     }
 
     @Override
@@ -98,7 +93,7 @@ public class SpanLayerSupport
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
-        return WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
+        return SPAN_TYPE.equals(aLayer.getType());
     }
 
     @Override
@@ -116,11 +111,11 @@ public class SpanLayerSupport
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer,
             List<AnnotationFeature> aAllFeaturesInProject)
     {
-        TypeDescription td = aTsd.addType(aLayer.getName(), aLayer.getDescription(),
-                CAS.TYPE_NAME_ANNOTATION);
+        var td = aTsd.addType(aLayer.getName(), aLayer.getDescription(), TYPE_NAME_ANNOTATION);
 
         List<AnnotationFeature> featureForLayer = aAllFeaturesInProject.stream()
-                .filter(feature -> aLayer.equals(feature.getLayer())).collect(toList());
+                .filter(feature -> aLayer.equals(feature.getLayer())) //
+                .collect(toList());
         generateFeatures(aTsd, td, featureForLayer);
     }
 

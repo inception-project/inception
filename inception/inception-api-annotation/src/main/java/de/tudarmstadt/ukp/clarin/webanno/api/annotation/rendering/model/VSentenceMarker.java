@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 public class VSentenceMarker
     extends VMarker
 {
+    private static final long serialVersionUID = 6070738111254385502L;
+
     private final String type;
     private final int index;
 

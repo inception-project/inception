@@ -17,9 +17,17 @@
 -->
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<body>
-  <wicket:panel>
-    <div wicket:id="vis" class="brat"></div>
-  </wicket:panel>
-</body>
+<wicket:panel>
+  <div class="row form-row" wicket:enclosure="value">
+    <label wicket:for="value" wicket:enclosure="feature" class="feature-editor-label col-form-label">
+      <span wicket:id="feature"/>
+      <span class="float-end">
+        <span wicket:id="disabledKBWarning"/>
+      </span>
+    </label>
+    <div class="feature-editor-value">
+      <select wicket:id="value" type="text"/>
+    </div>
+  </div>
+</wicket:panel>
 </html>

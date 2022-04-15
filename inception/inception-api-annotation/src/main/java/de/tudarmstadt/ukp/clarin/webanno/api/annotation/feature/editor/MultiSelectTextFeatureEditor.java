@@ -17,31 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.startsWithIgnoreCase;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
-import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.ClassAttributeModifier;
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.StyleAttributeModifier;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
@@ -50,20 +38,16 @@ import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 
 public class MultiSelectTextFeatureEditor
     extends FeatureEditor
 {
-    private static final Logger LOG = LoggerFactory.getLogger(LinkFeatureEditor.class);
-
     private static final long serialVersionUID = 7469241620229001983L;
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -75,7 +59,6 @@ public class MultiSelectTextFeatureEditor
     // private RulesIndicator indicator = new RulesIndicator();
 
     private final MultiSelect<ReorderableTag> field;
-    private boolean hideUnconstrainedFeature;
 
     public MultiSelectTextFeatureEditor(String aId, MarkupContainer aOwner,
             final IModel<FeatureState> aFeatureStateModel, AnnotationActionHandler aHandler)
@@ -89,70 +72,7 @@ public class MultiSelectTextFeatureEditor
             @Override
             protected List<ReorderableTag> getChoices(String aInput)
             {
-                String input = aInput != null ? aInput.trim() : "";
-
-                FeatureState featureState = aFeatureStateModel.getObject();
-                TagSet tagset = featureState.getFeature().getTagset();
-                List<ReorderableTag> choices = new ArrayList<>();
-
-                Collection<String> values;
-                if (featureState.getValue() instanceof Collection) {
-                    values = (Collection<String>) featureState.getValue();
-                }
-                else {
-                    values = Collections.emptyList();
-                }
-
-                // If there is a tagset, add it to the choices - this may include descriptions
-                if (tagset != null) {
-                    featureState.tagset.stream() //
-                            .filter(t -> input.isEmpty() //
-                                    || startsWithIgnoreCase(t.getName(), input)
-                                    || values.contains(t.getName())) //
-                            .limit(properties.getAutoCompleteMaxResults()) //
-                            .forEach(choices::add);
-                }
-
-                // If the currently selected values contain any values not covered by the tagset,
-                // add virtual entries for them as well
-                for (String value : values) {
-                    if (!choices.stream().anyMatch(t -> t.getName().equals(value))) {
-                        choices.add(new ReorderableTag(value, false));
-                    }
-                }
-
-                if (!input.isEmpty()) {
-                    // Move any entries that match the input case-insensitive to the top
-                    List<ReorderableTag> inputMatchesInsensitive = choices.stream() //
-                            .filter(t -> t.getName().equalsIgnoreCase(input)) //
-                            .collect(toList());
-                    for (ReorderableTag t : inputMatchesInsensitive) {
-                        choices.remove(t);
-                        choices.add(0, t);
-                    }
-
-                    // Move any entries that match the input case-sensitive to the top
-                    List<ReorderableTag> inputMatchesSensitive = choices.stream() //
-                            .filter(t -> t.getName().equals(input)) //
-                            .collect(toList());
-                    if (inputMatchesSensitive.isEmpty()) {
-                        // If the input does not match any tagset entry, add a new virtual entry for
-                        // the
-                        // input so that we can select that and add it - this has no description.
-                        // If the input matches an existing entry, move it to the top.
-                        if ((tagset == null || tagset.isCreateTag())) {
-                            choices.add(0, new ReorderableTag(input, false));
-                        }
-                    }
-                    else {
-                        for (ReorderableTag t : inputMatchesSensitive) {
-                            choices.remove(t);
-                            choices.add(0, t);
-                        }
-                    }
-                }
-
-                return choices;
+                return MultiSelectTextFeatureEditor.this.getChoices(aFeatureStateModel, aInput);
             }
 
             @Override
@@ -162,7 +82,8 @@ public class MultiSelectTextFeatureEditor
 
                 aBehavior.setOption("autoWidth", true);
                 aBehavior.setOption("animation", false);
-                aBehavior.setOption("delay", 0);
+                aBehavior.setOption("delay", 250);
+                aBehavior.setOption("height", 300);
             }
 
             @Override
@@ -192,9 +113,7 @@ public class MultiSelectTextFeatureEditor
         };
         add(field);
 
-        // Checks whether hide un-constraint feature is enabled or not
-        hideUnconstrainedFeature = getModelObject().feature.isHideUnconstraintFeature();
-        add(createConstraintsInUseIndicatorContainer());
+        add(new ConstraintsInUseIndicator("textIndicator", getModel()));
     }
 
     @SuppressWarnings("rawtypes")
@@ -214,64 +133,78 @@ public class MultiSelectTextFeatureEditor
         super.onConfigure();
 
         // if enabled and constraints rule execution returns anything other than green
-        setVisible(!hideUnconstrainedFeature || (getModelObject().indicator.isAffected()
-                && getModelObject().indicator.getStatusColor().equals("green")));
+        var featState = getModelObject();
+        setVisible(!featState.feature.isHideUnconstraintFeature() || //
+                (featState.indicator.isAffected()
+                        && featState.indicator.getStatusColor().equals("green")));
     }
 
-    private Component createConstraintsInUseIndicatorContainer()
+    private List<ReorderableTag> getChoices(final IModel<FeatureState> aFeatureStateModel,
+            String aInput)
     {
-        // Shows whether constraints are triggered or not also shows state of constraints use.
-        Component indicator = new WebMarkupContainer("textIndicator");
-        indicator.add(LambdaBehavior.visibleWhen(() -> getModelObject().indicator.isAffected()));
-        indicator.add(new ClassAttributeModifier()
-        {
-            private static final long serialVersionUID = 4623544241209220039L;
+        String input = aInput != null ? aInput.trim() : "";
 
-            @Override
-            protected Set<String> update(Set<String> aOldClasses)
-            {
-                aOldClasses.add(getModelObject().indicator.getStatusSymbol());
-                return aOldClasses;
-            }
-        });
-        indicator.add(new StyleAttributeModifier()
-        {
-            private static final long serialVersionUID = 3627596292626670610L;
+        FeatureState featureState = aFeatureStateModel.getObject();
+        TagSet tagset = featureState.getFeature().getTagset();
+        List<ReorderableTag> choices = new ArrayList<>();
 
-            @Override
-            protected Map<String, String> update(Map<String, String> aStyles)
-            {
-                aStyles.put("color", getModelObject().indicator.getStatusColor());
-                return aStyles;
-            }
-        });
-        indicator.add(
-                new AttributeModifier("title", getModelObject().indicator.getStatusDescription()));
-        return indicator;
-    }
-
-    public static void handleException(Component aComponent, AjaxRequestTarget aTarget,
-            Exception aException)
-    {
-        try {
-            throw aException;
+        Collection<String> values;
+        if (featureState.getValue() instanceof Collection) {
+            values = (Collection<String>) featureState.getValue();
         }
-        catch (AnnotationException e) {
-            if (aTarget != null) {
-                aTarget.prependJavaScript("alert('Error: " + e.getMessage() + "')");
+        else {
+            values = emptyList();
+        }
+
+        // If there is a tagset, add it to the choices - this may include descriptions
+        if (tagset != null) {
+            featureState.tagset.stream() //
+                    .filter(t -> input.isEmpty() //
+                            || startsWithIgnoreCase(t.getName(), input)
+                            || values.contains(t.getName())) //
+                    .limit(properties.getAutoCompleteMaxResults()) //
+                    .forEach(choices::add);
+        }
+
+        // If the currently selected values contain any values not covered by the tagset,
+        // add virtual entries for them as well
+        for (String value : values) {
+            if (!choices.stream().anyMatch(t -> t.getName().equals(value))) {
+                choices.add(new ReorderableTag(value, false));
+            }
+        }
+
+        if (!input.isEmpty()) {
+            // Move any entries that match the input case-insensitive to the top
+            List<ReorderableTag> inputMatchesInsensitive = choices.stream() //
+                    .filter(t -> t.getName().equalsIgnoreCase(input)) //
+                    .collect(toList());
+            for (ReorderableTag t : inputMatchesInsensitive) {
+                choices.remove(t);
+                choices.add(0, t);
+            }
+
+            // Move any entries that match the input case-sensitive to the top
+            List<ReorderableTag> inputMatchesSensitive = choices.stream() //
+                    .filter(t -> t.getName().equals(input)) //
+                    .collect(toList());
+            if (inputMatchesSensitive.isEmpty()) {
+                // If the input does not match any tagset entry, add a new virtual entry for
+                // the
+                // input so that we can select that and add it - this has no description.
+                // If the input matches an existing entry, move it to the top.
+                if (tagset == null || tagset.isCreateTag()) {
+                    choices.add(0, new ReorderableTag(input, false));
+                }
             }
             else {
-                aComponent.error("Error: " + e.getMessage());
+                for (ReorderableTag t : inputMatchesSensitive) {
+                    choices.remove(t);
+                    choices.add(0, t);
+                }
             }
-            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
         }
-        catch (UIMAException e) {
-            aComponent.error("Error: " + ExceptionUtils.getRootCauseMessage(e));
-            LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
-        }
-        catch (Exception e) {
-            aComponent.error("Error: " + e.getMessage());
-            LOG.error("Error: " + e.getMessage(), e);
-        }
+
+        return choices;
     }
 }

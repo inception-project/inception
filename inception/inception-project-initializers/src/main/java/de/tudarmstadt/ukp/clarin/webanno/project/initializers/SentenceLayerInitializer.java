@@ -74,7 +74,7 @@ public class SentenceLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer sentenceLayer = new AnnotationLayer(Sentence.class.getName(), "Sentence",
-                SPAN_TYPE, aProject, true, AnchoringMode.CHARACTERS, NO_OVERLAP);
+                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, NO_OVERLAP);
 
         // Since the user cannot turn off validation for the sentence layer if there is any kind of
         // problem with the validation functionality we are conservative here and disable validation

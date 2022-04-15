@@ -22,7 +22,6 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,17 +59,14 @@ public class CompactSerializerImpl
     {
         CompactAnnotatedText aResponse = new CompactAnnotatedText();
 
-        CAS aCas = aRequest.getCas();
+        renderText(aVDoc, aResponse, aRequest);
 
-        renderText(aCas, aResponse, aRequest);
-
-        renderLayers(aResponse, aVDoc, aRequest);
+        renderLayers(aResponse, aVDoc);
 
         return aResponse;
     }
 
-    private void renderLayers(CompactAnnotatedText aResponse, VDocument aVDoc,
-            RenderRequest aRequest)
+    private void renderLayers(CompactAnnotatedText aResponse, VDocument aVDoc)
     {
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
@@ -116,16 +112,13 @@ public class CompactSerializerImpl
                 new CompactArgument("Arg2", aDependentFs));
     }
 
-    private void renderText(CAS aCas, CompactAnnotatedText aResponse, RenderRequest aRequest)
+    private void renderText(VDocument aVDoc, CompactAnnotatedText aResponse, RenderRequest aRequest)
     {
         if (!aRequest.isIncludeText()) {
             return;
         }
 
-        int windowBegin = aRequest.getWindowBeginOffset();
-        int windowEnd = aRequest.getWindowEndOffset();
-
-        String visibleText = aCas.getDocumentText().substring(windowBegin, windowEnd);
+        String visibleText = aVDoc.getText();
         visibleText = TextUtils.sanitizeVisibleText(visibleText, '\uFFFD');
         aResponse.setText(visibleText);
     }

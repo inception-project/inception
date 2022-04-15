@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
+import java.io.Serializable;
+
 public abstract class VMarker
+    implements Serializable
 {
+    private static final long serialVersionUID = -9076788370434561381L;
+
     public static final String EDITED = "edited";
     public static final String FOCUS = "focus";
     public static final String MATCH_FOCUS = "matchfocus";
