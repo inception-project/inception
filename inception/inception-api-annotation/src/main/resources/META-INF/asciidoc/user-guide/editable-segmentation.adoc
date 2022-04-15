@@ -44,3 +44,8 @@ by default **read-only** which means that you can see the sentence annotations i
 editor but not create or delete sentence annotations. To make the sentences really editable for the
 annotators, un-check the **read-only** checkbox and save the layer settings.
 
+While the sentence layer is editable (i.e. while the *read-only* checkbox is unchecked), the
+annotation page and the curation page default to a line-oriented editor instead of the usual
+sentence-oriented editor. In the line-oriented editor, the sentences can be safely shown and edited
+because the editor does not rely on sentence boundaries to control the rendering process.
+

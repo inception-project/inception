@@ -45,9 +45,10 @@ public class BratAnnotationEditorAutoConfiguration
     }
 
     @Bean(BratSentenceOrientedAnnotationEditorFactory.ID)
-    public BratSentenceOrientedAnnotationEditorFactory bratEditor()
+    public BratSentenceOrientedAnnotationEditorFactory bratEditor(
+            AnnotationSchemaService aAnnotationService)
     {
-        return new BratSentenceOrientedAnnotationEditorFactory();
+        return new BratSentenceOrientedAnnotationEditorFactory(aAnnotationService);
     }
 
     @Bean

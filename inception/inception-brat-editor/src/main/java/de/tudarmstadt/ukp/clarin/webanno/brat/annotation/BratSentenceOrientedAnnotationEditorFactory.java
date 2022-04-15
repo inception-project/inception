@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 /**
  * <p>
@@ -37,10 +39,27 @@ public class BratSentenceOrientedAnnotationEditorFactory
 {
     public static final String ID = "bratEditor";
 
+    private AnnotationSchemaService annotationService;
+
+    public BratSentenceOrientedAnnotationEditorFactory(AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
+
     @Override
     public String getDisplayName()
     {
         return "brat (sentence-oriented)";
+    }
+
+    @Override
+    public int accepts(Project aProject, String aFormat)
+    {
+        if (annotationService.isSentencesEditable(aProject)) {
+            return NOT_SUITABLE;
+        }
+
+        return DEFAULT;
     }
 
     @Override

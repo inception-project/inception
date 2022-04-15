@@ -50,8 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.NoResultException;
-
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
@@ -120,7 +118,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEv
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverview;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
@@ -246,22 +243,15 @@ public class CurationPage
 
     private AnnotationEditorBase createAnnotationEditor(String aId)
     {
-        boolean sentencesEditable;
-        try {
-            sentencesEditable = !annotationService.findLayer(getProject(), Sentence.class.getName())
-                    .isReadonly();
-        }
-        catch (NoResultException e) {
-            sentencesEditable = false;
-        }
-
-        String editorId = sentencesEditable ? BratLineOrientedAnnotationEditorFactory.ID
+        String editorId = annotationService.isSentencesEditable(getProject())
+                ? BratLineOrientedAnnotationEditorFactory.ID
                 : BratSentenceOrientedAnnotationEditorFactory.ID;
         AnnotatorState state = getModelObject();
         AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
             if (state.getDocument() != null) {
-                factory = editorRegistry.getPreferredEditorFactory(state.getDocument().getFormat());
+                factory = editorRegistry.getPreferredEditorFactory(state.getProject(),
+                        state.getDocument().getFormat());
             }
             else {
                 factory = editorRegistry.getDefaultEditorFactory();

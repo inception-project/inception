@@ -1528,4 +1528,15 @@ public class AnnotationSchemaServiceImpl
         }
         return result;
     }
+
+    @Override
+    public boolean isSentencesEditable(Project aProject)
+    {
+        try {
+            return !findLayer(aProject, Sentence.class.getName()).isReadonly();
+        }
+        catch (NoResultException e) {
+            return false;
+        }
+    }
 }

@@ -288,7 +288,8 @@ public class AnnotationPage
         AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
             if (state.getDocument() != null) {
-                factory = editorRegistry.getPreferredEditorFactory(state.getDocument().getFormat());
+                factory = editorRegistry.getPreferredEditorFactory(state.getProject(),
+                        state.getDocument().getFormat());
             }
             else {
                 factory = editorRegistry.getDefaultEditorFactory();
