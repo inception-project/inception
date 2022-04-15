@@ -29,6 +29,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -56,7 +57,7 @@ public class HfRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException
     {
         List<HfEntityGroup> response;
@@ -84,5 +85,7 @@ public class HfRecommender
             ann.setDoubleValue(scoreFeature, group.getScore());
             aCas.addFsToIndexes(ann);
         }
+
+        return new Range(aBegin, aEnd);
     }
 }
