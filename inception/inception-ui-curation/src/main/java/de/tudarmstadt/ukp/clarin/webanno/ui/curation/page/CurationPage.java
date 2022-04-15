@@ -117,7 +117,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverviewLink;
@@ -219,9 +219,9 @@ public class CurationPage
         splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
                 new Options("orientation", Options.asString("vertical")), new SplitterAdapter()));
 
-        List<AnnotatorSegment> segments = new LinkedList<>();
+        List<AnnotatorSegmentState> segments = new LinkedList<>();
 
-        AnnotatorSegment annotatorSegment = new AnnotatorSegment();
+        AnnotatorSegmentState annotatorSegment = new AnnotatorSegmentState();
         annotatorSegment.setAnnotatorState(getModelObject());
         segments.add(annotatorSegment);
 

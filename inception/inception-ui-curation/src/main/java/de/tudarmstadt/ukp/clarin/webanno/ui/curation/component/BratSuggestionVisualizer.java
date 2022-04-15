@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
@@ -96,7 +97,7 @@ public abstract class BratSuggestionVisualizer
 
     private final int position;
 
-    public BratSuggestionVisualizer(String aId, IModel<AnnotatorSegment> aModel, int aPosition)
+    public BratSuggestionVisualizer(String aId, IModel<AnnotatorSegmentState> aModel, int aPosition)
     {
         super(aId, aModel);
 
@@ -162,7 +163,7 @@ public abstract class BratSuggestionVisualizer
                     final VID paramId = BratRequestUtils.getVidFromRequest(request);
 
                     if (LazyDetailsHandler.COMMAND.equals(action)) {
-                        AnnotatorSegment segment = getModelObject();
+                        AnnotatorSegmentState segment = getModelObject();
                         AnnotatorState state = segment.getAnnotatorState();
                         CasProvider casProvider = () -> documentService.readAnnotationCas(
                                 segment.getAnnotatorState().getDocument(),
@@ -224,7 +225,7 @@ public abstract class BratSuggestionVisualizer
         return documentService.getAnnotationDocument(doc, username).getState();
     }
 
-    private String maybeAnonymizeUsername(AnnotatorSegment aSegment)
+    private String maybeAnonymizeUsername(AnnotatorSegmentState aSegment)
     {
         Project project = aSegment.getAnnotatorState().getProject();
         if (project.isAnonymousCuration()
@@ -235,25 +236,25 @@ public abstract class BratSuggestionVisualizer
         return aSegment.getUser().getUiName();
     }
 
-    public void setModel(IModel<AnnotatorSegment> aModel)
+    public void setModel(IModel<AnnotatorSegmentState> aModel)
     {
         setDefaultModel(aModel);
     }
 
-    public void setModelObject(AnnotatorSegment aModel)
+    public void setModelObject(AnnotatorSegmentState aModel)
     {
         setDefaultModelObject(aModel);
     }
 
     @SuppressWarnings("unchecked")
-    public IModel<AnnotatorSegment> getModel()
+    public IModel<AnnotatorSegmentState> getModel()
     {
-        return (IModel<AnnotatorSegment>) getDefaultModel();
+        return (IModel<AnnotatorSegmentState>) getDefaultModel();
     }
 
-    public AnnotatorSegment getModelObject()
+    public AnnotatorSegmentState getModelObject()
     {
-        return (AnnotatorSegment) getDefaultModelObject();
+        return (AnnotatorSegmentState) getDefaultModelObject();
     }
 
     @Override

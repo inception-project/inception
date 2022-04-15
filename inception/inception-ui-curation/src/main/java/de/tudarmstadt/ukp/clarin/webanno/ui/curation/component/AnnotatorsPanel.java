@@ -93,8 +93,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublishe
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.BratSuggestionVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.AnnotationStateColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.inception.curation.merge.AlreadyMergedException;
@@ -121,7 +120,7 @@ public class AnnotatorsPanel
 
     private static final long serialVersionUID = 8736268179612831795L;
 
-    private final ListView<AnnotatorSegment> annotatorSegments;
+    private final ListView<AnnotatorSegmentState> annotatorSegments;
     private final ContextMenu contextMenu;
 
     private @SpringBean DocumentService documentService;
@@ -133,7 +132,7 @@ public class AnnotatorsPanel
     private @SpringBean BratSchemaGenerator bratSchemaGenerator;
     private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 
-    public AnnotatorsPanel(String id, IModel<List<AnnotatorSegment>> aModel)
+    public AnnotatorsPanel(String id, IModel<List<AnnotatorSegmentState>> aModel)
     {
         super(id, aModel);
         setOutputMarkupId(true);
@@ -141,14 +140,14 @@ public class AnnotatorsPanel
         contextMenu = new ContextMenu("contextMenu");
         add(contextMenu);
 
-        annotatorSegments = new ListView<AnnotatorSegment>("annotatorSegments", aModel)
+        annotatorSegments = new ListView<AnnotatorSegmentState>("annotatorSegments", aModel)
         {
             private static final long serialVersionUID = -5389636445364196097L;
 
             @Override
-            protected void populateItem(ListItem<AnnotatorSegment> aItem)
+            protected void populateItem(ListItem<AnnotatorSegmentState> aItem)
             {
-                final AnnotatorSegment annotatorSegment = aItem.getModelObject();
+                final AnnotatorSegmentState annotatorSegment = aItem.getModelObject();
                 BratSuggestionVisualizer curationVisualizer = new BratSuggestionVisualizer(
                         "annotationViewer", new Model<>(annotatorSegment), aItem.getIndex())
                 {
@@ -172,7 +171,7 @@ public class AnnotatorsPanel
      * Method is called, if user has clicked on a span or an arc in the sentence panel. The span or
      * arc respectively is identified and copied to the merge CAS.
      */
-    protected void onClientEvent(AjaxRequestTarget aTarget, AnnotatorSegment aSegment)
+    protected void onClientEvent(AjaxRequestTarget aTarget, AnnotatorSegmentState aSegment)
         throws UIMAException, IOException, AnnotationException
     {
         if (isDocumentFinished(documentService, aSegment.getAnnotatorState())) {
@@ -246,7 +245,7 @@ public class AnnotatorsPanel
         }
     }
 
-    private void actionAcceptAll(AjaxRequestTarget aTarget, AnnotatorSegment aSegment,
+    private void actionAcceptAll(AjaxRequestTarget aTarget, AnnotatorSegmentState aSegment,
             AnnotationLayer aLayer)
         throws IOException
     {
@@ -381,7 +380,7 @@ public class AnnotatorsPanel
                 .ifPresent(state::setAnnotationDocumentTimestamp);
     }
 
-    private CAS readAnnotatorCas(AnnotatorSegment aSegment) throws IOException
+    private CAS readAnnotatorCas(AnnotatorSegmentState aSegment) throws IOException
     {
         return documentService.readAnnotationCas(aSegment.getAnnotatorState().getDocument(),
                 aSegment.getUser().getUsername());
@@ -412,7 +411,7 @@ public class AnnotatorsPanel
         Map<String, Map<VID, AnnotationState>> annoStates = calculateAnnotationStates(aState,
                 casses);
 
-        List<AnnotatorSegment> segments = new ArrayList<>();
+        List<AnnotatorSegmentState> segments = new ArrayList<>();
         for (String username : casses.keySet().stream().sorted().collect(toList())) {
             if (username.equals(CURATION_USER)) {
                 continue;
@@ -426,7 +425,7 @@ public class AnnotatorsPanel
                     "No annotation states for user [" + username + "]");
 
             // Create curation view for the current user
-            AnnotatorSegment seg = new AnnotatorSegment();
+            AnnotatorSegmentState seg = new AnnotatorSegmentState();
             seg.setUser(userService.get(username));
             seg.setAnnotatorState(aState);
             renderSegment(aTarget, seg, cas, annotationStates);
@@ -507,7 +506,7 @@ public class AnnotatorsPanel
         // get differing feature structures
         annotatorSegments.visitChildren(BratSuggestionVisualizer.class, (v, visit) -> {
             BratSuggestionVisualizer vis = (BratSuggestionVisualizer) v;
-            AnnotatorSegment seg = vis.getModelObject();
+            AnnotatorSegmentState seg = vis.getModelObject();
 
             CAS cas = casses.get(seg.getUser().getUsername());
 
@@ -528,7 +527,7 @@ public class AnnotatorsPanel
         });
     }
 
-    private void renderSegment(AjaxRequestTarget aTarget, AnnotatorSegment aSegment, CAS aCas,
+    private void renderSegment(AjaxRequestTarget aTarget, AnnotatorSegmentState aSegment, CAS aCas,
             Map<VID, AnnotationState> aAnnotationStates)
     {
         Validate.notNull(aAnnotationStates, "Parameter [aAnnotationStates] must not be null");

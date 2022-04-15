@@ -28,17 +28,16 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
  * A Model comprises of document and collection brat responses together with the username that will
  * populate the sentence with {@link AnnotationDocument}s
  */
-public class AnnotatorSegment
+public class AnnotatorSegmentState
     implements Serializable
 {
     private static final long serialVersionUID = 1785666148278992450L;
 
-    private String documentResponse;
     private User user;
     private AnnotatorState state;
     private VDocument vDocument;
 
-    public AnnotatorSegment()
+    public AnnotatorSegmentState()
     {
         // Nothing to do
     }
@@ -51,16 +50,6 @@ public class AnnotatorSegment
     public VDocument getVDocument()
     {
         return vDocument;
-    }
-
-    public String getDocumentResponse()
-    {
-        return documentResponse;
-    }
-
-    public void setDocumentResponse(String aDocumentResponse)
-    {
-        documentResponse = aDocumentResponse;
     }
 
     public User getUser()
