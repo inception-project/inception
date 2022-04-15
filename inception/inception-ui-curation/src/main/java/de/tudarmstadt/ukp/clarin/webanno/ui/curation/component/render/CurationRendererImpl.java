@@ -36,10 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -50,22 +47,20 @@ public class CurationRendererImpl
     private final PreRenderer preRenderer;
     private final AnnotationSchemaService schemaService;
     private final ColoringService coloringService;
-    private final BratSerializer bratSerializer;
     private final AnnotationEditorProperties annotationEditorProperties;
 
     public CurationRendererImpl(PreRenderer aPreRenderer, AnnotationSchemaService aSchemaService,
-            ColoringService aColoringService, BratSerializer aBratSerializer,
+            ColoringService aColoringService,
             AnnotationEditorProperties aAnnotationEditorProperties)
     {
         preRenderer = aPreRenderer;
         schemaService = aSchemaService;
         coloringService = aColoringService;
-        bratSerializer = aBratSerializer;
         annotationEditorProperties = aAnnotationEditorProperties;
     }
 
     @Override
-    public String render(CAS aCas, AnnotatorState aState, ColoringStrategy aColoringStrategy)
+    public VDocument render(CAS aCas, AnnotatorState aState, ColoringStrategy aColoringStrategy)
         throws IOException
     {
         List<AnnotationLayer> layersToRender = new ArrayList<>();
@@ -98,8 +93,6 @@ public class CurationRendererImpl
         ColorRenderer colorRenderer = new ColorRenderer(schemaService, coloringService);
         colorRenderer.render(vdoc, request);
 
-        GetDocumentResponse response = bratSerializer.render(vdoc, request);
-
-        return JSONUtil.toInterpretableJsonString(response);
+        return vdoc;
     }
 }

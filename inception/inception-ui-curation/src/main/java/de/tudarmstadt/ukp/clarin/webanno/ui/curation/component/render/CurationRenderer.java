@@ -23,9 +23,10 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 public interface CurationRenderer
 {
-    String render(CAS aCas, AnnotatorState aState, ColoringStrategy aColoringStrategy)
+    VDocument render(CAS aCas, AnnotatorState aState, ColoringStrategy aColoringStrategy)
         throws IOException;
 }

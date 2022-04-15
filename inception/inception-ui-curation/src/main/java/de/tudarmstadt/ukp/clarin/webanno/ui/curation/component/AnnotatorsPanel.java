@@ -77,7 +77,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
@@ -88,7 +87,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
@@ -402,17 +400,6 @@ public class AnnotatorsPanel
 
     public final static String CURATION_USER = "CURATION_USER";
 
-    private String getCollectionInformation(AnnotationSchemaService aAnnotationService,
-            AnnotatorState aState)
-        throws IOException
-    {
-        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-        info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(aState.getProject(),
-                aState.getAnnotationLayers()));
-
-        return JSONUtil.toInterpretableJsonString(info);
-    }
-
     /**
      * Initializes the user annotation segments later to be filled with content.
      */
@@ -442,7 +429,8 @@ public class AnnotatorsPanel
             // Create curation view for the current user
             AnnotatorSegment seg = new AnnotatorSegment();
             seg.setUser(userService.get(username));
-            renderSegment(aTarget, seg, aState, cas, annotationStates);
+            seg.setAnnotatorState(aState);
+            renderSegment(aTarget, seg, cas, annotationStates);
             segments.add(seg);
         }
 
@@ -530,7 +518,8 @@ public class AnnotatorsPanel
             }
 
             var annotationStates = annoStates.get(seg.getUser().getUsername());
-            renderSegment(aTarget, seg, aState, cas, annotationStates);
+            seg.setAnnotatorState(aState);
+            renderSegment(aTarget, seg, cas, annotationStates);
 
             if (isBlank(vis.getDocumentData())) {
                 return;
@@ -540,17 +529,17 @@ public class AnnotatorsPanel
         });
     }
 
-    private void renderSegment(AjaxRequestTarget aTarget, AnnotatorSegment aSegment,
-            AnnotatorState aState, CAS aCas, Map<VID, AnnotationState> aAnnotationStates)
+    private void renderSegment(AjaxRequestTarget aTarget, AnnotatorSegment aSegment, CAS aCas,
+            Map<VID, AnnotationState> aAnnotationStates)
     {
         Validate.notNull(aAnnotationStates, "Parameter [aAnnotationStates] must not be null");
 
         // Create curation view for the current user
         try {
+            var aState = aSegment.getAnnotatorState();
             var coloringStrategy = new AnnotationStateColoringStrategy(aAnnotationStates);
-            aSegment.setCollectionData(getCollectionInformation(schemaService, aState));
-            aSegment.setDocumentResponse(curationRenderer.render(aCas, aState, coloringStrategy));
-            aSegment.setAnnotatorState(aState);
+            var vDoc = curationRenderer.render(aCas, aState, coloringStrategy);
+            aSegment.setVDocument(vDoc);
         }
         catch (Exception e) {
             // Cannot include the username in the messages logged to the user because the

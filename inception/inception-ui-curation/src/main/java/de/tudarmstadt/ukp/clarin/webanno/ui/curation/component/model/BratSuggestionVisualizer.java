@@ -54,14 +54,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
@@ -77,6 +84,9 @@ public abstract class BratSuggestionVisualizer
     private @SpringBean UserDao userService;
     private @SpringBean DocumentService documentService;
     private @SpringBean LazyDetailsLookupService lazyDetailsLookupService;
+    private @SpringBean BratSchemaGenerator bratSchemaGenerator;
+    private @SpringBean CurationRenderer curationRenderer;
+    private @SpringBean BratSerializer bratSerializer;
 
     private final WebMarkupContainer vis;
     private final ConfirmationDialog stateChangeConfirmationDialog;
@@ -261,13 +271,43 @@ public abstract class BratSuggestionVisualizer
 
     public String getDocumentData()
     {
-        return getModelObject().getDocumentResponse() == null ? "{}"
-                : getModelObject().getDocumentResponse();
+        try {
+            var state = getModelObject().getAnnotatorState();
+            // FIXME: This is a minimalist render request containing only a view pieces of
+            // information that the serializer needs. In particular, it does not contain the CAS
+            // because even if we loaded it again now, its FS addresses could have changed over
+            // what they were when the VDocument has first been created. Optimally, we wouldn't
+            // need access to the request here at all and the important information would be
+            // contained in the VDocuemnt already.
+            RenderRequest request = RenderRequest.builder() //
+                    .withState(state) //
+                    .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                    .build();
+            GetDocumentResponse response = bratSerializer.render(getModelObject().getVDocument(),
+                    request);
+
+            return JSONUtil.toInterpretableJsonString(response);
+
+        }
+        catch (Exception e) {
+            handleError("Unable to render annotatations", e);
+            return "{}";
+        }
     }
 
     private String getCollectionData()
     {
-        return getModelObject().getCollectionData();
+        try {
+            AnnotatorState aState = getModelObject().getAnnotatorState();
+            GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+            info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(aState.getProject(),
+                    aState.getAnnotationLayers()));
+            return JSONUtil.toInterpretableJsonString(info);
+        }
+        catch (IOException e) {
+            handleError("Unablet to render collection information", e);
+            return "{}";
+        }
     }
 
     private void handleError(String aMessage, Exception e)

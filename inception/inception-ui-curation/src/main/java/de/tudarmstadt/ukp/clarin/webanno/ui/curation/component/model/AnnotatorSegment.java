@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -33,13 +34,23 @@ public class AnnotatorSegment
     private static final long serialVersionUID = 1785666148278992450L;
 
     private String documentResponse;
-    private String collectionData = "{}";
     private User user;
     private AnnotatorState state;
+    private VDocument vDocument;
 
     public AnnotatorSegment()
     {
         // Nothing to do
+    }
+
+    public void setVDocument(VDocument aVDocument)
+    {
+        vDocument = aVDocument;
+    }
+
+    public VDocument getVDocument()
+    {
+        return vDocument;
     }
 
     public String getDocumentResponse()
@@ -50,16 +61,6 @@ public class AnnotatorSegment
     public void setDocumentResponse(String aDocumentResponse)
     {
         documentResponse = aDocumentResponse;
-    }
-
-    public String getCollectionData()
-    {
-        return collectionData;
-    }
-
-    public void setCollectionData(String aCollectionData)
-    {
-        collectionData = aCollectionData;
     }
 
     public User getUser()
@@ -80,13 +81,5 @@ public class AnnotatorSegment
     public void setAnnotatorState(AnnotatorState aState)
     {
         state = aState;
-    }
-
-    // FIXME: Why do we even need this?
-    @Deprecated
-    public boolean equals(AnnotatorSegment segment)
-    {
-        return segment.getCollectionData().equals(collectionData)
-                && segment.getDocumentResponse().equals(documentResponse);
     }
 }
