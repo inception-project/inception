@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryI
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfAnnotationEditorSupportAutoConfiguration;
 
 /**
@@ -48,7 +49,7 @@ public class PdfAnnotationEditorFactory
     }
 
     @Override
-    public int accepts(String aFormat)
+    public int accepts(Project aProject, String aFormat)
     {
         switch (aFormat) {
         case PdfFormatSupport.ID:

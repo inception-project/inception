@@ -41,7 +41,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
@@ -163,7 +162,7 @@ public class AnnotationPage
 
         add(createRightSidebar());
 
-        createAnnotationEditor(null);
+        createAnnotationEditor();
 
         leftSidebar = createLeftSidebar();
         add(leftSidebar);
@@ -273,7 +272,7 @@ public class AnnotationPage
         actionRefreshDocument(aEvent.getRequestHandler());
     }
 
-    private void createAnnotationEditor(IPartialPageRequestHandler aTarget)
+    private void createAnnotationEditor()
     {
         AnnotatorState state = getModelObject();
 
@@ -289,7 +288,8 @@ public class AnnotationPage
         AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
             if (state.getDocument() != null) {
-                factory = editorRegistry.getPreferredEditorFactory(state.getDocument().getFormat());
+                factory = editorRegistry.getPreferredEditorFactory(state.getProject(),
+                        state.getDocument().getFormat());
             }
             else {
                 factory = editorRegistry.getDefaultEditorFactory();
@@ -452,7 +452,7 @@ public class AnnotationPage
             // Set the actual editor component. This has to happen *before* any AJAX refreshs are
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
-            createAnnotationEditor(aTarget);
+            createAnnotationEditor();
             // update paging, only do it during document load so we load the cas after it has been
             // upgraded
             try {

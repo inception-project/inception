@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegis
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationEditorPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
@@ -376,6 +377,6 @@ public class CasMergeTestBase
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerSupportRegistry.init();
 
-        sut = new CasMerge(schemaService);
+        sut = new CasMerge(schemaService, new AnnotationEditorPropertiesImpl(), null);
     }
 }

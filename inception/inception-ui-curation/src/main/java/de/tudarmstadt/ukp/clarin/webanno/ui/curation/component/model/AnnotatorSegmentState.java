@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 import java.io.Serializable;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -27,39 +28,28 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
  * A Model comprises of document and collection brat responses together with the username that will
  * populate the sentence with {@link AnnotationDocument}s
  */
-public class AnnotatorSegment
+public class AnnotatorSegmentState
     implements Serializable
 {
     private static final long serialVersionUID = 1785666148278992450L;
 
-    private String documentResponse;
-    private String collectionData = "{}";
     private User user;
     private AnnotatorState state;
+    private VDocument vDocument;
 
-    public AnnotatorSegment()
+    public AnnotatorSegmentState()
     {
         // Nothing to do
     }
 
-    public String getDocumentResponse()
+    public void setVDocument(VDocument aVDocument)
     {
-        return documentResponse;
+        vDocument = aVDocument;
     }
 
-    public void setDocumentResponse(String aDocumentResponse)
+    public VDocument getVDocument()
     {
-        documentResponse = aDocumentResponse;
-    }
-
-    public String getCollectionData()
-    {
-        return collectionData;
-    }
-
-    public void setCollectionData(String aCollectionData)
-    {
-        collectionData = aCollectionData;
+        return vDocument;
     }
 
     public User getUser()
@@ -80,13 +70,5 @@ public class AnnotatorSegment
     public void setAnnotatorState(AnnotatorState aState)
     {
         state = aState;
-    }
-
-    // FIXME: Why do we even need this?
-    @Deprecated
-    public boolean equals(AnnotatorSegment segment)
-    {
-        return segment.getCollectionData().equals(collectionData)
-                && segment.getDocumentResponse().equals(documentResponse);
     }
 }

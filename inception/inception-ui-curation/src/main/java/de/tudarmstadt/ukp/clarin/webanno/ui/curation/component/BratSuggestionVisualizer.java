@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
@@ -28,16 +28,20 @@ import java.lang.invoke.MethodHandles;
 
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.handler.TextRequestHandler;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,25 +54,28 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
+import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 
-/**
- * Wicket panel for visualizing an annotated sentence in brat. When a user clicks on a span or an
- * arc, the Method onSelectAnnotationForMerge() is called. Override that method to receive the
- * result in another Wicket panel.
- */
 public abstract class BratSuggestionVisualizer
-    extends BratVisualizer
+    extends Panel
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -78,17 +85,55 @@ public abstract class BratSuggestionVisualizer
     private @SpringBean UserDao userService;
     private @SpringBean DocumentService documentService;
     private @SpringBean LazyDetailsLookupService lazyDetailsLookupService;
+    private @SpringBean BratSchemaGenerator bratSchemaGenerator;
+    private @SpringBean CurationRenderer curationRenderer;
+    private @SpringBean BratSerializer bratSerializer;
 
+    private final WebMarkupContainer vis;
     private final ConfirmationDialog stateChangeConfirmationDialog;
     private final AbstractDefaultAjaxBehavior controller;
+    private final AbstractAjaxBehavior collProvider;
+    private final AbstractAjaxBehavior docProvider;
 
     private final int position;
 
-    public BratSuggestionVisualizer(String aId, IModel<AnnotatorSegment> aModel, int aPosition)
+    public BratSuggestionVisualizer(String aId, IModel<AnnotatorSegmentState> aModel, int aPosition)
     {
         super(aId, aModel);
 
         position = aPosition;
+
+        vis = new WebMarkupContainer("vis");
+        vis.setOutputMarkupId(true);
+
+        // Provides collection-level information like type definitions, styles, etc.
+        collProvider = new AbstractAjaxBehavior()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onRequest()
+            {
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(
+                        new TextRequestHandler("application/json", "UTF-8", getCollectionData()));
+            }
+        };
+
+        // Provides the actual document contents
+        docProvider = new AbstractAjaxBehavior()
+        {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public void onRequest()
+            {
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(
+                        new TextRequestHandler("application/json", "UTF-8", getDocumentData()));
+            }
+        };
+
+        add(vis);
+        add(collProvider, docProvider);
 
         add(new Label("username", getModel().map(this::maybeAnonymizeUsername)));
 
@@ -118,7 +163,7 @@ public abstract class BratSuggestionVisualizer
                     final VID paramId = BratRequestUtils.getVidFromRequest(request);
 
                     if (LazyDetailsHandler.COMMAND.equals(action)) {
-                        AnnotatorSegment segment = getModelObject();
+                        AnnotatorSegmentState segment = getModelObject();
                         AnnotatorState state = segment.getAnnotatorState();
                         CasProvider casProvider = () -> documentService.readAnnotationCas(
                                 segment.getAnnotatorState().getDocument(),
@@ -180,7 +225,7 @@ public abstract class BratSuggestionVisualizer
         return documentService.getAnnotationDocument(doc, username).getState();
     }
 
-    private String maybeAnonymizeUsername(AnnotatorSegment aSegment)
+    private String maybeAnonymizeUsername(AnnotatorSegmentState aSegment)
     {
         Project project = aSegment.getAnnotatorState().getProject();
         if (project.isAnonymousCuration()
@@ -191,33 +236,30 @@ public abstract class BratSuggestionVisualizer
         return aSegment.getUser().getUiName();
     }
 
-    public void setModel(IModel<AnnotatorSegment> aModel)
+    public void setModel(IModel<AnnotatorSegmentState> aModel)
     {
         setDefaultModel(aModel);
     }
 
-    public void setModelObject(AnnotatorSegment aModel)
+    public void setModelObject(AnnotatorSegmentState aModel)
     {
         setDefaultModelObject(aModel);
     }
 
     @SuppressWarnings("unchecked")
-    public IModel<AnnotatorSegment> getModel()
+    public IModel<AnnotatorSegmentState> getModel()
     {
-        return (IModel<AnnotatorSegment>) getDefaultModel();
+        return (IModel<AnnotatorSegmentState>) getDefaultModel();
     }
 
-    public AnnotatorSegment getModelObject()
+    public AnnotatorSegmentState getModelObject()
     {
-        return (AnnotatorSegment) getDefaultModelObject();
+        return (AnnotatorSegmentState) getDefaultModelObject();
     }
 
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
-        // MUST NOT CALL super.renderHead here because that would call Util.embedByUrl again!
-        // super.renderHead(aResponse);
-
         aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
         aResponse.render(JavaScriptHeaderItem.forReference(BratCurationResourceReference.get()));
 
@@ -228,17 +270,45 @@ public abstract class BratSuggestionVisualizer
         aResponse.render(OnLoadHeaderItem.forScript("\n" + script));
     }
 
-    @Override
     public String getDocumentData()
     {
-        return getModelObject().getDocumentResponse() == null ? "{}"
-                : getModelObject().getDocumentResponse();
+        try {
+            var state = getModelObject().getAnnotatorState();
+            // FIXME: This is a minimalist render request containing only a view pieces of
+            // information that the serializer needs. In particular, it does not contain the CAS
+            // because even if we loaded it again now, its FS addresses could have changed over
+            // what they were when the VDocument has first been created. Optimally, we wouldn't
+            // need access to the request here at all and the important information would be
+            // contained in the VDocuemnt already.
+            RenderRequest request = RenderRequest.builder() //
+                    .withState(state) //
+                    .withWindow(state.getWindowBeginOffset(), state.getWindowEndOffset()) //
+                    .build();
+            GetDocumentResponse response = bratSerializer.render(getModelObject().getVDocument(),
+                    request);
+
+            return JSONUtil.toInterpretableJsonString(response);
+
+        }
+        catch (Exception e) {
+            handleError("Unable to render annotatations", e);
+            return "{}";
+        }
     }
 
-    @Override
-    protected String getCollectionData()
+    private String getCollectionData()
     {
-        return getModelObject().getCollectionData();
+        try {
+            AnnotatorState aState = getModelObject().getAnnotatorState();
+            GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+            info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(aState.getProject(),
+                    aState.getAnnotationLayers()));
+            return JSONUtil.toInterpretableJsonString(info);
+        }
+        catch (IOException e) {
+            handleError("Unablet to render collection information", e);
+            return "{}";
+        }
     }
 
     private void handleError(String aMessage, Exception e)
@@ -260,6 +330,40 @@ public abstract class BratSuggestionVisualizer
 
         LOG.error("{}", aMessage, e);
         error(aMessage);
+    }
+
+    private String bratRenderCommand(String aJson)
+    {
+        String str = WicketUtil.wrapInTryCatch("Wicket.$('" + vis.getMarkupId()
+                + "').dispatcher.post('renderData', [" + aJson + "]);");
+        return str;
+    }
+
+    public void render(AjaxRequestTarget aTarget)
+    {
+        LOG.debug("[{}][{}] render", getMarkupId(), vis.getMarkupId());
+
+        // Controls whether rendering should happen within the AJAX request or after the AJAX
+        // request. Doing it within the request has the benefit of the browser only having to
+        // recalculate the layout once at the end of the AJAX request (at least theoretically)
+        // while deferring the rendering causes the AJAX request to complete faster, but then
+        // the browser needs to recalculate its layout twice - once of any Wicket components
+        // being re-rendered and once for the brat view to re-render.
+        final boolean deferredRendering = false;
+
+        StringBuilder js = new StringBuilder();
+
+        if (deferredRendering) {
+            js.append("setTimeout(function() {");
+        }
+
+        js.append(bratRenderCommand(getDocumentData()));
+
+        if (deferredRendering) {
+            js.append("}, 0);");
+        }
+
+        aTarget.appendJavaScript(js);
     }
 
     protected abstract void onClientEvent(AjaxRequestTarget aTarget) throws Exception;

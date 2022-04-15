@@ -33,6 +33,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 /**
  * <p>
@@ -106,10 +107,10 @@ public class AnnotationEditorRegistryImpl
     }
 
     @Override
-    public AnnotationEditorFactory getPreferredEditorFactory(String aFormat)
+    public AnnotationEditorFactory getPreferredEditorFactory(Project aProject, String aFormat)
     {
         return getEditorFactories().stream() //
-                .max(comparing(factory -> factory.accepts(aFormat))) //
+                .max(comparing(factory -> factory.accepts(aProject, aFormat))) //
                 .orElseGet(this::getDefaultEditorFactory);
     }
 }

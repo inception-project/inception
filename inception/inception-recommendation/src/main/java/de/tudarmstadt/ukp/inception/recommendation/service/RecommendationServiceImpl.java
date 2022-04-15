@@ -1781,7 +1781,7 @@ public class RecommendationServiceImpl
         }
         default:
             throw new IllegalStateException(
-                    "Unknown anchoring mode: [" + aLayer.getAnchoringMode() + "]");
+                    "Unsupported anchoring mode: [" + aLayer.getAnchoringMode() + "]");
         }
 
         return Optional.of(new Offset(begin, end));
