@@ -61,8 +61,6 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -120,7 +118,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverviewLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverview;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
@@ -162,7 +160,7 @@ public class CurationPage
 
     private WebMarkupContainer leftSidebar;
     private IModel<List<CurationUnit>> curationUnits;
-    private WebMarkupContainer curationUnitOverview;
+    private CurationUnitOverview curationUnitOverview;
 
     private WebMarkupContainer rightSidebar;
     private AnnotationDetailEditorPanel detailEditor;
@@ -238,19 +236,7 @@ public class CurationPage
         annotationEditor = createAnnotationEditor("editor");
         splitter.add(annotationEditor);
 
-        curationUnitOverview = new WebMarkupContainer("unitOverview");
-        curationUnitOverview.setOutputMarkupPlaceholderTag(true);
-        curationUnitOverview.add(new ListView<CurationUnit>("unit", curationUnits)
-        {
-            private static final long serialVersionUID = 8539162089561432091L;
-
-            @Override
-            protected void populateItem(ListItem<CurationUnit> item)
-            {
-                item.add(new CurationUnitOverviewLink("label", item.getModel(),
-                        CurationPage.this.getModel()));
-            }
-        });
+        curationUnitOverview = new CurationUnitOverview("unitOverview", getModel(), curationUnits);
 
         leftSidebar = createLeftSidebar("leftSidebar");
         leftSidebar.add(curationUnitOverview);
