@@ -21,6 +21,8 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.Logger;
 
 public final class WicketExceptionUtil
@@ -28,17 +30,20 @@ public final class WicketExceptionUtil
     public static void handleException(Logger aLog, Component aComponent, AjaxRequestTarget aTarget,
             Exception aException)
     {
+        if (aException instanceof ReplaceHandlerException) {
+            // Let Wicket redirects still work
+            throw (ReplaceHandlerException) aException;
+        }
+
+        if (aTarget != null) {
+            aTarget.addChildren(aComponent.getPage(), IFeedback.class);
+        }
+
         try {
             throw aException;
         }
         catch (AnnotationException e) {
-            if (aTarget != null) {
-                aTarget.prependJavaScript("alert('Error: " + e.getMessage() + "')");
-            }
-            else {
-                aComponent.error("Error: " + e.getMessage());
-            }
-            aLog.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
+            aComponent.error("Error: " + e.getMessage());
         }
         catch (UIMAException e) {
             aComponent.error("Error: " + ExceptionUtils.getRootCauseMessage(e));

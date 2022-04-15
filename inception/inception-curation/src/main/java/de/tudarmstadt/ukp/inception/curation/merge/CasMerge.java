@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalFeatureValueException;
@@ -104,21 +105,19 @@ public class CasMerge
 
     private final AnnotationSchemaService schemaService;
     private final ApplicationEventPublisher eventPublisher;
+    private final AnnotationEditorProperties annotationEditorProperties;
 
     private MergeStrategy mergeStrategy = new DefaultMergeStrategy();
     private boolean silenceEvents = false;
     private Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
     private LoadingCache<AnnotationLayer, TypeAdapter> adapterCache;
 
-    public CasMerge(AnnotationSchemaService aSchemaService)
-    {
-        this(aSchemaService, null);
-    }
-
     public CasMerge(AnnotationSchemaService aSchemaService,
+            AnnotationEditorProperties aAnnotationEditorProperties,
             ApplicationEventPublisher aEventPublisher)
     {
         schemaService = aSchemaService;
+        annotationEditorProperties = aAnnotationEditorProperties;
         eventPublisher = aEventPublisher;
 
         adapterCache = Caffeine.newBuilder().maximumSize(100).build(schemaService::getAdapter);
@@ -275,9 +274,11 @@ public class CasMerge
         for (String layerName : layerNames) {
             List<SpanPosition> positions = aDiff.getPositions().stream()
                     .filter(pos -> layerName.equals(pos.getType()))
-                    .filter(pos -> pos instanceof SpanPosition).map(pos -> (SpanPosition) pos)
+                    .filter(pos -> pos instanceof SpanPosition) //
+                    .map(pos -> (SpanPosition) pos)
                     // We only process slot features here
-                    .filter(pos -> pos.getFeature() != null).collect(Collectors.toList());
+                    .filter(pos -> pos.getFeature() != null) //
+                    .collect(Collectors.toList());
 
             if (positions.isEmpty()) {
                 continue;
@@ -379,7 +380,7 @@ public class CasMerge
      * @throws UIMAException
      *             if there was a problem clearing the CAS.
      */
-    private static void clearAnnotations(CAS aCas) throws UIMAException
+    private void clearAnnotations(CAS aCas) throws UIMAException
     {
         // Copy the CAS - basically we do this just to keep the full type system information
         CAS backup = WebAnnoCasUtil.createCasCopy(aCas);
@@ -397,14 +398,18 @@ public class CasMerge
         aCas.setDocumentLanguage(backup.getDocumentLanguage()); // DKPro Core Issue 435
         aCas.setDocumentText(backup.getDocumentText());
 
-        // Transfer token boundaries
-        for (AnnotationFS t : selectTokens(backup)) {
-            aCas.addFsToIndexes(createToken(aCas, t.getBegin(), t.getEnd()));
+        if (!annotationEditorProperties.isTokenLayerEditable()) {
+            // Transfer token boundaries
+            for (AnnotationFS t : selectTokens(backup)) {
+                aCas.addFsToIndexes(createToken(aCas, t.getBegin(), t.getEnd()));
+            }
         }
 
-        // Transfer sentence boundaries
-        for (AnnotationFS s : selectSentences(backup)) {
-            aCas.addFsToIndexes(createSentence(aCas, s.getBegin(), s.getEnd()));
+        if (!annotationEditorProperties.isSentenceLayerEditable()) {
+            // Transfer sentence boundaries
+            for (AnnotationFS s : selectSentences(backup)) {
+                aCas.addFsToIndexes(createSentence(aCas, s.getBegin(), s.getEnd()));
+            }
         }
     }
 
@@ -413,7 +418,8 @@ public class CasMerge
         return selectAt(aCas, aFs.getType(), aFs.getBegin(), aFs.getEnd()).stream() //
                 .filter(cand -> aAdapter.equivalents(aFs, cand,
                         (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f))) //
-                .findAny().isPresent();
+                .findAny() //
+                .isPresent();
     }
 
     private static List<AnnotationFS> selectCandidateRelationsAt(CAS aTargetCas,

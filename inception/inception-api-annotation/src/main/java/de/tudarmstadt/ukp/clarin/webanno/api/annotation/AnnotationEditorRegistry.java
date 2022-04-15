@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import java.util.List;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+
 public interface AnnotationEditorRegistry
 {
     List<AnnotationEditorFactory> getEditorFactories();
@@ -27,5 +29,5 @@ public interface AnnotationEditorRegistry
 
     AnnotationEditorFactory getDefaultEditorFactory();
 
-    AnnotationEditorFactory getPreferredEditorFactory(String aFormat);
+    AnnotationEditorFactory getPreferredEditorFactory(Project aProject, String aFormat);
 }

@@ -25,6 +25,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryI
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.htmleditor.config.HtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.io.html.HtmlFormatSupport;
 import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
@@ -46,7 +47,7 @@ public class AnnotatorJsHtmlAnnotationEditorFactory
     }
 
     @Override
-    public int accepts(String aFormat)
+    public int accepts(Project aProject, String aFormat)
     {
         switch (aFormat) {
         case LegacyHtmlFormatSupport.ID: // fall-through

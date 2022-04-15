@@ -38,16 +38,17 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 @EnableConfigurationProperties(BratAnnotationEditorPropertiesImpl.class)
 public class BratAnnotationEditorAutoConfiguration
 {
-    @Bean
+    @Bean(BratLineOrientedAnnotationEditorFactory.ID)
     public BratLineOrientedAnnotationEditorFactory lineOrientedBratEditor()
     {
         return new BratLineOrientedAnnotationEditorFactory();
     }
 
-    @Bean
-    public BratSentenceOrientedAnnotationEditorFactory bratEditor()
+    @Bean(BratSentenceOrientedAnnotationEditorFactory.ID)
+    public BratSentenceOrientedAnnotationEditorFactory bratEditor(
+            AnnotationSchemaService aAnnotationService)
     {
-        return new BratSentenceOrientedAnnotationEditorFactory();
+        return new BratSentenceOrientedAnnotationEditorFactory(aAnnotationService);
     }
 
     @Bean

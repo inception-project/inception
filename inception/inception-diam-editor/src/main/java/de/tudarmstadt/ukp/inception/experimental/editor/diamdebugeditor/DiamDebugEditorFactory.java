@@ -45,12 +45,6 @@ public class DiamDebugEditorFactory
     }
 
     @Override
-    public int getOrder()
-    {
-        return 1;
-    }
-
-    @Override
     public void initState(AnnotatorState aModelObject)
     {
         aModelObject.setPagingStrategy(new NoPagingStrategy());
