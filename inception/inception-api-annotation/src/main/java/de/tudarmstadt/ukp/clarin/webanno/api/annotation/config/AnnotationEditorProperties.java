@@ -51,4 +51,10 @@ public interface AnnotationEditorProperties
 
         return false;
     }
+
+    /**
+     * @deprecated Configurable JavaScript action to be removed soon.
+     */
+    @Deprecated
+    boolean isConfigurableJavaScriptActionEnabled();
 }
