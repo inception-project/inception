@@ -102,20 +102,18 @@ public class BratSerializerImpl
     {
         GetDocumentResponse aResponse = new GetDocumentResponse();
 
-        CAS aCas = aRequest.getCas();
-
         aResponse.setRtlMode(RTL == aRequest.getState().getScriptDirection());
         aResponse.setFontZoom(aRequest.getState().getPreferences().getFontZoom());
 
-        renderText(aCas, aResponse, aRequest);
+        renderText(aVDoc, aResponse, aRequest);
 
         // The rows need to be rendered first because we use the row boundaries to split
         // cross-row spans into multiple ranges
         renderBratRowsFromUnits(aResponse, aRequest);
 
-        renderBratTokensFromText(aResponse, aRequest);
+        renderBratTokensFromText(aResponse, aVDoc);
 
-        renderLayers(aResponse, aVDoc, aRequest);
+        renderLayers(aResponse, aVDoc);
 
         renderComments(aResponse, aVDoc, aRequest);
 
@@ -124,17 +122,12 @@ public class BratSerializerImpl
         return aResponse;
     }
 
-    private void renderLayers(GetDocumentResponse aResponse, VDocument aVDoc,
-            RenderRequest aRequest)
+    private void renderLayers(GetDocumentResponse aResponse, VDocument aVDoc)
     {
-        CAS cas = aRequest.getCas();
-
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
-                List<Offsets> offsets = vspan.getRanges().stream()
-                        .flatMap(range -> split(aResponse.getSentenceOffsets(),
-                                cas.getDocumentText().substring(aRequest.getWindowBeginOffset(),
-                                        aRequest.getWindowEndOffset()),
+                List<Offsets> offsets = vspan.getRanges().stream() //
+                        .flatMap(range -> split(aResponse.getSentenceOffsets(), aVDoc.getText(),
                                 range.getBegin(), range.getEnd()).stream())
                         .map(range -> {
                             int[] span = { range.getBegin(), range.getEnd() };
@@ -142,7 +135,8 @@ public class BratSerializerImpl
                             range.setBegin(span[0]);
                             range.setEnd(span[1]);
                             return range;
-                        }).collect(toList());
+                        }) //
+                        .collect(toList());
 
                 Entity entity = new Entity(vspan.getVid(), vspan.getType(), offsets,
                         vspan.getLabelHint(), vspan.getColorHint(), vspan.isActionButtons());
@@ -186,6 +180,14 @@ public class BratSerializerImpl
             RenderRequest aRequest)
     {
         CAS cas = aRequest.getCas();
+
+        if (cas == null) {
+            // FIXME: In curation, rendering happens at a different time than serializing and
+            // we can not keep the CAS around all the time - for the moment, we also do not need
+            // the sentence comments on the annotators views in curation, so we ignore this.
+            // Eventually, it should be changed so that we do not need the CAS here.
+            return;
+        }
 
         Map<AnnotationFS, Integer> sentenceIndexes = null;
         for (VComment vcomment : aVDoc.comments()) {
@@ -260,12 +262,13 @@ public class BratSerializerImpl
         return asList(new Argument("Arg1", aGovernorFs), new Argument("Arg2", aDependentFs));
     }
 
-    private void renderText(CAS aCas, GetDocumentResponse aResponse, RenderRequest aRequest)
+    private void renderText(VDocument aVDoc, GetDocumentResponse aResponse, RenderRequest aRequest)
     {
-        int windowBegin = aRequest.getWindowBeginOffset();
-        int windowEnd = aRequest.getWindowEndOffset();
+        if (!aRequest.isIncludeText()) {
+            return;
+        }
 
-        String visibleText = aCas.getDocumentText().substring(windowBegin, windowEnd);
+        String visibleText = aVDoc.getText();
         char replacementChar = 0;
         if (StringUtils.isNotEmpty(properties.getWhiteSpaceReplacementCharacter())) {
             replacementChar = properties.getWhiteSpaceReplacementCharacter().charAt(0);
@@ -275,12 +278,10 @@ public class BratSerializerImpl
         aResponse.setText(visibleText);
     }
 
-    private void renderBratTokensFromText(GetDocumentResponse aResponse, RenderRequest aRequest)
+    private void renderBratTokensFromText(GetDocumentResponse aResponse, VDocument aVDoc)
     {
-        int winBegin = aRequest.getWindowBeginOffset();
-        int winEnd = aRequest.getWindowEndOffset();
         List<Offsets> bratTokenOffsets = new ArrayList<>();
-        String visibleText = aRequest.getCas().getDocumentText().substring(winBegin, winEnd);
+        String visibleText = aVDoc.getText();
         BreakIterator bi = BreakIterator.getWordInstance(Locale.ROOT);
         bi.setText(visibleText);
         int last = bi.first();

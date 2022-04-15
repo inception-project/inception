@@ -19,16 +19,23 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.HOST_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.LINK_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.MULTI_VALUE_SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.createMultiLinkWithRoleTestTypeSystem;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.createMultiValueStringTestTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+import static org.apache.uima.fit.factory.CasFactory.createCas;
+import static org.apache.uima.fit.factory.CasFactory.createText;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -41,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.statistics.agreement.IAnnotationStudy;
@@ -64,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -103,6 +110,7 @@ public class AgreementMeasureTestSuite_ImplBase
         when(annotationService.listAnnotationLayer(any())).thenReturn(layers);
         when(annotationService.listSupportedFeatures(any(AnnotationLayer.class)))
                 .thenReturn(features);
+        when(annotationService.listSupportedFeatures(any(Project.class))).thenReturn(features);
         when(annotationService.listAnnotationFeature(any(AnnotationLayer.class)))
                 .thenReturn(features);
         when(annotationService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
@@ -151,6 +159,45 @@ public class AgreementMeasureTestSuite_ImplBase
     }
 
     public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
+    R multiValueStringPartialAgreement(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
+    {
+        AnnotationLayer layer = new AnnotationLayer(MULTI_VALUE_SPAN_TYPE, MULTI_VALUE_SPAN_TYPE,
+                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
+        layer.setId(1l);
+        layers.add(layer);
+
+        AnnotationFeature feature = new AnnotationFeature(project, layer, "values", "values",
+                CAS.TYPE_NAME_STRING_ARRAY);
+        feature.setId(1l);
+        feature.setLinkMode(NONE);
+        feature.setMode(ARRAY);
+        features.add(feature);
+
+        T traits = aSupport.createTraits();
+        traits.setLinkCompareBehavior(LINK_TARGET_AS_LABEL);
+
+        CAS user1 = createCas(createMultiValueStringTestTypeSystem());
+        user1.setDocumentText("This is a test.");
+        AnnotationBuilder.buildAnnotation(user1, MULTI_VALUE_SPAN_TYPE) //
+                .at(0, 4) //
+                .withFeature("values", asList("a")) //
+                .buildAndAddToIndexes();
+
+        CAS user2 = createCas(createMultiValueStringTestTypeSystem());
+        user2.setDocumentText("This is a test.");
+        AnnotationBuilder.buildAnnotation(user2, MULTI_VALUE_SPAN_TYPE) //
+                .at(0, 4) //
+                .withFeature("values", asList("a", "b")) //
+                .buildAndAddToIndexes();
+
+        AgreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
+
+        return measure.getAgreement(Map.of( //
+                "user1", asList(user1), //
+                "user2", asList(user2)));
+    }
+
+    public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
     R twoEmptyCasTest(AgreementMeasureSupport<T, R, S> aSupport) throws Exception
     {
         AnnotationLayer layer = new AnnotationLayer(Lemma.class.getName(),
@@ -189,30 +236,24 @@ public class AgreementMeasureTestSuite_ImplBase
         layer.setId(1l);
         layers.add(layer);
 
-        AnnotationFeature feature = new AnnotationFeature(project, layer, "PosValue", "PosValue",
-                CAS.TYPE_NAME_STRING);
+        AnnotationFeature feature = new AnnotationFeature(project, layer, POS._FeatName_PosValue,
+                POS._FeatName_PosValue, TYPE_NAME_STRING);
         feature.setId(1l);
         features.add(feature);
 
-        T traits = aSupport.createTraits();
+        var user1 = createText("test");
+        var user2 = createText("test");
+        var user3 = createText("test");
+        buildAnnotation(user3, POS.class).at(0, 4) //
+                .withFeature(POS._FeatName_PosValue, "test") //
+                .buildAndAddToIndexes();
 
-        JCas user1 = JCasFactory.createText("test");
+        AgreementMeasure<R> measure = aSupport.createMeasure(feature, aSupport.createTraits());
 
-        JCas user2 = JCasFactory.createText("test");
-
-        JCas user3 = JCasFactory.createText("test");
-        POS pos3 = new POS(user3, 0, 4);
-        pos3.setPosValue("test");
-        pos3.addToIndexes();
-
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1.getCas()));
-        casByUser.put("user2", asList(user2.getCas()));
-        casByUser.put("user3", asList(user3.getCas()));
-
-        AgreementMeasure<R> measure = aSupport.createMeasure(feature, traits);
-
-        return measure.getAgreement(casByUser);
+        return measure.getAgreement(Map.of( //
+                "user1", asList(user1), //
+                "user2", asList(user2), //
+                "user3", asList(user3)));
     }
 
     public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
@@ -273,13 +314,13 @@ public class AgreementMeasureTestSuite_ImplBase
         feature.setTagset(tagset);
         features.add(feature);
 
-        CAS user1 = CasFactory.createText("test");
+        CAS user1 = createText("test");
 
         buildAnnotation(user1, POS.class).at(0, 1) //
                 .withFeature(POS._FeatName_PosValue, "+") //
                 .buildAndAddToIndexes();
 
-        CAS user2 = CasFactory.createText("test");
+        CAS user2 = createText("test");
 
         buildAnnotation(user2, POS.class).at(0, 1) //
                 .withFeature(POS._FeatName_PosValue, "+") //
@@ -309,15 +350,15 @@ public class AgreementMeasureTestSuite_ImplBase
         feature.setTagset(tagset);
         features.add(feature);
 
-        CAS user1a = CasFactory.createText("test");
-        CAS user1b = CasFactory.createText("test");
+        CAS user1a = createText("test");
+        CAS user1b = createText("test");
 
         buildAnnotation(user1a, POS.class).at(0, 1) //
                 .withFeature(POS._FeatName_PosValue, "+") //
                 .buildAndAddToIndexes();
 
-        CAS user2a = CasFactory.createText("test");
-        CAS user2b = CasFactory.createText("test");
+        CAS user2a = createText("test");
+        CAS user2b = createText("test");
 
         buildAnnotation(user2b, POS.class).at(0, 1) //
                 .withFeature(POS._FeatName_PosValue, "+") //

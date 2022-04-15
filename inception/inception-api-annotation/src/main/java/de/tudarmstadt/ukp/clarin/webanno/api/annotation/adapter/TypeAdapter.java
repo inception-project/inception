@@ -31,6 +31,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -156,7 +157,8 @@ public interface TypeAdapter
      *            the value.
      */
     void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
-            AnnotationFeature aFeature, Object aValue);
+            AnnotationFeature aFeature, Object aValue)
+        throws AnnotationException;
 
     /**
      * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
@@ -165,6 +167,7 @@ public interface TypeAdapter
     @Deprecated
     default void setFeatureValue(AnnotatorState aState, CAS aCas, int aAddress,
             AnnotationFeature aFeature, Object aValue)
+        throws AnnotationException
     {
         setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aCas, aAddress,
                 aFeature, aValue);

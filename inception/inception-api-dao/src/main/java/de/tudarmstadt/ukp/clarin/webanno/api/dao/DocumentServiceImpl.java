@@ -40,7 +40,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 
@@ -55,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -91,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SourceDocumentStateStats;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
@@ -302,6 +306,62 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional
+    public List<AnnotationDocument> createOrGetAnnotationDocuments(SourceDocument aDocument,
+            Collection<User> aUsers)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aUsers, "Users must be specified");
+
+        if (aUsers.isEmpty()) {
+            return emptyList();
+        }
+
+        Set<String> usersWithoutAnnotationDocument = new HashSet<>();
+        aUsers.forEach(user -> usersWithoutAnnotationDocument.add(user.getUsername()));
+
+        List<AnnotationDocument> annDocs = listAnnotationDocuments(aDocument);
+        annDocs.stream().forEach(annDoc -> usersWithoutAnnotationDocument.remove(annDoc.getUser()));
+
+        for (var user : usersWithoutAnnotationDocument) {
+            var annDoc = new AnnotationDocument(user, aDocument);
+            createAnnotationDocument(annDoc);
+            annDocs.add(annDoc);
+        }
+
+        return annDocs;
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationDocument> createOrGetAnnotationDocuments(
+            Collection<SourceDocument> aDocuments, User aUser)
+    {
+        Validate.notNull(aDocuments, "Source documents must be specified");
+        Validate.notNull(aUser, "User must be specified");
+
+        if (aDocuments.isEmpty()) {
+            return emptyList();
+        }
+
+        Project project = aDocuments.iterator().next().getProject();
+        Set<SourceDocument> sourceDocsWithoutAnnotationDocument = new HashSet<>();
+        aDocuments.forEach(srcDoc -> sourceDocsWithoutAnnotationDocument.add(srcDoc));
+
+        List<AnnotationDocument> annDocs = listAnnotationDocuments(project, aUser);
+        annDocs.stream().forEach(
+                annDoc -> sourceDocsWithoutAnnotationDocument.remove(annDoc.getDocument()));
+
+        for (var srcDoc : sourceDocsWithoutAnnotationDocument) {
+            var annDoc = new AnnotationDocument(aUser.getUsername(), srcDoc);
+            createAnnotationDocument(annDoc);
+            annDocs.add(annDoc);
+        }
+
+        return annDocs;
+    }
+
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser)
     {
@@ -312,11 +372,7 @@ public class DocumentServiceImpl
         // create one.
         AnnotationDocument annotationDocument = null;
         if (!existsAnnotationDocument(aDocument, aUser)) {
-            annotationDocument = new AnnotationDocument();
-            annotationDocument.setDocument(aDocument);
-            annotationDocument.setName(aDocument.getName());
-            annotationDocument.setUser(aUser.getUsername());
-            annotationDocument.setProject(aDocument.getProject());
+            annotationDocument = new AnnotationDocument(aUser.getUsername(), aDocument);
             createAnnotationDocument(annotationDocument);
         }
         else {
@@ -345,8 +401,10 @@ public class DocumentServiceImpl
         return entityManager
                 .createQuery("FROM AnnotationDocument WHERE document = :document AND "
                         + "user =:user" + " AND project = :project", AnnotationDocument.class)
-                .setParameter("document", aDocument).setParameter("user", aUser)
-                .setParameter("project", aDocument.getProject()).getSingleResult();
+                .setParameter("document", aDocument) //
+                .setParameter("user", aUser) //
+                .setParameter("project", aDocument.getProject()) //
+                .getSingleResult();
     }
 
     @Override
@@ -894,6 +952,20 @@ public class DocumentServiceImpl
         return casStorageService.getCasTimestamp(aDocument, aUsername);
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, String aUsername,
+            long aExpectedTimeStamp, String aContextAction)
+        throws IOException, ConcurentCasModificationException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aUsername, "Username must be specified");
+
+        return casStorageService.verifyCasTimestamp(aDocument, aUsername, aExpectedTimeStamp,
+                aContextAction);
+    }
+
     @Override
     @Transactional
     public void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
@@ -913,6 +985,8 @@ public class DocumentServiceImpl
                 .publishEvent(new AfterCasWrittenEvent(this, aAnnotationDocument, aCas));
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public void deleteAnnotationCas(SourceDocument aSourceDocument, String aUsername)
         throws IOException
@@ -920,6 +994,8 @@ public class DocumentServiceImpl
         casStorageService.deleteCas(aSourceDocument, aUsername);
     }
 
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
     public void deleteAnnotationCas(AnnotationDocument aAnnotationDocument) throws IOException
     {
@@ -982,7 +1058,7 @@ public class DocumentServiceImpl
     }
 
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = NoResultException.class)
     public boolean isAnnotationFinished(SourceDocument aDocument, String aUsername)
     {
         String query = String.join("\n", //
@@ -999,6 +1075,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public List<AnnotationDocument> listAnnotationDocuments(Project aProject)
     {
         String query = String.join("\n", //
@@ -1040,6 +1117,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public List<AnnotationDocument> listAnnotationDocuments(Project aProject, User aUser)
     {
         return entityManager
@@ -1066,6 +1144,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject,
             User aUser)
     {
@@ -1083,6 +1162,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, User aUser)
     {
         // First get the source documents
@@ -1115,6 +1195,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument)
     {
         Set<String> users = projectService.listProjectUsersWithPermissions(aDocument.getProject())
@@ -1142,6 +1223,40 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument,
+            List<AnnotationDocument> aRelevantAnnotationDocuments, List<User> aUsersWithPermission)
+    {
+        Set<String> users = aUsersWithPermission.stream() //
+                .map(User::getUsername) //
+                .collect(toSet());
+
+        Map<AnnotationDocumentState, AtomicLong> counts = new LinkedHashMap<>();
+        aRelevantAnnotationDocuments.stream()
+                .filter(annDoc -> annDoc.getDocument().equals(aDocument)) //
+                .forEach(aDoc -> {
+                    AtomicLong count = counts.computeIfAbsent(aDoc.getState(),
+                            _key -> new AtomicLong(0));
+                    count.incrementAndGet();
+                    users.remove(aDoc.getUser());
+                });
+
+        counts.computeIfAbsent(AnnotationDocumentState.NEW, _key -> new AtomicLong(0))
+                .addAndGet(users.size());
+
+        Map<AnnotationDocumentState, Long> finalCounts = new LinkedHashMap<>();
+        for (AnnotationDocumentState state : AnnotationDocumentState.values()) {
+            finalCounts.put(state, 0l);
+        }
+        for (Entry<AnnotationDocumentState, AtomicLong> e : counts.entrySet()) {
+            finalCounts.put(e.getKey(), e.getValue().get());
+        }
+
+        return finalCounts;
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public SourceDocumentStateStats getSourceDocumentStats(Project aProject)
     {
         // This query is better because we do not inject strings into the query string, but it
@@ -1190,6 +1305,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional
     public boolean existsCurationDocument(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -1230,6 +1346,20 @@ public class DocumentServiceImpl
     public AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
     {
+        AnnotationDocumentState oldState = setAnnotationDocumentStateNoEvent(aDocument, aState,
+                aFlags);
+
+        if (!Objects.equals(oldState, aDocument.getState())) {
+            applicationEventPublisher
+                    .publishEvent(new AnnotationStateChangeEvent(this, aDocument, oldState));
+        }
+
+        return oldState;
+    }
+
+    private AnnotationDocumentState setAnnotationDocumentStateNoEvent(AnnotationDocument aDocument,
+            AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags)
+    {
         AnnotationDocumentState oldState = aDocument.getState();
 
         aDocument.setState(aState);
@@ -1249,12 +1379,6 @@ public class DocumentServiceImpl
         }
 
         createAnnotationDocument(aDocument);
-
-        if (!Objects.equals(oldState, aDocument.getState())) {
-            applicationEventPublisher
-                    .publishEvent(new AnnotationStateChangeEvent(this, aDocument, oldState));
-        }
-
         return oldState;
     }
 
@@ -1264,7 +1388,7 @@ public class DocumentServiceImpl
             AnnotationDocumentState aState)
     {
         for (AnnotationDocument doc : aDocuments) {
-            setAnnotationDocumentState(doc, aState);
+            setAnnotationDocumentStateNoEvent(doc, aState);
         }
     }
 
@@ -1315,6 +1439,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public long countSourceDocuments()
     {
         String query = String.join("\n", "SELECT COUNT(*)", "FROM SourceDocument");
@@ -1322,6 +1447,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public long countAnnotationDocuments()
     {
         String query = String.join("\n", "SELECT COUNT(*)", "FROM AnnotationDocument");
@@ -1329,6 +1455,7 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
     public void upgradeAllAnnotationDocuments(Project aProject) throws IOException
     {
         // Perform a forced upgrade on all CASes in the project. This action affects all users

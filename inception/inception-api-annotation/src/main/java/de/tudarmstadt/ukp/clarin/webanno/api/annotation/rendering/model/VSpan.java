@@ -35,6 +35,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class VSpan
     extends VObject
 {
+    private static final long serialVersionUID = -1610831873656531589L;
+
     private final List<VRange> ranges;
 
     public VSpan(AnnotationLayer aLayer, AnnotationFS aFS, String aType, VRange aOffsets,

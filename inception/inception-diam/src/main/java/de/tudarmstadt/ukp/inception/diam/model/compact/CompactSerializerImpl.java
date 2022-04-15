@@ -22,15 +22,16 @@ import static java.util.stream.Collectors.toList;
 
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.Offsets;
@@ -58,17 +59,14 @@ public class CompactSerializerImpl
     {
         CompactAnnotatedText aResponse = new CompactAnnotatedText();
 
-        CAS aCas = aRequest.getCas();
+        renderText(aVDoc, aResponse, aRequest);
 
-        renderText(aCas, aResponse, aRequest);
-
-        renderLayers(aResponse, aVDoc, aRequest);
+        renderLayers(aResponse, aVDoc);
 
         return aResponse;
     }
 
-    private void renderLayers(CompactAnnotatedText aResponse, VDocument aVDoc,
-            RenderRequest aRequest)
+    private void renderLayers(CompactAnnotatedText aResponse, VDocument aVDoc)
     {
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
@@ -93,6 +91,16 @@ public class CompactSerializerImpl
                 aResponse.addRelation(arc);
             }
         }
+
+        for (var marker : aVDoc.getMarkers()) {
+            if (marker instanceof VAnnotationMarker) {
+                aResponse.addAnnotationMarker(
+                        new CompactAnnotationMarker((VAnnotationMarker) marker));
+            }
+            else if (marker instanceof VTextMarker) {
+                aResponse.addTextMarker(new CompactTextMarker((VTextMarker) marker));
+            }
+        }
     }
 
     /**
@@ -104,12 +112,13 @@ public class CompactSerializerImpl
                 new CompactArgument("Arg2", aDependentFs));
     }
 
-    private void renderText(CAS aCas, CompactAnnotatedText aResponse, RenderRequest aRequest)
+    private void renderText(VDocument aVDoc, CompactAnnotatedText aResponse, RenderRequest aRequest)
     {
-        int windowBegin = aRequest.getWindowBeginOffset();
-        int windowEnd = aRequest.getWindowEndOffset();
+        if (!aRequest.isIncludeText()) {
+            return;
+        }
 
-        String visibleText = aCas.getDocumentText().substring(windowBegin, windowEnd);
+        String visibleText = aVDoc.getText();
         visibleText = TextUtils.sanitizeVisibleText(visibleText, '\uFFFD');
         aResponse.setText(visibleText);
     }

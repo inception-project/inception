@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>23.0-SNAPSHOT</version>
+    <version>24.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-external-editor</artifactId>
   <name>INCEpTION - Editor - External editor</name>
@@ -48,6 +48,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-diam</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-websocket</artifactId>
     </dependency>
 
     <dependency>
@@ -97,6 +101,10 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-spring</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-request</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>org.slf4j</groupId>
@@ -120,7 +128,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>generate-sources</phase>
+            <phase>${ts-link-dependency-phase}</phase>
             <configuration>
               <arguments>link @inception-project/inception-js-api</arguments>
             </configuration>
@@ -130,7 +138,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>generate-sources</phase>
+            <phase>${ts-link-dependency-phase}</phase>
             <configuration>
               <arguments>link @inception-project/inception-diam</arguments>
             </configuration>
@@ -140,7 +148,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>compile</phase>
+            <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build</arguments>
             </configuration>
@@ -150,7 +158,7 @@
             <goals>
               <goal>npm</goal>
             </goals>
-            <phase>compile</phase>
+            <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build-minified</arguments>
             </configuration>

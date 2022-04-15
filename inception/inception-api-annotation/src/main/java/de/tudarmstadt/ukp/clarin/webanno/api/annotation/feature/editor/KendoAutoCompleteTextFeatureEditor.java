@@ -20,18 +20,17 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
-import java.util.List;
-
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 
 /**
  * String feature editor using a Kendo AutoComplete field.
@@ -61,17 +60,15 @@ public class KendoAutoCompleteTextFeatureEditor
 {
     private static final long serialVersionUID = 8686646370500180943L;
 
-    private final int maxResults;
+    private @SpringBean StringFeatureSupportProperties properties;
 
     public KendoAutoCompleteTextFeatureEditor(String aId, MarkupContainer aItem,
-            IModel<FeatureState> aModel, int aMaxResults, AnnotationActionHandler aHandler)
+            IModel<FeatureState> aModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, aModel);
 
         AnnotationFeature feat = getModelObject().feature;
         StringFeatureTraits traits = readFeatureTraits(feat);
-
-        maxResults = aMaxResults;
 
         add(new KeyBindingsPanel("keyBindings", () -> traits.getKeyBindings(), aModel, aHandler)
                 // The key bindings are only visible when the label is also enabled, i.e. when the
@@ -91,21 +88,7 @@ public class KendoAutoCompleteTextFeatureEditor
     @Override
     protected AbstractTextComponent createInputField()
     {
-        return new ReorderableTagAutoCompleteField("value")
-        {
-            private static final long serialVersionUID = 311286735004237737L;
-
-            @Override
-            protected List<ReorderableTag> getChoices(String aTerm)
-            {
-                FeatureState state = KendoAutoCompleteTextFeatureEditor.this.getModelObject();
-
-                TagRanker ranker = new TagRanker();
-                ranker.setMaxResults(maxResults);
-                ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
-
-                return ranker.rank(aTerm, state.tagset);
-            }
-        };
+        return new ReorderableTagAutoCompleteField("value", getModel(),
+                properties.getAutoCompleteMaxResults());
     }
 }

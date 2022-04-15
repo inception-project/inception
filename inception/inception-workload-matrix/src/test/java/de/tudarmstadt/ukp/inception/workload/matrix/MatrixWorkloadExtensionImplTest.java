@@ -134,7 +134,7 @@ public class MatrixWorkloadExtensionImplTest
     }
 
     @Test
-    public void thatRecalculatingStateDoesNotFallBacKBehindCuration() throws Exception
+    public void thatRecalculatingStateDoesNotFallBackBehindCuration() throws Exception
     {
         documentService.setSourceDocumentState(sourceDocument,
                 SourceDocumentState.CURATION_IN_PROGRESS);

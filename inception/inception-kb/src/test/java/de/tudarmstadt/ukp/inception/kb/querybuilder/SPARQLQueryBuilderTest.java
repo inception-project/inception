@@ -1416,16 +1416,21 @@ public class SPARQLQueryBuilderTest
         kb.setLabelIri(RDFS.LABEL.stringValue());
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
 
-        // The label "Thomas Henricus" is not assigned directly via rdfs:label but rather via a
-        // subproperty of it. Thus, this test also checks if the label sub-property support works.
+        // The label "Gadebusch, Thomas Henricus" is not assigned directly via rdfs:label but rather
+        // via a subproperty of it. Thus, this test also checks if the label sub-property support
+        // works.
+        //
+        // <https://d-nb.info/gnd/100136605> gndo:variantNameForThePerson "Gadebusch, Thomas
+        // Henricus";
+        // gndo:variantNameEntityForThePerson _:node1fhgbdto1x8884759 .
         List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder //
                 .forItems(kb) //
-                .withLabelMatchingExactlyAnyOf("Thomas Henricus"));
+                .withLabelMatchingExactlyAnyOf("Gadebusch, Thomas Henricus"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> "Thomas Henricus".equals(label));
+                .allMatch(label -> "Gadebusch, Thomas Henricus".equals(label));
     }
 
     @Tag("slow")

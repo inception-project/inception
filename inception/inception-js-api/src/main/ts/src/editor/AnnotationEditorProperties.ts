@@ -21,4 +21,5 @@ export interface AnnotationEditorProperties {
   scriptSources: ReadonlyArray<string>;
   stylesheetSources: ReadonlyArray<string>;
   diamAjaxCallbackUrl: string;
+  diamWsUrl: string;
 }

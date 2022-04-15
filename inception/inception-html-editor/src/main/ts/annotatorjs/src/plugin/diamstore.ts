@@ -19,8 +19,6 @@ import { CompactAnnotatedText, CompactSpan, DiamAjax } from '@inception-project/
 import { textChangeRangeIsUnchanged } from 'typescript';
 import { Plugin, Annotator } from '../annotator';
 
-const ANNOTATIONS_SERIALIZER = "compact";
-
 interface Range {
   start: string;
   startOffset: number;
@@ -91,7 +89,7 @@ export class DiamStore extends Plugin {
 
   loadAnnotations() {
     let annotations = [];
-    this.ajax.loadAnnotations(ANNOTATIONS_SERIALIZER).then((doc: CompactAnnotatedText) => {
+    this.ajax.loadAnnotations().then((doc: CompactAnnotatedText) => {
       if (doc.spans) {
         annotations.push(...this.compactSpansToAnnotation(doc.spans));
       }

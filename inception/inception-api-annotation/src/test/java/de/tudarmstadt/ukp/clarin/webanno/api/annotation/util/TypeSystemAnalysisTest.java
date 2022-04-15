@@ -17,11 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
+import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
+import static org.apache.uima.cas.CAS.TYPE_NAME_FLOAT;
+import static org.apache.uima.cas.CAS.TYPE_NAME_INTEGER;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
-import org.apache.commons.lang3.builder.ToStringStyle;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 
 public class TypeSystemAnalysisTest
@@ -38,7 +44,34 @@ public class TypeSystemAnalysisTest
     @BeforeEach
     public void setup()
     {
-        ToStringBuilder.setDefaultStyle(ToStringStyle.SHORT_PREFIX_STYLE);
+        ToStringBuilder.setDefaultStyle(SHORT_PREFIX_STYLE);
+    }
+
+    @Test
+    public void testSpanWithArrayFeature() throws Exception
+    {
+        TypeSystemDescription tsd = createTypeSystemDescription("tsd/spanWithArrayFeatures");
+        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
+
+        AnnotationLayer spanLayer = new AnnotationLayer();
+        spanLayer.setName("webanno.custom.Span");
+        spanLayer.setUiName("Span");
+        spanLayer.setType(WebAnnoConst.SPAN_TYPE);
+        spanLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
+        spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        spanLayer.setCrossSentence(true);
+
+        var stringsFeature = new AnnotationFeature("stringsFeature", TYPE_NAME_STRING_ARRAY);
+        stringsFeature.setMode(MultiValueMode.ARRAY);
+
+        SoftAssertions softly = new SoftAssertions();
+        softly.assertThat(analysis.getLayers()) //
+                .containsExactly(spanLayer) //
+                .usingRecursiveComparison();
+        softly.assertThat(analysis.getFeatures(spanLayer.getName()))
+                .containsExactlyInAnyOrder(stringsFeature) //
+                .usingRecursiveComparison();
+        softly.assertAll();
     }
 
     @Test
@@ -55,19 +88,18 @@ public class TypeSystemAnalysisTest
         spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         spanLayer.setCrossSentence(true);
 
-        AnnotationFeature stringFeature = new AnnotationFeature("stringFeature",
-                CAS.TYPE_NAME_STRING);
-        AnnotationFeature intFeature = new AnnotationFeature("intFeature", CAS.TYPE_NAME_INTEGER);
-        AnnotationFeature booleanFeature = new AnnotationFeature("booleanFeature",
-                CAS.TYPE_NAME_BOOLEAN);
-        AnnotationFeature floatFeature = new AnnotationFeature("floatFeature", CAS.TYPE_NAME_FLOAT);
+        var stringFeature = new AnnotationFeature("stringFeature", TYPE_NAME_STRING);
+        var intFeature = new AnnotationFeature("intFeature", TYPE_NAME_INTEGER);
+        var booleanFeature = new AnnotationFeature("booleanFeature", TYPE_NAME_BOOLEAN);
+        var floatFeature = new AnnotationFeature("floatFeature", TYPE_NAME_FLOAT);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()).containsExactly(spanLayer)
-                .usingFieldByFieldElementComparator();
+        softly.assertThat(analysis.getLayers()) //
+                .containsExactly(spanLayer) //
+                .usingRecursiveComparison();
         softly.assertThat(analysis.getFeatures(spanLayer.getName()))
                 .containsExactlyInAnyOrder(stringFeature, intFeature, booleanFeature, floatFeature)
-                .usingFieldByFieldElementComparator();
+                .usingRecursiveComparison();
         softly.assertAll();
     }
 
@@ -85,16 +117,16 @@ public class TypeSystemAnalysisTest
         slotSpanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         slotSpanLayer.setCrossSentence(true);
 
-        AnnotationFeature freeSlot = new AnnotationFeature("freeSlot", CAS.TYPE_NAME_ANNOTATION);
+        AnnotationFeature freeSlot = new AnnotationFeature("freeSlot", TYPE_NAME_ANNOTATION);
 
         AnnotationFeature boundSlot = new AnnotationFeature("boundSlot", "webanno.custom.SlotSpan");
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()).containsExactly(slotSpanLayer)
-                .usingFieldByFieldElementComparator();
+        softly.assertThat(analysis.getLayers()) //
+                .containsExactly(slotSpanLayer) //
+                .usingRecursiveComparison();
         softly.assertThat(analysis.getFeatures(slotSpanLayer.getName()))
-                .containsExactlyInAnyOrder(freeSlot, boundSlot)
-                .usingFieldByFieldElementComparator();
+                .containsExactlyInAnyOrder(freeSlot, boundSlot).usingRecursiveComparison();
         softly.assertAll();
     }
 
@@ -121,20 +153,18 @@ public class TypeSystemAnalysisTest
         relationTargetLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         relationTargetLayer.setCrossSentence(true);
 
-        AnnotationFeature stringFeature = new AnnotationFeature("stringFeature",
-                CAS.TYPE_NAME_STRING);
-        AnnotationFeature intFeature = new AnnotationFeature("intFeature", CAS.TYPE_NAME_INTEGER);
-        AnnotationFeature booleanFeature = new AnnotationFeature("booleanFeature",
-                CAS.TYPE_NAME_BOOLEAN);
-        AnnotationFeature floatFeature = new AnnotationFeature("floatFeature", CAS.TYPE_NAME_FLOAT);
+        var stringFeature = new AnnotationFeature("stringFeature", TYPE_NAME_STRING);
+        var intFeature = new AnnotationFeature("intFeature", TYPE_NAME_INTEGER);
+        var booleanFeature = new AnnotationFeature("booleanFeature", TYPE_NAME_BOOLEAN);
+        var floatFeature = new AnnotationFeature("floatFeature", TYPE_NAME_FLOAT);
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(analysis.getLayers())
                 .containsExactlyInAnyOrder(relationLayer, relationTargetLayer)
-                .usingFieldByFieldElementComparator();
+                .usingRecursiveComparison();
         softly.assertThat(analysis.getFeatures(relationLayer.getName()))
                 .containsExactlyInAnyOrder(stringFeature, intFeature, booleanFeature, floatFeature)
-                .usingFieldByFieldElementComparator();
+                .usingRecursiveComparison();
         softly.assertAll();
     }
 
@@ -152,17 +182,16 @@ public class TypeSystemAnalysisTest
         chainLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         chainLayer.setCrossSentence(true);
 
-        AnnotationFeature referenceRelationFeature = new AnnotationFeature("referenceRelation",
-                CAS.TYPE_NAME_STRING);
-        AnnotationFeature referenceTypeFeature = new AnnotationFeature("referenceType",
-                CAS.TYPE_NAME_STRING);
+        var referenceRelationFeature = new AnnotationFeature("referenceRelation", TYPE_NAME_STRING);
+        var referenceTypeFeature = new AnnotationFeature("referenceType", TYPE_NAME_STRING);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()).containsExactlyInAnyOrder(chainLayer)
-                .usingFieldByFieldElementComparator();
+        softly.assertThat(analysis.getLayers()) //
+                .containsExactlyInAnyOrder(chainLayer) //
+                .usingRecursiveComparison();
         softly.assertThat(analysis.getFeatures(chainLayer.getName()))
                 .containsExactlyInAnyOrder(referenceRelationFeature, referenceTypeFeature)
-                .usingFieldByFieldElementComparator();
+                .usingRecursiveComparison();
         softly.assertAll();
     }
 
@@ -173,8 +202,10 @@ public class TypeSystemAnalysisTest
         TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()).extracting(l -> l.getName() + ":" + l.getType())
-                .hasSize(27).containsExactlyInAnyOrder(
+        softly.assertThat(analysis.getLayers()) //
+                .extracting(l -> l.getName() + ":" + l.getType()) //
+                .hasSize(27) //
+                .containsExactlyInAnyOrder(
                         "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference:chain",
                         "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.Morpheme:span",
                         "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures:span",
@@ -199,7 +230,8 @@ public class TypeSystemAnalysisTest
                         "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.chunk.Chunk:span",
                         "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency:relation",
                         "de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation:span",
-                        "webanno.custom.Chain:chain", "webanno.custom.Relation:relation",
+                        "webanno.custom.Chain:chain", //
+                        "webanno.custom.Relation:relation", //
                         "webanno.custom.SlotSpan:span");
         softly.assertAll();
     }
@@ -212,8 +244,10 @@ public class TypeSystemAnalysisTest
         TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()).extracting(l -> l.getName() + ":" + l.getType())
-                .hasSize(8).containsExactlyInAnyOrder(
+        softly.assertThat(analysis.getLayers()) //
+                .extracting(l -> l.getName() + ":" + l.getType()) //
+                .hasSize(8) //
+                .containsExactlyInAnyOrder(
                         "org.apache.ctakes.typesystem.type.textspan.Segment:span",
                         "org.apache.ctakes.typesystem.type.textspan.Sentence:span",
                         "org.apache.ctakes.typesystem.type.syntax.Chunk:span",
@@ -243,8 +277,11 @@ public class TypeSystemAnalysisTest
         TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()).extracting(l -> l.getName() + ":" + l.getType())
-                .hasSize(4).containsExactlyInAnyOrder("eu.project.ttc.types.WordAnnotation:span",
+        softly.assertThat(analysis.getLayers()) //
+                .extracting(l -> l.getName() + ":" + l.getType()) //
+                .hasSize(4) //
+                .containsExactlyInAnyOrder( //
+                        "eu.project.ttc.types.WordAnnotation:span",
                         "eu.project.ttc.types.TermComponentAnnotation:span",
                         "eu.project.ttc.types.TranslationCandidateAnnotation:span",
                         "eu.project.ttc.types.FormAnnotation:span");
@@ -258,8 +295,10 @@ public class TypeSystemAnalysisTest
         TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(analysis.getLayers()).extracting(l -> l.getName() + ":" + l.getType())
-                .hasSize(58).containsExactlyInAnyOrder(
+        softly.assertThat(analysis.getLayers()) //
+                .extracting(l -> l.getName() + ":" + l.getType()) //
+                .hasSize(58) //
+                .containsExactlyInAnyOrder(
                         "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference:chain",
                         "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.Morpheme:span",
                         "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures:span",
@@ -313,7 +352,8 @@ public class TypeSystemAnalysisTest
                         "org.cleartk.ne.type.Ace2005Document:span",
                         "org.cleartk.ne.type.Chunk:span",
                         "org.cleartk.score.type.ScoredAnnotation:span",
-                        "org.cleartk.srl.type.Chunk:span", "org.cleartk.timeml.type.Anchor:span",
+                        "org.cleartk.srl.type.Chunk:span", //
+                        "org.cleartk.timeml.type.Anchor:span", //
                         "org.cleartk.timeml.type.Event:span",
                         "org.cleartk.token.type.Subtoken:span",
                         "org.cleartk.token.type.Token:span");

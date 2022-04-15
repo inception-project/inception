@@ -523,13 +523,13 @@ public class SearchAnnotationSidebar
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         if (selectedResult != null) {
-            AnnotatorState state = aEvent.getState();
-            if (state.getWindowBeginOffset() <= selectedResult.getOffsetStart()
-                    && selectedResult.getOffsetEnd() <= state.getWindowEndOffset()) {
+            int windowBeginOffset = aEvent.getRequest().getWindowBeginOffset();
+            if (windowBeginOffset <= selectedResult.getOffsetStart()
+                    && selectedResult.getOffsetEnd() <= aEvent.getRequest().getWindowEndOffset()) {
                 aEvent.getVDocument()
                         .add(new VTextMarker(VMarker.MATCH_FOCUS,
-                                selectedResult.getOffsetStart() - state.getWindowBeginOffset(),
-                                selectedResult.getOffsetEnd() - state.getWindowBeginOffset()));
+                                selectedResult.getOffsetStart() - windowBeginOffset,
+                                selectedResult.getOffsetEnd() - windowBeginOffset));
             }
         }
     }
@@ -683,6 +683,7 @@ public class SearchAnnotationSidebar
 
     private void setFeatureValues(SourceDocument aDocument, CAS aCas, SpanAdapter aAdapter,
             AnnotatorState state, AnnotationFS annoFS)
+        throws AnnotationException
     {
         int addr = getAddr(annoFS);
         List<FeatureState> featureStates = state.getFeatureStates();

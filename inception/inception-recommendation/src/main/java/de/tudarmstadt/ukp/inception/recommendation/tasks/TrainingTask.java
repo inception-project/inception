@@ -26,8 +26,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.error;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.info;
 import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.warn;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
@@ -63,9 +63,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
@@ -193,7 +193,7 @@ public class TrainingTask
                                         .orElse(RecommenderContext.EMPTY_CONTEXT));
                         ctx.setUser(user);
 
-                        RecommendationEngineCapability capability = recommendationEngine
+                        TrainingCapability capability = recommendationEngine
                                 .getTrainingCapability();
 
                         // If engine does not support training, mark engine ready and skip to
@@ -222,6 +222,11 @@ public class TrainingTask
                             logMessages.add(warn(this,
                                     "There are no [%s] annotations available to train on.",
                                     layer.getUiName()));
+                            // This can happen if there were already predictions based on existing
+                            // annotations, but all annotations have been removed/deleted. To ensure
+                            // that the prediction run removes the stale predictions, we need to
+                            // call it a success here.
+                            seenSuccessfulTraining = true;
                             continue;
                         }
 

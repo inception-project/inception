@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
@@ -950,9 +951,30 @@ public class CasStorageServiceImpl
         Validate.notBlank(aUser, "User must be specified");
 
         // Ensure that the CAS is not being re-written and temporarily unavailable while we check
-        // for its existence
+        // for its timestamp
         try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
             return driver.getCasMetadata(aDocument, aUser).map(CasStorageMetadata::getTimestamp);
+        }
+        catch (IOException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public Optional<Long> verifyCasTimestamp(SourceDocument aDocument, String aUser,
+            long aExpectedTimeStamp, String aContextAction)
+        throws IOException, ConcurentCasModificationException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notBlank(aUser, "User must be specified");
+
+        // Ensure that the CAS is not being re-written and temporarily unavailable while we check
+        // for its timestamp
+        try (WithExclusiveAccess access = new WithExclusiveAccess(aDocument, aUser)) {
+            return driver.verifyCasTimestamp(aDocument, aUser, aExpectedTimeStamp, aContextAction);
         }
         catch (IOException e) {
             throw e;

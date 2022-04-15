@@ -78,7 +78,6 @@ import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBErrorHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.DisabledKBWarning;
 
 @Deprecated
 public class SubjectObjectFeatureEditor
@@ -111,8 +110,6 @@ public class SubjectObjectFeatureEditor
         stateModel = aStateModel;
         actionHandler = aHandler;
         project = this.getModelObject().feature.getProject();
-
-        add(createDisabledKbWarningLabel());
 
         content = new WebMarkupContainer("content");
         content.setOutputMarkupId(true);
@@ -432,14 +429,6 @@ public class SubjectObjectFeatureEditor
             aComponent.error("Error: " + e.getMessage());
             LOG.error("Error: " + e.getMessage(), e);
         }
-    }
-
-    private DisabledKBWarning createDisabledKbWarningLabel()
-    {
-        if (linkedAnnotationFeature == null) {
-            linkedAnnotationFeature = getLinkedAnnotationFeature();
-        }
-        return new DisabledKBWarning("disabledKBWarning", Model.of(linkedAnnotationFeature));
     }
 
     @OnEvent

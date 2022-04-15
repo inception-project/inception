@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>23.0-SNAPSHOT</version>
+    <version>24.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
 
@@ -730,6 +730,7 @@
                 <toc>left</toc>
                 <include-dir>./admin-guide/</include-dir>
                 <source-dir>${project.basedir}/../</source-dir>
+                <imagesDir>./admin-guide/images</imagesDir>
               </attributes>
             </configuration>
           </execution>
@@ -824,6 +825,7 @@
               <product-name>INCEpTION</product-name>
               <product-website-url>https://inception-project.github.io</product-website-url>
               <icons>font</icons>
+              <experimental>true</experimental>
             </attributes>
             <requires>
               <require>asciidoctor-diagram</require>

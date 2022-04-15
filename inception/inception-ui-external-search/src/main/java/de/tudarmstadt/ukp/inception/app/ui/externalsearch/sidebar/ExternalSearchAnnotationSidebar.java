@@ -59,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
@@ -215,7 +216,7 @@ public class ExternalSearchAnnotationSidebar
         if (searchState.getSelectedResult() != null
                 && (searchState.getSelectedResult().getDocumentId()
                         .equals(getAnnotationPage().getModelObject().getDocument().getName()))) {
-            highlightKeywords(aEvent.getState(), aEvent.getVDocument());
+            highlightKeywords(aEvent.getRequest(), aEvent.getVDocument());
         }
         else {
             // a document was opened not by selecting from the result list
@@ -225,7 +226,7 @@ public class ExternalSearchAnnotationSidebar
 
     // TODO: Maybe we should highlight all occurrences of the query term in the texst and
     // not only the ones returned in the highlights?
-    private void highlightKeywords(AnnotatorState aAnnotatorState, VDocument aVDocument)
+    private void highlightKeywords(RenderRequest aRequest, VDocument aVDocument)
     {
         ExternalSearchUserState searchState = searchStateModel.getObject();
         try {
@@ -240,11 +241,12 @@ public class ExternalSearchAnnotationSidebar
                     // Highlight the keywords in the annotator indicated by the offsets
                     // if they are within the current window.
                     for (OffsetSpan offset : exHighlight.get().getOffsets()) {
-                        if (aAnnotatorState.getWindowBeginOffset() <= offset.getBegin()) {
-                            if (offset.getEnd() <= aAnnotatorState.getWindowEndOffset()) {
+                        int windowBeginOffset = aRequest.getWindowBeginOffset();
+                        if (windowBeginOffset <= offset.getBegin()) {
+                            if (offset.getEnd() <= aRequest.getWindowEndOffset()) {
                                 aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS,
-                                        offset.getBegin() - aAnnotatorState.getWindowBeginOffset(),
-                                        offset.getEnd() - aAnnotatorState.getWindowBeginOffset()));
+                                        offset.getBegin() - windowBeginOffset,
+                                        offset.getEnd() - windowBeginOffset));
                             }
                             else {
                                 break;

@@ -272,7 +272,8 @@ public class DocumentMetadataAnnotationDetailPanel
         }
     }
 
-    private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, CAS aCas) throws IOException
+    private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, CAS aCas)
+        throws IOException, AnnotationException
     {
         List<FeatureState> featureStates = featureList.getModelObject();
 

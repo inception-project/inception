@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
@@ -50,19 +48,17 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -83,19 +79,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLineOrientedAnnotationEditorFactory;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratSentenceOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
@@ -115,10 +113,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegment;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverviewLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverview;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
@@ -150,6 +148,7 @@ public class CurationPage
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean CurationService curationService;
     private @SpringBean CurationMergeService curationMergeService;
+    private @SpringBean AnnotationEditorRegistry editorRegistry;
 
     private long currentprojectId;
 
@@ -158,10 +157,10 @@ public class CurationPage
 
     private WebMarkupContainer leftSidebar;
     private IModel<List<CurationUnit>> curationUnits;
-    private WebMarkupContainer curationUnitOverview;
+    private CurationUnitOverview curationUnitOverview;
 
     private WebMarkupContainer rightSidebar;
-    private AnnotationDetailEditorPanel detailPanel;
+    private AnnotationDetailEditorPanel detailEditor;
 
     private WebMarkupContainer centerArea;
     private WebMarkupContainer splitter;
@@ -215,15 +214,9 @@ public class CurationPage
         splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
                 new Options("orientation", Options.asString("vertical")), new SplitterAdapter()));
 
-        splitter.add(getModelObject().getPagingStrategy()
-                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
-                .add(visibleWhen(() -> getModelObject().getDocument() != null))
-                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
-                        (c, e) -> e.getRequestHandler().add(c))));
+        List<AnnotatorSegmentState> segments = new LinkedList<>();
 
-        List<AnnotatorSegment> segments = new LinkedList<>();
-
-        AnnotatorSegment annotatorSegment = new AnnotatorSegment();
+        AnnotatorSegmentState annotatorSegment = new AnnotatorSegmentState();
         annotatorSegment.setAnnotatorState(getModelObject());
         segments.add(annotatorSegment);
 
@@ -232,36 +225,58 @@ public class CurationPage
         annotatorsPanel.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         splitter.add(annotatorsPanel);
 
-        rightSidebar = makeRightSidebar("rightSidebar");
-        rightSidebar
-                .add(detailPanel = makeAnnotationDetailEditorPanel("annotationDetailEditorPanel"));
+        detailEditor = createDetailEditor("annotationDetailEditorPanel");
+        rightSidebar = createRightSidebar("rightSidebar");
+        rightSidebar.add(detailEditor);
         add(rightSidebar);
 
-        getModelObject().setEditorFactoryId("bratEditor");
-        annotationEditor = new BratAnnotationEditor("annotationEditor", getModel(), detailPanel,
-                this::getEditorCas);
-        annotationEditor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
-        annotationEditor.setOutputMarkupPlaceholderTag(true);
+        annotationEditor = createAnnotationEditor("editor");
         splitter.add(annotationEditor);
 
-        curationUnitOverview = new WebMarkupContainer("unitOverview");
-        curationUnitOverview.setOutputMarkupPlaceholderTag(true);
-        curationUnitOverview.add(new ListView<CurationUnit>("unit", curationUnits)
-        {
-            private static final long serialVersionUID = 8539162089561432091L;
+        curationUnitOverview = new CurationUnitOverview("unitOverview", getModel(), curationUnits);
 
-            @Override
-            protected void populateItem(ListItem<CurationUnit> item)
-            {
-                item.add(new CurationUnitOverviewLink("label", item.getModel(),
-                        CurationPage.this.getModel()));
-            }
-        });
-
-        leftSidebar = makeLeftSidebar("leftSidebar");
+        leftSidebar = createLeftSidebar("leftSidebar");
         leftSidebar.add(curationUnitOverview);
         leftSidebar.add(new LambdaAjaxLink("refresh", this::actionRefresh));
         add(leftSidebar);
+    }
+
+    private AnnotationEditorBase createAnnotationEditor(String aId)
+    {
+        String editorId = annotationService.isSentencesEditable(getProject())
+                ? BratLineOrientedAnnotationEditorFactory.ID
+                : BratSentenceOrientedAnnotationEditorFactory.ID;
+        AnnotatorState state = getModelObject();
+        AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
+        if (factory == null) {
+            if (state.getDocument() != null) {
+                factory = editorRegistry.getPreferredEditorFactory(state.getProject(),
+                        state.getDocument().getFormat());
+            }
+            else {
+                factory = editorRegistry.getDefaultEditorFactory();
+            }
+        }
+
+        state.setEditorFactoryId(factory.getBeanName());
+        AnnotationEditorBase editor = factory.create(aId, getModel(), detailEditor,
+                this::getEditorCas);
+        editor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
+        editor.setOutputMarkupPlaceholderTag(true);
+
+        // Give the new editor an opportunity to configure the current paging strategy, this does
+        // not configure the paging for a document yet this would require loading the CAS which
+        // might not have been upgraded yet
+        factory.initState(state);
+
+        // Use the proper position labels for the current paging strategy
+        splitter.addOrReplace(getModelObject().getPagingStrategy()
+                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
+                .add(visibleWhen(() -> getModelObject().getDocument() != null))
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
+                        (c, e) -> e.getRequestHandler().add(c))));
+
+        return editor;
     }
 
     private void actionRefresh(AjaxRequestTarget aTarget)
@@ -275,7 +290,7 @@ public class CurationPage
         }
     }
 
-    private WebMarkupContainer makeLeftSidebar(String aId)
+    private WebMarkupContainer createLeftSidebar(String aId)
     {
         WebMarkupContainer sidebar = new WebMarkupContainer("leftSidebar");
         sidebar.setOutputMarkupPlaceholderTag(true);
@@ -290,7 +305,7 @@ public class CurationPage
         return sidebar;
     }
 
-    private WebMarkupContainer makeRightSidebar(String aId)
+    private WebMarkupContainer createRightSidebar(String aId)
     {
         WebMarkupContainer sidebar = new WebMarkupContainer(aId);
         sidebar.setOutputMarkupPlaceholderTag(true);
@@ -303,7 +318,7 @@ public class CurationPage
         return sidebar;
     }
 
-    private AnnotationDetailEditorPanel makeAnnotationDetailEditorPanel(String aId)
+    private AnnotationDetailEditorPanel createDetailEditor(String aId)
     {
         AnnotationDetailEditorPanel panel = new AnnotationDetailEditorPanel(aId, this, getModel())
         {
@@ -460,8 +475,12 @@ public class CurationPage
         }
 
         // If we have a timestamp, then use it to detect if there was a concurrent access
-        verifyAndUpdateDocumentTimestamp(state,
-                curationDocumentService.getCurationCasTimestamp(state.getDocument()));
+        if (isEditable() && state.getAnnotationDocumentTimestamp().isPresent()) {
+            curationDocumentService
+                    .verifyCurationCasTimestamp(state.getDocument(),
+                            state.getAnnotationDocumentTimestamp().get(), "reading")
+                    .ifPresent(state::setAnnotationDocumentTimestamp);
+        }
 
         return curationDocumentService.readCurationCas(state.getDocument());
     }
@@ -475,15 +494,14 @@ public class CurationPage
         curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
         // Update timestamp in state
-        Optional<Long> diskTimestamp = curationDocumentService
-                .getCurationCasTimestamp(state.getDocument());
-        AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
+        curationDocumentService.getCurationCasTimestamp(state.getDocument())
+                .ifPresent(state::setAnnotationDocumentTimestamp);
     }
 
     @Override
     public AnnotationActionHandler getAnnotationActionHandler()
     {
-        return detailPanel;
+        return detailEditor;
     }
 
     @Override
@@ -531,8 +549,8 @@ public class CurationPage
             state.reset();
 
             // Initialize timestamp in state
-            updateDocumentTimestampAfterWrite(state,
-                    curationDocumentService.getCurationCasTimestamp(state.getDocument()));
+            curationDocumentService.getCurationCasTimestamp(state.getDocument())
+                    .ifPresent(state::setAnnotationDocumentTimestamp);
 
             // Initialize the visible content
             state.moveToUnit(mergeCas, aFocus + 1, TOP);
@@ -540,7 +558,7 @@ public class CurationPage
             currentprojectId = state.getProject().getId();
 
             curationUnits.setObject(buildUnitOverview(state));
-            detailPanel.reset(aTarget);
+            detailEditor.reset(aTarget);
 
             annotatorsPanel.init(aTarget, getModelObject());
 
@@ -576,7 +594,9 @@ public class CurationPage
                     + "administration dashboard and if none of the imported users have been "
                     + "enabled via the users management page after the import (also something "
                     + "that only administrators can do).");
-            backToProjectPage();
+            PageParameters pageParameters = new PageParameters();
+            setProjectPageParameter(pageParameters, getProject());
+            throw new RestartResponseException(CurationPage.class, pageParameters);
         }
 
         Map<String, CAS> casses = documentService
@@ -839,8 +859,8 @@ public class CurationPage
             }
         }
 
-        updateDocumentTimestampAfterWrite(aState,
-                curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
+        curationDocumentService.getCurationCasTimestamp(aState.getDocument())
+                .ifPresent(aState::setAnnotationDocumentTimestamp);
 
         return mergeCas;
     }

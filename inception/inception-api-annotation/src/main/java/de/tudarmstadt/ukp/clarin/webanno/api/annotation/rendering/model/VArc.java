@@ -30,6 +30,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class VArc
     extends VObject
 {
+    private static final long serialVersionUID = 3930613022560194891L;
+
     private VID source;
     private VID target;
 

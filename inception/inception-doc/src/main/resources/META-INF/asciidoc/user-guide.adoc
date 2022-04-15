@@ -147,6 +147,8 @@ include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_weblicht.adoc[leveloffset=+2]
 
+include::{include-dir}projects_recommendation_elg.adoc[leveloffset=+2]
+
 include::{include-dir}projects_tagsets.adoc[leveloffset=+2]
 
 include::{include-dir}projects_export.adoc[leveloffset=+2]
@@ -194,6 +196,10 @@ include::{include-dir}guidelines.adoc[leveloffset=+1]
 <<<
 
 include::{include-dir}pdf-editor.adoc[leveloffset=+1]
+
+<<<
+
+include::{include-dir}editable-segmentation.adoc[leveloffset=+1]
 
 <<<
 

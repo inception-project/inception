@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.DynamicTextAreaFeatureEditor;
@@ -109,6 +110,7 @@ public class StringFeatureSupport
 
     @Override
     public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+        throws AnnotationException
     {
         if (aValue != null && schemaService != null && aFeature.getTagset() != null
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
@@ -181,7 +183,7 @@ public class StringFeatureSupport
             return new KendoComboboxTextFeatureEditor(aId, aOwner, aFeatureStateModel, aHandler);
         case AUTOCOMPLETE:
             return new KendoAutoCompleteTextFeatureEditor(aId, aOwner, aFeatureStateModel,
-                    properties.getAutoCompleteMaxResults(), aHandler);
+                    aHandler);
         default:
             throw new IllegalStateException(
                     "Unknown editor type: [" + traits.getEditorType() + "]");

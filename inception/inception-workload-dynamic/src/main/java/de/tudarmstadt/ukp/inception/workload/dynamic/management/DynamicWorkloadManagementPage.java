@@ -56,6 +56,7 @@ import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.markup.html.form.DateTextField;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.HeaderlessColumn;
@@ -94,8 +95,6 @@ import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 import com.googlecode.wicket.kendo.ui.KendoDataSource;
-import com.googlecode.wicket.kendo.ui.form.datetime.AjaxDatePicker;
-import com.googlecode.wicket.kendo.ui.form.dropdown.DropDownList;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
@@ -172,8 +171,8 @@ public class DynamicWorkloadManagementPage
     // Input Fields
     private TextField<String> userFilterTextField;
     private TextField<String> documentFilterTextField;
-    private AjaxDatePicker dateFrom;
-    private AjaxDatePicker dateTo;
+    private DateTextField dateFrom;
+    private DateTextField dateTo;
     private AjaxCheckBox unused;
     private BootstrapRadioChoice<DateSelection> dateChoices;
     private DropDownChoice<User> userSelection;
@@ -281,8 +280,7 @@ public class DynamicWorkloadManagementPage
 
         // Add StateFilters
         stateFilters = new WebMarkupContainer("stateFilters");
-        ListView<SourceDocumentState> listview = new ListView<>("stateFilter",
-                asList(SourceDocumentState.values()))
+        var listview = new ListView<>("stateFilter", asList(SourceDocumentState.values()))
         {
             private static final long serialVersionUID = -2292408105823066466L;
 
@@ -292,9 +290,8 @@ public class DynamicWorkloadManagementPage
                 LambdaAjaxLink link = new LambdaAjaxLink("stateFilterLink",
                         (_target -> actionApplyStateFilter(_target, aItem.getModelObject())));
 
-                link.add(new Label(MID_LABEL,
-                        aItem.getModel().map(SourceDocumentState::symbol).orElse(""))
-                                .setEscapeModelStrings(false));
+                link.add(new Label(MID_LABEL, aItem.getModel().map( //
+                        SourceDocumentState::symbol).orElse("")).setEscapeModelStrings(false));
                 link.add(new AttributeAppender("class", () -> dataProvider.getFilterState()
                         .getStates().contains(aItem.getModelObject()) ? "active" : "", " "));
                 aItem.add(link);
@@ -339,11 +336,10 @@ public class DynamicWorkloadManagementPage
         searchForm.add(documentFilterTextField);
 
         // Input dates
-        dateFrom = new AjaxDatePicker("from", PropertyModel.of(dataProvider, "filter.from"),
-                "MM/dd/yyyy");
+        dateFrom = new DateTextField("from", PropertyModel.of(dataProvider, "filter.from"),
+                "yyyy-MM-dd");
         dateFrom.setOutputMarkupId(true);
-        dateTo = new AjaxDatePicker("to", PropertyModel.of(dataProvider, "filter.to"),
-                "MM/dd/yyyy");
+        dateTo = new DateTextField("to", PropertyModel.of(dataProvider, "filter.to"), "yyyy-MM-dd");
         dateTo.setOutputMarkupId(true);
 
         searchForm.add(dateFrom);
@@ -478,7 +474,7 @@ public class DynamicWorkloadManagementPage
             _target.add(settingsForm);
         }).add(visibleWhen(abandonationToggle.getModel())));
 
-        DropDownChoice<AnnotationDocumentState> abandonationState = new DropDownList<>(
+        DropDownChoice<AnnotationDocumentState> abandonationState = new DropDownChoice<>(
                 "abandonationState");
         abandonationState.setRequired(true);
         abandonationState.setNullValid(false);
@@ -488,7 +484,7 @@ public class DynamicWorkloadManagementPage
         abandonationState.add(visibleWhen(abandonationToggle.getModel()));
         settingsForm.add(abandonationState);
 
-        DropDownChoice<String> workflowChoices = new DropDownList<>("workflowType");
+        DropDownChoice<String> workflowChoices = new DropDownChoice<>("workflowType");
         workflowChoices.setChoiceRenderer(
                 new LambdaChoiceRenderer<>(id -> workflowExtensionPoint.getExtension(id)
                         .map(WorkflowExtension::getLabel).orElse("<" + id + " not available>")));
@@ -531,7 +527,7 @@ public class DynamicWorkloadManagementPage
         userSelectionForm.setOutputMarkupId(true);
 
         // Dropdown menu with all available users of the project
-        userSelection = new DropDownList<>("userSelection");
+        userSelection = new DropDownChoice<>("userSelection");
         userSelection.setChoiceRenderer(new LambdaChoiceRenderer<>(User::getUiName));
         // No default model required, as the input shall be empty by default
         userSelection.setModel(new Model<>());
@@ -637,7 +633,7 @@ public class DynamicWorkloadManagementPage
         userResetDocumentForm.add(visibleWhen(() -> !isNull(userSelection.getModelObject())));
 
         // Dropdown for all annotation documents for the user that exist in the DB
-        resetDocument = new DropDownList<>("resetDocument");
+        resetDocument = new DropDownChoice<>("resetDocument");
         resetDocument.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocument::getName));
         resetDocument.setChoices(this::getCreatedDocumentsForSelectedUser);
         resetDocument.setModel(LoadableDetachableModel.of(this::getSelectedAnnotationDocument));
@@ -645,7 +641,7 @@ public class DynamicWorkloadManagementPage
         userResetDocumentForm.add(resetDocument);
 
         // Dropdown for all states that can be assign to the selected document
-        documentState = new DropDownList<>("documentState");
+        documentState = new DropDownChoice<>("documentState");
         documentState
                 .setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationDocumentState::getName));
         documentState.setChoices(this::getAnnotationDocumentStates);

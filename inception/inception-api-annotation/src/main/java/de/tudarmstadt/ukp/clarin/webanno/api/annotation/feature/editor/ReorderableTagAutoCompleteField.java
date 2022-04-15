@@ -29,22 +29,44 @@ import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 
-public abstract class ReorderableTagAutoCompleteField
+public class ReorderableTagAutoCompleteField
     extends AutoCompleteTextField<ReorderableTag>
 {
     private static final long serialVersionUID = 311286735004237737L;
 
-    protected ReorderableTagAutoCompleteField(String aId)
+    private final IModel<FeatureState> featureState;
+    private final int maxResults;
+
+    protected ReorderableTagAutoCompleteField(String aId, IModel<FeatureState> aFeatureState,
+            int aMaxResults)
     {
         super(aId);
+        featureState = aFeatureState;
+        maxResults = aMaxResults;
     }
 
-    public ReorderableTagAutoCompleteField(String aId, IModel<ReorderableTag> aModel)
+    public ReorderableTagAutoCompleteField(String aId, IModel<ReorderableTag> aModel,
+            IModel<FeatureState> aFeatureState, int aMaxResults)
     {
         super(aId, aModel);
+        featureState = aFeatureState;
+        maxResults = aMaxResults;
+    }
+
+    @Override
+    protected List<ReorderableTag> getChoices(String aTerm)
+    {
+        FeatureState state = featureState.getObject();
+
+        TagRanker ranker = new TagRanker();
+        ranker.setMaxResults(maxResults);
+        ranker.setTagCreationAllowed(state.getFeature().getTagset().isCreateTag());
+
+        return ranker.rank(aTerm, state.tagset);
     }
 
     @Override
@@ -64,9 +86,6 @@ public abstract class ReorderableTagAutoCompleteField
                         "    e.preventDefault();" + "  }", "}"));
         behavior.setOption("select", " function (e) { this.trigger('change'); }");
     }
-
-    @Override
-    protected abstract List<ReorderableTag> getChoices(String aTerm);
 
     /*
      * Below is a hack which is required because all the text feature editors are expected to write

@@ -26,6 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtensionImpl;
+import de.tudarmstadt.ukp.inception.workload.matrix.annotation.MatrixWorkflowActionBarExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.event.MatrixWorkloadStateWatcher;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
@@ -47,5 +48,11 @@ public class MatrixWorkloadManagerAutoConfiguration
             SchedulingService aSchedulingService)
     {
         return new MatrixWorkloadStateWatcher(aSchedulingService);
+    }
+
+    @Bean
+    public MatrixWorkflowActionBarExtension matrixWorkflowActionBarExtension()
+    {
+        return new MatrixWorkflowActionBarExtension();
     }
 }

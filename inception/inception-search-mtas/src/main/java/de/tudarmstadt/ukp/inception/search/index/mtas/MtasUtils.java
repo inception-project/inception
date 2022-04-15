@@ -33,22 +33,28 @@ public final class MtasUtils
         // No instances
     }
 
-    public static void print(MtasTokenCollection aTC) throws MtasParserException
+    public static void print(MtasTokenCollection aTC)
     {
-        String[][] dump = aTC.getList();
-        int[] widths = new int[dump[0].length];
-        for (int n = 0; n < dump.length; n++) {
-            for (int i = 0; i < widths.length; i++) {
-                widths[i] = Math.max(widths[i], String.valueOf(dump[n][i]).length());
+        try {
+            String[][] dump = aTC.getList();
+
+            int[] widths = new int[dump[0].length];
+            for (int n = 0; n < dump.length; n++) {
+                for (int i = 0; i < widths.length; i++) {
+                    widths[i] = Math.max(widths[i], String.valueOf(dump[n][i]).length());
+                }
+            }
+
+            for (int n = 0; n < dump.length; n++) {
+                for (int i = 0; i < dump[n].length; i++) {
+                    System.out.print(StringUtils.rightPad(String.valueOf(dump[n][i]), widths[i]));
+                    System.out.print(" | ");
+                }
+                System.out.println();
             }
         }
-
-        for (int n = 0; n < dump.length; n++) {
-            for (int i = 0; i < dump[n].length; i++) {
-                System.out.print(StringUtils.rightPad(String.valueOf(dump[n][i]), widths[i]));
-                System.out.print(" | ");
-            }
-            System.out.println();
+        catch (MtasParserException e) {
+            e.printStackTrace();
         }
     }
 

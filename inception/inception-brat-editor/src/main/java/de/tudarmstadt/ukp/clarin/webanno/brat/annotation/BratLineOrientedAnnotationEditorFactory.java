@@ -36,6 +36,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoCon
 public class BratLineOrientedAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
+    public static final String ID = "lineOrientedBratEditor";
+
     @Override
     public String getDisplayName()
     {

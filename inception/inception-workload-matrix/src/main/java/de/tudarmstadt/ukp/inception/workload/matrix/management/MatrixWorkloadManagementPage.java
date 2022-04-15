@@ -30,10 +30,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.lang.invoke.MethodHandles;
@@ -50,7 +53,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
@@ -58,6 +60,9 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -82,6 +87,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
@@ -90,6 +96,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
+import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellClickEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnCellOpenContextMenuEvent;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.event.AnnotatorColumnSelectionChangedEvent;
@@ -107,6 +114,8 @@ import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDoc
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentSelectColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.SourceDocumentStateColumn;
 import de.tudarmstadt.ukp.inception.workload.matrix.management.support.UserSelectToolbar;
+import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/monitoring")
 public class MatrixWorkloadManagementPage
@@ -123,6 +132,8 @@ public class MatrixWorkloadManagementPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationService;
+    private @SpringBean WorkloadManagementService workloadManagementService;
+    private @SpringBean MatrixWorkloadExtension matrixWorkloadExtension;
     private @SpringBean(name = "matrixWorkloadManagementPageMenuItem") ProjectMenuItem pageMenuItem;
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> documentMatrix;
@@ -167,6 +178,8 @@ public class MatrixWorkloadManagementPage
 
         add(documentMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode));
 
+        add(createSettingsForm());
+
         add(new LambdaAjaxLink("refresh", this::actionRefresh));
 
         actionContainer = new WebMarkupContainer("actionContainer");
@@ -187,6 +200,8 @@ public class MatrixWorkloadManagementPage
                 .of(() -> bulkChangeMode ? "btn-primary active" : "btn-outline-primary")));
         actionContainer.add(toggleBulkChange);
 
+        bulkActionDropdown.add(new LambdaAjaxLink("bulkStartProgress", this::actionBulkStart)
+                .add(visibleWhen(() -> DEVELOPMENT == getApplication().getConfigurationType())));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkLock", this::actionBulkLock));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkUnlock", this::actionBulkUnlock));
         bulkActionDropdown.add(new LambdaAjaxLink("bulkFinish", this::actionBulkFinish));
@@ -197,6 +212,34 @@ public class MatrixWorkloadManagementPage
 
         add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
         add(contextMenu = new ContextMenu("contextMenu"));
+    }
+
+    /**
+     * @return the "Settings" dropdown menu form
+     */
+    public Form<MatrixWorkloadTraits> createSettingsForm()
+    {
+        MatrixWorkloadTraits traits = matrixWorkloadExtension.readTraits(
+                workloadManagementService.loadOrCreateWorkloadManagerConfiguration(getProject()));
+
+        Form<MatrixWorkloadTraits> settingsForm = new Form<>("settingsForm",
+                new CompoundPropertyModel<>(traits));
+        settingsForm.setOutputMarkupId(true);
+
+        settingsForm.add(new CheckBox("reopenableByAnnotator"));
+
+        settingsForm.add(new LambdaAjaxButton<>("save", this::actionConfirm));
+
+        return settingsForm;
+    }
+
+    private void actionConfirm(AjaxRequestTarget aTarget, Form<MatrixWorkloadTraits> aForm)
+    {
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        // Writes the new traits into the DB
+        matrixWorkloadExtension.writeTraits(aForm.getModelObject(), getProject());
+        success("Changes saved");
     }
 
     private DataTable<DocumentMatrixRow, DocumentMatrixSortKey> createDocumentMatrix(
@@ -312,10 +355,10 @@ public class MatrixWorkloadManagementPage
     private void actionResetCurationDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
     {
         IModel<String> documentNameModel = Model.of(aDocument.getName());
-        resetDocumentDialog
-                .setTitleModel(new StringResourceModel("ResetCurationDocumentDialog.title", this));
-        resetDocumentDialog
-                .setChallengeModel(new StringResourceModel("ResetCurationDocumentDialog.text", this)
+        resetDocumentDialog.setTitleModel( //
+                new StringResourceModel("ResetCurationDocumentDialog.title", this));
+        resetDocumentDialog.setChallengeModel( //
+                new StringResourceModel("ResetCurationDocumentDialog.text", this)
                         .setParameters(documentNameModel));
         resetDocumentDialog.setResponseModel(documentNameModel);
         resetDocumentDialog.setConfirmAction(_target -> {
@@ -336,13 +379,17 @@ public class MatrixWorkloadManagementPage
     {
         Collection<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments();
 
-        List<AnnotationDocument> lockedDocuments = selectedDocuments.stream()
-                .filter(annDoc -> annDoc.getState() == IGNORE).collect(toList());
+        var lockedDocuments = selectedDocuments.stream()
+                .filter(annDoc -> annDoc.getState() == IGNORE) //
+                .collect(toList());
         documentService.bulkSetAnnotationDocumentState(lockedDocuments, NEW);
 
-        List<AnnotationDocument> finishedDocuments = selectedDocuments.stream()
-                .filter(annDoc -> annDoc.getState() == FINISHED).collect(toList());
+        var finishedDocuments = selectedDocuments.stream()
+                .filter(annDoc -> annDoc.getState() == FINISHED) //
+                .collect(toList());
         documentService.bulkSetAnnotationDocumentState(finishedDocuments, IN_PROGRESS);
+
+        matrixWorkloadExtension.recalculate(getProject());
 
         success(format("The state of %d document(s) has been set to [%s]", lockedDocuments.size(),
                 NEW));
@@ -358,13 +405,16 @@ public class MatrixWorkloadManagementPage
     {
         Collection<AnnotationDocument> selectedDocuments = selectedAnnotationDocuments();
 
-        List<AnnotationDocument> newDocuments = selectedDocuments.stream()
-                .filter(annDoc -> annDoc.getState() == NEW).collect(toList());
+        var newDocuments = selectedDocuments.stream().filter(annDoc -> annDoc.getState() == NEW) //
+                .collect(toList());
         documentService.bulkSetAnnotationDocumentState(newDocuments, IGNORE);
 
-        List<AnnotationDocument> inProgressDocuments = selectedDocuments.stream()
-                .filter(annDoc -> annDoc.getState() == IN_PROGRESS).collect(toList());
+        var inProgressDocuments = selectedDocuments.stream()
+                .filter(annDoc -> annDoc.getState() == IN_PROGRESS) //
+                .collect(toList());
         documentService.bulkSetAnnotationDocumentState(inProgressDocuments, FINISHED);
+
+        matrixWorkloadExtension.recalculate(getProject());
 
         success(format("The state of %d document(s) has been set to [%s]", newDocuments.size(),
                 IGNORE));
@@ -376,12 +426,33 @@ public class MatrixWorkloadManagementPage
         aTarget.add(documentMatrix);
     }
 
+    private void actionBulkStart(AjaxRequestTarget aTarget)
+    {
+        var newDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == NEW) //
+                .collect(toList());
+
+        documentService.bulkSetAnnotationDocumentState(newDocuments, IN_PROGRESS);
+
+        matrixWorkloadExtension.recalculate(getProject());
+
+        success(format("The state of %d document(s) has been set to [%s]", newDocuments.size(),
+                IN_PROGRESS));
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        reloadMatrixData();
+        aTarget.add(documentMatrix);
+    }
+
     private void actionBulkLock(AjaxRequestTarget aTarget)
     {
-        List<AnnotationDocument> newDocuments = selectedAnnotationDocuments().stream()
-                .filter(annDoc -> annDoc.getState() == NEW).collect(toList());
+        var newDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == NEW) //
+                .collect(toList());
 
         documentService.bulkSetAnnotationDocumentState(newDocuments, IGNORE);
+
+        matrixWorkloadExtension.recalculate(getProject());
 
         success(format("The state of %d document(s) has been set to [%s]", newDocuments.size(),
                 IGNORE));
@@ -393,10 +464,13 @@ public class MatrixWorkloadManagementPage
 
     private void actionBulkUnlock(AjaxRequestTarget aTarget)
     {
-        List<AnnotationDocument> lockedDocuments = selectedAnnotationDocuments().stream()
-                .filter(annDoc -> annDoc.getState() == IGNORE).collect(toList());
+        var lockedDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == IGNORE) //
+                .collect(toList());
 
         documentService.bulkSetAnnotationDocumentState(lockedDocuments, NEW);
+
+        matrixWorkloadExtension.recalculate(getProject());
 
         success(format("The state of %d document(s) has been set to [%s]", lockedDocuments.size(),
                 NEW));
@@ -408,10 +482,13 @@ public class MatrixWorkloadManagementPage
 
     private void actionBulkFinish(AjaxRequestTarget aTarget)
     {
-        List<AnnotationDocument> inProgressDocuments = selectedAnnotationDocuments().stream()
-                .filter(annDoc -> annDoc.getState() == IN_PROGRESS).collect(toList());
+        var inProgressDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == IN_PROGRESS) //
+                .collect(toList());
 
         documentService.bulkSetAnnotationDocumentState(inProgressDocuments, FINISHED);
+
+        matrixWorkloadExtension.recalculate(getProject());
 
         success(format("The state of %d document(s) has been set to [%s]",
                 inProgressDocuments.size(), FINISHED));
@@ -423,10 +500,13 @@ public class MatrixWorkloadManagementPage
 
     private void actionBulkResume(AjaxRequestTarget aTarget)
     {
-        List<AnnotationDocument> finishedDocuments = selectedAnnotationDocuments().stream()
-                .filter(annDoc -> annDoc.getState() == FINISHED).collect(toList());
+        var finishedDocuments = selectedAnnotationDocuments().stream()
+                .filter(annDoc -> annDoc.getState() == FINISHED) //
+                .collect(toList());
 
         documentService.bulkSetAnnotationDocumentState(finishedDocuments, IN_PROGRESS);
+
+        matrixWorkloadExtension.recalculate(getProject());
 
         success(format("The state of %d document(s) has been set to [%s]", finishedDocuments.size(),
                 IN_PROGRESS));
@@ -440,8 +520,7 @@ public class MatrixWorkloadManagementPage
     {
         selectedUsers.getObject().clear();
 
-        DataTable<DocumentMatrixRow, DocumentMatrixSortKey> newMatrix = createDocumentMatrix(
-                "documentMatrix", bulkChangeMode);
+        var newMatrix = createDocumentMatrix("documentMatrix", bulkChangeMode);
         documentMatrix.replaceWith(newMatrix);
         documentMatrix = newMatrix;
 
@@ -467,39 +546,50 @@ public class MatrixWorkloadManagementPage
             }
         });
 
-        Map<Pair<SourceDocument, String>, AnnotationDocument> annotationDocumentsToChange = new HashMap<>();
+        Set<AnnotationDocument> annotationDocumentsToChange = new HashSet<>();
 
         List<DocumentMatrixRow> rows = ((DocumentMatrixDataProvider) documentMatrix
                 .getDataProvider()).getMatrixData();
 
+        // Collect annotation documents by row
         for (DocumentMatrixRow row : rows) {
-            // Collect annotation documents by row
-            if (row.isSelected()) {
-                for (User annotator : annotators) {
-                    AnnotationDocument annDoc = row.getAnnotationDocument(annotator.getUsername());
-                    if (annDoc == null) {
-                        annDoc = documentService
-                                .createOrGetAnnotationDocument(row.getSourceDocument(), annotator);
-                    }
+            if (!row.isSelected()) {
+                continue;
+            }
 
-                    annotationDocumentsToChange
-                            .put(Pair.of(row.getSourceDocument(), annotator.getUsername()), annDoc);
+            List<User> usersWithoutAnnDocs = new ArrayList<>();
+            for (User annotator : annotators) {
+                AnnotationDocument annDoc = row.getAnnotationDocument(annotator.getUsername());
+                if (annDoc == null) {
+                    usersWithoutAnnDocs.add(annotator);
+                }
+                else {
+                    annotationDocumentsToChange.add(annDoc);
                 }
             }
 
-            // Collect annotation documents by column
-            for (User anotator : selectedUserObjects) {
-                Pair<SourceDocument, String> key = Pair.of(row.getSourceDocument(),
-                        anotator.getUsername());
-                if (!annotationDocumentsToChange.containsKey(key)) {
-                    AnnotationDocument annDoc = documentService
-                            .createOrGetAnnotationDocument(row.getSourceDocument(), anotator);
-                    annotationDocumentsToChange.put(key, annDoc);
-                }
-            }
+            annotationDocumentsToChange.addAll(documentService
+                    .createOrGetAnnotationDocuments(row.getSourceDocument(), usersWithoutAnnDocs));
         }
 
-        return annotationDocumentsToChange.values();
+        // Collect annotation documents by column
+        for (User anotator : selectedUserObjects) {
+            List<SourceDocument> sourceDocsWithoutAnnDocs = new ArrayList<>();
+            for (DocumentMatrixRow row : rows) {
+                AnnotationDocument annDoc = row.getAnnotationDocument(anotator.getUsername());
+                if (annDoc == null) {
+                    sourceDocsWithoutAnnDocs.add(row.getSourceDocument());
+                }
+                else {
+                    annotationDocumentsToChange.add(annDoc);
+                }
+            }
+
+            annotationDocumentsToChange.addAll(documentService
+                    .createOrGetAnnotationDocuments(sourceDocsWithoutAnnDocs, anotator));
+        }
+
+        return annotationDocumentsToChange;
     }
 
     @OnEvent
@@ -623,7 +713,8 @@ public class MatrixWorkloadManagementPage
     {
         Set<String> annotators = projectService
                 .listProjectUsersWithPermissions(getProject(), ANNOTATOR).stream()
-                .map(User::getUsername).collect(Collectors.toSet());
+                .map(User::getUsername) //
+                .collect(toSet());
 
         Map<SourceDocument, DocumentMatrixRow> documentMatrixRows = new LinkedHashMap<>();
         for (SourceDocument srcDoc : documentService.listSourceDocuments(getProject())) {

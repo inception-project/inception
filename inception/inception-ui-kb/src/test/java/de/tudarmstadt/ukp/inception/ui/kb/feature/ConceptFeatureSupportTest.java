@@ -46,7 +46,8 @@ public class ConceptFeatureSupportTest
     {
         initMocks(this);
 
-        sut = new ConceptFeatureSupport(kbService, new KnowledgeBasePropertiesImpl());
+        sut = new ConceptFeatureSupport(
+                new ConceptLabelCache(kbService, new KnowledgeBasePropertiesImpl()));
     }
 
     @Test

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
 public class LambdaAjaxLink
@@ -65,6 +66,10 @@ public class LambdaAjaxLink
     {
         try {
             action.accept(aTarget);
+        }
+        catch (ReplaceHandlerException e) {
+            // Let Wicket redirects still work
+            throw e;
         }
         catch (Exception e) {
             if (exceptionHandler != null) {

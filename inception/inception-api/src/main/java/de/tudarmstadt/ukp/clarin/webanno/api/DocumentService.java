@@ -34,6 +34,8 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
@@ -661,6 +663,12 @@ public interface DocumentService
 
     AnnotationDocument createOrGetAnnotationDocument(SourceDocument aDocument, User aUser);
 
+    List<AnnotationDocument> createOrGetAnnotationDocuments(SourceDocument aDocument,
+            Collection<User> aUsers);
+
+    List<AnnotationDocument> createOrGetAnnotationDocuments(Collection<SourceDocument> aDocuments,
+            User aUsers);
+
     /**
      * Returns the annotatable {@link SourceDocument source documents} from the given project for
      * the given user. Annotatable documents are those for which there is no corresponding
@@ -699,6 +707,12 @@ public interface DocumentService
     AnnotationDocumentState setAnnotationDocumentState(AnnotationDocument aDocument,
             AnnotationDocumentState aState, AnnotationDocumentStateChangeFlag... aFlags);
 
+    /**
+     * Sets the state of multiple annotation documents at once. This method does not generate
+     * {@link AnnotationStateChangeEvent} events. This means in particular that webhooks for
+     * annotation document changes will not fire and that workload managers will not know that they
+     * need to recalculate the document and project states.
+     */
     void bulkSetAnnotationDocumentState(Iterable<AnnotationDocument> aDocuments,
             AnnotationDocumentState aState);
 
@@ -718,6 +732,10 @@ public interface DocumentService
     Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, String aUsername)
         throws IOException;
 
+    Optional<Long> verifyAnnotationCasTimestamp(SourceDocument aDocument, String aUsername,
+            long aExpectedTimeStamp, String aContextAction)
+        throws IOException, ConcurentCasModificationException;
+
     boolean existsInitialCas(SourceDocument aDocument) throws IOException;
 
     /**
@@ -733,6 +751,10 @@ public interface DocumentService
     void upgradeAllAnnotationDocuments(Project aProject) throws IOException;
 
     Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument);
+
+    Map<AnnotationDocumentState, Long> getAnnotationDocumentStats(SourceDocument aDocument,
+            List<AnnotationDocument> aAllAnnotationDocumentsInProject,
+            List<User> aUsersWithPermission);
 
     SourceDocumentStateStats getSourceDocumentStats(Project aProject);
 }

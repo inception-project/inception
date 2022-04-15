@@ -29,16 +29,14 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType.REJECTED;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -80,7 +78,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
@@ -562,9 +559,10 @@ public class ActiveLearningSidebar
         AnnotationFeature feat = annotationService.getFeature(aCurrentRecommendation.getFeature(),
                 alState.getLayer());
         FeatureSupport<?> featureSupport = featureSupportRegistry.findExtension(feat).orElseThrow();
-        // We get away with passing "null" here instead of the CAS because we currently
-        // have no recommenders for any feature types that actually need the CAS (i.e.
-        // link feature types and the likes).
+
+        // We get away with passing "null" here instead of the CAS because we currently have no
+        // recommenders for any feature types that actually need the CAS (i.e. link feature types
+        // and the likes).
         Object wrappedFeatureValue = featureSupport.wrapFeatureValue(feat, null,
                 aCurrentRecommendation.getLabel());
         FeatureState featureState = new FeatureState(aCurrentRecommendation.getVID(), feat,
@@ -574,7 +572,7 @@ public class ActiveLearningSidebar
         List<ReorderableTag> tagList = annotationService.listTagsReorderable(feat.getTagset());
         List<ReorderableTag> reorderedTagList = new ArrayList<>();
         if (tagList.size() > 0) {
-            Predictions predictions = recommendationService.getPredictions(state.getUser(),
+            var predictions = recommendationService.getPredictions(state.getUser(),
                     state.getProject());
             // get all the predictions
             List<SpanSuggestion> allRecommendations = predictions.getPredictionsByTokenAndFeature(
@@ -582,17 +580,34 @@ public class ActiveLearningSidebar
                     aCurrentRecommendation.getBegin(), aCurrentRecommendation.getEnd(),
                     aCurrentRecommendation.getFeature());
 
-            // get all the label of the predictions (e.g. "NN")
-            Map<String, SpanSuggestion> allRecommendationLabels = allRecommendations.stream() //
+            // Get all the label of the predictions (e.g. "NN").
+            var allLabels = new LinkedHashMap<String, SpanSuggestion>();
+            allRecommendations.stream() //
                     .filter(AnnotationSuggestion::isVisible) //
-                    .collect(toMap(AnnotationSuggestion::getLabel, identity()));
+                    // We filter for recommendations from the same recommender as the current
+                    // suggestion to assess comes from because scores may not be comparable
+                    // across recommenders
+                    .filter(rec -> rec.getRecommenderId() == aCurrentRecommendation
+                            .getRecommenderId())
+                    .forEachOrdered(rec -> {
+                        if (Objects.equals(rec.getLabel(), aCurrentRecommendation.getLabel())) {
+                            allLabels.put(rec.getLabel(), aCurrentRecommendation);
+                        }
+                        else {
+                            var existingSuggestion = allLabels.get(rec.getLabel());
+                            if (existingSuggestion == null
+                                    || rec.getScore() > existingSuggestion.getScore()) {
+                                allLabels.put(rec.getLabel(), rec);
+                            }
+                        }
+                    });
 
             for (ReorderableTag tag : tagList) {
                 // add the tags which contain the prediction-labels to the beginning of a tagset
-                SpanSuggestion suggestion = allRecommendationLabels.get(tag.getName());
+                SpanSuggestion suggestion = allLabels.get(tag.getName());
                 if (suggestion != null) {
                     tag.setReordered(true);
-                    tag.setDetail(format("%.2f", suggestion.getScore()));
+                    tag.setScore(format("%.3f", suggestion.getScore()));
                     reorderedTagList.add(tag);
                 }
             }
@@ -655,9 +670,8 @@ public class ActiveLearningSidebar
         SourceDocument sourceDoc = documentService.getSourceDocument(state.getProject(),
                 suggestion.getDocumentName());
         if (Objects.equals(state.getDocument().getId(), sourceDoc.getId())) {
-            Optional<Long> diskTimestamp = documentService.getAnnotationCasTimestamp(sourceDoc,
-                    state.getUser().getUsername());
-            AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, diskTimestamp);
+            documentService.getAnnotationCasTimestamp(sourceDoc, state.getUser().getUsername())
+                    .ifPresent(state::setAnnotationDocumentTimestamp);
         }
     }
 
@@ -1104,7 +1118,7 @@ public class ActiveLearningSidebar
 
             // Update visibility in case the that was created/deleted overlaps with any suggestions
             CAS cas = documentService.readAnnotationCas(aDocument, user.getUsername());
-            SuggestionDocumentGroup<SpanSuggestion> group = SuggestionDocumentGroup.filter(
+            SuggestionDocumentGroup<SpanSuggestion> group = SuggestionDocumentGroup.groupsOfType(
                     SpanSuggestion.class,
                     predictions.getPredictionsByDocument(aDocument.getName()));
             recommendationService.calculateSpanSuggestionVisibility(cas, user.getUsername(), aLayer,

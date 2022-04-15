@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
@@ -80,9 +81,11 @@ public class CurationServiceAutoConfiguration
 
     @Bean
     public CurationMergeService curationMergeService(AnnotationSchemaService aAnnotationService,
-            AnnotationEditorProperties aAnnotationEditorProperties)
+            AnnotationEditorProperties aAnnotationEditorProperties,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
-        return new CurationMergeServiceImpl(aAnnotationService, aAnnotationEditorProperties);
+        return new CurationMergeServiceImpl(aAnnotationService, aAnnotationEditorProperties,
+                aApplicationEventPublisher);
     }
 
     @Bean

@@ -19,7 +19,7 @@
 ====
 IMPORTANT: Make sure you have read the <<sect_reverse_proxy,general instructions>> for running behind 
        a reverse proxy and have configured your <<sect_settings,settings file>> accordingly, otherwise you will not be able
-       to properly use {produce-name} via the reverse proxy!
+       to properly use {product-name} via the reverse proxy!
 ====
 
 This assumes that you already have the following packages installed:

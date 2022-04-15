@@ -23,7 +23,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections4.CollectionUtils.subtract;
 import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
@@ -71,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffA
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class CasDiff
 {
@@ -678,6 +681,14 @@ public class CasDiff
             // When we get here, f1 or f2 can still be null
 
             switch (range.getName()) {
+            case CAS.TYPE_NAME_STRING_ARRAY: {
+                Set<?> value1 = FSUtil.getFeature(aFS1, f1, Set.class);
+                Set<?> value2 = FSUtil.getFeature(aFS2, f2, Set.class);
+                if (!value1.equals(value2)) {
+                    return false;
+                }
+                break;
+            }
             case CAS.TYPE_NAME_BOOLEAN: {
                 boolean value1 = f1 != null ? aFS1.getBooleanValue(f1) : false;
                 boolean value2 = f2 != null ? aFS2.getBooleanValue(f2) : false;
@@ -1216,8 +1227,17 @@ public class CasDiff
     }
 
     public static List<DiffAdapter> getDiffAdapters(AnnotationSchemaService schemaService,
-            Iterable<AnnotationLayer> aLayers)
+            Collection<AnnotationLayer> aLayers)
     {
+        if (aLayers.isEmpty()) {
+            return emptyList();
+        }
+
+        Project project = aLayers.iterator().next().getProject();
+
+        var featuresByLayer = schemaService.listSupportedFeatures(project).stream() //
+                .collect(groupingBy(AnnotationFeature::getLayer));
+
         List<DiffAdapter> adapters = new ArrayList<>();
         nextLayer: for (AnnotationLayer layer : aLayers) {
             if (!layer.isEnabled()) {
@@ -1225,7 +1245,7 @@ public class CasDiff
             }
 
             Set<String> labelFeatures = new LinkedHashSet<>();
-            nextFeature: for (AnnotationFeature f : schemaService.listSupportedFeatures(layer)) {
+            nextFeature: for (var f : featuresByLayer.getOrDefault(layer, emptyList())) {
                 if (!f.isEnabled() || !f.isCuratable()) {
                     continue nextFeature;
                 }
@@ -1257,7 +1277,7 @@ public class CasDiff
 
             adapters.add(adapter);
 
-            nextFeature: for (AnnotationFeature f : schemaService.listSupportedFeatures(layer)) {
+            nextFeature: for (var f : featuresByLayer.getOrDefault(layer, emptyList())) {
                 if (!f.isEnabled()) {
                     continue nextFeature;
                 }

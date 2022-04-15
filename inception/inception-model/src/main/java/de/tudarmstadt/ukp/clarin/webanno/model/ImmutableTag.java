@@ -27,21 +27,28 @@ public class ImmutableTag
 {
     private static final long serialVersionUID = -8402497864975003660L;
 
+    private final Long tagsetId;
     private final Long id;
     private final String name;
     private final String description;
-    // private TagSet tagSet;
 
     public ImmutableTag(Tag aTag)
     {
+        if (aTag.getTagSet() != null) {
+            tagsetId = aTag.getTagSet().getId();
+        }
+        else {
+            tagsetId = null;
+        }
         id = aTag.getId();
         name = aTag.getName();
         description = aTag.getDescription();
     }
 
-    public ImmutableTag(Long aId, String aName, String aDescription)
+    public ImmutableTag(String aName, String aDescription)
     {
-        id = aId;
+        tagsetId = null;
+        id = null;
         name = aName;
         description = aDescription;
     }
@@ -68,12 +75,12 @@ public class ImmutableTag
             return false;
         }
         ImmutableTag castOther = (ImmutableTag) other;
-        return new EqualsBuilder().append(id, castOther.id).isEquals();
+        return new EqualsBuilder().append(name, castOther.name).isEquals();
     }
 
     @Override
     public int hashCode()
     {
-        return new HashCodeBuilder().append(id).toHashCode();
+        return new HashCodeBuilder().append(name).toHashCode();
     }
 }
