@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
+import java.io.Serializable;
+
 /**
  * Result for a lazy detail.
  * <p>
@@ -28,7 +30,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
  * @see VLazyDetailQuery
  */
 public class VLazyDetailResult
+    implements Serializable
 {
+    private static final long serialVersionUID = -2371700263138292842L;
+
     private final String label;
     private final String value;
 

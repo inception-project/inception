@@ -31,6 +31,7 @@ import java.util.Set;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
@@ -59,12 +60,15 @@ public class CurationMergeServiceImpl
 
     private final AnnotationSchemaService annotationService;
     private final AnnotationEditorProperties annotationEditorProperties;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public CurationMergeServiceImpl(AnnotationSchemaService aAnnotationService,
-            AnnotationEditorProperties aAnnotationEditorProperties)
+            AnnotationEditorProperties aAnnotationEditorProperties,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         annotationService = aAnnotationService;
         annotationEditorProperties = aAnnotationEditorProperties;
+        applicationEventPublisher = aApplicationEventPublisher;
     }
 
     @Override
@@ -104,7 +108,8 @@ public class CurationMergeServiceImpl
         }
 
         try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
-            CasMerge casMerge = new CasMerge(annotationService);
+            CasMerge casMerge = new CasMerge(annotationService, annotationEditorProperties,
+                    applicationEventPublisher);
             casMerge.setMergeStrategy(aMergeStrategy);
             return casMerge.reMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
                     aCassesToMerge);

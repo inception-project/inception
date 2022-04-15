@@ -93,7 +93,7 @@ public class WicketUtil
     /**
      * Add call that wraps given script in try-catch block to script text
      */
-    public static String wrapInTryCatch(String aJsCall)
+    public static String wrapInTryCatch(CharSequence aJsCall)
     {
         return " tryCatch(() => {" + aJsCall + "}); ";
     }

@@ -360,7 +360,6 @@ public class WebAnnoCasUtil
     public static boolean exists(CAS aCas, Type aType)
     {
         return !aCas.select(aType).isEmpty();
-        // return aCas.getAnnotationIndex(aType).iterator().hasNext();
     }
 
     /**

@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
 public class VRange
+    implements Serializable
 {
+    private static final long serialVersionUID = 7134433544759110764L;
+
     private final int begin;
     private final int end;
     private final boolean clippedAtBegin;

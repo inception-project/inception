@@ -94,7 +94,11 @@ include::{include-dir}settings_annotation-editor_pdf.adoc[leveloffset=+1]
 
 include::{include-dir}security-preauth.adoc[leveloffset=+1]
 
+include::{include-dir}settings_documentmetadata.adoc[leveloffset=+1]
+
 include::{include-dir}settings_concept-linking.adoc[leveloffset=+1]
+
+include::{include-dir}settings_segmentation.adoc[leveloffset=+1]
 
 include::{include-dir}settings_knowledgebase.adoc[leveloffset=+1]
 

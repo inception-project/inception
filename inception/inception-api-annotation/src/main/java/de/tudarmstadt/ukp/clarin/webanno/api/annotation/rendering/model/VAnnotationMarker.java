@@ -22,6 +22,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 public class VAnnotationMarker
     extends VMarker
 {
+    private static final long serialVersionUID = -5386606974045570687L;
+
     private final VID[] vid;
     private String type;
 

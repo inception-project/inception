@@ -29,6 +29,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -36,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -64,13 +66,19 @@ public class CurationEditorExtension
 
     private final AnnotationSchemaService annotationService;
     private final DocumentService documentService;
+    private final AnnotationEditorProperties annotationEditorProperties;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
     public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
-            DocumentService aDocumentService)
+            DocumentService aDocumentService,
+            AnnotationEditorProperties aAnnotationEditorProperties,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         annotationService = aAnnotationService;
         documentService = aDocumentService;
+        annotationEditorProperties = aAnnotationEditorProperties;
+        applicationEventPublisher = aApplicationEventPublisher;
     }
 
     @Override
@@ -142,7 +150,8 @@ public class CurationEditorExtension
         throws AnnotationException
     {
         SourceDocument doc = aState.getDocument();
-        CasMerge casMerge = new CasMerge(annotationService);
+        CasMerge casMerge = new CasMerge(annotationService, annotationEditorProperties,
+                applicationEventPublisher);
 
         TypeAdapter adapter = annotationService.getAdapter(layer);
         AnnotationFeature feature = adapter.listFeatures().stream().sequential()
@@ -162,7 +171,8 @@ public class CurationEditorExtension
         throws AnnotationException
     {
         SourceDocument doc = aState.getDocument();
-        CasMerge casMerge = new CasMerge(annotationService);
+        CasMerge casMerge = new CasMerge(annotationService, annotationEditorProperties,
+                applicationEventPublisher);
         CasMergeOperationResult mergeResult = casMerge.mergeRelationAnnotation(doc, aSrcUser, layer,
                 aTargetCas, sourceAnnotation, layer.isAllowStacking());
 
@@ -177,7 +187,8 @@ public class CurationEditorExtension
         throws AnnotationException
     {
         SourceDocument doc = aState.getDocument();
-        CasMerge casMerge = new CasMerge(annotationService);
+        CasMerge casMerge = new CasMerge(annotationService, annotationEditorProperties,
+                applicationEventPublisher);
         CasMergeOperationResult mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer,
                 aTargetCas, sourceAnnotation, layer.isAllowStacking());
 
