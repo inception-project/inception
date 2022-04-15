@@ -35,6 +35,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoCon
 public class BratSentenceOrientedAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
+    public static final String ID = "bratEditor";
+
     @Override
     public String getDisplayName()
     {

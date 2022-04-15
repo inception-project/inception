@@ -50,6 +50,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.NoResultException;
+
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
@@ -94,6 +96,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedP
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLineOrientedAnnotationEditorFactory;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratSentenceOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
@@ -118,6 +122,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEv
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverviewLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
@@ -255,8 +260,19 @@ public class CurationPage
 
     private AnnotationEditorBase createAnnotationEditor(String aId)
     {
+        boolean sentencesEditable;
+        try {
+            sentencesEditable = !annotationService.findLayer(getProject(), Sentence.class.getName())
+                    .isReadonly();
+        }
+        catch (NoResultException e) {
+            sentencesEditable = false;
+        }
+
+        String editorId = sentencesEditable ? BratLineOrientedAnnotationEditorFactory.ID
+                : BratSentenceOrientedAnnotationEditorFactory.ID;
         AnnotatorState state = getModelObject();
-        AnnotationEditorFactory factory = editorRegistry.getEditorFactory("bratEditor");
+        AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
         if (factory == null) {
             if (state.getDocument() != null) {
                 factory = editorRegistry.getPreferredEditorFactory(state.getDocument().getFormat());

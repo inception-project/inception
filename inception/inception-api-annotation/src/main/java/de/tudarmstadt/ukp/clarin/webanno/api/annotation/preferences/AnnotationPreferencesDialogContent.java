@@ -24,6 +24,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -50,7 +52,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -78,8 +79,7 @@ public class AnnotationPreferencesDialogContent
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private static final Logger LOG = LoggerFactory
-            .getLogger(AnnotationPreferencesDialogContent.class);
+    private static final Logger LOG = getLogger(AnnotationPreferencesDialogContent.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService projectService;
@@ -101,11 +101,6 @@ public class AnnotationPreferencesDialogContent
 
         stateModel = aModel;
         modalWindow = aModalWindow;
-
-        editorChoices = annotationEditorRegistry.getEditorFactories().stream()
-                .map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
-                .collect(Collectors.toList());
-        editorChoices.add(0, Pair.of(null, "Auto (based on document format)"));
 
         form = new Form<>("form", new CompoundPropertyModel<>(loadModel(stateModel.getObject())));
 
@@ -135,6 +130,7 @@ public class AnnotationPreferencesDialogContent
         AnnotationEditorState state = preferencesService.loadDefaultTraitsForProject(
                 AnnotationPageBase.KEY_EDITOR_STATE, stateModel.getObject().getProject());
 
+        editorChoices = getEditorChoices();
         DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
         editor.setChoices(editorChoices);
@@ -172,6 +168,15 @@ public class AnnotationPreferencesDialogContent
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
 
         add(form);
+    }
+
+    private List<Pair<String, String>> getEditorChoices()
+    {
+        var editors = annotationEditorRegistry.getEditorFactories().stream()
+                .map(f -> Pair.of(f.getBeanName(), f.getDisplayName())) //
+                .collect(toList());
+        editors.add(0, Pair.of(null, "Auto (based on document format)"));
+        return editors;
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Preferences> aForm)

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
@@ -398,8 +399,6 @@ public class AnnotatorsPanel
                 .replace("_(" + AnnotationState.ERROR.name() + ")", "");
     }
 
-    public final static String CURATION_USER = "CURATION_USER";
-
     /**
      * Initializes the user annotation segments later to be filled with content.
      */
@@ -545,8 +544,7 @@ public class AnnotatorsPanel
             // Cannot include the username in the messages logged to the user because the
             // curation might be anonymous and then we would leak the true name
             error("Unable to render: " + e.getMessage());
-            LOG.error("Unable to render annotations for user [" + aSegment.getUser().getUsername()
-                    + "]", e);
+            LOG.error("Unable to render annotations for user {}", aSegment.getUser(), e);
             aTarget.addChildren(getPage(), IFeedback.class);
         }
     }

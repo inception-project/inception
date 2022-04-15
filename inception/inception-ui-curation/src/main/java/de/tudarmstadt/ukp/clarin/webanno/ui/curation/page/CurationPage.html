@@ -24,7 +24,7 @@
       flex-direction: column !important;
     }
     
-    .curation-sentence-number {
+    .curation-unit-number {
       border: 1px solid white;
       border-radius: 4px 4px 4px 4px;
       -moz-border-radius: 4px 4px 4px 4px;
@@ -37,7 +37,7 @@
       text-align: center;
     }
 
-    .curation-sentence-number a {
+    .curation-unit-number a {
       display: block;
       text-decoration: none !important;
       border-radius: 4px 4px 4px 4px;
@@ -95,7 +95,7 @@
       <div wicket:id="leftSidebar" class="flex-sidebar flex-v-container flex-gutter">
         <div class="flex-content card">
           <div class="card-header">
-            Sentences
+            Units
             <div class="actions">
               <button wicket:id="refresh" class="btn btn-action btn-secondary">
                 <i class="fas fa-redo"></i>
@@ -156,7 +156,7 @@
           </div>
           <div class="scrolling card-body">
             <div wicket:id="unitOverview" style="border-collapse: collapse;">
-              <span wicket:id="unit" class="curation-sentence-number">
+              <span wicket:id="unit" class="curation-unit-number">
                 <a wicket:id="label"></a>
               </span>
             </div>
