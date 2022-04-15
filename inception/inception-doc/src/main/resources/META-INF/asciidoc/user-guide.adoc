@@ -199,6 +199,10 @@ include::{include-dir}pdf-editor.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}editable-segmentation.adoc[leveloffset=+1]
+
+<<<
+
 = Appendices
 
 [appendix]

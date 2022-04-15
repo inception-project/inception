@@ -101,6 +101,7 @@ public class AnnotationPreferencesDialogContent
 
         stateModel = aModel;
         modalWindow = aModalWindow;
+        editorChoices = getEditorChoices();
 
         form = new Form<>("form", new CompoundPropertyModel<>(loadModel(stateModel.getObject())));
 
@@ -130,7 +131,6 @@ public class AnnotationPreferencesDialogContent
         AnnotationEditorState state = preferencesService.loadDefaultTraitsForProject(
                 AnnotationPageBase.KEY_EDITOR_STATE, stateModel.getObject().getProject());
 
-        editorChoices = getEditorChoices();
         DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("editor");
         editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
         editor.setChoices(editorChoices);
