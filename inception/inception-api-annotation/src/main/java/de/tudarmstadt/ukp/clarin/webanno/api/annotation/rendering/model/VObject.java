@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +27,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public abstract class VObject
+    implements Serializable
 {
+    private static final long serialVersionUID = -2362598130503053908L;
+
     private final AnnotationLayer layer;
     private final String type;
     private final Map<String, String> features;

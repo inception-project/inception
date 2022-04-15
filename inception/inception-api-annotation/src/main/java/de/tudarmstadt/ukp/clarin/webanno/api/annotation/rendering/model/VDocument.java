@@ -21,6 +21,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableList;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -35,7 +36,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class VDocument
+    implements Serializable
 {
+    private static final long serialVersionUID = 683698003864323322L;
+
     private final Map<VID, VArc> arcs = new LinkedHashMap<>();
     private final Map<VID, VSpan> spans = new LinkedHashMap<>();
     private final ListValuedMap<VID, VComment> comments = new ArrayListValuedHashMap<>();

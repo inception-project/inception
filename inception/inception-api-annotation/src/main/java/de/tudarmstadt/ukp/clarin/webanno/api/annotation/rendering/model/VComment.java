@@ -19,13 +19,18 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 
+import java.io.Serializable;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.uima.cas.FeatureStructure;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public class VComment
+    implements Serializable
 {
+    private static final long serialVersionUID = -1327907345192547101L;
+
     private final VID vid;
     private final VCommentType commentType;
     private final String comment;
