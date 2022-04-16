@@ -88,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -182,7 +183,7 @@ public class CasMerge
         Set<LogMessage> messages = new LinkedHashSet<>();
 
         // Remove any annotations from the target CAS - keep type system, sentences and tokens
-        clearAnnotations(aTargetCas);
+        clearAnnotations(aTargetDocument.getProject(), aTargetCas);
 
         // If there is nothing to merge, bail out
         if (aCases.isEmpty()) {
@@ -375,12 +376,15 @@ public class CasMerge
      * Removes all annotations except {@link Token} and {@link Sentence} annotations - but from
      * these also only the offsets are kept and all other features are cleared.
      * 
+     * @param aProject
+     *            the project to which the CAS belongs.
+     * 
      * @param aCas
      *            the CAS to clear.
      * @throws UIMAException
      *             if there was a problem clearing the CAS.
      */
-    private void clearAnnotations(CAS aCas) throws UIMAException
+    private void clearAnnotations(Project aProject, CAS aCas) throws UIMAException
     {
         // Copy the CAS - basically we do this just to keep the full type system information
         CAS backup = WebAnnoCasUtil.createCasCopy(aCas);
@@ -398,14 +402,23 @@ public class CasMerge
         aCas.setDocumentLanguage(backup.getDocumentLanguage()); // DKPro Core Issue 435
         aCas.setDocumentText(backup.getDocumentText());
 
-        if (!annotationEditorProperties.isTokenLayerEditable()) {
+        transferSegmentation(aProject, aCas, backup);
+    }
+
+    /**
+     * If tokens and/or sentences are not editable, then they are not part of the curation process
+     * and we transfer them from the template CAS.
+     */
+    private void transferSegmentation(Project aProject, CAS aCas, CAS backup)
+    {
+        if (!schemaService.isTokenLayerEditable(aProject)) {
             // Transfer token boundaries
             for (AnnotationFS t : selectTokens(backup)) {
                 aCas.addFsToIndexes(createToken(aCas, t.getBegin(), t.getEnd()));
             }
         }
 
-        if (!annotationEditorProperties.isSentenceLayerEditable()) {
+        if (!schemaService.isSentenceLayerEditable(aProject)) {
             // Transfer sentence boundaries
             for (AnnotationFS s : selectSentences(backup)) {
                 aCas.addFsToIndexes(createSentence(aCas, s.getBegin(), s.getEnd()));

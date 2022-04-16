@@ -39,13 +39,20 @@ careful, ready to face unexpected situations and make regular backups of course.
 
 Once the feature has been enabled, new projects get a **Sentence** layer. It is also possible to
 add a sentence layer to existing project from the dropdown menu of the **create layer** button where
-other built-in layers can also be added to a project that does not yet contain them. The layer is
-by default **read-only** which means that you can see the sentence annotations in the annotation
-editor but not create or delete sentence annotations. To make the sentences really editable for the
-annotators, un-check the **read-only** checkbox and save the layer settings.
+other built-in layers can also be added to a project that does not yet contain them. By default, the
+layer is **not enabled** and **read-only** which means that you can neither see the sentence 
+annotations in the annotation editor nor create or delete sentence annotations. To make the sentences 
+visible and editable for the annotators, check the **enabled** checkbox and un-check the 
+**read-only** checkbox and save the layer settings.
 
-While the sentence layer is editable (i.e. while the *read-only* checkbox is unchecked), the
-annotation page and the curation page default to a line-oriented editor instead of the usual
-sentence-oriented editor. In the line-oriented editor, the sentences can be safely shown and edited
-because the editor does not rely on sentence boundaries to control the rendering process.
+While the sentence layer is editable (i.e. enabled and not read-only), the annotation page and the curation page default to a line-oriented editor instead of the usual sentence-oriented editor. In
+the line-oriented editor, the sentences can be safely shown and edited because the editor does not
+rely on sentence boundaries to control the rendering process. It is then possible to curate the
+sentence boundaries.
+
+NOTE: If you start curating a document while the sentence layer is editable but then switch it back
+      not being editable, then it could happen that different annotators have different segmentations and/or that the curation
+      document does not contain all sentence boundaries. This means that some sentences may be invisible because the 
+      the sentence-oriented visualization does not display them!
+
 

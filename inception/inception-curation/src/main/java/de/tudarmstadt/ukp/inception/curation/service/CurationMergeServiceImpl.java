@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
+import static java.lang.Integer.MAX_VALUE;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -93,17 +94,20 @@ public class CurationMergeServiceImpl
     {
         List<DiffAdapter> adapters = getDiffAdapters(annotationService, aLayers);
 
-        if (!annotationEditorProperties.isSentenceLayerEditable()) {
+        // If the token/sentence layer is not editable, we do not offer curation of the tokens.
+        // Instead the tokens are obtained from a random template CAS when initializing the CAS - we
+        // assume here that the tokens have never been modified.
+        if (!annotationService.isSentenceLayerEditable(aDocument.getProject())) {
             adapters.removeIf(adapter -> Sentence._TypeName.equals(adapter.getType()));
         }
 
-        if (!annotationEditorProperties.isTokenLayerEditable()) {
+        if (!annotationService.isTokenLayerEditable(aDocument.getProject())) {
             adapters.removeIf(adapter -> Token._TypeName.equals(adapter.getType()));
         }
 
         DiffResult diff;
         try (StopWatch watch = new StopWatch(LOG, "CasDiff")) {
-            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge, 0, Integer.MAX_VALUE)
+            diff = doDiffSingle(adapters, LINK_ROLE_AS_LABEL, aCassesToMerge, 0, MAX_VALUE)
                     .toResult();
         }
 
