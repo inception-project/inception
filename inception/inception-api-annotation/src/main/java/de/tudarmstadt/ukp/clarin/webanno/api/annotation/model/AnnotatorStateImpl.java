@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
@@ -38,7 +39,6 @@ import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
@@ -185,7 +185,7 @@ public class AnnotatorStateImpl
 
     private PagingStrategy pagingStrategy;
 
-    private List<Unit> visibleUnits;
+    private List<Unit> visibleUnits = emptyList();
 
     private Map<AnnotatorStateMetaDataKey<?>, Object> metaData = new HashMap<>();
 
@@ -389,8 +389,9 @@ public class AnnotatorStateImpl
 
         // Make sure the currently selected layer is actually visible/exists
         if (!annotationLayers.contains(selectedAnnotationLayer)) {
-            selectedAnnotationLayer = annotationLayers.stream()
-                    .filter(layer -> layer.getType().equals(WebAnnoConst.SPAN_TYPE)).findFirst()
+            selectedAnnotationLayer = annotationLayers.stream() //
+                    .filter(layer -> layer.getType().equals(SPAN_TYPE)) //
+                    .findFirst() //
                     .orElse(null);
             defaultAnnotationLayer = selectedAnnotationLayer;
         }

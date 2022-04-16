@@ -243,7 +243,7 @@ public class CurationPage
 
     private AnnotationEditorBase createAnnotationEditor(String aId)
     {
-        String editorId = annotationService.isSentencesEditable(getProject())
+        String editorId = annotationService.isSentenceLayerEditable(getProject())
                 ? BratLineOrientedAnnotationEditorFactory.ID
                 : BratSentenceOrientedAnnotationEditorFactory.ID;
         AnnotatorState state = getModelObject();
@@ -446,7 +446,7 @@ public class CurationPage
         // state is up-to-date
         workloadManagementService.getWorkloadManagerExtension(state.getProject())
                 .freshenStatus(state.getProject());
-        return curationDocumentService.listCuratableSourceDocuments(getModelObject().getProject());
+        return curationDocumentService.listCuratableSourceDocuments(state.getProject());
     }
 
     /**
@@ -688,6 +688,7 @@ public class CurationPage
         if (aFocusParameter != null) {
             focus = aFocusParameter.toInt(0);
         }
+
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
@@ -695,23 +696,24 @@ public class CurationPage
                 && focus == getModelObject().getFocusUnitIndex()) {
             return;
         }
+
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)
         if (aPreviousDocument == null || !aPreviousDocument.equals(currentDocument)) {
             actionLoadDocument(aTarget, focus);
+            return;
         }
-        else {
-            try {
-                getModelObject().moveToUnit(getEditorCas(), focus, TOP);
-                actionRefreshDocument(aTarget);
+
+        try {
+            getModelObject().moveToUnit(getEditorCas(), focus, TOP);
+            actionRefreshDocument(aTarget);
+        }
+        catch (Exception e) {
+            if (aTarget != null) {
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
-            catch (Exception e) {
-                if (aTarget != null) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                }
-                LOG.error("Error reading CAS " + e.getMessage(), e);
-                error("Error reading CAS " + e.getMessage());
-            }
+            LOG.error("Error reading CAS " + e.getMessage(), e);
+            error("Error reading CAS " + e.getMessage());
         }
     }
 
@@ -728,6 +730,7 @@ public class CurationPage
             dsd.setColor(sourceDocument.getState().getColor());
             allSourceDocuments.add(dsd);
         }
+
         return allSourceDocuments;
     }
 
@@ -761,7 +764,6 @@ public class CurationPage
                     unit.getEnd()).toResult();
 
             CurationUnit curationUnit = new CurationUnit(unit.getBegin(), unit.getEnd(), unitIndex);
-
             curationUnit.setState(calculateState(diff));
 
             curationUnitList.add(curationUnit);

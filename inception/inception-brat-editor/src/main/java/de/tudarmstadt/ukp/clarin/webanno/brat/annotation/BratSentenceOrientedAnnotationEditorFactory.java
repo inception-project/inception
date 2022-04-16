@@ -55,7 +55,7 @@ public class BratSentenceOrientedAnnotationEditorFactory
     @Override
     public int accepts(Project aProject, String aFormat)
     {
-        if (annotationService.isSentencesEditable(aProject)) {
+        if (annotationService.isSentenceLayerEditable(aProject)) {
             return NOT_SUITABLE;
         }
 
