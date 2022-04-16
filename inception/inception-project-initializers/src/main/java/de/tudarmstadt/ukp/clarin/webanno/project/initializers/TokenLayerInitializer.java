@@ -84,6 +84,7 @@ public class TokenLayerInitializer
         tokenLayer.setValidationMode(NEVER);
         tokenLayer.setReadonly(true);
         tokenLayer.setCrossSentence(false);
+        tokenLayer.setEnabled(false);
 
         annotationSchemaService.createOrUpdateLayer(tokenLayer);
     }
