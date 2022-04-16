@@ -21,15 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
-import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
@@ -56,14 +53,6 @@ public class TokenLayerInitializer
     public String getName()
     {
         return "Tokens";
-    }
-
-    @Override
-    public List<Class<? extends ProjectInitializer>> getDependencies()
-    {
-        return asList(
-                // Because tokens are not allowed to cross sentence boundaries
-                SentenceLayerInitializer.class);
     }
 
     @Override
