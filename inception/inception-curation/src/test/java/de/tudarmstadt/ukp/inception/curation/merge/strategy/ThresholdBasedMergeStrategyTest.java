@@ -37,31 +37,31 @@ class ThresholdBasedMergeStrategyTest
     {
         var minUsers = 0;
         var minConfidence = 0.0;
-        var maxResults = 1;
+        var topRanks = 1;
 
         {
             var best = makeConfiguration("A", "B");
             var secondBest = makeConfiguration("C");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best, secondBest)) //
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest)) //
                     .containsExactly(best);
         }
 
         {
             var best = makeConfiguration("A");
             var secondBest = makeConfiguration("B");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best, secondBest)) //
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest)) //
                     .as("A tie is always considered as DISPUTED") //
                     .isEmpty();
         }
 
         {
             var best = makeConfiguration("A");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best)) //
+            assertThat(calculate(minUsers, minConfidence, topRanks, best)) //
                     .containsExactly(best);
         }
 
         {
-            assertThat(calculate(minUsers, minConfidence, maxResults)).isEmpty();
+            assertThat(calculate(minUsers, minConfidence, topRanks)).isEmpty();
         }
     }
 
@@ -70,12 +70,12 @@ class ThresholdBasedMergeStrategyTest
     {
         var minUsers = 0;
         var minConfidence = 1.0;
-        var maxResults = 1;
+        var topRanks = 1;
 
         {
             var best = makeConfiguration("A", "B");
             var secondBest = makeConfiguration("C");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best, secondBest))
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest))
                     .as("With confidence threshold 1, and non-unanimouse vote is DISPUTED")
                     .isEmpty();
         }
@@ -83,19 +83,19 @@ class ThresholdBasedMergeStrategyTest
         {
             var best = makeConfiguration("A");
             var secondBest = makeConfiguration("B");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best, secondBest)) //
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest)) //
                     .as("A tie is always considered as DISPUTED") //
                     .isEmpty();
         }
 
         {
             var best = makeConfiguration("A");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best)) //
+            assertThat(calculate(minUsers, minConfidence, topRanks, best)) //
                     .containsExactly(best);
         }
 
         {
-            assertThat(calculate(minUsers, minConfidence, maxResults)).isEmpty();
+            assertThat(calculate(minUsers, minConfidence, topRanks)).isEmpty();
         }
     }
 
@@ -104,12 +104,12 @@ class ThresholdBasedMergeStrategyTest
     {
         var minUsers = 0;
         var minConfidence = 0.5;
-        var maxResults = 1;
+        var topRanks = 1;
 
         {
             var best = makeConfiguration("A", "B");
             var secondBest = makeConfiguration("C");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best, secondBest)) //
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest)) //
                     .as("Best has twice the votes of second best") //
                     .containsExactly(best);
         }
@@ -117,32 +117,74 @@ class ThresholdBasedMergeStrategyTest
         {
             var best = makeConfiguration("A", "B", "C");
             var secondBest = makeConfiguration("D", "E");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best, secondBest)) //
-                    .as("Best has less than twice the votes of second best") //
-                    .isEmpty();
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest)) //
+                    .as("Best has more than half of the total votes") //
+                    .containsExactly(best);
         }
 
         {
             var best = makeConfiguration("A");
             var secondBest = makeConfiguration("B");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best, secondBest)) //
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest)) //
                     .as("A tie is always considered as DISPUTED") //
                     .isEmpty();
         }
 
         {
             var best = makeConfiguration("A");
-            assertThat(calculate(minUsers, minConfidence, maxResults, best)) //
+            assertThat(calculate(minUsers, minConfidence, topRanks, best)) //
                     .containsExactly(best);
         }
 
         {
-            assertThat(calculate(minUsers, minConfidence, maxResults)).isEmpty();
+            assertThat(calculate(minUsers, minConfidence, topRanks)).isEmpty();
+        }
+    }
+
+    @Test
+    void testWithPointFiveConfidenceWithMultipleResults()
+    {
+        var minUsers = 0;
+        var minConfidence = 0.4;
+        var topRanks = 2;
+
+        {
+            var best = makeConfiguration("A", "B");
+            var secondBest = makeConfiguration("C");
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest)) //
+                    .as("Second-best does not have at least 50% of the total votes") //
+                    .containsExactly(best);
+        }
+
+        {
+            var best = makeConfiguration("A", "B", "C");
+            var secondBest = makeConfiguration("D", "E");
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest)) //
+                    .as("Second-best does have 40% of the total votes") //
+                    .containsExactly(best, secondBest);
+        }
+
+        {
+            var best = makeConfiguration("A");
+            var secondBest = makeConfiguration("B");
+            assertThat(calculate(minUsers, minConfidence, topRanks, best, secondBest)) //
+                    .as("A tie is allowed when topRanks is not 1") //
+                    .containsExactly(best, secondBest);
+        }
+
+        {
+            var best = makeConfiguration("A");
+            assertThat(calculate(minUsers, minConfidence, topRanks, best)) //
+                    .containsExactly(best);
+        }
+
+        {
+            assertThat(calculate(minUsers, minConfidence, topRanks)).isEmpty();
         }
     }
 
     private List<Configuration> calculate(int aUserThreshold, double aConfidenceThreshold,
-            int aMaxResults, Configuration... aConfigurations)
+            int aTopRanks, Configuration... aConfigurations)
     {
         ConfigurationSet cfgSet = new ConfigurationSet(position);
         for (Configuration cfg : aConfigurations) {
@@ -150,7 +192,7 @@ class ThresholdBasedMergeStrategyTest
         }
 
         ThresholdBasedMergeStrategy sut = new ThresholdBasedMergeStrategy(aUserThreshold,
-                aConfidenceThreshold, aMaxResults);
+                aConfidenceThreshold, aTopRanks);
         return sut.chooseConfigurationsToMerge(null, cfgSet);
     }
 

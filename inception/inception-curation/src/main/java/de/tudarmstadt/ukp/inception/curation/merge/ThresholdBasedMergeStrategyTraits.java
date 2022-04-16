@@ -26,7 +26,7 @@ public class ThresholdBasedMergeStrategyTraits
 
     private int userThreshold = 1;
     private double confidenceThreshold = 0.75d;
-    private int maxResults = 1;
+    private int topRanks = 1;
 
     public int getUserThreshold()
     {
@@ -48,13 +48,13 @@ public class ThresholdBasedMergeStrategyTraits
         confidenceThreshold = aConfidenceThreshold;
     }
 
-    public int getMaxResults()
+    public int getTopRanks()
     {
-        return maxResults < 1 ? 1 : maxResults;
+        return topRanks < 1 ? 1 : topRanks;
     }
 
-    public void setMaxResults(int aMaxResults)
+    public void setTopRanks(int aTopRanks)
     {
-        maxResults = aMaxResults;
+        topRanks = aTopRanks;
     }
 }

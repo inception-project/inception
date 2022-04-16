@@ -59,7 +59,7 @@ public class ThresholdBasedMergeStrategyFactoryImpl
     public MergeStrategy makeStrategy(ThresholdBasedMergeStrategyTraits aTraits)
     {
         return new ThresholdBasedMergeStrategy(aTraits.getUserThreshold(),
-                aTraits.getConfidenceThreshold(), aTraits.getMaxResults());
+                aTraits.getConfidenceThreshold(), aTraits.getTopRanks());
     }
 
     @Override
