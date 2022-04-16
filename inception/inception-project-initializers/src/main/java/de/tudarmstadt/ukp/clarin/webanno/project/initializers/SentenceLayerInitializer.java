@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
 
@@ -29,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
@@ -74,7 +74,7 @@ public class SentenceLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer sentenceLayer = new AnnotationLayer(Sentence.class.getName(), "Sentence",
-                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS, NO_OVERLAP);
+                SPAN_TYPE, aProject, true, TOKENS, NO_OVERLAP);
 
         // Since the user cannot turn off validation for the sentence layer if there is any kind of
         // problem with the validation functionality we are conservative here and disable validation
@@ -82,6 +82,7 @@ public class SentenceLayerInitializer
         sentenceLayer.setValidationMode(NEVER);
         sentenceLayer.setReadonly(true);
         sentenceLayer.setCrossSentence(true);
+        sentenceLayer.setEnabled(false);
 
         annotationSchemaService.createOrUpdateLayer(sentenceLayer);
     }

@@ -567,5 +567,7 @@ public interface AnnotationSchemaService
     void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
         throws ResourceInitializationException;
 
-    boolean isSentencesEditable(Project aProject);
+    boolean isSentenceLayerEditable(Project aProject);
+
+    boolean isTokenLayerEditable(Project aProject);
 }
