@@ -21,9 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode.NEVER;
+import static java.util.Collections.emptyList;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +61,7 @@ public class TokenLayerInitializer
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return Collections.emptyList();
+        return emptyList();
     }
 
     @Override

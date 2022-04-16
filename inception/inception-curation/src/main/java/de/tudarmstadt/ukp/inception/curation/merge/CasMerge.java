@@ -226,7 +226,7 @@ public class CasMerge
                     .map(pos -> (SpanPosition) pos)
                     // We don't process slot features here (they are span sub-positions)
                     .filter(pos -> pos.getFeature() == null) //
-                    .collect(Collectors.toList());
+                    .collect(toList());
 
             if (positions.isEmpty()) {
                 continue;
@@ -248,10 +248,11 @@ public class CasMerge
 
                 for (Configuration cfgToMerge : cfgsToMerge) {
                     try {
+                        AnnotationLayer layer = type2layer.get(position.getType());
                         AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(casMap);
                         CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
                                 aTargetUsername, type2layer.get(position.getType()), aTargetCas,
-                                sourceFS, false);
+                                sourceFS, layer.isAllowStacking());
                         LOG.trace(" `-> merged annotation with agreement");
 
                         switch (result.getState()) {
