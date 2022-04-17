@@ -26,10 +26,11 @@ public class ThresholdBasedMergeStrategyTraits
 
     private int userThreshold = 1;
     private double confidenceThreshold = 0.75d;
+    private int topRanks = 1;
 
     public int getUserThreshold()
     {
-        return userThreshold;
+        return userThreshold < 1 ? 1 : userThreshold;
     }
 
     public void setUserThreshold(int aUserThreshold)
@@ -39,11 +40,29 @@ public class ThresholdBasedMergeStrategyTraits
 
     public double getConfidenceThreshold()
     {
+        if (confidenceThreshold < 0) {
+            return 0.0d;
+        }
+
+        if (confidenceThreshold > 1.0) {
+            return 1.0d;
+        }
+
         return confidenceThreshold;
     }
 
     public void setConfidenceThreshold(double aConfidenceThreshold)
     {
         confidenceThreshold = aConfidenceThreshold;
+    }
+
+    public int getTopRanks()
+    {
+        return topRanks < 1 ? 1 : topRanks;
+    }
+
+    public void setTopRanks(int aTopRanks)
+    {
+        topRanks = aTopRanks;
     }
 }
