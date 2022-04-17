@@ -107,16 +107,33 @@ NOTE: The upper *Annotation* pane that the curator uses to edit annotations is n
 
 [#merging-strategies]
 == Merging strategies
-By default, the merging strategy only considers annotations if all annotators made the same 
+
+{product-name} supports several different strategies for pre-merging data from the annotators to the curated document. The default strategy is **Merge completely agreeing non-stacked annotations**, but this default can be changed by the project manager in the project settings. It is also possible to update the default settings from the **Re-merge** dialog on the curation page.
+
+=== Merge completely agreeing non-stacked annotations
+
+This merge strategy only considers annotations if all annotators made the same 
 annotation at the same location (i.e. complete and agreeing annotations) - i.e. it considers any 
 annotations not provided by all annotators as a disagreement between the annotators.
 
-However, there are situations where it is desirable to merge annotations from all annotators, even
+=== Merge incomplete agreeing non-stacked annotations
+
+There are situations where it is desirable to merge annotations from all annotators, even
 if some did not provide it. For example, if your project has two annotators, one working on POS
 tagging and another working on lemmatization, then as a curator, you might simply want to merge the
-annotators from the two. This can be done by using the **Re-merge** action and activating the
-checkbox **Merge incomplete annotations**. This will re-merge the current document (i.e. discard
-the entire state of curation and merge from scratch).
+annotators from the two.
+
+=== Merge using thresholds
+
+This is the most powerful and flexible strategy. It is also the only strategy so far that supports merging stacked annotations.
+
+The strategy is controlled by three parameters:
+
+* **User threshold:** the minimum amount of annotators that must have voted for a given 
+label for the label to be considered at all. If less then this number of annotators as 
+assigned the label, then it is completely ignored.
+* **Confidence threshold:** the minimum confidence of a label. The confidence for a label is calculated by counting the total number annotators (`all_votes`) that annotated a given position and dividing the number of annotators that provided a given label by the total number (i.e. `votes(label)  / all_votes`. Note that the user threshold is applied before counting votes to calculate confidence. Note how the confidence interacts with the number of valid labels you expect. E.g. if you expect that there could be four valid labels (and therefore set the **top-voted** parameter to `4`), then the best confidence that a single label can have is **25%** (`= 100% / 4``).
+* **Top-voted:** when set to `1`, only the single best label is pre-merged. If there is a tie on the best label, then nothing is merged. When set to `2` or higher, the respective `n` best labels are pre-merged. If there is any tie within the `n` best labels, then all labels that still meet the lowest score of the tie are merged as well. For example, if set to `2` and three annotators voted for label `X` and another two anotators voted for `Y` and `Z` respectively, then `Y` and `Z` have a tie at the second rank, so both of them are merged. Note that this setting only affects annotations on layers that allow stacking annotations. For other layers, an implicit setting of `1` is used here.
 
 == Anonymized curation
 By default, the curator can see the annotators names on the curation page. However, in some cases,

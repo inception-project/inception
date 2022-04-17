@@ -30,7 +30,7 @@ public class ThresholdBasedMergeStrategyTraits
 
     public int getUserThreshold()
     {
-        return userThreshold;
+        return userThreshold < 1 ? 1 : userThreshold;
     }
 
     public void setUserThreshold(int aUserThreshold)
@@ -40,6 +40,14 @@ public class ThresholdBasedMergeStrategyTraits
 
     public double getConfidenceThreshold()
     {
+        if (confidenceThreshold < 0) {
+            return 0.0d;
+        }
+
+        if (confidenceThreshold > 1.0) {
+            return 1.0d;
+        }
+
         return confidenceThreshold;
     }
 
