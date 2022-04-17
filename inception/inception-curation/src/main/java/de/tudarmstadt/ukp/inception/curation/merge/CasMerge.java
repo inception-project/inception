@@ -144,10 +144,10 @@ public class CasMerge
         return mergeStrategy;
     }
 
-    private List<Configuration> chooseConfigurationToMerge(DiffResult aDiff, ConfigurationSet cfgs,
-            Map<String, List<CAS>> aCasMap)
+    private List<Configuration> chooseConfigurationToMerge(AnnotationLayer aLayer, DiffResult aDiff,
+            ConfigurationSet cfgs, Map<String, List<CAS>> aCasMap)
     {
-        return mergeStrategy.chooseConfigurationsToMerge(aDiff, cfgs);
+        return mergeStrategy.chooseConfigurationsToMerge(aDiff, cfgs, aLayer);
     }
 
     /**
@@ -238,9 +238,11 @@ public class CasMerge
             // Slots are also excluded for the moment
             for (SpanPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
+                AnnotationLayer layer = type2layer.get(position.getType());
                 ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
-                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(aDiff, cfgs, casMap);
+                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs,
+                        casMap);
 
                 if (cfgsToMerge.isEmpty()) {
                     continue;
@@ -248,7 +250,6 @@ public class CasMerge
 
                 for (Configuration cfgToMerge : cfgsToMerge) {
                     try {
-                        AnnotationLayer layer = type2layer.get(position.getType());
                         AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(casMap);
                         CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
                                 aTargetUsername, type2layer.get(position.getType()), aTargetCas,
@@ -290,9 +291,11 @@ public class CasMerge
 
             for (SpanPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
+                AnnotationLayer layer = type2layer.get(position.getType());
                 ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
-                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(aDiff, cfgs, casMap);
+                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs,
+                        casMap);
 
                 if (cfgsToMerge.isEmpty()) {
                     continue;
@@ -332,9 +335,11 @@ public class CasMerge
 
             for (RelationPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
+                AnnotationLayer layer = type2layer.get(position.getType());
                 ConfigurationSet cfgs = aDiff.getConfigurationSet(position);
 
-                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(aDiff, cfgs, casMap);
+                List<Configuration> cfgsToMerge = chooseConfigurationToMerge(layer, aDiff, cfgs,
+                        casMap);
 
                 if (cfgsToMerge.isEmpty()) {
                     continue;
@@ -345,7 +350,7 @@ public class CasMerge
                         AnnotationFS sourceFS = (AnnotationFS) cfgToMerge.getRepresentative(casMap);
                         CasMergeOperationResult result = mergeRelationAnnotation(aTargetDocument,
                                 aTargetUsername, type2layer.get(position.getType()), aTargetCas,
-                                sourceFS, false);
+                                sourceFS, layer.isAllowStacking());
                         LOG.trace(" `-> merged annotation with agreement");
 
                         switch (result.getState()) {

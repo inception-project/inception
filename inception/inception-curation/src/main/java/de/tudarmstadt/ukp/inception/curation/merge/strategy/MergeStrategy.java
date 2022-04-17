@@ -22,9 +22,10 @@ import java.util.List;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface MergeStrategy
 {
     List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff,
-            ConfigurationSet aConfigurationSet);
+            ConfigurationSet aConfigurationSet, AnnotationLayer aLayer);
 }

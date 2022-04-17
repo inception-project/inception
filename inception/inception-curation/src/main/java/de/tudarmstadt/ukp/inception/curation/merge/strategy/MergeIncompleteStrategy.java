@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class MergeIncompleteStrategy
     implements MergeStrategy
@@ -40,7 +41,8 @@ public class MergeIncompleteStrategy
     public static final String BEAN_NAME = "incompleteAgreementNonStacked";
 
     @Override
-    public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs)
+    public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs,
+            AnnotationLayer aLayer)
     {
         boolean stacked = aCfgs.getConfigurations().stream() //
                 .filter(Configuration::isStacked) //

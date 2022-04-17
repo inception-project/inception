@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class ThresholdBasedMergeStrategy
     implements MergeStrategy
@@ -68,8 +69,11 @@ public class ThresholdBasedMergeStrategy
     }
 
     @Override
-    public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs)
+    public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs,
+            AnnotationLayer aLayer)
     {
+        int topRanksToConsider = aLayer.isAllowStacking() ? topRanks : 1;
+
         List<Configuration> cfgsAboveUserThreshold = aCfgs.getConfigurations().stream() //
                 .filter(cfg -> cfg.getCasGroupIds().size() >= userThreshold) //
                 .sorted(comparing((Configuration cfg) -> cfg.getCasGroupIds().size()).reversed()) //
@@ -86,8 +90,8 @@ public class ThresholdBasedMergeStrategy
                 .sum();
 
         double cutOffVotesByConfidence = confidenceThreshold * totalVotes;
-        double cutOffVotesByRank = cfgsAboveUserThreshold
-                .get((topRanks - 1) < cfgsAboveUserThreshold.size() ? (topRanks - 1)
+        double cutOffVotesByRank = cfgsAboveUserThreshold.get(
+                (topRanksToConsider - 1) < cfgsAboveUserThreshold.size() ? (topRanksToConsider - 1)
                         : cfgsAboveUserThreshold.size() - 1)
                 .getCasGroupIds().size();
 
@@ -96,7 +100,7 @@ public class ThresholdBasedMergeStrategy
                 .filter(cfg -> cfg.getCasGroupIds().size() >= cutOffVotesByRank) //
                 .collect(toList());
 
-        if (topRanks == 1 && result.size() > 1) {
+        if (topRanksToConsider == 1 && result.size() > 1) {
             // If we request only one result but there is more than one, then it is a tie. If only
             // a single result is requested, then ties are considered a dispute.
             return Collections.emptyList();
