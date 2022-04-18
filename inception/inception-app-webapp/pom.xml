@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>23.2-SNAPSHOT</version>
+    <version>23.2</version>
     <relativePath>..</relativePath>
   </parent>
 
