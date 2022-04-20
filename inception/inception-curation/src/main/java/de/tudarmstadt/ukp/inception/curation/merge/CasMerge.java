@@ -31,7 +31,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -622,7 +621,7 @@ public class CasMerge
         AnnotationFS targetFs;
         if (candidateHosts.size() == 0) {
             throw new UnfulfilledPrerequisitesException(
-                    "The base annotation does not exist. Please add it first. ");
+                    "The base annotation does not exist. Please add it first.");
         }
         AnnotationFS mergeFs = candidateHosts.get(0);
         int liIndex = aSourceSlotIndex;
@@ -664,7 +663,9 @@ public class CasMerge
         links.add(linkRole);
         links.remove(duplicateLink);
 
-        setFeature(mergeFs, slotFeature, links);
+        adapter.setFeatureValue(aDocument, aUsername, aTargetCas, mergeFs.getAddress(), slotFeature,
+                links);
+
         return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
                 getAddr(mergeFs));
     }
