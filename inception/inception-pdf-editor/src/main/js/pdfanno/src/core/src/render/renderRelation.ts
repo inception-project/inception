@@ -130,7 +130,6 @@ function createSVGElement (top, left, width, height) {
     left       : `${left - margin}px`,
     width      : `${width + margin * 2}px`,
     height     : `${height + margin * 2}px`,
-    visibility : 'hidden',
     'z-index'  : 2
   }).attr({
     x : 0,
