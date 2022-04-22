@@ -1,29 +1,38 @@
 import { uuid } from '../../../anno-ui/utils'
 import AbstractAnnotation from './abstract'
+import { mergeRects, findTexts } from '../../../page/textLayer'
 
 /**
  * Span Annotation.
  */
 export default class SpanAnnotation extends AbstractAnnotation {
 
+  type = 'span'
+  rectangles = []
+  readOnly = false
+  knob = true
+  border = true
+  text = null
+  color = null
+  selectedText = null
+  textRange = null
+  page = null
+  zIndex: number;
+  $element = null
+
   /**
    * Constructor.
    */
-  constructor () {
+  constructor() {
     super()
 
-    this.uuid         = null
-    this.type         = 'span'
-    this.rectangles   = []
-    this.text         = null
-    this.color        = null
-    this.readOnly     = false
+    this.uuid = null
+    this.text = null
+    this.color = null
     this.selectedText = null
-    this.textRange    = null
-    this.page         = null
-    this.knob         = true
-    this.border       = true
-    this.$element     = this.createDummyElement()
+    this.textRange = null
+    this.page = null
+    this.$element = this.createDummyElement()
 
     window.globalEvent.on('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.on('enableViewMode', this.enableViewMode)
@@ -32,22 +41,22 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from an annotation data.
    */
-  static newInstance (annotation, allowZeroWidth) {
-    let a          = new SpanAnnotation()
-    a.uuid         = annotation.uuid || uuid()
-    a.text         = annotation.text
-    a.color        = annotation.color
-    a.readOnly     = annotation.readOnly || false
+  static newInstance(annotation, allowZeroWidth) {
+    let a = new SpanAnnotation()
+    a.uuid = annotation.uuid || uuid()
+    a.text = annotation.text
+    a.color = annotation.color
+    a.readOnly = annotation.readOnly || false
     a.selectedText = annotation.selectedText
-    a.textRange    = annotation.textRange
-    a.page         = annotation.page
-    a.zIndex       = annotation.zIndex || 10
-    a.knob         = (typeof annotation.knob === 'boolean' ? annotation.knob : true)
-    a.border       = annotation.border !== false
+    a.textRange = annotation.textRange
+    a.page = annotation.page
+    a.zIndex = annotation.zIndex || 10
+    a.knob = (typeof annotation.knob === 'boolean' ? annotation.knob : true)
+    a.border = annotation.border !== false
 
     // Calc the position.
-    let rects = window.findTexts(a.page, a.textRange[0], a.textRange[1], allowZeroWidth)
-    rects = window.mergeRects(rects)
+    let rects = findTexts(a.page, a.textRange[0], a.textRange[1], allowZeroWidth)
+    rects = mergeRects(rects)
     a.rectangles = rects
 
     return a
@@ -56,7 +65,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from a TOML object.
    */
-  static newInstanceFromTomlObject (tomlObject) {
+  static newInstanceFromTomlObject(tomlObject) {
     let d = tomlObject
     d.selectedText = d.text
     d.text = d.label
@@ -68,14 +77,15 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Render annotation(s).
    */
-  render () {
+  render(): boolean {
 
     if (!this.rectangles || this.rectangles.length === 0) {
       if (!this.page || !this.textRange) {
-        return console.log('ERROR: span missing page or textRange. span=', this)
+        console.error('ERROR: span missing page or textRange. span=', this)
+        return false
       }
-      let rects = window.findTexts(this.page, this.textRange[0], this.textRange[1])
-      rects = window.mergeRects(rects)
+      let rects = findTexts(this.page, this.textRange[0], this.textRange[1])
+      rects = mergeRects(rects)
       this.rectangles = rects
     }
 
@@ -85,7 +95,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Set a hover event.
    */
-  setHoverEvent () {
+  setHoverEvent() {
     this.$element.find('.anno-knob').hover(
       this.handleHoverInEvent,
       this.handleHoverOutEvent
@@ -95,7 +105,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Delete the annotation from rendering, a container in window, and a container in localStorage.
    */
-  destroy () {
+  destroy() {
     let promise = super.destroy()
     this.emit('delete')
 
@@ -107,29 +117,29 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Create an annotation data for save.
    */
-  createAnnotation () {
+  createAnnotation() {
     return {
-      uuid         : this.uuid,
-      type         : this.type,
-      rectangles   : this.rectangles,
-      text         : this.text,
-      color        : this.color,
-      readyOnly    : this.readOnly,
-      selectedText : this.selectedText
+      uuid: this.uuid,
+      type: this.type,
+      rectangles: this.rectangles,
+      text: this.text,
+      color: this.color,
+      readyOnly: this.readOnly,
+      selectedText: this.selectedText
     }
   }
 
   /**
    * Get the position for text.
    */
-  getTextPosition () {
+  getTextPosition() {
 
     let p = null
 
     if (this.rectangles.length > 0) {
       p = {
-        x : this.rectangles[0].x + 7,
-        y : this.rectangles[0].y - 20
+        x: this.rectangles[0].x + 7,
+        y: this.rectangles[0].y - 20
       }
     }
 
@@ -139,28 +149,28 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Delete the annotation if selected.
    */
-  deleteSelectedAnnotation () {
-    super.deleteSelectedAnnotation()
+  deleteSelectedAnnotation(): boolean {
+    return super.deleteSelectedAnnotation()
   }
 
   /**
    * Handle a selected event on a text.
    */
-  handleTextSelected () {
+  handleTextSelected() {
     this.select()
   }
 
   /**
    * Handle a deselected event on a text.
    */
-  handleTextDeselected () {
+  handleTextDeselected() {
     this.deselect()
   }
 
   /**
    * Handle a hovein event on a text.
    */
-  handleTextHoverIn () {
+  handleTextHoverIn() {
     this.highlight()
     this.emit('hoverin')
   }
@@ -168,7 +178,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Handle a hoveout event on a text.
    */
-  handleTextHoverOut () {
+  handleTextHoverOut() {
     this.dehighlight()
     this.emit('hoverout')
   }
@@ -176,7 +186,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Save a new text.
    */
-  handleTextChanged (newText) {
+  handleTextChanged(newText) {
     this.text = newText
     this.save()
   }
@@ -184,7 +194,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Handle a hoverin event.
    */
-  handleHoverInEvent (e) {
+  handleHoverInEvent(e) {
     super.handleHoverInEvent(e)
     this.emit('circlehoverin', this)
   }
@@ -192,7 +202,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Handle a hoverout event.
    */
-  handleHoverOutEvent (e) {
+  handleHoverOutEvent(e) {
     super.handleHoverOutEvent(e)
     this.emit('circlehoverout', this)
   }
@@ -200,7 +210,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Handle a click event.
    */
-  handleClickEvent (e) {
+  handleClickEvent(e) {
     super.handleClickEvent(e)
     if (this.selected) {
       var data = {
@@ -216,13 +226,13 @@ export default class SpanAnnotation extends AbstractAnnotation {
         "u": window.apiUrl,
         "sh": [],
         "fh": [function () {
-            alert('Something went wrong on selecting a span annotation for: ' + data)
+          alert('Something went wrong on selecting a span annotation for: ' + data)
         }]
       });
     }
   }
 
-  export (id) {
+  export(id) {
 
     let text = (this.selectedText || '')
       .replace(/\r\n/g, ' ')
@@ -232,15 +242,15 @@ export default class SpanAnnotation extends AbstractAnnotation {
       .replace(/\\/g, '')
 
     return {
-      id        : id + '',
-      page      : this.page,
-      label     : this.text || '',
+      id: id + '',
+      page: this.page,
+      label: this.text || '',
       text,
-      textrange : this.textRange
+      textrange: this.textRange
     }
   }
 
-  export040 () {
+  export040() {
 
     let text = (this.selectedText || '')
       .replace(/\r\n/g, ' ')
@@ -250,11 +260,11 @@ export default class SpanAnnotation extends AbstractAnnotation {
       .replace(/\\/g, '')
 
     return {
-      type      : this.type,
-      page      : this.page,
-      label     : this.text || '',
+      type: this.type,
+      page: this.page,
+      label: this.text || '',
       text,
-      textrange : this.textRange
+      textrange: this.textRange
     }
   }
 
@@ -272,7 +282,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
       "u": window.apiUrl,
       "sh": [],
       "fh": [function () {
-          alert('Something went wrong on deleting a recommendation for: ' + data)
+        alert('Something went wrong on deleting a recommendation for: ' + data)
       }]
     });
   }
@@ -280,7 +290,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Enable view mode.
    */
-  enableViewMode () {
+  enableViewMode() {
     this.disableViewMode()
     super.enableViewMode()
     var singleClickAction = this.handleClickEvent
@@ -311,7 +321,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Disable view mode.
    */
-  disableViewMode () {
+  disableViewMode() {
     super.disableViewMode()
     this.$element.find('.anno-knob').off('click')
   }

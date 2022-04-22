@@ -6,18 +6,18 @@ import { customizeAnalyzeResult, extractMeta, Page } from './util/analyzer'
 /**
  * Text layer data.
  */
-let pages : Page[];
+let pages: Page[] = [];
 
 /**
  * Setup text layers.
  */
-export function setup (analyzeData) {
-  // Create text layers data.
+export function setup(analyzeData) {
+  console.debug("Create text layers data")
   pages = customizeAnalyzeResult(analyzeData)
 }
 
-function getPage(num : number) : Page {
-  return pages.find(page => page.page === num)
+function getPage(num: number): Page {
+  return pages.find(p => p.page === num)
 }
 
 /**
@@ -27,7 +27,7 @@ function getPage(num : number) : Page {
  * @param point - { x, y } coords.
  * @return {*} - The nearest text index to the given point.
  */
-window.findIndex = function (pageNum : number, point) {
+ export function findIndex(pageNum: number, point) {
 
   const page = getPage(pageNum);
 
@@ -64,7 +64,7 @@ window.findIndex = function (pageNum : number, point) {
  * @param point - { x, y } coords.
  * @returns {*} - The text data if found, whereas null.
  */
-window.findText = function (pageNum : number, point) {
+export function findText(pageNum: number, point) {
 
   const page = getPage(pageNum);
 
@@ -100,7 +100,7 @@ window.findText = function (pageNum : number, point) {
  * @param allowZeroWidth - whether zero-width spans are allowed or not, required for range usage
  * @returns {Array} - the texts.
  */
-window.findTexts = function (pageNum : number, startPosition, endPosition, allowZeroWidth) {
+export function findTexts(pageNum: number, startPosition, endPosition, allowZeroWidth?) {
 
   const items = []
 
@@ -153,8 +153,8 @@ window.findTexts = function (pageNum : number, startPosition, endPosition, allow
       }
 
       if (last.position < data.position) last = data
-    // if zero-width spans are not allowed interprete ranges as PDFAnno does usually
-    // [3,3] is one character, [3,4] are two characters
+      // if zero-width spans are not allowed interprete ranges as PDFAnno does usually
+      // [3,3] is one character, [3,4] are two characters
     } else {
       if (startPosition <= position) {
         inRange = true
@@ -189,7 +189,7 @@ window.findTexts = function (pageNum : number, startPosition, endPosition, allow
 /**
  * Merge user selections.
  */
-window.mergeRects = function (rects) {
+export function mergeRects(rects) {
 
   // Remove null.
   rects = rects.filter(rect => rect)
@@ -216,13 +216,13 @@ window.mergeRects = function (rects) {
 
     // Same line -> Merge rects.
     if (withinMargin(rects[i].top, tmp.top, error)) {
-      tmp.top    = Math.min(tmp.top, rects[i].top)
-      tmp.left   = Math.min(tmp.left, rects[i].left)
-      tmp.right  = Math.max(tmp.right, rects[i].right)
+      tmp.top = Math.min(tmp.top, rects[i].top)
+      tmp.left = Math.min(tmp.left, rects[i].left)
+      tmp.right = Math.max(tmp.right, rects[i].right)
       tmp.bottom = Math.max(tmp.bottom, rects[i].bottom)
-      tmp.x      = tmp.left
-      tmp.y      = tmp.top
-      tmp.width  = tmp.right - tmp.left
+      tmp.x = tmp.left
+      tmp.y = tmp.top
+      tmp.width = tmp.right - tmp.left
       tmp.height = tmp.bottom - tmp.top
 
       // New line -> Create a new rect.
@@ -238,23 +238,23 @@ window.mergeRects = function (rects) {
 /**
  * Convert a DOMList to a javascript plan object.
  */
-function convertToObject (rect) {
+function convertToObject(rect) {
   return {
-    top    : rect.top,
-    left   : rect.left,
-    right  : rect.right,
-    bottom : rect.bottom,
-    x      : rect.x,
-    y      : rect.y,
-    width  : rect.width,
-    height : rect.height
+    top: rect.top,
+    left: rect.left,
+    right: rect.right,
+    bottom: rect.bottom,
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height
   }
 }
 
 /**
  * Check the value(x) within the range.
  */
-function withinMargin (x, base, margin) {
+function withinMargin(x, base, margin) {
   return (base - margin) <= x && x <= (base + margin)
 }
 
@@ -262,7 +262,7 @@ function withinMargin (x, base, margin) {
  * Returns the scaling factor of the PDF. If the PDF has not been drawn yet, a factor of 1 is
  * assumed.
  */
-function scale () {
+function scale() {
   if (window.PDFView.pdfViewer.getPageView(0) === undefined) {
     return 1;
   } else {

@@ -15,6 +15,8 @@ export default class AbstractAnnotation extends EventEmitter {
     return obj && obj.uuid && obj.type
   }
 
+  uuid : string = null
+
   /**
    * Constructor.
    */
@@ -180,7 +182,7 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Delete the annotation if selected.
    */
-  deleteSelectedAnnotation() : boolean{
+  deleteSelectedAnnotation() : boolean {
 
     if (this.isSelected()) {
       this.destroy().then(() => {

@@ -184,9 +184,7 @@ public class PdfAnnotationEditor
                         aTarget);
             }
 
-            String script = getAnnotationsJS(pdfAnnoModel);
-
-            aTarget.appendJavaScript(script);
+            aTarget.appendJavaScript(getAnnotationsJS(pdfAnnoModel));
         }
         catch (IOException e) {
             handleError("Unable to load data", e, aTarget);

@@ -4,20 +4,22 @@ import { dispatchWindowEvent } from '../utils/event'
 import SpanAnnotation from './span'
 import RelationAnnotation from './relation.js'
 import semver from 'semver'
-import Ajv from 'ajv'
+import Ajv, { ValidateFunction } from 'ajv'
+import AbstractAnnotation from './abstract'
+
 /**
  * Annotation Container.
  */
 export default class AnnotationContainer {
 
+  set = new Set<AbstractAnnotation>()
+  ajv = new Ajv({ allErrors: true })
+  validate : ValidateFunction;
+
   /**
    * Constructor.
    */
   constructor() {
-    this.set = new Set()
-    this.ajv = new Ajv({
-      allErrors: true
-    })
     this.validate = this.ajv.compile(require('../../../../schemas/pdfanno-schema.json'))
   }
 
@@ -250,7 +252,6 @@ export default class AnnotationContainer {
             relation.save()
             relation.render()
             relation.enableViewMode()
-
           }
         })
       }

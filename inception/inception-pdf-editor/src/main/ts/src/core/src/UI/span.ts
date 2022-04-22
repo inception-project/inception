@@ -1,6 +1,7 @@
 import $ from 'jquery'
 import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
+import { findIndex, findTexts, findText } from '../../../page/textLayer'
 
 function scale () {
   return window.PDFView.pdfViewer.getPageView(0).viewport.scale
@@ -132,7 +133,7 @@ export function getRectangles () {
     return null
 
   } else {
-    let targets = window.findTexts(currentPage, startPosition, endPosition)
+    let targets = findTexts(currentPage, startPosition, endPosition)
     return mergeRects(targets)
   }
 
@@ -148,7 +149,7 @@ export function createSpan ({ text = null, zIndex = 10, color = null }) {
 
   } else {
 
-    let targets = window.findTexts(currentPage, startPosition, endPosition)
+    let targets = findTexts(currentPage, startPosition, endPosition)
     if (targets.length === 0) {
       return null
     }
@@ -196,7 +197,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const y = e.clientY - top
 
     // Find the data in pdftxt.
-    const item = window.findText(page, scaleDown({ x, y }))
+    const item = findText(page, scaleDown({ x, y }))
     if (item) {
       if (!startPosition || !endPosition) {
         initPosition = item.position
@@ -223,7 +224,7 @@ window.addEventListener('DOMContentLoaded', () => {
       spanAnnotation = null
     }
 
-    let targets = window.findTexts(currentPage, startPosition, endPosition)
+    let targets = findTexts(currentPage, startPosition, endPosition)
     if (targets.length > 0) {
       const mergedRect = mergeRects(targets)
       spanAnnotation = saveSpan({
@@ -307,7 +308,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const x = e.clientX - left
       const y = e.clientY - top
 
-      const position = window.findIndex(page, scaleDown({ x, y }))
+      const position = findIndex(page, scaleDown({ x, y }))
       var data = {
         "action": "createSpan",
         "page": currentPage,

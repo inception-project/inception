@@ -11,7 +11,6 @@ let globalEvent
  */
 export default class RelationAnnotation extends AbstractAnnotation {
 
-  uuid: string;
   type: string;
   direction: unknown;
   text: string;

@@ -26,17 +26,11 @@ fs.mkdirsSync(`${outbase}/pdfjs/`)
 defaults = {
   bundle: true,
   sourcemap: true,
-  minify: true,
+  minify: false,
   target: "es6",
   loader: { ".ts": "ts" },
   logLevel: 'info'
 }
-
-esbuild.build(Object.assign({
-  entryPoints: ["src/core/index.ts"],
-  outfile: `${outbase}/pdfanno.core.bundle.js`,
-  globalName: "pdfanno.core"
-}, defaults))
 
 esbuild.build(Object.assign({
   entryPoints: ["src/pdfanno.ts"],

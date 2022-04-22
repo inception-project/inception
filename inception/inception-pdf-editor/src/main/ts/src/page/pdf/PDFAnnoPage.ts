@@ -380,7 +380,7 @@ export default class PDFAnnoPage {
       if (Array.isArray(errors)) {
         message = this.validateSchemaErrors(errors)
       }
-      annoUI.ui.alertDialog.show({ message })
+      console.error('Unable to import annotations.', errors);
     })
   }
 
