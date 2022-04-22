@@ -42,7 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfEditorProperties;
 
-public class PdfAnnoPanel
+public class PdfDocumentIFrameView
     extends Panel
 {
     private static final long serialVersionUID = 4202869513273132875L;
@@ -54,7 +54,7 @@ public class PdfAnnoPanel
     private AbstractAjaxBehavior pdftxtProvider;
     private AbstractAjaxBehavior apiProvider;
 
-    public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel,
+    public PdfDocumentIFrameView(String aId, IModel<AnnotatorState> aModel,
             PdfAnnotationEditor aPdfAnnotationEditor)
     {
         super(aId, aModel);

@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameView;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
@@ -103,7 +103,7 @@ public class PdfAnnotationEditor
         super(aId, aModel, aActionHandler, aCasProvider);
         String format = aModel.getObject().getDocument().getFormat();
         if (format.equals(PdfFormatSupport.ID)) {
-            add(new PdfAnnoPanel(VIS, aModel, this));
+            add(new PdfDocumentIFrameView(VIS, aModel, this));
         }
         else {
             add(new WrongFileFormatPanel(VIS, format));

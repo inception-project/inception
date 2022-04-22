@@ -18,7 +18,10 @@
 const esbuild = require('esbuild')
 const fs = require('fs-extra');
 
-fs.emptyDirSync('dist')
+let outbase = "../../../target/js/de/tudarmstadt/ukp/inception/pdfeditor/resources/";
+
+fs.emptyDirSync(outbase)
+fs.mkdirsSync(`${outbase}/pdfjs/`)
 
 defaults = {
   bundle: true,
@@ -31,42 +34,40 @@ defaults = {
 
 esbuild.build(Object.assign({
   entryPoints: ["src/core/index.ts"],
-  outfile: "dist/pdfanno/pdfanno.core.bundle.js",
+  outfile: `${outbase}/pdfanno.core.bundle.js`,
   globalName: "pdfanno.core"
 }, defaults))
 
 esbuild.build(Object.assign({
   entryPoints: ["src/pdfanno.ts"],
-  outfile: "dist/pdfanno/pdfanno.page.bundle.js",
+  outfile: `${outbase}/pdfanno.page.bundle.js`,
   globalName: "pdfanno.page",
 }, defaults))
 
 esbuild.build(Object.assign({
   entryPoints: ["src/viewer.js"],
-  outfile: "dist/pdfanno/viewer.bundle.js",
+  outfile: `${outbase}/viewer.bundle.js`,
   globalName: "viewer",
   external: ['images/*']
 }, defaults))
 
 esbuild.build(Object.assign({
   entryPoints: ["src/l10n.ts"],
-  outfile: "dist/pdfanno/l10n.bundle.js",
+  outfile: `${outbase}/l10n.bundle.js`,
   globalName: "l10n",
 }, defaults))
 
-fs.mkdirsSync('dist/pdfanno')
-fs.copySync('index.html', 'dist/pdfanno/index.html')
-fs.copySync('index-debug.html', 'dist/pdfanno/index-debug.html')
-fs.copySync('../pdfjs/images', 'dist/pdfanno/images')
-fs.copySync('../pdfjs/locale', 'dist/pdfanno/locale')
-fs.copySync('node_modules/pdfjs-dist/cmaps', 'dist/pdfanno/cmaps')
-fs.copySync('node_modules/pdfjs-dist/web/compatibility.js', 'dist/pdfanno/compatibility.bundle.js')
-fs.copySync('node_modules/pdfjs-dist/web/compatibility.js.map', 'dist/pdfanno/compatibility.bundle.js.map')
+fs.copySync('index.html', `${outbase}/index.html`)
+fs.copySync('index-debug.html', `${outbase}/index-debug.html`)
+fs.copySync('../pdfjs/images', `${outbase}/images`)
+fs.copySync('../pdfjs/locale', `${outbase}/locale`)
+fs.copySync('node_modules/pdfjs-dist/cmaps', `${outbase}/cmaps`)
+fs.copySync('node_modules/pdfjs-dist/web/compatibility.js', `${outbase}/compatibility.bundle.js`)
+fs.copySync('node_modules/pdfjs-dist/web/compatibility.js.map', `${outbase}/compatibility.bundle.js.map`)
 
-fs.mkdirsSync('dist/pdfanno/pdfjs/')
-fs.copySync('node_modules/pdfjs-dist/build/pdf.js', 'dist/pdfanno/pdfjs/pdf.js')
-fs.copySync('node_modules/pdfjs-dist/build/pdf.js.map', 'dist/pdfanno/pdfjs/pdf.js.map')
-fs.copySync('node_modules/pdfjs-dist/build/pdf.min.js', 'dist/pdfanno/pdfjs/pdf.min.js')
-fs.copySync('node_modules/pdfjs-dist/build/pdf.worker.js', 'dist/pdfanno/pdfjs/pdf.worker.js')
-fs.copySync('node_modules/pdfjs-dist/build/pdf.worker.js.map', 'dist/pdfanno/pdfjs/pdf.worker.js.map')
-fs.copySync('node_modules/pdfjs-dist/build/pdf.worker.min.js', 'dist/pdfanno/pdfjs/pdf.worker.min.js')
+fs.copySync('node_modules/pdfjs-dist/build/pdf.js', `${outbase}/pdfjs/pdf.js`)
+fs.copySync('node_modules/pdfjs-dist/build/pdf.js.map', `${outbase}/pdfjs/pdf.js.map`)
+fs.copySync('node_modules/pdfjs-dist/build/pdf.min.js', `${outbase}/pdfjs/pdf.min.js`)
+fs.copySync('node_modules/pdfjs-dist/build/pdf.worker.js', `${outbase}/pdfjs/pdf.worker.js`)
+fs.copySync('node_modules/pdfjs-dist/build/pdf.worker.js.map', `${outbase}/pdfjs/pdf.worker.js.map`)
+fs.copySync('node_modules/pdfjs-dist/build/pdf.worker.min.js', `${outbase}/pdfjs/pdf.worker.min.js`)

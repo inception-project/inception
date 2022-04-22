@@ -19,7 +19,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.pdfeditor;
+package de.tudarmstadt.ukp.inception.pdfeditor.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -32,7 +32,7 @@ public class PdfAnnotationEditorWebMvcConfiguration
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry aRegistry)
     {
-        aRegistry.addResourceHandler("/resources/pdfanno/**")
-                .addResourceLocations("classpath:/pdfanno/");
+        aRegistry.addResourceHandler("/resources/pdfanno/**").addResourceLocations(
+                "classpath:/de/tudarmstadt/ukp/inception/pdfeditor/resources/");
     }
 }
