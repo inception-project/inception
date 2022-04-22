@@ -49,6 +49,7 @@ export function renderRelation (a) {
     stroke : a.color
   })
   group.style.visibility = 'visible'
+  group.style.pointerEvents = 'auto'
   group.setAttribute('read-only', a.readOnly === true)
 
   $svg[0].appendChild(group)
@@ -130,6 +131,7 @@ function createSVGElement (top, left, width, height) {
     left       : `${left - margin}px`,
     width      : `${width + margin * 2}px`,
     height     : `${height + margin * 2}px`,
+    'pointer-events' : 'none',
     'z-index'  : 2
   }).attr({
     x : 0,
