@@ -1,12 +1,12 @@
 /**
  * Create text layers which enable users to select texts.
  */
-import { customizeAnalyzeResult, extractMeta } from './util/analyzer'
+import { customizeAnalyzeResult, extractMeta, Page } from './util/analyzer'
 
 /**
  * Text layer data.
  */
-let pages
+let pages : Page[];
 
 /**
  * Setup text layers.
@@ -16,16 +16,26 @@ export function setup (analyzeData) {
   pages = customizeAnalyzeResult(analyzeData)
 }
 
+function getPage(num : number) : Page {
+  return pages.find(page => page.page === num)
+}
+
 /**
  * Find index between characters in the text.
  * Used for zero-width span annotations.
- * @param page - the page number.
+ * @param pageNum - the page number.
  * @param point - { x, y } coords.
  * @return {*} - The nearest text index to the given point.
  */
-window.findIndex = function (page, point) {
+window.findIndex = function (pageNum : number, point) {
 
-  const metaList = pages[page - 1].meta
+  const page = getPage(pageNum);
+
+  if (!page) {
+    return null;
+  }
+
+  const metaList = page.meta;
 
   for (let i = 0, len = metaList.length; i < len; i++) {
     const info = metaList[i]
@@ -50,13 +60,19 @@ window.findIndex = function (page, point) {
 
 /**
  * Find the text.
- * @param page - the page number.
+ * @param pageNum - the page number.
  * @param point - { x, y } coords.
  * @returns {*} - The text data if found, whereas null.
  */
-window.findText = function (page, point) {
+window.findText = function (pageNum : number, point) {
 
-  const metaList = pages[page - 1].meta
+  const page = getPage(pageNum);
+
+  if (!page) {
+    return null;
+  }
+
+  const metaList = page.meta;
 
   for (let i = 0, len = metaList.length; i < len; i++) {
     const info = metaList[i]
@@ -68,8 +84,7 @@ window.findText = function (page, point) {
     const { position, char, x, y, w, h } = extractMeta(info)
 
     // is Hit?
-    if (x <= point.x && point.x <= (x + w)
-      && y <= point.y && point.y <= (y + h)) {
+    if (x <= point.x && point.x <= (x + w) && y <= point.y && point.y <= (y + h)) {
       return { position, char, x, y, w, h }
     }
   }
@@ -79,13 +94,13 @@ window.findText = function (page, point) {
 
 /**
  * Find the texts.
- * @param page - the page number.
+ * @param pageNum - the page number.
  * @param startPosition - the start position in pdftxt.
  * @param endPosition - the end position in pdftxt.
  * @param allowZeroWidth - whether zero-width spans are allowed or not, required for range usage
  * @returns {Array} - the texts.
  */
-window.findTexts = function (page, startPosition, endPosition, allowZeroWidth) {
+window.findTexts = function (pageNum : number, startPosition, endPosition, allowZeroWidth) {
 
   const items = []
 
@@ -93,7 +108,13 @@ window.findTexts = function (page, startPosition, endPosition, allowZeroWidth) {
     return items
   }
 
-  const metaList = pages[page - 1].meta
+  const page = getPage(pageNum);
+
+  if (!page) {
+    return null;
+  }
+
+  const metaList = page.meta;
 
   let inRange = false
 
@@ -149,7 +170,7 @@ window.findTexts = function (page, startPosition, endPosition, allowZeroWidth) {
   // handle case where position is the very last index for a zero-width span
   // which does not exist in the pdfextract file and therefore cannot be found
   // use the previous character box and "append" the zero-width span after it
-  if (items.length === 0 && startPosition === endPosition && page === pages.length && allowZeroWidth) {
+  if (items.length === 0 && startPosition === endPosition && pageNum === pages.length && allowZeroWidth) {
     items.push({
       position: startPosition,
       page: last.page,

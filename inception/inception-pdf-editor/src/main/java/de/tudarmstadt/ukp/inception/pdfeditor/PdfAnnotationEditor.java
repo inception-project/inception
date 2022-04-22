@@ -89,9 +89,8 @@ public class PdfAnnotationEditor
 
     private PdfExtractFile pdfExtractFile;
     private DocumentModel documentModel;
-    private int page;
-    private Offset pageOffset;
     private Map<Integer, Offset> pageOffsetCache;
+    private int page;
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -152,7 +151,13 @@ public class PdfAnnotationEditor
      */
     public void renderPdfAnnoModel(AjaxRequestTarget aTarget)
     {
-        if (getModelObject().getProject() == null || pageOffset == null) {
+        if (getModelObject().getProject() == null) {
+            return;
+        }
+
+        Offset pageOffset = pageOffsetCache.computeIfAbsent(page, this::calculatePageOffsets);
+
+        if (pageOffset == null) {
             return;
         }
 
@@ -367,7 +372,6 @@ public class PdfAnnotationEditor
     private void getAnnotations(AjaxRequestTarget aTarget, IRequestParameters aParams)
     {
         page = aParams.getParameterValue("page").toInt();
-        pageOffset = pageOffsetCache.computeIfAbsent(page, this::calculatePageOffsets);
         renderPdfAnnoModel(aTarget);
     }
 
@@ -379,8 +383,8 @@ public class PdfAnnotationEditor
         int beginPage = Math.min(Math.max(1, aPage - 1), maxPageNumber);
         int endPage = Math.min(Math.max(1, aPage + 1), maxPageNumber);
 
-        int begin = pdfExtractFile.getPageOffset(beginPage).getBegin();
-        int end = pdfExtractFile.getPageOffset(endPage).getEnd() + 1;
+        int begin = pdfExtractFile.getBeginPageOffset(beginPage);
+        int end = pdfExtractFile.getEndPageOffset(endPage);
 
         List<Offset> offsets = new ArrayList<>();
         offsets.add(new Offset(begin, begin));

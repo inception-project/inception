@@ -21,6 +21,9 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
@@ -100,7 +103,7 @@ public class PdfExtractFile
     /**
      * Maps a page number to its corresponding begin and end offset
      */
-    private Map<Integer, Offset> pageOffsetMap;
+    private NavigableMap<Integer, Offset> pageOffsetMap;
 
     private int maxPageNumber;
 
@@ -190,7 +193,7 @@ public class PdfExtractFile
         stringToExtract = new Int2IntOpenHashMap();
         extractToString = new Int2IntOpenHashMap();
         extractLines = new HashMap<>();
-        pageOffsetMap = new HashMap<>();
+        pageOffsetMap = new TreeMap<>();
         pdftxt = aPdftxt;
 
         StringBuilder sb = new StringBuilder();
@@ -290,11 +293,45 @@ public class PdfExtractFile
     }
 
     /**
-     * Get begin and end offset of a page.
+     * Get begin of page or end of previous page og page was empty.
      */
-    public Offset getPageOffset(int aPage)
+    public int getBeginPageOffset(int aPage)
     {
-        return pageOffsetMap.get(aPage);
+        if (pageOffsetMap.isEmpty()) {
+            return 0;
+        }
+
+        Entry<Integer, Offset> pageOrPageBefore = pageOffsetMap.floorEntry(aPage);
+        if (pageOrPageBefore == null) {
+            return 0;
+        }
+
+        if (pageOrPageBefore.getKey().intValue() == aPage) {
+            return pageOrPageBefore.getValue().getBegin();
+        }
+
+        return pageOrPageBefore.getValue().getEnd();
+    }
+
+    /**
+     * Get end of page or begin of next page if the page was empty.
+     */
+    public int getEndPageOffset(int aPage)
+    {
+        if (pageOffsetMap.isEmpty()) {
+            return 0;
+        }
+
+        Entry<Integer, Offset> pageOrPageAfter = pageOffsetMap.ceilingEntry(aPage);
+        if (pageOrPageAfter == null) {
+            return pageOffsetMap.get(maxPageNumber).getEnd();
+        }
+
+        if (pageOrPageAfter.getKey().intValue() == aPage) {
+            return pageOrPageAfter.getValue().getEnd();
+        }
+
+        return pageOrPageAfter.getValue().getBegin();
     }
 
     public int getMaxPageNumber()

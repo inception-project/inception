@@ -1,8 +1,5 @@
 import { renderKnob } from './renderKnob'
 import { hex2rgba } from '../utils/color'
-import { ANNO_VERSION } from '../version'
-
-console.log('ANNO_VERSION:', ANNO_VERSION)
 
 /**
  * Create a Span element.
