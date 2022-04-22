@@ -1,10 +1,9 @@
 import * as annoUI from '../../anno-ui'
 import { anyOf, dispatchWindowEvent } from '../../shared/util'
 import { convertToExportY, paddingBetweenPages, nextZIndex } from '../../shared/coords'
-import {
-  adjustViewerSize
-} from '../util/window'
-import * as constants from '../../shared/constants'
+import { adjustViewerSize } from '../util/window'
+import SpanAnnotation from '../../core/src/annotation/span'
+import RelationAnnotation from '../../core/src/annotation/relation'
 
 /**
  * PDFAnno's Annotation functions for Page produced by .
@@ -38,33 +37,6 @@ export default class PDFAnnoPage {
     dispatchWindowEvent('iframeReady')
   }
 
-  getContentFile(name) {
-    const items = this.contentFiles.filter(c => c.name === name)
-    if (items.length > 0) {
-      return items[0]
-    }
-    return null
-  }
-
-  getAnnoFile(name) {
-    const items = this.annoFiles.filter(c => c.name === name)
-    if (items.length > 0) {
-      return items[0]
-    }
-    return null
-  }
-
-  displayContent(contentName) {
-
-    let contentFile = this.contentFiles.filter(c => c.name === contentName)
-    if (contentFile.length === 0) {
-      console.log('displayContent: NOT FOUND FILE. file=', contentName)
-      return
-    }
-
-    this.displayViewer(contentFile[0])
-  }
-
   displayViewer(contentFile) {
 
     // Reset settings.
@@ -76,17 +48,6 @@ export default class PDFAnnoPage {
 
     // Set the PDF file name.
     window.iframeWindow.PDFView.url = contentFile.name
-
-    // Save the current.
-    this.currentContentFile = contentFile
-  }
-
-  setCurrentContentFile(contentFile) {
-    this.currentContentFile = contentFile
-  }
-
-  getCurrentContentFile() {
-    return this.currentContentFile
   }
 
   /**
@@ -108,7 +69,7 @@ export default class PDFAnnoPage {
     if (window.iframeWindow && window.iframeWindow.PDFViewerApplication) {
       window.iframeWindow.PDFViewerApplication.close()
       $('#numPages', window.iframeWindow.document).text('')
-      this.currentContentFile = null
+      // this.currentContentFile = null
       dispatchWindowEvent('didCloseViewer')
     }
   }
@@ -344,15 +305,14 @@ export default class PDFAnnoPage {
    * Create a new span annotation.
    */
   createSpanAnnotation(options) {
-    console.log('createSpanAnnotation:', options)
-    return window.iframeWindow.PDFAnnoCore.default.SpanAnnotation.newInstance(options)
+    return SpanAnnotation.newInstance(options)
   }
 
   /**
    * Create a new relation annotation.
    */
   createRelationAnnotation(options) {
-    return window.iframeWindow.PDFAnnoCore.default.RelationAnnotation.newInstance(options)
+    return RelationAnnotation.newInstance(options)
   }
 
   validateSchemaErrors(errors) {

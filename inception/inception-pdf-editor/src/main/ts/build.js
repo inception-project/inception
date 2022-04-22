@@ -26,7 +26,7 @@ fs.mkdirsSync(`${outbase}/pdfjs/`)
 defaults = {
   bundle: true,
   sourcemap: true,
-  minify: false,
+  minify: true,
   target: "es6",
   loader: { ".ts": "ts" },
   logLevel: 'info'

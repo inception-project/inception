@@ -58,7 +58,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from an annotation data.
    */
-  static newInstance(annotation) {
+  public static newInstance(annotation) {
     let a = new RelationAnnotation()
     a.uuid = annotation.uuid || uuid()
     a.direction = 'relation'
@@ -74,7 +74,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from a TOML object.
    */
-  static newInstanceFromTomlObject(d) {
+  public static newInstanceFromTomlObject(d) {
     // d.direction = d.dir
     d.direction = 'relation'
     d.text = d.label

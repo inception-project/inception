@@ -41,7 +41,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from an annotation data.
    */
-  static newInstance(annotation, allowZeroWidth) {
+  public static newInstance(annotation: SpanAnnotation, allowZeroWidth?: boolean) {
     let a = new SpanAnnotation()
     a.uuid = annotation.uuid || uuid()
     a.text = annotation.text
@@ -65,7 +65,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from a TOML object.
    */
-  static newInstanceFromTomlObject(tomlObject) {
+  public static newInstanceFromTomlObject(tomlObject) {
     let d = tomlObject
     d.selectedText = d.text
     d.text = d.label

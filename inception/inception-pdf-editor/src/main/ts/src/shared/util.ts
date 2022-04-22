@@ -9,7 +9,7 @@ export function anyOf (target, candidates) {
 /**
  * Dispatch a custom event to `window` object.
  */
-export function dispatchWindowEvent (eventName, data) {
+export function dispatchWindowEvent (eventName, data?) {
   var event = document.createEvent('CustomEvent')
   event.initCustomEvent(eventName, true, true, data)
   window.dispatchEvent(event)
