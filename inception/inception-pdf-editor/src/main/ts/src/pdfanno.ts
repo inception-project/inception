@@ -157,5 +157,3 @@ function getPDFName (url) {
     }, 1000)
   }
 }
-
-window.getPDFName = getPDFName
