@@ -110,6 +110,7 @@ function renderAnno () {
     left       : `${leftMargin}px`,
     width      : `${width}px`,
     height     : `${height}px`,
+    visibility : 'hidden',
     'z-index'  : 2
   })
   // Add an annotation layer.
@@ -119,6 +120,7 @@ function renderAnno () {
     left       : `${leftMargin}px`,
     width      : `${width}px`,
     height     : `${height}px`,
+    visibility : 'hidden',
     'z-index'  : 2
   })
 

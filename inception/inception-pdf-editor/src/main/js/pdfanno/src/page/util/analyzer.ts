@@ -12,11 +12,15 @@
  *   position page type char x y w h ? ? ? ?
  *   9426<TAB>4<TAB>TEXT<TAB>G<TAB>435.29147 62.84513 7.7976065 13.014011<TAB>435.6371 65.52354 7.3116064 7.4520063
  *   9427<TAB>4<TAB>DRAW<TAB>MOVE_TO<TAB>129.75435<TAB>79.0188
- *
  */
-export function customizeAnalyzeResult (pdftxt) {
+export interface Page {
+  body;
+  meta;
+  page : number;
+}
 
-  let pages = []
+export function customizeAnalyzeResult (pdftxt) : Page[] {
+  let pages : Page[] = []
   let page
   let body
   let meta
