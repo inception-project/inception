@@ -6,16 +6,16 @@ import { dispatchWindowEvent } from '../utils/event'
 /**
  * Abstract Annotation Class.
  */
-export default class AbstractAnnotation extends EventEmitter {
-
-  /**
-   * Check the argument is an annotation.
-   */
-  static isAnnotation(obj) {
-    return obj && obj.uuid && obj.type
-  }
-
-  uuid : string = null
+export default abstract class AbstractAnnotation extends EventEmitter {
+  uuid: string = null
+  deleted = false;
+  disabled = false;
+  selected = false;
+  hoverEventDisable = false;
+  selectedTime = null;
+  $element: JQuery<any> = null;
+  exportId: any;
+  type: string;
 
   /**
    * Constructor.
@@ -23,10 +23,6 @@ export default class AbstractAnnotation extends EventEmitter {
   constructor() {
     super()
     this.autoBind()
-    this.deleted = false
-    this.selected = false
-    this.selectedTime = null
-    this.createdAt = new Date().getTime()
   }
 
   /**
@@ -40,11 +36,12 @@ export default class AbstractAnnotation extends EventEmitter {
       })
   }
 
+  abstract setHoverEvent(): void;
+
   /**
    * Render annotation(s).
    */
-  render() : boolean {
-
+  render(): boolean {
     this.$element.remove()
 
     if (this.deleted) {
@@ -86,13 +83,6 @@ export default class AbstractAnnotation extends EventEmitter {
     }
 
     return promise
-  }
-
-  /**
-   * Judge the point within the element.
-   */
-  isHit(x, y) {
-    return false
   }
 
   /**
@@ -182,7 +172,7 @@ export default class AbstractAnnotation extends EventEmitter {
   /**
    * Delete the annotation if selected.
    */
-  deleteSelectedAnnotation() : boolean {
+  deleteSelectedAnnotation(): boolean {
 
     if (this.isSelected()) {
       this.destroy().then(() => {
@@ -261,5 +251,12 @@ export default class AbstractAnnotation extends EventEmitter {
   equalTo(anotherAnnotation) {
     // Implement Here.
     return false
+  }
+
+  /**
+   * Check the argument is an annotation.
+   */
+  static isAnnotation(obj) {
+    return obj && obj.uuid && obj.type
   }
 }

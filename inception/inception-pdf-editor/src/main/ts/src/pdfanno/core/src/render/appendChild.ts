@@ -22,7 +22,7 @@ function transform (node, viewport) {
  * @param {Object} viewport The page's viewport data
  * @return {SVGElement} A node that was created and appended by this function
  */
-export default function appendChild (svg, annotation, viewport) {
+export default function appendChild (svg, annotation, viewport?) {
   // TODO no need third argument(viewport) ?
   if (!viewport) {
     viewport = window.PDFView.pdfViewer.getPageView(0).viewport

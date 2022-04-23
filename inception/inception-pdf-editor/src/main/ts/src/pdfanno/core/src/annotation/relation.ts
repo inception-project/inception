@@ -4,8 +4,6 @@ import { getRelationTextPosition } from '../utils/relation.js'
 import { anyOf } from '../../../shared/util'
 import SpanAnnotation from './span'
 
-let globalEvent
-
 /**
  * Relation Annotation (one-way / two-way / link)
  */
@@ -32,8 +30,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
   constructor() {
     super()
 
-    globalEvent = window.globalEvent
-
     this.uuid = uuid()
     this.type = 'relation'
     this.direction = null
@@ -50,9 +46,9 @@ export default class RelationAnnotation extends AbstractAnnotation {
     this.x2 = 0
     this.y2 = 0
 
-    globalEvent.on('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
-    globalEvent.on('enableViewMode', this.enableViewMode)
-    globalEvent.on('rectmoveend', this.handleRelMoveEnd)
+    window.globalEvent.on('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
+    window.globalEvent.on('enableViewMode', this.enableViewMode)
+    window.globalEvent.on('rectmoveend', this.handleRelMoveEnd)
   }
 
   /**
@@ -176,9 +172,9 @@ export default class RelationAnnotation extends AbstractAnnotation {
       delete this._rel2Annotation
     }
 
-    globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
-    globalEvent.removeListener('enableViewMode', this.enableViewMode)
-    globalEvent.removeListener('rectmoveend', this.handleRelMoveEnd)
+    window.globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
+    window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
+    window.globalEvent.removeListener('rectmoveend', this.handleRelMoveEnd)
 
     return promise
   }
@@ -346,7 +342,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
 
   /**
    * Export Data for TOML.
-   * @returns
    */
   export() {
     return {

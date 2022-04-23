@@ -15,6 +15,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
 const esbuild = require('esbuild')
 const fs = require('fs-extra');
 
@@ -30,6 +32,18 @@ defaults = {
   target: "es6",
   loader: { ".ts": "ts" },
   logLevel: 'info'
+}
+
+const argv = yargs(hideBin(process.argv)).argv
+
+if (argv.live) {
+  defaults['watch'] = {
+    onRebuild(error, result) {
+      if (error) console.error('watch build failed:', error)
+      else console.log('watch build succeeded:', result)
+    },
+  };
+  outbase = "../../../target/classes/de/tudarmstadt/ukp/inception/pdfeditor/resources/";
 }
 
 esbuild.build(Object.assign({

@@ -184,14 +184,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
   }
 
   /**
-   * Save a new text.
-   */
-  handleTextChanged(newText) {
-    this.text = newText
-    this.save()
-  }
-
-  /**
    * Handle a hoverin event.
    */
   handleHoverInEvent(e) {

@@ -5,7 +5,7 @@ import { scaleDown } from './utils'
 /**
  * Create a new Relation annotation.
  */
-export function createRelation ({ type, anno1, anno2, text, color }) {
+export function createRelation({ type, anno1, anno2, text, color }) {
   // TODO No need?
   // for old style.
   if (arguments.length === 3) {
@@ -82,7 +82,7 @@ window.addEventListener('DOMContentLoaded', () => {
         "u": window.apiUrl,
         "sh": [],
         "fh": [function () {
-            alert('Something went wrong on creating new relation for: ' + data)
+          alert('Something went wrong on creating new relation for: ' + data)
         }]
       });
     }
@@ -97,7 +97,7 @@ function getClientXY(e) {
   let rect = document.getElementById('annoLayer').getBoundingClientRect()
   let x = e.clientX - rect.left
   let y = e.clientY - rect.top
-  return {x, y}
+  return { x, y }
 }
 
 let relationAnnotation = null

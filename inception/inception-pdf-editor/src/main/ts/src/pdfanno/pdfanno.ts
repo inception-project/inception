@@ -2,7 +2,6 @@ import './pdfanno.css'
 import $ from 'jquery'
 import urijs from 'urijs'
 import * as annoUI from './anno-ui'
-import * as publicApi from './page/public'
 import * as textLayer from './page/textLayer'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
 import { dispatchWindowEvent } from './shared/util'
@@ -17,14 +16,6 @@ export function initPdfAnno() {
    */
   window.pdfanno = {}
 
-  /**
-    * Expose public APIs.
-    */
-  publicApi.expose()
-
-  /**
-    * Annotation functions for a page.
-    */
   window.annoPage = new PDFAnnoPage()
 
   window.globalEvent = new EventEmitter()
@@ -45,7 +36,6 @@ export function initPdfAnno() {
    *  The entry point.
    */
   window.addEventListener('DOMContentLoaded', async (ev) => onDomContentLoaded(ev))
-
 }
 
 initPdfAnno()
@@ -141,7 +131,6 @@ function renderAnno() {
   }
 
   let height = $('#viewer').height()
-
   let width = $('.page').width()
 
   // TODO no need ?
@@ -290,7 +279,7 @@ function getPDFName(url) {
 /**
  * Show or hide a loding.
  */
-function showLoader(display) {
+function showLoader(display: boolean) {
   if (display) {
     $('#pdfLoading').removeClass('close hidden')
   } else {
