@@ -46,7 +46,7 @@ export const paddingBetweenPages = 9
  */
 export function getPageSize () {
 
-  let pdfView = window.PDFView || window.iframeWindow.PDFView
+  let pdfView = window.PDFView
 
   let viewBox = pdfView.pdfViewer.getPageView(0).viewport.viewBox
   let size = { width : viewBox[2], height : viewBox[3] }
@@ -57,12 +57,9 @@ export function getPageSize () {
  * Get the next z-index.
  */
 export function nextZIndex () {
-
-  let w = (window.iframeWindow ? window.iframeWindow : window)
-
-  if (!w.nextZIndex) {
-    w.nextZIndex = 10
+  if (!window.nextZIndex) {
+    window.nextZIndex = 10
   }
 
-  return w.nextZIndex++
+  return window.nextZIndex++
 }

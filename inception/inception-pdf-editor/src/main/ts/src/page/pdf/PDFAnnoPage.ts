@@ -26,11 +26,6 @@ export default class PDFAnnoPage {
    * Start PDFAnno Application.
    */
   startViewerApplication() {
-
-    // Alias for convenience.
-    // TODO Remove this alias.
-    window.iframeWindow = window
-
     // Adjust the height of viewer.
     adjustViewerSize()
 
@@ -44,10 +39,10 @@ export default class PDFAnnoPage {
 
     // Load PDF.
     const uint8Array = new Uint8Array(contentFile.content)
-    window.iframeWindow.PDFViewerApplication.open(uint8Array)
+    window.PDFViewerApplication.open(uint8Array)
 
     // Set the PDF file name.
-    window.iframeWindow.PDFView.url = contentFile.name
+    window.PDFView.url = contentFile.name
   }
 
   /**
@@ -66,9 +61,9 @@ export default class PDFAnnoPage {
    * Close the viewer.
    */
   closePDFViewer() {
-    if (window.iframeWindow && window.iframeWindow.PDFViewerApplication) {
-      window.iframeWindow.PDFViewerApplication.close()
-      $('#numPages', window.iframeWindow.document).text('')
+    if (window.PDFViewerApplication) {
+      window.PDFViewerApplication.close()
+      $('#numPages', window.document).text('')
       // this.currentContentFile = null
       dispatchWindowEvent('didCloseViewer')
     }
@@ -86,11 +81,11 @@ export default class PDFAnnoPage {
    */
   createSpan({ text = null, color = null } = {}) {
     // Get user selection.
-    const rects = window.iframeWindow.PDFAnnoCore.default.UI.getRectangles()
+    const rects = window.PDFAnnoCore.default.UI.getRectangles()
     console.log('createSpan:rects:', rects)
 
     // Get selected annotations.
-    const selectedAnnotations = window.iframeWindow.annotationContainer.getSelectedAnnotations()
+    const selectedAnnotations = window.annotationContainer.getSelectedAnnotations()
 
     // Check empty.
     if (!rects && selectedAnnotations.length === 0) {
@@ -111,8 +106,7 @@ export default class PDFAnnoPage {
 
       // Create a new rectAnnotation.
     } else if (rects) {
-      window.iframeWindow.PDFAnnoCore.default.UI.createSpan({ text, zIndex: nextZIndex(), color })
-
+      window.PDFAnnoCore.default.UI.createSpan({ text, zIndex: nextZIndex(), color })
     }
 
     // Notify annotation added.
@@ -130,7 +124,7 @@ export default class PDFAnnoPage {
     }
 
     // If a user select relation annotation(s), change the color and text only.
-    const relAnnos = window.iframeWindow.annotationContainer.getSelectedAnnotations()
+    const relAnnos = window.annotationContainer.getSelectedAnnotations()
       .filter(anno => anno.type === 'relation')
     if (relAnnos.length > 0) {
       relAnnos
@@ -144,7 +138,7 @@ export default class PDFAnnoPage {
       return
     }
 
-    let selectedAnnotations = window.iframeWindow.annotationContainer.getSelectedAnnotations()
+    let selectedAnnotations = window.annotationContainer.getSelectedAnnotations()
     selectedAnnotations = selectedAnnotations.filter(a => {
       return a.type === 'span'
     }).sort((a1, a2) => {
@@ -160,7 +154,7 @@ export default class PDFAnnoPage {
     console.log('first:second,', first, second)
 
     // Check duplicated.
-    const arrows = window.iframeWindow.annotationContainer
+    const arrows = window.annotationContainer
       .getAllAnnotations()
       .filter(a => a.type === 'relation')
       .filter(a => {
@@ -183,7 +177,7 @@ export default class PDFAnnoPage {
       return
     }
 
-    window.iframeWindow.PDFAnnoCore.default.UI.createRelation({
+    window.PDFAnnoCore.default.UI.createRelation({
       type,
       anno1: first,
       anno2: second,
@@ -201,7 +195,7 @@ export default class PDFAnnoPage {
   displayAnnotation(isPrimary) {
 
     // Check the viewer not clised.
-    if ($('#numPages', window.iframeWindow.document).text() === '') {
+    if ($('#numPages', window.document).text() === '') {
       return
     }
 
@@ -265,32 +259,32 @@ export default class PDFAnnoPage {
    * Get all annotations.
    */
   getAllAnnotations() {
-    if (!window.iframeWindow || !window.iframeWindow.annotationContainer) {
+    if (window.annotationContainer) {
       return []
     }
-    return window.iframeWindow.annotationContainer.getAllAnnotations()
+    return window.annotationContainer.getAllAnnotations()
   }
 
   /**
    * Get selected annotations.
    */
   getSelectedAnnotations() {
-    return window.iframeWindow.annotationContainer.getSelectedAnnotations()
+    return window.annotationContainer.getSelectedAnnotations()
   }
 
   /**
    * Find an annotation by id.
    */
-  findAnnotationById(id) {
-    return window.iframeWindow.annotationContainer.findById(id)
+  findAnnotationById(id: String) {
+    return window.annotationContainer.findById(id)
   }
 
   /**
    * Clear the all annotations from the view and storage.
    */
   clearAllAnnotations() {
-    if (window.iframeWindow) {
-      window.iframeWindow.annotationContainer.getAllAnnotations().forEach(a => a.destroy())
+    if (window.annotationContainer) {
+      window.annotationContainer.getAllAnnotations().forEach(a => a.destroy())
     }
   }
 
@@ -298,7 +292,7 @@ export default class PDFAnnoPage {
    * Add an annotation to the container.
    */
   addAnnotation(annotation) {
-    window.iframeWindow.annotationContainer.add(annotation)
+    window.annotationContainer.add(annotation)
   }
 
   /**
@@ -332,7 +326,7 @@ export default class PDFAnnoPage {
    * Import annotations from UI.
    */
   importAnnotation(paperData, isPrimary) {
-    window.iframeWindow.annotationContainer.importAnnotations(paperData, isPrimary).then(() => {
+    window.annotationContainer.importAnnotations(paperData, isPrimary).then(() => {
       // Notify annotations added.
       dispatchWindowEvent('annotationrendered')
     }).catch(errors => {
@@ -382,16 +376,14 @@ export default class PDFAnnoPage {
    * Get the viewport of the viewer.
    */
   getViewerViewport() {
-    return window.iframeWindow.PDFView.pdfViewer.getPageView(0).viewport
+    return window.PDFView.pdfViewer.getPageView(0).viewport
   }
 
   /**
    * Load PDF data from url.
-   * @param {String} url
-   * @returns Promise<Uint8Array>
    * @memberof PDFAnnoPage
    */
-  loadPdf(url) {
+  loadPdf(url: String): Promise<Uint8Array> {
     // add noise to the query parameters so caching is prevented
     var antiCacheUrl = url + "&time=" + new Date().getTime();
     return fetch(antiCacheUrl, {
@@ -410,10 +402,9 @@ export default class PDFAnnoPage {
 
   /**
    * Load pdftxt data from url.
-   * @returns Promise<String>
    * @memberof PDFAnnoPage
    */
-  loadPdftxt(url: string) {
+  loadPdftxt(url: string): Promise<String> {
     // add noise to the query parameters so caching is prevented
     var antiCacheUrl = url + "&time=" + new Date().getTime();
     return fetch(antiCacheUrl, {
