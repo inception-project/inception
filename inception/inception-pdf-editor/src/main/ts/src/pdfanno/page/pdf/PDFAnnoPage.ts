@@ -33,8 +33,6 @@ export default class PDFAnnoPage {
   startViewerApplication() {
     // Adjust the height of viewer.
     adjustViewerSize()
-
-    dispatchWindowEvent('iframeReady')
   }
 
   displayViewer(name: string, pdf) {

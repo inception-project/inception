@@ -8,6 +8,8 @@ import EventEmitter from 'events'
 import UI from './core/src/UI'
 import AnnotationContainer from './core/src/annotation/container'
 import AbstractAnnotation from './core/src/annotation/abstract'
+import { installSpanSelection } from './core/src/UI/span'
+import { installRelationSelection } from './core/src/UI/relation'
 
 let annoPage: PDFAnnoPage;
 let annotationContainer: AnnotationContainer;
@@ -32,15 +34,6 @@ export function initPdfAnno() {
   // Adapt to scale change.
   window.addEventListener('scalechange', ev => onScaleChange(ev))
 
-  /**
-   *  The entry point.
-   */
-  window.addEventListener('DOMContentLoaded', async (ev) => onDomContentLoaded(ev))
-}
-
-initPdfAnno()
-
-function onDomContentLoaded(ev: Event) {
   // Show loading.
   showLoader(true)
 
@@ -50,9 +43,13 @@ function onDomContentLoaded(ev: Event) {
   // Start application.
   annoPage.startViewerApplication()
 
+  installSpanSelection()
+  installRelationSelection()
+
   // Show a content.
   displayViewer()
 }
+
 
 function onPageRendered(ev) {
   console.log('pagerendered:', ev.detail.pageNumber)
@@ -174,7 +171,7 @@ function renderAnnotations() {
   dispatchWindowEvent('annotationrendered')
 }
 
-function getAnnotations() {
+export function getAnnotations() {
   var data = {
     "action": "getAnnotations",
     "page": window.pageRender

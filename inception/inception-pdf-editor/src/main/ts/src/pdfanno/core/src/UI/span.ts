@@ -183,7 +183,7 @@ export function createSpan ({ text = null, zIndex = 10, color = null }) {
 
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+export function installSpanSelection() {
 
   function setPositions (e) {
 
@@ -342,7 +342,7 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('annotationDeleted', () => {
     otherAnnotationTreating = false
   })
-})
+}
 
 let mouseDown = false
 let initPosition = null

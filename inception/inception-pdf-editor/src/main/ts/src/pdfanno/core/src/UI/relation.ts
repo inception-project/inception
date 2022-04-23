@@ -36,7 +36,7 @@ export function createRelation({ type, anno1, anno2, text, color }) {
   return annotation
 }
 
-window.addEventListener('DOMContentLoaded', () => {
+export function installRelationSelection() {
 
   const $viewer = $('#viewer')
 
@@ -91,7 +91,7 @@ window.addEventListener('DOMContentLoaded', () => {
     mousedownFired = false
     relationAnnotation = null
   })
-})
+}
 
 function getClientXY(e) {
   let rect = document.getElementById('annoLayer').getBoundingClientRect()

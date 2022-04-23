@@ -52,11 +52,11 @@ esbuild.build(Object.assign({
   globalName: "PdfAnnotationEditor",
 }, defaults))
 
-esbuild.build(Object.assign({
-  entryPoints: ["src/pdfanno/pdfanno.ts"],
-  outfile: `${outbase}/pdfanno.page.bundle.js`,
-  globalName: "pdfanno.page",
-}, defaults))
+// esbuild.build(Object.assign({
+//   entryPoints: ["src/pdfanno/pdfanno.ts"],
+//   outfile: `${outbase}/pdfanno.page.bundle.js`,
+//   globalName: "pdfanno.page",
+// }, defaults))
 
 esbuild.build(Object.assign({
   entryPoints: ["src/pdfjs/viewer.js"],

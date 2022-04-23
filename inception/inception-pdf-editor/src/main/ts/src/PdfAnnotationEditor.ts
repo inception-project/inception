@@ -17,6 +17,7 @@
  */
 import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-js-api";
 import "./PdfAnnotationEditor.css"
+import { initPdfAnno, getAnnotations as doLoadAnnotations } from "./pdfanno/pdfanno";
 
 export class PdfAnnotationEditor implements AnnotationEditor {
   private ajax: DiamAjax;
@@ -26,10 +27,13 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     this.ajax = ajax;
     this.root = element;
     console.log("PdfAnnotationEditor initializing in ", element)
+
+    initPdfAnno();
   }
 
   loadAnnotations(): void {
-    console.log("Loading annotations not implemented yet")
+    console.log("Triggered loadAnnotations")
+    doLoadAnnotations();
   }
 
   destroy(): void {

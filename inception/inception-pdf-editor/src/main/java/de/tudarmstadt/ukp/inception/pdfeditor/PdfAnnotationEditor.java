@@ -144,17 +144,17 @@ public class PdfAnnotationEditor
         return props;
     }
 
-    @Override
-    public void render(AjaxRequestTarget aTarget)
-    {
-        Selection selection = getModelObject().getSelection();
-        renderPdfAnnoModel(aTarget);
-        if (selection.getAnnotation() != null) {
-            aTarget.appendJavaScript(
-                    "var anno = pdfanno.contentWindow.annoPage.findAnnotationById('"
-                            + selection.getAnnotation() + "');" + "anno && anno.select();");
-        }
-    }
+    // @Override
+    // public void render(AjaxRequestTarget aTarget)
+    // {
+    // Selection selection = getModelObject().getSelection();
+    // renderPdfAnnoModel(aTarget);
+    // if (selection.getAnnotation() != null) {
+    // aTarget.appendJavaScript(
+    // "var anno = pdfanno.contentWindow.annoPage.findAnnotationById('"
+    // + selection.getAnnotation() + "');" + "anno && anno.select();");
+    // }
+    // }
 
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
     {
