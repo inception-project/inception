@@ -2,15 +2,17 @@ import * as annoUI from '../../anno-ui'
 import { anyOf, dispatchWindowEvent } from '../../shared/util'
 import { convertToExportY, paddingBetweenPages, nextZIndex } from '../../shared/coords'
 import { adjustViewerSize } from '../util/window'
-import SpanAnnotation from '../../core/src/annotation/span'
-import RelationAnnotation from '../../core/src/annotation/relation'
+import AnnotationContainer from '../../core/src/annotation/container'
 
 /**
  * PDFAnno's Annotation functions for Page produced by .
  */
 export default class PDFAnnoPage {
 
-  constructor() {
+  annotationContainer: AnnotationContainer;
+
+  constructor(annotationContainer: AnnotationContainer) {
+    this.annotationContainer = annotationContainer;
     this.autoBind()
   }
 
@@ -85,7 +87,7 @@ export default class PDFAnnoPage {
     console.log('createSpan:rects:', rects)
 
     // Get selected annotations.
-    const selectedAnnotations = window.annotationContainer.getSelectedAnnotations()
+    const selectedAnnotations = this.annotationContainer.getSelectedAnnotations()
 
     // Check empty.
     if (!rects && selectedAnnotations.length === 0) {
@@ -124,7 +126,7 @@ export default class PDFAnnoPage {
     }
 
     // If a user select relation annotation(s), change the color and text only.
-    const relAnnos = window.annotationContainer.getSelectedAnnotations()
+    const relAnnos = this..annotationContainer.getSelectedAnnotations()
       .filter(anno => anno.type === 'relation')
     if (relAnnos.length > 0) {
       relAnnos
@@ -138,7 +140,7 @@ export default class PDFAnnoPage {
       return
     }
 
-    let selectedAnnotations = window.annotationContainer.getSelectedAnnotations()
+    let selectedAnnotations = this..annotationContainer.getSelectedAnnotations()
     selectedAnnotations = selectedAnnotations.filter(a => {
       return a.type === 'span'
     }).sort((a1, a2) => {
@@ -154,7 +156,7 @@ export default class PDFAnnoPage {
     console.log('first:second,', first, second)
 
     // Check duplicated.
-    const arrows = window.annotationContainer
+    const arrows = this.annotationContainer
       .getAllAnnotations()
       .filter(a => a.type === 'relation')
       .filter(a => {
@@ -190,101 +192,18 @@ export default class PDFAnnoPage {
   }
 
   /**
-   * Display annotations an user selected.
-   */
-  displayAnnotation(isPrimary) {
-
-    // Check the viewer not clised.
-    if ($('#numPages', window.document).text() === '') {
-      return
-    }
-
-    const colorMap = annoUI.labelInput.getColorMap()
-
-    let annotations = []
-    let primaryIndex = -1
-
-    // Primary annotation.
-    if (isPrimary) {
-      $('#dropdownAnnoPrimary a').each((index, element) => {
-        let $elm = $(element)
-        if ($elm.find('.fa-check').hasClass('no-visible') === false) {
-          let annoPath = $elm.find('.js-annoname').text()
-
-          const annoFile = window.annoPage.getAnnoFile(annoPath)
-          if (!annoFile) {
-            console.log('ERROR')
-            return
-          }
-          primaryIndex = 0
-          annotations.push(annoFile.content)
-
-          let filename = annoFile.name
-          localStorage.setItem('_pdfanno_primary_annoname', filename)
-          console.log('filename:', filename)
-        }
-      })
-    }
-
-    // Reference annotations.
-    if (!isPrimary) {
-      $('#dropdownAnnoReference a').each((index, element) => {
-        let $elm = $(element)
-        if ($elm.find('.fa-check').hasClass('no-visible') === false) {
-          let annoPath = $elm.find('.js-annoname').text()
-
-          const annoFile = window.annoPage.getAnnoFile(annoPath)
-
-          if (!annoFile) {
-            console.log('ERROR')
-            return
-          }
-          annotations.push(annoFile.content)
-        }
-      })
-    }
-
-    // Create import data.
-    let paperData = {
-      primary: primaryIndex,
-      annotations,
-      colorMap
-    }
-
-    // Import annotations to Viewer.
-    window.annoPage.importAnnotation(paperData, isPrimary)
-  }
-
-  /**
-   * Get all annotations.
-   */
-  getAllAnnotations() {
-    if (window.annotationContainer) {
-      return []
-    }
-    return window.annotationContainer.getAllAnnotations()
-  }
-
-  /**
-   * Get selected annotations.
-   */
-  getSelectedAnnotations() {
-    return window.annotationContainer.getSelectedAnnotations()
-  }
-
-  /**
    * Find an annotation by id.
    */
   findAnnotationById(id: String) {
-    return window.annotationContainer.findById(id)
+    return this.annotationContainer.findById(id)
   }
 
   /**
    * Clear the all annotations from the view and storage.
    */
   clearAllAnnotations() {
-    if (window.annotationContainer) {
-      window.annotationContainer.getAllAnnotations().forEach(a => a.destroy())
+    if (this.annotationContainer) {
+      this.annotationContainer.getAllAnnotations().forEach(a => a.destroy())
     }
   }
 
@@ -292,21 +211,7 @@ export default class PDFAnnoPage {
    * Add an annotation to the container.
    */
   addAnnotation(annotation) {
-    window.annotationContainer.add(annotation)
-  }
-
-  /**
-   * Create a new span annotation.
-   */
-  createSpanAnnotation(options) {
-    return SpanAnnotation.newInstance(options)
-  }
-
-  /**
-   * Create a new relation annotation.
-   */
-  createRelationAnnotation(options) {
-    return RelationAnnotation.newInstance(options)
+    this.annotationContainer.add(annotation)
   }
 
   validateSchemaErrors(errors) {
@@ -326,7 +231,7 @@ export default class PDFAnnoPage {
    * Import annotations from UI.
    */
   importAnnotation(paperData, isPrimary) {
-    window.annotationContainer.importAnnotations(paperData, isPrimary).then(() => {
+    this.annotationContainer.importAnnotations(paperData, isPrimary).then(() => {
       // Notify annotations added.
       dispatchWindowEvent('annotationrendered')
     }).catch(errors => {
@@ -341,9 +246,9 @@ export default class PDFAnnoPage {
   /**
    * Scroll window to the annotation.
    */
-  scrollToAnnotation(id) {
+  scrollToAnnotation(id: String) {
 
-    let annotation = window.annoPage.findAnnotationById(id)
+    let annotation = this.findAnnotationById(id)
 
     if (annotation) {
 
@@ -358,17 +263,15 @@ export default class PDFAnnoPage {
         pageNumber = d.pageNumber
         y = d.y
       }
-      let pageHeight = window.annoPage.getViewerViewport().height
-      let scale = window.annoPage.getViewerViewport().scale
+      let pageHeight = this.getViewerViewport().height
+      let scale = this.getViewerViewport().scale
       let _y = (pageHeight + paddingBetweenPages) * (pageNumber - 1) + y * scale
       _y -= 100
       $('#viewer').parent()[0].scrollTop = _y
 
       // highlight.
       annotation.highlight()
-      setTimeout(() => {
-        annotation.dehighlight()
-      }, 1000)
+      setTimeout(() => annotation.dehighlight(), 1000)
     }
   }
 
@@ -433,13 +336,5 @@ export default class PDFAnnoPage {
         analyzeResult: results[1]
       }
     })
-  }
-
-  set pdftxt(text) {
-    this._pdftxt = text
-  }
-
-  get pdftxt() {
-    return this._pdftxt
   }
 }

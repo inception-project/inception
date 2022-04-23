@@ -26,7 +26,6 @@
 
 import _ from './viewer.css'
 
-// var DEFAULT_URL = '../pdfs/P12-1046.pdf';
 var DEFAULT_URL = null;
 var DEFAULT_PDF_NAME;
 var DEFAULT_SCALE_DELTA = 1.1;

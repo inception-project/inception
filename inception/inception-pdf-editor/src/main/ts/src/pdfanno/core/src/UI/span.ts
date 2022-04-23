@@ -342,7 +342,6 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('annotationDeleted', () => {
     otherAnnotationTreating = false
   })
-
 })
 
 let mouseDown = false

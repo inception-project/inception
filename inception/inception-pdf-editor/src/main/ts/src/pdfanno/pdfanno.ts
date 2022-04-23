@@ -16,13 +16,14 @@ export function initPdfAnno() {
    */
   window.pdfanno = {}
 
+  // Create an annocation container.
+  window.annotationContainer = new AnnotationContainer()
+
   window.annoPage = new PDFAnnoPage()
 
   window.globalEvent = new EventEmitter()
   window.globalEvent.setMaxListeners(0)
 
-  // Create an annocation container.
-  window.annotationContainer = new AnnotationContainer()
 
   // Enable a view mode.
   PDFAnnoCore.UI.enableViewMode()
