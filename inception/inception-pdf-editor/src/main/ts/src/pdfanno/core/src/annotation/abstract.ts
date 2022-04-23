@@ -93,13 +93,11 @@ export default abstract class AbstractAnnotation extends EventEmitter {
       this.toggleSelect()
     }
 
-    if (this.type !== 'textbox') {
-      if (this.selected) {
-        // TODO Use common function.
-        let event = document.createEvent('CustomEvent')
-        event.initCustomEvent('annotationSelected', true, true, this)
-        window.dispatchEvent(event)
-      }
+    if (this.selected) {
+      // TODO Use common function.
+      let event = document.createEvent('CustomEvent')
+      event.initCustomEvent('annotationSelected', true, true, this)
+      window.dispatchEvent(event)
     }
   }
 

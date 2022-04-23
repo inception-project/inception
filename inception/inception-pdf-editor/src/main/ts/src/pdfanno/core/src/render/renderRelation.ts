@@ -1,6 +1,7 @@
 import setAttributes from '../utils/setAttributes'
 import { DEFAULT_RADIUS } from './renderKnob'
 import { findBezierControlPoint } from '../utils/relation.js'
+import RelationAnnotation from '../annotation/relation'
 
 /**
  * Create a RELATION annotation.
@@ -8,7 +9,7 @@ import { findBezierControlPoint } from '../utils/relation.js'
  * @param {RelationAnnotation} a - The annotation definition
  * @return {SVGGElement} A group of a relation to be rendered
  */
-export function renderRelation (a) {
+export function renderRelation (a: RelationAnnotation, svg) {
 
   a.color = a.color || '#F00'
 
@@ -50,7 +51,7 @@ export function renderRelation (a) {
   })
   group.style.visibility = 'visible'
   group.style.pointerEvents = 'auto'
-  group.setAttribute('read-only', a.readOnly === true)
+  group.setAttribute('read-only', a.readOnly === true ? 'true' : null)
 
   $svg[0].appendChild(group)
 
@@ -65,10 +66,10 @@ export function renderRelation (a) {
       orient  : 'auto-start-reverse'
     })
     marker.setAttribute('preserveAspectRatio', 'none')
-    marker.setAttribute('markerWidth', 5)
-    marker.setAttribute('markerHeight', 5)
-    marker.setAttribute('refX', 5)
-    marker.setAttribute('refY', 5)
+    marker.setAttribute('markerWidth', '5')
+    marker.setAttribute('markerHeight', '5')
+    marker.setAttribute('refX', '5')
+    marker.setAttribute('refY', '5')
     group.appendChild(marker)
 
     let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
@@ -119,7 +120,7 @@ export function renderRelation (a) {
   return $base[0]
 }
 
-function createSVGElement (top, left, width, height) {
+function createSVGElement (top, left, width, height): [JQuery<HTMLElement>, number] {
 
   // the margin for rendering an arrow curve.
   const margin = 50
