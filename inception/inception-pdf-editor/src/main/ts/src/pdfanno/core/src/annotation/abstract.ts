@@ -17,7 +17,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   selectedTime = null;
   $element: JQuery<any> = null;
   exportId: any;
-  type: string;
+  type: 'span' | 'relation';
 
   /**
    * Constructor.
@@ -166,7 +166,6 @@ export default abstract class AbstractAnnotation extends EventEmitter {
     } else {
       this.select()
     }
-
   }
 
   /**

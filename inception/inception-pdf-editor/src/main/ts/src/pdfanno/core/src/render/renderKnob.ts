@@ -21,7 +21,7 @@ export function renderKnob ({ x, y, readOnly, text, color}) {
   }
 
   // Create a knob.
-  return $(`<div title="` + text + `" class="${cssClass}"/>`).css({
+  return $(`<div title="${text}" class="${cssClass}"/>`).css({
     top    : `${y}px`,
     left   : `${x}px`,
     width  : DEFAULT_RADIUS + 'px',

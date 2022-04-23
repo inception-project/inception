@@ -1,9 +1,10 @@
-import * as annoUI from '../../anno-ui'
-import { anyOf, dispatchWindowEvent } from '../../shared/util'
-import { convertToExportY, paddingBetweenPages, nextZIndex } from '../../shared/coords'
+import { dispatchWindowEvent } from '../../shared/util'
+import { convertToExportY, paddingBetweenPages } from '../../shared/coords'
 import { adjustViewerSize } from '../util/window'
 import AnnotationContainer from '../../core/src/annotation/container'
 import AbstractAnnotation from '../../core/src/annotation/abstract'
+import SpanAnnotation from '../../core/src/annotation/span'
+import RelationAnnotation from '../../core/src/annotation/relation'
 
 /**
  * PDFAnno's Annotation functions for Page produced by .
@@ -83,9 +84,7 @@ export default class PDFAnnoPage {
    * Find an annotation by id.
    */
   findAnnotationById(id: String): AbstractAnnotation{
-    // FIXME: Should access the annotationContainer via "this" here, but currently seems not to be
-    // working...
-    return window.annotationContainer.findById(id)
+    return this.annotationContainer.findById(id)
   }
 
   /**
@@ -121,9 +120,7 @@ export default class PDFAnnoPage {
    * Import annotations from UI.
    */
   importAnnotation(paperData, isPrimary: boolean) {
-    // FIXME: Should access the annotationContainer via "this" here, but currently seems not to be
-    // working...
-    window.annotationContainer.importAnnotations(paperData, isPrimary).then(() => {
+    this.annotationContainer.importAnnotations(paperData, isPrimary).then(() => {
       // Notify annotations added.
       dispatchWindowEvent('annotationrendered')
     }).catch(errors => {
@@ -145,16 +142,21 @@ export default class PDFAnnoPage {
     if (annotation) {
 
       // scroll to.
-      let pageNumber, y
+      let pageNumber: number
+      let y: number
       if (annotation.type === 'span') {
-        pageNumber = annotation.page
-        y = annotation.rectangles[0].y
-      } else {
-        let _y = annotation.y || annotation.y1
-        let d = convertToExportY(_y)
+        let spanAnnotation = annotation as SpanAnnotation;
+        pageNumber = spanAnnotation.page
+        y = spanAnnotation.rectangles[0].y
+      }
+      
+      if (annotation.type === 'relation') {
+        let relationAnnotation = annotation as RelationAnnotation;
+        let d = convertToExportY(relationAnnotation.y1)
         pageNumber = d.pageNumber
         y = d.y
       }
+
       let pageHeight = this.getViewerViewport().height
       let scale = this.getViewerViewport().scale
       let _y = (pageHeight + paddingBetweenPages) * (pageNumber - 1) + y * scale
