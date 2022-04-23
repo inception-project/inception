@@ -28,22 +28,7 @@ export class PdfAnnotationEditorFactory implements AnnotationEditorFactory {
 
     const ajax = diam.createAjaxClient(props.diamAjaxCallbackUrl);
 
-    let targetElement: Element;
-    if ((element as any).querySelector) {
-      targetElement = (element as any).querySelector("[data-capture-root]");
-    }
-
-    if (!targetElement && element instanceof HTMLDocument) {
-      let bodies = element.getElementsByTagName("body");
-      if (bodies && bodies.length > 0) {
-        targetElement = bodies[0];
-      }
-    }
-
-    if (!targetElement) {
-      targetElement = element as Element;
-    }
-
+    let targetElement = element as Element;
     element[PROP_EDITOR] = new PdfAnnotationEditor(targetElement, ajax);
     return element[PROP_EDITOR];
   }

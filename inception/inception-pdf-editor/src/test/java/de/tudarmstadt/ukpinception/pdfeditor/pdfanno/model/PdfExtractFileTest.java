@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
 
+import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile.getSubstitutionTable;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.readAllBytes;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,7 +27,6 @@ import java.nio.file.Paths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 
@@ -39,7 +39,7 @@ public class PdfExtractFileTest
     {
         String pdftxt = new String(readAllBytes(Paths.get("src/test/resources/pdfextract.txt")),
                 UTF_8);
-        pdfExtractFile = new PdfExtractFile(pdftxt, PdfAnnotationEditor.getSubstitutionTable());
+        pdfExtractFile = new PdfExtractFile(pdftxt, getSubstitutionTable());
     }
 
     @Test

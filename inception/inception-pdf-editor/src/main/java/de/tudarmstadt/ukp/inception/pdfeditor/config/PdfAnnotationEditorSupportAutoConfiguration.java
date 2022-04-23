@@ -23,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfFormatSupport;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameViewFactory;
 
 /**
  * Provides support for an PDF-oriented annotation editor.
@@ -41,5 +42,11 @@ public class PdfAnnotationEditorSupportAutoConfiguration
     public PdfFormatSupport pdfFormatSupport()
     {
         return new PdfFormatSupport();
+    }
+
+    @Bean
+    public PdfDocumentIFrameViewFactory pdfDocumentIFrameViewFactory()
+    {
+        return new PdfDocumentIFrameViewFactory();
     }
 }

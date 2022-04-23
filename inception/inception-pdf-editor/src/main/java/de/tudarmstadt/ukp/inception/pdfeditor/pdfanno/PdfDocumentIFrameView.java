@@ -17,12 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
+import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile.getSubstitutionTable;
+
 import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -35,16 +42,24 @@ import org.apache.wicket.request.resource.ContentDisposition;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfEditorProperties;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
 
 public class PdfDocumentIFrameView
     extends Panel
 {
+    private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
+
     private static final long serialVersionUID = 4202869513273132875L;
 
     private @SpringBean DocumentService documentService;
@@ -54,10 +69,12 @@ public class PdfDocumentIFrameView
     private AbstractAjaxBehavior pdftxtProvider;
     private AbstractAjaxBehavior apiProvider;
 
-    public PdfDocumentIFrameView(String aId, IModel<AnnotatorState> aModel,
-            PdfAnnotationEditor aPdfAnnotationEditor)
+    private PdfExtractFile pdfExtractFile;
+
+    public PdfDocumentIFrameView(String aId, IModel<AnnotationDocument> aDoc,
+            String aEditorFactoryId)
     {
-        super(aId, aModel);
+        super(aId, aDoc);
 
         add(pdfProvider = new AbstractAjaxBehavior()
         {
@@ -66,7 +83,7 @@ public class PdfDocumentIFrameView
             @Override
             public void onRequest()
             {
-                SourceDocument doc = aModel.getObject().getDocument();
+                SourceDocument doc = aDoc.getObject().getDocument();
 
                 File pdfFile = documentService.getSourceDocumentFile(doc);
 
@@ -97,9 +114,9 @@ public class PdfDocumentIFrameView
             @Override
             public void respond(AjaxRequestTarget aTarget)
             {
-                aPdfAnnotationEditor.initialize(aTarget);
-                String pdftext = aPdfAnnotationEditor.getPdfExtractFile().getPdftxt();
-                SourceDocument doc = aModel.getObject().getDocument();
+                initialize(aTarget);
+                String pdftext = pdfExtractFile.getPdftxt();
+                SourceDocument doc = aDoc.getObject().getDocument();
 
                 StringResourceStream resource = new StringResourceStream(pdftext, "text/plain");
 
@@ -119,7 +136,9 @@ public class PdfDocumentIFrameView
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
-                aPdfAnnotationEditor.handleAPIRequest(aTarget, getRequest().getPostParameters());
+                PdfAnnotationEditor editor = PdfDocumentIFrameView.this
+                        .findParent(PdfAnnotationEditor.class);
+                editor.handleAPIRequest(aTarget, getRequest().getPostParameters());
             }
         });
 
@@ -152,5 +171,47 @@ public class PdfDocumentIFrameView
                 super.onComponentTag(aTag);
             }
         });
+    }
+
+    public PdfExtractFile getPdfExtractFile()
+    {
+        return pdfExtractFile;
+    }
+
+    public IModel<AnnotationDocument> getModel()
+    {
+        return (IModel<AnnotationDocument>) getDefaultModel();
+    }
+
+    private void initialize(AjaxRequestTarget aTarget)
+    {
+        File pdfFile = documentService.getSourceDocumentFile(getModel().getObject().getDocument());
+
+        try {
+            String pdfText = PDFExtractor.processFileToString(pdfFile, false);
+            pdfExtractFile = new PdfExtractFile(pdfText, getSubstitutionTable());
+        }
+        catch (IOException | SAXException | ParserConfigurationException e) {
+            handleError("Unable to create PdfExtractFile for [" + pdfFile.getName() + "]"
+                    + "with PDFExtractor.", e, aTarget);
+        }
+    }
+
+    private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
+    {
+        if (aCause instanceof AnnotationException) {
+            LOG.debug(aMessage, aCause);
+            handleError(aCause.getMessage(), aTarget);
+        }
+        else {
+            LOG.error(aMessage, aCause);
+            handleError(aMessage + ": " + ExceptionUtils.getRootCauseMessage(aCause), aTarget);
+        }
+    }
+
+    private void handleError(String aMessage, AjaxRequestTarget aTarget)
+    {
+        error(aMessage);
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 }

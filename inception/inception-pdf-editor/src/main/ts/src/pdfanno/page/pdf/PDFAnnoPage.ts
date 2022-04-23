@@ -12,6 +12,7 @@ import RelationAnnotation from '../../core/src/annotation/relation'
 export default class PDFAnnoPage {
 
   annotationContainer: AnnotationContainer;
+  pdftxt;
 
   constructor(annotationContainer: AnnotationContainer) {
     this.annotationContainer = annotationContainer;
@@ -36,17 +37,16 @@ export default class PDFAnnoPage {
     dispatchWindowEvent('iframeReady')
   }
 
-  displayViewer(contentFile) {
-
+  displayViewer(name: string, pdf) {
     // Reset settings.
     this.resetPDFViewerSettings()
 
     // Load PDF.
-    const uint8Array = new Uint8Array(contentFile.content)
+    const uint8Array = new Uint8Array(pdf)
     window.PDFViewerApplication.open(uint8Array)
 
     // Set the PDF file name.
-    window.PDFView.url = contentFile.name
+    window.PDFViewerApplication.url = name
   }
 
   /**

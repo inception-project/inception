@@ -7,16 +7,17 @@ import RelationAnnotation from '../annotation/relation'
 /**
  * Create a RELATION annotation.
  *
- * @param {RelationAnnotation} a - The annotation definition
- * @return {SVGGElement} A group of a relation to be rendered
+ * @param a The annotation definition
+ * @return A group of a relation to be rendered
  */
-export function renderRelation (a: RelationAnnotation, svg) {
+export function renderRelation (a: RelationAnnotation, svg): SVGGElement {
 
   a.color = a.color || '#F00'
 
   // Adjust the start/end points.
   let xDiff = a.x1 - a.x2
   let yDiff = a.y1 - a.y2
+  
   // if difference of x and difference of y is both 0 use 0 for atan
   let theta = Math.atan(xDiff === 0 && yDiff === 0 ? 0 : (yDiff / xDiff))
   let sign = (a.x1 < a.x2 ? 1 : -1)

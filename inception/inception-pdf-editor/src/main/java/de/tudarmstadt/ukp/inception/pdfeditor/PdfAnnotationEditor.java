@@ -24,19 +24,12 @@ import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSeria
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer.convertToDocumentOffsets;
 import static java.lang.String.join;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
@@ -44,14 +37,12 @@ import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.dkpro.core.api.resources.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -64,13 +55,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameView;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
 
 public class PdfAnnotationEditor
     extends AnnotationEditorBase
@@ -87,33 +78,41 @@ public class PdfAnnotationEditor
 
     private static final String VIS = "vis";
 
-    private PdfExtractFile pdfExtractFile;
     private DocumentModel documentModel;
     private Map<Integer, Offset> pageOffsetCache;
     private int page;
+    private PdfDocumentIFrameView view;
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean(name = "pdfDocumentIFrameViewFactory") DocumentViewFactory viewFactory;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
+
         String format = aModel.getObject().getDocument().getFormat();
         if (format.equals(PdfFormatSupport.ID)) {
-            add(new PdfDocumentIFrameView(VIS, aModel, this));
+            AnnotationDocument annDoc = documentService.getAnnotationDocument(
+                    aModel.getObject().getDocument(), aModel.getObject().getUser());
+            add(view = (PdfDocumentIFrameView) viewFactory.createView(VIS, Model.of(annDoc),
+                    viewFactory.getId()));
         }
         else {
             add(new WrongFileFormatPanel(VIS, format));
         }
-    }
 
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
+        try {
+            documentModel = new DocumentModel(getCasProvider().get().getDocumentText());
+        }
+        catch (IOException e) {
+            handleError("Unable to load data", e);
+        }
+
+        pageOffsetCache = new HashMap<>();
     }
 
     @Override
@@ -173,7 +172,7 @@ public class PdfAnnotationEditor
             int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
 
             PdfAnnoModel pdfAnnoModel = render(cas, begin, end,
-                    new PdfAnnoSerializer(pdfExtractFile, begin));
+                    new PdfAnnoSerializer(view.getPdfExtractFile(), begin));
 
             // show unmatched spans to user
             if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
@@ -194,7 +193,7 @@ public class PdfAnnotationEditor
     public void createSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
             CAS aCas)
     {
-        if (pdfExtractFile == null && documentModel == null) {
+        if (view.getPdfExtractFile() == null && documentModel == null) {
             // in this case the user probably changed the document and accidentally
             // marked text in the old document. so do not create any annotation here.
             handleError(
@@ -206,7 +205,8 @@ public class PdfAnnotationEditor
 
         try {
             Offset offset = new Offset(aParams);
-            Offset docOffset = convertToDocumentOffset(offset, documentModel, pdfExtractFile);
+            Offset docOffset = convertToDocumentOffset(offset, documentModel,
+                    view.getPdfExtractFile());
             AnnotatorState state = getModelObject();
             if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                 if (state.isSlotArmed()) {
@@ -352,7 +352,8 @@ public class PdfAnnotationEditor
             if (paramId.isSynthetic()) {
                 getModelObject().clearArmedSlot();
                 Offset offset = new Offset(aParams);
-                Offset docOffset = convertToDocumentOffset(offset, documentModel, pdfExtractFile);
+                Offset docOffset = convertToDocumentOffset(offset, documentModel,
+                        view.getPdfExtractFile());
                 if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
                             aCas, paramId, "doAction");
@@ -376,18 +377,18 @@ public class PdfAnnotationEditor
     private Offset calculatePageOffsets(int aPage)
     {
         // get page offsets, if possible for the from previous to next page
-        int maxPageNumber = pdfExtractFile.getMaxPageNumber();
+        int maxPageNumber = view.getPdfExtractFile().getMaxPageNumber();
 
         int beginPage = Math.min(Math.max(1, aPage - 1), maxPageNumber);
         int endPage = Math.min(Math.max(1, aPage + 1), maxPageNumber);
 
-        int begin = pdfExtractFile.getBeginPageOffset(beginPage);
-        int end = pdfExtractFile.getEndPageOffset(endPage);
+        int begin = view.getPdfExtractFile().getBeginPageOffset(beginPage);
+        int end = view.getPdfExtractFile().getEndPageOffset(endPage);
 
         List<Offset> offsets = new ArrayList<>();
         offsets.add(new Offset(begin, begin));
         offsets.add(new Offset(end, end));
-        offsets = convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
+        offsets = convertToDocumentOffsets(offsets, documentModel, view.getPdfExtractFile());
 
         int newBegin = offsets.stream().mapToInt(Offset::getBegin).min().getAsInt();
         int newEnd = offsets.stream().mapToInt(Offset::getEnd).max().getAsInt();
@@ -450,47 +451,5 @@ public class PdfAnnotationEditor
                 "'primary': true,", //
                 "'colorMap': {},", //
                 "'annotations':[annoFile]}, true);");
-    }
-
-    public PdfExtractFile getPdfExtractFile()
-    {
-        return pdfExtractFile;
-    }
-
-    public static Map<String, String> getSubstitutionTable()
-        throws IOException, ParserConfigurationException, SAXException
-    {
-        String substitutionTable = "classpath:/de/tudarmstadt/ukp/dkpro/core/io/pdf/substitutionTable.xml";
-        URL url = ResourceUtils.resolveLocation(substitutionTable);
-        try (InputStream is = url.openStream()) {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            SAXParser saxParser = factory.newSAXParser();
-            SubstitutionTableParser substitutionTableParser = new SubstitutionTableParser();
-            saxParser.parse(is, substitutionTableParser);
-            return substitutionTableParser.getSubstitutionTable();
-        }
-    }
-
-    public void initialize(AjaxRequestTarget aTarget)
-    {
-        try {
-            documentModel = new DocumentModel(getCasProvider().get().getDocumentText());
-        }
-        catch (IOException e) {
-            handleError("Unable to load data", e, aTarget);
-        }
-
-        File pdfFile = documentService.getSourceDocumentFile(getModel().getObject().getDocument());
-
-        try {
-            String pdfText = PDFExtractor.processFileToString(pdfFile, false);
-            pdfExtractFile = new PdfExtractFile(pdfText, getSubstitutionTable());
-        }
-        catch (IOException | SAXException | ParserConfigurationException e) {
-            handleError("Unable to create PdfExtractFile for [" + pdfFile.getName() + "]"
-                    + "with PDFExtractor.", e, aTarget);
-        }
-
-        pageOffsetCache = new HashMap<>();
     }
 }

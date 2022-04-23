@@ -1,7 +1,7 @@
 import './pdfanno.css'
 import $ from 'jquery'
 import urijs from 'urijs'
-  import * as textLayer from './page/textLayer'
+import * as textLayer from './page/textLayer'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
 import { dispatchWindowEvent } from './shared/util'
 import EventEmitter from 'events'
@@ -58,7 +58,7 @@ function onPageRendered(ev) {
   console.log('pagerendered:', ev.detail.pageNumber)
 
   // No action, if the viewer is closed.
-  if (!window.PDFView.pdfViewer.getPageView(0)) {
+  if (!window.PDFViewerApplication.pdfViewer.getPageView(0)) {
     return
   }
 
@@ -78,7 +78,7 @@ function adjustPageGaps() {
   // Correctly rendering when changing scaling.
   // The margin between pages is fixed(9px), and never be scaled in default,
   // then manually have to change the margin.
-  let scale = window.PDFView.pdfViewer.getPageView(0).viewport.scale
+  let scale = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
   let borderWidth = `${9 * scale}px`
   let marginBottom = `${-9 * scale}px`
   let marginTop = `${1 * scale}px`
@@ -105,7 +105,7 @@ function removeAnnoLayer() {
 function renderAnno() {
 
   // No action, if the viewer is closed.
-  if (!window.PDFView.pdfViewer.getPageView(0)) {
+  if (!window.PDFViewerApplication.pdfViewer.getPageView(0)) {
     return
   }
 
@@ -163,7 +163,7 @@ function renderAnno() {
  * Render all annotations.
  */
 function renderAnnotations() {
-  const annotations = window.annotationContainer.getAllAnnotations()
+  const annotations = annotationContainer.getAllAnnotations()
   if (annotations.length === 0) {
     return
   }
@@ -203,10 +203,7 @@ async function displayViewer() {
     let { pdf, analyzeResult } = await annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
 
     setTimeout(() => {
-      annoPage.displayViewer({
-        name: getPDFName(pdfURL),
-        content: pdf
-      })
+      annoPage.displayViewer(getPDFName(pdfURL), pdf)
     }, 500)
 
     const listenPageRendered = async () => {
@@ -245,7 +242,6 @@ async function displayViewer() {
     })
 
   } catch (err) {
-
     // Hide a loading, and show the error message.
     showLoader(false)
     console.error('Failed to analyze the PDF.', err);
@@ -255,7 +251,6 @@ async function displayViewer() {
     // Start application.
     annoPage.startViewerApplication()
   }
-
 }
 
 /**
