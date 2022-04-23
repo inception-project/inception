@@ -9,20 +9,65 @@ import { dispatchWindowEvent } from './shared/util'
 import EventEmitter from 'events'
 import PDFAnnoCore from './core/src/PDFAnnoCore'
 import AnnotationContainer from './core/src/annotation/container'
-
-window.globalEvent = new EventEmitter()
-window.globalEvent.setMaxListeners(0)
-
 export default PDFAnnoCore
 
-// Create an annocation container.
-window.annotationContainer = new AnnotationContainer()
+export function initPdfAnno() {
+  /**
+   * Global variable.
+   */
+  window.pdfanno = {}
 
-// Enable a view mode.
-PDFAnnoCore.UI.enableViewMode()
+  /**
+    * Expose public APIs.
+    */
+  publicApi.expose()
 
-// The event called at page rendered by pdfjs.
-window.addEventListener('pagerendered', function (ev) {
+  /**
+    * Annotation functions for a page.
+    */
+  window.annoPage = new PDFAnnoPage()
+
+  window.globalEvent = new EventEmitter()
+  window.globalEvent.setMaxListeners(0)
+
+  // Create an annocation container.
+  window.annotationContainer = new AnnotationContainer()
+
+  // Enable a view mode.
+  PDFAnnoCore.UI.enableViewMode()
+
+  // The event called at page rendered by pdfjs.
+  window.addEventListener('pagerendered', ev => onPageRendered(ev))
+  // Adapt to scale change.
+  window.addEventListener('scalechange', ev => onScaleChange(ev))
+
+  /**
+   *  The entry point.
+   */
+  window.addEventListener('DOMContentLoaded', async (ev) => onDomContentLoaded(ev))
+
+}
+
+initPdfAnno()
+
+function onDomContentLoaded(ev) {
+  // UI.
+  setupUI()
+
+  // Show loading.
+  showLoader(true)
+
+  // Init viewer.
+  window.annoPage.initializeViewer(null)
+
+  // Start application.
+  window.annoPage.startViewerApplication()
+
+  // Show a content.
+  displayViewer()
+}
+
+function onPageRendered(ev) {
   console.log('pagerendered:', ev.detail.pageNumber)
 
   // No action, if the viewer is closed.
@@ -32,17 +77,16 @@ window.addEventListener('pagerendered', function (ev) {
 
   adjustPageGaps()
   renderAnno()
-})
+}
 
-// Adapt to scale change.
-window.addEventListener('scalechange', () => {
+function onScaleChange(ev) {
   console.log('scalechange')
   adjustPageGaps()
   removeAnnoLayer()
   renderAnno()
-})
+}
 
-function adjustPageGaps () {
+function adjustPageGaps() {
   // Issue Fix.
   // Correctly rendering when changing scaling.
   // The margin between pages is fixed(9px), and never be scaled in default,
@@ -52,8 +96,8 @@ function adjustPageGaps () {
   let marginBottom = `${-9 * scale}px`
   let marginTop = `${1 * scale}px`
   $('.page').css({
-    'border-top-width'    : borderWidth,
-    'border-bottom-width' : borderWidth,
+    'border-top-width': borderWidth,
+    'border-bottom-width': borderWidth,
     marginBottom,
     marginTop
   })
@@ -62,7 +106,7 @@ function adjustPageGaps () {
 /*
  * Remove the annotation layer and the temporary rendering layer.
  */
-function removeAnnoLayer () {
+function removeAnnoLayer() {
   // TODO Remove #annoLayer.
   $('#annoLayer, #annoLayer2').remove()
 }
@@ -70,7 +114,7 @@ function removeAnnoLayer () {
 /*
  * Render annotations saved in the storage.
  */
-function renderAnno () {
+function renderAnno() {
 
   // No action, if the viewer is closed.
   if (!window.PDFView.pdfViewer.getPageView(0)) {
@@ -103,27 +147,27 @@ function renderAnno () {
   // TODO no need ?
   // Add an annotation layer.
   let $annoLayer = $(`<svg id="${svgLayerId}" class="${svgLayerId}"/>`).css({   // TODO CSSClass.
-    position   : 'absolute',
-    top        : '0px',
-    left       : `${leftMargin}px`,
-    width      : `${width}px`,
-    height     : `${height}px`,
-    visibility : 'hidden',
-    'z-index'  : 2
+    position: 'absolute',
+    top: '0px',
+    left: `${leftMargin}px`,
+    width: `${width}px`,
+    height: `${height}px`,
+    visibility: 'hidden',
+    'z-index': 2
   })
   // Add an annotation layer.
   let $annoLayer2 = $(`<div id="${annoLayer2Id}"/>`).addClass('annoLayer').css({   // TODO CSSClass.
-    position   : 'absolute',
-    top        : '0px',
-    left       : `${leftMargin}px`,
-    width      : `${width}px`,
-    height     : `${height}px`,
-    visibility : 'hidden',
-    'z-index'  : 2
+    position: 'absolute',
+    top: '0px',
+    left: `${leftMargin}px`,
+    width: `${width}px`,
+    height: `${height}px`,
+    visibility: 'hidden',
+    'z-index': 2
   })
 
   $('#viewer').css({
-    position : 'relative'  // TODO css.
+    position: 'relative'  // TODO css.
   }).append($annoLayer).append($annoLayer2)
 
   dispatchWindowEvent('annotationlayercreated')
@@ -134,7 +178,7 @@ function renderAnno () {
 /**
  * Render all annotations.
  */
-function renderAnnotations () {
+function renderAnnotations() {
   const annotations = window.annotationContainer.getAllAnnotations()
   if (annotations.length === 0) {
     return
@@ -145,43 +189,6 @@ function renderAnnotations () {
   })
   dispatchWindowEvent('annotationrendered')
 }
-
-
-/**
- * Global variable.
- */
-window.pdfanno = {}
-
-/**
- * Expose public APIs.
- */
-publicApi.expose()
-
-/**
- * Annotation functions for a page.
- */
-window.annoPage = new PDFAnnoPage()
-
-/**
- *  The entry point.
- */
-window.addEventListener('DOMContentLoaded', async () => {
-
-  // UI.
-  setupUI()
-
-  // Show loading.
-  showLoader(true)
-
-  // Init viewer.
-  window.annoPage.initializeViewer(null)
-
-  // Start application.
-  window.annoPage.startViewerApplication()
-
-  // Show a content.
-  displayViewer()
-})
 
 function getAnnotations() {
   var data = {
@@ -199,11 +206,11 @@ function getAnnotations() {
   });
 }
 
-async function displayViewer () {
+async function displayViewer() {
 
   // Display a PDF specified via URL query parameter.
-  const q        = urijs(document.URL).query(true)
-  const pdfURL   = q.pdf
+  const q = urijs(document.URL).query(true)
+  const pdfURL = q.pdf
   const pdftxtURL = q.pdftxt
   window.apiUrl = q.api
 
@@ -213,8 +220,8 @@ async function displayViewer () {
 
     setTimeout(() => {
       window.annoPage.displayViewer({
-        name    : getPDFName(pdfURL),
-        content : pdf
+        name: getPDFName(pdfURL),
+        content: pdf
       })
     }, 500)
 
@@ -231,7 +238,7 @@ async function displayViewer () {
     const renderTimeout = 500
     window.pagechangeEventCounter = 0
     window.pageRender = 1;
-    let initAnnotations = function(e) {
+    let initAnnotations = function (e) {
       try {
         getAnnotations()
       } finally {
@@ -239,7 +246,7 @@ async function displayViewer () {
       }
     }
     document.addEventListener('pagerendered', initAnnotations)
-    document.addEventListener('pagechange', function(e) {
+    document.addEventListener('pagechange', function (e) {
       pagechangeEventCounter++
       if (e.pageNumber !== window.pageRender) {
         const snapshot = window.pagechangeEventCounter
@@ -267,7 +274,7 @@ async function displayViewer () {
 
 }
 
-function setupUI () {
+function setupUI() {
   // Start event listeners.
   annoUI.event.setup()
 }
@@ -275,7 +282,7 @@ function setupUI () {
 /**
  * Get a PDF name from URL.
  */
-function getPDFName (url) {
+function getPDFName(url) {
   const a = url.split('/')
   return a[a.length - 1]
 }
@@ -283,7 +290,7 @@ function getPDFName (url) {
 /**
  * Show or hide a loding.
  */
- function showLoader (display) {
+function showLoader(display) {
   if (display) {
     $('#pdfLoading').removeClass('close hidden')
   } else {
