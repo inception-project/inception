@@ -1,32 +1,31 @@
 import './pdfanno.css'
 import $ from 'jquery'
 import urijs from 'urijs'
-import * as annoUI from './anno-ui'
-import * as textLayer from './page/textLayer'
+  import * as textLayer from './page/textLayer'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
 import { dispatchWindowEvent } from './shared/util'
 import EventEmitter from 'events'
-import PDFAnnoCore from './core/src/PDFAnnoCore'
+import UI from './core/src/UI'
 import AnnotationContainer from './core/src/annotation/container'
-export default PDFAnnoCore
+import AbstractAnnotation from './core/src/annotation/abstract'
+
+let annoPage: PDFAnnoPage;
+let annotationContainer: AnnotationContainer;
 
 export function initPdfAnno() {
-  /**
-   * Global variable.
-   */
-  window.pdfanno = {}
-
-  // Create an annocation container.
-  window.annotationContainer = new AnnotationContainer()
-
-  window.annoPage = new PDFAnnoPage()
-
   window.globalEvent = new EventEmitter()
   window.globalEvent.setMaxListeners(0)
 
+  // Create an annocation container.
+  annotationContainer = new AnnotationContainer();
+  annoPage = new PDFAnnoPage(annotationContainer);
+
+  // FIXME: These should be removed
+  window.annotationContainer = annotationContainer;
+  window.annoPage = annoPage;
 
   // Enable a view mode.
-  PDFAnnoCore.UI.enableViewMode()
+  UI.enableViewMode()
 
   // The event called at page rendered by pdfjs.
   window.addEventListener('pagerendered', ev => onPageRendered(ev))
@@ -41,18 +40,15 @@ export function initPdfAnno() {
 
 initPdfAnno()
 
-function onDomContentLoaded(ev) {
-  // UI.
-  setupUI()
-
+function onDomContentLoaded(ev: Event) {
   // Show loading.
   showLoader(true)
 
   // Init viewer.
-  window.annoPage.initializeViewer(null)
+  annoPage.initializeViewer(null)
 
   // Start application.
-  window.annoPage.startViewerApplication()
+  annoPage.startViewerApplication()
 
   // Show a content.
   displayViewer()
@@ -99,7 +95,8 @@ function adjustPageGaps() {
  */
 function removeAnnoLayer() {
   // TODO Remove #annoLayer.
-  $('#annoLayer, #annoLayer2').remove()
+  document.getElementById("annoLayer")?.remove()
+  document.getElementById("annoLayer2")?.remove()
 }
 
 /*
@@ -117,10 +114,7 @@ function renderAnno() {
   const annoLayer2Id = 'annoLayer2'
 
   // Check already exists.
-  if ($('#' + svgLayerId).length > 0) {
-    return
-  }
-  if ($('#' + annoLayer2Id).length > 0) {
+  if (document.getElementById(svgLayerId) && document.getElementById(annoLayer2Id)) {
     return
   }
 
@@ -173,7 +167,7 @@ function renderAnnotations() {
   if (annotations.length === 0) {
     return
   }
-  annotations.forEach(a => {
+  annotations.forEach((a: AbstractAnnotation) => {
     a.render()
     a.enableViewMode()
   })
@@ -206,10 +200,10 @@ async function displayViewer() {
 
   // Load a PDF file.
   try {
-    let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
+    let { pdf, analyzeResult } = await annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
 
     setTimeout(() => {
-      window.annoPage.displayViewer({
+      annoPage.displayViewer({
         name: getPDFName(pdfURL),
         content: pdf
       })
@@ -223,7 +217,7 @@ async function displayViewer() {
 
     // Init textLayers.
     textLayer.setup(analyzeResult)
-    window.annoPage.pdftxt = analyzeResult
+    annoPage.pdftxt = analyzeResult
 
     const renderTimeout = 500
     window.pagechangeEventCounter = 0
@@ -257,16 +251,11 @@ async function displayViewer() {
     console.error('Failed to analyze the PDF.', err);
 
     // Init viewer.
-    window.annoPage.initializeViewer(null)
+    annoPage.initializeViewer(null)
     // Start application.
-    window.annoPage.startViewerApplication()
+    annoPage.startViewerApplication()
   }
 
-}
-
-function setupUI() {
-  // Start event listeners.
-  annoUI.event.setup()
 }
 
 /**

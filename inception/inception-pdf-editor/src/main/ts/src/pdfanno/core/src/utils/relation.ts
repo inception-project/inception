@@ -11,29 +11,29 @@
  * @params y2 : the y of an end position.
  * @return { x, y } the position of bezier control.
  */
-export function findBezierControlPoint (x1, y1, x2, y2) {
+export function findBezierControlPoint(x1: number, y1: number, x2: number, y2: number) {
 
   const DISTANCE = 30
 
   // vertical line.
   if (x1 === x2) {
     return {
-      x : x1,
-      y : (y1 + y2) / 2
+      x: x1,
+      y: (y1 + y2) / 2
     }
   }
 
   // horizontal line.
   if (y1 === y2) {
     return {
-      x : (x1 + x2) / 2,
-      y : y1 - DISTANCE
+      x: (x1 + x2) / 2,
+      y: y1 - DISTANCE
     }
   }
 
   let center = {
-    x : (x1 + x2) / 2,
-    y : (y1 + y2) / 2
+    x: (x1 + x2) / 2,
+    y: (y1 + y2) / 2
   }
 
   let gradient = (y1 - y2) / (x1 - x2)
@@ -47,34 +47,34 @@ export function findBezierControlPoint (x1, y1, x2, y2) {
     // right top quadrant.
     if (y1 > y2) {
       return {
-        x : center.x - Math.abs(deltaX),
-        y : center.y - Math.abs(deltaY)
+        x: center.x - Math.abs(deltaX),
+        y: center.y - Math.abs(deltaY)
       }
       // right bottom quadrant.
     } else {
       return {
-        x : center.x + Math.abs(deltaX),
-        y : center.y - Math.abs(deltaY)
+        x: center.x + Math.abs(deltaX),
+        y: center.y - Math.abs(deltaY)
       }
     }
   } else {
     // left top quadrant.
     if (y1 > y2) {
       return {
-        x : center.x + Math.abs(deltaX),
-        y : center.y - Math.abs(deltaY)
+        x: center.x + Math.abs(deltaX),
+        y: center.y - Math.abs(deltaY)
       }
       // left bottom quadrant.
     } else {
       return {
-        x : center.x - Math.abs(deltaX),
-        y : center.y - Math.abs(deltaY)
+        x: center.x - Math.abs(deltaX),
+        y: center.y - Math.abs(deltaY)
       }
     }
   }
 }
 
-export function getRelationTextPosition (x1, y1, x2, y2, text = '', parentId = null) {
+export function getRelationTextPosition(x1: number, y1: number, x2: number, y2: number, text = '', parentId = null) {
 
   // texts rendered.
   let rects = []
@@ -83,10 +83,10 @@ export function getRelationTextPosition (x1, y1, x2, y2, text = '', parentId = n
     // Remove myself.
     if ($this.parent().data('parent-id') !== parentId) {
       rects.push({
-        x      : parseFloat($this.attr('x')),
-        y      : parseFloat($this.attr('y')),
-        width  : parseFloat($this.attr('width')),
-        height : parseFloat($this.attr('height'))
+        x: parseFloat($this.attr('x')),
+        y: parseFloat($this.attr('y')),
+        width: parseFloat($this.attr('width')),
+        height: parseFloat($this.attr('height'))
       })
     }
   })

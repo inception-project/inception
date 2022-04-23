@@ -26,7 +26,7 @@ export default class AnnotationContainer {
   /**
    * Add an annotation to the container.
    */
-  add(annotation) {
+  add(annotation: AbstractAnnotation) {
     this.set.add(annotation)
     dispatchWindowEvent('annotationUpdated')
   }
@@ -34,7 +34,7 @@ export default class AnnotationContainer {
   /**
    * Remove the annotation from the container.
    */
-  remove(annotation) {
+  remove(annotation: AbstractAnnotation) {
     this.set.delete(annotation)
     dispatchWindowEvent('annotationUpdated')
   }
@@ -51,7 +51,7 @@ export default class AnnotationContainer {
   /**
    * Get all annotations from the container.
    */
-  getAllAnnotations() {
+  getAllAnnotations() : AbstractAnnotation[] {
     let list = []
     this.set.forEach(a => list.push(a))
     return list
@@ -60,7 +60,7 @@ export default class AnnotationContainer {
   /**
    * Get annotations which user select.
    */
-  getSelectedAnnotations() {
+  getSelectedAnnotations() : AbstractAnnotation[] {
     return this.getAllAnnotations().filter(a => a.selected)
   }
 
@@ -134,7 +134,7 @@ export default class AnnotationContainer {
   /**
    * Import annotations.
    */
-  importAnnotations(data, isPrimary) {
+  importAnnotations(data, isPrimary: boolean) {
 
     const readOnly = !isPrimary
     const colorMap = data.colorMap

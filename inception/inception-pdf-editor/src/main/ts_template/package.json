@@ -36,6 +36,7 @@
     "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
     "@typescript-eslint/parser": "${typescript-eslint.version}",
     "@types/jquery": "^3.5.13",
-    "@types/urijs": "^1.19.11"
+    "@types/urijs": "^1.19.11",
+    "@types/events": "^3.0.0"
   }
 }

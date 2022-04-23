@@ -1,7 +1,7 @@
 /**
  * Change color definition style from hex to rgba.
  */
-export function hex2rgba (hex, alpha = 1) {
+export function hex2rgba(hex, alpha = 1) {
 
   // long version
   let r = hex.match(/^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i)

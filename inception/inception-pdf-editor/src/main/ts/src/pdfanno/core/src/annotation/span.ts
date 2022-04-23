@@ -9,7 +9,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
 
   type = 'span'
   rectangles = []
-  readOnly = false
   knob = true
   border = true
   text = null

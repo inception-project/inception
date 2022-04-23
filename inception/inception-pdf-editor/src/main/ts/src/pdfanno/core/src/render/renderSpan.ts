@@ -1,3 +1,4 @@
+import $ from 'jquery'
 import { renderKnob } from './renderKnob'
 import { hex2rgba } from '../utils/color'
 import SpanAnnotation from '../annotation/span'

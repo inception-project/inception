@@ -13,7 +13,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
   direction: unknown;
   text: string;
   color: string;
-  readOnly: boolean;
   $element: JQuery<HTMLElement>;
   x1: number;
   y1: number;

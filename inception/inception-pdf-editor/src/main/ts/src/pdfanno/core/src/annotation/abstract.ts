@@ -1,3 +1,4 @@
+import $ from 'jquery'
 import EventEmitter from 'events'
 import appendChild from '../render/appendChild'
 import { DEFAULT_RADIUS } from '../render/renderKnob'
@@ -11,6 +12,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   deleted = false;
   disabled = false;
   selected = false;
+  readOnly = false;
   hoverEventDisable = false;
   selectedTime = null;
   $element: JQuery<any> = null;
@@ -48,7 +50,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
       return false
     }
 
-    const base = $('#annoLayer2')[0]
+    const base = document.getElementById('annoLayer2')
     this.$element = $(appendChild(base, this))
 
     if (!this.hoverEventDisable && this.setHoverEvent) {

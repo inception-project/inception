@@ -1,3 +1,5 @@
+import $ from 'jquery'
+
 /**
  * Circle radius.
  */
