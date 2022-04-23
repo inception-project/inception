@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.inception.pdfeditor;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer.convertToDocumentOffset;
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer.convertToDocumentOffsets;
 import static java.lang.String.join;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,10 +33,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.servlet.ServletContext;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
@@ -47,7 +52,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
@@ -57,14 +61,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
+import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameView;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer;
+import de.tudarmstadt.ukp.inception.pdfeditor.resources.PdfAnnotationEditorCssResourceReference;
+import de.tudarmstadt.ukp.inception.pdfeditor.resources.PdfAnnotationEditorJavascriptResourceReference;
 
 public class PdfAnnotationEditor
-    extends AnnotationEditorBase
+    extends ExternalAnnotationEditorBase
 {
     private static final long serialVersionUID = -3358207848681467993L;
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
@@ -88,22 +96,12 @@ public class PdfAnnotationEditor
     private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean(name = "pdfDocumentIFrameViewFactory") DocumentViewFactory viewFactory;
+    private @SpringBean ServletContext servletContext;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-
-        String format = aModel.getObject().getDocument().getFormat();
-        if (format.equals(PdfFormatSupport.ID)) {
-            AnnotationDocument annDoc = documentService.getAnnotationDocument(
-                    aModel.getObject().getDocument(), aModel.getObject().getUser());
-            add(view = (PdfDocumentIFrameView) viewFactory.createView(VIS, Model.of(annDoc),
-                    viewFactory.getId()));
-        }
-        else {
-            add(new WrongFileFormatPanel(VIS, format));
-        }
 
         try {
             documentModel = new DocumentModel(getCasProvider().get().getDocumentText());
@@ -113,6 +111,37 @@ public class PdfAnnotationEditor
         }
 
         pageOffsetCache = new HashMap<>();
+    }
+
+    @Override
+    protected Component makeView()
+    {
+        AnnotatorState state = getModelObject();
+        String format = state.getDocument().getFormat();
+        if (!format.equals(PdfFormatSupport.ID)) {
+            return new WrongFileFormatPanel(VIS, format);
+        }
+
+        AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
+                state.getUser());
+        view = (PdfDocumentIFrameView) viewFactory.createView(VIS, Model.of(annDoc),
+                viewFactory.getId());
+        return view;
+    }
+
+    @Override
+    protected AnnotationEditorProperties getProperties()
+    {
+        AnnotationEditorProperties props = new AnnotationEditorProperties();
+        // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
+        // defined in main.ts
+        props.setEditorFactory("PdfAnnotationEditor.factory()");
+        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
+        props.setStylesheetSources(asList(
+                referenceToUrl(servletContext, PdfAnnotationEditorCssResourceReference.get())));
+        props.setScriptSources(asList(referenceToUrl(servletContext,
+                PdfAnnotationEditorJavascriptResourceReference.get())));
+        return props;
     }
 
     @Override

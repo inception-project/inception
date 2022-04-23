@@ -35,7 +35,7 @@ export class PdfAnnotationEditorFactory implements AnnotationEditorFactory {
 
   public destroy(element: Node) {
     if (element[PROP_EDITOR] != null) {
-      element[PROP_EDITOR].destroy();
+      element[PROP_EDITOR].destroy();c
       console.log('Destroyed editor');
     }
   }

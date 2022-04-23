@@ -32,7 +32,6 @@ import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.UrlRenderer;
@@ -56,7 +55,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
 
 public class PdfDocumentIFrameView
-    extends Panel
+    extends WebMarkupContainer
 {
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
@@ -75,6 +74,9 @@ public class PdfDocumentIFrameView
             String aEditorFactoryId)
     {
         super(aId, aDoc);
+
+        // FIXME: "pdfanno" below is a hard-coded probably somewhere in the JS code
+        setMarkupId("pdfanno");
 
         add(pdfProvider = new AbstractAjaxBehavior()
         {
@@ -141,36 +143,30 @@ public class PdfDocumentIFrameView
                 editor.handleAPIRequest(aTarget, getRequest().getPostParameters());
             }
         });
+    }
 
-        add(new WebMarkupContainer("frame")
-        {
-            private static final long serialVersionUID = 1421253898149294234L;
+    @Override
+    protected void onComponentTag(ComponentTag aTag)
+    {
+        String indexFile = pdfEditorProperties.isDebug() ? "index-debug.html" : "index.html";
 
-            @Override
-            protected final void onComponentTag(final ComponentTag aTag)
-            {
-                checkComponentTag(aTag, "iframe");
+        UrlRenderer urlRenderer = RequestCycle.get().getUrlRenderer();
 
-                String indexFile = pdfEditorProperties.isDebug() ? "index-debug.html"
-                        : "index.html";
+        String viewerUrl = urlRenderer.renderContextRelativeUrl("resources/pdfanno/" + indexFile);
 
-                UrlRenderer urlRenderer = RequestCycle.get().getUrlRenderer();
+        String pdfUrl = urlRenderer.renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));
+        String pdftxtUrl = urlRenderer.renderFullUrl(Url.parse(pdftxtProvider.getCallbackUrl()));
+        String apiUrl = urlRenderer.renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
 
-                String viewerUrl = urlRenderer
-                        .renderContextRelativeUrl("resources/pdfanno/" + indexFile);
+        viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&api=" + apiUrl;
 
-                String pdfUrl = urlRenderer.renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));
-                String pdftxtUrl = urlRenderer
-                        .renderFullUrl(Url.parse(pdftxtProvider.getCallbackUrl()));
-                String apiUrl = urlRenderer.renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
+        aTag.setName("iframe");
+        aTag.put("src", viewerUrl);
+        aTag.put("class", "flex-content");
+        aTag.put("frameborder", "0");
+        aTag.put("scrolling", "no");
 
-                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&api=" + apiUrl;
-
-                aTag.put("src", viewerUrl);
-
-                super.onComponentTag(aTag);
-            }
-        });
+        super.onComponentTag(aTag);
     }
 
     public PdfExtractFile getPdfExtractFile()

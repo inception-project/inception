@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-js-api";
+import "./PdfAnnotationEditor.css"
 
 export class PdfAnnotationEditor implements AnnotationEditor {
   private ajax: DiamAjax;
@@ -24,13 +25,14 @@ export class PdfAnnotationEditor implements AnnotationEditor {
   public constructor(element: Element, ajax: DiamAjax) {
     this.ajax = ajax;
     this.root = element;
+    console.log("PdfAnnotationEditor initializing in ", element)
   }
 
   loadAnnotations(): void {
-    throw new Error("Method not implemented.");
+    console.log("Loading annotations not implemented yet")
   }
-  
+
   destroy(): void {
-    throw new Error("Method not implemented.");
+    console.log("Destroy not implemented yet")
   }
 }
