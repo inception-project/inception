@@ -33,20 +33,20 @@ defaults = {
 }
 
 esbuild.build(Object.assign({
-  entryPoints: ["src/pdfanno.ts"],
+  entryPoints: ["src/pdfanno/pdfanno.ts"],
   outfile: `${outbase}/pdfanno.page.bundle.js`,
   globalName: "pdfanno.page",
 }, defaults))
 
 esbuild.build(Object.assign({
-  entryPoints: ["src/viewer.js"],
+  entryPoints: ["src/pdfjs/viewer.js"],
   outfile: `${outbase}/viewer.bundle.js`,
   globalName: "viewer",
   external: ['images/*']
 }, defaults))
 
 esbuild.build(Object.assign({
-  entryPoints: ["src/l10n.ts"],
+  entryPoints: ["src/pdfjs/l10n.ts"],
   outfile: `${outbase}/l10n.bundle.js`,
   globalName: "l10n",
 }, defaults))

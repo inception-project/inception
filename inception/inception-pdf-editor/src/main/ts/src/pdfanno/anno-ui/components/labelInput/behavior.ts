@@ -2,11 +2,9 @@
  * Define the behaviors of label input component.
  */
 import * as alertDialog from '../../uis/alertDialog'
-import * as annoUtils from '../../utils'
 import * as db from './db'
 import * as core from './core'
 import * as color from './color'
-import labelInputReader from './reader'
 
 /**
  * Setup the behaviors for Input Label.

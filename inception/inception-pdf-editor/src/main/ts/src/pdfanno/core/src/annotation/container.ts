@@ -20,7 +20,7 @@ export default class AnnotationContainer {
    * Constructor.
    */
   constructor() {
-    this.validate = this.ajv.compile(require('../../../../schemas/pdfanno-schema.json'))
+    this.validate = this.ajv.compile(require('../../../schemas/pdfanno-schema.json'))
   }
 
   /**

@@ -1,33 +1,21 @@
 import './pdfanno.css'
 import $ from 'jquery'
-
 import urijs from 'urijs'
-
-// UI parts.
 import * as annoUI from './anno-ui'
-
 import * as publicApi from './page/public'
 import * as textLayer from './page/textLayer'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
-
-/**
- Functions for annotations rendered over a PDF file.
- */
-// require('!style-loader!css-loader!./index.css')
 import { dispatchWindowEvent } from './shared/util'
-
 import EventEmitter from 'events'
+import PDFAnnoCore from './core/src/PDFAnnoCore'
+import AnnotationContainer from './core/src/annotation/container'
 
 window.globalEvent = new EventEmitter()
 window.globalEvent.setMaxListeners(0)
 
-// This is the entry point of window.xxx.
-// (setting from webpack.config.js)
-import PDFAnnoCore from './core/src/PDFAnnoCore'
 export default PDFAnnoCore
 
 // Create an annocation container.
-import AnnotationContainer from './core/src/annotation/container'
 window.annotationContainer = new AnnotationContainer()
 
 // Enable a view mode.
