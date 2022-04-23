@@ -16,6 +16,7 @@
     "url": "https://github.com/inception-project/issues"
   },
   "dependencies": {
+    "@inception-project/inception-js-api": "${semver}",
     "events": "^3.3.0",
     "request": "^2.81.0",
     "request-promise": "^4.2.2",
