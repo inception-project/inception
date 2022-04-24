@@ -1,5 +1,3 @@
-import $ from "jquery"
-
 /**
  * Disable the action of pageback, if `DEL` or `BackSpace` button pressed.
  */
@@ -54,7 +52,8 @@ export function enableViewMode () {
   document.addEventListener('keyup', disablePagebackAction)
   document.addEventListener('keydown', disablePagebackAction)
 
-  $(document)
-    .off('click', handlePageClick)
-    .on('click', '.page', handlePageClick)
+  document.querySelectorAll('.page').forEach(e => {
+    e.removeEventListener('click', handlePageClick)
+    e.addEventListener('click', handlePageClick)
+  })
 }

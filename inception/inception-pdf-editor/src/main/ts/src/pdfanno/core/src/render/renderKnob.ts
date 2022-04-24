@@ -1,5 +1,3 @@
-import $ from 'jquery'
-
 /**
  * Circle radius.
  */
@@ -9,25 +7,23 @@ export const DEFAULT_RADIUS = 7
  * Create a bounding circle.
  * @param {Object} the data for rendering.
  */
-export function renderKnob ({ x, y, readOnly, text, color}) {
+export function renderKnob ({ x, y, readOnly, text, color}): HTMLElement {
 
   // Adjust the position.
   [x, y] = adjustPoint(x, (y - (DEFAULT_RADIUS + 2)), DEFAULT_RADIUS)
 
-  // Set the CSS class.
-  let cssClass = 'anno-knob'
+  const knob = document.createElement('div');
+  knob.setAttribute('title', text)
+  knob.classList.add('anno-knob')  
   if (readOnly) {
-    cssClass += ' is-readonly'
+    knob.classList.add('is-readonly')  
   }
-
-  // Create a knob.
-  return $(`<div title="${text}" class="${cssClass}"/>`).css({
-    top    : `${y}px`,
-    left   : `${x}px`,
-    width  : DEFAULT_RADIUS + 'px',
-    height : DEFAULT_RADIUS + 'px',
-    backgroundColor : color
-  })
+  knob.style.top = `${y}px`
+  knob.style.left = `${x}px`,
+  knob.style.width = DEFAULT_RADIUS + 'px',
+  knob.style.height = DEFAULT_RADIUS + 'px',
+  knob.style.backgroundColor = color
+  return knob
 }
 
 /**
@@ -36,15 +32,14 @@ export function renderKnob ({ x, y, readOnly, text, color}) {
 function adjustPoint (x, y, radius) {
 
   // Get all knobs.
-  const $circles = $('.anno-knob')
+  const circles = document.querySelectorAll('.anno-knob') as NodeListOf<HTMLElement>;
 
   // Find a position where all knobs are not placed at.
   while (true) {
     let good = true
-    $circles.each(function () {
-      const $this = $(this)
-      const x1 = parseInt($this.css('left'))
-      const y1 = parseInt($this.css('top'))
+    circles.forEach(knob => {
+      const x1 = parseInt(knob.style.left)
+      const y1 = parseInt(knob.style.top)
       const distance1 = Math.pow(x - x1, 2) + Math.pow(y - y1, 2)
       const distance2 = Math.pow(radius, 2)
       if (distance1 < distance2) {

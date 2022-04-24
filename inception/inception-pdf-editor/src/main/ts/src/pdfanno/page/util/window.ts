@@ -1,5 +1,3 @@
-import $ from 'jquery'
-
 /**
  * Utility for window.
  */

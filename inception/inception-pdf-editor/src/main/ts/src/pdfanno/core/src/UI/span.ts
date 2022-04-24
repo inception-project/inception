@@ -1,8 +1,6 @@
-import $ from 'jquery'
 import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
 import { findIndex, findTexts, findText } from '../../../page/textLayer'
-import { dispatchWindowEvent } from '../../../shared/util'
 
 function scale() {
   return window.PDFView.pdfViewer.getPageView(0).viewport.scale
@@ -188,7 +186,11 @@ export function installSpanSelection() {
 
   function setPositions(e) {
 
-    const canvasElement = e.currentTarget
+    const canvasElement = (e.target as HTMLElement).closest('.canvasWrapper')
+    if (!canvasElement) {
+      return;
+    }
+
     const pageElement = canvasElement.parentNode
     const page = parseInt(pageElement.getAttribute('data-page-number'))
     currentPage = page
@@ -242,9 +244,15 @@ export function installSpanSelection() {
     }
   }
 
-  const $viewer = $('#viewer')
+  const viewer = document.getElementById('viewer')
+  const canvasWrappers = viewer.querySelectorAll('.canvasWrapper')
 
-  $viewer.on('mousedown', '.canvasWrapper', e => {
+  viewer.addEventListener('mousedown', e => {
+    let canvasWrapper = (e.target as HTMLElement).closest('.canvasWrapper')
+    if (!canvasWrapper) {
+      return;
+    }
+
     if (otherAnnotationTreating || e.shiftKey) {
       // Ignore, if other annotation is detected.
       return
@@ -259,13 +267,25 @@ export function installSpanSelection() {
       spanAnnotation = null
     }
     makeSelections(e)
-  })
-  $viewer.on('mousemove', '.canvasWrapper', e => {
+  });
+
+  viewer.addEventListener('mousemove', e => {
+    let canvasWrapper = (e.target as HTMLElement).closest('.canvasWrapper')
+    if (!canvasWrapper) {
+      return;
+    }
+
     if (mouseDown) {
       makeSelections(e)
     }
   })
-  $viewer.on('mouseup', '.canvasWrapper', e => {
+
+  viewer.addEventListener('mouseup', e => {
+    let canvasWrapper = (e.target as HTMLElement).closest('.canvasWrapper')
+    if (!canvasWrapper) {
+      return;
+    }
+
     if (mouseDown) {
       makeSelections(e)
       if (spanAnnotation) {
@@ -276,7 +296,7 @@ export function installSpanSelection() {
           bubbles: true,
           detail: { begin: startPosition, end: endPosition + 1 }
         });
-        $viewer[0].dispatchEvent(event);
+        viewer.dispatchEvent(event);
         // wait a second before destroying selection for better user experience
         setTimeout(function () {
           if (spanAnnotation) {
@@ -288,10 +308,14 @@ export function installSpanSelection() {
     mouseDown = false
   })
 
-  $viewer.on('click', '.canvasWrapper', e => {
+  viewer.addEventListener('click', e => {
+    const canvasElement = (e.target as HTMLElement).closest('.canvasWrapper')
+    if (!canvasElement) {
+      return;
+    }
+
     if (e.shiftKey) {
-      const canvasElement = e.currentTarget
-      const pageElement = canvasElement.parentNode
+      const pageElement = canvasElement.parentElement
       const page = parseInt(pageElement.getAttribute('data-page-number'))
       currentPage = page
       const { top, left } = canvasElement.getBoundingClientRect()
@@ -309,7 +333,7 @@ export function installSpanSelection() {
         bubbles: true,
         detail: { begin: position, end: position }
       });
-      $viewer[0].dispatchEvent(event);
+      viewer.dispatchEvent(event);
       // wait a second before destroying selection for better user experience
       setTimeout(function () {
         if (spanAnnotation) {
