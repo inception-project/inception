@@ -1,5 +1,4 @@
 import './pdfanno.css'
-import $ from 'jquery'
 import urijs from 'urijs'
 import * as textLayer from './page/textLayer'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
@@ -10,6 +9,10 @@ import AnnotationContainer from './core/src/annotation/container'
 import AbstractAnnotation from './core/src/annotation/abstract'
 import { installSpanSelection } from './core/src/UI/span'
 import { installRelationSelection } from './core/src/UI/relation'
+
+  // TODO make it a global const.
+  const svgLayerId = 'annoLayer'
+  const annoLayer2Id = 'annoLayer2'
 
 let annoPage: PDFAnnoPage;
 let annotationContainer: AnnotationContainer;
@@ -76,14 +79,13 @@ function adjustPageGaps() {
   // The margin between pages is fixed(9px), and never be scaled in default,
   // then manually have to change the margin.
   let scale = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
-  let borderWidth = `${9 * scale}px`
-  let marginBottom = `${-9 * scale}px`
-  let marginTop = `${1 * scale}px`
-  $('.page').css({
-    'border-top-width': borderWidth,
-    'border-bottom-width': borderWidth,
-    marginBottom,
-    marginTop
+  document.querySelectorAll('.page').forEach(e => {
+    const page = e as HTMLElement;
+    let borderWidth = `${9 * scale}px`
+    page.style.borderTopWidth = borderWidth
+    page.style.borderBottomWidth = borderWidth
+    page.style.marginBottom = `${-9 * scale}px`
+    page.style.marginTop = `${1 * scale}px`
   })
 }
 
@@ -92,8 +94,8 @@ function adjustPageGaps() {
  */
 function removeAnnoLayer() {
   // TODO Remove #annoLayer.
-  document.getElementById("annoLayer")?.remove()
-  document.getElementById("annoLayer2")?.remove()
+  document.getElementById(svgLayerId)?.remove()
+  document.getElementById(annoLayer2Id)?.remove()
 }
 
 /*
@@ -106,50 +108,50 @@ function renderAnno() {
     return
   }
 
-  // TODO make it a global const.
-  const svgLayerId = 'annoLayer'
-  const annoLayer2Id = 'annoLayer2'
-
   // Check already exists.
   if (document.getElementById(svgLayerId) && document.getElementById(annoLayer2Id)) {
     return
   }
 
-  let leftMargin = ($('#viewer').width() - $('.page').width()) / 2
+  const viewer = document.getElementById('viewer');
+  const pageElement = document.querySelector('.page')
+  let leftMargin = (viewer.clientWidth - pageElement.clientWidth) / 2
 
   // At window.width < page.width.
   if (leftMargin < 0) {
     leftMargin = 9
   }
 
-  let height = $('#viewer').height()
-  let width = $('.page').width()
+  let height = viewer.clientHeight
+  let width = pageElement.clientWidth
 
   // TODO no need ?
   // Add an annotation layer.
-  let $annoLayer = $(`<svg id="${svgLayerId}" class="${svgLayerId}"/>`).css({   // TODO CSSClass.
-    position: 'absolute',
-    top: '0px',
-    left: `${leftMargin}px`,
-    width: `${width}px`,
-    height: `${height}px`,
-    visibility: 'hidden',
-    'z-index': 2
-  })
-  // Add an annotation layer.
-  let $annoLayer2 = $(`<div id="${annoLayer2Id}"/>`).addClass('annoLayer').css({   // TODO CSSClass.
-    position: 'absolute',
-    top: '0px',
-    left: `${leftMargin}px`,
-    width: `${width}px`,
-    height: `${height}px`,
-    visibility: 'hidden',
-    'z-index': 2
-  })
+  let annoLayer = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  annoLayer.classList.add('annoLayer')
+  annoLayer.id = svgLayerId
+  annoLayer.style.position= 'absolute'
+  annoLayer.style.top= '0px'
+  annoLayer.style.left= `${leftMargin}px`
+  annoLayer.style.width= `${width}px`
+  annoLayer.style.height= `${height}px`
+  annoLayer.style.visibility= 'hidden'
+  annoLayer.style.zIndex = '2'
 
-  $('#viewer').css({
-    position: 'relative'  // TODO css.
-  }).append($annoLayer).append($annoLayer2)
+  let annoLayer2 = document.createElement('div')
+  annoLayer2.id = annoLayer2Id
+  annoLayer2.classList.add('annoLayer')
+  annoLayer2.style.position= 'absolute'
+  annoLayer2.style.top= '0px'
+  annoLayer2.style.left= `${leftMargin}px`
+  annoLayer2.style.width= `${width}px`
+  annoLayer2.style.height= `${height}px`
+  annoLayer2.style.visibility= 'hidden'
+  annoLayer2.style.zIndex = '2'
+
+  viewer.style.position = 'relative';
+  viewer.appendChild(annoLayer)
+  viewer.appendChild(annoLayer2)
 
   dispatchWindowEvent('annotationlayercreated')
 
