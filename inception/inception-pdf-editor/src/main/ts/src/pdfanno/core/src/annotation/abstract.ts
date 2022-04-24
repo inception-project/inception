@@ -160,7 +160,6 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    * Toggle the selected state.
    */
   toggleSelect() {
-
     if (this.selected) {
       this.deselect()
     } else {
@@ -248,10 +247,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   /**
    * Check the another annotation is equal to `this`.
    */
-  equalTo(anotherAnnotation) {
-    // Implement Here.
-    return false
-  }
+  abstract equalTo(anotherAnnotation): boolean;
 
   /**
    * Check the argument is an annotation.

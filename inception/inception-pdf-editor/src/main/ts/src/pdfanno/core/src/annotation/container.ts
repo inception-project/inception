@@ -114,8 +114,6 @@ export default class AnnotationContainer {
           return
         }
 
-        let pdfannoVersion = tomlObject.pdfanno || tomlObject.version
-
         // schema Validation
         if (!this.validate(tomlObject)) {
           reject(this.validate.errors)
