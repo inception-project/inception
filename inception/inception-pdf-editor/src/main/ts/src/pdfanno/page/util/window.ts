@@ -18,10 +18,11 @@ export function adjustViewerSize() {
  * Resize the height of elements adjusting to the window.
  */
 export function resizeHandler() {
-
   // PDFViewer.
-  let height = $(window).innerHeight() - $('#viewerInner').offset().top
-  $('#viewerInner').css('height', `${height}px`)
+  let viewer = document.getElementById('viewerInner');
+  let height = window.innerHeight - viewer.getBoundingClientRect().top + window.scrollY
+  viewer.style.height = `${height}px`;
 
-  $('.loadingInProgress').css('height', '100%')
+  document.querySelectorAll('.loadingInProgress').forEach(
+    e => (e as HTMLElement).style.height = '100%')
 }
