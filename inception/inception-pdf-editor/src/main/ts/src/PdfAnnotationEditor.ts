@@ -26,13 +26,11 @@ export class PdfAnnotationEditor implements AnnotationEditor {
   public constructor(element: Element, ajax: DiamAjax) {
     this.ajax = ajax;
     this.root = element;
-    console.log("PdfAnnotationEditor initializing in ", element)
 
     initPdfAnno();
   }
 
   loadAnnotations(): void {
-    console.log("Triggered loadAnnotations")
     doLoadAnnotations();
   }
 
