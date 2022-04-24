@@ -1,7 +1,7 @@
 /**
  * Create text layers which enable users to select texts.
  */
-import { customizeAnalyzeResult, extractMeta, Page } from './util/analyzer'
+import { loadPageInformation, extractMeta, Page, Meta } from './util/analyzer'
 
 /**
  * Text layer data.
@@ -11,9 +11,8 @@ let pages: Page[] = [];
 /**
  * Setup text layers.
  */
-export function setup(analyzeData) {
-  console.debug("Create text layers data")
-  pages = customizeAnalyzeResult(analyzeData)
+export function setup(analyzeData: string) {
+  pages = loadPageInformation(analyzeData)
 }
 
 function getPage(num: number): Page {
@@ -27,7 +26,7 @@ function getPage(num: number): Page {
  * @param point - { x, y } coords.
  * @return {*} - The nearest text index to the given point.
  */
- export function findIndex(pageNum: number, point) {
+export function findIndex(pageNum: number, point: { x: number, y: number }): number {
 
   const page = getPage(pageNum);
 
@@ -35,16 +34,16 @@ function getPage(num: number): Page {
     return null;
   }
 
-  const metaList = page.meta;
+  const infoList = page.infoList;
 
-  for (let i = 0, len = metaList.length; i < len; i++) {
-    const info = metaList[i]
+  for (let i = 0, len = infoList.length; i < len; i++) {
+    const info = infoList[i]
 
     if (!info) {
       continue
     }
 
-    const { position, char, x, y, w, h } = extractMeta(info)
+    const { position, x, y, w, h } = extractMeta(info)
 
     if (y <= point.y && point.y <= (y + h)) {
       if (x <= point.x && point.x <= x + w / 2) {
@@ -64,7 +63,7 @@ function getPage(num: number): Page {
  * @param point - { x, y } coords.
  * @returns {*} - The text data if found, whereas null.
  */
-export function findText(pageNum: number, point) {
+export function findText(pageNum: number, point): Meta {
 
   const page = getPage(pageNum);
 
@@ -72,20 +71,20 @@ export function findText(pageNum: number, point) {
     return null;
   }
 
-  const metaList = page.meta;
+  const infoList = page.infoList;
 
-  for (let i = 0, len = metaList.length; i < len; i++) {
-    const info = metaList[i]
+  for (let i = 0, len = infoList.length; i < len; i++) {
+    const info = infoList[i]
 
     if (!info) {
       continue
     }
 
-    const { position, char, x, y, w, h } = extractMeta(info)
+    const m = extractMeta(info)
 
     // is Hit?
-    if (x <= point.x && point.x <= (x + w) && y <= point.y && point.y <= (y + h)) {
-      return { position, char, x, y, w, h }
+    if (m.x <= point.x && point.x <= (m.x + m.w) && m.y <= point.y && point.y <= (m.y + m.h)) {
+      return m;
     }
   }
 
@@ -100,7 +99,7 @@ export function findText(pageNum: number, point) {
  * @param allowZeroWidth - whether zero-width spans are allowed or not, required for range usage
  * @returns {Array} - the texts.
  */
-export function findTexts(pageNum: number, startPosition, endPosition, allowZeroWidth?) {
+export function findTexts(pageNum: number, startPosition: number, endPosition: number, allowZeroWidth?: boolean): Meta[] {
 
   const items = []
 
@@ -114,13 +113,13 @@ export function findTexts(pageNum: number, startPosition, endPosition, allowZero
     return null;
   }
 
-  const metaList = page.meta;
+  const infoList = page.infoList;
 
   let inRange = false
 
-  for (let index = 0, len = metaList.length; index < len; index++) {
+  for (let index = 0, len = infoList.length; index < len; index++) {
 
-    const info = metaList[index]
+    const info = infoList[index]
 
     if (!info) {
       if (inRange) {
@@ -186,34 +185,51 @@ export function findTexts(pageNum: number, startPosition, endPosition, allowZero
   return items
 }
 
+export class Rect {
+  top: number;
+  left: number;
+  right: number;
+  bottom: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+
+  static fromMeta(m: Meta): Rect {
+    const r = new Rect();
+    r.top = m.y
+    r.left = m.x
+    r.right = m.x + m.w
+    r.bottom = m.y + m.h
+    r.x = m.x;
+    r.y = m.y;
+    r.width = m.w;
+    r.height = m.h;
+    return r;
+  }
+}
+
 /**
  * Merge user selections.
  */
-export function mergeRects(rects) {
+export function mergeRects(metas: Meta[]): Rect[] {
 
   // Remove null.
-  rects = rects.filter(rect => rect)
+  metas = metas.filter(m => m)
 
-  if (rects.length === 0) {
+  if (metas.length === 0) {
     return []
   }
 
   // Normalize.
-  rects = rects.map(rect => {
-    rect.top = rect.top || rect.y
-    rect.left = rect.left || rect.x
-    rect.right = rect.right || (rect.x + rect.w)
-    rect.bottom = rect.bottom || (rect.y + rect.h)
-    return rect
-  })
+  let rects = metas.map(m => Rect.fromMeta(m))
 
-  // a virtical margin of error.
+  // a vertical margin of error.
   const error = 5 * scale()
 
-  let tmp = convertToObject(rects[0])
+  let tmp = rects[0]
   let newRects = [tmp]
   for (let i = 1; i < rects.length; i++) {
-
     // Same line -> Merge rects.
     if (withinMargin(rects[i].top, tmp.top, error)) {
       tmp.top = Math.min(tmp.top, rects[i].top)
@@ -227,7 +243,7 @@ export function mergeRects(rects) {
 
       // New line -> Create a new rect.
     } else {
-      tmp = convertToObject(rects[i])
+      tmp = rects[i]
       newRects.push(tmp)
     }
   }
@@ -236,25 +252,9 @@ export function mergeRects(rects) {
 }
 
 /**
- * Convert a DOMList to a javascript plan object.
- */
-function convertToObject(rect) {
-  return {
-    top: rect.top,
-    left: rect.left,
-    right: rect.right,
-    bottom: rect.bottom,
-    x: rect.x,
-    y: rect.y,
-    width: rect.width,
-    height: rect.height
-  }
-}
-
-/**
  * Check the value(x) within the range.
  */
-function withinMargin(x, base, margin) {
+function withinMargin(x: number, base: number, margin: number) {
   return (base - margin) <= x && x <= (base + margin)
 }
 

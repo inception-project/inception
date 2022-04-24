@@ -14,32 +14,66 @@
  *   9427<TAB>4<TAB>DRAW<TAB>MOVE_TO<TAB>129.75435<TAB>79.0188
  */
 export interface Page {
-  body;
-  meta;
+  body: string;
+  infoList: Info[];
   page: number;
 }
 
-export function customizeAnalyzeResult(pdftxt: string): Page[] {
+export type Info = [
+  position: number, 
+  page: number, 
+  type: string, 
+  char: string, 
+  meta: number[]
+]
+
+export class Meta {
+  position: number;
+  page: number;
+  type: string;
+  char: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+
+  static parse(info: Info): Meta {
+    const [x, y, w, h] = info[4]
+    const m = new Meta();
+    m.position = info[0];
+    m.page = info[1];
+    m.type = 'TEXT';
+    m.char = info[3];
+    m.x = x;
+    m.y = y;
+    m.w = w;
+    m.h = h;
+    return m;
+  }
+}
+
+export function loadPageInformation(pdftxt: string): Page[] {
   let pages: Page[] = []
   let page: number;
   let body: string;
-  let meta
+  let meta: Info[];
   let tokenId = 0
+
   pdftxt.split('\n').forEach(line => {
     tokenId++
 
     if (page && !line) {
       body += ' '
-      meta.push(line)
+      meta.push(undefined)
       return
     } 
 
-    let info = line.split('\t')
-    if (!isTextLine(info)) {
+    let lineFields = line.split('\t')
+    if (!isTextLine(lineFields)) {
       return
     }
 
-    info = parseInfo([tokenId].concat(info))
+    let info = parseInfo(tokenId, lineFields)
 
     let {
       page: pageNumber,
@@ -53,7 +87,7 @@ export function customizeAnalyzeResult(pdftxt: string): Page[] {
       meta = []
     }
     else if (page !== pageNumber) {
-      pages.push({ body, meta, page })
+      pages.push({ body, infoList: meta, page })
       body = ''
       meta = []
       page = pageNumber
@@ -69,7 +103,7 @@ export function customizeAnalyzeResult(pdftxt: string): Page[] {
     }
   })
 
-  pages.push({ body, meta, page })
+  pages.push({ body, infoList: meta, page })
 
   return pages
 }
@@ -77,10 +111,10 @@ export function customizeAnalyzeResult(pdftxt: string): Page[] {
 /**
  * Check the line is TEXT.
  */
-function isTextLine(info) {
+function isTextLine(lineFields: string[]): boolean {
   // info must be "page<TAB>char<TAB>x y w h"
-  if (info.length === 3 && info[2].split(' ').length === 4) {
-    if (info[1].length >= 2 && info[1].startsWith('[')) {
+  if (lineFields.length === 3 && lineFields[2].split(' ').length === 4) {
+    if (lineFields[1].length >= 2 && lineFields[1].startsWith('[')) {
       // 1 [MOVE_TO] 129.75435 61.265076
       return false
     }
@@ -93,16 +127,14 @@ function isTextLine(info) {
 
 /**
  * Parse Info data.
- * @param {*} info
- * @returns
  */
-function parseInfo(info) {
+function parseInfo(tokenId: number, lineFields: string[]): Info {
   return [
-    parseInt(info[0]),
-    parseInt(info[1]),
+    tokenId,
+    parseInt(lineFields[0]),
     'TEXT',
-    info[2],
-    info[3].split(' ').map(parseFloat)
+    lineFields[1],
+    lineFields[2].split(' ').map(parseFloat)
   ]
 }
 
@@ -111,29 +143,4 @@ function parseInfo(info) {
  */
 export function extractMeta(meta): Meta {
   return Meta.parse(meta);
-}
-
-class Meta {
-  position: number;
-  page: number;
-  type: string;
-  char: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-
-  static parse(meta): Meta {
-    const [x, y, w, h] = meta[4]
-    const m = new Meta();
-    m.position = meta[0];
-    m.page = meta[1];
-    m.type = 'TEXT';
-    m.char = meta[3];
-    m.x = x;
-    m.y = y;
-    m.w = w;
-    m.h = h;
-    return m;
-  }
 }
