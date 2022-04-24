@@ -1,4 +1,3 @@
-import $ from 'jquery'
 import { renderKnob } from './renderKnob'
 import { hex2rgba } from '../utils/color'
 import SpanAnnotation from '../annotation/span'
@@ -30,7 +29,8 @@ export function renderSpan(a: SpanAnnotation, svg): HTMLElement {
   const viewport = pageView.viewport
   const scale = viewport.scale
   let merginBetweenPages = 1
-  let pageTopY = $('#pageContainer' + a.page).position().top / scale + paddingTop + merginBetweenPages
+  let pageContainer = document.getElementById(`pageContainer${a.page}`)
+  let pageTopY = pageContainer.offsetTop / scale + paddingTop + merginBetweenPages
 
   const rectangles = a.rectangles.map(r => {
     return {
