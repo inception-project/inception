@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
@@ -75,7 +74,6 @@ public class PdfAnnotationEditor
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
     private static final String CREATE_SPAN = "createSpan";
-    private static final String DELETE_RECOMMENDATION = "deleteRecommendation";
     private static final String GET_ANNOTATIONS = "getAnnotations";
 
     private static final String VIS = "vis";
@@ -241,30 +239,6 @@ public class PdfAnnotationEditor
         }
     }
 
-    private void deleteRecommendation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-            CAS aCas)
-    {
-        try {
-            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
-            if (paramId.isSynthetic()) {
-                getModelObject().clearArmedSlot();
-                Offset offset = new Offset(aParams);
-                Offset docOffset = convertToDocumentOffset(offset, documentModel,
-                        view.getPdfExtractFile());
-                if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
-                    extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
-                            aCas, paramId, "doAction");
-                }
-                else {
-                    handleError("Unable to delete recommendation: No match was found", aTarget);
-                }
-            }
-        }
-        catch (AnnotationException | IOException e) {
-            handleError("Unable to delete recommendation", e, aTarget);
-        }
-    }
-
     private void getAnnotations(AjaxRequestTarget aTarget, IRequestParameters aParams)
     {
         page = aParams.getParameterValue("page").toInt();
@@ -299,19 +273,15 @@ public class PdfAnnotationEditor
             CAS cas = getCasProvider().get();
             String action = aParams.getParameterValue("action").toString();
 
-            // Doing anything but selecting or creating a span annotation when a
-            // slot is armed will unarm it
-            if (getModelObject().isSlotArmed()
-                    && !(action.equals(CREATE_SPAN) || action.equals(DELETE_RECOMMENDATION))) {
-                getModelObject().clearArmedSlot();
-            }
+            // // Doing anything but selecting or creating a span annotation when a
+            // // slot is armed will unarm it
+            // if (getModelObject().isSlotArmed() && !(action.equals(CREATE_SPAN))) {
+            // getModelObject().clearArmedSlot();
+            // }
 
             switch (action) {
             case CREATE_SPAN:
                 createSpanAnnotation(aTarget, aParams, cas);
-                break;
-            case DELETE_RECOMMENDATION:
-                deleteRecommendation(aTarget, aParams, cas);
                 break;
             case GET_ANNOTATIONS:
                 getAnnotations(aTarget, aParams);

@@ -72,21 +72,7 @@ export class PdfAnnotationEditor implements AnnotationEditor {
   onDoubleClickAnnotation(ev: CustomEvent) {
     let ann = ev.detail as AbstractAnnotation;
 
-    if (ann.type === 'span') {
-      let spanAnn = ann as SpanAnnotation;
-      var data = {
-        "action": "deleteRecommendation",
-        "id": ann.uuid,
-        "page": spanAnn.page,
-        "begin": spanAnn.textRange[0],
-        "end": spanAnn.textRange[1]
-      }
-      parent.Wicket.Ajax.ajax({
-        "m": "POST",
-        "ep": data,
-        "u": window.apiUrl
-      });
-    }
+    this.ajax.triggerExtensionAction(ann.uuid);
   }
 
   onCreateRelationAnnotation(ev: CustomEvent) {
