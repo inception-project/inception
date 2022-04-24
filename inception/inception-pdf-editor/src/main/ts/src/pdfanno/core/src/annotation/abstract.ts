@@ -90,7 +90,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   /**
    * Handle a click event.
    */
-  handleClickEvent(e) {
+  handleClickEvent(e: Event) {
     if (!this.selected) {
       this.toggleSelect()
     }
@@ -99,7 +99,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
       // TODO Use common function.
       let event = document.createEvent('CustomEvent')
       event.initCustomEvent('annotationSelected', true, true, this)
-      window.dispatchEvent(event)
+      this.$element[0].dispatchEvent(event)
     }
   }
 

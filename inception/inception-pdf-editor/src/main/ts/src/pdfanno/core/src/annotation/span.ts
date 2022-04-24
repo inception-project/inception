@@ -7,8 +7,8 @@ import { mergeRects, findTexts } from '../../../page/textLayer'
  */
 export default class SpanAnnotation extends AbstractAnnotation {
 
-  type = 'span'
   rectangles = []
+  readOnly = false
   knob = true
   border = true
   text = null
@@ -25,6 +25,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   constructor() {
     super()
 
+    this.type = 'span'
     this.uuid = null
     this.text = null
     this.color = null
@@ -198,31 +199,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     this.emit('circlehoverout', this)
   }
 
-  /**
-   * Handle a click event.
-   */
-  handleClickEvent(e) {
-    super.handleClickEvent(e)
-    if (this.selected) {
-      var data = {
-        "action": "selectSpan",
-        "id": this.uuid,
-        "page": this.page,
-        "begin": this.textRange[0],
-        "end": this.textRange[1]
-      }
-      parent.Wicket.Ajax.ajax({
-        "m": "POST",
-        "ep": data,
-        "u": window.apiUrl,
-        "sh": [],
-        "fh": [function () {
-          alert('Something went wrong on selecting a span annotation for: ' + data)
-        }]
-      });
-    }
-  }
-
   export(id) {
 
     let text = (this.selectedText || '')
@@ -284,29 +260,29 @@ export default class SpanAnnotation extends AbstractAnnotation {
   enableViewMode() {
     this.disableViewMode()
     super.enableViewMode()
-    var singleClickAction = this.handleClickEvent
-    var doubleClickAction = this.deleteRecommendation
-    if (!this.readOnly) {
-      this.$element.find('.anno-knob').on('click', function (e) {
-        clickCount++
-        if (clickCount === 1) {
-          timer = setTimeout(function () {
-            try {
-              singleClickAction() // perform single-click action
-            } finally {
-              clickCount = 0      // after action performed, reset counter
-            }
-          }, CLICK_DELAY);
-        } else {
-          clearTimeout(timer)     // prevent single-click action
-          try {
-            doubleClickAction()   // perform double-click action
-          } finally {
-            clickCount = 0        // after action performed, reset counter
-          }
-        }
-      })
+    if (this.readOnly) {
+      return;
     }
+
+    this.$element.find('.anno-knob').on('click', (ev: Event) => {
+      clickCount++
+      if (clickCount === 1) {
+        timer = setTimeout(() => {
+          try {
+            this.handleClickEvent(ev) // perform single-click action
+          } finally {
+            clickCount = 0      // after action performed, reset counter
+          }
+        }, CLICK_DELAY);
+      } else {
+        clearTimeout(timer)     // prevent single-click action
+        try {
+          this.deleteRecommendation()   // perform double-click action
+        } finally {
+          clickCount = 0        // after action performed, reset counter
+        }
+      }
+    })
   }
 
   /**

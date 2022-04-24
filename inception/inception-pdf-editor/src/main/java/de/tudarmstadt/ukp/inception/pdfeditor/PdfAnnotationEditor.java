@@ -78,9 +78,7 @@ public class PdfAnnotationEditor
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
     private static final String CREATE_SPAN = "createSpan";
-    private static final String SELECT_SPAN = "selectSpan";
     private static final String CREATE_RELATION = "createRelation";
-    private static final String SELECT_RELATION = "selectRelation";
     private static final String DELETE_RECOMMENDATION = "deleteRecommendation";
     private static final String GET_ANNOTATIONS = "getAnnotations";
 
@@ -143,18 +141,6 @@ public class PdfAnnotationEditor
                 PdfAnnotationEditorJavascriptResourceReference.get())));
         return props;
     }
-
-    // @Override
-    // public void render(AjaxRequestTarget aTarget)
-    // {
-    // Selection selection = getModelObject().getSelection();
-    // renderPdfAnnoModel(aTarget);
-    // if (selection.getAnnotation() != null) {
-    // aTarget.appendJavaScript(
-    // "var anno = pdfanno.contentWindow.annoPage.findAnnotationById('"
-    // + selection.getAnnotation() + "');" + "anno && anno.select();");
-    // }
-    // }
 
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
     {
@@ -259,49 +245,6 @@ public class PdfAnnotationEditor
         }
     }
 
-    private void selectSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-            CAS aCas)
-    {
-        VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
-        selectSpanAnnotation(aTarget, paramId, aCas);
-    }
-
-    private void selectSpanAnnotation(AjaxRequestTarget aTarget, VID paramId, CAS aCas)
-    {
-        try {
-            if (paramId.isSynthetic()) {
-                extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget, aCas,
-                        paramId, "spanOpenDialog");
-                return;
-            }
-
-            AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, paramId.getId());
-            Offset offset = new Offset(fs.getBegin(), fs.getEnd());
-
-            if (offset.getBegin() > -1 && offset.getEnd() > -1) {
-                AnnotatorState state = getModelObject();
-                if (state.isSlotArmed()) {
-                    // When filling a slot, the current selection is *NOT* changed. The
-                    // Span annotation which owns the slot that is being filled remains
-                    // selected!
-                    getActionHandler().actionFillSlot(aTarget, aCas, offset.getBegin(),
-                            offset.getEnd(), paramId);
-                }
-                else {
-                    state.getSelection().selectSpan(paramId, aCas, offset.getBegin(),
-                            offset.getEnd());
-                    getActionHandler().actionSelect(aTarget);
-                }
-            }
-            else {
-                handleError("Unable to select span annotation: No match was found", aTarget);
-            }
-        }
-        catch (AnnotationException | IOException e) {
-            handleError("Unable to select span annotation", e, aTarget);
-        }
-    }
-
     private void createRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
             CAS aCas)
         throws IOException
@@ -338,38 +281,6 @@ public class PdfAnnotationEditor
             // if existing annotations are not re-rendered after an attempt to create a relation.
             // it can happen that mouse will hang when leaving annotation knob while dragging
             renderPdfAnnoModel(aTarget);
-        }
-    }
-
-    private void selectRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-            CAS aCas)
-    {
-        try {
-            AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class,
-                    aParams.getParameterValue("origin").toInt());
-            AnnotationFS targetFs = selectByAddr(aCas, AnnotationFS.class,
-                    aParams.getParameterValue("target").toInt());
-
-            AnnotatorState state = getModelObject();
-            Selection selection = state.getSelection();
-            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
-
-            // HACK: If an arc was clicked that represents a link feature, then
-            // open the associated span annotation instead.
-            if (paramId.isSlotSet()) {
-                paramId = new VID(paramId.getId());
-                selectSpanAnnotation(aTarget, paramId, aCas);
-            }
-            else {
-                selection.selectArc(paramId, originFs, targetFs);
-
-                if (selection.getAnnotation().isSet()) {
-                    getActionHandler().actionSelect(aTarget);
-                }
-            }
-        }
-        catch (Exception e) {
-            handleError("Unable to select relation annotation", e, aTarget);
         }
     }
 
@@ -433,8 +344,8 @@ public class PdfAnnotationEditor
 
             // Doing anything but selecting or creating a span annotation when a
             // slot is armed will unarm it
-            if (getModelObject().isSlotArmed() && !(action.equals(SELECT_SPAN)
-                    || action.equals(CREATE_SPAN) || action.equals(DELETE_RECOMMENDATION))) {
+            if (getModelObject().isSlotArmed()
+                    && !(action.equals(CREATE_SPAN) || action.equals(DELETE_RECOMMENDATION))) {
                 getModelObject().clearArmedSlot();
             }
 
@@ -442,14 +353,8 @@ public class PdfAnnotationEditor
             case CREATE_SPAN:
                 createSpanAnnotation(aTarget, aParams, cas);
                 break;
-            case SELECT_SPAN:
-                selectSpanAnnotation(aTarget, aParams, cas);
-                break;
             case CREATE_RELATION:
                 createRelationAnnotation(aTarget, aParams, cas);
-                break;
-            case SELECT_RELATION:
-                selectRelationAnnotation(aTarget, aParams, cas);
                 break;
             case DELETE_RECOMMENDATION:
                 deleteRecommendation(aTarget, aParams, cas);

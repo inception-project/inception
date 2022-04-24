@@ -316,30 +316,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
   }
 
   /**
-   * The callback that is called at clicked.
-   */
-  handleClickEvent(e) {
-    super.handleClickEvent(e)
-    if (this.selected) {
-      var data = {
-        "action": "selectRelation",
-        "id": this.uuid,
-        "origin": this.rel1Annotation.uuid,
-        "target": this.rel2Annotation.uuid
-      }
-      parent.Wicket.Ajax.ajax({
-        "m": "POST",
-        "ep": data,
-        "u": window.apiUrl,
-        "sh": [],
-        "fh": [function () {
-          alert('Something went wrong on selecting a relation annotation for: ' + data)
-        }]
-      });
-    }
-  }
-
-  /**
    * Export Data for TOML.
    */
   export() {
@@ -373,7 +349,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
     super.enableViewMode()
 
     if (!this.readOnly) {
-      this.$element.find('path').on('click', this.handleClickEvent)
+      this.$element.find('path').on('click', ev => this.handleClickEvent(ev))
     }
   }
 

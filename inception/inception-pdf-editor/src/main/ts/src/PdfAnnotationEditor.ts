@@ -18,6 +18,8 @@
 import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-js-api";
 import "./PdfAnnotationEditor.css"
 import { initPdfAnno, getAnnotations as doLoadAnnotations } from "./pdfanno/pdfanno";
+import AbstractAnnotation from "./pdfanno/core/src/annotation/abstract";
+import SpanAnnotation from "./pdfanno/core/src/annotation/span";
 
 export class PdfAnnotationEditor implements AnnotationEditor {
   private ajax: DiamAjax;
@@ -28,10 +30,21 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     this.root = element;
 
     initPdfAnno();
+
+    element.addEventListener('annotationSelected', ev => this.onAnnotationSelected(ev));
   }
 
   loadAnnotations(): void {
     doLoadAnnotations();
+  }
+
+  onAnnotationSelected(ev: CustomEvent) {
+    let ann = ev.detail as AbstractAnnotation;
+    if (!ann.selected) {
+      return;
+    }
+
+    this.ajax.selectAnnotation(ann.uuid);
   }
 
   destroy(): void {
