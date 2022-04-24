@@ -236,22 +236,11 @@ export default class SpanAnnotation extends AbstractAnnotation {
   }
 
   deleteRecommendation() {
-    var data = {
-      "action": "deleteRecommendation",
-      "id": this.uuid,
-      "page": this.page,
-      "begin": this.textRange[0],
-      "end": this.textRange[1]
-    }
-    parent.Wicket.Ajax.ajax({
-      "m": "POST",
-      "ep": data,
-      "u": window.apiUrl,
-      "sh": [],
-      "fh": [function () {
-        alert('Something went wrong on deleting a recommendation for: ' + data)
-      }]
+    let event = new CustomEvent('doubleClickAnnotation', {
+      bubbles: true,
+      detail: this
     });
+    this.$element[0].dispatchEvent(event);
   }
 
   /**

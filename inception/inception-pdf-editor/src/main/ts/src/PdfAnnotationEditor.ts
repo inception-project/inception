@@ -34,6 +34,7 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     element.addEventListener('annotationSelected', ev => this.onAnnotationSelected(ev));
     element.addEventListener('createSpanAnnotation', ev => this.onCreateSpanAnnotation(ev));
     element.addEventListener('createRelationAnnotation', ev => this.onCreateRelationAnnotation(ev));
+    element.addEventListener('doubleClickAnnotation', ev => this.onDoubleClickAnnotation(ev));
   }
 
   loadAnnotations(): void {
@@ -66,6 +67,26 @@ export class PdfAnnotationEditor implements AnnotationEditor {
       "ep": data,
       "u": window.apiUrl
     });
+  }
+
+  onDoubleClickAnnotation(ev: CustomEvent) {
+    let ann = ev.detail as AbstractAnnotation;
+
+    if (ann.type === 'span') {
+      let spanAnn = ann as SpanAnnotation;
+      var data = {
+        "action": "deleteRecommendation",
+        "id": ann.uuid,
+        "page": spanAnn.page,
+        "begin": spanAnn.textRange[0],
+        "end": spanAnn.textRange[1]
+      }
+      parent.Wicket.Ajax.ajax({
+        "m": "POST",
+        "ep": data,
+        "u": window.apiUrl
+      });
+    }
   }
 
   onCreateRelationAnnotation(ev: CustomEvent) {
