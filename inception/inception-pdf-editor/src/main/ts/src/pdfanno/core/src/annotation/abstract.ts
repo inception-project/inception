@@ -2,7 +2,7 @@ import $ from 'jquery'
 import EventEmitter from 'events'
 import appendChild from '../render/appendChild'
 import { DEFAULT_RADIUS } from '../render/renderKnob'
-import { dispatchWindowEvent } from '../utils/event'
+import { dispatchWindowEvent } from '../../../shared/util'
 
 /**
  * Abstract Annotation Class.
