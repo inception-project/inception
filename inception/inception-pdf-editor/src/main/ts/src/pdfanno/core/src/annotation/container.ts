@@ -2,7 +2,6 @@ import { fromTomlString } from '../utils/tomlString'
 import { dispatchWindowEvent } from '../../../shared/util'
 import SpanAnnotation from './span'
 import RelationAnnotation from './relation.js'
-import semver from 'semver'
 import Ajv, { ValidateFunction } from 'ajv'
 import AbstractAnnotation from './abstract'
 
@@ -77,53 +76,6 @@ export default class AnnotationContainer {
     return annotation
   }
 
-  /**
-   * Change the annotations color, if the text is the same in an annotation.
-   *
-   * annoType : span, one-way, two-way, link
-   */
-  changeColor({ text, color, uuid, annoType }) {
-    console.log('changeColor: ', text, color, uuid)
-    if (uuid) {
-      const a = this.findById(uuid)
-      if (a) {
-        a.color = color
-        a.render()
-        a.enableViewMode()
-      }
-    } else {
-      this.getAllAnnotations()
-        .filter(a => a.text === text)
-        .filter(a => {
-          if (annoType === 'span') {
-            return a.type === annoType
-          } else if (annoType === 'relation') {
-            if (a.type === 'relation' && a.direction === annoType) {
-              return true
-            }
-          }
-          return false
-        }).forEach(a => {
-          a.color = color
-          a.render()
-          a.enableViewMode()
-        })
-    }
-  }
-
-  setColor(colorMap) {
-    console.log('setColor:', colorMap)
-    Object.keys(colorMap).forEach(annoType => {
-      if (annoType === 'default') {
-        return
-      }
-      Object.keys(colorMap[annoType]).forEach(text => {
-        const color = colorMap[annoType][text]
-        this.changeColor({ text, color, annoType })
-      })
-    })
-  }
-
   _findSpan(tomlObject, id) {
     return tomlObject.spans.find(v => {
       return id === v.id
@@ -164,62 +116,17 @@ export default class AnnotationContainer {
 
         let pdfannoVersion = tomlObject.pdfanno || tomlObject.version
 
-        if (semver.gt(pdfannoVersion, '0.4.0')) {
-          // schema Validation
-          if (!this.validate(tomlObject)) {
-            reject(this.validate.errors)
-            return
-          }
-          this.importAnnotations041(tomlObject, i, readOnly, getColor)
-        } else {
-          this.importAnnotations040(tomlObject, i, readOnly, getColor)
+        // schema Validation
+        if (!this.validate(tomlObject)) {
+          reject(this.validate.errors)
+          return
         }
+        this.importAnnotations041(tomlObject, i, readOnly, getColor)
       })
 
       // Done.
       resolve(true)
     })
-  }
-
-  /**
-   * Import annotations.
-   */
-  importAnnotations040(tomlObject, tomlIndex, readOnly, getColor) {
-
-    for (const key in tomlObject) {
-
-      let d = tomlObject[key]
-
-      // Skip if the content is not object, like version string.
-      if (typeof d !== 'object') {
-        continue
-      }
-
-      d.readOnly = readOnly
-
-      if (d.type === 'span') {
-
-        let span = SpanAnnotation.newInstanceFromTomlObject(d)
-        span.color = getColor(tomlIndex, span.type, span.text)
-        span.save()
-        span.render()
-        span.enableViewMode()
-
-        // Relation.
-      } else if (d.type === 'relation') {
-
-        d.rel1 = tomlObject[d.ids[0]].uuid
-        d.rel2 = tomlObject[d.ids[1]].uuid
-        let relation = RelationAnnotation.newInstanceFromTomlObject(d)
-        relation.color = getColor(tomlIndex, relation.direction, relation.text)
-        relation.save()
-        relation.render()
-        relation.enableViewMode()
-
-      } else {
-        console.log('Unknown: ', key, d)
-      }
-    }
   }
 
   /**

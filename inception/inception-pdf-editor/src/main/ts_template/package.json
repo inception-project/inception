@@ -20,7 +20,6 @@
     "events": "^3.3.0",
     "request": "^2.81.0",
     "request-promise": "^4.2.2",
-    "semver": "^5.5.0",
     "toml": "github:yoheiMune/toml-node",
     "urijs": "^1.19.11",
     "pdfjs-dist": "^1.10.100",
