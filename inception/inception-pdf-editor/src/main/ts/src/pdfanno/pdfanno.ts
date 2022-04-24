@@ -213,7 +213,6 @@ async function displayViewer() {
 
     // Init textLayers.
     textLayer.setup(analyzeResult)
-    annoPage.pdftxt = analyzeResult
 
     const renderTimeout = 500
     window.pagechangeEventCounter = 0

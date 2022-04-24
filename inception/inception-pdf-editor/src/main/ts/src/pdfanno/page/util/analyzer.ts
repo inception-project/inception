@@ -16,65 +16,60 @@
 export interface Page {
   body;
   meta;
-  page : number;
+  page: number;
 }
 
-export function customizeAnalyzeResult (pdftxt) : Page[] {
-  let pages : Page[] = []
-  let page
-  let body
+export function customizeAnalyzeResult(pdftxt: string): Page[] {
+  let pages: Page[] = []
+  let page: number;
+  let body: string;
   let meta
   let tokenId = 0
   pdftxt.split('\n').forEach(line => {
-
     tokenId++
 
     if (page && !line) {
       body += ' '
       meta.push(line)
-    } else {
-      let info = line.split('\t')
+      return
+    } 
 
-      if (!isTextLine(info)) {
-        return
-      }
+    let info = line.split('\t')
+    if (!isTextLine(info)) {
+      return
+    }
 
-      info = parseInfo([tokenId].concat(info))
+    info = parseInfo([tokenId].concat(info))
 
-      let {
-        page : pageNumber,
-        type,
-        char
-      } = extractMeta(info)
-      if (!page) {
-        page = pageNumber
-        body = ''
-        meta = []
-      } else if (page !== pageNumber) {
-        pages.push({
-          body,
-          meta,
-          page
-        })
-        body = ''
-        meta = []
-        page = pageNumber
+    let {
+      page: pageNumber,
+      type,
+      char
+    } = extractMeta(info)
+
+    if (!page) {
+      page = pageNumber
+      body = ''
+      meta = []
+    }
+    else if (page !== pageNumber) {
+      pages.push({ body, meta, page })
+      body = ''
+      meta = []
+      page = pageNumber
+    }
+
+    if (type === 'TEXT') {
+      // Special replace, like "NO_UNICODE"
+      if (char === 'NO_UNICODE') {
+        char = '?'
       }
-      if (type === 'TEXT') {
-        // Special replace, like "NO_UNICODE"
-        if (char === 'NO_UNICODE') {
-          char = '?'
-        }
-        body += char
-        meta.push(info)
-      }
+      body += char
+      meta.push(info)
     }
   })
-  pages.push({
-    body,
-    meta,
-    page
-  })
+
+  pages.push({ body, meta, page })
 
   return pages
 }
@@ -82,7 +77,7 @@ export function customizeAnalyzeResult (pdftxt) : Page[] {
 /**
  * Check the line is TEXT.
  */
-function isTextLine (info) {
+function isTextLine(info) {
   // info must be "page<TAB>char<TAB>x y w h"
   if (info.length === 3 && info[2].split(' ').length === 4) {
     if (info[1].length >= 2 && info[1].startsWith('[')) {
@@ -101,7 +96,7 @@ function isTextLine (info) {
  * @param {*} info
  * @returns
  */
-function parseInfo (info) {
+function parseInfo(info) {
   return [
     parseInt(info[0]),
     parseInt(info[1]),
@@ -114,16 +109,31 @@ function parseInfo (info) {
 /**
  * Interpret the meta data.
  */
-export function extractMeta (meta) {
-  const [ x, y, w, h ] = meta[4]
-  return {
-    position : meta[0],
-    page     : meta[1],
-    type     : 'TEXT',
-    char     : meta[3],
-    x,
-    y,
-    w,
-    h
+export function extractMeta(meta): Meta {
+  return Meta.parse(meta);
+}
+
+class Meta {
+  position: number;
+  page: number;
+  type: string;
+  char: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+
+  static parse(meta): Meta {
+    const [x, y, w, h] = meta[4]
+    const m = new Meta();
+    m.position = meta[0];
+    m.page = meta[1];
+    m.type = 'TEXT';
+    m.char = meta[3];
+    m.x = x;
+    m.y = y;
+    m.w = w;
+    m.h = h;
+    return m;
   }
 }
