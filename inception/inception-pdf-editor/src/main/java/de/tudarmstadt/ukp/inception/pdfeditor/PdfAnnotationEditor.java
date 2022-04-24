@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer.convertToDocumentOffset;
@@ -37,7 +36,6 @@ import javax.servlet.ServletContext;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -57,7 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -78,7 +75,6 @@ public class PdfAnnotationEditor
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
     private static final String CREATE_SPAN = "createSpan";
-    private static final String CREATE_RELATION = "createRelation";
     private static final String DELETE_RECOMMENDATION = "deleteRecommendation";
     private static final String GET_ANNOTATIONS = "getAnnotations";
 
@@ -245,45 +241,6 @@ public class PdfAnnotationEditor
         }
     }
 
-    private void createRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-            CAS aCas)
-        throws IOException
-    {
-        try {
-            VID origin = VID.parseOptional(aParams.getParameterValue("origin").toString());
-            VID target = VID.parseOptional(aParams.getParameterValue("target").toString());
-
-            if (target.isNotSet()) {
-                // relation drawing was not stopped over a target
-                return;
-            }
-
-            if (origin.isSynthetic() || target.isSynthetic()) {
-                throw new AnnotationException("Cannot create relations on suggestions");
-            }
-
-            AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class, origin.getId());
-            AnnotationFS targetFs = selectByAddr(aCas, AnnotationFS.class, target.getId());
-
-            AnnotatorState state = getModelObject();
-            Selection selection = state.getSelection();
-            selection.selectArc(VID.NONE_ID, originFs, targetFs);
-
-            if (selection.getAnnotation().isNotSet()) {
-                getActionHandler().actionCreateOrUpdate(aTarget, aCas);
-            }
-        }
-        catch (AnnotationException | CASRuntimeException e) {
-            handleError("Unable to create relation annotation", e, aTarget);
-        }
-        finally {
-            // workaround to enable further creation of relations in PDFAnno
-            // if existing annotations are not re-rendered after an attempt to create a relation.
-            // it can happen that mouse will hang when leaving annotation knob while dragging
-            renderPdfAnnoModel(aTarget);
-        }
-    }
-
     private void deleteRecommendation(AjaxRequestTarget aTarget, IRequestParameters aParams,
             CAS aCas)
     {
@@ -352,9 +309,6 @@ public class PdfAnnotationEditor
             switch (action) {
             case CREATE_SPAN:
                 createSpanAnnotation(aTarget, aParams, cas);
-                break;
-            case CREATE_RELATION:
-                createRelationAnnotation(aTarget, aParams, cas);
                 break;
             case DELETE_RECOMMENDATION:
                 deleteRecommendation(aTarget, aParams, cas);

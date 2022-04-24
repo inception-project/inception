@@ -33,6 +33,7 @@ export class PdfAnnotationEditor implements AnnotationEditor {
 
     element.addEventListener('annotationSelected', ev => this.onAnnotationSelected(ev));
     element.addEventListener('createSpanAnnotation', ev => this.onCreateSpanAnnotation(ev));
+    element.addEventListener('createRelationAnnotation', ev => this.onCreateRelationAnnotation(ev));
   }
 
   loadAnnotations(): void {
@@ -65,6 +66,12 @@ export class PdfAnnotationEditor implements AnnotationEditor {
       "ep": data,
       "u": window.apiUrl
     });
+  }
+
+  onCreateRelationAnnotation(ev: CustomEvent) {
+    let { origin, target } = ev.detail;
+
+    this.ajax.createRelationAnnotation(origin, target);
   }
 
   destroy(): void {

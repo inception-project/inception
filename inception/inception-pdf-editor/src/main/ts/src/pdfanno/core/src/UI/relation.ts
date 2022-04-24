@@ -70,21 +70,17 @@ export function installRelationSelection() {
   })
 
   $viewer.on('mouseup', () => {
-    if (mousedownFired && onAnnotation && drawing) {
-      var data = {
-        "action": "createRelation",
-        "origin": relationAnnotation.rel1Annotation.uuid,
-        "target": hoveredAnnotation ? hoveredAnnotation.uuid : -1,
-      }
-      parent.Wicket.Ajax.ajax({
-        "m": "POST",
-        "ep": data,
-        "u": window.apiUrl,
-        "sh": [],
-        "fh": [function () {
-          alert('Something went wrong on creating new relation for: ' + data)
-        }]
+    if (mousedownFired && onAnnotation && drawing && hoveredAnnotation) {
+      let event = new CustomEvent('createRelationAnnotation', {
+        bubbles: true,
+        detail: { 
+          origin: relationAnnotation.rel1Annotation.uuid, 
+          target: hoveredAnnotation.uuid }
       });
+      $viewer[0].dispatchEvent(event);
+    }
+    if (relationAnnotation) {
+      relationAnnotation.destroy()
     }
     drawing = false
     onAnnotation = false
