@@ -1,6 +1,11 @@
-import $ from 'jquery'
 import RelationAnnotation from '../annotation/relation.js'
 import { scaleDown } from './utils'
+
+let relationAnnotation = null
+let hoveredAnnotation = null
+let mousedownFired = false
+let onAnnotation = false
+let drawing = false
 
 /**
  * Create a new Relation annotation.
@@ -38,7 +43,7 @@ export function createRelation({ type, anno1, anno2, text, color }) {
 
 export function installRelationSelection() {
 
-  const $viewer = $('#viewer')
+  const viewer = document.getElementById('viewer')
 
   window.addEventListener('annotationHoverIn', (e) => {
     hoveredAnnotation = e.detail
@@ -48,7 +53,11 @@ export function installRelationSelection() {
     hoveredAnnotation = null
   })
 
-  $viewer.on('mousedown', '.anno-knob', () => {
+  viewer.addEventListener('mousedown', ev => {
+    if (!(ev.target as HTMLElement).closest('.anno-knob')) {
+      return;
+    }
+
     mousedownFired = true
     if (hoveredAnnotation) {
       onAnnotation = true
@@ -59,7 +68,7 @@ export function installRelationSelection() {
     }
   })
 
-  $viewer.on('mousemove', (e) => {
+  viewer.addEventListener('mousemove', (e) => {
     if (mousedownFired && onAnnotation) {
       drawing = true
       let p = scaleDown(getClientXY(e))
@@ -69,7 +78,7 @@ export function installRelationSelection() {
     }
   })
 
-  $viewer.on('mouseup', () => {
+  viewer.addEventListener('mouseup', () => {
     if (mousedownFired && onAnnotation && drawing && hoveredAnnotation) {
       let event = new CustomEvent('createRelationAnnotation', {
         bubbles: true,
@@ -77,7 +86,7 @@ export function installRelationSelection() {
           origin: relationAnnotation.rel1Annotation.uuid, 
           target: hoveredAnnotation.uuid }
       });
-      $viewer[0].dispatchEvent(event);
+      viewer.dispatchEvent(event);
     }
     if (relationAnnotation) {
       relationAnnotation.destroy()
@@ -95,9 +104,3 @@ function getClientXY(e) {
   let y = e.clientY - rect.top
   return { x, y }
 }
-
-let relationAnnotation = null
-let hoveredAnnotation = null
-let mousedownFired = false
-let onAnnotation = false
-let drawing = false
