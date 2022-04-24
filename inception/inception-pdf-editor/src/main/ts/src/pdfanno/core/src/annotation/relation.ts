@@ -8,11 +8,8 @@ import SpanAnnotation from './span'
  */
 export default class RelationAnnotation extends AbstractAnnotation {
 
-  type: string;
   direction: unknown;
   text: string;
-  color: string;
-  $element: JQuery<HTMLElement>;
   x1: number;
   y1: number;
   x2: number;
@@ -35,13 +32,18 @@ export default class RelationAnnotation extends AbstractAnnotation {
     this.text = null
     this.color = null
     this.readOnly = false
-    this.$element = this.createDummyElement()
+    this.element = this.createDummyElement()
 
     // for render.
     this.x1 = 0
     this.y1 = 0
     this.x2 = 0
     this.y2 = 0
+
+    // Need to bind these event handler methods
+    this.handleSingleClickEvent = this.handleSingleClickEvent.bind(this)
+    this.handleHoverInEvent = this.handleHoverInEvent.bind(this)
+    this.handleHoverOutEvent = this.handleHoverOutEvent.bind(this)
 
     window.globalEvent.on('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.on('enableViewMode', this.enableViewMode)
@@ -79,10 +81,10 @@ export default class RelationAnnotation extends AbstractAnnotation {
    * Set a hover event.
    */
   setHoverEvent() {
-    this.$element.find('path').hover(
-      this.handleHoverInEvent,
-      this.handleHoverOutEvent
-    )
+    this.element.querySelectorAll('path').forEach(e => {
+      e.addEventListener('mouseenter', this.handleHoverInEvent)
+      e.addEventListener('mouseleave', this.handleHoverOutEvent)
+    })
   }
 
   /**
@@ -128,7 +130,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Render the annotation.
    */
-  render() : boolean {
+  render(): boolean {
     this.setStartEndPosition()
     return super.render()
   }
@@ -314,30 +316,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
   }
 
   /**
-   * Export Data for TOML.
-   */
-  export() {
-    return {
-      head: this.rel1Annotation.exportId + '',
-      tail: this.rel2Annotation.exportId + '',
-      label: this.text || ''
-    }
-  }
-
-  /**
- * Export Data for TOML.
- * @returns {{type: string, dir: null, ids: *[], label: *|string}}
- */
-  export040() {
-    return {
-      type: this.type,
-      dir: this.direction,
-      ids: [this.rel1Annotation.exportId, this.rel2Annotation.exportId],
-      label: this.text || ''
-    }
-  }
-
-  /**
    * Enable view mode.
    */
   enableViewMode() {
@@ -347,7 +325,8 @@ export default class RelationAnnotation extends AbstractAnnotation {
     super.enableViewMode()
 
     if (!this.readOnly) {
-      this.$element.find('path').on('click', ev => this.handleClickEvent(ev))
+      this.element.querySelectorAll('path').forEach(e => 
+        e.addEventListener('click', this.handleSingleClickEvent))
     }
   }
 
@@ -356,7 +335,8 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   disableViewMode() {
     super.disableViewMode()
-    this.$element.find('path').off('click')
+    this.element.querySelectorAll('path').forEach(e => 
+      e.removeEventListener('click', this.handleSingleClickEvent))
   }
 
   /**

@@ -263,11 +263,11 @@ function getPDFName(url) {
  */
 function showLoader(display: boolean) {
   if (display) {
-    $('#pdfLoading').removeClass('close hidden')
+    document.querySelectorAll('#pdfLoading').forEach(e => e.classList.remove('close', 'hidden'))
   } else {
-    $('#pdfLoading').addClass('close')
+    document.querySelectorAll('#pdfLoading').forEach(e => e.classList.add('close'))
     setTimeout(function () {
-      $('#pdfLoading').addClass('hidden')
+      document.querySelectorAll('#pdfLoading').forEach(e => e.classList.add('hidden'))
     }, 1000)
   }
 }

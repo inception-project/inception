@@ -11,12 +11,11 @@ export default class SpanAnnotation extends AbstractAnnotation {
   knob = true
   border = true
   text = null
-  color = null
   selectedText = null
   textRange = null
   page = null
   zIndex: number;
-  $element = null
+  element: HTMLElement = null
 
   /**
    * Constructor.
@@ -31,7 +30,12 @@ export default class SpanAnnotation extends AbstractAnnotation {
     this.selectedText = null
     this.textRange = null
     this.page = null
-    this.$element = this.createDummyElement()
+    this.element = this.createDummyElement()
+
+    // Need to bind these event handler methods
+    this.handleClickEvent = this.handleClickEvent.bind(this)
+    this.handleHoverInEvent = this.handleHoverInEvent.bind(this)
+    this.handleHoverOutEvent = this.handleHoverOutEvent.bind(this)
 
     window.globalEvent.on('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.on('enableViewMode', this.enableViewMode)
@@ -95,10 +99,10 @@ export default class SpanAnnotation extends AbstractAnnotation {
    * Set a hover event.
    */
   setHoverEvent() {
-    this.$element.find('.anno-knob').hover(
-      this.handleHoverInEvent,
-      this.handleHoverOutEvent
-    )
+    this.element.querySelectorAll('.anno-knob').forEach(e => {
+      e.addEventListener('mouseenter', this.handleHoverInEvent)
+      e.addEventListener('mouseleave', this.handleHoverOutEvent)
+    })
   }
 
   /**
@@ -234,12 +238,12 @@ export default class SpanAnnotation extends AbstractAnnotation {
     }
   }
 
-  deleteRecommendation() {
+  handleDoubleClickEvent() {
     let event = new CustomEvent('doubleClickAnnotation', {
       bubbles: true,
       detail: this
     });
-    this.$element[0].dispatchEvent(event);
+    this.element.dispatchEvent(event);
   }
 
   /**
@@ -252,25 +256,28 @@ export default class SpanAnnotation extends AbstractAnnotation {
       return;
     }
 
-    this.$element.find('.anno-knob').on('click', (ev: Event) => {
-      clickCount++
-      if (clickCount === 1) {
-        timer = setTimeout(() => {
-          try {
-            this.handleClickEvent(ev) // perform single-click action
-          } finally {
-            clickCount = 0      // after action performed, reset counter
-          }
-        }, CLICK_DELAY);
-      } else {
-        clearTimeout(timer)     // prevent single-click action
+    this.element.querySelectorAll('.anno-knob').forEach(e => 
+      e.addEventListener('click', this.handleClickEvent))
+  }
+
+  handleClickEvent(ev: Event) {
+    clickCount++
+    if (clickCount === 1) {
+      timer = setTimeout(() => {
         try {
-          this.deleteRecommendation()   // perform double-click action
+          this.handleSingleClickEvent(ev) // perform single-click action
         } finally {
-          clickCount = 0        // after action performed, reset counter
+          clickCount = 0      // after action performed, reset counter
         }
+      }, CLICK_DELAY);
+    } else {
+      clearTimeout(timer)     // prevent single-click action
+      try {
+        this.handleDoubleClickEvent()   // perform double-click action
+      } finally {
+        clickCount = 0        // after action performed, reset counter
       }
-    })
+    }
   }
 
   /**
@@ -278,7 +285,8 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   disableViewMode() {
     super.disableViewMode()
-    this.$element.find('.anno-knob').off('click')
+    this.element.querySelectorAll('.anno-knob').forEach(e => 
+      e.removeEventListener('click', this.handleAnyClickEvent))
   }
 }
 

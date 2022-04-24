@@ -1,4 +1,3 @@
-import $ from 'jquery'
 import EventEmitter from 'events'
 import appendChild from '../render/appendChild'
 import { DEFAULT_RADIUS } from '../render/renderKnob'
@@ -9,13 +8,14 @@ import { dispatchWindowEvent } from '../../../shared/util'
  */
 export default abstract class AbstractAnnotation extends EventEmitter {
   uuid: string = null
+  color: string = null
   deleted = false;
   disabled = false;
   selected = false;
   readOnly = false;
   hoverEventDisable = false;
   selectedTime = null;
-  $element: JQuery<any> = null;
+  element: HTMLElement = null;
   exportId: any;
   type: 'span' | 'relation';
 
@@ -44,20 +44,20 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    * Render annotation(s).
    */
   render(): boolean {
-    this.$element.remove()
+    this.element.remove()
 
     if (this.deleted) {
       return false
     }
 
     const base = document.getElementById('annoLayer2')
-    this.$element = $(appendChild(base, this))
+    this.element = appendChild(base, this)
 
     if (!this.hoverEventDisable && this.setHoverEvent) {
       this.setHoverEvent()
     }
 
-    this.selected && this.$element.addClass('--selected')
+    this.selected && this.element.classList.remove('--selected')
 
     this.disabled && this.disable()
 
@@ -76,7 +76,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    */
   destroy() {
     this.deleted = true
-    this.$element.remove()
+    this.element.remove()
 
     let promise = Promise.resolve()
 
@@ -90,7 +90,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   /**
    * Handle a click event.
    */
-  handleClickEvent(e: Event) {
+  handleSingleClickEvent(e: Event) {
     if (!this.selected) {
       this.toggleSelect()
     }
@@ -99,7 +99,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
       // TODO Use common function.
       let event = document.createEvent('CustomEvent')
       event.initCustomEvent('annotationSelected', true, true, this)
-      this.$element[0].dispatchEvent(event)
+      this.element.dispatchEvent(event)
     }
   }
 
@@ -127,14 +127,14 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    * Highlight the annotation.
    */
   highlight() {
-    this.$element.addClass('--hover')
+    this.element.classList.add('--hover')
   }
 
   /**
    * Dehighlight the annotation.
    */
   dehighlight() {
-    this.$element.removeClass('--hover')
+    this.element.classList.remove('--hover')
   }
 
   /**
@@ -143,7 +143,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   select() {
     this.selected = true
     this.selectedTime = Date.now()
-    this.$element.addClass('--selected')
+    this.element.classList.add('--selected')
   }
 
   /**
@@ -153,7 +153,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
     console.log('deselect')
     this.selected = false
     this.selectedTime = null
-    this.$element.removeClass('--selected')
+    this.element.classList.remove('--selected')
   }
 
   /**
@@ -186,30 +186,31 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    * Check whether the annotation is selected.
    */
   isSelected() {
-    return this.$element.hasClass('--selected')
+    return this.element.classList.contains('--selected')
   }
 
   /**
    * Create a dummy DOM element for the timing that a annotation hasn't be specified yet.
    */
-  createDummyElement() {
-    return $('<div class="dummy"/>')
+  createDummyElement(): HTMLElement {
+    let element = document.createElement("dummy");
+    element.classList.add("dummy");
+    return element;
   }
 
   /**
    * Get the central position of the boundingCircle.
    */
   getBoundingCirclePosition() {
-    const $circle = this.$element.find('.anno-knob')
-    if ($circle.length > 0) {
-      return {
-        // x : parseFloat($circle.css('left')) + parseFloat($circle.css('width')) / 2,
-        // y : parseFloat($circle.css('top')) + parseFloat($circle.css('height')) / 2
-        x: parseFloat($circle.css('left')) + DEFAULT_RADIUS / 2.0,
-        y: parseFloat($circle.css('top')) + DEFAULT_RADIUS / 2.0
-      }
+    let knob = this.element.querySelector('.anno-knob') as HTMLElement;
+    if (!knob) {
+      return null;
     }
-    return null
+
+    return {
+      x: parseFloat(knob.style.left) + DEFAULT_RADIUS / 2.0,
+      y: parseFloat(knob.style.top) + DEFAULT_RADIUS / 2.0
+    }
   }
 
   /**
@@ -236,12 +237,12 @@ export default abstract class AbstractAnnotation extends EventEmitter {
 
   enable() {
     this.disabled = false
-    this.$element.css('pointer-events', 'auto')
+    this.element.style.pointerEvents = 'auto'
   }
 
   disable() {
     this.disabled = true
-    this.$element.css('pointer-events', 'none')
+    this.element.style.pointerEvents = 'none'
   }
 
   /**
