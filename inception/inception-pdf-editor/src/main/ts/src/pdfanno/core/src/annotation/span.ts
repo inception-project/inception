@@ -1,4 +1,3 @@
-import { uuid } from '../../../anno-ui/utils'
 import AbstractAnnotation from './abstract'
 import { mergeRects, findTexts } from '../../../page/textLayer'
 
@@ -43,7 +42,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   public static newInstance(annotation: SpanAnnotation, allowZeroWidth?: boolean) {
     let a = new SpanAnnotation()
-    a.uuid = annotation.uuid || uuid()
+    a.uuid = annotation.uuid
     a.text = annotation.text
     a.color = annotation.color
     a.readOnly = annotation.readOnly || false

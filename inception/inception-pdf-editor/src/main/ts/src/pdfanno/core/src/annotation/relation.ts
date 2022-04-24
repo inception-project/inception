@@ -1,4 +1,3 @@
-import { uuid } from '../../../anno-ui/utils'
 import AbstractAnnotation from './abstract'
 import { getRelationTextPosition } from '../utils/relation.js'
 import { anyOf } from '../../../shared/util'
@@ -29,7 +28,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
   constructor() {
     super()
 
-    this.uuid = uuid()
     this.type = 'relation'
     this.direction = null
     this.rel1Annotation = null
@@ -55,7 +53,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   public static newInstance(annotation) {
     let a = new RelationAnnotation()
-    a.uuid = annotation.uuid || uuid()
+    a.uuid = annotation.uuid
     a.direction = 'relation'
     a.rel1Annotation = AbstractAnnotation.isAnnotation(annotation.rel1) ? annotation.rel1 : window.annotationContainer.findById(annotation.rel1)
     a.rel2Annotation = AbstractAnnotation.isAnnotation(annotation.rel2) ? annotation.rel2 : window.annotationContainer.findById(annotation.rel2)

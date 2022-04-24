@@ -1,4 +1,3 @@
-import { uuid } from '../../../anno-ui/utils'
 import { fromTomlString } from '../utils/tomlString'
 import { dispatchWindowEvent } from '../../../shared/util'
 import SpanAnnotation from './span'
@@ -196,7 +195,6 @@ export default class AnnotationContainer {
         continue
       }
 
-      d.uuid = uuid()
       d.readOnly = readOnly
 
       if (d.type === 'span') {
@@ -234,7 +232,7 @@ export default class AnnotationContainer {
       const objs = tomlObject[key]
       if (Array.isArray(objs)) {
         objs.forEach(obj => {
-          obj.uuid = obj.id || uuid()
+          obj.uuid = obj.id
           obj.readOnly = readOnly
 
           if (key === 'spans') {
