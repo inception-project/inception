@@ -24,7 +24,7 @@ export interface DiamAjax {
 
   deleteAnnotation(id: VID): void;
 
-  createSpanAnnotation(offsets: Array<Offsets>, spanText: string): void;
+  createSpanAnnotation(offsets: Array<Offsets>, spanText?: string): void;
 
   createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void;
 

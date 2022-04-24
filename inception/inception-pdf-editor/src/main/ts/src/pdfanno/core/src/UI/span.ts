@@ -2,15 +2,16 @@ import $ from 'jquery'
 import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
 import { findIndex, findTexts, findText } from '../../../page/textLayer'
+import { dispatchWindowEvent } from '../../../shared/util'
 
-function scale () {
+function scale() {
   return window.PDFView.pdfViewer.getPageView(0).viewport.scale
 }
 
 /**
  * Merge user selections.
  */
-function mergeRects (rects) {
+function mergeRects(rects) {
 
   // Remove null.
   rects = rects.filter(rect => rect)
@@ -33,13 +34,13 @@ function mergeRects (rects) {
 
     // Same line -> Merge rects.
     if (withinMargin(rects[i].top, tmp.top, error)) {
-      tmp.top    = Math.min(tmp.top, rects[i].top)
-      tmp.left   = Math.min(tmp.left, rects[i].left)
-      tmp.right  = Math.max(tmp.right, rects[i].right)
+      tmp.top = Math.min(tmp.top, rects[i].top)
+      tmp.left = Math.min(tmp.left, rects[i].left)
+      tmp.right = Math.max(tmp.right, rects[i].right)
       tmp.bottom = Math.max(tmp.bottom, rects[i].bottom)
-      tmp.x      = tmp.left
-      tmp.y      = tmp.top
-      tmp.width  = tmp.right - tmp.left
+      tmp.x = tmp.left
+      tmp.y = tmp.top
+      tmp.width = tmp.right - tmp.left
       tmp.height = tmp.bottom - tmp.top
 
       // New line -> Create a new rect.
@@ -55,30 +56,30 @@ function mergeRects (rects) {
 /**
  * Convert a DOMList to a javascript plan object.
  */
-function convertToObject (rect) {
+function convertToObject(rect) {
   return {
-    top    : rect.top,
-    left   : rect.left,
-    right  : rect.right,
-    bottom : rect.bottom,
-    x      : rect.x,
-    y      : rect.y,
-    width  : rect.width,
-    height : rect.height
+    top: rect.top,
+    left: rect.left,
+    right: rect.right,
+    bottom: rect.bottom,
+    x: rect.x,
+    y: rect.y,
+    width: rect.width,
+    height: rect.height
   }
 }
 
 /**
  * Check the value(x) within the range.
  */
-function withinMargin (x, base, margin) {
+function withinMargin(x, base, margin) {
   return (base - margin) <= x && x <= (base + margin)
 }
 
 /**
  * Save a rect annotation.
  */
-export function saveSpan ({
+export function saveSpan({
   text = '',
   rects = [],
   textRange = [],
@@ -97,7 +98,7 @@ export function saveSpan ({
   }
 
   let annotation = {
-    rectangles : rects,
+    rectangles: rects,
     selectedText,
     text,
     textRange,
@@ -127,7 +128,7 @@ window.saveSpan = saveSpan
 /**
  * Get the rect area of User selected.
  */
-export function getRectangles () {
+export function getRectangles() {
 
   if (!currentPage || !startPosition || !endPosition) {
     return null
@@ -142,7 +143,7 @@ export function getRectangles () {
 /**
  * Create a span by current texts selection.
  */
-export function createSpan ({ text = null, zIndex = 10, color = null }) {
+export function createSpan({ text = null, zIndex = 10, color = null }) {
 
   if (!currentPage || !startPosition || !endPosition) {
     return null
@@ -160,12 +161,12 @@ export function createSpan ({ text = null, zIndex = 10, color = null }) {
 
     const mergedRect = mergeRects(targets)
     const annotation = saveSpan({
-      rects     : mergedRect,
-      page      : currentPage,
+      rects: mergedRect,
+      page: currentPage,
       text,
       zIndex,
       color,
-      textRange : [ startPosition, endPosition ],
+      textRange: [startPosition, endPosition],
       selectedText
     })
 
@@ -185,7 +186,7 @@ export function createSpan ({ text = null, zIndex = 10, color = null }) {
 
 export function installSpanSelection() {
 
-  function setPositions (e) {
+  function setPositions(e) {
 
     const canvasElement = e.currentTarget
     const pageElement = canvasElement.parentNode
@@ -215,7 +216,7 @@ export function installSpanSelection() {
     }
   }
 
-  function makeSelections (e) {
+  function makeSelections(e) {
 
     setPositions(e)
 
@@ -228,14 +229,14 @@ export function installSpanSelection() {
     if (targets.length > 0) {
       const mergedRect = mergeRects(targets)
       spanAnnotation = saveSpan({
-        rects        : mergedRect,
-        page         : currentPage,
-        save         : false,
-        focusToLabel : false,
-        color        : '#0f0',
-        knob         : false,
-        border       : false,
-        textRange    : [ startPosition, endPosition ]
+        rects: mergedRect,
+        page: currentPage,
+        save: false,
+        focusToLabel: false,
+        color: '#0f0',
+        knob: false,
+        border: false,
+        textRange: [startPosition, endPosition]
       })
       spanAnnotation.disable()
     }
@@ -271,28 +272,17 @@ export function installSpanSelection() {
         spanAnnotation.deselect()
       }
       if (startPosition !== null && endPosition !== null) {
-        var data = {
-          "action": "createSpan",
-          "page": currentPage,
-          "begin": startPosition,
-          "end": endPosition + 1
-        }
-        parent.Wicket.Ajax.ajax({
-          "m": "POST",
-          "ep": data,
-          "u": window.apiUrl,
-          "sh": [function () {
-            // wait a second before destroying selection for better user experience
-            setTimeout(function () {
-              if (spanAnnotation) {
-                spanAnnotation.destroy()
-              }
-            }, 1000)
-          }],
-          "fh": [function () {
-              alert('Something went wrong on creating new annotation for: ' + data)
-          }]
+        let event = new CustomEvent('createSpanAnnotation', {
+          bubbles: true,
+          detail: { begin: startPosition, end: endPosition + 1 }
         });
+        $viewer[0].dispatchEvent(event);
+        // wait a second before destroying selection for better user experience
+        setTimeout(function () {
+          if (spanAnnotation) {
+            spanAnnotation.destroy()
+          }
+        }, 1000)
       }
     }
     mouseDown = false
@@ -309,25 +299,23 @@ export function installSpanSelection() {
       const y = e.clientY - top
 
       const position = findIndex(page, scaleDown({ x, y }))
-      var data = {
-        "action": "createSpan",
-        "page": currentPage,
-        "begin": position,
-        "end": position
-      }
-      console.log(data)
-      if (position != null) {
-        parent.Wicket.Ajax.ajax({
-          "m"  : "POST",
-          "ep" : data,
-          "u"  : window.apiUrl,
-          "fh" : [function () {
-            alert('Something went wrong on creating new zero-width span annotation for: ' + data)
-          }]
-        })
-      } else {
+
+      if (position == null) {
         console.log('Position is null, cannot create zero-width span annotaton')
+        return
       }
+
+      let event = new CustomEvent('createSpanAnnotation', {
+        bubbles: true,
+        detail: { begin: position, end: position }
+      });
+      $viewer[0].dispatchEvent(event);
+      // wait a second before destroying selection for better user experience
+      setTimeout(function () {
+        if (spanAnnotation) {
+          spanAnnotation.destroy()
+        }
+      }, 1000)
       currentPage = null
     }
   })
@@ -346,8 +334,8 @@ export function installSpanSelection() {
 
 let mouseDown = false
 let initPosition = null
-let startPosition = null
-let endPosition = null
-let currentPage = null
-let spanAnnotation = null
+let startPosition: number = null
+let endPosition: number = null
+let currentPage: number = null
+let spanAnnotation: SpanAnnotation = null
 

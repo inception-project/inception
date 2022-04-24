@@ -32,6 +32,7 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     initPdfAnno();
 
     element.addEventListener('annotationSelected', ev => this.onAnnotationSelected(ev));
+    element.addEventListener('createSpanAnnotation', ev => this.onCreateSpanAnnotation(ev));
   }
 
   loadAnnotations(): void {
@@ -45,6 +46,25 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     }
 
     this.ajax.selectAnnotation(ann.uuid);
+  }
+
+  onCreateSpanAnnotation(ev: CustomEvent) {
+    let { begin, end } = ev.detail;
+
+    // FIXME: Cannot use DIAM here because the server side needs to perform an offset conversion
+    // from the PDF offsets to the backend offsets
+    // this.ajax.createSpanAnnotation([[begin, end]]);
+
+    var data = {
+      "action": "createSpan",
+      "begin": begin,
+      "end": end
+    }
+    parent.Wicket.Ajax.ajax({
+      "m": "POST",
+      "ep": data,
+      "u": window.apiUrl
+    });
   }
 
   destroy(): void {
