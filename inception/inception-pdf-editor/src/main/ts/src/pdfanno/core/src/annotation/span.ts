@@ -186,58 +186,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     this.emit('hoverout')
   }
 
-  /**
-   * Handle a hoverin event.
-   */
-  handleHoverInEvent(e) {
-    super.handleHoverInEvent(e)
-    this.emit('circlehoverin', this)
-  }
-
-  /**
-   * Handle a hoverout event.
-   */
-  handleHoverOutEvent(e) {
-    super.handleHoverOutEvent(e)
-    this.emit('circlehoverout', this)
-  }
-
-  export(id) {
-
-    let text = (this.selectedText || '')
-      .replace(/\r\n/g, ' ')
-      .replace(/\r/g, ' ')
-      .replace(/\n/g, ' ')
-      .replace(/"/g, '')
-      .replace(/\\/g, '')
-
-    return {
-      id: id + '',
-      page: this.page,
-      label: this.text || '',
-      text,
-      textrange: this.textRange
-    }
-  }
-
-  export040() {
-
-    let text = (this.selectedText || '')
-      .replace(/\r\n/g, ' ')
-      .replace(/\r/g, ' ')
-      .replace(/\n/g, ' ')
-      .replace(/"/g, '')
-      .replace(/\\/g, '')
-
-    return {
-      type: this.type,
-      page: this.page,
-      label: this.text || '',
-      text,
-      textrange: this.textRange
-    }
-  }
-
   handleDoubleClickEvent() {
     let event = new CustomEvent('doubleClickAnnotation', {
       bubbles: true,
@@ -286,7 +234,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   disableViewMode() {
     super.disableViewMode()
     this.element.querySelectorAll('.anno-knob').forEach(e => 
-      e.removeEventListener('click', this.handleAnyClickEvent))
+      e.removeEventListener('click', this.handleClickEvent))
   }
 }
 

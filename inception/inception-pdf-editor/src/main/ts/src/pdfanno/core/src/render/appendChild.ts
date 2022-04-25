@@ -11,7 +11,7 @@ import RelationAnnotation from '../annotation/relation'
  * @param {Object} viewport The page's viewport data
  * @return {Node}
  */
-function transform (node, viewport) {
+function transform (node: HTMLElement, viewport): HTMLElement {
   node.style.transform = `scale(${viewport.scale})`
   return node
 }
@@ -24,13 +24,13 @@ function transform (node, viewport) {
  * @param {Object} viewport The page's viewport data
  * @return {SVGElement} A node that was created and appended by this function
  */
-export default function appendChild (svg, annotation: AbstractAnnotation, viewport?) {
+export default function appendChild (svg, annotation: AbstractAnnotation, viewport?): HTMLElement {
   // TODO no need third argument(viewport) ?
   if (!viewport) {
     viewport = window.PDFView.pdfViewer.getPageView(0).viewport
   }
 
-  let child
+  let child: HTMLElement
   switch (annotation.type) {
   case 'span':
     child = renderSpan(annotation as SpanAnnotation, svg)

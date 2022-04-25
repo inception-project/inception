@@ -1,5 +1,4 @@
 import AbstractAnnotation from './abstract'
-import { getRelationTextPosition } from '../utils/relation.js'
 import { anyOf } from '../../../shared/util'
 import SpanAnnotation from './span'
 
@@ -47,7 +46,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
 
     window.globalEvent.on('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.on('enableViewMode', this.enableViewMode)
-    window.globalEvent.on('rectmoveend', this.handleRelMoveEnd)
+    // window.globalEvent.on('rectmoveend', this.handleRelMoveEnd)
   }
 
   /**
@@ -95,7 +94,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
     if (this._rel1Annotation) {
       this._rel1Annotation.on('hoverin', this.handleRelHoverIn)
       this._rel1Annotation.on('hoverout', this.handleRelHoverOut)
-      this._rel1Annotation.on('rectmove', this.handleRelMove)
+      // this._rel1Annotation.on('rectmove', this.handleRelMove)
       this._rel1Annotation.on('delete', this.handleRelDelete)
     }
   }
@@ -115,7 +114,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
     if (this._rel2Annotation) {
       this._rel2Annotation.on('hoverin', this.handleRelHoverIn)
       this._rel2Annotation.on('hoverout', this.handleRelHoverOut)
-      this._rel2Annotation.on('rectmove', this.handleRelMove)
+      // this._rel2Annotation.on('rectmove', this.handleRelMove)
       this._rel2Annotation.on('delete', this.handleRelDelete)
     }
   }
@@ -159,39 +158,20 @@ export default class RelationAnnotation extends AbstractAnnotation {
     if (this._rel1Annotation) {
       this._rel1Annotation.removeListener('hoverin', this.handleRelHoverIn)
       this._rel1Annotation.removeListener('hoverout', this.handleRelHoverOut)
-      this._rel1Annotation.removeListener('rectmove', this.handleRelMove)
       this._rel1Annotation.removeListener('delete', this.handleRelDelete)
       delete this._rel1Annotation
     }
     if (this._rel2Annotation) {
       this._rel2Annotation.removeListener('hoverin', this.handleRelHoverIn)
       this._rel2Annotation.removeListener('hoverout', this.handleRelHoverOut)
-      this._rel2Annotation.removeListener('rectmove', this.handleRelMove)
       this._rel2Annotation.removeListener('delete', this.handleRelDelete)
       delete this._rel2Annotation
     }
 
     window.globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
-    window.globalEvent.removeListener('rectmoveend', this.handleRelMoveEnd)
 
     return promise
-  }
-
-  /**
-   * Delete the annotation if selected.
-   */
-  deleteSelectedAnnotation(): boolean {
-    return super.deleteSelectedAnnotation()
-  }
-
-  /**
-   * Get the position for text.
-   */
-  // TODO No need ?
-  getTextPosition() {
-    this.setStartEndPosition()
-    return getRelationTextPosition(this.x1, this.y1, this.x2, this.y2, this.text, this.uuid)
   }
 
   /**
@@ -274,29 +254,12 @@ export default class RelationAnnotation extends AbstractAnnotation {
   }
 
   /**
-   * The callback that is called relations has been moved.
-   */
-  handleRelMove() {
-    this.render()
-  }
-
-  /**
    * The callback that is called relations has finished to be moved.
    */
   handleRelMoveEnd(rectAnnotation) {
     if (this._rel1Annotation === rectAnnotation || this._rel2Annotation === rectAnnotation) {
       this.enableViewMode()
     }
-  }
-
-  /**
-   * The callback that is called the text content is changed.
-   *
-   * @param {String} newText - the content an user changed.
-   */
-  handleTextChanged(newText) {
-    this.text = newText
-    this.save()
   }
 
   /**
@@ -319,7 +282,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
    * Enable view mode.
    */
   enableViewMode() {
-
     this.disableViewMode()
 
     super.enableViewMode()
