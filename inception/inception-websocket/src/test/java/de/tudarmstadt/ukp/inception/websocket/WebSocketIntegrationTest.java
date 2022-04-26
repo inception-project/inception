@@ -81,7 +81,7 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
         properties = { //
                 "spring.main.banner-mode=off", //
                 "websocket.enabled=true", //
-                "websocket.loggedevent.enabled=true", //
+                "websocket.logged-events.enabled=true", //
                 "event-logging.enabled=true" })
 @SpringBootApplication( //
         exclude = { //

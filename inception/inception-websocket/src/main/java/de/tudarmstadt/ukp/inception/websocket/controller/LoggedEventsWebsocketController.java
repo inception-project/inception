@@ -15,13 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.footer;
+package de.tudarmstadt.ukp.inception.websocket.controller;
 
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
+import java.security.Principal;
+import java.util.List;
 
-public interface RecommendationEventMessageController
+import org.springframework.context.ApplicationEvent;
+
+import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+
+public interface LoggedEventsWebsocketController
 {
-    String handleException(Throwable exception);
+    /***
+     * Push messages on received application events to named user
+     */
+    public void onApplicationEvent(ApplicationEvent aEvent);
 
-    void onRecommenderErrorEvent(RecommenderTaskEvent aEvent);
+    /**
+     * Return the most recent logged events to the subscribing client
+     * 
+     * @param aPrincipal
+     *            the subscribing client
+     * @return the most recent events
+     */
+    public List<LoggedEventMessage> getMostRecentLoggedEvents(Principal aPrincipal);
+
+    public String handleException(Throwable exception);
 }

@@ -40,9 +40,9 @@ import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @Controller
-@ConditionalOnExpression("${websocket.enabled:true} and ${websocket.loggedevent.enabled:false}")
-public class LoggedEventMessageControllerImpl
-    implements LoggedEventMessageController
+@ConditionalOnExpression("${websocket.enabled:true} and ${websocket.logged-events.enabled:false}")
+public class LoggedEventsWebsocketControllerImpl
+    implements LoggedEventsWebsocketController
 {
     private static final int MAX_EVENTS = 5;
 
@@ -56,7 +56,7 @@ public class LoggedEventMessageControllerImpl
     private final EventLoggingAdapterRegistry adapterRegistry;
 
     @Autowired
-    public LoggedEventMessageControllerImpl(SimpMessagingTemplate aMsgTemplate,
+    public LoggedEventsWebsocketControllerImpl(SimpMessagingTemplate aMsgTemplate,
             EventLoggingAdapterRegistry aAdapterRegistry, DocumentService aDocService,
             ProjectService aProjectService, EventRepository aEventRepository)
     {
