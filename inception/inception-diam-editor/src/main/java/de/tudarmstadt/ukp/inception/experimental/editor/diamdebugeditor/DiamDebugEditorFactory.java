@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.experimental.editor.diamdebugeditor;
 
 import org.apache.wicket.model.IModel;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -27,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 
+@ConditionalOnExpression("${websocket.enabled:true}")
 @Component("diamDebugEditor")
 public class DiamDebugEditorFactory
     extends AnnotationEditorFactoryImplBase
