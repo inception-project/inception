@@ -132,7 +132,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHa
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //
         "de.tudarmstadt.ukp.inception.log.model" })
-public class DiamController_ViewportRoutingTest
+public class DiamWebsocketController_ViewportRoutingTest
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -143,7 +143,7 @@ public class DiamController_ViewportRoutingTest
     private @LocalServerPort int port;
     private String websocketUrl;
 
-    private @Autowired DiamController sut;
+    private @Autowired DiamWebsocketController sut;
 
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
