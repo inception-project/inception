@@ -1,4 +1,8 @@
 /*
+ * Copyright 2017
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -15,22 +19,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
+package de.tudarmstadt.ukp.inception.pdfeditor.config;
 
-import java.security.Principal;
-import java.util.Optional;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import org.springframework.http.ResponseEntity;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
-public interface XHtmlXmlDocumentViewController
+@Configuration
+public class PdfAnnotationEditorWebMvcConfiguration
+    implements WebMvcConfigurer
 {
-    String BASE_URL = "/de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentViewController";
-
-    String getDocumentUrl(SourceDocument aDoc);
-
-    ResponseEntity<String> getDocument(long aProjectId, long aDocumentId, Optional<String> aEditor,
-            Principal aPrincipal)
-        throws Exception;
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry aRegistry)
+    {
+        aRegistry.addResourceHandler("/resources/pdfanno/**").addResourceLocations(
+                "classpath:/de/tudarmstadt/ukp/inception/pdfeditor/resources/");
+    }
 }

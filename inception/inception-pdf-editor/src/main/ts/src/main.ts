@@ -15,22 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externaleditor.xhtml;
+import { PdfAnnotationEditorFactory } from './PdfAnnotationEditorFactory';
 
-import java.security.Principal;
-import java.util.Optional;
+const INSTANCE = new PdfAnnotationEditorFactory()
 
-import org.springframework.http.ResponseEntity;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
-public interface XHtmlXmlDocumentViewController
-{
-    String BASE_URL = "/de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentViewController";
-
-    String getDocumentUrl(SourceDocument aDoc);
-
-    ResponseEntity<String> getDocument(long aProjectId, long aDocumentId, Optional<String> aEditor,
-            Principal aPrincipal)
-        throws Exception;
+export function factory(): PdfAnnotationEditorFactory {
+  return INSTANCE;
 }

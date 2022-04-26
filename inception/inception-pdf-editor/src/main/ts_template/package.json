@@ -1,0 +1,36 @@
+{
+  "name": "@inception-project/${project.artifactId}",
+  "version": "${semver}",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "node build.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/inception-project/inception.git"
+  },
+  "author": "hshindo, yoheiMune, INCEpTION Team",
+  "license": "(MIT AND Apache-2.0)",
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
+  "dependencies": {
+    "@inception-project/inception-js-api": "${semver}",
+    "events": "^3.3.0",
+    "toml": "github:yoheiMune/toml-node",
+    "urijs": "^1.19.11",
+    "pdfjs-dist": "^1.10.100",
+    "yargs": "^17.3.1"
+  },
+  "devDependencies": {
+    "esbuild": "${esbuild.version}",
+    "eslint": "${eslint.version}",
+    "typescript": "${typescript.version}",
+    "fs-extra": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
+    "@typescript-eslint/parser": "${typescript-eslint.version}",
+    "@types/urijs": "^1.19.11",
+    "@types/events": "^3.0.0"
+  }
+}
