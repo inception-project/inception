@@ -1,19 +1,19 @@
 import AbstractAnnotation from './abstract'
-import { mergeRects, findTexts } from '../../../page/textLayer'
+import { mergeRects, getGlyphsInRange, Rect } from '../../../page/textLayer'
 
 /**
  * Span Annotation.
  */
 export default class SpanAnnotation extends AbstractAnnotation {
 
-  rectangles = []
+  rectangles: Rect[] = []
   readOnly = false
   knob = true
   border = true
   text = null
   selectedText = null
-  textRange = null
-  page = null
+  textRange: [number, number] = null
+  page: number = null
   zIndex: number;
   element: HTMLElement = null
 
@@ -58,9 +58,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     a.border = annotation.border !== false
 
     // Calc the position.
-    let rects = findTexts(a.page, a.textRange[0], a.textRange[1], allowZeroWidth)
-    rects = mergeRects(rects)
-    a.rectangles = rects
+    a.rectangles = mergeRects(getGlyphsInRange(a.page, a.textRange[0], a.textRange[1], allowZeroWidth))
 
     return a
   }
@@ -87,9 +85,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
         console.error('ERROR: span missing page or textRange. span=', this)
         return false
       }
-      let rects = findTexts(this.page, this.textRange[0], this.textRange[1])
-      rects = mergeRects(rects)
-      this.rectangles = rects
+      this.rectangles = mergeRects(getGlyphsInRange(this.page, this.textRange[0], this.textRange[1]))
     }
 
     return super.render()
@@ -115,21 +111,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     window.globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
     return promise
-  }
-
-  /**
-   * Create an annotation data for save.
-   */
-  createAnnotation() {
-    return {
-      uuid: this.uuid,
-      type: this.type,
-      rectangles: this.rectangles,
-      text: this.text,
-      color: this.color,
-      readyOnly: this.readOnly,
-      selectedText: this.selectedText
-    }
   }
 
   /**
@@ -204,7 +185,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
       return;
     }
 
-    this.element.querySelectorAll('.anno-knob').forEach(e => 
+    this.element.querySelectorAll('.anno-knob').forEach(e =>
       e.addEventListener('click', this.handleClickEvent))
   }
 
@@ -233,7 +214,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   disableViewMode() {
     super.disableViewMode()
-    this.element.querySelectorAll('.anno-knob').forEach(e => 
+    this.element.querySelectorAll('.anno-knob').forEach(e =>
       e.removeEventListener('click', this.handleClickEvent))
   }
 }

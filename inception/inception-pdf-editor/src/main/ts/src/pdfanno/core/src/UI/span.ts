@@ -1,6 +1,6 @@
 import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
-import { findIndex, findTexts, findText } from '../../../page/textLayer'
+import { findIndex, getGlyphsInRange, findGlyphAtPoint } from '../../../page/textLayer'
 
 function scale() {
   return window.PDFView.pdfViewer.getPageView(0).viewport.scale
@@ -132,7 +132,7 @@ export function getRectangles() {
     return null
 
   } else {
-    let targets = findTexts(currentPage, startPosition, endPosition)
+    let targets = getGlyphsInRange(currentPage, startPosition, endPosition)
     return mergeRects(targets)
   }
 
@@ -148,7 +148,7 @@ export function createSpan({ text = null, zIndex = 10, color = null }) {
 
   } else {
 
-    let targets = findTexts(currentPage, startPosition, endPosition)
+    let targets = getGlyphsInRange(currentPage, startPosition, endPosition)
     if (targets.length === 0) {
       return null
     }
@@ -200,19 +200,19 @@ export function installSpanSelection() {
     const y = e.clientY - top
 
     // Find the data in pdftxt.
-    const item = findText(page, scaleDown({ x, y }))
-    if (item) {
+    const glyph = findGlyphAtPoint(page, scaleDown({ x, y }))
+    if (glyph) {
       if (!startPosition || !endPosition) {
-        initPosition = item.position
-        startPosition = item.position
-        endPosition = item.position
+        initPosition = glyph.position
+        startPosition = glyph.position
+        endPosition = glyph.position
       } else {
-        if (item.position < initPosition) {
-          startPosition = item.position
+        if (glyph.position < initPosition) {
+          startPosition = glyph.position
           endPosition = initPosition
         } else {
           startPosition = initPosition
-          endPosition = item.position
+          endPosition = glyph.position
         }
       }
     }
@@ -227,7 +227,10 @@ export function installSpanSelection() {
       spanAnnotation = null
     }
 
-    let targets = findTexts(currentPage, startPosition, endPosition)
+    let targets = getGlyphsInRange(currentPage, startPosition, endPosition)
+    let selectedText = ""
+    targets.forEach(m => selectedText += m.glyph)
+    console.log(selectedText)
     if (targets.length > 0) {
       const mergedRect = mergeRects(targets)
       spanAnnotation = saveSpan({

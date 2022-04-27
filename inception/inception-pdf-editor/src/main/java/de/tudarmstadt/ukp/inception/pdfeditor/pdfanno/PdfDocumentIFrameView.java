@@ -184,7 +184,7 @@ public class PdfDocumentIFrameView
         File pdfFile = documentService.getSourceDocumentFile(getModel().getObject().getDocument());
 
         try {
-            String pdfText = PDFExtractor.processFileToString(pdfFile, false);
+            String pdfText = PDFExtractor.processFileToString(pdfFile);
             pdfExtractFile = new PdfExtractFile(pdfText, getSubstitutionTable());
         }
         catch (IOException | SAXException | ParserConfigurationException e) {
