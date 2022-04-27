@@ -34,6 +34,7 @@ public class ToggleBox
 
         setOutputMarkupId(true);
 
+        setRequired(true);
         setNullValid(false);
         setChoices(asList(true, false));
         setEscapeModelStrings(false);
