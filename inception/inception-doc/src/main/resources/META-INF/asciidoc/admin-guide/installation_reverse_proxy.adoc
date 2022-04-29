@@ -39,9 +39,6 @@ server.address=127.0.0.1
 # additional path, remove this line
 server.servlet.context-path=/inception
 
-# Use the forward-header handling of the embedded Tomcat - usually works best
-server.forward-headers-strategy=NATIVE
-
 # Tell {product-name} which URL your users will enter into their browsers to access it. 
 # Make sure you have an entry with and an entry without the protocol. 
 # If you also allow unencrypted http (not recommended) then also add a line with
