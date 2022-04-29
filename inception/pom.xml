@@ -1043,7 +1043,7 @@
       <dependency>
         <groupId>org.owasp.antisamy</groupId>
         <artifactId>antisamy</artifactId>
-        <version>1.6.4</version>
+        <version>1.6.7</version>
         <exclusions>
           <exclusion>
             <groupId>xml-apis</groupId>
