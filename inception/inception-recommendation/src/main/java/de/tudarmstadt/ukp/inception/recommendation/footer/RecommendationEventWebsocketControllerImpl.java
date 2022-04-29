@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.footer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -32,20 +32,20 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
-@ConditionalOnBean(SimpMessagingTemplate.class)
+@ConditionalOnExpression("${websocket.enabled:true} and ${websocket.recommender-events.enabled:true}")
 @Controller
-public class RecommendationEventMessageControllerImpl
-    implements RecommendationEventMessageController
+public class RecommendationEventWebsocketControllerImpl
+    implements RecommendationEventWebsocketController
 {
     private final Logger log = LoggerFactory
-            .getLogger(RecommendationEventMessageControllerImpl.class);
+            .getLogger(RecommendationEventWebsocketControllerImpl.class);
 
     public static final String REC_EVENTS = "/recEvents";
     public static final String REC_EVENTS_TOPIC = "/queue" + REC_EVENTS;
 
     private final SimpMessagingTemplate msgTemplate;
 
-    public RecommendationEventMessageControllerImpl(@Autowired SimpMessagingTemplate aMsgTemplate)
+    public RecommendationEventWebsocketControllerImpl(@Autowired SimpMessagingTemplate aMsgTemplate)
     {
         msgTemplate = aMsgTemplate;
     }

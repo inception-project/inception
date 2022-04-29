@@ -45,11 +45,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistryImpl;
 import de.tudarmstadt.ukp.inception.log.adapter.SpanEventAdapter;
-import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageControllerImpl;
+import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventsWebsocketControllerImpl;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
 
 @ExtendWith(SpringExtension.class)
-public class LoggedEventMessageControllerImplTest
+public class LoggedEventsWebsocketControllerImplTest
 {
     private static final String TEST_ADMIN_USERNAME = "testAdmin";
     private @Mock DocumentService docService;
@@ -62,7 +62,7 @@ public class LoggedEventMessageControllerImplTest
     private SourceDocument testDoc;
     private User testAdmin;
 
-    private LoggedEventMessageControllerImpl sut;
+    private LoggedEventsWebsocketControllerImpl sut;
 
     @BeforeEach
     public void setup()
@@ -79,7 +79,7 @@ public class LoggedEventMessageControllerImplTest
         when(projectService.getProject(1L)).thenReturn(testProject);
         when(docService.getSourceDocument(1L, 2L)).thenReturn(testDoc);
 
-        sut = new LoggedEventMessageControllerImpl(new SimpMessagingTemplate(outboundChannel),
+        sut = new LoggedEventsWebsocketControllerImpl(new SimpMessagingTemplate(outboundChannel),
                 adapterRegistry, docService, projectService, eventRepository);
     }
 

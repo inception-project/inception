@@ -97,6 +97,8 @@ spring:
     change-log: classpath:/db/changelog/db.changelog-master.xml
 
 server:
+  # Use the forward-header handling of the embedded Tomcat - usually works best
+  forward-headers-strategy: NATIVE
   error:
     whitelabel:
       enabled: false
