@@ -27,7 +27,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
-import de.tudarmstadt.ukp.clarin.webanno.telemetry.ui.ToggleBox;
 
 public class MatomoTelemetryTraitsEditor
     extends Panel
