@@ -26,6 +26,8 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.inception.initializers.BasicDocumentClassificationProjectInitializer;
+import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelLayerInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicRelationLayerInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicRelationRecommenderInitializer;
@@ -40,16 +42,21 @@ import de.tudarmstadt.ukp.inception.initializers.WikiDataKnowledgeBaseInitialize
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
 
 @AutoConfigureAfter({ //
         KnowledgeBaseServiceAutoConfiguration.class, //
         RecommenderServiceAutoConfiguration.class, //
-        StringMatchingRecommenderAutoConfiguration.class })
+        StringMatchingRecommenderAutoConfiguration.class, //
+        DocumentMetadataLayerSupportAutoConfiguration.class })
 // @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @Configuration
 public class InceptionProjectInitializersAutoConfiguration
@@ -140,5 +147,23 @@ public class InceptionProjectInitializersAutoConfiguration
             ApplicationContext aContext, AnnotationSchemaService aAnnotationService)
     {
         return new EntityLinkingProjectInitializer(aContext, aAnnotationService);
+    }
+
+    @ConditionalOnBean(DocumentMetadataLayerSupport.class)
+    @Bean
+    public BasicDocumentLabelLayerInitializer basicDocumentTagLayerInitializer(
+            AnnotationSchemaService aAnnotationSchemaService,
+            DocumentMetadataLayerSupport aDocLayerSupport)
+    {
+        return new BasicDocumentLabelLayerInitializer(aAnnotationSchemaService, aDocLayerSupport);
+    }
+
+    @ConditionalOnBean(DocumentMetadataLayerSupport.class)
+    @Bean
+    BasicDocumentClassificationProjectInitializer basicDocumentClassificationProjectInitializer(
+            PreferencesService aPreferencesService, DocumentMetadataSidebarFactory aDocMetaSidebar)
+    {
+        return new BasicDocumentClassificationProjectInitializer(aPreferencesService,
+                aDocMetaSidebar);
     }
 }

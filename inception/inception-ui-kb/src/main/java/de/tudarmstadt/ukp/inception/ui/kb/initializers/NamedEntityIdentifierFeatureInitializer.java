@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.initializers;
 
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport.TYPE_ANY_OBJECT;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -36,7 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerIn
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 
 /**
  * Adds the {@code identifier} feature provided since DKPro Core 1.9.0 as a concept feature.
@@ -90,6 +90,6 @@ public class NamedEntityIdentifierFeatureInitializer
                 NamedEntity.class.getName());
 
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, neLayer, "identifier",
-                "identifier", ConceptFeatureSupport.TYPE_ANY_OBJECT, "Linked entity", null));
+                "identifier", TYPE_ANY_OBJECT, "Linked entity", null));
     }
 }
