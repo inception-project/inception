@@ -162,7 +162,8 @@ public interface TypeAdapter
 
     /**
      * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
-     *             {@link #delete(SourceDocument, String, CAS, VID)} instead.
+     *             {@link #setFeatureValue(SourceDocument, String, CAS, int, AnnotationFeature,
+     *             Object).
      */
     @Deprecated
     default void setFeatureValue(AnnotatorState aState, CAS aCas, int aAddress,
