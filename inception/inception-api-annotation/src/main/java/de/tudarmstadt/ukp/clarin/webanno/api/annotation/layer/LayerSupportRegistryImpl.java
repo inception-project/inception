@@ -21,6 +21,7 @@ import static java.util.Collections.unmodifiableList;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -94,6 +95,14 @@ public class LayerSupportRegistryImpl
     @Override
     public List<LayerSupport> getLayerSupports()
     {
+        if (layerSupports == null) {
+            log.error(
+                    "List of extensions was accessed on this extension point before the extension "
+                            + "point was initialized!",
+                    new IllegalStateException());
+            return Collections.emptyList();
+        }
+
         return layerSupports;
     }
 

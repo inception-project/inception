@@ -25,6 +25,7 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarState;
 import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -75,7 +76,11 @@ public class BasicDocumentLabelingProjectInitializer
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return asList(BasicDocumentLabelLayerInitializer.class);
+        return asList(
+                // Because all projects should have a Token layer
+                TokenLayerInitializer.class, //
+                // Because locks to token boundaries
+                BasicDocumentLabelLayerInitializer.class);
     }
 
     @Override
