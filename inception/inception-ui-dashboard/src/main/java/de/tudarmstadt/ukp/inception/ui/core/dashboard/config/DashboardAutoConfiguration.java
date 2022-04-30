@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -52,14 +53,14 @@ public class DashboardAutoConfiguration
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "dashboard", name = "legacy-export", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnExpression("${websocket.enabled:true} and !${dashboard.legacy-export.enabled:false}")
     public ProjectExportMenuItem projectExportMenuItem()
     {
         return new ProjectExportMenuItem();
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "dashboard", name = "legacy-export", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnExpression("!${websocket.enabled:true} or ${dashboard.legacy-export.enabled:false}")
     @Deprecated
     public LegacyProjectExportMenuItem legacyProjectExportMenuItem()
     {

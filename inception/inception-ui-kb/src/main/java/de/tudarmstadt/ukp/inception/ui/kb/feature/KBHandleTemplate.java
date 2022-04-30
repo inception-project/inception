@@ -37,11 +37,13 @@ final class KBHandleTemplate
         StringBuilder sb = new StringBuilder();
         sb.append("<div>");
         sb.append("  <div class=\"item-title\">");
-        sb.append("  # if (data.rank && data.rank != '0') { #");
+        // We cannot use && here because that causes an XML parse error in the browser - so we nest
+        // the if clauses...
+        sb.append("  # if (data.rank) { if (data.rank != '0') { #");
         sb.append("  <span class=\"item-rank\">");
         sb.append("    [${ data.rank }]");
         sb.append("  </span>");
-        sb.append("  # } #");
+        sb.append("  # } } #");
         sb.append("    ${ data.uiLabel }");
         sb.append("  </div>");
         sb.append("  <div class=\"item-identifier\">");

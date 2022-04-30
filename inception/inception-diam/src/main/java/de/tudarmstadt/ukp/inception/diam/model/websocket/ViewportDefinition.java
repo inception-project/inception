@@ -27,7 +27,7 @@ import org.apache.uima.cas.text.AnnotationPredicates;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.diam.service.DiamController;
+import de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController;
 import de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants;
 
 public class ViewportDefinition
@@ -105,10 +105,10 @@ public class ViewportDefinition
         properties.setProperty(WebSocketConstants.PARAM_PROJECT, String.valueOf(projectId));
         properties.setProperty(WebSocketConstants.PARAM_DOCUMENT, String.valueOf(documentId));
         properties.setProperty(WebSocketConstants.PARAM_USER, user);
-        properties.setProperty(DiamController.PARAM_FROM, String.valueOf(begin));
-        properties.setProperty(DiamController.PARAM_TO, String.valueOf(end));
-        return DiamController.PLACEHOLDER_RESOLVER
-                .replacePlaceholders(DiamController.DOCUMENT_VIEWPORT_TOPIC_TEMPLATE, properties);
+        properties.setProperty(DiamWebsocketController.PARAM_FROM, String.valueOf(begin));
+        properties.setProperty(DiamWebsocketController.PARAM_TO, String.valueOf(end));
+        return DiamWebsocketController.PLACEHOLDER_RESOLVER
+                .replacePlaceholders(DiamWebsocketController.DOCUMENT_VIEWPORT_TOPIC_TEMPLATE, properties);
     }
 
     @Override
