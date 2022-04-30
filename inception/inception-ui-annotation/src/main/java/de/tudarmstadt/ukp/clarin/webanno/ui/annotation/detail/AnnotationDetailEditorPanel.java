@@ -950,6 +950,12 @@ public abstract class AnnotationDetailEditorPanel
     {
         AnnotatorState state = getModelObject();
 
+        if (state.getSelectableLayers().isEmpty()) {
+            info("No text-level annotation layers are available in this project.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
         if (state.getSelectedAnnotationLayer() == null) {
             error("No layer is selected. First select a layer.");
             aTarget.addChildren(getPage(), IFeedback.class);
