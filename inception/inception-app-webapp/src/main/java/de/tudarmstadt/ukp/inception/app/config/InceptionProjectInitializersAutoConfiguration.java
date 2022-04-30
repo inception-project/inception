@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.initializers.BasicDocumentClassificationProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelLayerInitializer;
+import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelTagSetInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicRelationLayerInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicRelationRecommenderInitializer;
@@ -165,5 +166,13 @@ public class InceptionProjectInitializersAutoConfiguration
     {
         return new BasicDocumentClassificationProjectInitializer(aPreferencesService,
                 aDocMetaSidebar);
+    }
+
+    @ConditionalOnBean(DocumentMetadataLayerSupport.class)
+    @Bean
+    BasicDocumentLabelTagSetInitializer basicDocumentLabelTagSetInitializer(
+            AnnotationSchemaService aAnnotationSchemaService)
+    {
+        return new BasicDocumentLabelTagSetInitializer(aAnnotationSchemaService);
     }
 }

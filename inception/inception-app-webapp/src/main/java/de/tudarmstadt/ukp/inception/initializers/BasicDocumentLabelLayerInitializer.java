@@ -82,9 +82,8 @@ public class BasicDocumentLabelLayerInitializer
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
         return asList(
-        // // Tagsets
-        // BasicSpanTagSetInitializer.class
-        );
+                // Tagsets
+                BasicDocumentLabelTagSetInitializer.class);
     }
 
     @Override
@@ -98,12 +97,11 @@ public class BasicDocumentLabelLayerInitializer
         docLayerSupport.writeTraits(docTagLayer, traits);
         annotationSchemaService.createOrUpdateLayer(docTagLayer);
 
-        TagSet docTagTagSet = null;
-        // TagSet spanTagSet = annotationSchemaService
-        // .getTagSet(BasicSpanTagSetInitializer.BASIC_SPAN_TAG_SET_NAME, aProject);
+        TagSet docLabelTagSet = annotationSchemaService.getTagSet(
+                BasicDocumentLabelTagSetInitializer.BASIC_DOCUMENT_LABEL_TAG_SET_NAME, aProject);
 
-        annotationSchemaService.createFeature(
-                new AnnotationFeature(aProject, docTagLayer, BASIC_DOCUMENT_LABEL_LABEL_FEATURE_NAME,
-                        "Label", CAS.TYPE_NAME_STRING, "Document label", docTagTagSet));
+        annotationSchemaService.createFeature(new AnnotationFeature(aProject, docTagLayer,
+                BASIC_DOCUMENT_LABEL_LABEL_FEATURE_NAME, "Label", CAS.TYPE_NAME_STRING,
+                "Document label", docLabelTagSet));
     }
 }
