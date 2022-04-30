@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link InceptionProjectInitializersAutoConfiguration#basicDocumentClassificationProjectInitializer}.
+ * {@link InceptionProjectInitializersAutoConfiguration#basicDocumentLabelingProjectInitializer}.
  * </p>
  */
 public class BasicDocumentLabelingProjectInitializer
