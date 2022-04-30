@@ -37,8 +37,8 @@ import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceR
 import de.tudarmstadt.ukp.inception.support.dayjs.DayJsResourceReference;
 import de.tudarmstadt.ukp.inception.support.vue.VueComponent;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
-import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageController;
-import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventMessageControllerImpl;
+import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventsWebsocketController;
+import de.tudarmstadt.ukp.inception.websocket.controller.LoggedEventsWebsocketControllerImpl;
 import de.tudarmstadt.ukp.inception.websocket.feedback.FeedbackPanelExtensionBehavior;
 
 @AuthorizeAction(action = Action.RENDER, roles = "ROLE_ADMIN")
@@ -47,7 +47,7 @@ public class LoggedEventFooterPanel
 {
     private static final long serialVersionUID = -9006607500867612027L;
 
-    private @SpringBean LoggedEventMessageController loggedEventService;
+    private @SpringBean LoggedEventsWebsocketController loggedEventService;
     private @SpringBean ServletContext servletContext;
     private FeedbackPanelExtensionBehavior feedback;
 
@@ -65,7 +65,7 @@ public class LoggedEventFooterPanel
         super.onConfigure();
         // model will be added as props to vue component
         setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(), "topicChannel",
-                LoggedEventMessageControllerImpl.LOGGED_EVENTS, "feedbackPanelId",
+                LoggedEventsWebsocketControllerImpl.LOGGED_EVENTS, "feedbackPanelId",
                 feedback.retrieveFeedbackPanelId(this))));
     }
 

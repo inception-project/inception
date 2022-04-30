@@ -72,7 +72,7 @@
     <uimafit.version>3.2.0</uimafit.version>
 
     <spring.version>5.3.19</spring.version>
-    <spring.boot.version>2.6.6</spring.boot.version>
+    <spring.boot.version>2.6.7</spring.boot.version>
     <spring.security.version>5.6.2</spring.security.version>
     <springdoc.version>1.6.7</springdoc.version>
     <swagger.version>2.2.0</swagger.version>
@@ -137,11 +137,13 @@
     <jackson.version>2.13.2</jackson.version>
     <okhttp.version>4.9.3</okhttp.version>
     
+    <node.version>16.14.2</node.version>
+    <npm.version>8.5.0</npm.version>
     <typescript.version>^4.6.3</typescript.version>
-    <typescript-eslint.version>^5.17.0</typescript-eslint.version>
-    <esbuild.version>^0.14.29</esbuild.version>
+    <typescript-eslint.version>^5.20.0</typescript-eslint.version>
+    <esbuild.version>^0.14.38</esbuild.version>
     <esbuild-sass-plugin.version>^2.2.6</esbuild-sass-plugin.version>
-    <eslint.version>^8.12.0</eslint.version>
+    <eslint.version>^8.13.0</eslint.version>
   </properties>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->
@@ -1061,7 +1063,7 @@
       <dependency>
         <groupId>org.owasp.antisamy</groupId>
         <artifactId>antisamy</artifactId>
-        <version>1.6.4</version>
+        <version>1.6.7</version>
         <exclusions>
           <exclusion>
             <groupId>xml-apis</groupId>
@@ -2023,7 +2025,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
-        <version>1.4</version>
+        <version>3.0.0</version>
         <executions>
           <execution>
             <phase>validate</phase>
@@ -2145,7 +2147,7 @@
         <plugin>
           <groupId>com.github.eirslett</groupId>
           <artifactId>frontend-maven-plugin</artifactId>
-          <version>1.11.3</version>
+          <version>1.12.1</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -2159,7 +2161,7 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-surefire-plugin</artifactId>
-          <version>3.0.0-M5</version>
+          <version>3.0.0-M6</version>
           <configuration>
             <systemPropertyVariables>
               <dkpro.core.testCachePath>${dkpro.core.testCachePath}</dkpro.core.testCachePath>
@@ -2175,12 +2177,12 @@
         <plugin>
           <groupId>io.fabric8</groupId>
           <artifactId>docker-maven-plugin</artifactId>
-          <version>0.38.0</version>
+          <version>0.39.1</version>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>versions-maven-plugin</artifactId>
-          <version>2.8.1</version>
+          <version>2.10.0</version>
           <configuration>
             <rulesUri>file:${maven.multiModuleProjectDirectory}/inception/inception-build/src/main/resources/inception/rules.xml</rulesUri>
             <!--
@@ -2579,8 +2581,8 @@
             <configuration>
               <workingDirectory>src/main/ts</workingDirectory>
               <installDirectory>../../node</installDirectory>
-              <nodeVersion>v16.13.0</nodeVersion>
-              <npmVersion>8.1.0</npmVersion>
+              <nodeVersion>v${node.version}</nodeVersion>
+              <npmVersion>${npm.version}</npmVersion>
             </configuration>
             <executions>
               <execution>

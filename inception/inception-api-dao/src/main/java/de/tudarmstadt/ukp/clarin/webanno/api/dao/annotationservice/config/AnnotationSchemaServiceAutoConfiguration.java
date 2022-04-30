@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationOverlapB
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAnchoringModeBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanOverlapBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -71,10 +72,11 @@ public class AnnotationSchemaServiceAutoConfiguration
     public AnnotationSchemaService annotationSchemaService(
             LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
+            AnnotationEditorProperties aAnnotationEditorProperties,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
         return new AnnotationSchemaServiceImpl(aLayerSupportRegistry, aFeatureSupportRegistry,
-                aApplicationEventPublisher, entityManager);
+                aApplicationEventPublisher, aAnnotationEditorProperties, entityManager);
     }
 
     @Bean

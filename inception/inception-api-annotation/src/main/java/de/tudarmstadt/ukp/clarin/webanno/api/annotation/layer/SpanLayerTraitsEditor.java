@@ -26,8 +26,10 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesConfigurationPanel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.AnchoringModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.OverlapModeSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.behaviors.ValidationModeSelect;
@@ -40,6 +42,8 @@ public class SpanLayerTraitsEditor
     extends LayerTraitsEditor_ImplBase<SpanLayerTraits, SpanLayerSupport>
 {
     private static final long serialVersionUID = -9082045435380184514L;
+
+    private @SpringBean AnnotationEditorProperties annotationEditorProperties;
 
     public SpanLayerTraitsEditor(String aId, SpanLayerSupport aLayerSupport,
             IModel<AnnotationLayer> aLayer)
@@ -73,6 +77,8 @@ public class SpanLayerTraitsEditor
         aForm.add(crossSentence);
 
         var onClickJavascriptAction = new TextArea<String>("onClickJavascriptAction");
+        onClickJavascriptAction
+                .setVisible(annotationEditorProperties.isConfigurableJavaScriptActionEnabled());
         onClickJavascriptAction
                 .setModel(PropertyModel.of(getLayerModel(), "onClickJavascriptAction"));
         onClickJavascriptAction.add(new AttributeModifier("placeholder",

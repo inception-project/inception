@@ -66,7 +66,7 @@ public class RecommendationEventFooterPanel
         super.onConfigure();
         // model will be added as props to vue component
         setDefaultModel(Model.ofMap(Map.of("wsEndpoint", constructEndpointUrl(), "topicChannel",
-                RecommendationEventMessageControllerImpl.REC_EVENTS, "feedbackPanelId",
+                RecommendationEventWebsocketControllerImpl.REC_EVENTS, "feedbackPanelId",
                 feedback.retrieveFeedbackPanelId(this), "projectId", getProjectId())));
     }
 

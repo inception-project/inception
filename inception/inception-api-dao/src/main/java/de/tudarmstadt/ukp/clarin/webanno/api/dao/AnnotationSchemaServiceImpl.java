@@ -83,11 +83,11 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
@@ -131,20 +131,23 @@ public class AnnotationSchemaServiceImpl
     private final FeatureSupportRegistry featureSupportRegistry;
     private final LoadingCache<TagSet, List<ImmutableTag>> immutableTagsCache;
     private final TypeSystemDescription builtInTypes;
+    private final AnnotationEditorProperties annotationEditorProperties;
 
     public AnnotationSchemaServiceImpl()
     {
-        this(null, null, null, null);
+        this(null, null, null, null, null);
     }
 
     @Autowired
     public AnnotationSchemaServiceImpl(LayerSupportRegistry aLayerSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aApplicationEventPublisher, EntityManager aEntityManager)
+            ApplicationEventPublisher aApplicationEventPublisher,
+            AnnotationEditorProperties aAnnotationEditorProperties, EntityManager aEntityManager)
     {
         layerSupportRegistry = aLayerSupportRegistry;
         featureSupportRegistry = aFeatureSupportRegistry;
         applicationEventPublisher = aApplicationEventPublisher;
+        annotationEditorProperties = aAnnotationEditorProperties;
         entityManager = aEntityManager;
 
         immutableTagsCache = Caffeine.newBuilder() //
@@ -1336,8 +1339,8 @@ public class AnnotationSchemaServiceImpl
     @Override
     public TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
-        return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer,
-                () -> listAnnotationFeature(aLayer));
+        return layerSupportRegistry.getLayerSupport(aLayer) //
+                .createAdapter(aLayer, () -> listAnnotationFeature(aLayer));
     }
 
     @Override
@@ -1365,7 +1368,7 @@ public class AnnotationSchemaServiceImpl
                 l.setProject(aProject);
 
                 // Need to set the attach type
-                if (WebAnnoConst.RELATION_TYPE.equals(l.getType())) {
+                if (RELATION_TYPE.equals(l.getType())) {
                     RelationDetails relDetails = analysis.getRelationDetails(l.getName());
 
                     AnnotationLayer attachLayer;
@@ -1530,10 +1533,31 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    public boolean isSentencesEditable(Project aProject)
+    public boolean isSentenceLayerEditable(Project aProject)
     {
+        if (!annotationEditorProperties.isSentenceLayerEditable()) {
+            return false;
+        }
+
         try {
-            return !findLayer(aProject, Sentence.class.getName()).isReadonly();
+            var layer = findLayer(aProject, Sentence.class.getName());
+            return !layer.isReadonly() && layer.isEnabled();
+        }
+        catch (NoResultException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean isTokenLayerEditable(Project aProject)
+    {
+        if (!annotationEditorProperties.isTokenLayerEditable()) {
+            return false;
+        }
+
+        try {
+            var layer = findLayer(aProject, Token.class.getName());
+            return !layer.isReadonly() && layer.isEnabled();
         }
         catch (NoResultException e) {
             return false;

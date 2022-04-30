@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public interface XHtmlXmlDocumentViewController
 {
-    String BASE_URL = "/de.tudarmstadt.ukp.inception.htmleditor.docview.XHtmlXmlDocumentViewController";
+    String BASE_URL = "/de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentViewController";
 
     String getDocumentUrl(SourceDocument aDoc);
 
