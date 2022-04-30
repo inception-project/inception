@@ -26,9 +26,9 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.inception.initializers.BasicDocumentClassificationProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelLayerInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelTagSetInitializer;
+import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelingProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicRelationLayerInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicRelationRecommenderInitializer;
@@ -52,6 +52,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringM
 import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
+import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @AutoConfigureAfter({ //
         KnowledgeBaseServiceAutoConfiguration.class, //
@@ -161,11 +163,13 @@ public class InceptionProjectInitializersAutoConfiguration
 
     @ConditionalOnBean(DocumentMetadataLayerSupport.class)
     @Bean
-    BasicDocumentClassificationProjectInitializer basicDocumentClassificationProjectInitializer(
-            PreferencesService aPreferencesService, DocumentMetadataSidebarFactory aDocMetaSidebar)
+    BasicDocumentLabelingProjectInitializer basicDocumentLabelingProjectInitializer(
+            PreferencesService aPreferencesService, DocumentMetadataSidebarFactory aDocMetaSidebar,
+            WorkloadManagementService aWorkloadManagementService,
+            MatrixWorkloadExtension aMatrixWorkloadExtension)
     {
-        return new BasicDocumentClassificationProjectInitializer(aPreferencesService,
-                aDocMetaSidebar);
+        return new BasicDocumentLabelingProjectInitializer(aPreferencesService, aDocMetaSidebar,
+                aWorkloadManagementService, aMatrixWorkloadExtension);
     }
 
     @ConditionalOnBean(DocumentMetadataLayerSupport.class)
