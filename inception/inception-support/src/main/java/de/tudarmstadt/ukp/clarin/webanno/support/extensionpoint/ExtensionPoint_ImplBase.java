@@ -22,6 +22,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.ClassUtils.getAbbreviatedName;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,6 +74,14 @@ public abstract class ExtensionPoint_ImplBase<C, E extends Extension<C>>
     @Override
     public List<E> getExtensions()
     {
+        if (extensionsList == null) {
+            log.error(
+                    "List of extensions was accessed on this extension point before the extension "
+                            + "point was initialized!",
+                    new IllegalStateException());
+            return Collections.emptyList();
+        }
+
         return extensionsList;
     }
 

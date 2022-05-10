@@ -27,7 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
@@ -950,6 +949,12 @@ public abstract class AnnotationDetailEditorPanel
     {
         AnnotatorState state = getModelObject();
 
+        if (state.getSelectableLayers().isEmpty()) {
+            info("No text-level annotation layers are available in this project.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
         if (state.getSelectedAnnotationLayer() == null) {
             error("No layer is selected. First select a layer.");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -1207,21 +1212,28 @@ public abstract class AnnotationDetailEditorPanel
                         info("Cleared slot [" + link.role + "] in feature ["
                                 + linkFeature.getUiName() + "] on ["
                                 + linkFeature.getLayer().getUiName() + "]");
-                        LOG.debug("Cleared slot [" + link.role + "] in feature ["
-                                + linkFeature.getName() + "] on annotation [" + getAddr(linkHostFS)
-                                + "]");
+                        LOG.debug("Cleared slot [{}] in feature [{}] on annotation [{}]", link.role,
+                                linkFeature.getName(), getAddr(linkHostFS));
                         modified = true;
                     }
                 }
                 if (modified) {
-                    setFeature(linkHostFS, linkFeature, links);
+                    try {
+                        adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(),
+                                aCas, getAddr(linkHostFS), linkFeature, links);
+                    }
+                    catch (AnnotationException e) {
+                        error("Unable to clean slots in feature [" + linkFeature.getUiName()
+                                + "] on [" + linkFeature.getLayer().getUiName() + "]");
+                        LOG.error("Unable to clean slots in feature [{}] on annotation [{}]",
+                                linkFeature.getName(), getAddr(linkHostFS));
+                    }
 
                     // If the currently armed slot is part of this link, then we disarm the slot
                     // to avoid the armed slot no longer pointing at the index which the user
                     // had selected it to point at.
                     FeatureState armedFeature = state.getArmedFeature();
-                    if (armedFeature != null
-                            && WebAnnoCasUtil.getAddr(linkHostFS) == armedFeature.vid.getId()
+                    if (armedFeature != null && getAddr(linkHostFS) == armedFeature.vid.getId()
                             && armedFeature.feature.equals(linkFeature)) {
                         state.clearArmedSlot();
                     }

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
+package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.linesOf;
