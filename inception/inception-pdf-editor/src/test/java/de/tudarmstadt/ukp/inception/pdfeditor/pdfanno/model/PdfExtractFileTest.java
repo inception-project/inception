@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
+package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile.getSubstitutionTable;
 import static java.nio.charset.StandardCharsets.UTF_8;

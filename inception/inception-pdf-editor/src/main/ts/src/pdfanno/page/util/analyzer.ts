@@ -15,7 +15,7 @@
  */
 export interface Page {
   body: string;
-  infoList: Info[];
+  glyphs: Info[];
   page: number;
 }
 
@@ -29,9 +29,9 @@ export type Info = [
 
 export class Meta {
   position: number;
-  page: number;
+  pageNumber: number;
   type: string;
-  char: string;
+  glyph: string;
   x: number;
   y: number;
   w: number;
@@ -41,9 +41,9 @@ export class Meta {
     const [x, y, w, h] = info[4]
     const m = new Meta();
     m.position = info[0];
-    m.page = info[1];
+    m.pageNumber = info[1];
     m.type = 'TEXT';
-    m.char = info[3];
+    m.glyph = info[3];
     m.x = x;
     m.y = y;
     m.w = w;
@@ -75,11 +75,7 @@ export function loadPageInformation(pdftxt: string): Page[] {
 
     let info = parseInfo(tokenId, lineFields)
 
-    let {
-      page: pageNumber,
-      type,
-      char
-    } = extractMeta(info)
+    let { pageNumber, type, glyph } = extractMeta(info)
 
     if (!page) {
       page = pageNumber
@@ -87,7 +83,7 @@ export function loadPageInformation(pdftxt: string): Page[] {
       meta = []
     }
     else if (page !== pageNumber) {
-      pages.push({ body, infoList: meta, page })
+      pages.push({ body, glyphs: meta, page })
       body = ''
       meta = []
       page = pageNumber
@@ -95,15 +91,15 @@ export function loadPageInformation(pdftxt: string): Page[] {
 
     if (type === 'TEXT') {
       // Special replace, like "NO_UNICODE"
-      if (char === 'NO_UNICODE') {
-        char = '?'
+      if (glyph === 'NO_UNICODE') {
+        glyph = '?'
       }
-      body += char
+      body += glyph
       meta.push(info)
     }
   })
 
-  pages.push({ body, infoList: meta, page })
+  pages.push({ body, glyphs: meta, page })
 
   return pages
 }

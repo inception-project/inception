@@ -34,7 +34,7 @@ export function findIndex(pageNum: number, point: { x: number, y: number }): num
     return null;
   }
 
-  const infoList = page.infoList;
+  const infoList = page.glyphs;
 
   for (let i = 0, len = infoList.length; i < len; i++) {
     const info = infoList[i]
@@ -58,12 +58,14 @@ export function findIndex(pageNum: number, point: { x: number, y: number }): num
 }
 
 /**
- * Find the text.
+ * Find the glyph at the given position in the PDF document. This operation uses the glyph
+ * position data that is provided by the server.
+ * 
  * @param pageNum - the page number.
  * @param point - { x, y } coords.
  * @returns {*} - The text data if found, whereas null.
  */
-export function findText(pageNum: number, point): Meta {
+export function findGlyphAtPoint(pageNum: number, point: {x: number, y: number}): Meta {
 
   const page = getPage(pageNum);
 
@@ -71,7 +73,7 @@ export function findText(pageNum: number, point): Meta {
     return null;
   }
 
-  const infoList = page.infoList;
+  const infoList = page.glyphs;
 
   for (let i = 0, len = infoList.length; i < len; i++) {
     const info = infoList[i]
@@ -99,7 +101,7 @@ export function findText(pageNum: number, point): Meta {
  * @param allowZeroWidth - whether zero-width spans are allowed or not, required for range usage
  * @returns {Array} - the texts.
  */
-export function findTexts(pageNum: number, startPosition: number, endPosition: number, allowZeroWidth?: boolean): Meta[] {
+export function getGlyphsInRange(pageNum: number, startPosition: number, endPosition: number, allowZeroWidth?: boolean): Meta[] {
 
   const items = []
 
@@ -113,13 +115,13 @@ export function findTexts(pageNum: number, startPosition: number, endPosition: n
     return null;
   }
 
-  const infoList = page.infoList;
+  const glyphs = page.glyphs;
 
   let inRange = false
 
-  for (let index = 0, len = infoList.length; index < len; index++) {
+  for (let index = 0, len = glyphs.length; index < len; index++) {
 
-    const info = infoList[index]
+    const info = glyphs[index]
 
     if (!info) {
       if (inRange) {
@@ -172,7 +174,7 @@ export function findTexts(pageNum: number, startPosition: number, endPosition: n
   if (items.length === 0 && startPosition === endPosition && pageNum === pages.length && allowZeroWidth) {
     items.push({
       position: startPosition,
-      page: last.page,
+      page: last.pageNumber,
       type: last.type,
       char: '',
       x: last.x + last.w,
