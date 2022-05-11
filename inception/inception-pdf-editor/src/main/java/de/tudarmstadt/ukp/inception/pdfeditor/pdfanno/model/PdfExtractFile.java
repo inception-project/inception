@@ -49,8 +49,11 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 public class PdfExtractFile
     implements Serializable
 {
-
     private static final long serialVersionUID = -8596941152876909935L;
+
+    private static final int COL_PAGE = 0;
+    private static final int COL_VALUE = 1;
+    private static final int COL_COORDS = 2;
 
     /**
      * Contains PDFExtract file raw content
@@ -217,11 +220,11 @@ public class PdfExtractFile
         for (String line : lines) {
             PdfExtractLine extractLine = new PdfExtractLine();
             String[] columns = line.split("\t");
-            int page = Integer.parseInt(columns[0].trim());
+            int page = Integer.parseInt(columns[COL_PAGE].trim());
             extractLine.setPage(page);
             extractLine.setPosition(extractLineIndex);
-            extractLine.setValue(columns[1].trim());
-            extractLine.setDisplayPositions(columns.length > 2 ? columns[2].trim() : "");
+            extractLine.setValue(columns[COL_VALUE].trim());
+            extractLine.setDisplayPositions(columns.length > 2 ? columns[COL_COORDS].trim() : "");
             extractLines.put(extractLineIndex, extractLine);
 
             stringToExtract.put(strContentIndex, extractLineIndex);

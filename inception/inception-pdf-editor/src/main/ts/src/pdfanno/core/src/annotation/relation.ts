@@ -135,22 +135,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
   }
 
   /**
-   * Create an annotation data for save.
-   */
-  createAnnotation() {
-    return {
-      uuid: this.uuid,
-      type: this.type,
-      direction: this.direction,
-      rel1: this._rel1Annotation.uuid,
-      rel2: this._rel2Annotation.uuid,
-      text: this.text,
-      color: this.color,
-      readOnly: this.readOnly
-    }
-  }
-
-  /**
    * Destroy the annotation.
    */
   destroy() {

@@ -850,23 +850,6 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Set a feature value.
-     *
-     * @param aFS
-     *            the feature structure.
-     * @param aFeatureName
-     *            the feature within the annotation whose value to set.
-     * @param aValue
-     *            the feature value.
-     */
-    public static void setFeatureFS(FeatureStructure aFS, String aFeatureName,
-            FeatureStructure aValue)
-    {
-        Feature labelFeature = aFS.getType().getFeatureByBaseName(aFeatureName);
-        aFS.setFeatureValue(labelFeature, aValue);
-    }
-
-    /**
      * Get a feature value.
      *
      * @param aFS

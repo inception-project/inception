@@ -1,3 +1,5 @@
+import { Rect } from "../../../page/textLayer"
+
 export const BORDER_COLOR = '#00BFFF'
 
 /**
@@ -29,14 +31,14 @@ export function scaleUp (svg, rect) {
  * @param {Object} rect A map of numeric values to scale
  * @return {Object} A copy of `rect` with values scaled down
  */
-export function scaleDown (rect) {
+export function scaleDown (rect: Record<string, number>) : Record<string, number>{
 
   // TODO for old style:  scaleDown(svg, rect)
   if (arguments.length === 2) {
     rect = arguments[1]
   }
 
-  let result = {}
+  let result : Record<string, number> = {}
   const viewport = window.PDFView.pdfViewer.getPageView(0).viewport
   Object.keys(rect).forEach((key) => {
     result[key] = rect[key] / viewport.scale
