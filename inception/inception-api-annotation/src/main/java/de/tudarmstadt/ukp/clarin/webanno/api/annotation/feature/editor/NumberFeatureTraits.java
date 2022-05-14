@@ -19,9 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 /**
  * Traits for number features.
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NumberFeatureTraits
     implements Serializable
 {
