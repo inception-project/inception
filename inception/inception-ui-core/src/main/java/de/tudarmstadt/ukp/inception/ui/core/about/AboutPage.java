@@ -17,6 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.about;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.loadJsonDependencies;
+import static java.lang.String.join;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.defaultString;
+
 import java.time.Year;
 
 import org.apache.wicket.markup.html.basic.Label;
@@ -24,7 +31,7 @@ import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.model.StringResourceModel;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation;
+import de.tudarmstadt.ukp.clarin.webanno.support.about.Dependency;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 @MountPath("/about")
@@ -38,7 +45,28 @@ public class AboutPage
         setStatelessHint(true);
         setVersioned(false);
 
-        add(new Label("dependencies", ApplicationInformation.loadDependencies()));
+        var buf = new StringBuilder();
+
+        var groupedBySource = loadJsonDependencies().stream()
+                .collect(groupingBy(d -> defaultString(d.getSource(), "UNKNOWN")));
+        for (var groupKey : groupedBySource.keySet().stream().sorted().collect(toList())) {
+            buf.append("===== ").append(groupKey).append(" =====\n");
+            for (var dep : groupedBySource.get(groupKey).stream()
+                    .sorted(comparing(Dependency::getName)).collect(toList())) {
+                buf.append(dep.getName());
+                if (dep.getVersion() != null) {
+                    buf.append(" ").append(dep.getVersion());
+                }
+                if (dep.getLicenses() != null && !dep.getLicenses().isEmpty()) {
+                    buf.append(" licensed as ");
+                    buf.append(join(", ", dep.getLicenses()));
+                }
+                buf.append("\n");
+            }
+            buf.append("\n");
+        }
+
+        add(new Label("dependencies", buf));
         add(new Label("copyright",
                 new StringResourceModel("copyright")
                         .setParameters(Integer.toString(Year.now().getValue())))

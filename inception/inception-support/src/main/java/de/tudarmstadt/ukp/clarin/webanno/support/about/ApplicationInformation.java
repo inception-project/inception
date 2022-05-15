@@ -20,18 +20,64 @@ package de.tudarmstadt.ukp.clarin.webanno.support.about;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.list;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+
 public class ApplicationInformation
 {
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationInformation.class);
+
+    public static Set<Dependency> loadJsonDependencies()
+    {
+        try {
+            var deps = new LinkedHashSet<Dependency>();
+            var cl = ApplicationInformation.class.getClassLoader();
+            for (URL mavenDeps : list(cl.getResources("META-INF/DEPENDENCIES.json"))) {
+                loadMavenDependencies(mavenDeps).getDependencies()
+                        .forEach(dep -> deps.add(dep.toDependency()));
+            }
+            for (URL npmDeps : list(cl.getResources("META-INF/NPM-DEPENDENCIES.json"))) {
+                loadNpmDependencies(npmDeps).values() //
+                        .forEach(dep -> deps.add(dep.toDependency()));
+            }
+
+            return deps;
+        }
+        catch (Exception e) {
+            LOG.error("Unable to retrieve JSON dependency information", e);
+            return Collections.emptySet();
+        }
+    }
+
+    static NpmDependencies loadNpmDependencies(URL npmDeps) throws IOException
+    {
+        try (InputStream is = npmDeps.openStream()) {
+            var deps = JSONUtil.fromJsonStream(NpmDependencies.class, is);
+            for (var entry : deps.entrySet()) {
+                entry.getValue().setName(entry.getKey());
+            }
+            return deps;
+        }
+    }
+
+    static MavenDependencies loadMavenDependencies(URL mavenDeps) throws IOException
+    {
+        try (InputStream is = mavenDeps.openStream()) {
+            return JSONUtil.fromJsonStream(MavenDependencies.class, is);
+        }
+    }
 
     public static String loadDependencies()
     {

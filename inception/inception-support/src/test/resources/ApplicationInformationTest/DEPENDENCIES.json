@@ -1,0 +1,2028 @@
+
+{
+  "name": "INCEpTION - Editor - HTML + Annotator JS",
+  "url": "https://inception-project.github.io/inception-html-editor",
+  "groupId": "de.tudarmstadt.ukp.inception.app",
+  "artifactId": "inception-html-editor",
+  "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+  "licenses": [
+    { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+  ],
+  "dependencies": [
+    {
+      "name": "AntLR Parser Generator",
+      "url": "http://www.antlr.org/",
+      "groupId": "antlr",
+      "artifactId": "antlr",
+      "version": "2.7.7",
+      "licenses": [
+        { "name": "BSD License", "url": "http://www.antlr.org/license.html" }
+      ]
+    },
+    {
+      "name": "cglib",
+      "url": "https://github.com/cglib/cglib/cglib",
+      "groupId": "cglib",
+      "artifactId": "cglib",
+      "version": "3.3.0",
+      "licenses": [
+        { "name": "ASF 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "ClassMate",
+      "url": "https://github.com/FasterXML/java-classmate",
+      "groupId": "com.fasterxml",
+      "artifactId": "classmate",
+      "version": "1.5.1",
+  "organizationName": "fasterxml.com",
+  "organizationUrl": "https://fasterxml.com",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Jackson-annotations",
+      "url": "http://github.com/FasterXML/jackson",
+      "groupId": "com.fasterxml.jackson.core",
+      "artifactId": "jackson-annotations",
+      "version": "2.13.2",
+  "organizationName": "FasterXML",
+  "organizationUrl": "http://fasterxml.com/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Jackson-core",
+      "url": "https://github.com/FasterXML/jackson-core",
+      "groupId": "com.fasterxml.jackson.core",
+      "artifactId": "jackson-core",
+      "version": "2.13.2",
+  "organizationName": "FasterXML",
+  "organizationUrl": "http://fasterxml.com/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "jackson-databind",
+      "url": "http://github.com/FasterXML/jackson",
+      "groupId": "com.fasterxml.jackson.core",
+      "artifactId": "jackson-databind",
+      "version": "2.13.2",
+  "organizationName": "FasterXML",
+  "organizationUrl": "http://fasterxml.com/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Jackson datatype: JSR310",
+      "url": "https://github.com/FasterXML/jackson-modules-java8/jackson-datatype-jsr310",
+      "groupId": "com.fasterxml.jackson.datatype",
+      "artifactId": "jackson-datatype-jsr310",
+      "version": "2.13.2",
+  "organizationName": "FasterXML",
+  "organizationUrl": "http://fasterxml.com/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "zjsonpatch",
+      "url": "https://github.com/flipkart-incubator/zjsonpatch/",
+      "groupId": "com.flipkart.zjsonpatch",
+      "artifactId": "zjsonpatch",
+      "version": "0.4.0",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Context",
+      "url": "https://github.com/MarcGiffing/wicket-spring-boot/wicket-spring-boot-context",
+      "groupId": "com.giffing.wicket.spring.boot.starter",
+      "artifactId": "wicket-spring-boot-context",
+      "version": "3.1.6",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Wicket Spring Boot Starter",
+      "url": "https://github.com/MarcGiffing/wicket-spring-boot/wicket-spring-boot-starter",
+      "groupId": "com.giffing.wicket.spring.boot.starter",
+      "artifactId": "wicket-spring-boot-starter",
+      "version": "3.1.6",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Caffeine cache",
+      "url": "https://github.com/ben-manes/caffeine",
+      "groupId": "com.github.ben-manes.caffeine",
+      "artifactId": "caffeine",
+      "version": "3.0.6",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Open JSON",
+      "url": "https://github.com/openjson/openjson",
+      "groupId": "com.github.openjson",
+      "artifactId": "openjson",
+      "version": "1.0.10",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "txtmark",
+      "url": "https://github.com/rjeschke/txtmark",
+      "groupId": "com.github.rjeschke",
+      "artifactId": "txtmark",
+      "version": "0.13",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "FindBugs-Annotations",
+      "url": "http://findbugs.sourceforge.net/",
+      "groupId": "com.google.code.findbugs",
+      "artifactId": "annotations",
+      "version": "2.0.1",
+      "licenses": [
+        { "name": "GNU Lesser Public License", "url": "http://www.gnu.org/licenses/lgpl.html" }
+      ]
+    },
+    {
+      "name": "error-prone annotations",
+      "url": "https://errorprone.info/error_prone_annotations",
+      "groupId": "com.google.errorprone",
+      "artifactId": "error_prone_annotations",
+      "version": "2.11.0",
+  "organizationName": "Google LLC",
+  "organizationUrl": "http://www.google.com",
+      "licenses": [
+        { "name": "Apache 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Guava InternalFutureFailureAccess and InternalFutures",
+      "url": "https://github.com/google/guava/failureaccess",
+      "groupId": "com.google.guava",
+      "artifactId": "failureaccess",
+      "version": "1.0.1",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Guava: Google Core Libraries for Java",
+      "url": "https://github.com/google/guava/guava",
+      "groupId": "com.google.guava",
+      "artifactId": "guava",
+      "version": "30.1.1-jre",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Guava ListenableFuture only",
+      "url": "https://github.com/google/guava/listenablefuture",
+      "groupId": "com.google.guava",
+      "artifactId": "listenablefuture",
+      "version": "9999.0-empty-to-avoid-conflict-with-guava",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "OWASP Java HTML Sanitizer",
+      "url": "https://github.com/OWASP/java-html-sanitizer/owasp-java-html-sanitizer",
+      "groupId": "com.googlecode.owasp-java-html-sanitizer",
+      "artifactId": "owasp-java-html-sanitizer",
+      "version": "20211018.2",
+  "organizationName": "OWASP",
+  "organizationUrl": "https://owasp.org",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "wicket-jquery-ui",
+      "url": "https://github.com/sebfz1/wicket-jquery-ui/wicket-jquery-ui",
+      "groupId": "com.googlecode.wicket-jquery-ui",
+      "artifactId": "wicket-jquery-ui",
+      "version": "9.8.0",
+  "organizationName": "7thWeb",
+  "organizationUrl": "http://www.7thweb.net/wicket-jquery-ui/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "wicket-jquery-ui-core",
+      "url": "https://github.com/sebfz1/wicket-jquery-ui/wicket-jquery-ui-core",
+      "groupId": "com.googlecode.wicket-jquery-ui",
+      "artifactId": "wicket-jquery-ui-core",
+      "version": "9.8.0",
+  "organizationName": "7thWeb",
+  "organizationUrl": "http://www.7thweb.net/wicket-jquery-ui/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "wicket-kendo-ui",
+      "url": "https://github.com/sebfz1/wicket-jquery-ui/wicket-kendo-ui",
+      "groupId": "com.googlecode.wicket-jquery-ui",
+      "artifactId": "wicket-kendo-ui",
+      "version": "9.8.0",
+  "organizationName": "7thWeb",
+  "organizationUrl": "http://www.7thweb.net/wicket-jquery-ui/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "ICU4J",
+      "url": "http://icu-project.org/",
+      "groupId": "com.ibm.icu",
+      "artifactId": "icu4j",
+      "version": "68.2",
+      "licenses": [
+        { "name": "Unicode/ICU License", "url": "https://raw.githubusercontent.com/unicode-org/icu/master/icu4c/LICENSE" }
+      ]
+    },
+    {
+      "name": "Jakarta Activation",
+      "url": "https://github.com/eclipse-ee4j/jaf/jakarta.activation",
+      "groupId": "com.sun.activation",
+      "artifactId": "jakarta.activation",
+      "version": "1.2.2",
+  "organizationName": "Eclipse Foundation",
+  "organizationUrl": "https://www.eclipse.org",
+      "licenses": [
+        { "name": "EDL 1.0", "url": "http://www.eclipse.org/org/documents/edl-v10.php" }
+      ]
+    },
+    {
+      "name": "istack common utility code runtime",
+      "url": "https://projects.eclipse.org/projects/ee4j/istack-commons/istack-commons-runtime",
+      "groupId": "com.sun.istack",
+      "artifactId": "istack-commons-runtime",
+      "version": "3.0.12",
+  "organizationName": "Eclipse Foundation",
+  "organizationUrl": "https://www.eclipse.org",
+      "licenses": [
+        { "name": "Eclipse Distribution License - v 1.0", "url": "http://www.eclipse.org/org/documents/edl-v10.php" }
+      ]
+    },
+    {
+      "name": "Old JAXB Core",
+      "url": "http://jaxb.java.net/jaxb-bundles/jaxb-core",
+      "groupId": "com.sun.xml.bind",
+      "artifactId": "jaxb-core",
+      "version": "2.3.0",
+  "organizationName": "Oracle Corporation",
+  "organizationUrl": "http://www.oracle.com/",
+      "licenses": [
+        { "name": "CDDL+GPL License", "url": "http://glassfish.java.net/public/CDDL+GPL_1_1.html" }
+      ]
+    },
+    {
+      "name": "Old JAXB Runtime",
+      "url": "http://jaxb.java.net/jaxb-bundles/jaxb-impl",
+      "groupId": "com.sun.xml.bind",
+      "artifactId": "jaxb-impl",
+      "version": "2.3.0",
+  "organizationName": "Oracle Corporation",
+  "organizationUrl": "http://www.oracle.com/",
+      "licenses": [
+        { "name": "CDDL+GPL License", "url": "http://glassfish.java.net/public/CDDL+GPL_1_1.html" }
+      ]
+    },
+    {
+      "name": "Apache Commons FileUpload",
+      "url": "http://commons.apache.org/proper/commons-fileupload/",
+      "groupId": "commons-fileupload",
+      "artifactId": "commons-fileupload",
+      "version": "1.4",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Commons IO",
+      "url": "https://commons.apache.org/proper/commons-io/",
+      "groupId": "commons-io",
+      "artifactId": "commons-io",
+      "version": "2.11.0",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Logging",
+      "url": "http://jakarta.apache.org/commons/logging/",
+      "groupId": "commons-logging",
+      "artifactId": "commons-logging-api",
+      "version": "1.1",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "http://jakarta.apache.org",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "/LICENSE.txt" }
+      ]
+    },
+    {
+      "name": "jquery-selectors",
+      "url": "http://nexus.sonatype.org/oss-repository-hosting.html/jquery-selectors",
+      "groupId": "de.agilecoders.wicket",
+      "artifactId": "jquery-selectors",
+      "version": "3.0.4",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "bootstrap-core",
+      "url": "https://github.com/l0rdn1kk0n/wicket-bootstrap/wicket-bootstrap-core",
+      "groupId": "de.agilecoders.wicket",
+      "artifactId": "wicket-bootstrap-core",
+      "version": "6.0.0-M6",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "bootstrap-extensions",
+      "url": "https://github.com/l0rdn1kk0n/wicket-bootstrap/wicket-bootstrap-extensions",
+      "groupId": "de.agilecoders.wicket",
+      "artifactId": "wicket-bootstrap-extensions",
+      "version": "6.0.0-M6",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "library",
+      "url": "https://github.com/l0rdn1kk0n/wicket-webjars/wicket-webjars",
+      "groupId": "de.agilecoders.wicket.webjars",
+      "artifactId": "wicket-webjars",
+      "version": "3.0.4",
+  "organizationName": "agilecoders.de",
+  "organizationUrl": "http://agilecoders.de",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - API",
+      "url": "https://inception-project.github.io/inception-api",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-api",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Annotation API",
+      "url": "https://inception-project.github.io/inception-api-annotation",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-api-annotation",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Persistence API",
+      "url": "https://inception-project.github.io/inception-api-dao",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-api-dao",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Formats API",
+      "url": "https://inception-project.github.io/inception-api-formats",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-api-formats",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Bootstrap",
+      "url": "https://inception-project.github.io/inception-bootstrap",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-bootstrap",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Constraints",
+      "url": "https://inception-project.github.io/inception-constraints",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-constraints",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Diagnostics",
+      "url": "https://inception-project.github.io/inception-diag",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-diag",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - DIAM",
+      "url": "https://inception-project.github.io/inception-diam",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-diam",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Export",
+      "url": "https://inception-project.github.io/inception-export",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-export",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Editor - External editor",
+      "url": "https://inception-project.github.io/inception-external-editor",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-external-editor",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - IO - HTML",
+      "url": "https://inception-project.github.io/inception-io-html",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-io-html",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - IO - TSV",
+      "url": "https://inception-project.github.io/inception-io-webanno-tsv",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-io-webanno-tsv",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - IO - XML",
+      "url": "https://inception-project.github.io/inception-io-xml",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-io-xml",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Log",
+      "url": "https://inception-project.github.io/inception-log",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-log",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Model",
+      "url": "https://inception-project.github.io/inception-model",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-model",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Export Model",
+      "url": "https://inception-project.github.io/inception-model-export",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-model-export",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Preferences",
+      "url": "https://inception-project.github.io/inception-preferences",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-preferences",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Project",
+      "url": "https://inception-project.github.io/inception-project",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-project",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Scheduling",
+      "url": "https://inception-project.github.io/inception-scheduling",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-scheduling",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Core - Security",
+      "url": "https://inception-project.github.io/inception-security",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-security",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Support library",
+      "url": "https://inception-project.github.io/inception-support",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-support",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - UI - Core",
+      "url": "https://inception-project.github.io/inception-ui-core",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-ui-core",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "INCEpTION - Websocket",
+      "url": "https://inception-project.github.io/inception-websocket",
+      "groupId": "de.tudarmstadt.ukp.inception.app",
+      "artifactId": "inception-websocket",
+      "version": "24.0-SNAPSHOT",
+  "organizationName": "The INCEpTION Project",
+  "organizationUrl": "https://inception-project.github.io",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "OpenMinTeD SHARE (v3.0.2) Annotations for Java - API",
+      "url": "https://github.com/openminted/omtd-share-annotations/omtd-share-annotations-api",
+      "groupId": "eu.openminted.share.annotations",
+      "artifactId": "omtd-share-annotations-api",
+      "version": "3.0.2.7",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "fastutil",
+      "url": "http://fastutil.di.unimi.it/",
+      "groupId": "it.unimi.dsi",
+      "artifactId": "fastutil",
+      "version": "8.5.8",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.html" }
+      ]
+    },
+    {
+      "name": "Jakarta XML Binding API",
+      "url": "https://github.com/eclipse-ee4j/jaxb-api/jakarta.xml.bind-api",
+      "groupId": "jakarta.xml.bind",
+      "artifactId": "jakarta.xml.bind-api",
+      "version": "2.3.3",
+  "organizationName": "Eclipse Foundation",
+  "organizationUrl": "https://www.eclipse.org",
+      "licenses": [
+        { "name": "Eclipse Distribution License - v 1.0", "url": "http://www.eclipse.org/org/documents/edl-v10.php" }
+      ]
+    },
+    {
+      "name": "JavaBeans Activation Framework API jar",
+      "url": "http://java.net/all/javax.activation-api/",
+      "groupId": "javax.activation",
+      "artifactId": "javax.activation-api",
+      "version": "1.2.0",
+  "organizationName": "Oracle",
+  "organizationUrl": "http://www.oracle.com",
+      "licenses": [
+        { "name": "CDDL/GPLv2+CE", "url": "https://github.com/javaee/activation/blob/master/LICENSE.txt" }
+      ]
+    },
+    {
+      "name": "javax.inject",
+      "url": "http://code.google.com/p/atinject/",
+      "groupId": "javax.inject",
+      "artifactId": "javax.inject",
+      "version": "1",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "javax.persistence-api",
+      "url": "https://github.com/javaee/jpa-spec",
+      "groupId": "javax.persistence",
+      "artifactId": "javax.persistence-api",
+      "version": "2.2",
+      "licenses": [
+        { "name": "Eclipse Public License v1.0", "url": "http://www.eclipse.org/legal/epl-v10.html" },
+        { "name": "Eclipse Distribution License v. 1.0", "url": "http://www.eclipse.org/org/documents/edl-v10.php" }
+      ]
+    },
+    {
+      "name": "jaxb-api",
+      "url": "https://github.com/javaee/jaxb-spec/jaxb-api",
+      "groupId": "javax.xml.bind",
+      "artifactId": "jaxb-api",
+      "version": "2.3.0",
+  "organizationName": "Oracle Corporation",
+  "organizationUrl": "http://www.oracle.com/",
+      "licenses": [
+        { "name": "CDDL 1.1", "url": "https://oss.oracle.com/licenses/CDDL+GPL-1.1" },
+        { "name": "GPL2 w/ CPE", "url": "https://oss.oracle.com/licenses/CDDL+GPL-1.1" }
+      ]
+    },
+    {
+      "name": "Joda-Time",
+      "url": "https://www.joda.org/joda-time/",
+      "groupId": "joda-time",
+      "artifactId": "joda-time",
+      "version": "2.10.13",
+  "organizationName": "Joda.org",
+  "organizationUrl": "https://www.joda.org",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Byte Buddy (without dependencies)",
+      "url": "https://bytebuddy.net/byte-buddy",
+      "groupId": "net.bytebuddy",
+      "artifactId": "byte-buddy",
+      "version": "1.12.8",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Ant Core",
+      "url": "https://ant.apache.org/",
+      "groupId": "org.apache.ant",
+      "artifactId": "ant",
+      "version": "1.10.12",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Ant Launcher",
+      "url": "https://ant.apache.org/",
+      "groupId": "org.apache.ant",
+      "artifactId": "ant-launcher",
+      "version": "1.10.12",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Commons Collections",
+      "url": "https://commons.apache.org/proper/commons-collections/",
+      "groupId": "org.apache.commons",
+      "artifactId": "commons-collections4",
+      "version": "4.4",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Commons Compress",
+      "url": "https://commons.apache.org/proper/commons-compress/",
+      "groupId": "org.apache.commons",
+      "artifactId": "commons-compress",
+      "version": "1.21",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Commons Lang",
+      "url": "https://commons.apache.org/proper/commons-lang/",
+      "groupId": "org.apache.commons",
+      "artifactId": "commons-lang3",
+      "version": "3.12.0",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Commons Pool",
+      "url": "https://commons.apache.org/proper/commons-pool/",
+      "groupId": "org.apache.commons",
+      "artifactId": "commons-pool2",
+      "version": "2.11.1",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Commons Text",
+      "url": "https://commons.apache.org/proper/commons-text",
+      "groupId": "org.apache.commons",
+      "artifactId": "commons-text",
+      "version": "1.9",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Ivy",
+      "url": "http://ant.apache.org/ivy/",
+      "groupId": "org.apache.ivy",
+      "artifactId": "ivy",
+      "version": "2.5.0",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "http://www.apache.org/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Log4j API",
+      "url": "https://logging.apache.org/log4j/2.x/log4j-api/",
+      "groupId": "org.apache.logging.log4j",
+      "artifactId": "log4j-api",
+      "version": "2.17.2",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Log4j Core",
+      "url": "https://logging.apache.org/log4j/2.x/log4j-core/",
+      "groupId": "org.apache.logging.log4j",
+      "artifactId": "log4j-core",
+      "version": "2.17.2",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Log4j Layout for JSON template",
+      "url": "https://logging.apache.org/log4j/2.x/log4j-layout-template-json/",
+      "groupId": "org.apache.logging.log4j",
+      "artifactId": "log4j-layout-template-json",
+      "version": "2.17.2",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache Log4j SLF4J Binding",
+      "url": "https://logging.apache.org/log4j/2.x/log4j-slf4j-impl/",
+      "groupId": "org.apache.logging.log4j",
+      "artifactId": "log4j-slf4j-impl",
+      "version": "2.17.2",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Maven Model",
+      "url": "http://maven.apache.org/ref/3.0.5//maven-model",
+      "groupId": "org.apache.maven",
+      "artifactId": "maven-model",
+      "version": "3.0.5",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "http://www.apache.org/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache UIMA uimaFIT - Core",
+      "url": "https://uima.apache.org",
+      "groupId": "org.apache.uima",
+      "artifactId": "uimafit-core",
+      "version": "3.2.0",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache UIMA Base: uimaj-core",
+      "url": "https://uima.apache.org",
+      "groupId": "org.apache.uima",
+      "artifactId": "uimaj-core",
+      "version": "3.2.0",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Apache UIMA Base: uimaj-document-annotation",
+      "url": "https://uima.apache.org",
+      "groupId": "org.apache.uima",
+      "artifactId": "uimaj-document-annotation",
+      "version": "3.2.0",
+  "organizationName": "The Apache Software Foundation",
+  "organizationUrl": "https://www.apache.org/",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Wicket Auth Roles",
+      "url": "http://wicket.apache.org/wicket-auth-roles",
+      "groupId": "org.apache.wicket",
+      "artifactId": "wicket-auth-roles",
+      "version": "9.9.1",
+  "organizationName": "Apache Software Foundation",
+  "organizationUrl": "http://apache.org",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Wicket Core",
+      "url": "http://wicket.apache.org/wicket-core",
+      "groupId": "org.apache.wicket",
+      "artifactId": "wicket-core",
+      "version": "9.9.1",
+  "organizationName": "Apache Software Foundation",
+  "organizationUrl": "http://apache.org",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Wicket Development Utilities",
+      "url": "http://wicket.apache.org/wicket-devutils",
+      "groupId": "org.apache.wicket",
+      "artifactId": "wicket-devutils",
+      "version": "9.9.1",
+  "organizationName": "Apache Software Foundation",
+  "organizationUrl": "http://apache.org",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Wicket Extensions",
+      "url": "http://wicket.apache.org/wicket-extensions",
+      "groupId": "org.apache.wicket",
+      "artifactId": "wicket-extensions",
+      "version": "9.9.1",
+  "organizationName": "Apache Software Foundation",
+  "organizationUrl": "http://apache.org",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Wicket IoC common code",
+      "url": "http://wicket.apache.org/wicket-ioc",
+      "groupId": "org.apache.wicket",
+      "artifactId": "wicket-ioc",
+      "version": "9.9.1",
+  "organizationName": "Apache Software Foundation",
+  "organizationUrl": "http://apache.org",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Wicket Request",
+      "url": "http://maven.apache.org",
+      "groupId": "org.apache.wicket",
+      "artifactId": "wicket-request",
+      "version": "9.9.1",
+  "organizationName": "Apache Software Foundation",
+  "organizationUrl": "http://apache.org",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Wicket Spring Integration",
+      "url": "http://wicket.apache.org/wicket-spring",
+      "groupId": "org.apache.wicket",
+      "artifactId": "wicket-spring",
+      "version": "9.9.1",
+  "organizationName": "Apache Software Foundation",
+  "organizationUrl": "http://apache.org",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Wicket Util",
+      "url": "http://wicket.apache.org/wicket-util",
+      "groupId": "org.apache.wicket",
+      "artifactId": "wicket-util",
+      "version": "9.9.1",
+  "organizationName": "Apache Software Foundation",
+  "organizationUrl": "http://apache.org",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "procyon-compilertools",
+      "url": "https://bitbucket.org/mstrobel/procyon",
+      "groupId": "org.bitbucket.mstrobel",
+      "artifactId": "procyon-compilertools",
+      "version": "0.5.32",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "procyon-core",
+      "url": "https://bitbucket.org/mstrobel/procyon",
+      "groupId": "org.bitbucket.mstrobel",
+      "artifactId": "procyon-core",
+      "version": "0.5.32",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Checker Qual",
+      "url": "https://checkerframework.org",
+      "groupId": "org.checkerframework",
+      "artifactId": "checker-qual",
+      "version": "3.21.3",
+      "licenses": [
+        { "name": "The MIT License", "url": "http://opensource.org/licenses/MIT" }
+      ]
+    },
+    {
+      "name": "Plexus Common Utilities",
+      "url": "http://plexus.codehaus.org/plexus-utils",
+      "groupId": "org.codehaus.plexus",
+      "artifactId": "plexus-utils",
+      "version": "2.0.6",
+  "organizationName": "Codehaus",
+  "organizationUrl": "http://www.codehaus.org/",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "org.danekja.jdk-serializable-functional",
+      "url": "https://github.com/danekja/jdk-serializable-functional",
+      "groupId": "org.danekja",
+      "artifactId": "jdk-serializable-functional",
+      "version": "1.9.0",
+      "licenses": [
+        { "name": "MIT License", "url": "http://www.opensource.org/licenses/mit-license.php" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - Coreference API",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-coref-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - FeaturePath API (ASL)",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-featurepath-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - IO API",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-io-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - Part-of-Speech API",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-lexmorph-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - Metadata API",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-metadata-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - Named Entity Recognition API",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-ner-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - Parameter API",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-parameter-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - Resources API",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-resources-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - Lexical Units API",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-segmentation-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - Syntax API",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-api-syntax-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "DKPro Core ASL - IO - HTML (jsoup 1.13.1)",
+      "url": "https://dkpro.github.io/dkpro-core/",
+      "groupId": "org.dkpro.core",
+      "artifactId": "dkpro-core-io-html-asl",
+      "version": "2.2.0",
+  "organizationName": "Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+  "organizationUrl": "https://www.ukp.tu-darmstadt.de/",
+      "licenses": [
+        { "name": "Apache License Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "JAXB Runtime",
+      "url": "https://eclipse-ee4j.github.io/jaxb-ri/",
+      "groupId": "org.glassfish.jaxb",
+      "artifactId": "jaxb-runtime",
+      "version": "2.3.6",
+  "organizationName": "Eclipse Foundation",
+  "organizationUrl": "https://www.eclipse.org",
+      "licenses": [
+        { "name": "Eclipse Distribution License - v 1.0", "url": "http://www.eclipse.org/org/documents/edl-v10.php" }
+      ]
+    },
+    {
+      "name": "TXW2 Runtime",
+      "url": "https://eclipse-ee4j.github.io/jaxb-ri/",
+      "groupId": "org.glassfish.jaxb",
+      "artifactId": "txw2",
+      "version": "2.3.6",
+  "organizationName": "Eclipse Foundation",
+  "organizationUrl": "https://www.eclipse.org",
+      "licenses": [
+        { "name": "Eclipse Distribution License - v 1.0", "url": "http://www.eclipse.org/org/documents/edl-v10.php" }
+      ]
+    },
+    {
+      "name": "Hibernate ORM - hibernate-core",
+      "url": "https://hibernate.org/orm",
+      "groupId": "org.hibernate",
+      "artifactId": "hibernate-core",
+      "version": "5.6.8.Final",
+  "organizationName": "Hibernate.org",
+  "organizationUrl": "https://hibernate.org",
+      "licenses": [
+        { "name": "GNU Library General Public License v2.1 or later", "url": "https://www.opensource.org/licenses/LGPL-2.1" }
+      ]
+    },
+    {
+      "name": "Hibernate Commons Annotations",
+      "url": "http://hibernate.org",
+      "groupId": "org.hibernate.common",
+      "artifactId": "hibernate-commons-annotations",
+      "version": "5.1.2.Final",
+  "organizationName": "Hibernate.org",
+  "organizationUrl": "http://hibernate.org",
+      "licenses": [
+        { "name": "GNU Library General Public License v2.1 or later", "url": "http://www.opensource.org/licenses/LGPL-2.1" }
+      ]
+    },
+    {
+      "name": "Javassist",
+      "url": "http://www.javassist.org/",
+      "groupId": "org.javassist",
+      "artifactId": "javassist",
+      "version": "3.28.0-GA",
+  "organizationName": "Shigeru Chiba, www.javassist.org",
+      "licenses": [
+        { "name": "MPL 1.1", "url": "http://www.mozilla.org/MPL/MPL-1.1.html" },
+        { "name": "LGPL 2.1", "url": "http://www.gnu.org/licenses/lgpl-2.1.html" },
+        { "name": "Apache License 2.0", "url": "http://www.apache.org/licenses/" }
+      ]
+    },
+    {
+      "name": "Java Annotation Indexer",
+      "url": "http://www.jboss.org/jandex",
+      "groupId": "org.jboss",
+      "artifactId": "jandex",
+      "version": "2.4.2.Final",
+  "organizationName": "JBoss by Red Hat",
+  "organizationUrl": "http://www.jboss.org",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "JBoss Logging 3",
+      "url": "http://www.jboss.org",
+      "groupId": "org.jboss.logging",
+      "artifactId": "jboss-logging",
+      "version": "3.4.2.Final",
+  "organizationName": "JBoss by Red Hat",
+  "organizationUrl": "http://www.jboss.org",
+      "licenses": [
+        { "name": "Apache License, version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Java Transaction API",
+      "url": "http://www.jboss.org/jboss-transaction-api_1.2_spec",
+      "groupId": "org.jboss.spec.javax.transaction",
+      "artifactId": "jboss-transaction-api_1.2_spec",
+      "version": "1.1.1.Final",
+  "organizationName": "JBoss by Red Hat",
+  "organizationUrl": "http://www.jboss.org",
+      "licenses": [
+        { "name": "Common Development and Distribution License", "url": "http://repository.jboss.org/licenses/cddl.txt" },
+        { "name": "GNU General Public License, Version 2 with the Classpath Exception", "url": "http://repository.jboss.org/licenses/gpl-2.0-ce.txt" }
+      ]
+    },
+    {
+      "name": "jsoup Java HTML Parser",
+      "url": "https://jsoup.org/",
+      "groupId": "org.jsoup",
+      "artifactId": "jsoup",
+      "version": "1.14.3",
+  "organizationName": "Jonathan Hedley",
+  "organizationUrl": "https://jhy.io/",
+      "licenses": [
+        { "name": "The MIT License", "url": "https://jsoup.org/license" }
+      ]
+    },
+    {
+      "name": "Liquibase",
+      "url": "http://www.liquibase.org/liquibase-root/liquibase-dist",
+      "groupId": "org.liquibase",
+      "artifactId": "liquibase-core",
+      "version": "4.5.0",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "asm",
+      "url": "http://asm.ow2.io/",
+      "groupId": "org.ow2.asm",
+      "artifactId": "asm",
+      "version": "9.1",
+  "organizationName": "OW2",
+  "organizationUrl": "http://www.ow2.org/",
+      "licenses": [
+        { "name": "BSD-3-Clause", "url": "https://asm.ow2.io/license.html" }
+      ]
+    },
+    {
+      "name": "Reflections",
+      "url": "http://github.com/ronmamo/reflections",
+      "groupId": "org.reflections",
+      "artifactId": "reflections",
+      "version": "0.9.10",
+      "licenses": [
+        { "name": "WTFPL", "url": "http://www.wtfpl.net/" },
+        { "name": "The New BSD License", "url": "http://www.opensource.org/licenses/bsd-license.html" }
+      ]
+    },
+    {
+      "name": "JCL 1.2 implemented over SLF4J",
+      "url": "http://www.slf4j.org",
+      "groupId": "org.slf4j",
+      "artifactId": "jcl-over-slf4j",
+      "version": "1.7.36",
+  "organizationName": "QOS.ch",
+  "organizationUrl": "http://www.qos.ch",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Log4j Implemented Over SLF4J",
+      "url": "http://www.slf4j.org",
+      "groupId": "org.slf4j",
+      "artifactId": "log4j-over-slf4j",
+      "version": "1.7.36",
+  "organizationName": "QOS.ch",
+  "organizationUrl": "http://www.qos.ch",
+      "licenses": [
+        { "name": "Apache Software Licenses", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "SLF4J API Module",
+      "url": "http://www.slf4j.org",
+      "groupId": "org.slf4j",
+      "artifactId": "slf4j-api",
+      "version": "1.7.36",
+  "organizationName": "QOS.ch",
+  "organizationUrl": "http://www.qos.ch",
+      "licenses": [
+        { "name": "MIT License", "url": "http://www.opensource.org/licenses/mit-license.php" }
+      ]
+    },
+    {
+      "name": "Spring AOP",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-aop",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Beans",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-beans",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Context",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-context",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Context Support",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-context-support",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Core",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-core",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Expression Language (SpEL)",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-expression",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Commons Logging Bridge",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-jcl",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring JDBC",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-jdbc",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Messaging",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-messaging",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Transaction",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-tx",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Web",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-web",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring Web MVC",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-webmvc",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Spring WebSocket",
+      "url": "https://github.com/spring-projects/spring-framework",
+      "groupId": "org.springframework",
+      "artifactId": "spring-websocket",
+      "version": "5.3.19",
+  "organizationName": "Spring IO",
+  "organizationUrl": "https://spring.io/projects/spring-framework",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "spring-boot",
+      "url": "https://spring.io/projects/spring-boot",
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot",
+      "version": "2.6.7",
+  "organizationName": "Pivotal Software, Inc.",
+  "organizationUrl": "https://spring.io",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "spring-boot-autoconfigure",
+      "url": "https://spring.io/projects/spring-boot",
+      "groupId": "org.springframework.boot",
+      "artifactId": "spring-boot-autoconfigure",
+      "version": "2.6.7",
+  "organizationName": "Pivotal Software, Inc.",
+  "organizationUrl": "https://spring.io",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "spring-security-config",
+      "url": "https://spring.io/projects/spring-security",
+      "groupId": "org.springframework.security",
+      "artifactId": "spring-security-config",
+      "version": "5.6.2",
+  "organizationName": "Pivotal Software, Inc.",
+  "organizationUrl": "https://spring.io",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "spring-security-core",
+      "url": "https://spring.io/projects/spring-security",
+      "groupId": "org.springframework.security",
+      "artifactId": "spring-security-core",
+      "version": "5.6.2",
+  "organizationName": "Pivotal Software, Inc.",
+  "organizationUrl": "https://spring.io",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "spring-security-crypto",
+      "url": "https://spring.io/projects/spring-security",
+      "groupId": "org.springframework.security",
+      "artifactId": "spring-security-crypto",
+      "version": "5.6.3",
+  "organizationName": "Pivotal Software, Inc.",
+  "organizationUrl": "https://spring.io",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "spring-security-messaging",
+      "url": "https://spring.io/projects/spring-security",
+      "groupId": "org.springframework.security",
+      "artifactId": "spring-security-messaging",
+      "version": "5.6.3",
+  "organizationName": "Pivotal Software, Inc.",
+  "organizationUrl": "https://spring.io",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "spring-security-web",
+      "url": "https://spring.io/projects/spring-security",
+      "groupId": "org.springframework.security",
+      "artifactId": "spring-security-web",
+      "version": "5.6.2",
+  "organizationName": "Pivotal Software, Inc.",
+  "organizationUrl": "https://spring.io",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "XZ for Java",
+      "url": "https://tukaani.org/xz/java.html",
+      "groupId": "org.tukaani",
+      "artifactId": "xz",
+      "version": "1.8",
+      "licenses": [
+        { "name": "Public Domain", "url": "" }
+      ]
+    },
+    {
+      "name": "Animate.css",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars",
+      "artifactId": "animate.css",
+      "version": "3.2.6",
+      "licenses": [
+        { "name": "MIT", "url": "http://opensource.org/licenses/MIT" }
+      ]
+    },
+    {
+      "name": "Bootstrap",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars",
+      "artifactId": "bootstrap",
+      "version": "5.1.3",
+      "licenses": [
+        { "name": "Apache License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0" }
+      ]
+    },
+    {
+      "name": "Font Awesome",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars",
+      "artifactId": "font-awesome",
+      "version": "5.15.3",
+      "licenses": [
+        { "name": "CC BY 3.0", "url": "http://creativecommons.org/licenses/by/3.0/" }
+      ]
+    },
+    {
+      "name": "jQuery UI",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars",
+      "artifactId": "jquery-ui",
+      "version": "1.13.0",
+      "licenses": [
+        { "name": "MIT License", "url": "https://github.com/jquery/jquery-ui/blob/master/MIT-LICENSE.txt" }
+      ]
+    },
+    {
+      "name": "Modernizr",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars",
+      "artifactId": "modernizr",
+      "version": "2.8.3-1",
+      "licenses": [
+        { "name": "MIT License", "url": "http://en.wikipedia.org/wiki/MIT_License" }
+      ]
+    },
+    {
+      "name": "Popper.js",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars",
+      "artifactId": "popper.js",
+      "version": "2.9.3",
+      "licenses": [
+        { "name": "MIT", "url": "https://github.com/FezVrasta/popper.js/raw/master/LICENSE.md" }
+      ]
+    },
+    {
+      "name": "spin.js",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars",
+      "artifactId": "spin-js",
+      "version": "2.1.0",
+      "licenses": [
+        { "name": "MIT", "url": "https://raw.github.com/fgnass/spin.js/gh-pages/LICENSE.txt" }
+      ]
+    },
+    {
+      "name": "typeahead.js",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars",
+      "artifactId": "typeaheadjs",
+      "version": "0.11.1",
+      "licenses": [
+        { "name": "MIT", "url": "https://github.com/twitter/typeahead.js/blob/master/LICENSE" }
+      ]
+    },
+    {
+      "name": "hover",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars.bower",
+      "artifactId": "hover",
+      "version": "2.0.2",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "jquery.scrollTo",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars.bower",
+      "artifactId": "jquery.scrollTo",
+      "version": "2.1.2",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "moment",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars.bower",
+      "artifactId": "momentjs",
+      "version": "2.24.0",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "enjoyhint",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars.bowergithub.xbsoftware",
+      "artifactId": "enjoyhint",
+      "version": "3.1.0",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "@babel/helper-validator-identifier",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "babel__helper-validator-identifier",
+      "version": "7.16.7",
+      "licenses": [
+        { "name": "MIT", "url": "" }
+      ]
+    },
+    {
+      "name": "@babel/parser",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "babel__parser",
+      "version": "7.17.10",
+      "licenses": [
+        { "name": "MIT", "url": "" }
+      ]
+    },
+    {
+      "name": "@babel/types",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "babel__types",
+      "version": "7.17.0",
+      "licenses": [
+        { "name": "MIT", "url": "" }
+      ]
+    },
+    {
+      "name": "csstype",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "csstype",
+      "version": "3.0.0-beta.4",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "dayjs",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "dayjs",
+      "version": "1.9.6",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "estree-walker",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "estree-walker",
+      "version": "2.0.2",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "inputmask",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "inputmask",
+      "version": "4.0.0",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "kinetic",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "kinetic",
+      "version": "5.2.0",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "source-map",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "source-map",
+      "version": "0.6.1",
+      "licenses": [
+        { "name": "BSD 3-Clause", "url": "https://spdx.org/licenses/BSD 3-Clause#licenseText" }
+      ]
+    },
+    {
+      "name": "summernote",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "summernote",
+      "version": "0.8.20",
+      "licenses": [
+        { "name": "MIT", "url": "" }
+      ]
+    },
+    {
+      "name": "to-fast-properties",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "to-fast-properties",
+      "version": "2.0.0",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "vue",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "vue",
+      "version": "3.0.5",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "@vue/compiler-core",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "vue__compiler-core",
+      "version": "3.0.5",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "@vue/compiler-dom",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "vue__compiler-dom",
+      "version": "3.0.5",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "@vue/reactivity",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "vue__reactivity",
+      "version": "3.0.5",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "@vue/runtime-core",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "vue__runtime-core",
+      "version": "3.0.5",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "@vue/runtime-dom",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "vue__runtime-dom",
+      "version": "3.0.5",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "@vue/shared",
+      "url": "https://www.webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "vue__shared",
+      "version": "3.0.5",
+      "licenses": [
+        { "name": "MIT", "url": "https://spdx.org/licenses/MIT#licenseText" }
+      ]
+    },
+    {
+      "name": "webstomp-client",
+      "url": "http://webjars.org",
+      "groupId": "org.webjars.npm",
+      "artifactId": "webstomp-client",
+      "version": "1.2.6",
+      "licenses": [
+        { "name": "Apache-2.0", "url": "https://spdx.org/licenses/Apache-2.0#licenseText" }
+      ]
+    },
+    {
+      "name": "Wicket Annotations",
+      "url": "http://wicketstuff.org/wicketstuff-annotation",
+      "groupId": "org.wicketstuff",
+      "artifactId": "wicketstuff-annotation",
+      "version": "9.9.0",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Annotation Event Dispatcher",
+      "url": "http://wicketstuff.org/wicketstuff-annotationeventdispatcher-parent/wicketstuff-annotationeventdispatcher",
+      "groupId": "org.wicketstuff",
+      "artifactId": "wicketstuff-annotationeventdispatcher",
+      "version": "9.9.0",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Input Events",
+      "url": "http://wicketstuff.org/input-events-parent/wicketstuff-input-events",
+      "groupId": "org.wicketstuff",
+      "artifactId": "wicketstuff-input-events",
+      "version": "9.9.0",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "Wicketstuff-Select2 Components",
+      "url": "http://wicketstuff.org/wicketstuff-select2-parent/wicketstuff-select2",
+      "groupId": "org.wicketstuff",
+      "artifactId": "wicketstuff-select2",
+      "version": "9.9.0",
+      "licenses": [
+        { "name": "The Apache Software License, Version 2.0", "url": "http://www.apache.org/licenses/LICENSE-2.0.txt" }
+      ]
+    },
+    {
+      "name": "wicketstuff-urlfragment",
+      "url": "https://github.com/Horsed/WicketUrlFragment/wicketstuff-urlfragment",
+      "groupId": "org.wicketstuff",
+      "artifactId": "wicketstuff-urlfragment",
+      "version": "9.9.0",
+      "licenses": [
+        { "name": "MIT License", "url": "http://opensource.org/licenses/MIT" }
+      ]
+    }
+  ]
+}
