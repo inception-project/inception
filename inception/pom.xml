@@ -1177,7 +1177,7 @@
       <dependency>
         <groupId>com.github.openjson</groupId>
         <artifactId>openjson</artifactId>
-        <version>1.0.10</version>
+        <version>1.0.12</version>
       </dependency>
 
       <dependency>
@@ -1230,12 +1230,12 @@
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
-        <version>3.28.0-GA</version>
+        <version>3.29.0-GA</version>
       </dependency>
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.12.8</version>
+        <version>1.12.10</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
