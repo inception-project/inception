@@ -63,7 +63,7 @@
 
     <junit.version>5.8.2</junit.version>
     <mockito.version>3.12.4</mockito.version>
-    <assertj.version>3.21.0</assertj.version>
+    <assertj.version>3.22.0</assertj.version>
 
     <dkpro.version>2.2.0</dkpro.version>
     <uima.version>3.2.0</uima.version>
@@ -132,7 +132,7 @@
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.13.1</jackson.version>
+    <jackson.version>2.13.3</jackson.version>
     <okhttp.version>4.9.1</okhttp.version>
   </properties>
   <repositories>
@@ -163,6 +163,7 @@
     </repository>
     -->
     <!-- For Wicket Bootstrap 6.0.0-SNAPSHOT -->
+    <!--  
     <repository>
       <id>oss.sonatype.org-snapshot</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -173,6 +174,7 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    -->
     <!-- For Apache UIMA release candidates -->
     <!--
     <repository>
