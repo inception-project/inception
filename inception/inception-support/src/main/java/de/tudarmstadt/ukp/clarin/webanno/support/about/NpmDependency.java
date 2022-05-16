@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.about;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.normaliseLicense;
 import static java.util.Arrays.asList;
 
 import java.io.Serializable;
@@ -138,7 +139,7 @@ public class NpmDependency
             @Override
             public List<String> getLicenses()
             {
-                return asList(NpmDependency.this.getLicenses());
+                return asList(normaliseLicense(NpmDependency.this.getLicenses()));
             }
         };
     }

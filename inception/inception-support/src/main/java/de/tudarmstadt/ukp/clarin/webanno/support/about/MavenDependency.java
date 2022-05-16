@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.about;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.normaliseLicense;
+import static java.util.stream.Collectors.toList;
+
 import java.io.Serializable;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -150,8 +152,8 @@ public class MavenDependency
             public List<String> getLicenses()
             {
                 return MavenDependency.this.getLicenses().stream() //
-                        .map(l -> l.toString()) //
-                        .collect(Collectors.toList());
+                        .map(l -> normaliseLicense(l.toString())) //
+                        .collect(toList());
             }
         };
     }

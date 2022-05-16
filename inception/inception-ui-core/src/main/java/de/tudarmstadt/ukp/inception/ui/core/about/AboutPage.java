@@ -22,6 +22,7 @@ import static java.lang.String.join;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.time.Year;
@@ -47,7 +48,22 @@ public class AboutPage
 
         var buf = new StringBuilder();
 
-        var groupedBySource = loadJsonDependencies().stream()
+        buf.append("===== Licenses =====\n");
+
+        var dependencies = loadJsonDependencies();
+
+        dependencies = dependencies.stream() //
+                .filter(d -> !d.getName().startsWith("@inception-project/")) //
+                .filter(d -> !d.getName().startsWith("INCEpTION")) //
+                .collect(toSet());
+
+        dependencies.stream() //
+                .flatMap(d -> d.getLicenses().stream()) //
+                .sorted().distinct() //
+                .forEach(l -> buf.append(l).append("\n"));
+        buf.append("\n");
+
+        var groupedBySource = dependencies.stream()
                 .collect(groupingBy(d -> defaultString(d.getSource(), "UNKNOWN")));
         for (var groupKey : groupedBySource.keySet().stream().sorted().collect(toList())) {
             buf.append("===== ").append(groupKey).append(" =====\n");
