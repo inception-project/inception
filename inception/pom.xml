@@ -63,12 +63,12 @@
 
     <junit-jupiter.version>5.8.2</junit-jupiter.version>
     <mockito.version>4.4.0</mockito.version>
-    <assertj.version>3.21.0</assertj.version>
+    <assertj.version>3.22.0</assertj.version>
     <awaitility.version>4.2.0</awaitility.version>
     <xmlunit.version>1.6</xmlunit.version>
 
     <dkpro.version>2.2.0</dkpro.version>
-    <uima.version>3.2.0</uima.version>
+    <uima.version>3.3.0</uima.version>
     <uimafit.version>3.2.0</uimafit.version>
 
     <spring.version>5.3.19</spring.version>
@@ -90,8 +90,8 @@
     <hibernate.version>5.6.8.Final</hibernate.version>
     <hibernate.validator.version>6.2.3.Final</hibernate.validator.version>
 
-    <wicket.version>9.9.1</wicket.version>
-    <wicketstuff.version>9.9.0</wicketstuff.version>
+    <wicket.version>9.10.0</wicket.version>
+    <wicketstuff.version>9.10.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.8.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.0-M6</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
@@ -134,7 +134,7 @@
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
-    <jackson.version>2.13.2</jackson.version>
+    <jackson.version>2.13.3</jackson.version>
     <okhttp.version>4.9.3</okhttp.version>
     
     <node.version>16.14.2</node.version>
@@ -147,6 +147,7 @@
   </properties>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core -->
+    <!--  
     <repository>
       <id>ukp-oss-releases</id>
       <url>https://zoidberg.ukp.informatik.tu-darmstadt.de/artifactory/public-releases</url>
@@ -159,6 +160,7 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    -->
     <!-- For SNAPSHOTs of WebAnno / DKPro Core -->
     <!--
     <repository>
@@ -173,6 +175,7 @@
     </repository>
     -->
     <!-- For Wicket Bootstrap 6.0.0-SNAPSHOT -->
+    <!--  
     <repository>
       <id>oss.sonatype.org-snapshot</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -183,6 +186,7 @@
         <enabled>true</enabled>
       </snapshots>
     </repository>
+    -->
     <!-- For Apache UIMA release candidates -->
     <!--
     <repository>
