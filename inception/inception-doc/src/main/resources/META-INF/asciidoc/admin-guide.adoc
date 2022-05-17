@@ -42,6 +42,8 @@ include::{include-dir}installation_ssl_apache.adoc[leveloffset=+2]
 
 include::{include-dir}installation_ssl_nginx.adoc[leveloffset=+2]
 
+include::{include-dir}installation_ssl_caddy.adoc[leveloffset=+2]
+
 include::{include-dir}installation_docker.adoc[leveloffset=+1]
 
 <<<

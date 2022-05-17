@@ -1,0 +1,66 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Caddy as a reverse proxy
+
+====
+IMPORTANT: Make sure you have read the <<sect_reverse_proxy,general instructions>> for running behind 
+       a reverse proxy and have configured your <<sect_settings,settings file>> accordingly, otherwise you will not be able
+       to properly use {product-name} via the reverse proxy!
+====
+
+This section describes using link:https://caddyserver.com/[Caddy] as a web server serving as a reverse proxy for INCEpTION.
+It further assumes that you want to use the builting funcionality to use link:https://letsencrypt.org/[Let's Encrypt] as a CA for obtaining valid SSL certificates.
+
+* You can install caddy by following the steps in link:https://caddyserver.com/docs/install[Caddy].
+We assume that you will use the default Systemd configuration that comes with e.g. installing Caddy via apt.
+Also, we assume that the host you are running Caddy on has a valid DNS entry and is reachable from the internet.
+
+* Verify the installation with
+
+----
+$ systemctl status caddy
+● caddy.service - Caddy
+   Loaded: loaded (/lib/systemd/system/caddy.service; enabled; vendor preset: enabled)
+   Active: active (running) since Wed 2022-04-27 23:17:14 CEST; 2 weeks 5 days ago
+     Docs: https://caddyserver.com/docs/
+ Main PID: 3541 (caddy)
+      CPU: 8min 36.550s
+   CGroup: /system.slice/caddy.service
+           └─3541 /usr/bin/caddy run --environ --config /etc/caddy/Caddyfile
+----
+
+* You can stop, start or restart Caddy with
+
+----
+$ systemctl stop caddy
+
+$ systemctl start caddy
+
+$ systemctl restart caddy
+----
+
+* Edit the Caddyfile under `/etc/caddy/Caddyfile` and paste the following (and adjust it to your own needs):
+
+----
+example.com
+
+handle_path "/inception" {
+    reverse_proxy 127.0.0.1:8080
+}
+----
+
+After you restart the Caddy service, you now have a running reverse proxy with automatic HTTPS certificates!
