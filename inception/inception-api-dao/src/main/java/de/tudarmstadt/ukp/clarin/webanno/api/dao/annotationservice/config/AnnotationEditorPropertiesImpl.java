@@ -37,6 +37,7 @@ public class AnnotationEditorPropertiesImpl
     private boolean sentenceLayerEditable;
     private boolean rememberLayerEnabled = false;
     private boolean forwardAnnotationEnabled = false;
+    private boolean configurableJavaScriptActionEnabled = false;
 
     @ManagedAttribute
     @Override
@@ -84,5 +85,16 @@ public class AnnotationEditorPropertiesImpl
     public void setRememberLayerEnabled(boolean aRememberLayerEnabled)
     {
         rememberLayerEnabled = aRememberLayerEnabled;
+    }
+
+    public void setConfigurableJavaScriptActionEnabled(boolean aConfigurableJavaScriptActionEnabled)
+    {
+        configurableJavaScriptActionEnabled = aConfigurableJavaScriptActionEnabled;
+    }
+
+    @Override
+    public boolean isConfigurableJavaScriptActionEnabled()
+    {
+        return configurableJavaScriptActionEnabled;
     }
 }

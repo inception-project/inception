@@ -36,7 +36,7 @@ export class DiamAjaxImpl implements DiamAjax {
     this.ajaxEndpoint = ajaxEndpoint;
   }
 
-  selectAnnotation(id: string) {
+  selectAnnotation(id: VID): void {
     Wicket.Ajax.ajax({
       "m": "POST",
       "u": this.ajaxEndpoint,
@@ -47,7 +47,7 @@ export class DiamAjaxImpl implements DiamAjax {
     });
   }
 
-  createSpanAnnotation(offsets: Array<Offsets>, spanText: string) {
+  createSpanAnnotation(offsets: Array<Offsets>, spanText?: string): void {
     Wicket.Ajax.ajax({
       "m": "POST",
       "u": this.ajaxEndpoint,
@@ -59,7 +59,7 @@ export class DiamAjaxImpl implements DiamAjax {
     });
   }
 
-  createRelationAnnotation(originSpanId: VID, targetSpanId: VID) {
+  createRelationAnnotation(originSpanId: VID, targetSpanId: VID): void {
     Wicket.Ajax.ajax({
       "m": "POST",
       "u": this.ajaxEndpoint,
@@ -71,12 +71,23 @@ export class DiamAjaxImpl implements DiamAjax {
     });
   }
 
-  deleteAnnotation(id: VID) {
+  deleteAnnotation(id: VID): void {
     Wicket.Ajax.ajax({
       "m": "POST",
       "u": this.ajaxEndpoint,
       "ep": {
         action: 'deleteAnnotation',
+        id: id
+      }
+    });
+  }
+
+  triggerExtensionAction(id: VID): void {
+    Wicket.Ajax.ajax({
+      "m": "POST",
+      "u": this.ajaxEndpoint,
+      "ep": {
+        action: 'doAction',
         id: id
       }
     });

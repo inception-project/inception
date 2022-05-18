@@ -57,8 +57,10 @@ public interface PagingStrategy
             List<Unit> units = units(aCas);
 
             // Find the unit containing the given offset
-            Unit unit = units.stream().filter(u -> u.getBegin() <= aOffset && aOffset <= u.getEnd())
-                    .findFirst().orElseThrow(() -> new IllegalArgumentException(
+            Unit unit = units.stream() //
+                    .filter(u -> u.getBegin() <= aOffset && aOffset <= u.getEnd()) //
+                    .findFirst() //
+                    .orElseThrow(() -> new IllegalArgumentException(
                             "No unit contains character offset [" + aOffset + "]"));
 
             // How many rows to display before the unit such that the unit is centered?

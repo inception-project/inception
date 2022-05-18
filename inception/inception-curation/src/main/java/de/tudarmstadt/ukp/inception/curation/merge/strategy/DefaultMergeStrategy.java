@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge.strategy;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
 
 import java.lang.invoke.MethodHandles;
-import java.util.Optional;
+import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.slf4j.Logger;
@@ -29,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class DefaultMergeStrategy
     implements MergeStrategy
@@ -36,8 +39,8 @@ public class DefaultMergeStrategy
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Override
-    public Optional<Configuration> chooseConfigurationToMerge(DiffResult aDiff,
-            ConfigurationSet aCfgs)
+    public List<Configuration> chooseConfigurationsToMerge(DiffResult aDiff, ConfigurationSet aCfgs,
+            AnnotationLayer aLayer)
     {
         boolean stacked = aCfgs.getConfigurations().stream() //
                 .filter(Configuration::isStacked) //
@@ -45,20 +48,20 @@ public class DefaultMergeStrategy
 
         if (stacked) {
             LOG.trace(" `-> Not merging stacked annotation");
-            return Optional.empty();
+            return emptyList();
         }
 
         if (!aDiff.isComplete(aCfgs)) {
             LOG.trace(" `-> Not merging incomplete annotation");
-            return Optional.empty();
+            return emptyList();
         }
 
         if (!aDiff.isAgreement(aCfgs)) {
             LOG.trace(" `-> Not merging annotation with disagreement");
-            return Optional.empty();
+            return emptyList();
         }
 
-        return Optional.of(aCfgs.getConfigurations().get(0));
+        return asList(aCfgs.getConfigurations().get(0));
     }
 
     @Override

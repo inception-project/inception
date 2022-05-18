@@ -17,14 +17,27 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.ahocorasick.trie.Emit;
 import org.ahocorasick.trie.Trie;
+import org.dkpro.core.api.resources.ResourceUtils;
+import org.xml.sax.SAXException;
 
+import de.tudarmstadt.ukp.inception.pdfeditor.SubstitutionTableParser;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 
@@ -36,8 +49,11 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 public class PdfExtractFile
     implements Serializable
 {
-
     private static final long serialVersionUID = -8596941152876909935L;
+
+    private static final int COL_PAGE = 0;
+    private static final int COL_VALUE = 1;
+    private static final int COL_COORDS = 2;
 
     /**
      * Contains PDFExtract file raw content
@@ -100,7 +116,7 @@ public class PdfExtractFile
     /**
      * Maps a page number to its corresponding begin and end offset
      */
-    private Map<Integer, Offset> pageOffsetMap;
+    private NavigableMap<Integer, Offset> pageOffsetMap;
 
     private int maxPageNumber;
 
@@ -190,7 +206,7 @@ public class PdfExtractFile
         stringToExtract = new Int2IntOpenHashMap();
         extractToString = new Int2IntOpenHashMap();
         extractLines = new HashMap<>();
-        pageOffsetMap = new HashMap<>();
+        pageOffsetMap = new TreeMap<>();
         pdftxt = aPdftxt;
 
         StringBuilder sb = new StringBuilder();
@@ -204,11 +220,11 @@ public class PdfExtractFile
         for (String line : lines) {
             PdfExtractLine extractLine = new PdfExtractLine();
             String[] columns = line.split("\t");
-            int page = Integer.parseInt(columns[0].trim());
+            int page = Integer.parseInt(columns[COL_PAGE].trim());
             extractLine.setPage(page);
             extractLine.setPosition(extractLineIndex);
-            extractLine.setValue(columns[1].trim());
-            extractLine.setDisplayPositions(columns.length > 2 ? columns[2].trim() : "");
+            extractLine.setValue(columns[COL_VALUE].trim());
+            extractLine.setDisplayPositions(columns.length > 2 ? columns[COL_COORDS].trim() : "");
             extractLines.put(extractLineIndex, extractLine);
 
             stringToExtract.put(strContentIndex, extractLineIndex);
@@ -290,15 +306,63 @@ public class PdfExtractFile
     }
 
     /**
-     * Get begin and end offset of a page.
+     * Get begin of page or end of previous page og page was empty.
      */
-    public Offset getPageOffset(int aPage)
+    public int getBeginPageOffset(int aPage)
     {
-        return pageOffsetMap.get(aPage);
+        if (pageOffsetMap.isEmpty()) {
+            return 0;
+        }
+
+        Entry<Integer, Offset> pageOrPageBefore = pageOffsetMap.floorEntry(aPage);
+        if (pageOrPageBefore == null) {
+            return 0;
+        }
+
+        if (pageOrPageBefore.getKey().intValue() == aPage) {
+            return pageOrPageBefore.getValue().getBegin();
+        }
+
+        return pageOrPageBefore.getValue().getEnd();
+    }
+
+    /**
+     * Get end of page or begin of next page if the page was empty.
+     */
+    public int getEndPageOffset(int aPage)
+    {
+        if (pageOffsetMap.isEmpty()) {
+            return 0;
+        }
+
+        Entry<Integer, Offset> pageOrPageAfter = pageOffsetMap.ceilingEntry(aPage);
+        if (pageOrPageAfter == null) {
+            return pageOffsetMap.get(maxPageNumber).getEnd();
+        }
+
+        if (pageOrPageAfter.getKey().intValue() == aPage) {
+            return pageOrPageAfter.getValue().getEnd();
+        }
+
+        return pageOrPageAfter.getValue().getBegin();
     }
 
     public int getMaxPageNumber()
     {
         return maxPageNumber;
+    }
+
+    public static Map<String, String> getSubstitutionTable()
+        throws IOException, ParserConfigurationException, SAXException
+    {
+        String substitutionTable = "classpath:/de/tudarmstadt/ukp/dkpro/core/io/pdf/substitutionTable.xml";
+        URL url = ResourceUtils.resolveLocation(substitutionTable);
+        try (InputStream is = url.openStream()) {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
+            SubstitutionTableParser substitutionTableParser = new SubstitutionTableParser();
+            saxParser.parse(is, substitutionTableParser);
+            return substitutionTableParser.getSubstitutionTable();
+        }
     }
 }

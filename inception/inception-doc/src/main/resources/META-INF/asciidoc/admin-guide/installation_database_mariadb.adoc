@@ -160,3 +160,8 @@ In most cases, {product-name} can auto-configure the database dialect to use. Ho
 database.dialect=org.hibernate.dialect.MySQL8Dialect
 ----
 
+Finally, recent versions of MySQL may need this setting to avoid schema validation to fail during startup:
+
+----
+spring.jpa.properties.hibernate.globally_quoted_identifiers=true
+----

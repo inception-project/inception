@@ -18,115 +18,122 @@
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID.NONE_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer.convertToDocumentOffset;
 import static de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer.convertToDocumentOffsets;
 import static java.lang.String.join;
+import static java.util.Arrays.asList;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
+import javax.servlet.ServletContext;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.dkpro.core.api.resources.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
+import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameView;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
+import de.tudarmstadt.ukp.inception.pdfeditor.resources.PdfAnnotationEditorCssResourceReference;
+import de.tudarmstadt.ukp.inception.pdfeditor.resources.PdfAnnotationEditorJavascriptResourceReference;
 
 public class PdfAnnotationEditor
-    extends AnnotationEditorBase
+    extends ExternalAnnotationEditorBase
 {
     private static final long serialVersionUID = -3358207848681467993L;
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
     private static final String CREATE_SPAN = "createSpan";
-    private static final String SELECT_SPAN = "selectSpan";
-    private static final String CREATE_RELATION = "createRelation";
-    private static final String SELECT_RELATION = "selectRelation";
-    private static final String DELETE_RECOMMENDATION = "deleteRecommendation";
     private static final String GET_ANNOTATIONS = "getAnnotations";
 
     private static final String VIS = "vis";
 
-    private PdfExtractFile pdfExtractFile;
     private DocumentModel documentModel;
-    private int page;
-    private Offset pageOffset;
     private Map<Integer, Offset> pageOffsetCache;
+    private int page;
+    private PdfDocumentIFrameView view;
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ColoringService coloringService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean(name = "pdfDocumentIFrameViewFactory") DocumentViewFactory viewFactory;
+    private @SpringBean ServletContext servletContext;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-        String format = aModel.getObject().getDocument().getFormat();
-        if (format.equals(PdfFormatSupport.ID)) {
-            add(new PdfAnnoPanel(VIS, aModel, this));
+
+        try {
+            documentModel = new DocumentModel(getCasProvider().get().getDocumentText());
         }
-        else {
-            add(new WrongFileFormatPanel(VIS, format));
+        catch (IOException e) {
+            handleError("Unable to load data", e);
         }
+
+        pageOffsetCache = new HashMap<>();
     }
 
     @Override
-    public void renderHead(IHeaderResponse aResponse)
+    protected Component makeView()
     {
-        super.renderHead(aResponse);
+        AnnotatorState state = getModelObject();
+        String format = state.getDocument().getFormat();
+        if (!format.equals(PdfFormatSupport.ID)) {
+            return new WrongFileFormatPanel(VIS, format);
+        }
+
+        AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
+                state.getUser());
+        view = (PdfDocumentIFrameView) viewFactory.createView(VIS, Model.of(annDoc),
+                viewFactory.getId());
+        return view;
     }
 
     @Override
-    public void render(AjaxRequestTarget aTarget)
+    protected AnnotationEditorProperties getProperties()
     {
-        Selection selection = getModelObject().getSelection();
-        renderPdfAnnoModel(aTarget);
-        if (selection.getAnnotation() != null) {
-            aTarget.appendJavaScript(
-                    "var anno = pdfanno.contentWindow.annoPage.findAnnotationById('"
-                            + selection.getAnnotation() + "');" + "anno && anno.select();");
-        }
+        AnnotationEditorProperties props = new AnnotationEditorProperties();
+        // The factory is the JS call. Cf. the "globalName" in build.js and the factory method
+        // defined in main.ts
+        props.setEditorFactory("PdfAnnotationEditor.factory()");
+        props.setDiamAjaxCallbackUrl(getDiamBehavior().getCallbackUrl().toString());
+        props.setStylesheetSources(asList(
+                referenceToUrl(servletContext, PdfAnnotationEditorCssResourceReference.get())));
+        props.setScriptSources(asList(referenceToUrl(servletContext,
+                PdfAnnotationEditorJavascriptResourceReference.get())));
+        return props;
     }
 
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
@@ -152,7 +159,13 @@ public class PdfAnnotationEditor
      */
     public void renderPdfAnnoModel(AjaxRequestTarget aTarget)
     {
-        if (getModelObject().getProject() == null || pageOffset == null) {
+        if (getModelObject().getProject() == null) {
+            return;
+        }
+
+        Offset pageOffset = pageOffsetCache.computeIfAbsent(page, this::calculatePageOffsets);
+
+        if (pageOffset == null) {
             return;
         }
 
@@ -168,7 +181,7 @@ public class PdfAnnotationEditor
             int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
 
             PdfAnnoModel pdfAnnoModel = render(cas, begin, end,
-                    new PdfAnnoSerializer(pdfExtractFile, begin));
+                    new PdfAnnoSerializer(view.getPdfExtractFile(), begin));
 
             // show unmatched spans to user
             if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
@@ -179,9 +192,7 @@ public class PdfAnnotationEditor
                         aTarget);
             }
 
-            String script = getAnnotationsJS(pdfAnnoModel);
-
-            aTarget.appendJavaScript(script);
+            aTarget.appendJavaScript(getAnnotationsJS(pdfAnnoModel));
         }
         catch (IOException e) {
             handleError("Unable to load data", e, aTarget);
@@ -191,7 +202,7 @@ public class PdfAnnotationEditor
     public void createSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
             CAS aCas)
     {
-        if (pdfExtractFile == null && documentModel == null) {
+        if (view.getPdfExtractFile() == null && documentModel == null) {
             // in this case the user probably changed the document and accidentally
             // marked text in the old document. so do not create any annotation here.
             handleError(
@@ -203,7 +214,8 @@ public class PdfAnnotationEditor
 
         try {
             Offset offset = new Offset(aParams);
-            Offset docOffset = convertToDocumentOffset(offset, documentModel, pdfExtractFile);
+            Offset docOffset = convertToDocumentOffset(offset, documentModel,
+                    view.getPdfExtractFile());
             AnnotatorState state = getModelObject();
             if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                 if (state.isSlotArmed()) {
@@ -227,165 +239,27 @@ public class PdfAnnotationEditor
         }
     }
 
-    private void selectSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-            CAS aCas)
-    {
-        VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
-        selectSpanAnnotation(aTarget, paramId, aCas);
-    }
-
-    private void selectSpanAnnotation(AjaxRequestTarget aTarget, VID paramId, CAS aCas)
-    {
-        try {
-            if (paramId.isSynthetic()) {
-                extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget, aCas,
-                        paramId, "spanOpenDialog");
-                return;
-            }
-
-            AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, paramId.getId());
-            Offset offset = new Offset(fs.getBegin(), fs.getEnd());
-
-            if (offset.getBegin() > -1 && offset.getEnd() > -1) {
-                AnnotatorState state = getModelObject();
-                if (state.isSlotArmed()) {
-                    // When filling a slot, the current selection is *NOT* changed. The
-                    // Span annotation which owns the slot that is being filled remains
-                    // selected!
-                    getActionHandler().actionFillSlot(aTarget, aCas, offset.getBegin(),
-                            offset.getEnd(), paramId);
-                }
-                else {
-                    state.getSelection().selectSpan(paramId, aCas, offset.getBegin(),
-                            offset.getEnd());
-                    getActionHandler().actionSelect(aTarget);
-                }
-            }
-            else {
-                handleError("Unable to select span annotation: No match was found", aTarget);
-            }
-        }
-        catch (AnnotationException | IOException e) {
-            handleError("Unable to select span annotation", e, aTarget);
-        }
-    }
-
-    private void createRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-            CAS aCas)
-        throws IOException
-    {
-        try {
-            VID origin = VID.parseOptional(aParams.getParameterValue("origin").toString());
-            VID target = VID.parseOptional(aParams.getParameterValue("target").toString());
-
-            if (target.isNotSet()) {
-                // relation drawing was not stopped over a target
-                return;
-            }
-
-            if (origin.isSynthetic() || target.isSynthetic()) {
-                throw new AnnotationException("Cannot create relations on suggestions");
-            }
-
-            AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class, origin.getId());
-            AnnotationFS targetFs = selectByAddr(aCas, AnnotationFS.class, target.getId());
-
-            AnnotatorState state = getModelObject();
-            Selection selection = state.getSelection();
-            selection.selectArc(VID.NONE_ID, originFs, targetFs);
-
-            if (selection.getAnnotation().isNotSet()) {
-                getActionHandler().actionCreateOrUpdate(aTarget, aCas);
-            }
-        }
-        catch (AnnotationException | CASRuntimeException e) {
-            handleError("Unable to create relation annotation", e, aTarget);
-        }
-        finally {
-            // workaround to enable further creation of relations in PDFAnno
-            // if existing annotations are not re-rendered after an attempt to create a relation.
-            // it can happen that mouse will hang when leaving annotation knob while dragging
-            renderPdfAnnoModel(aTarget);
-        }
-    }
-
-    private void selectRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-            CAS aCas)
-    {
-        try {
-            AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class,
-                    aParams.getParameterValue("origin").toInt());
-            AnnotationFS targetFs = selectByAddr(aCas, AnnotationFS.class,
-                    aParams.getParameterValue("target").toInt());
-
-            AnnotatorState state = getModelObject();
-            Selection selection = state.getSelection();
-            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
-
-            // HACK: If an arc was clicked that represents a link feature, then
-            // open the associated span annotation instead.
-            if (paramId.isSlotSet()) {
-                paramId = new VID(paramId.getId());
-                selectSpanAnnotation(aTarget, paramId, aCas);
-            }
-            else {
-                selection.selectArc(paramId, originFs, targetFs);
-
-                if (selection.getAnnotation().isSet()) {
-                    getActionHandler().actionSelect(aTarget);
-                }
-            }
-        }
-        catch (Exception e) {
-            handleError("Unable to select relation annotation", e, aTarget);
-        }
-    }
-
-    private void deleteRecommendation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-            CAS aCas)
-    {
-        try {
-            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
-            if (paramId.isSynthetic()) {
-                getModelObject().clearArmedSlot();
-                Offset offset = new Offset(aParams);
-                Offset docOffset = convertToDocumentOffset(offset, documentModel, pdfExtractFile);
-                if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
-                    extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
-                            aCas, paramId, "doAction");
-                }
-                else {
-                    handleError("Unable to delete recommendation: No match was found", aTarget);
-                }
-            }
-        }
-        catch (AnnotationException | IOException e) {
-            handleError("Unable to delete recommendation", e, aTarget);
-        }
-    }
-
     private void getAnnotations(AjaxRequestTarget aTarget, IRequestParameters aParams)
     {
         page = aParams.getParameterValue("page").toInt();
-        pageOffset = pageOffsetCache.computeIfAbsent(page, this::calculatePageOffsets);
         renderPdfAnnoModel(aTarget);
     }
 
     private Offset calculatePageOffsets(int aPage)
     {
         // get page offsets, if possible for the from previous to next page
-        int maxPageNumber = pdfExtractFile.getMaxPageNumber();
+        int maxPageNumber = view.getPdfExtractFile().getMaxPageNumber();
 
         int beginPage = Math.min(Math.max(1, aPage - 1), maxPageNumber);
         int endPage = Math.min(Math.max(1, aPage + 1), maxPageNumber);
 
-        int begin = pdfExtractFile.getPageOffset(beginPage).getBegin();
-        int end = pdfExtractFile.getPageOffset(endPage).getEnd() + 1;
+        int begin = view.getPdfExtractFile().getBeginPageOffset(beginPage);
+        int end = view.getPdfExtractFile().getEndPageOffset(endPage);
 
         List<Offset> offsets = new ArrayList<>();
         offsets.add(new Offset(begin, begin));
         offsets.add(new Offset(end, end));
-        offsets = convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
+        offsets = convertToDocumentOffsets(offsets, documentModel, view.getPdfExtractFile());
 
         int newBegin = offsets.stream().mapToInt(Offset::getBegin).min().getAsInt();
         int newEnd = offsets.stream().mapToInt(Offset::getEnd).max().getAsInt();
@@ -399,28 +273,15 @@ public class PdfAnnotationEditor
             CAS cas = getCasProvider().get();
             String action = aParams.getParameterValue("action").toString();
 
-            // Doing anything but selecting or creating a span annotation when a
-            // slot is armed will unarm it
-            if (getModelObject().isSlotArmed() && !(action.equals(SELECT_SPAN)
-                    || action.equals(CREATE_SPAN) || action.equals(DELETE_RECOMMENDATION))) {
-                getModelObject().clearArmedSlot();
-            }
+            // // Doing anything but selecting or creating a span annotation when a
+            // // slot is armed will unarm it
+            // if (getModelObject().isSlotArmed() && !(action.equals(CREATE_SPAN))) {
+            // getModelObject().clearArmedSlot();
+            // }
 
             switch (action) {
             case CREATE_SPAN:
                 createSpanAnnotation(aTarget, aParams, cas);
-                break;
-            case SELECT_SPAN:
-                selectSpanAnnotation(aTarget, aParams, cas);
-                break;
-            case CREATE_RELATION:
-                createRelationAnnotation(aTarget, aParams, cas);
-                break;
-            case SELECT_RELATION:
-                selectRelationAnnotation(aTarget, aParams, cas);
-                break;
-            case DELETE_RECOMMENDATION:
-                deleteRecommendation(aTarget, aParams, cas);
                 break;
             case GET_ANNOTATIONS:
                 getAnnotations(aTarget, aParams);
@@ -448,47 +309,5 @@ public class PdfAnnotationEditor
                 "'primary': true,", //
                 "'colorMap': {},", //
                 "'annotations':[annoFile]}, true);");
-    }
-
-    public PdfExtractFile getPdfExtractFile()
-    {
-        return pdfExtractFile;
-    }
-
-    public static Map<String, String> getSubstitutionTable()
-        throws IOException, ParserConfigurationException, SAXException
-    {
-        String substitutionTable = "classpath:/de/tudarmstadt/ukp/dkpro/core/io/pdf/substitutionTable.xml";
-        URL url = ResourceUtils.resolveLocation(substitutionTable);
-        try (InputStream is = url.openStream()) {
-            SAXParserFactory factory = SAXParserFactory.newInstance();
-            SAXParser saxParser = factory.newSAXParser();
-            SubstitutionTableParser substitutionTableParser = new SubstitutionTableParser();
-            saxParser.parse(is, substitutionTableParser);
-            return substitutionTableParser.getSubstitutionTable();
-        }
-    }
-
-    public void initialize(AjaxRequestTarget aTarget)
-    {
-        try {
-            documentModel = new DocumentModel(getCasProvider().get().getDocumentText());
-        }
-        catch (IOException e) {
-            handleError("Unable to load data", e, aTarget);
-        }
-
-        File pdfFile = documentService.getSourceDocumentFile(getModel().getObject().getDocument());
-
-        try {
-            String pdfText = PDFExtractor.processFileToString(pdfFile, false);
-            pdfExtractFile = new PdfExtractFile(pdfText, getSubstitutionTable());
-        }
-        catch (IOException | SAXException | ParserConfigurationException e) {
-            handleError("Unable to create PdfExtractFile for [" + pdfFile.getName() + "]"
-                    + "with PDFExtractor.", e, aTarget);
-        }
-
-        pageOffsetCache = new HashMap<>();
     }
 }

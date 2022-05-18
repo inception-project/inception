@@ -19,6 +19,15 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
   <form wicket:id="form" class="form-horizontal">
+    <div class="row form-row">
+      <label class="col-4 col-form-label">
+        Quick preset
+      </label>
+      <div class="col-8">
+        <button class="btn btn-outline-secondary" type="button" wicket:id="presetMajorityVote">Majority vote</button>
+        <button class="btn btn-outline-secondary" type="button" wicket:id="presetUnanimousVote">Unanimous vote</button>
+      </div>
+    </div>
     <div class="row form-row" wicket:enclosure="userThreshold">
       <label class="col-sm-4 col-form-label" wicket:for="userThreshold">
         User threshold
@@ -36,6 +45,14 @@
           <input wicket:id="confidenceThreshold" type="number" class="form-control"></input>
           <span class="input-group-text">%</span>
         </div>
+      </div>
+    </div>
+    <div class="row form-row" wicket:enclosure="topRanks">
+      <label class="col-sm-4 col-form-label" wicket:for="topRanks">
+        Top-voted
+      </label>
+      <div class="col-sm-8">
+        <input wicket:id="topRanks" type="number" class="form-control"></input>
       </div>
     </div>
   </form>
