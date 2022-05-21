@@ -20,8 +20,10 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.RdfCollection.collectionOf;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
@@ -161,6 +163,8 @@ public class SPARQLQueryBuilder
     public static final Prefix PREFIX_FUSEKI_SEARCH = prefix("text",
             iri("http://jena.apache.org/text#"));
     public static final Iri FUSEKI_QUERY = PREFIX_FUSEKI_SEARCH.iri("query");
+
+    public static final Prefix PREFIX_STARDOG_SEARCH = prefix("fts", iri(PREFIX_STARDOG));
 
     public static final Iri OWL_INTERSECTIONOF = iri(OWL.INTERSECTIONOF.stringValue());
     public static final Iri RDF_REST = iri(RDF.REST.stringValue());
@@ -732,6 +736,9 @@ public class SPARQLQueryBuilder
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(values));
         }
+        else if (FTS_STARDOG.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Stardog_FTS(values));
+        }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Wikidata_FTS(values));
         }
@@ -841,6 +848,27 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
+    private GraphPattern withLabelMatchingExactlyAnyOf_Stardog_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_STARDOG_SEARCH);
+
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryString_FTS(value);
+
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                            .filter(equalsPattern(VAR_MATCH_TERM, value, kb))));
+        }
+
+        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
     private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
@@ -907,6 +935,9 @@ public class SPARQLQueryBuilder
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingAnyOf_Virtuoso_FTS(values));
         }
+        else if (FTS_STARDOG.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelMatchingAnyOf_Stardog_FTS(values));
+        }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingAnyOf_Wikidata_FTS(values));
         }
@@ -934,6 +965,26 @@ public class SPARQLQueryBuilder
     {
         // Falling back to "contains" semantics if there is no FTS
         return withLabelContainingAnyOf_No_FTS(aValues);
+    }
+
+    private GraphPattern withLabelMatchingAnyOf_Stardog_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_STARDOG_SEARCH);
+
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryString_FTS(value);
+
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
+        }
+
+        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
     private GraphPattern withLabelMatchingAnyOf_Wikidata_FTS(String[] aValues)
@@ -1053,6 +1104,9 @@ public class SPARQLQueryBuilder
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(values));
         }
+        else if (FTS_STARDOG.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelContainingAnyOf_Stardog_FTS(values));
+        }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_Wikidata_FTS(values));
         }
@@ -1164,6 +1218,27 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
+    private GraphPattern withLabelContainingAnyOf_Stardog_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_STARDOG_SEARCH);
+
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryString_FTS(value);
+
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                            .filter(containsPattern(VAR_MATCH_TERM, value))));
+        }
+
+        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
     private GraphPattern withLabelContainingAnyOf_Wikidata_FTS(String[] aValues)
     {
         // In our KB settings, the language can be unset, but the Wikidata entity search
@@ -1208,6 +1283,9 @@ public class SPARQLQueryBuilder
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_Virtuoso_FTS(value));
         }
+        else if (FTS_STARDOG.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelStartingWith_Stardog_FTS(value));
+        }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_Wikidata_FTS(value));
         }
@@ -1237,6 +1315,22 @@ public class SPARQLQueryBuilder
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                         .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
+    }
+
+    private GraphPattern withLabelStartingWith_Stardog_FTS(String aPrefix)
+    {
+        prefixes.add(PREFIX_STARDOG_SEARCH);
+
+        if (aPrefix.isEmpty()) {
+            returnEmptyResult = true;
+        }
+
+        String sanitizedValue = sanitizeQueryString_FTS(aPrefix);
+
+        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+                        .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                                .filter(startsWithPattern(VAR_MATCH_TERM, aPrefix))));
     }
 
     private GraphPattern withLabelStartingWith_Wikidata_FTS(String aPrefix)
