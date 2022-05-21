@@ -62,7 +62,7 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
 
     private @Autowired ServletContext servletContext;
     private @Autowired DocumentService documentService;
-    private @Autowired SimpMessagingTemplate msgTemplate;
+    private @Autowired(required = false) SimpMessagingTemplate msgTemplate;
 
     public ProjectExportTask_ImplBase(Project aProject, R aRequest, String aUsername)
     {
@@ -76,8 +76,13 @@ public abstract class ProjectExportTask_ImplBase<R extends ProjectExportRequest_
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        monitor = new NotifyingProjectExportTaskMonitor(project, handle, request.getTitle(),
-                msgTemplate);
+        if (msgTemplate != null) {
+            monitor = new NotifyingProjectExportTaskMonitor(project, handle, request.getTitle(),
+                    msgTemplate);
+        }
+        else {
+            monitor = new ProjectExportTaskMonitor(project, handle, request.getTitle());
+        }
         monitor.setCreateTime(System.currentTimeMillis());
     }
 
