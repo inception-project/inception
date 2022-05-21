@@ -137,6 +137,7 @@ public class ActivitiesDashletControllerImpl
                 user.getUsername(), annotationEvents, 10);
         return recentEvents.stream() //
                 .filter(Objects::nonNull) //
+                .filter(event -> event.getDocument() == -1l) //
                 // Filter out documents which are not annotatable or curatable
                 .filter(event -> {
                     if (CURATION_USER.equals(event.getAnnotator())) {
@@ -154,7 +155,7 @@ public class ActivitiesDashletControllerImpl
                 .map(event -> {
                     if (CURATION_USER.equals(event.getAnnotator())) {
                         return new Activity(event,
-                                annotatableSourceDocuments.get(event.getDocument()),
+                                curatableSourceDocuments.get(event.getDocument()),
                                 curationPageMenuItem.getUrl(project, event.getDocument()));
                     }
                     else {
