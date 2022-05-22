@@ -86,6 +86,7 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
@@ -974,12 +975,13 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
                 continue;
             }
 
-            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, fuzzyQuery)
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
         }
 
@@ -1517,7 +1519,7 @@ public class SPARQLQueryBuilder
 
             // Match without language
             expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING)).parenthesize());
+                    Expressions.equals(function(LANG, aVariable), EMPTY_STRING)).parenthesize());
         }
         else {
             // Match ignoring language
@@ -1564,7 +1566,7 @@ public class SPARQLQueryBuilder
 
             // Match without language
             expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING)).parenthesize());
+                    Expressions.equals(function(LANG, aVariable), EMPTY_STRING)).parenthesize());
         }
         else {
             // Match ignoring language
@@ -1752,7 +1754,7 @@ public class SPARQLQueryBuilder
         if (language != null) {
             // Find all labels without any language
             patterns.add(VAR_SUBJECT.has(aProperty, aVariable)
-                    .filter(function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING)));
+                    .filter(Expressions.equals(function(LANG, aVariable), EMPTY_STRING)));
 
             patterns.add(VAR_SUBJECT.has(aProperty, aVariable)
                     .filter(function(LANGMATCHES, function(LANG, aVariable), literalOf(language))));
