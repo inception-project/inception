@@ -109,7 +109,7 @@ public class FusekiRepositoryTest
     }
 
     @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_noFTS() throws Exception
+    public void testWithLabelStartingWith_withLanguage_noFTS() throws Exception
     {
         SPARQLQueryBuilderTest.testWithLabelStartingWith_withLanguage_noFTS(repository, kb);
     }

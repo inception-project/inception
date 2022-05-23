@@ -25,9 +25,9 @@ import java.lang.reflect.Method;
 
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 
@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 // The repository has to exist and stardoc has to be running for this test to run.
 // To create the repository, use the following command:
 // stardog-admin db create -n test -o search.enabled=true --
-@Ignore("Requires manually setting up a test server")
+@Disabled("Requires manually setting up a test server")
 public class StardogRepositoryTest
 {
     private Repository repository;
@@ -94,7 +94,7 @@ public class StardogRepositoryTest
     }
 
     @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_noFTS() throws Exception
+    public void testWithLabelStartingWith_withLanguage_noFTS() throws Exception
     {
         SPARQLQueryBuilderTest.testWithLabelStartingWith_withLanguage_noFTS(repository, kb);
     }
