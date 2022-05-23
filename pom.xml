@@ -26,7 +26,7 @@
 
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception</artifactId>
-  <version>23.5-SNAPSHOT</version>
+  <version>23.6-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
   <description>INCEpTION provides a semantic annotation platform offering intelligent annotation assistance and knowledge management.</description>

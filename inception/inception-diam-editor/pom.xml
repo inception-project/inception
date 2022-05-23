@@ -21,7 +21,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>23.5-SNAPSHOT</version>
+    <version>23.6-SNAPSHOT</version>
   </parent>
   <artifactId>inception-diam-editor</artifactId>
   <name>INCEpTION - DIAM - Editor</name>
