@@ -33,6 +33,7 @@ import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.isReachable;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.eclipse.rdf4j.rio.RDFFormat.RDFXML;
 import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -44,16 +45,6 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.jena.fuseki.main.FusekiServer;
-import org.apache.jena.query.Dataset;
-import org.apache.jena.query.text.EntityDefinition;
-import org.apache.jena.query.text.TextDatasetFactory;
-import org.apache.jena.query.text.TextIndex;
-import org.apache.jena.query.text.TextIndexConfig;
-import org.apache.jena.query.text.TextIndexLucene;
-import org.apache.jena.tdb.TDBFactory;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -68,7 +59,6 @@ import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -79,14 +69,14 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SPARQLQueryBuilderTest
 {
-    private static final String TURTLE_PREFIX = String.join("\n", //
+    static final String TURTLE_PREFIX = String.join("\n", //
             "@base <http://example.org/> .", //
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .", //
             "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .", //
             "@prefix so: <http://schema.org/> .", //
             "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .");
 
-    private static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = String.join("\n", //
+    static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = String.join("\n", //
             "<#green-goblin>", //
             "    rdfs:label 'Green Goblin' ;", //
             "    rdfs:label 'Green Goblin'@en ;", //
@@ -106,7 +96,7 @@ public class SPARQLQueryBuilderTest
             "    rdfs:label 'Red Goblin' ;", //
             "    rdfs:comment 'Little red monster' .");
 
-    private static final String DATA_LABELS_WITHOUT_LANGUAGE = String.join("\n", //
+    static final String DATA_LABELS_WITHOUT_LANGUAGE = String.join("\n", //
             "<#green-goblin>", //
             "    rdfs:label 'Green Goblin' .", //
             "", //
@@ -116,21 +106,21 @@ public class SPARQLQueryBuilderTest
             "<#red-goblin>", //
             "    rdfs:label 'Red Goblin' .");
 
-    private static final String DATA_MULTIPLE_LABELS = String.join("\n", //
+    static final String DATA_MULTIPLE_LABELS = String.join("\n", //
             "<#example>", //
             "    rdfs:label 'specimen' ;", //
             "    rdfs:label 'sample' ;", //
             "    rdfs:label 'instance' ;", //
             "    rdfs:label 'case'  .");
 
-    private static final String DATA_ADDITIONAL_SEARCH_PROPERTIES = String.join("\n", //
+    static final String DATA_ADDITIONAL_SEARCH_PROPERTIES = String.join("\n", //
             "<#example>", //
             "    rdfs:prefLabel 'specimen' ;", //
             "    rdfs:label 'sample' ;", //
             "    rdfs:label 'instance' ;", //
             "    rdfs:label 'case'  .");
 
-    private static final String LABEL_SUBPROPERTY = String.join("\n", //
+    static final String LABEL_SUBPROPERTY = String.join("\n", //
             "<#sublabel>", //
             "    rdfs:subPropertyOf rdfs:label .", //
             "", //
@@ -143,7 +133,7 @@ public class SPARQLQueryBuilderTest
      * with "subclass" and then a number. Instances start with the number of the class to which they
      * belong followed by a number.
      */
-    private static final String DATA_CLASS_RDFS_HIERARCHY = String.join("\n", //
+    static final String DATA_CLASS_RDFS_HIERARCHY = String.join("\n", //
             "<#explicitRoot>", //
             "    rdf:type rdfs:Class .", //
             "<#subclass1>", //
@@ -174,7 +164,7 @@ public class SPARQLQueryBuilderTest
      * "subproperty" and then a number. The dataset also contains some non-properties to be able to
      * ensure that queries limited to properties do not return non-properties.
      */
-    private static final String DATA_PROPERTIES = String.join("\n", //
+    static final String DATA_PROPERTIES = String.join("\n", //
             "<#explicitRoot>", //
             "    rdf:type rdfs:Class .", //
             "<#property-1>", //
@@ -208,7 +198,6 @@ public class SPARQLQueryBuilderTest
 
     private KnowledgeBase kb;
     private Repository rdf4jLocalRepo;
-    private Repository fusekiLocalRepo;
     private Repository ukpVirtuosoRepo;
     private Repository zbwStw;
     private Repository zbwGnd;
@@ -217,8 +206,6 @@ public class SPARQLQueryBuilderTest
     private Repository yago;
     private Repository hucit;
     private Repository britishMuseum;
-
-    private FusekiServer fusekiServer;
 
     @BeforeEach
     public void setUp()
@@ -231,7 +218,7 @@ public class SPARQLQueryBuilderTest
         kb.setFullTextSearchIri(null);
         kb.setMaxResults(100);
 
-        initRdfsMapping();
+        initRdfsMapping(kb);
 
         // Local RDF4J in-memory store - this should be used for most tests because we can
         // a) rely on its availability
@@ -242,14 +229,6 @@ public class SPARQLQueryBuilderTest
         rdf4jLocalRepo = new SailRepository(lucenesail);
         rdf4jLocalRepo.init();
 
-        // Local Fuseki in-memory story
-        fusekiServer = FusekiServer.create() //
-                .add("/fuseki", createFusekiFTSDataset()) //
-                .build();
-        fusekiServer.start();
-
-        fusekiLocalRepo = buildSparqlRepository(
-                "http://localhost:" + fusekiServer.getPort() + "/fuseki");
         ukpVirtuosoRepo = buildSparqlRepository(
                 "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql");
         wikidata = buildSparqlRepository("https://query.wikidata.org/sparql");
@@ -276,14 +255,20 @@ public class SPARQLQueryBuilderTest
     @AfterEach
     public void tearDown()
     {
-        fusekiServer.stop();
-
         restoreSslVerification();
     }
 
-    private Repository buildSparqlRepository(String aUrl)
+    static Repository buildSparqlRepository(String aUrl)
     {
         SPARQLRepository repo = new SPARQLRepository(aUrl);
+        repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
+        repo.init();
+        return repo;
+    }
+
+    static Repository buildSparqlRepository(String aQueryUrl, String aUpdateUrl)
+    {
+        SPARQLRepository repo = new SPARQLRepository(aQueryUrl, aUpdateUrl);
         repo.setHttpClient(newPerThreadSslCheckingHttpClientBuilder().build());
         repo.init();
         return repo;
@@ -884,37 +869,23 @@ public class SPARQLQueryBuilderTest
                         || label.startsWith("http://example.org/#subclass1-"));
     }
 
-    @Test
-    public void testWithLabelMatchingAnyOf_RDF4J_withLanguage_noFTS() throws Exception
+    static void testWithLabelMatchingAnyOf_withLanguage_noFTS(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        kb.setFullTextSearchIri(null);
+        aKB.setFullTextSearchIri(null);
 
-        __testWithLabelMatchingAnyOf_withLanguage(rdf4jLocalRepo);
+        testWithLabelMatchingAnyOf_withLanguage(aRepository, aKB);
     }
 
-    @Test
-    public void testWithLabelMatchingAnyOf_RDF4J_withLanguage_FTS() throws Exception
+    static void testWithLabelMatchingAnyOf_withLanguage(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
-
-        __testWithLabelMatchingAnyOf_withLanguage(rdf4jLocalRepo);
-    }
-
-    @Test
-    public void testWithLabelMatchingAnyOf_FUSEKI_withLanguage_FTS() throws Exception
-    {
-        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
-
-        __testWithLabelMatchingAnyOf_withLanguage(fusekiLocalRepo);
-    }
-
-    public void __testWithLabelMatchingAnyOf_withLanguage(Repository aRepository) throws Exception
-    {
-        importDataFromString(aRepository, TURTLE, TURTLE_PREFIX,
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
-                .forItems(kb) //
+                .forItems(aKB) //
                 .withLabelMatchingAnyOf("Gobli"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -926,37 +897,23 @@ public class SPARQLQueryBuilderTest
                                 "http://example.org/#green-goblin", "Green Goblin", null, "en"));
     }
 
-    @Test
-    public void testWithLabelContainingAnyOf_RDF4J_withLanguage_noFTS() throws Exception
+    static void testWithLabelContainingAnyOf_withLanguage_noFTS(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        kb.setFullTextSearchIri(null);
+        aKB.setFullTextSearchIri(null);
 
-        __testWithLabelContainingAnyOf_withLanguage(rdf4jLocalRepo);
+        testWithLabelContainingAnyOf_withLanguage(aRepository, aKB);
     }
 
-    @Test
-    public void testWithLabelContainingAnyOf_RDF4J_withLanguage_FTS() throws Exception
+    static void testWithLabelContainingAnyOf_withLanguage(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
-
-        __testWithLabelContainingAnyOf_withLanguage(rdf4jLocalRepo);
-    }
-
-    @Test
-    public void testWithLabelContainingAnyOf_FUSEKI_withLanguage_FTS() throws Exception
-    {
-        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
-
-        __testWithLabelContainingAnyOf_withLanguage(fusekiLocalRepo);
-    }
-
-    public void __testWithLabelContainingAnyOf_withLanguage(Repository aRepository) throws Exception
-    {
-        importDataFromString(aRepository, TURTLE, TURTLE_PREFIX,
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
-                .forItems(kb) //
+                .forItems(aKB) //
                 .withLabelContainingAnyOf("Goblin"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1047,30 +1004,24 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().contains("work"));
     }
 
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage_noFTS() throws Exception
-    {
-        kb.setFullTextSearchIri(null);
-
-        __testWithLabelMatchingExactlyAnyOf_withLanguage(rdf4jLocalRepo);
-    }
-
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage_FTS() throws Exception
-    {
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
-
-        __testWithLabelMatchingExactlyAnyOf_withLanguage(rdf4jLocalRepo);
-    }
-
-    public void __testWithLabelMatchingExactlyAnyOf_withLanguage(Repository aRepository)
+    static void testWithLabelMatchingExactlyAnyOf_withLanguage_noFTS(Repository aRepository,
+            KnowledgeBase aKB)
         throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+        aKB.setFullTextSearchIri(null);
+
+        testWithLabelMatchingExactlyAnyOf_withLanguage(aRepository, aKB);
+    }
+
+    static void testWithLabelMatchingExactlyAnyOf_withLanguage(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
+    {
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
-                .forItems(kb) //
+                .forItems(aKB) //
                 .withLabelMatchingExactlyAnyOf("Green Goblin"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1083,46 +1034,28 @@ public class SPARQLQueryBuilderTest
                         "Green Goblin", null, "en"));
     }
 
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty_noFTS() throws Exception
-    {
-        kb.setFullTextSearchIri(null);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
-        kb.setLabelIri(RDFS.LABEL.stringValue());
-
-        __testWithLabelMatchingExactlyAnyOf_subproperty(rdf4jLocalRepo);
-    }
-
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty_FTS() throws Exception
-    {
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
-        kb.setLabelIri(RDFS.LABEL.stringValue());
-
-        __testWithLabelMatchingExactlyAnyOf_subproperty(rdf4jLocalRepo);
-    }
-
-    @Disabled("Requires addition Fuseki FTS configuration")
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_FUSEKI_subproperty_FTS() throws Exception
-    {
-        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
-        kb.setLabelIri(RDFS.LABEL.stringValue());
-
-        __testWithLabelMatchingExactlyAnyOf_subproperty(fusekiLocalRepo);
-    }
-
-    public void __testWithLabelMatchingExactlyAnyOf_subproperty(Repository aRepository)
+    static void testWithLabelMatchingExactlyAnyOf_subproperty_noFTS(Repository aRepository,
+            KnowledgeBase aKB)
         throws Exception
     {
-        importDataFromString(aRepository, TURTLE, TURTLE_PREFIX, LABEL_SUBPROPERTY);
+        aKB.setFullTextSearchIri(null);
+
+        testWithLabelMatchingExactlyAnyOf_subproperty(aRepository, aKB);
+    }
+
+    static void testWithLabelMatchingExactlyAnyOf_subproperty(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
+    {
+        aKB.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        aKB.setLabelIri(RDFS.LABEL.stringValue());
+
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, LABEL_SUBPROPERTY);
 
         // The label "Green Goblin" is not assigned directly via rdfs:label but rather via a
         // subproperty of it. Thus, this test also checks if the label sub-property support works.
         List<KBHandle> results = asHandles(aRepository,
-                SPARQLQueryBuilder.forItems(kb).withLabelMatchingExactlyAnyOf("Green Goblin"));
+                SPARQLQueryBuilder.forItems(aKB).withLabelMatchingExactlyAnyOf("Green Goblin"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.equals("Green Goblin"));
@@ -1132,36 +1065,22 @@ public class SPARQLQueryBuilderTest
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin"));
     }
 
-    @Test
-    public void testWithLabelStartingWith_RDF4J_withoutLanguage_noFTS() throws Exception
+    static void testWithLabelStartingWith_withoutLanguage_noFTS(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        kb.setFullTextSearchIri(null);
+        aKB.setFullTextSearchIri(null);
 
-        __testWithLabelStartingWith_withoutLanguage(rdf4jLocalRepo);
+        testWithLabelStartingWith_withoutLanguage(aRepository, aKB);
     }
 
-    @Test
-    public void testWithLabelStartingWith_RDF4J_withoutLanguage_FTS() throws Exception
+    static void testWithLabelStartingWith_withoutLanguage(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
-
-        __testWithLabelStartingWith_withoutLanguage(rdf4jLocalRepo);
-    }
-
-    @Test
-    public void testWithLabelStartingWith_FUSEKI_withoutLanguage_FTS() throws Exception
-    {
-        kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
-
-        __testWithLabelStartingWith_withoutLanguage(fusekiLocalRepo);
-    }
-
-    public void __testWithLabelStartingWith_withoutLanguage(Repository aRepository) throws Exception
-    {
-        importDataFromString(aRepository, TURTLE, TURTLE_PREFIX, DATA_LABELS_WITHOUT_LANGUAGE);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_LABELS_WITHOUT_LANGUAGE);
 
         List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
-                .forItems(kb) //
+                .forItems(aKB) //
                 .withLabelStartingWith("Green"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1172,16 +1091,17 @@ public class SPARQLQueryBuilderTest
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin"));
     }
 
-    @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_noFTS() throws Exception
+    static void testWithLabelStartingWith_withLanguage_noFTS(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+        aKB.setFullTextSearchIri(null);
+
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        kb.setFullTextSearchIri(null);
-
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
                 .withLabelStartingWith("Green Goblin"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1194,18 +1114,17 @@ public class SPARQLQueryBuilderTest
                         "Green Goblin", null, "en"));
     }
 
-    @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_1() throws Exception
+    static void testWithLabelStartingWith_withLanguage_FTS_1(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
-
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         // Single word - actually, we add a wildcard here so anything that starts with "Green"
         // would also be matched
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
                 .withLabelStartingWith("Green"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1218,18 +1137,17 @@ public class SPARQLQueryBuilderTest
                         "Green Goblin", null, "en"));
     }
 
-    @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_2() throws Exception
+    static void testWithLabelStartingWith_withLanguage_FTS_2(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
-
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         // Two words with the second being very short - this is no problem for the LUCENE FTS
         // and we simply add a wildcard to match "Green Go*"
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
                 .withLabelStartingWith("Green Go"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1242,19 +1160,18 @@ public class SPARQLQueryBuilderTest
                         "Green Goblin", null, "en"));
     }
 
-    @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_3() throws Exception
+    static void testWithLabelStartingWith_withLanguage_FTS_3(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
-
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
 
         // Two words with the second being very short and a space following - in this case we
         // assume that the user is in fact searching for "Barack Ob" and do either drop the
         // last element nor add a wildcard
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
                 .withLabelStartingWith("Green Go "));
 
         assertThat(results).isEmpty();
@@ -1703,13 +1620,16 @@ public class SPARQLQueryBuilderTest
                 .contains("agent", "Thing");
     }
 
-    @Test
-    public void testWithLabelContainingAnyOf_RDF4J_pets_ttl() throws Exception
+    static void testWithLabelContainingAnyOf_pets_ttl_noFTS(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromFile(rdf4jLocalRepo, "src/test/resources/data/pets.ttl");
+        aKB.setFullTextSearchIri(null);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
+        importDataFromFile(aRepository, aKB, "src/test/resources/data/pets.ttl");
+
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
                 .withLabelContainingAnyOf("Socke"));
 
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -1720,15 +1640,16 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder(new KBHandle("http://mbugert.de/pets#socke", "Socke"));
     }
 
-    @Test
-    public void thatRootsCanBeRetrieved_RDF4J_ontolex() throws Exception
+    static void thatRootsCanBeRetrieved_ontolex(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromFile(rdf4jLocalRepo, "src/test/resources/data/wordnet-ontolex-ontology.owl");
+        importDataFromFile(aRepository, aKB,
+                "src/test/resources/data/wordnet-ontolex-ontology.owl");
 
-        initOwlMapping();
+        initOwlMapping(aKB);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forClasses(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forClasses(aKB) //
                 .roots() //
                 .retrieveLabel());
 
@@ -1746,68 +1667,82 @@ public class SPARQLQueryBuilderTest
 
     private void importDataFromFile(Repository aRepository, String aFilename) throws IOException
     {
+        importDataFromFile(aRepository, kb, aFilename);
+    }
+
+    static void importDataFromFile(Repository aRepository, KnowledgeBase aKB, String aFilename)
+        throws IOException
+    {
         // Detect the file format
-        RDFFormat format = Rio.getParserFormatForFileName(aFilename).orElse(RDFFormat.RDFXML);
+        RDFFormat format = Rio.getParserFormatForFileName(aFilename).orElse(RDFXML);
 
         System.out.printf("Loading %s data fron %s%n", format, aFilename);
 
         // Load files into the repository
         try (InputStream is = new FileInputStream(aFilename)) {
-            importData(aRepository, format, is);
+            importData(aRepository, aKB, format, is);
         }
     }
 
     private void importDataFromString(Repository aRepository, RDFFormat aFormat, String... aRdfData)
         throws IOException
     {
+        importDataFromString(aRepository, kb, aFormat, aRdfData);
+    }
+
+    static void importDataFromString(Repository aRepository, KnowledgeBase aKB, RDFFormat aFormat,
+            String... aRdfData)
+        throws IOException
+    {
         String data = String.join("\n", aRdfData);
 
         // Load files into the repository
         try (InputStream is = IOUtils.toInputStream(data, UTF_8)) {
-            importData(aRepository, aFormat, is);
+            importData(aRepository, aKB, aFormat, is);
         }
     }
 
-    private void importData(Repository aRepository, RDFFormat aFormat, InputStream aIS)
+    static void importData(Repository aRepository, KnowledgeBase aKB, RDFFormat aFormat,
+            InputStream aIS)
         throws IOException
     {
         try (RepositoryConnection conn = aRepository.getConnection()) {
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
-            String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+            String prefix = StringUtils.removeEnd(aKB.getBasePrefix(), "#");
             conn.add(aIS, prefix, aFormat);
         }
     }
 
-    private void initRdfsMapping()
+    static void initRdfsMapping(KnowledgeBase aKB)
     {
-        kb.setClassIri(RDFS.CLASS.stringValue());
-        kb.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
-        kb.setTypeIri(RDF.TYPE.stringValue());
-        kb.setLabelIri(RDFS.LABEL.stringValue());
-        kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
-        kb.setDescriptionIri(RDFS.COMMENT.stringValue());
+        aKB.setClassIri(RDFS.CLASS.stringValue());
+        aKB.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
+        aKB.setTypeIri(RDF.TYPE.stringValue());
+        aKB.setLabelIri(RDFS.LABEL.stringValue());
+        aKB.setPropertyTypeIri(RDF.PROPERTY.stringValue());
+        aKB.setDescriptionIri(RDFS.COMMENT.stringValue());
         // We are intentionally not using RDFS.LABEL here to ensure we can test the label
         // and property label separately
-        kb.setPropertyLabelIri(SKOS.PREF_LABEL.stringValue());
+        aKB.setPropertyLabelIri(SKOS.PREF_LABEL.stringValue());
         // We are intentionally not using RDFS.COMMENT here to ensure we can test the description
         // and property description separately
-        kb.setPropertyDescriptionIri("http://schema.org/description");
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        aKB.setPropertyDescriptionIri("http://schema.org/description");
+        aKB.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
     }
 
-    private void initOwlMapping()
+    static void initOwlMapping(KnowledgeBase aKB)
     {
-        kb.setClassIri(OWL.CLASS.stringValue());
-        kb.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
-        kb.setTypeIri(RDF.TYPE.stringValue());
-        kb.setLabelIri(RDFS.LABEL.stringValue());
-        kb.setPropertyTypeIri(RDF.PROPERTY.stringValue());
-        kb.setDescriptionIri(RDFS.COMMENT.stringValue());
-        kb.setPropertyLabelIri(RDF.PROPERTY.stringValue());
-        kb.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
+        aKB.setClassIri(OWL.CLASS.stringValue());
+        aKB.setSubclassIri(RDFS.SUBCLASSOF.stringValue());
+        aKB.setTypeIri(RDF.TYPE.stringValue());
+        aKB.setLabelIri(RDFS.LABEL.stringValue());
+        aKB.setPropertyTypeIri(RDF.PROPERTY.stringValue());
+        aKB.setDescriptionIri(RDFS.COMMENT.stringValue());
+        aKB.setPropertyLabelIri(RDF.PROPERTY.stringValue());
+        aKB.setPropertyDescriptionIri(RDFS.COMMENT.stringValue());
+        aKB.setSubPropertyIri(RDFS.SUBPROPERTYOF.stringValue());
     }
 
     private void initWikidataMapping()
@@ -1833,22 +1768,5 @@ public class SPARQLQueryBuilderTest
 
         assumeTrue(isReachable(sparqlRepository.toString()),
                 "Remote repository at [" + sparqlRepository + "] is not reachable");
-    }
-
-    /**
-     * Creates a dataset description with FTS support for the RDFS label property.
-     */
-    private static Dataset createFusekiFTSDataset()
-    {
-        Dataset ds1 = TDBFactory.createDataset();
-        Directory dir = new RAMDirectory();
-        EntityDefinition eDef = new EntityDefinition("iri", "text");
-        eDef.setPrimaryPredicate(org.apache.jena.vocabulary.RDFS.label);
-        TextIndexConfig tidxCfg = new TextIndexConfig(eDef);
-        tidxCfg.setValueStored(true);
-        tidxCfg.setMultilingualSupport(true);
-        TextIndex tidx = new TextIndexLucene(dir, tidxCfg);
-        Dataset ds = TextDatasetFactory.create(ds1, tidx);
-        return ds;
     }
 }

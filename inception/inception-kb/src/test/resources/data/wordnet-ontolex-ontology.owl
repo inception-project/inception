@@ -17,8 +17,8 @@
        <vann:preferredNamespaceUri>http://wordnet-rdf.princeton.edu/ontology#</vann:preferredNamespaceUri>
        <dc:title xml:lang="en">WordNet RDF Ontology</dc:title>
        <dc:description xml:lang="en">An ontology describing the data types used in the WordNet RDF model</dc:description>
-       <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2014-3-3</dc:issued>
-       <dc:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-4-17</dc:modified>
+       <dc:issued rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2014-03-03</dc:issued>
+       <dc:modified rdf:datatype="http://www.w3.org/2001/XMLSchema#date">2011-04-17</dc:modified>
        <owl:versionInfo rdf:datatype="http://www.w3.org/2001/XMLSchema#decimal">3.1</owl:versionInfo>
        <dc:license rdf:resource="http://wordnet-rdf.princeton.edu/license.html"/>
        <dc:contributor>
