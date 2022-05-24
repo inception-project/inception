@@ -22,8 +22,8 @@
     <artifactId>inception-app</artifactId>
     <version>24.0-SNAPSHOT</version>
   </parent>
-  <artifactId>inception-io-xmi</artifactId>
-  <name>INCEpTION - IO - XMI</name>
+  <artifactId>inception-io-lif</artifactId>
+  <name>INCEpTION - IO - LIF</name>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -47,15 +47,7 @@
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-bincas-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-xmi-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-xml-asl</artifactId>
+      <artifactId>dkpro-core-io-lif-asl</artifactId>
     </dependency>
   </dependencies>
 </project>

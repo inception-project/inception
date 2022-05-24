@@ -687,6 +687,36 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-imscwb</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-perseus</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-nif</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-lif</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-tcf</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-xmi</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-telemetry</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
@@ -737,11 +767,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-tcf</artifactId>
-        <version>24.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
@@ -753,11 +778,6 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-model-export</artifactId>
-        <version>24.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-xmi</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1912,6 +1932,10 @@
     <module>inception-io-conll</module>
     <module>inception-io-json</module>
     <module>inception-io-html</module>
+    <module>inception-io-nif</module>
+    <module>inception-io-lif</module>
+    <module>inception-io-perseus</module>
+    <module>inception-io-imscwb</module>
     <module>inception-io-tcf</module>
     <module>inception-io-text</module>
     <module>inception-io-webanno-tsv</module>

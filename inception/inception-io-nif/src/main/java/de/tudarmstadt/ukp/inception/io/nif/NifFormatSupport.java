@@ -15,26 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.formats;
+package de.tudarmstadt.ukp.inception.io.nif;
 
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.xml.InlineXmlWriter;
+import org.dkpro.core.io.nif.NifReader;
+import org.dkpro.core.io.nif.NifWriter;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-public class UimaInlineXmlFormatSupport
+public class NifFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "dkpro-core-uima-inline-xml";
-    public static final String NAME = "Inline XML";
+    public static final String ID = "nif";
+    public static final String NAME = "NLP Interchange Format (NIF)";
 
     @Override
     public String getId()
@@ -49,9 +52,22 @@ public class UimaInlineXmlFormatSupport
     }
 
     @Override
+    public boolean isReadable()
+    {
+        return true;
+    }
+
+    @Override
     public boolean isWritable()
     {
         return true;
+    }
+
+    @Override
+    public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
+        throws ResourceInitializationException
+    {
+        return createReaderDescription(NifReader.class, aTSD);
     }
 
     @Override
@@ -59,6 +75,6 @@ public class UimaInlineXmlFormatSupport
             TypeSystemDescription aTSD, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(InlineXmlWriter.class, aTSD);
+        return createEngineDescription(NifWriter.class, aTSD);
     }
 }

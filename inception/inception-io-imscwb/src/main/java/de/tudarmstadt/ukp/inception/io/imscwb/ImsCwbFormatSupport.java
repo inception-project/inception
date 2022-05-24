@@ -15,29 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.formats;
+package de.tudarmstadt.ukp.inception.io.imscwb;
 
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.io.nif.NifReader;
-import org.dkpro.core.io.nif.NifWriter;
+import org.dkpro.core.io.imscwb.ImsCwbReader;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
-public class NifFormatSupport
+public class ImsCwbFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "nif";
-    public static final String NAME = "NLP Interchange Format (NIF)";
+    public static final String ID = "imscwb";
+    public static final String NAME = "Corpus Workbench Format (aka VRT)";
 
     @Override
     public String getId()
@@ -57,24 +52,23 @@ public class NifFormatSupport
         return true;
     }
 
-    @Override
-    public boolean isWritable()
-    {
-        return true;
-    }
+    // @Override
+    // public boolean isWritable()
+    // {
+    // return true;
+    // }
 
     @Override
     public CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
     {
-        return createReaderDescription(NifReader.class, aTSD);
+        return createReaderDescription(ImsCwbReader.class, aTSD);
     }
 
-    @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject,
-            TypeSystemDescription aTSD, CAS aCAS)
-        throws ResourceInitializationException
-    {
-        return createEngineDescription(NifWriter.class, aTSD);
-    }
+    // @Override
+    // public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
+    // throws ResourceInitializationException
+    // {
+    // return createEngineDescription(ImsCwbWriter.class);
+    // }
 }
