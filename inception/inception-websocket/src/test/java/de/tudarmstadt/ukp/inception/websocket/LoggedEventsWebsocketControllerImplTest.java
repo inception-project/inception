@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.websocket;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -38,6 +41,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -59,6 +63,7 @@ public class LoggedEventsWebsocketControllerImplTest
     private TestChannel outboundChannel;
 
     private Project testProject;
+    private AnnotationLayer testLayer;
     private SourceDocument testDoc;
     private User testAdmin;
 
@@ -72,6 +77,8 @@ public class LoggedEventsWebsocketControllerImplTest
         adapterRegistry.onContextRefreshedEvent(null);
         testProject = new Project("test-project");
         testProject.setId(1L);
+        testLayer = new AnnotationLayer("custom.Span", "Span", SPAN_TYPE, testProject, false,
+                TOKENS, ANY_OVERLAP);
         testDoc = new SourceDocument("testDoc", testProject, "text");
         testDoc.setId(2L);
         testAdmin = new User(TEST_ADMIN_USERNAME, Role.ROLE_USER, Role.ROLE_ADMIN);
@@ -87,8 +94,8 @@ public class LoggedEventsWebsocketControllerImplTest
     @WithMockUser(TEST_ADMIN_USERNAME)
     public void thatSpanCreatedEventIsRelayedToUser()
     {
-        sut.onApplicationEvent(
-                new SpanCreatedEvent(getClass(), testDoc, testAdmin.getUsername(), null, null));
+        sut.onApplicationEvent(new SpanCreatedEvent(getClass(), testDoc, testAdmin.getUsername(),
+                testLayer, null));
 
         List<Message<?>> messages = outboundChannel.getMessages();
         LoggedEventMessage msg = (LoggedEventMessage) messages.get(0).getPayload();
