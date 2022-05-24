@@ -26,9 +26,6 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelLayerInitializer;
-import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelTagSetInitializer;
-import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelingProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.EntityLinkingProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.NamedEntityIdentifierStringRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.initializers.StandardProjectInitializer;
@@ -36,16 +33,11 @@ import de.tudarmstadt.ukp.inception.initializers.WikiDataKnowledgeBaseInitialize
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
-import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
-import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @AutoConfigureAfter({ //
         KnowledgeBaseServiceAutoConfiguration.class, //
@@ -87,33 +79,5 @@ public class InceptionProjectInitializersAutoConfiguration
             ApplicationContext aContext, AnnotationSchemaService aAnnotationService)
     {
         return new EntityLinkingProjectInitializer(aContext, aAnnotationService);
-    }
-
-    @ConditionalOnBean(DocumentMetadataLayerSupport.class)
-    @Bean
-    public BasicDocumentLabelLayerInitializer basicDocumentTagLayerInitializer(
-            AnnotationSchemaService aAnnotationSchemaService,
-            DocumentMetadataLayerSupport aDocLayerSupport)
-    {
-        return new BasicDocumentLabelLayerInitializer(aAnnotationSchemaService, aDocLayerSupport);
-    }
-
-    @ConditionalOnBean(DocumentMetadataLayerSupport.class)
-    @Bean
-    BasicDocumentLabelingProjectInitializer basicDocumentLabelingProjectInitializer(
-            PreferencesService aPreferencesService, DocumentMetadataSidebarFactory aDocMetaSidebar,
-            WorkloadManagementService aWorkloadManagementService,
-            MatrixWorkloadExtension aMatrixWorkloadExtension)
-    {
-        return new BasicDocumentLabelingProjectInitializer(aPreferencesService, aDocMetaSidebar,
-                aWorkloadManagementService, aMatrixWorkloadExtension);
-    }
-
-    @ConditionalOnBean(DocumentMetadataLayerSupport.class)
-    @Bean
-    BasicDocumentLabelTagSetInitializer basicDocumentLabelTagSetInitializer(
-            AnnotationSchemaService aAnnotationSchemaService)
-    {
-        return new BasicDocumentLabelTagSetInitializer(aAnnotationSchemaService);
     }
 }

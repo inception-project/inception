@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.initializers;
+package de.tudarmstadt.ukp.inception.project.initializers.doclabeling;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarTabbedPanel.KEY_SIDEBAR_STATE;
 import static java.util.Arrays.asList;
@@ -27,8 +27,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarState;
-import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.config.InceptionDocumentLabelingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.QuickProjectInitializer;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link InceptionProjectInitializersAutoConfiguration#basicDocumentLabelingProjectInitializer}.
+ * {@link InceptionDocumentLabelingProjectInitializersAutoConfiguration#basicDocumentLabelingProjectInitializer}.
  * </p>
  */
 public class BasicDocumentLabelingProjectInitializer
