@@ -1838,7 +1838,23 @@ public abstract class WebAnnoTsv3WriterTestBase
         Relation r = new Relation(jcas, s2.getBegin(), s2.getEnd());
         r.setGovernor(s1);
         r.setDependent(s2);
-        asList(s1, s2).forEach(Annotation::addToIndexes);
+        asList(s1, s2, r).forEach(Annotation::addToIndexes);
+
+        writeAndAssertEquals(jcas);
+    }
+
+    @Test
+    public void testSubTokenRelation2() throws Exception
+    {
+        JCas jcas = makeJCasOneSentence("Test again");
+        Span s1 = new Span(jcas, 0, 1);
+        s1.setValue("OTH");
+        Span s2 = new Span(jcas, 5, 10);
+        s2.setValue("OTH");
+        Relation r = new Relation(jcas, s2.getBegin(), s2.getEnd());
+        r.setGovernor(s1);
+        r.setDependent(s2);
+        asList(s1, s2, r).forEach(Annotation::addToIndexes);
 
         writeAndAssertEquals(jcas);
     }

@@ -121,7 +121,7 @@ public class NamedEntityLinker
         if (conceptFeatureTraits.getRepositoryId() != null) {
             Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(recommender.getProject(),
                     conceptFeatureTraits.getRepositoryId());
-            if (kb.isPresent() && kb.get().isSupportConceptLinking()) {
+            if (kb.isPresent() && kb.get().isEnabled() && kb.get().isSupportConceptLinking()) {
                 handles.addAll(readCandidates(kb.get(), aCoveredText, aBegin, aCas));
             }
         }

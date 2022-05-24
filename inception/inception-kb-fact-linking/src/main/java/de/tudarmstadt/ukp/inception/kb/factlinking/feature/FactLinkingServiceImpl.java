@@ -74,12 +74,12 @@ public class FactLinkingServiceImpl
             // If a specific KB is selected, get its properties
             Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(aProject,
                     traits.getRepositoryId());
-            if (kb.isPresent()) {
+            if (kb.isPresent() && kb.get().isEnabled()) {
                 handles.addAll(kbService.listProperties(kb.get(), false));
             }
         }
         else {
-            for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
+            for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(aProject)) {
                 handles.addAll(kbService.listProperties(kb, false));
             }
         }
@@ -112,6 +112,7 @@ public class FactLinkingServiceImpl
             // Use the concept from a particular knowledge base
             if (traits.getRepositoryId() != null) {
                 instance = kbService.getKnowledgeBaseById(aProject, traits.getRepositoryId())
+                        .filter(KnowledgeBase::isEnabled)
                         .flatMap(kb -> kbService.readInstance(kb, kbHandleIdentifier));
             }
             // Use the concept from any knowledge base (leave KB unselected)
@@ -130,13 +131,13 @@ public class FactLinkingServiceImpl
         if (traits.getRepositoryId() != null) {
             return kbService.getKnowledgeBaseById(aProject, traits.getRepositoryId()).get();
         }
-        else {
-            for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
-                if (kbService.listProperties(kb, false).contains(aProperty)) {
-                    return kb;
-                }
+
+        for (KnowledgeBase kb : kbService.getEnabledKnowledgeBases(aProject)) {
+            if (kbService.listProperties(kb, false).contains(aProperty)) {
+                return kb;
             }
         }
+
         return null;
     }
 
