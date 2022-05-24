@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
@@ -45,18 +44,16 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.function.FailableBiConsumer;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.eclipse.rdf4j.repository.sail.SailRepository;
 import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
-import org.eclipse.rdf4j.sail.lucene.LuceneSail;
-import org.eclipse.rdf4j.sail.memory.MemoryStore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -197,7 +194,6 @@ public class SPARQLQueryBuilderTest
             "    <#implicit-property-1> 'value1' .");
 
     private KnowledgeBase kb;
-    private Repository rdf4jLocalRepo;
     private Repository ukpVirtuosoRepo;
     private Repository zbwStw;
     private Repository zbwGnd;
@@ -219,15 +215,6 @@ public class SPARQLQueryBuilderTest
         kb.setMaxResults(100);
 
         initRdfsMapping(kb);
-
-        // Local RDF4J in-memory store - this should be used for most tests because we can
-        // a) rely on its availability
-        // b) import custom test data
-        LuceneSail lucenesail = new LuceneSail();
-        lucenesail.setParameter(LuceneSail.LUCENE_RAMDIR_KEY, "true");
-        lucenesail.setBaseSail(new MemoryStore());
-        rdf4jLocalRepo = new SailRepository(lucenesail);
-        rdf4jLocalRepo.init();
 
         ukpVirtuosoRepo = buildSparqlRepository(
                 "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql");
@@ -258,6 +245,118 @@ public class SPARQLQueryBuilderTest
         restoreSslVerification();
     }
 
+    static List<Scenario> tests() throws Exception
+    {
+        return asList( //
+                new Scenario("testWithLabelStartingWith_withLanguage_FTS_1",
+                        SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_FTS_1),
+                new Scenario("testWithLabelStartingWith_withLanguage_FTS_2",
+                        SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_FTS_2),
+                new Scenario("testWithLabelStartingWith_withLanguage_FTS_3",
+                        SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_FTS_3),
+                new Scenario("testWithLabelStartingWith_withLanguage_noFTS",
+                        SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_noFTS),
+                new Scenario("testWithLabelContainingAnyOf_pets_ttl_noFTS",
+                        SPARQLQueryBuilderTest::testWithLabelContainingAnyOf_pets_ttl_noFTS),
+                new Scenario("thatRootsCanBeRetrieved_ontolex",
+                        SPARQLQueryBuilderTest::thatRootsCanBeRetrieved_ontolex),
+                new Scenario("testWithLabelContainingAnyOf_withLanguage_noFTS",
+                        SPARQLQueryBuilderTest::testWithLabelContainingAnyOf_withLanguage_noFTS),
+                new Scenario("testWithLabelContainingAnyOf_withLanguage",
+                        SPARQLQueryBuilderTest::testWithLabelContainingAnyOf_withLanguage),
+                new Scenario("testWithLabelMatchingAnyOf_withLanguage",
+                        SPARQLQueryBuilderTest::testWithLabelMatchingAnyOf_withLanguage),
+                new Scenario("testWithLabelMatchingAnyOf_withLanguage_noFTS",
+                        SPARQLQueryBuilderTest::testWithLabelMatchingAnyOf_withLanguage_noFTS),
+                new Scenario("testWithLabelStartingWith_withoutLanguage",
+                        SPARQLQueryBuilderTest::testWithLabelStartingWith_withoutLanguage),
+                new Scenario("testWithLabelStartingWith_withoutLanguage_noFTS",
+                        SPARQLQueryBuilderTest::testWithLabelStartingWith_withoutLanguage_noFTS),
+                new Scenario("testWithLabelMatchingExactlyAnyOf_subproperty",
+                        SPARQLQueryBuilderTest::testWithLabelMatchingExactlyAnyOf_subproperty),
+                new Scenario("testWithLabelMatchingExactlyAnyOf_subproperty_noFTS",
+                        SPARQLQueryBuilderTest::testWithLabelMatchingExactlyAnyOf_subproperty_noFTS),
+                new Scenario("testWithLabelMatchingExactlyAnyOf_withLanguage_noFTS",
+                        SPARQLQueryBuilderTest::testWithLabelMatchingExactlyAnyOf_withLanguage_noFTS),
+                new Scenario("testWithLabelMatchingExactlyAnyOf_withLanguage",
+                        SPARQLQueryBuilderTest::testWithLabelMatchingExactlyAnyOf_withLanguage),
+                new Scenario("thatExistsReturnsTrueWhenDataQueriedForExists",
+                        SPARQLQueryBuilderTest::thatExistsReturnsTrueWhenDataQueriedForExists),
+                new Scenario("thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved",
+                        SPARQLQueryBuilderTest::thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved),
+                new Scenario("thatLabelsAndDescriptionsWithLanguageArePreferred",
+                        SPARQLQueryBuilderTest::thatLabelsAndDescriptionsWithLanguageArePreferred),
+                new Scenario("thatSearchOverMultipleLabelsWorks",
+                        SPARQLQueryBuilderTest::thatSearchOverMultipleLabelsWorks),
+                new Scenario("thatMatchingAgainstAdditionalSearchPropertiesWorks",
+                        SPARQLQueryBuilderTest::thatMatchingAgainstAdditionalSearchPropertiesWorks),
+                new Scenario("thatExistsReturnsFalseWhenDataQueriedForDoesNotExist",
+                        SPARQLQueryBuilderTest::thatExistsReturnsFalseWhenDataQueriedForDoesNotExist),
+                new Scenario("thatExplicitClassCanBeRetrievedByItsIdentifier",
+                        SPARQLQueryBuilderTest::thatExplicitClassCanBeRetrievedByItsIdentifier),
+                new Scenario("thatImplicitClassCanBeRetrievedByItsIdentifier",
+                        SPARQLQueryBuilderTest::thatImplicitClassCanBeRetrievedByItsIdentifier),
+                new Scenario("thatNonClassCannotBeRetrievedByItsIdentifier",
+                        SPARQLQueryBuilderTest::thatNonClassCannotBeRetrievedByItsIdentifier),
+                new Scenario("thatCanRetrieveItemInfoForIdentifier",
+                        SPARQLQueryBuilderTest::thatCanRetrieveItemInfoForIdentifier),
+                new Scenario("thatAllPropertiesCanBeRetrieved",
+                        SPARQLQueryBuilderTest::thatAllPropertiesCanBeRetrieved),
+                new Scenario("thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults),
+                new Scenario("thatPropertyQueryLimitedToChildrenDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatPropertyQueryLimitedToChildrenDoesNotReturnOutOfScopeResults),
+                new Scenario("thatPropertyQueryLimitedToDomainDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatPropertyQueryLimitedToDomainDoesNotReturnOutOfScopeResults),
+                new Scenario("thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults),
+                new Scenario("thatQueryWithExplicitRootClassDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatQueryWithExplicitRootClassDoesNotReturnOutOfScopeResults),
+                new Scenario("thatNonRootClassCanBeUsedAsExplicitRootClass",
+                        SPARQLQueryBuilderTest::thatNonRootClassCanBeUsedAsExplicitRootClass),
+                new Scenario("thatQueryLimitedToClassesDoesNotReturnInstances",
+                        SPARQLQueryBuilderTest::thatQueryLimitedToClassesDoesNotReturnInstances),
+                new Scenario("thatQueryLimitedToInstancesDoesNotReturnClasses",
+                        SPARQLQueryBuilderTest::thatQueryLimitedToInstancesDoesNotReturnClasses),
+                new Scenario("thatClassQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatClassQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults),
+                new Scenario("thatClassQueryLimitedToParentsDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatClassQueryLimitedToParentsDoesNotReturnOutOfScopeResults),
+                new Scenario("thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults),
+                new Scenario("thatClassQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatClassQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults),
+                new Scenario("thatInstanceQueryLimitedToParentsDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatInstanceQueryLimitedToParentsDoesNotReturnOutOfScopeResults),
+                new Scenario("thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults),
+                new Scenario("thatInstanceQueryLimitedToChildrenDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatInstanceQueryLimitedToChildrenDoesNotReturnOutOfScopeResults),
+                new Scenario("thatInstanceQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatInstanceQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults),
+                new Scenario("thatItemQueryLimitedToChildrenDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatItemQueryLimitedToChildrenDoesNotReturnOutOfScopeResults),
+                new Scenario("thatItemQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults",
+                        SPARQLQueryBuilderTest::thatItemQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults),
+                new Scenario("testWithLabelStartingWith_OLIA",
+                        SPARQLQueryBuilderTest::testWithLabelStartingWith_OLIA)
+
+        );
+    }
+
+    static class Scenario
+    {
+        final String name;
+        final FailableBiConsumer<Repository, KnowledgeBase, Exception> implementation;
+
+        public Scenario(String aName,
+                FailableBiConsumer<Repository, KnowledgeBase, Exception> aImplementation)
+        {
+            name = aName;
+            implementation = aImplementation;
+        }
+    }
+
     static Repository buildSparqlRepository(String aUrl)
     {
         SPARQLRepository repo = new SPARQLRepository(aUrl);
@@ -282,12 +381,13 @@ public class SPARQLQueryBuilderTest
      * @throws Exception
      *             -
      */
-    @Test
-    public void thatExistsReturnsTrueWhenDataQueriedForExists() throws Exception
+    static void thatExistsReturnsTrueWhenDataQueriedForExists(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder.forClasses(kb));
+        boolean result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB));
 
         assertThat(result).isTrue();
     }
@@ -299,16 +399,17 @@ public class SPARQLQueryBuilderTest
      * @throws Exception
      *             -
      */
-    @Test
-    public void thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved() throws Exception
+    static void thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        kb.setDefaultLanguage(null);
+        aKB.setDefaultLanguage(null);
 
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
                 .withIdentifier("http://example.org/#green-goblin") //
                 .retrieveLabel() //
                 .retrieveDescription());
@@ -330,17 +431,18 @@ public class SPARQLQueryBuilderTest
      * @throws Exception
      *             -
      */
-    @Test
-    public void thatLabelsAndDescriptionsWithLanguageArePreferred() throws Exception
+    static void thatLabelsAndDescriptionsWithLanguageArePreferred(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
         // The dataset contains only labels for French but no descriptions
-        kb.setDefaultLanguage("fr");
+        aKB.setDefaultLanguage("fr");
 
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
                 .withIdentifier("http://example.org/#green-goblin") //
                 .retrieveLabel() //
                 .retrieveDescription());
@@ -353,14 +455,14 @@ public class SPARQLQueryBuilderTest
                         "Goblin vert", "Little green monster", "fr"));
     }
 
-    @Test
-    public void thatSearchOverMultipleLabelsWorks() throws Exception
+    static void thatSearchOverMultipleLabelsWorks(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_MULTIPLE_LABELS);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_MULTIPLE_LABELS);
 
         for (String term : asList("specimen", "sample", "instance", "case")) {
-            List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                    .forItems(kb) //
+            List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                    .forItems(aKB) //
                     .withLabelMatchingAnyOf(term) //
                     .retrieveLabel());
 
@@ -370,18 +472,19 @@ public class SPARQLQueryBuilderTest
         }
     }
 
-    @Test
-    public void thatMatchingAgainstAdditionalSearchPropertiesWorks() throws Exception
+    static void thatMatchingAgainstAdditionalSearchPropertiesWorks(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        kb.setLabelIri("http://www.w3.org/2000/01/rdf-schema#prefLabel");
-        kb.setAdditionalMatchingProperties(asList("http://www.w3.org/2000/01/rdf-schema#label"));
+        aKB.setLabelIri("http://www.w3.org/2000/01/rdf-schema#prefLabel");
+        aKB.setAdditionalMatchingProperties(asList("http://www.w3.org/2000/01/rdf-schema#label"));
 
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_ADDITIONAL_SEARCH_PROPERTIES);
 
         for (String term : asList("specimen", "sample", "instance", "case")) {
-            List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                    .forItems(kb) //
+            List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                    .forItems(aKB) //
                     .withLabelMatchingAnyOf(term) //
                     .retrieveLabel());
 
@@ -400,13 +503,14 @@ public class SPARQLQueryBuilderTest
      * @throws Exception
      *             -
      */
-    @Test
-    public void thatExistsReturnsFalseWhenDataQueriedForDoesNotExist() throws Exception
+    static void thatExistsReturnsFalseWhenDataQueriedForDoesNotExist(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(rdf4jLocalRepo,
-                SPARQLQueryBuilder.forClasses(kb).parentsOf("http://example.org/#explicitRoot"));
+        boolean result = exists(aRepository,
+                SPARQLQueryBuilder.forClasses(aKB).parentsOf("http://example.org/#explicitRoot"));
 
         assertThat(result).isFalse();
     }
@@ -417,12 +521,13 @@ public class SPARQLQueryBuilderTest
      * @throws Exception
      *             -
      */
-    @Test
-    public void thatExplicitClassCanBeRetrievedByItsIdentifier() throws Exception
+    static void thatExplicitClassCanBeRetrievedByItsIdentifier(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder.forClasses(kb)
+        boolean result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB)
                 .withIdentifier("http://example.org/#explicitRoot"));
 
         assertThat(result).isTrue();
@@ -434,12 +539,13 @@ public class SPARQLQueryBuilderTest
      * @throws Exception
      *             -
      */
-    @Test
-    public void thatImplicitClassCanBeRetrievedByItsIdentifier() throws Exception
+    static void thatImplicitClassCanBeRetrievedByItsIdentifier(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder.forClasses(kb)
+        boolean result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB)
                 .withIdentifier("http://example.org/#implicitRoot"));
 
         assertThat(result).isTrue();
@@ -452,12 +558,13 @@ public class SPARQLQueryBuilderTest
      * @throws Exception
      *             -
      */
-    @Test
-    public void thatNonClassCannotBeRetrievedByItsIdentifier() throws Exception
+    static void thatNonClassCannotBeRetrievedByItsIdentifier(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder.forClasses(kb)
+        boolean result = exists(aRepository, SPARQLQueryBuilder.forClasses(aKB)
                 .withIdentifier("http://example.org/#DoesNotExist"));
 
         assertThat(result).isFalse();
@@ -469,14 +576,14 @@ public class SPARQLQueryBuilderTest
      * @throws Exception
      *             -
      */
-    @Test
-    public void thatCanRetrieveItemInfoForIdentifier() throws Exception
+    static void thatCanRetrieveItemInfoForIdentifier(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX,
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
                 .withIdentifier("http://example.org/#red-goblin") //
                 .retrieveLabel() //
                 .retrieveDescription());
@@ -489,13 +596,13 @@ public class SPARQLQueryBuilderTest
                         "Red Goblin", "Little red monster"));
     }
 
-    @Test
-    public void thatAllPropertiesCanBeRetrieved() throws Exception
+    static void thatAllPropertiesCanBeRetrieved(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forProperties(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forProperties(aKB) //
                 .retrieveLabel() //
                 .retrieveDescription() //
                 .retrieveDomainAndRange());
@@ -519,14 +626,14 @@ public class SPARQLQueryBuilderTest
                                 "Property One-One-One"));
     }
 
-    @Test
-    public void thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
+    static void thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
         throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forProperties(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forProperties(aKB) //
                 .descendantsOf("http://example.org/#property-1"));
 
         assertThat(results).isNotEmpty();
@@ -572,25 +679,27 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().startsWith("educated"));
     }
 
-    @Test
-    public void thatPropertyQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatPropertyQueryLimitedToChildrenDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo,
-                SPARQLQueryBuilder.forProperties(kb).childrenOf("http://example.org/#property-1"));
+        List<KBHandle> results = asHandles(aRepository,
+                SPARQLQueryBuilder.forProperties(aKB).childrenOf("http://example.org/#property-1"));
 
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getIdentifier)
                 .containsExactlyInAnyOrder("http://example.org/#subproperty-1-1");
     }
 
-    @Test
-    public void thatPropertyQueryLimitedToDomainDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatPropertyQueryLimitedToDomainDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder.forProperties(kb)
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forProperties(aKB)
                 .matchingDomain("http://example.org/#subclass1"));
 
         assertThat(results).isNotEmpty();
@@ -604,13 +713,14 @@ public class SPARQLQueryBuilderTest
         // other properties all either define or inherit an incompatible domain
     }
 
-    @Test
-    public void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forClasses(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forClasses(aKB) //
                 .roots());
 
         assertThat(results).isNotEmpty();
@@ -619,15 +729,15 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("explicitRoot", "implicitRoot");
     }
 
-    @Test
-    public void thatQueryWithExplicitRootClassDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatQueryWithExplicitRootClassDoesNotReturnOutOfScopeResults(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        kb.setRootConcepts(asList("http://example.org/#implicitRoot"));
+        aKB.setRootConcepts(asList("http://example.org/#implicitRoot"));
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo,
-                SPARQLQueryBuilder.forClasses(kb).roots());
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB).roots());
 
         assertThat(results).isNotEmpty();
         assertThat(results) //
@@ -635,16 +745,16 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("implicitRoot");
     }
 
-    @Test
-    public void thatNonRootClassCanBeUsedAsExplicitRootClass() throws Exception
+    static void thatNonRootClassCanBeUsedAsExplicitRootClass(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        kb.setRootConcepts(
+        aKB.setRootConcepts(
                 asList("http://example.org/#implicitRoot", "http://example.org/#subclass2"));
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo,
-                SPARQLQueryBuilder.forClasses(kb).roots());
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB).roots());
 
         assertThat(results).isNotEmpty();
         assertThat(results) //
@@ -652,12 +762,13 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("implicitRoot", "subclass2");
     }
 
-    @Test
-    public void thatQueryLimitedToClassesDoesNotReturnInstances() throws Exception
+    static void thatQueryLimitedToClassesDoesNotReturnInstances(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder.forClasses(kb));
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forClasses(aKB));
 
         assertThat(results).isNotEmpty();
         assertThat(results) //
@@ -665,12 +776,13 @@ public class SPARQLQueryBuilderTest
                 .noneMatch(label -> label.contains("instance"));
     }
 
-    @Test
-    public void thatQueryLimitedToInstancesDoesNotReturnClasses() throws Exception
+    static void thatQueryLimitedToInstancesDoesNotReturnClasses(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder.forInstances(kb));
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forInstances(aKB));
 
         assertThat(results).isNotEmpty();
         assertThat(results) //
@@ -678,13 +790,14 @@ public class SPARQLQueryBuilderTest
                 .noneMatch(label -> label.contains("class"));
     }
 
-    @Test
-    public void thatClassQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatClassQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forClasses(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forClasses(aKB) //
                 .ancestorsOf("http://example.org/#subclass1-1-1"));
 
         assertThat(results).isNotEmpty();
@@ -694,13 +807,14 @@ public class SPARQLQueryBuilderTest
                         "http://example.org/#subclass1", "http://example.org/#subclass1-1");
     }
 
-    @Test
-    public void thatClassQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatClassQueryLimitedToParentsDoesNotReturnOutOfScopeResults(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forClasses(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forClasses(aKB) //
                 .parentsOf("http://example.org/#subclass1-1"));
 
         assertThat(results).isNotEmpty();
@@ -709,13 +823,14 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("http://example.org/#subclass1");
     }
 
-    @Test
-    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forClasses(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forClasses(aKB) //
                 .childrenOf("http://example.org/#subclass1"));
 
         assertThat(results).isNotEmpty();
@@ -758,13 +873,14 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("http://www.wikidata.org/entity/Q1412447");
     }
 
-    @Test
-    public void thatClassQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatClassQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forClasses(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forClasses(aKB) //
                 .descendantsOf("http://example.org/#subclass1"));
 
         assertThat(results).isNotEmpty();
@@ -774,13 +890,14 @@ public class SPARQLQueryBuilderTest
                         "http://example.org/#subclass1-1-1");
     }
 
-    @Test
-    public void thatInstanceQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatInstanceQueryLimitedToParentsDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forClasses(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forClasses(aKB) //
                 .parentsOf("http://example.org/#1-1-1-instance-4"));
 
         assertThat(results).isNotEmpty(); //
@@ -789,14 +906,14 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("http://example.org/#subclass1-1-1");
     }
 
-    @Test
-    public void thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults()
+    static void thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
         throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forClasses(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forClasses(aKB) //
                 .ancestorsOf("http://example.org/#1-1-1-instance-4"));
 
         assertThat(results).isNotEmpty();
@@ -807,13 +924,14 @@ public class SPARQLQueryBuilderTest
                         "http://example.org/#subclass1-1-1");
     }
 
-    @Test
-    public void thatInstanceQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatInstanceQueryLimitedToChildrenDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forInstances(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forInstances(aKB) //
                 .childrenOf("http://example.org/#subclass1"));
 
         assertThat(results).isNotEmpty();
@@ -822,14 +940,14 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("http://example.org/#1-instance-1");
     }
 
-    @Test
-    public void thatInstanceQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
+    static void thatInstanceQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
         throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forInstances(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forInstances(aKB) //
                 .descendantsOf("http://example.org/#subclass1"));
 
         assertThat(results).isNotEmpty();
@@ -838,13 +956,14 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.matches("http://example.org/#1(-1)*-instance-.*"));
     }
 
-    @Test
-    public void thatItemQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatItemQueryLimitedToChildrenDoesNotReturnOutOfScopeResults(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forItems(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
                 .childrenOf("http://example.org/#subclass1"));
 
         assertThat(results).isNotEmpty();
@@ -854,12 +973,13 @@ public class SPARQLQueryBuilderTest
                         "http://example.org/#1-instance-1", "http://example.org/#subclass1-1");
     }
 
-    @Test
-    public void thatItemQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults() throws Exception
+    static void thatItemQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults(
+            Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        importDataFromString(rdf4jLocalRepo, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder.forItems(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forItems(aKB) //
                 .descendantsOf("http://example.org/#subclass1"));
 
         assertThat(results).isNotEmpty();
@@ -1487,16 +1607,15 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Achilles"));
     }
 
-    @Test
-    public void testWithLabelStartingWith_OLIA_FTS() throws Exception
+    static void testWithLabelStartingWith_OLIA(Repository aRepository, KnowledgeBase aKB)
+        throws Exception
     {
-        kb.setFullTextSearchIri(FTS_LUCENE.stringValue());
-        kb.setLabelIri("http://purl.org/olia/system.owl#hasTag");
+        aKB.setLabelIri("http://purl.org/olia/system.owl#hasTag");
 
-        importDataFromFile(rdf4jLocalRepo, "src/test/resources/data/penn.owl");
+        importDataFromFile(aRepository, aKB, "src/test/resources/data/penn.owl");
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder //
-                .forInstances(kb) //
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forInstances(aKB) //
                 .withLabelStartingWith("N"));
 
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
@@ -1665,11 +1784,6 @@ public class SPARQLQueryBuilderTest
         assertThat(sanitizeQueryString_FTS("Green\n\rGoblin")).isEqualTo("Green Goblin");
     }
 
-    private void importDataFromFile(Repository aRepository, String aFilename) throws IOException
-    {
-        importDataFromFile(aRepository, kb, aFilename);
-    }
-
     static void importDataFromFile(Repository aRepository, KnowledgeBase aKB, String aFilename)
         throws IOException
     {
@@ -1682,12 +1796,6 @@ public class SPARQLQueryBuilderTest
         try (InputStream is = new FileInputStream(aFilename)) {
             importData(aRepository, aKB, format, is);
         }
-    }
-
-    private void importDataFromString(Repository aRepository, RDFFormat aFormat, String... aRdfData)
-        throws IOException
-    {
-        importDataFromString(aRepository, kb, aFormat, aRdfData);
     }
 
     static void importDataFromString(Repository aRepository, KnowledgeBase aKB, RDFFormat aFormat,
