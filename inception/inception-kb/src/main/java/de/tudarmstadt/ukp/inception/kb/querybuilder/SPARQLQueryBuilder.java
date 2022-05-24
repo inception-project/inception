@@ -1319,20 +1319,30 @@ public class SPARQLQueryBuilder
                         .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
     }
 
-    private GraphPattern withLabelStartingWith_Stardog_FTS(String aPrefix)
+    private GraphPattern withLabelStartingWith_Stardog_FTS(String aPrefixQuery)
     {
         prefixes.add(PREFIX_STARDOG_SEARCH);
 
-        if (aPrefix.isEmpty()) {
+        // Strip single quotes and asterisks because they have special semantics
+        String sanitizedValue = sanitizeQueryString_FTS(aPrefixQuery);
+
+        if (StringUtils.isBlank(sanitizedValue)) {
             returnEmptyResult = true;
         }
 
-        String sanitizedValue = sanitizeQueryString_FTS(aPrefix);
+        String queryString = sanitizedValue.trim();
+
+        // If the query string entered by the user does not end with a space character, then
+        // we assume that the user may not yet have finished writing the word and add a
+        // wildcard
+        if (!aPrefixQuery.endsWith(" ")) {
+            queryString += "*";
+        }
 
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+                new StardogEntitySearchService(VAR_MATCH_TERM, queryString)
                         .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                                .filter(startsWithPattern(VAR_MATCH_TERM, aPrefix))));
+                                .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
     }
 
     private GraphPattern withLabelStartingWith_Wikidata_FTS(String aPrefix)
@@ -1671,14 +1681,20 @@ public class SPARQLQueryBuilder
         Iri subClassProperty = iri(kb.getSubclassIri());
         Iri typeOfProperty = iri(kb.getTypeIri());
 
-        // An item is an instance if ...
-        addPattern(PRIMARY_RESTRICTIONS, filterExists(VAR_SUBJECT.has(typeOfProperty, bNode()))
+        // An item is an instance if ... (make sure to add the LiftableExistsFilter
+        // directly to the PRIMARY_RESTRICTIONS and not nested in another pattern
+        // so it can be discovered by selectQuery() and be lifted if necessary.
+        addPattern(PRIMARY_RESTRICTIONS,
+                new PromotableExistsFilter(VAR_SUBJECT.has(typeOfProperty, bNode())));
                 // ... it is not explicitly defined as being a class
-                .filterNotExists(VAR_SUBJECT.has(typeOfProperty, classIri))
+        addPattern(PRIMARY_RESTRICTIONS,
+                filterNotExists(VAR_SUBJECT.has(typeOfProperty, classIri)));
                 // ... it does not have any subclass
-                .filterNotExists(bNode().has(subClassProperty, VAR_SUBJECT))
+        addPattern(PRIMARY_RESTRICTIONS,
+                filterNotExists(bNode().has(subClassProperty, VAR_SUBJECT)));
                 // ... it does not have any superclass
-                .filterNotExists(VAR_SUBJECT.has(subClassProperty, bNode())));
+        addPattern(PRIMARY_RESTRICTIONS,
+                filterNotExists(VAR_SUBJECT.has(subClassProperty, bNode())));
     }
 
     private void limitToProperties()
@@ -1796,6 +1812,19 @@ public class SPARQLQueryBuilder
         SelectQuery query = Queries.SELECT().distinct();
         prefixes.forEach(query::prefix);
         projections.forEach(query::select);
+
+        // Some KBs do not like queries consisting only of FILTERs, so if we have a filter
+        // (in particular a FILTER EXISTS), we can convert that a proper pattern by removing
+        // the FILTER EXISTS from it. We only do this if there are no other primary patterns
+        // because the FILTER EXISTS pattern would usually be one that could be expensive and
+        // if we already have another primary pattern, that is hopefully way cheaper.
+        var promotableRestriction = primaryRestrictions.stream().findFirst()
+                .filter(pattern -> pattern instanceof PromotableExistsFilter)
+                .map(pattern -> (PromotableExistsFilter) pattern);
+        if (primaryPatterns.isEmpty() && promotableRestriction.isPresent()) {
+            primaryPatterns.add(promotableRestriction.get().getNested());
+            primaryRestrictions.remove(promotableRestriction.get());
+        }
 
         // First add the primary patterns and high-level restrictions (e.g. limits to classes or
         // instances) - this is important because Virtuoso has trouble when combining UNIONS,
@@ -2178,5 +2207,28 @@ public class SPARQLQueryBuilder
     public int hashCode()
     {
         return selectQuery().getQueryString().hashCode();
+    }
+
+    private static class PromotableExistsFilter
+        implements GraphPattern
+    {
+
+        private final GraphPattern nested;
+
+        public PromotableExistsFilter(GraphPattern aNested)
+        {
+            nested = aNested;
+        }
+
+        public GraphPattern getNested()
+        {
+            return nested;
+        }
+
+        @Override
+        public String getQueryString()
+        {
+            return "FILTER EXISTS { " + nested.getQueryString() + " } ";
+        }
     }
 }
