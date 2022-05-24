@@ -21,8 +21,11 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.buildSparqlRepository;
+import static java.util.Arrays.asList;
 
 import java.lang.reflect.Method;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.jena.fuseki.main.FusekiServer;
 import org.apache.jena.query.Dataset;
@@ -38,12 +41,14 @@ import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.Scenario;
 
 public class FusekiRepositoryTest
 {
@@ -90,101 +95,25 @@ public class FusekiRepositoryTest
         fusekiServer.stop();
     }
 
-    @Test
-    public void testWithLabelStartingWith_withLanguage_FTS_1() throws Exception
+    private static List<Arguments> tests() throws Exception
     {
-        SPARQLQueryBuilderTest.testWithLabelStartingWith_withLanguage_FTS_1(repository, kb);
+        // These require additional configuration in Fuseki FTS
+        var exclusions = asList( //
+                "thatMatchingAgainstAdditionalSearchPropertiesWorks", //
+                "testWithLabelMatchingExactlyAnyOf_subproperty", //
+                "testWithLabelStartingWith_OLIA");
+
+        return SPARQLQueryBuilderTest.tests().stream() //
+                .filter(scenario -> !exclusions.contains(scenario.name))
+                .map(scenario -> Arguments.of(scenario.name, scenario))
+                .collect(Collectors.toList());
     }
 
-    @Test
-    public void testWithLabelStartingWith_withLanguage_FTS_2() throws Exception
+    @ParameterizedTest(name = "{index}: test {0}")
+    @MethodSource("tests")
+    public void runTests(String aScenarioName, Scenario aScenario) throws Exception
     {
-        SPARQLQueryBuilderTest.testWithLabelStartingWith_withLanguage_FTS_2(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelStartingWith_withLanguage_FTS_3() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelStartingWith_withLanguage_FTS_3(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelStartingWith_withLanguage_noFTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelStartingWith_withLanguage_noFTS(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelContainingAnyOf_pets_ttl_noFTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelContainingAnyOf_pets_ttl_noFTS(repository, kb);
-    }
-
-    @Test
-    public void thatRootsCanBeRetrieved_ontolex() throws Exception
-    {
-        SPARQLQueryBuilderTest.thatRootsCanBeRetrieved_ontolex(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelContainingAnyOf_withLanguage_noFTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelContainingAnyOf_withLanguage_noFTS(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelContainingAnyOf_withLanguage_FTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelContainingAnyOf_withLanguage(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelMatchingAnyOf_withLanguage_FTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelMatchingAnyOf_withLanguage(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelMatchingAnyOf_withLanguage_noFTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelMatchingAnyOf_withLanguage_noFTS(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelStartingWith_withoutLanguage_FTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelStartingWith_withoutLanguage(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelStartingWith_withoutLanguage_noFTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelStartingWith_withoutLanguage_noFTS(repository, kb);
-    }
-
-    @Disabled("Requires addition Fuseki FTS configuration")
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_subproperty_FTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelMatchingExactlyAnyOf_subproperty(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_subproperty_noFTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelMatchingExactlyAnyOf_subproperty_noFTS(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_withLanguage_noFTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelMatchingExactlyAnyOf_withLanguage_noFTS(repository, kb);
-    }
-
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_withLanguage_FTS() throws Exception
-    {
-        SPARQLQueryBuilderTest.testWithLabelMatchingExactlyAnyOf_withLanguage(repository, kb);
+        aScenario.implementation.accept(repository, kb);
     }
 
     /**

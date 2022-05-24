@@ -35,6 +35,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
@@ -47,8 +48,11 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTART
 import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.oneOrMore;
 import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.path;
 import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.zeroOrMore;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.dataset;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.from;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
+import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.filterExists;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.filterNotExists;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.optional;
@@ -71,6 +75,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
@@ -91,7 +96,6 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery;
@@ -857,7 +861,7 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -876,7 +880,7 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -999,7 +1003,7 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -1007,7 +1011,8 @@ public class SPARQLQueryBuilder
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
@@ -1017,7 +1022,7 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -1025,7 +1030,8 @@ public class SPARQLQueryBuilder
                     VAR_MATCH_TERM.has(FTS_VIRTUOSO, literalOf("\"" + sanitizedValue + "\""))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
@@ -1038,7 +1044,7 @@ public class SPARQLQueryBuilder
             String sanitizedValue = sanitizeQueryString_FTS(value);
             String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
-            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
+            if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
                 continue;
             }
 
@@ -1054,8 +1060,8 @@ public class SPARQLQueryBuilder
                     collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(fuzzyQuery))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelMatchingAnyOf_RDF4J_FTS(String[] aValues)
@@ -1069,7 +1075,7 @@ public class SPARQLQueryBuilder
 
             String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
-            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
+            if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
                 continue;
             }
 
@@ -1077,18 +1083,25 @@ public class SPARQLQueryBuilder
                     .has(FTS_LUCENE,
                             bNode(LUCENE_QUERY, literalOf(fuzzyQuery)).andHas(LUCENE_PROPERTY,
                                     VAR_MATCH_TERM_PROPERTY))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM));
+                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                    // if an item has multiple labels, return a label that matches the query
+                    .filter(and(Stream.of(sanitizedValue.split("\\s"))
+                            .map(term -> containsPattern(VAR_MATCH_TERM, term)) //
+                            .toArray(Expression[]::new))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     @Override
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::trimQueryString)
-                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+        String[] values = Arrays.stream(aValues) //
+                .map(SPARQLQueryBuilder::trimQueryString) //
+                .filter(StringUtils::isNotBlank) //
+                .toArray(String[]::new);
 
         if (values.length == 0) {
             returnEmptyResult = true;
@@ -1686,13 +1699,13 @@ public class SPARQLQueryBuilder
         // so it can be discovered by selectQuery() and be lifted if necessary.
         addPattern(PRIMARY_RESTRICTIONS,
                 new PromotableExistsFilter(VAR_SUBJECT.has(typeOfProperty, bNode())));
-                // ... it is not explicitly defined as being a class
+        // ... it is not explicitly defined as being a class
         addPattern(PRIMARY_RESTRICTIONS,
                 filterNotExists(VAR_SUBJECT.has(typeOfProperty, classIri)));
-                // ... it does not have any subclass
+        // ... it does not have any subclass
         addPattern(PRIMARY_RESTRICTIONS,
                 filterNotExists(bNode().has(subClassProperty, VAR_SUBJECT)));
-                // ... it does not have any superclass
+        // ... it does not have any superclass
         addPattern(PRIMARY_RESTRICTIONS,
                 filterNotExists(VAR_SUBJECT.has(subClassProperty, bNode())));
     }
@@ -1831,15 +1844,15 @@ public class SPARQLQueryBuilder
         // property paths FILTERS and OPTIONALS (which we do a lot). It seems to help when we put
         // the FILTERS together with the primary part of the query into a group.
         // See: https://github.com/openlink/virtuoso-opensource/issues/831
-        query.where(() -> SparqlBuilderUtils.getBracedString(
-                GraphPatterns.and(concat(primaryPatterns.stream(), primaryRestrictions.stream())
+        query.where(() -> SparqlBuilderUtils
+                .getBracedString(and(concat(primaryPatterns.stream(), primaryRestrictions.stream())
                         .toArray(GraphPattern[]::new)).getQueryString()));
 
         // Then add the optional or lower-prio elements
         secondaryPatterns.stream().forEach(query::where);
 
         if (kb.getDefaultDatasetIri() != null) {
-            query.from(SparqlBuilder.dataset(SparqlBuilder.from(iri(kb.getDefaultDatasetIri()))));
+            query.from(dataset(from(iri(kb.getDefaultDatasetIri()))));
         }
 
         int actualLimit = getLimit();
