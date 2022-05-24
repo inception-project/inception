@@ -214,9 +214,8 @@ public class AnnotationDocumentExporter
                     documentService.exportCas(srcDoc, INITIAL_CAS_PSEUDO_USER, os);
                 }
 
-                log.info("Exported annotation document content for user [" + INITIAL_CAS_PSEUDO_USER
-                        + "] for source document [" + srcDoc.getId() + "] in project ["
-                        + project.getName() + "] with id [" + project.getId() + "]");
+                log.info("Exported annotation document content for user [{}] for source document "
+                        + "{} in project {}", INITIAL_CAS_PSEUDO_USER, srcDoc, project);
 
                 //
                 // Export per-user annotation document
@@ -274,10 +273,10 @@ public class AnnotationDocumentExporter
                             }
                         }
 
-                        log.info("Exported annotation document content for user ["
-                                + annDoc.getUser() + "] for source document [" + srcDoc.getId()
-                                + "] in project [" + project.getName() + "] with id ["
-                                + project.getId() + "]");
+                        log.info(
+                                "Exported annotation document content for user [{}] for source document "
+                                        + "{} in project {}",
+                                annDoc.getUser(), srcDoc, project);
                     }
                 }
             }
