@@ -90,7 +90,7 @@ public class KnowledgeBasePageMenuItem
         }
 
         // not visible if the current project does not have knowledge bases
-        return !kbService.getKnowledgeBases(aProject).isEmpty();
+        return !kbService.getEnabledKnowledgeBases(aProject).isEmpty();
     }
 
     @Override
