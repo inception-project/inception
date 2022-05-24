@@ -434,7 +434,8 @@ public class ConceptLinkingServiceImpl
         // Determine which knowledge bases to query
         List<KnowledgeBase> knowledgeBases = new ArrayList<>();
         if (aRepositoryId != null) {
-            kbService.getKnowledgeBaseById(aProject, aRepositoryId).filter(KnowledgeBase::isEnabled)
+            kbService.getKnowledgeBaseById(aProject, aRepositoryId) //
+                    .filter(KnowledgeBase::isEnabled) //
                     .ifPresent(knowledgeBases::add);
         }
         else {

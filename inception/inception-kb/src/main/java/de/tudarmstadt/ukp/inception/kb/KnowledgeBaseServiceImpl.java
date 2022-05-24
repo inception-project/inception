@@ -581,7 +581,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
     {
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+        for (KnowledgeBase kb : getEnabledKnowledgeBases(aProject)) {
             Optional<KBConcept> concept = readConcept(kb, aIdentifier, true);
             if (concept.isPresent()) {
                 return concept;
@@ -758,7 +758,7 @@ public class KnowledgeBaseServiceImpl
     @Override
     public Optional<KBInstance> readInstance(Project aProject, String aIdentifier)
     {
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+        for (KnowledgeBase kb : getEnabledKnowledgeBases(aProject)) {
             Optional<KBInstance> instance = readInstance(kb, aIdentifier);
             if (instance.isPresent()) {
                 return instance;
@@ -1151,7 +1151,7 @@ public class KnowledgeBaseServiceImpl
     {
         Optional<KBHandle> someResult = Optional.empty();
 
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+        for (KnowledgeBase kb : getEnabledKnowledgeBases(aProject)) {
             Optional<KBHandle> concept = readHandle(kb, aIdentifier);
             if (!concept.isPresent()) {
                 continue;
