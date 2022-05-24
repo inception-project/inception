@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.initializers;
+package de.tudarmstadt.ukp.inception.project.initializers.basic;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,13 +25,13 @@ import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.QuickProjectInitializer;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link InceptionProjectInitializersAutoConfiguration#basicProjectInitializer}.
+ * {@link InceptionBasicProjectInitializersAutoConfiguration#basicProjectInitializer}.
  * </p>
  */
 public class BasicProjectInitializer

@@ -319,6 +319,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-initializers-basic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-formats</artifactId>
     </dependency>
     <dependency>
@@ -887,6 +891,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-basic</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-editor</usedDependency>

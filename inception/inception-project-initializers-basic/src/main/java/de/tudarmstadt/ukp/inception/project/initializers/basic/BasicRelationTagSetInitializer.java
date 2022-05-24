@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.initializers;
+package de.tudarmstadt.ukp.inception.project.initializers.basic;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -28,23 +28,23 @@ import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TagSetInitializer;
-import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link InceptionProjectInitializersAutoConfiguration#basicSpanTagSetInitializer}.
+ * {@link InceptionBasicProjectInitializersAutoConfiguration#basicRelationTagSetInitializer}.
  * </p>
  */
-public class BasicSpanTagSetInitializer
+public class BasicRelationTagSetInitializer
     implements TagSetInitializer
 {
-    public static final String BASIC_SPAN_TAG_SET_NAME = "Span labels";
+    public static final String BASIC_RELATION_TAG_SET_NAME = "Relation labels";
 
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
-    public BasicSpanTagSetInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public BasicRelationTagSetInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
@@ -52,19 +52,19 @@ public class BasicSpanTagSetInitializer
     @Override
     public String getName()
     {
-        return BASIC_SPAN_TAG_SET_NAME;
-    }
-
-    @Override
-    public List<Class<? extends ProjectInitializer>> getDependencies()
-    {
-        return Collections.emptyList();
+        return BASIC_RELATION_TAG_SET_NAME;
     }
 
     @Override
     public boolean applyByDefault()
     {
         return false;
+    }
+
+    @Override
+    public List<Class<? extends ProjectInitializer>> getDependencies()
+    {
+        return Collections.emptyList();
     }
 
     @Override
@@ -79,7 +79,7 @@ public class BasicSpanTagSetInitializer
         TagSet tagSet = new TagSet();
         tagSet.setProject(aProject);
         tagSet.setName(getName());
-        tagSet.setDescription("Span labels");
+        tagSet.setDescription("Relation labels");
         tagSet.setLanguage("en");
         tagSet.setCreateTag(true);
 

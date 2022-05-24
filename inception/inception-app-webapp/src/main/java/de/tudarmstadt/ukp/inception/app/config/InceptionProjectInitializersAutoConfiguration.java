@@ -29,13 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelLayerInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelTagSetInitializer;
 import de.tudarmstadt.ukp.inception.initializers.BasicDocumentLabelingProjectInitializer;
-import de.tudarmstadt.ukp.inception.initializers.BasicProjectInitializer;
-import de.tudarmstadt.ukp.inception.initializers.BasicRelationLayerInitializer;
-import de.tudarmstadt.ukp.inception.initializers.BasicRelationRecommenderInitializer;
-import de.tudarmstadt.ukp.inception.initializers.BasicRelationTagSetInitializer;
-import de.tudarmstadt.ukp.inception.initializers.BasicSpanLayerInitializer;
-import de.tudarmstadt.ukp.inception.initializers.BasicSpanRecommenderInitializer;
-import de.tudarmstadt.ukp.inception.initializers.BasicSpanTagSetInitializer;
 import de.tudarmstadt.ukp.inception.initializers.EntityLinkingProjectInitializer;
 import de.tudarmstadt.ukp.inception.initializers.NamedEntityIdentifierStringRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.initializers.StandardProjectInitializer;
@@ -47,7 +40,6 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -64,61 +56,6 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 @Configuration
 public class InceptionProjectInitializersAutoConfiguration
 {
-    @Bean
-    public BasicProjectInitializer basicProjectInitializer(ApplicationContext aContext)
-    {
-        return new BasicProjectInitializer(aContext);
-    }
-
-    @Bean
-    public BasicRelationLayerInitializer basicRelationLayerInitializer(
-            AnnotationSchemaService aAnnotationSchemaService)
-    {
-        return new BasicRelationLayerInitializer(aAnnotationSchemaService);
-    }
-
-    @Bean
-    public BasicRelationTagSetInitializer basicRelationTagSetInitializer(
-            AnnotationSchemaService aAnnotationSchemaService)
-    {
-        return new BasicRelationTagSetInitializer(aAnnotationSchemaService);
-    }
-
-    @Bean
-    public BasicSpanLayerInitializer basicSpanLayerInitializer(
-            AnnotationSchemaService aAnnotationSchemaService)
-    {
-        return new BasicSpanLayerInitializer(aAnnotationSchemaService);
-    }
-
-    @ConditionalOnBean({ RecommendationService.class, StringMatchingRecommenderFactory.class })
-    @Bean
-    public BasicSpanRecommenderInitializer basicSpanRecommenderInitializer(
-            RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
-            StringMatchingRecommenderFactory aRecommenderFactory)
-    {
-        return new BasicSpanRecommenderInitializer(aRecommenderService, aAnnotationService,
-                aRecommenderFactory);
-    }
-
-    @ConditionalOnBean({ RecommendationService.class,
-            StringMatchingRelationRecommenderFactory.class, BasicSpanRecommenderInitializer.class })
-    @Bean
-    public BasicRelationRecommenderInitializer basicRelationRecommenderInitializer(
-            RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
-            StringMatchingRelationRecommenderFactory aRecommenderFactory)
-    {
-        return new BasicRelationRecommenderInitializer(aRecommenderService, aAnnotationService,
-                aRecommenderFactory);
-    }
-
-    @Bean
-    public BasicSpanTagSetInitializer basicSpanTagSetInitializer(
-            AnnotationSchemaService aAnnotationSchemaService)
-    {
-        return new BasicSpanTagSetInitializer(aAnnotationSchemaService);
-    }
-
     @ConditionalOnBean(RecommendationService.class)
     @Bean
     public NamedEntityIdentifierStringRecommenderInitializer namedEntityIdentifierStringRecommenderInitializer(

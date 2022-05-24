@@ -15,17 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.initializers;
+package de.tudarmstadt.ukp.inception.project.initializers.basic;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationTagSetInitializer.BASIC_RELATION_TAG_SET_NAME;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LAYER_NAME;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -35,25 +37,24 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
-import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link InceptionProjectInitializersAutoConfiguration#basicSpanLayerInitializer}.
+ * {@link InceptionBasicProjectInitializersAutoConfiguration#basicRelationLayerInitializer}.
  * </p>
  */
-public class BasicSpanLayerInitializer
+public class BasicRelationLayerInitializer
     implements LayerInitializer
 {
-    public static final String BASIC_SPAN_LAYER_NAME = "custom.Span";
-    public static final String BASIC_SPAN_LABEL_FEATURE_NAME = "label";
+    public static final String BASIC_RELATION_LAYER_NAME = "custom.Relation";
+    public static final String BASIC_RELATION_LABEL_FEATURE_NAME = "label";
 
     private final AnnotationSchemaService annotationSchemaService;
 
     @Autowired
-    public BasicSpanLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
+    public BasicRelationLayerInitializer(AnnotationSchemaService aAnnotationSchemaService)
     {
         annotationSchemaService = aAnnotationSchemaService;
     }
@@ -61,7 +62,7 @@ public class BasicSpanLayerInitializer
     @Override
     public String getName()
     {
-        return "Basic span annotation";
+        return "Basic relation annotation";
     }
 
     @Override
@@ -73,32 +74,35 @@ public class BasicSpanLayerInitializer
     @Override
     public boolean alreadyApplied(Project aProject)
     {
-        return annotationSchemaService.existsLayer(BASIC_SPAN_LAYER_NAME, aProject);
+        return annotationSchemaService.existsLayer(BASIC_RELATION_LAYER_NAME, aProject);
     }
 
     @Override
     public List<Class<? extends ProjectInitializer>> getDependencies()
     {
-        return asList(
-                // Because locks to token boundaries
-                TokenLayerInitializer.class, //
+        return asList( //
+                BasicSpanLayerInitializer.class,
                 // Tagsets
-                BasicSpanTagSetInitializer.class);
+                BasicRelationTagSetInitializer.class);
     }
 
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer spanLayer = new AnnotationLayer(BASIC_SPAN_LAYER_NAME, "Span", SPAN_TYPE,
-                aProject, false, TOKENS, OVERLAP_ONLY);
-        spanLayer.setCrossSentence(false);
-        annotationSchemaService.createOrUpdateLayer(spanLayer);
+        AnnotationLayer spanLayer = annotationSchemaService.findLayer(aProject,
+                BASIC_SPAN_LAYER_NAME);
 
-        TagSet spanTagSet = annotationSchemaService
-                .getTagSet(BasicSpanTagSetInitializer.BASIC_SPAN_TAG_SET_NAME, aProject);
+        AnnotationLayer relationLayer = new AnnotationLayer(BASIC_RELATION_LAYER_NAME, "Relation",
+                RELATION_TYPE, aProject, false, TOKENS, OVERLAP_ONLY);
+        relationLayer.setCrossSentence(false);
+        relationLayer.setAttachType(spanLayer);
+        annotationSchemaService.createOrUpdateLayer(relationLayer);
+
+        TagSet relationTagSet = annotationSchemaService.getTagSet(BASIC_RELATION_TAG_SET_NAME,
+                aProject);
 
         annotationSchemaService.createFeature(
-                new AnnotationFeature(aProject, spanLayer, BASIC_SPAN_LABEL_FEATURE_NAME, "Label",
-                        CAS.TYPE_NAME_STRING, "Span label", spanTagSet));
+                new AnnotationFeature(aProject, relationLayer, BASIC_RELATION_LABEL_FEATURE_NAME,
+                        "Label", TYPE_NAME_STRING, "Relation label", relationTagSet));
     }
 }

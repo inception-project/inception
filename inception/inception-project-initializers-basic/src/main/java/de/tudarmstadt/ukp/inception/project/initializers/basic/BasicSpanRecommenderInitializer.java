@@ -15,11 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.initializers;
+package de.tudarmstadt.ukp.inception.project.initializers.basic;
 
-import static de.tudarmstadt.ukp.inception.initializers.BasicRelationLayerInitializer.BASIC_RELATION_LABEL_FEATURE_NAME;
-import static de.tudarmstadt.ukp.inception.initializers.BasicRelationLayerInitializer.BASIC_RELATION_LAYER_NAME;
-import static de.tudarmstadt.ukp.inception.initializers.BasicSpanLayerInitializer.BASIC_SPAN_LABEL_FEATURE_NAME;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LABEL_FEATURE_NAME;
+import static de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanLayerInitializer.BASIC_SPAN_LAYER_NAME;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -30,29 +29,27 @@ import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.project.initializers.basic.config.InceptionBasicProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderTraits;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link InceptionProjectInitializersAutoConfiguration#basicRelationRecommenderInitializer}.
+ * {@link InceptionBasicProjectInitializersAutoConfiguration#basicSpanRecommenderInitializer}.
  * </p>
  */
-public class BasicRelationRecommenderInitializer
+public class BasicSpanRecommenderInitializer
     implements ProjectInitializer
 {
     private final AnnotationSchemaService annotationService;
     private final RecommendationService recommendationService;
-    private final StringMatchingRelationRecommenderFactory recommenderFactory;
+    private final StringMatchingRecommenderFactory recommenderFactory;
 
-    public BasicRelationRecommenderInitializer(RecommendationService aRecommenderService,
+    public BasicSpanRecommenderInitializer(RecommendationService aRecommenderService,
             AnnotationSchemaService aAnnotationService,
-            StringMatchingRelationRecommenderFactory aRecommenderFactory)
+            StringMatchingRecommenderFactory aRecommenderFactory)
     {
         recommendationService = aRecommenderService;
         annotationService = aAnnotationService;
@@ -62,7 +59,7 @@ public class BasicRelationRecommenderInitializer
     @Override
     public String getName()
     {
-        return "Basic relation recommender";
+        return "Basic span recommender";
     }
 
     @Override
@@ -86,23 +83,15 @@ public class BasicRelationRecommenderInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer relationLayer = annotationService.findLayer(aProject,
-                BASIC_RELATION_LAYER_NAME);
-        AnnotationFeature labelFeature = annotationService
-                .getFeature(BASIC_RELATION_LABEL_FEATURE_NAME, relationLayer);
+        AnnotationLayer spanLayer = annotationService.findLayer(aProject, BASIC_SPAN_LAYER_NAME);
+        AnnotationFeature labelFeature = annotationService.getFeature(BASIC_SPAN_LABEL_FEATURE_NAME,
+                spanLayer);
 
-        Recommender recommender = new Recommender(getName(), relationLayer);
+        Recommender recommender = new Recommender(getName(), spanLayer);
         recommender.setFeature(labelFeature);
         recommender.setMaxRecommendations(3);
         recommender.setThreshold(0.0d);
         recommender.setTool(recommenderFactory.getId());
-
-        RecommendationEngineFactory<StringMatchingRelationRecommenderTraits> factory = //
-                (RecommendationEngineFactory) recommendationService
-                        .getRecommenderFactory(recommender).get();
-        StringMatchingRelationRecommenderTraits traits = factory.readTraits(recommender);
-        traits.setAdjunctFeature(BASIC_SPAN_LABEL_FEATURE_NAME);
-        factory.writeTraits(recommender, traits);
 
         recommendationService.createOrUpdateRecommender(recommender);
     }
