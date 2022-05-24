@@ -1083,7 +1083,11 @@ public class SPARQLQueryBuilder
                     .has(FTS_LUCENE,
                             bNode(LUCENE_QUERY, literalOf(fuzzyQuery)).andHas(LUCENE_PROPERTY,
                                     VAR_MATCH_TERM_PROPERTY))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM));
+                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                    // if an item has multiple labels, return a label that matches the query
+                    .filter(and(Stream.of(sanitizedValue.split("\\s"))
+                            .map(term -> containsPattern(VAR_MATCH_TERM, term)) //
+                            .toArray(Expression[]::new))));
         }
 
         return and( //
