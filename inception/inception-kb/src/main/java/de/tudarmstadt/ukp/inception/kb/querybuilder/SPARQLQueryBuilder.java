@@ -20,8 +20,10 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.RdfCollection.collectionOf;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
@@ -33,6 +35,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
@@ -45,8 +48,11 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTART
 import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.oneOrMore;
 import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.path;
 import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.zeroOrMore;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.dataset;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.from;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
+import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.and;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.filterExists;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.filterNotExists;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.optional;
@@ -69,6 +75,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
@@ -84,11 +91,11 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery;
@@ -161,6 +168,8 @@ public class SPARQLQueryBuilder
     public static final Prefix PREFIX_FUSEKI_SEARCH = prefix("text",
             iri("http://jena.apache.org/text#"));
     public static final Iri FUSEKI_QUERY = PREFIX_FUSEKI_SEARCH.iri("query");
+
+    public static final Prefix PREFIX_STARDOG_SEARCH = prefix("fts", iri(PREFIX_STARDOG));
 
     public static final Iri OWL_INTERSECTIONOF = iri(OWL.INTERSECTIONOF.stringValue());
     public static final Iri RDF_REST = iri(RDF.REST.stringValue());
@@ -732,6 +741,9 @@ public class SPARQLQueryBuilder
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(values));
         }
+        else if (FTS_STARDOG.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Stardog_FTS(values));
+        }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Wikidata_FTS(values));
         }
@@ -841,13 +853,34 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
+    private GraphPattern withLabelMatchingExactlyAnyOf_Stardog_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_STARDOG_SEARCH);
+
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryString_FTS(value);
+
+            if (isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                            .filter(equalsPattern(VAR_MATCH_TERM, value, kb))));
+        }
+
+        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
     private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -907,6 +940,9 @@ public class SPARQLQueryBuilder
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingAnyOf_Virtuoso_FTS(values));
         }
+        else if (FTS_STARDOG.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelMatchingAnyOf_Stardog_FTS(values));
+        }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingAnyOf_Wikidata_FTS(values));
         }
@@ -936,6 +972,27 @@ public class SPARQLQueryBuilder
         return withLabelContainingAnyOf_No_FTS(aValues);
     }
 
+    private GraphPattern withLabelMatchingAnyOf_Stardog_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_STARDOG_SEARCH);
+
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryString_FTS(value);
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
+
+            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
+                continue;
+            }
+
+            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, fuzzyQuery)
+                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
+        }
+
+        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
     private GraphPattern withLabelMatchingAnyOf_Wikidata_FTS(String[] aValues)
     {
         // In our KB settings, the language can be unset, but the Wikidata entity search
@@ -946,7 +1003,7 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -954,7 +1011,8 @@ public class SPARQLQueryBuilder
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
@@ -964,7 +1022,7 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -972,7 +1030,8 @@ public class SPARQLQueryBuilder
                     VAR_MATCH_TERM.has(FTS_VIRTUOSO, literalOf("\"" + sanitizedValue + "\""))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
@@ -985,7 +1044,7 @@ public class SPARQLQueryBuilder
             String sanitizedValue = sanitizeQueryString_FTS(value);
             String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
-            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
+            if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
                 continue;
             }
 
@@ -1001,8 +1060,8 @@ public class SPARQLQueryBuilder
                     collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(fuzzyQuery))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelMatchingAnyOf_RDF4J_FTS(String[] aValues)
@@ -1016,7 +1075,7 @@ public class SPARQLQueryBuilder
 
             String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
-            if (StringUtils.isBlank(sanitizedValue) || StringUtils.isBlank(fuzzyQuery)) {
+            if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
                 continue;
             }
 
@@ -1024,18 +1083,25 @@ public class SPARQLQueryBuilder
                     .has(FTS_LUCENE,
                             bNode(LUCENE_QUERY, literalOf(fuzzyQuery)).andHas(LUCENE_PROPERTY,
                                     VAR_MATCH_TERM_PROPERTY))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM));
+                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                    // if an item has multiple labels, return a label that matches the query
+                    .filter(and(Stream.of(sanitizedValue.split("\\s"))
+                            .map(term -> containsPattern(VAR_MATCH_TERM, term)) //
+                            .toArray(Expression[]::new))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     @Override
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
-        String[] values = Arrays.stream(aValues).map(SPARQLQueryBuilder::trimQueryString)
-                .filter(StringUtils::isNotBlank).toArray(String[]::new);
+        String[] values = Arrays.stream(aValues) //
+                .map(SPARQLQueryBuilder::trimQueryString) //
+                .filter(StringUtils::isNotBlank) //
+                .toArray(String[]::new);
 
         if (values.length == 0) {
             returnEmptyResult = true;
@@ -1052,6 +1118,9 @@ public class SPARQLQueryBuilder
         }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(values));
+        }
+        else if (FTS_STARDOG.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelContainingAnyOf_Stardog_FTS(values));
         }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_Wikidata_FTS(values));
@@ -1164,6 +1233,27 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
+    private GraphPattern withLabelContainingAnyOf_Stardog_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_STARDOG_SEARCH);
+
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryString_FTS(value);
+
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                            .filter(containsPattern(VAR_MATCH_TERM, value))));
+        }
+
+        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
     private GraphPattern withLabelContainingAnyOf_Wikidata_FTS(String[] aValues)
     {
         // In our KB settings, the language can be unset, but the Wikidata entity search
@@ -1208,6 +1298,9 @@ public class SPARQLQueryBuilder
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_Virtuoso_FTS(value));
         }
+        else if (FTS_STARDOG.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelStartingWith_Stardog_FTS(value));
+        }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_Wikidata_FTS(value));
         }
@@ -1237,6 +1330,32 @@ public class SPARQLQueryBuilder
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                         .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
+    }
+
+    private GraphPattern withLabelStartingWith_Stardog_FTS(String aPrefixQuery)
+    {
+        prefixes.add(PREFIX_STARDOG_SEARCH);
+
+        // Strip single quotes and asterisks because they have special semantics
+        String sanitizedValue = sanitizeQueryString_FTS(aPrefixQuery);
+
+        if (StringUtils.isBlank(sanitizedValue)) {
+            returnEmptyResult = true;
+        }
+
+        String queryString = sanitizedValue.trim();
+
+        // If the query string entered by the user does not end with a space character, then
+        // we assume that the user may not yet have finished writing the word and add a
+        // wildcard
+        if (!aPrefixQuery.endsWith(" ")) {
+            queryString += "*";
+        }
+
+        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+                new StardogEntitySearchService(VAR_MATCH_TERM, queryString)
+                        .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
+                                .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
     }
 
     private GraphPattern withLabelStartingWith_Wikidata_FTS(String aPrefix)
@@ -1423,7 +1542,7 @@ public class SPARQLQueryBuilder
 
             // Match without language
             expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING)).parenthesize());
+                    Expressions.equals(function(LANG, aVariable), EMPTY_STRING)).parenthesize());
         }
         else {
             // Match ignoring language
@@ -1470,7 +1589,7 @@ public class SPARQLQueryBuilder
 
             // Match without language
             expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING)).parenthesize());
+                    Expressions.equals(function(LANG, aVariable), EMPTY_STRING)).parenthesize());
         }
         else {
             // Match ignoring language
@@ -1575,14 +1694,20 @@ public class SPARQLQueryBuilder
         Iri subClassProperty = iri(kb.getSubclassIri());
         Iri typeOfProperty = iri(kb.getTypeIri());
 
-        // An item is an instance if ...
-        addPattern(PRIMARY_RESTRICTIONS, filterExists(VAR_SUBJECT.has(typeOfProperty, bNode()))
-                // ... it is not explicitly defined as being a class
-                .filterNotExists(VAR_SUBJECT.has(typeOfProperty, classIri))
-                // ... it does not have any subclass
-                .filterNotExists(bNode().has(subClassProperty, VAR_SUBJECT))
-                // ... it does not have any superclass
-                .filterNotExists(VAR_SUBJECT.has(subClassProperty, bNode())));
+        // An item is an instance if ... (make sure to add the LiftableExistsFilter
+        // directly to the PRIMARY_RESTRICTIONS and not nested in another pattern
+        // so it can be discovered by selectQuery() and be lifted if necessary.
+        addPattern(PRIMARY_RESTRICTIONS,
+                new PromotableExistsFilter(VAR_SUBJECT.has(typeOfProperty, bNode())));
+        // ... it is not explicitly defined as being a class
+        addPattern(PRIMARY_RESTRICTIONS,
+                filterNotExists(VAR_SUBJECT.has(typeOfProperty, classIri)));
+        // ... it does not have any subclass
+        addPattern(PRIMARY_RESTRICTIONS,
+                filterNotExists(bNode().has(subClassProperty, VAR_SUBJECT)));
+        // ... it does not have any superclass
+        addPattern(PRIMARY_RESTRICTIONS,
+                filterNotExists(VAR_SUBJECT.has(subClassProperty, bNode())));
     }
 
     private void limitToProperties()
@@ -1658,7 +1783,7 @@ public class SPARQLQueryBuilder
         if (language != null) {
             // Find all labels without any language
             patterns.add(VAR_SUBJECT.has(aProperty, aVariable)
-                    .filter(function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING)));
+                    .filter(Expressions.equals(function(LANG, aVariable), EMPTY_STRING)));
 
             patterns.add(VAR_SUBJECT.has(aProperty, aVariable)
                     .filter(function(LANGMATCHES, function(LANG, aVariable), literalOf(language))));
@@ -1701,20 +1826,33 @@ public class SPARQLQueryBuilder
         prefixes.forEach(query::prefix);
         projections.forEach(query::select);
 
+        // Some KBs do not like queries consisting only of FILTERs, so if we have a filter
+        // (in particular a FILTER EXISTS), we can convert that a proper pattern by removing
+        // the FILTER EXISTS from it. We only do this if there are no other primary patterns
+        // because the FILTER EXISTS pattern would usually be one that could be expensive and
+        // if we already have another primary pattern, that is hopefully way cheaper.
+        var promotableRestriction = primaryRestrictions.stream().findFirst()
+                .filter(pattern -> pattern instanceof PromotableExistsFilter)
+                .map(pattern -> (PromotableExistsFilter) pattern);
+        if (primaryPatterns.isEmpty() && promotableRestriction.isPresent()) {
+            primaryPatterns.add(promotableRestriction.get().getNested());
+            primaryRestrictions.remove(promotableRestriction.get());
+        }
+
         // First add the primary patterns and high-level restrictions (e.g. limits to classes or
         // instances) - this is important because Virtuoso has trouble when combining UNIONS,
         // property paths FILTERS and OPTIONALS (which we do a lot). It seems to help when we put
         // the FILTERS together with the primary part of the query into a group.
         // See: https://github.com/openlink/virtuoso-opensource/issues/831
-        query.where(() -> SparqlBuilderUtils.getBracedString(
-                GraphPatterns.and(concat(primaryPatterns.stream(), primaryRestrictions.stream())
+        query.where(() -> SparqlBuilderUtils
+                .getBracedString(and(concat(primaryPatterns.stream(), primaryRestrictions.stream())
                         .toArray(GraphPattern[]::new)).getQueryString()));
 
         // Then add the optional or lower-prio elements
         secondaryPatterns.stream().forEach(query::where);
 
         if (kb.getDefaultDatasetIri() != null) {
-            query.from(SparqlBuilder.dataset(SparqlBuilder.from(iri(kb.getDefaultDatasetIri()))));
+            query.from(dataset(from(iri(kb.getDefaultDatasetIri()))));
         }
 
         int actualLimit = getLimit();
@@ -2082,5 +2220,28 @@ public class SPARQLQueryBuilder
     public int hashCode()
     {
         return selectQuery().getQueryString().hashCode();
+    }
+
+    private static class PromotableExistsFilter
+        implements GraphPattern
+    {
+
+        private final GraphPattern nested;
+
+        public PromotableExistsFilter(GraphPattern aNested)
+        {
+            nested = aNested;
+        }
+
+        public GraphPattern getNested()
+        {
+            return nested;
+        }
+
+        @Override
+        public String getQueryString()
+        {
+            return "FILTER EXISTS { " + nested.getQueryString() + " } ";
+        }
     }
 }

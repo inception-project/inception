@@ -15,7 +15,9 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -108,12 +110,12 @@
     <mtas.version>7.7.1.0</mtas.version> 
     <!--   7.7.1.0  depends on Lucene 7.7.1 -->
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
-    
+
     <elasticsearch.version>6.8.23</elasticsearch.version> 
     <!--   6.8.23   depends on Lucene 7.7.3 -->
     <!-- * 7.17.1   depends on Lucene 8.11.1 -->
     <!--   8.1.1    depends on Lucene 9.0.0 -->
- 
+
     <rdf4j.version>3.7.7</rdf4j.version> 
     <!--   3.7.6    depends on Lucene 7.7.3 -->
     <!-- * 4.0.0-M2 depends on Lucene 8.5.1 -->
@@ -121,7 +123,7 @@
     <!-- * 4.0.0-M2 depends on Solr 8.4.1 (but we don't use that dependency)-->
     <!--   3.7.6    depends on ElasticSearch 7.7.3 (but we don't use that dependency) -->
     <!-- * 4.0.0-M2 depends on ElasticSearch 7.8.1 (but we don't use that dependency) -->
- 
+
     <jena.version>3.17.0</jena.version>
     <!--   3.17.0   depends on Lucene 7.7.3 -->
     <!-- * 4.4.0    depends on Lucene 8.11.1 -->
@@ -284,6 +286,16 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-params</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite-api</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -682,7 +694,42 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-tei</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-conll</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-imscwb</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-perseus</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-nif</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-lif</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-tcf</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-xmi</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -717,6 +764,21 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-project-initializers-basic</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-project-initializers-doclabeling</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-project-initializers-wikidatalinking</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-project-export</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
@@ -737,11 +799,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-tcf</artifactId>
-        <version>24.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
@@ -753,11 +810,6 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-model-export</artifactId>
-        <version>24.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-io-xmi</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -792,7 +844,16 @@
         <artifactId>junit-bom</artifactId>
         <version>${junit-jupiter.version}</version>
       </dependency>
-
+      <dependency>
+        <groupId>org.junit.platform</groupId>
+        <artifactId>junit-platform-suite-engine</artifactId>
+        <version>1.8.2</version>
+      </dependency>
+      <dependency>
+        <groupId>org.junit.platform</groupId>
+        <artifactId>junit-platform-suite-api</artifactId>
+        <version>1.8.2</version>
+      </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
@@ -1883,6 +1944,9 @@
     <module>inception-model-export</module>
     <module>inception-project</module>
     <module>inception-project-initializers</module>
+    <module>inception-project-initializers-basic</module>
+    <module>inception-project-initializers-doclabeling</module>
+    <module>inception-project-initializers-wikidatalinking</module>
     <module>inception-project-export</module>
     <module>inception-remote</module>
     <module>inception-security</module>
@@ -1912,7 +1976,12 @@
     <module>inception-io-conll</module>
     <module>inception-io-json</module>
     <module>inception-io-html</module>
+    <module>inception-io-nif</module>
+    <module>inception-io-lif</module>
+    <module>inception-io-perseus</module>
+    <module>inception-io-imscwb</module>
     <module>inception-io-tcf</module>
+    <module>inception-io-tei</module>
     <module>inception-io-text</module>
     <module>inception-io-webanno-tsv</module>
     <module>inception-io-xmi</module>
@@ -2052,7 +2121,8 @@
         </executions>
         <configuration>
           <failOnWarning>true</failOnWarning>
-          <ignoredUnusedDeclaredDependencies combine.children="append">
+          <ignoredUnusedDeclaredDependencies
+            combine.children="append">
             <!--
               - Logging is used via reflection and cannot be detected by Maven
             -->
@@ -2080,6 +2150,8 @@
             -->
             <dependency>org.junit.jupiter:junit-jupiter-api</dependency>
             <dependency>org.junit.jupiter:junit-jupiter-params</dependency>
+            <dependency>org.junit.platform:junit-platform-suite-engine</dependency>
+            <dependency>org.junit.platform:junit-platform-suite-api</dependency>
             <dependency>org.mockito:mockito-core</dependency>
             <dependency>org.mockito:mockito-junit-jupiter</dependency>
             <dependency>org.assertj:assertj-core</dependency>

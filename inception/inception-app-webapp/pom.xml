@@ -35,11 +35,6 @@
       <scope>provided</scope>
     </dependency>
   
-    <dependency>
-      <groupId>org.eclipse.rdf4j</groupId>
-      <artifactId>rdf4j-repository-api</artifactId>
-    </dependency>
-  
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>org.dkpro.core</groupId>
@@ -93,10 +88,6 @@
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-kb</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-kb</artifactId>
     </dependency>
 
@@ -127,10 +118,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-recommendation-api</artifactId>
     </dependency>
     <!--
       <dependency>
@@ -257,6 +244,22 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-nif</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-lif</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-imscwb</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-perseus</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-conll</artifactId>
     </dependency>
     <dependency>
@@ -264,48 +267,14 @@
       <artifactId>inception-io-xmi</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-lif-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-nif-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-tei-asl</artifactId>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-perseus-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-xml-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-imscwb-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-ner-asl</artifactId>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-tei</artifactId>
     </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-plugin-manager</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -323,7 +292,15 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-formats</artifactId>
+      <artifactId>inception-project-initializers-basic</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-initializers-doclabeling</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-initializers-wikidatalinking</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -347,10 +324,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-model</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api</artifactId>
     </dependency>
     <dependency>
@@ -364,10 +337,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-diam-editor</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-workload</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -385,20 +354,12 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-sharing</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-preferences</artifactId>
-    </dependency>
 
 
     <!-- UIMA DEPENDENCIES -->
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimafit-core</artifactId>
     </dependency>
 
 
@@ -595,43 +556,6 @@
     <dependency>
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-kotlin</artifactId>
-    </dependency>
-    
-    <!-- Backport dependencies -->
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-parameter-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-metadata-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-io-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-syntax-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-lexmorph-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>net.java.dev.stax-utils</groupId>
-      <artifactId>stax-utils</artifactId>
-      <version>20070216</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.bea.xml</groupId>
-          <artifactId>jsr173-ri</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
   </dependencies>
   <build>
@@ -867,9 +791,11 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-plugin-manager</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-elg</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
@@ -882,15 +808,23 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-ui</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-dynamic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-tagsets</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-agreement</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-annotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-diam</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-diam-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-dashboard-activity</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-sharing</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-versioning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-websocket</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-basic</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-doclabeling</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project-initializers-wikidatalinking</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-brat-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-editor</usedDependency>
@@ -899,11 +833,16 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-nif</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-lif</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-imscwb</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-perseus</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-json</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-webanno-tsv</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-tcf</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-xmi</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-conll</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-tei</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-text</usedDependency>
               <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
