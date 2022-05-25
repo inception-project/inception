@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.formats.backports;
+package de.tudarmstadt.ukp.inception.io.tei.dkprobackport;
 
 import static org.dkpro.core.io.tei.internal.TeiConstants.ATTR_FUNCTION;
 import static org.dkpro.core.io.tei.internal.TeiConstants.ATTR_LEMMA;

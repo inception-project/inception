@@ -58,6 +58,7 @@ installPrefs inception-io-lif
 installPrefs inception-io-nif
 installPrefs inception-io-perseus
 installPrefs inception-io-tcf
+installPrefs inception-io-tei
 installPrefs inception-io-text
 installPrefs inception-io-webanno-tsv
 installPrefs inception-io-xmi
