@@ -21,8 +21,10 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ChunkLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.CoreferenceLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.CoreferenceRelationTagSetInitializer;
@@ -40,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.PartOfSpeechTagSet
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SemPredArgLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SentenceLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SofaChangeOperationTagSetInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.StandardProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 
@@ -49,6 +52,13 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitiali
 @ConditionalOnBean({ AnnotationSchemaService.class })
 public class ProjectInitializersAutoConfiguration
 {
+    @Bean
+    public StandardProjectInitializer standardProjectInitializer(
+            @Lazy ProjectService aProjectService)
+    {
+        return new StandardProjectInitializer(aProjectService);
+    }
+
     @Bean
     public ChunkLayerInitializer chunkLayerInitializer(AnnotationSchemaService aSchemaService)
     {

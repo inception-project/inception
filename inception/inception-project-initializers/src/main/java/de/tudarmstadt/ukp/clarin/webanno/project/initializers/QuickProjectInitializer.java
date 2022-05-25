@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist;
+package de.tudarmstadt.ukp.clarin.webanno.project.initializers;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 

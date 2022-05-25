@@ -17,67 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.app.config;
 
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.inception.initializers.EntityLinkingProjectInitializer;
-import de.tudarmstadt.ukp.inception.initializers.NamedEntityIdentifierStringRecommenderInitializer;
-import de.tudarmstadt.ukp.inception.initializers.StandardProjectInitializer;
-import de.tudarmstadt.ukp.inception.initializers.WikiDataKnowledgeBaseInitializer;
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
-import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
-
-@AutoConfigureAfter({ //
-        KnowledgeBaseServiceAutoConfiguration.class, //
-        RecommenderServiceAutoConfiguration.class, //
-        StringMatchingRecommenderAutoConfiguration.class, //
-        DocumentMetadataLayerSupportAutoConfiguration.class })
-// @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @Configuration
 public class InceptionProjectInitializersAutoConfiguration
 {
-    @ConditionalOnBean(RecommendationService.class)
-    @Bean
-    public NamedEntityIdentifierStringRecommenderInitializer namedEntityIdentifierStringRecommenderInitializer(
-            RecommendationService aRecommenderService, AnnotationSchemaService aAnnotationService,
-            StringMatchingRecommenderFactory aRecommenderFactory)
-    {
-        return new NamedEntityIdentifierStringRecommenderInitializer(aRecommenderService,
-                aAnnotationService, aRecommenderFactory);
-    }
-
-    @Bean
-    public StandardProjectInitializer standardProjectInitializer(
-            @Lazy ProjectService aProjectService)
-    {
-        return new StandardProjectInitializer(aProjectService);
-    }
-
-    @ConditionalOnBean(KnowledgeBaseService.class)
-    @Bean
-    public WikiDataKnowledgeBaseInitializer wikiDataKnowledgeBaseInitializer(
-            KnowledgeBaseService aKbService, KnowledgeBaseProperties aKbProperties)
-    {
-        return new WikiDataKnowledgeBaseInitializer(aKbService, aKbProperties);
-    }
-
-    @ConditionalOnBean(WikiDataKnowledgeBaseInitializer.class)
-    @Bean
-    public EntityLinkingProjectInitializer entityLinkingProjectInitializer(
-            ApplicationContext aContext, AnnotationSchemaService aAnnotationService)
-    {
-        return new EntityLinkingProjectInitializer(aContext, aAnnotationService);
-    }
 }
