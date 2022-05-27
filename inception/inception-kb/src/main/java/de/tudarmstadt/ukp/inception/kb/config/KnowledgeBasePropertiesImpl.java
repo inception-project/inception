@@ -49,8 +49,6 @@ public class KnowledgeBasePropertiesImpl
     private @DurationUnit(MINUTES) Duration renderCacheExpireDelay = ofMinutes(10);
     private @DurationUnit(MINUTES) Duration renderCacheRefreshDelay = ofMinutes(1);
 
-    private int fuzzyQueryPrefix = 2;
-
     @Override
     public int getDefaultMaxResults()
     {
@@ -148,15 +146,5 @@ public class KnowledgeBasePropertiesImpl
     public void setRenderCacheRefreshDelay(Duration aRenderCacheRefreshDelay)
     {
         renderCacheRefreshDelay = aRenderCacheRefreshDelay;
-    }
-
-    public int getFuzzyQueryPrefix()
-    {
-        return fuzzyQueryPrefix;
-    }
-
-    public void setFuzzyQueryPrefix(int aFuzzyQueryPrefix)
-    {
-        fuzzyQueryPrefix = aFuzzyQueryPrefix;
     }
 }
