@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.ranking;
 
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LABEL_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
@@ -139,6 +140,7 @@ public class BaselineRankingStrategyTest
         List<CandidateEntity> results = new ArrayList<>();
         for (KBHandle candidate : aCandidates) {
             CandidateEntity cand = new CandidateEntity(candidate) //
+                    .with(KEY_LABEL_NC, candidate.getUiLabel().toLowerCase(Locale.ROOT))
                     .with(KEY_QUERY, aQuery) //
                     .with(KEY_QUERY_NC, aQuery.toLowerCase(Locale.ROOT)) //
                     .with(KEY_MENTION, aMention) //

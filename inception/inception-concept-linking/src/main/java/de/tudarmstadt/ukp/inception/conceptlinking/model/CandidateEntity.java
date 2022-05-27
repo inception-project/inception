@@ -54,6 +54,8 @@ public class CandidateEntity
     public static final Key<String> KEY_MENTION = new Key<>("mention");
     public static final Key<String> KEY_MENTION_NC = new Key<>("mentionNC");
 
+    public static final Key<String> KEY_LABEL_NC = new Key<>("labelNC");
+
     /**
      * The context of the mention.
      */

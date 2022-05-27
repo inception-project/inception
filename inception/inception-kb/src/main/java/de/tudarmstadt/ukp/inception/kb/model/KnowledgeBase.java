@@ -158,6 +158,9 @@ public class KnowledgeBase
     @Column(nullable = false)
     private boolean readOnly;
 
+    @Column(nullable = false)
+    private boolean useFuzzy;
+
     /**
      * Whether the kb is available in the UI (outside of the project settings).
      */
@@ -491,6 +494,16 @@ public class KnowledgeBase
     public Set<String> getAdditionalMatchingProperties()
     {
         return additionalMatchingProperties;
+    }
+
+    public boolean isUseFuzzy()
+    {
+        return useFuzzy;
+    }
+
+    public void setUseFuzzy(boolean aUseFuzzy)
+    {
+        useFuzzy = aUseFuzzy;
     }
 
     @Override

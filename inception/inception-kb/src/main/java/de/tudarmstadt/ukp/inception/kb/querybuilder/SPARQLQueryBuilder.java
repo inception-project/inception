@@ -31,8 +31,10 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Pr
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.SECONDARY;
 import static java.lang.Character.isWhitespace;
 import static java.lang.Integer.toHexString;
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -40,10 +42,12 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.or;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.str;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.CONTAINS;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANG;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATCHES;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REGEX;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REPLACE;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
 import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.oneOrMore;
 import static org.eclipse.rdf4j.sparqlbuilder.core.PropertyPaths.path;
@@ -65,7 +69,6 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfLanguage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -75,7 +78,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.IRI;
@@ -114,6 +116,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.backport.Bind;
 
 /**
  * Build queries against the KB.
@@ -210,7 +213,7 @@ public class SPARQLQueryBuilder
 
     private boolean includeInferred = true;
 
-    private boolean forceDisableFTS = false;
+    private Set<String> forceDisableFTS = new LinkedHashSet<>();
 
     /**
      * This flag controls whether we attempt to drop duplicate labels and descriptions on the side
@@ -536,7 +539,7 @@ public class SPARQLQueryBuilder
         // this the old-fashioned way...
         if (Mode.PROPERTY.equals(mode)
                 && FTS_WIKIDATA.stringValue().equals(aKB.getFullTextSearchIri())) {
-            forceDisableFTS = true;
+            forceDisableFTS.add("Wikidata property query");
         }
     }
 
@@ -670,7 +673,7 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions withIdentifier(String... aIdentifiers)
     {
-        forceDisableFTS = true;
+        forceDisableFTS.add("identifier query");
 
         addPattern(PRIMARY, new ValuesPattern(VAR_SUBJECT,
                 Arrays.stream(aIdentifiers).map(Rdf::iri).toArray(RdfValue[]::new)));
@@ -681,7 +684,7 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions matchingDomain(String aIdentifier)
     {
-        forceDisableFTS = true;
+        forceDisableFTS.add("domain query");
 
         // The original code considered owl:unionOf in the domain definition... we do not do this
         // at the moment, but to see how it was before and potentially restore that behavior, we
@@ -765,11 +768,45 @@ public class SPARQLQueryBuilder
 
     private IRI getFtsMode()
     {
-        if (forceDisableFTS || kb.getFullTextSearchIri() == null) {
+        if (kb.getFullTextSearchIri() == null) {
+            return FTS_NONE;
+        }
+
+        if (isFtsLimited() && !forceDisableFTS.isEmpty()) {
+            LOG.debug("FTS force-disabled because it limits its results: {}", forceDisableFTS);
             return FTS_NONE;
         }
 
         return SimpleValueFactory.getInstance().createIRI(kb.getFullTextSearchIri());
+    }
+
+    /**
+     * When working with queries using any of {@link #roots()}, @link
+     * #withIdentifier(String)}, @link #childrenOf(String)}, {@link #descendantsOf(String)},
+     * {@link #parentsOf(String)} or {@link #ancestorsOf(String)}}, the FTS must be disabled. These
+     * methods must be called <b>before</b> any label-restricting methods like
+     * {@link #withLabelStartingWith(String)} This is because the FTS part of the query pre-filters
+     * the potential candidates, but the FTS may not return all candidates. Let's consider a large
+     * KB (e.g. Wikidata) and a query for <i>all humans named Amanda in the Star Trek universe</i>
+     * (there is a category for <i>humans in the Star Trek universe</i> in Wikidata). First the FTS
+     * would try to retrieve all entities named <i>Amanda</i>, but it does not really return all,
+     * just the top 50 (which is what Wikidata seems to be hard-coded to despite the documentation
+     * for <i>wikidata:limit</i> saying otherwise). None of these Amandas, however, is part of the
+     * Star Trek universe, so the final result of the query is empty. Here, the FTS restricts too
+     * much and too early. For such cases, we should rely on the scope sufficiently limiting the
+     * returned results such that the regex-based filtering does not get too slow.
+     * 
+     * @returns {@code true} if the FTS does not return all hits but only a e.g. the first 50 or 100
+     *          matches.
+     */
+    private boolean isFtsLimited()
+    {
+        if (kb.getFullTextSearchIri() == null) {
+            return false;
+        }
+
+        IRI ftsMode = SimpleValueFactory.getInstance().createIRI(kb.getFullTextSearchIri());
+        return FTS_WIKIDATA.equals(ftsMode);
     }
 
     private GraphPattern withLabelMatchingExactlyAnyOf_No_FTS(String[] aValues)
@@ -1079,15 +1116,25 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
-            valuePatterns.add(VAR_SUBJECT
-                    .has(FTS_LUCENE,
-                            bNode(LUCENE_QUERY, literalOf(fuzzyQuery)).andHas(LUCENE_PROPERTY,
-                                    VAR_MATCH_TERM_PROPERTY))
-                    .andHas(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                    // if an item has multiple labels, return a label that matches the query
-                    .filter(and(Stream.of(sanitizedValue.split("\\s"))
-                            .map(term -> containsPattern(VAR_MATCH_TERM, term)) //
-                            .toArray(Expression[]::new))));
+            // If a KB item has multiple labels, we want to return only the ones which actually
+            // match the query term such that the user is not confused that the results contain
+            // items that don't match the query (even though they do through a label that is not
+            // returned). RDF4J only provides access to the matched term in a "highlighed" form
+            // where "<B>" and "</B>" match the search term. So we have to strip these markers
+            // out as part of the query.
+            valuePatterns.add(VAR_SUBJECT //
+                    .has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(fuzzyQuery)) //
+                            .andHas(LUCENE_PROPERTY, VAR_MATCH_TERM_PROPERTY)
+                            .andHas(LUCENE_SNIPPET, var("snippet")))
+                    .and(new Bind(
+                            function(REPLACE,
+                                    function(REPLACE, var("snippet"), literalOf("</B>"),
+                                            literalOf("")),
+                                    literalOf("<B>"), literalOf("")),
+                            var("label")))
+                    .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM))
+                    .filter(and(Expressions.equals(str(var("label")), str(VAR_MATCH_TERM)),
+                            matchLanguage(VAR_MATCH_TERM, kb.getDefaultLanguage()))));
         }
 
         return and( //
@@ -1220,7 +1267,7 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -1534,15 +1581,15 @@ public class SPARQLQueryBuilder
         // Match exactly
         String value = "^" + asRegexp(aValue) + "$";
 
-        // Match with default language
         if (language != null) {
-            expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
-                            .parenthesize());
-
-            // Match without language
-            expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    Expressions.equals(function(LANG, aVariable), EMPTY_STRING)).parenthesize());
+            expressions.add(and( //
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)), //
+                    or( // Match with default language
+                            function(LANGMATCHES, function(LANG, aVariable), literalOf(language)),
+                            // Match without language
+                            Expressions.equals(function(LANG, aVariable), EMPTY_STRING) //
+                    ).parenthesize() //
+            ).parenthesize());
         }
         else {
             // Match ignoring language
@@ -1554,8 +1601,6 @@ public class SPARQLQueryBuilder
 
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
     {
-        String language = kb.getDefaultLanguage();
-
         List<Expression<?>> expressions = new ArrayList<>();
 
         Operand variable = aVariable;
@@ -1581,15 +1626,11 @@ public class SPARQLQueryBuilder
                     "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
         }
 
+        String language = kb.getDefaultLanguage();
         if (language != null) {
-            // Match with default language
-            expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
-                            .parenthesize());
-
-            // Match without language
-            expressions.add(and(function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
-                    Expressions.equals(function(LANG, aVariable), EMPTY_STRING)).parenthesize());
+            expressions.add(and( //
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)), //
+                    matchLanguage(aVariable, language)).parenthesize());
         }
         else {
             // Match ignoring language
@@ -1602,10 +1643,18 @@ public class SPARQLQueryBuilder
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
 
+    private Expression<?> matchLanguage(Variable aVariable, String language)
+    {
+        return or(// Match with default language
+                function(LANGMATCHES, function(LANG, aVariable), literalOf(language)),
+                // Match without language
+                Expressions.equals(function(LANG, aVariable), EMPTY_STRING)).parenthesize(); //
+    }
+
     @Override
     public SPARQLQueryPrimaryConditions roots()
     {
-        forceDisableFTS = true;
+        forceDisableFTS.add("roots query");
 
         addPattern(PRIMARY, mode.rootsPattern(kb));
 
@@ -1615,7 +1664,7 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions ancestorsOf(String aItemIri)
     {
-        forceDisableFTS = true;
+        forceDisableFTS.add("ancestorOf query");
 
         Iri contextIri = iri(aItemIri);
 
@@ -1627,7 +1676,7 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions descendantsOf(String aClassIri)
     {
-        forceDisableFTS = true;
+        forceDisableFTS.add("descendantsOf query");
 
         Iri contextIri = iri(aClassIri);
 
@@ -1639,7 +1688,7 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions childrenOf(String aClassIri)
     {
-        forceDisableFTS = true;
+        forceDisableFTS.add("childrenOf query");
 
         Iri contextIri = iri(aClassIri);
 
@@ -1651,7 +1700,7 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions parentsOf(String aClassIri)
     {
-        forceDisableFTS = true;
+        forceDisableFTS.add("parentsOf query");
 
         Iri contextIri = iri(aClassIri);
 
@@ -1746,7 +1795,7 @@ public class SPARQLQueryBuilder
         if (!mode.getAdditionalMatchingProperties(kb).isEmpty()) {
             addPreferredLabelProjections(projections);
             addPattern(SECONDARY, bindPrefLabelProperties(VAR_PREF_LABEL_PROPERTY));
-            retrieveOptional(VAR_PREF_LABEL_PROPERTY, VAR_PREF_LABEL);
+            retrieveOptionalWithLanguage(VAR_PREF_LABEL_PROPERTY, VAR_PREF_LABEL);
         }
 
         // If the label is already retrieved, do nothing
@@ -1756,7 +1805,7 @@ public class SPARQLQueryBuilder
 
         addMatchTermProjections(projections);
         addPattern(SECONDARY, bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY));
-        retrieveOptional(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM);
+        retrieveOptionalWithLanguage(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM);
 
         return this;
     }
@@ -1768,25 +1817,19 @@ public class SPARQLQueryBuilder
         projections.add(getDescriptionProjection());
 
         Iri descProperty = mode.getDescriptionProperty(kb);
-        retrieveOptional(descProperty, VAR_DESC_CANDIDATE);
+        retrieveOptionalWithLanguage(descProperty, VAR_DESC_CANDIDATE);
 
         return this;
     }
 
-    private void retrieveOptional(RdfPredicate aProperty, Variable aVariable)
+    private void retrieveOptionalWithLanguage(RdfPredicate aProperty, Variable aVariable)
     {
-        String language = kb.getDefaultLanguage();
-
         List<GraphPattern> patterns = new ArrayList<>();
 
-        // Find all labels corresponding to the KB language
+        String language = kb.getDefaultLanguage();
         if (language != null) {
-            // Find all labels without any language
-            patterns.add(VAR_SUBJECT.has(aProperty, aVariable)
-                    .filter(Expressions.equals(function(LANG, aVariable), EMPTY_STRING)));
-
-            patterns.add(VAR_SUBJECT.has(aProperty, aVariable)
-                    .filter(function(LANGMATCHES, function(LANG, aVariable), literalOf(language))));
+            patterns.add(VAR_SUBJECT.has(aProperty, aVariable) //
+                    .filter(matchLanguage(aVariable, language)));
         }
         else {
             // Find all labels ignoring any language
@@ -1890,10 +1933,11 @@ public class SPARQLQueryBuilder
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
             tupleQuery.setIncludeInferred(includeInferred);
             results = evaluateListQuery(tupleQuery, aAll);
-            results.sort(Comparator.comparing(KBObject::getUiLabel, String.CASE_INSENSITIVE_ORDER));
+            results.sort(comparing(KBObject::getUiLabel, CASE_INSENSITIVE_ORDER));
 
             LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
                     currentTimeMillis() - startTime);
+
             return results;
         }
         catch (QueryEvaluationException e) {
