@@ -17,43 +17,138 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.ranking;
 
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION;
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LABEL_NC;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.inception.conceptlinking.feature.CasingFeatureGenerator;
+import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
+import de.tudarmstadt.ukp.inception.conceptlinking.feature.LevenshteinFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
 public class BaselineRankingStrategyTest
 {
+    private Comparator<CandidateEntity> sut = BaselineRankingStrategy.getInstance();
+
+    private List<EntityRankingFeatureGenerator> generators = asList( //
+            new CasingFeatureGenerator(), //
+            new LevenshteinFeatureGenerator());
+
     @Test
-    public void thatiriExactlyMatchingQueryIsRankedFirst()
+    public void thatIriExactlyMatchingQueryIsRankedFirst()
     {
-        String query = "cand2";
+        String query = "123";
+        String mention = "456";
 
-        CandidateEntity cand1 = new CandidateEntity(new KBHandle("cand1")) //
-                .with(KEY_QUERY, query) //
-                .with(KEY_LEVENSHTEIN_QUERY, 0) //
-                .with(KEY_LEVENSHTEIN_MENTION, 0);
-        CandidateEntity cand2 = new CandidateEntity(new KBHandle("cand2")) //
-                .with(KEY_QUERY, query) //
-                .with(KEY_LEVENSHTEIN_QUERY, 5) //
-                .with(KEY_LEVENSHTEIN_MENTION, 8);
+        var exactIriMatch = new KBHandle(query, "1");
+        var labelMatchLev0 = new KBHandle("1", "123");
+        var labelMatchLev1 = new KBHandle("2", "23");
+        var labelMatchLev2 = new KBHandle("3", "3");
+        var mentionMatchLev0 = new KBHandle("4", "456");
+        var mentionMatchLev1 = new KBHandle("5", "56");
+        var mentionMatchLev2 = new KBHandle("6", "6");
 
-        List<CandidateEntity> candidates = new ArrayList<>();
-        candidates.add(cand1);
-        candidates.add(cand2);
+        var candidates = build(query, mention, //
+                labelMatchLev2, labelMatchLev1, labelMatchLev0, //
+                mentionMatchLev2, mentionMatchLev1, mentionMatchLev0, //
+                exactIriMatch);
 
-        candidates.sort(BaselineRankingStrategy.getInstance());
-
-        assertThat(candidates)
+        assertThat(candidates.stream().sorted(sut))
                 .as("Candidate where IRI exactly matches query comes before exact label match")
-                .containsExactly(cand2, cand1);
+                .extracting(CandidateEntity::getHandle) //
+                .containsSubsequence(exactIriMatch, labelMatchLev0);
+
+        assertThat(candidates.stream().sorted(sut)) //
+                .extracting(CandidateEntity::getHandle) //
+                .as("With same Levenshtein distance, label match takes precedence") //
+                .containsExactly( //
+                        exactIriMatch, //
+                        labelMatchLev0, //
+                        mentionMatchLev0, //
+                        labelMatchLev1, //
+                        mentionMatchLev1, //
+                        labelMatchLev2, //
+                        mentionMatchLev2);
+    }
+
+    @Test
+    public void thatCasedEditDistanceWinsIfUncasedEditDistanceIsEqual()
+    {
+        String query = "this";
+        String mention = "Chicago";
+
+        var labelMatch0 = new KBHandle("1", "This");
+        var labelMatch2 = new KBHandle("3", "tHIS");
+
+        var candidates = build(query, mention, labelMatch0, labelMatch2);
+        candidates.sort(sut);
+
+        assertThat(candidates) //
+                .extracting(CandidateEntity::getHandle) //
+                .as("Lower cased edit distance wins") //
+                .containsExactly( //
+                        labelMatch0, //
+                        labelMatch2);
+    }
+
+    @Test
+    public void thatQueryQuiteDifferentFromMention()
+    {
+        String query = "this";
+        String mention = "Chicago";
+
+        var labelMatch0 = new KBHandle("1", "This");
+        var labelMatch1 = new KBHandle("2", "this");
+        var labelMatch2 = new KBHandle("3", "tHIS");
+        var labelMatch3 = new KBHandle("4", "these");
+        var mentionMatch0 = new KBHandle("5", "Chicago");
+        var mentionMatch1 = new KBHandle("6", "Chico");
+        var mentionMatch2 = new KBHandle("7", "Chicago Police");
+
+        var candidates = build(query, mention, //
+                labelMatch0, labelMatch1, labelMatch2, labelMatch3, //
+                mentionMatch0, mentionMatch1, mentionMatch2);
+        candidates.sort(sut);
+
+        assertThat(candidates) //
+                .extracting(CandidateEntity::getHandle) //
+                .as("With same Levenshtein distance, label match takes precedence") //
+                .containsExactly( //
+                        labelMatch0, //
+                        labelMatch1, //
+                        labelMatch2, //
+                        mentionMatch0, //
+                        mentionMatch1, //
+                        labelMatch3, //
+                        mentionMatch2);
+    }
+
+    private List<CandidateEntity> build(String aQuery, String aMention, KBHandle... aCandidates)
+    {
+        List<CandidateEntity> results = new ArrayList<>();
+        for (KBHandle candidate : aCandidates) {
+            CandidateEntity cand = new CandidateEntity(candidate) //
+                    .with(KEY_LABEL_NC, candidate.getUiLabel().toLowerCase(Locale.ROOT))
+                    .with(KEY_QUERY, aQuery) //
+                    .with(KEY_QUERY_NC, aQuery.toLowerCase(Locale.ROOT)) //
+                    .with(KEY_MENTION, aMention) //
+                    .with(KEY_MENTION_NC, aMention.toLowerCase(Locale.ROOT));
+
+            generators.forEach(gen -> gen.apply(cand));
+            results.add(cand);
+        }
+        return results;
     }
 }
