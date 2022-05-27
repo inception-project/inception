@@ -54,6 +54,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingServiceAutoConfiguration;
@@ -211,8 +212,9 @@ public class ConceptLinkingServiceImpl
             }
         }
         finally {
-            log.debug("Generated [{}] candidates in {}ms", result.size(),
-                    currentTimeMillis() - startTime);
+            long duration = currentTimeMillis() - startTime;
+            log.debug("Generated [{}] candidates in {}ms", result.size(), duration);
+            WicketUtil.serverTiming("generateCandidates", duration);
         }
 
         return result;
@@ -221,6 +223,8 @@ public class ConceptLinkingServiceImpl
     private void findContainingMatches(Set<KBHandle> result, KnowledgeBase aKB,
             String aConceptScope, ConceptFeatureValueType aValueType, String[] aLongLabels)
     {
+        var startTime = currentTimeMillis();
+
         // Collect containing matches
         SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
 
@@ -229,7 +233,12 @@ public class ConceptLinkingServiceImpl
             containingBuilder.descendantsOf(aConceptScope);
         }
 
-        containingBuilder.withLabelMatchingAnyOf(aLongLabels);
+        if (aKB.isUseFuzzy()) {
+            containingBuilder.withLabelMatchingAnyOf(aLongLabels);
+        }
+        else {
+            containingBuilder.withLabelContainingAnyOf(aLongLabels);
+        }
 
         containingBuilder.retrieveLabel().retrieveDescription();
 
@@ -242,8 +251,10 @@ public class ConceptLinkingServiceImpl
                     conn -> containingBuilder.asHandles(conn, true));
         }
 
-        log.debug("Found [{}] candidates using matching {}", containingMatches.size(),
-                asList(aLongLabels));
+        var duration = currentTimeMillis() - startTime;
+        log.debug("Found [{}] candidates using matching {} in {}ms", containingMatches.size(),
+                asList(aLongLabels), duration);
+        WicketUtil.serverTiming("findContainingMatches", duration);
 
         result.addAll(containingMatches);
 
@@ -252,6 +263,8 @@ public class ConceptLinkingServiceImpl
     private void findStartingWithMatches(Set<KBHandle> result, KnowledgeBase aKB,
             String aConceptScope, ConceptFeatureValueType aValueType, String aQuery)
     {
+        var startTime = currentTimeMillis();
+
         SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB);
 
         if (aConceptScope != null) {
@@ -274,7 +287,10 @@ public class ConceptLinkingServiceImpl
                     conn -> startingWithBuilder.asHandles(conn, true));
         }
 
-        log.debug("Found [{}] candidates starting with [{}]]", startingWithMatches.size(), aQuery);
+        var duration = currentTimeMillis() - startTime;
+        log.debug("Found [{}] candidates starting with [{}]] in {}ms", startingWithMatches.size(),
+                aQuery, duration);
+        WicketUtil.serverTiming("findStartingWithMatches", duration);
 
         result.addAll(startingWithMatches);
     }
@@ -282,6 +298,8 @@ public class ConceptLinkingServiceImpl
     private void findExactMatches(Set<KBHandle> result, KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String[] aExactLabels)
     {
+        var startTime = currentTimeMillis();
+
         SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB);
 
         if (aConceptScope != null) {
@@ -301,8 +319,10 @@ public class ConceptLinkingServiceImpl
             exactMatches = kbService.read(aKB, conn -> exactBuilder.asHandles(conn, true));
         }
 
-        log.debug("Found [{}] candidates exactly matching {}", exactMatches.size(),
-                asList(aExactLabels));
+        var duration = currentTimeMillis() - startTime;
+        log.debug("Found [{}] candidates exactly matching {} in {}ms", exactMatches.size(),
+                asList(aExactLabels), duration);
+        WicketUtil.serverTiming("findExactMatches", duration);
 
         result.addAll(exactMatches);
     }
@@ -310,6 +330,8 @@ public class ConceptLinkingServiceImpl
     private void findExactIriMatches(Set<KBHandle> result, KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery)
     {
+        var startTime = currentTimeMillis();
+
         ParsedIRI iri = null;
         try {
             iri = new ParsedIRI(aQuery);
@@ -339,7 +361,10 @@ public class ConceptLinkingServiceImpl
             iriMatches = kbService.read(aKB, conn -> iriMatchBuilder.asHandles(conn, true));
         }
 
-        log.debug("Found [{}] candidates exactly matching IRI [{}]", iriMatches.size(), aQuery);
+        var duration = currentTimeMillis() - startTime;
+        log.debug("Found [{}] candidates exactly matching IRI [{}] in {}ms", iriMatches.size(),
+                aQuery, duration);
+        WicketUtil.serverTiming("findExactIriMatches", duration);
 
         result.addAll(iriMatches);
     }
@@ -417,8 +442,11 @@ public class ConceptLinkingServiceImpl
             rank++;
         }
 
+        long duration = currentTimeMillis() - startTime;
         log.debug("Ranked [{}] candidates for mention [{}] and query [{}] in [{}] ms",
-                results.size(), aMention, aQuery, currentTimeMillis() - startTime);
+                results.size(), aMention, aQuery, duration);
+
+        WicketUtil.serverTiming("rankCandidates", duration);
 
         return results;
     }
