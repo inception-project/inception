@@ -146,6 +146,7 @@ public class AeroRemoteApiController
     private static final String PARAM_PROJECT_ID = "projectId";
     private static final String PARAM_ANNOTATOR_ID = "userId";
     private static final String PARAM_DOCUMENT_ID = "documentId";
+    private static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
 
     private static final String VAL_ORIGINAL = "ORIGINAL";
 
@@ -369,6 +370,7 @@ public class AeroRemoteApiController
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<RResponse<RProject>> projectImport(
+            @RequestParam(name = PARAM_CREATE_MISSING_USERS, defaultValue = "false") boolean aCreateMissingUsers, //
             @RequestPart(PARAM_FILE) MultipartFile aFile)
         throws Exception
     {
@@ -393,8 +395,7 @@ public class AeroRemoteApiController
                 throw new UnsupportedFormatException("Incompatible to webanno ZIP file");
             }
 
-            // importedProject = importService.importProject(tempFile, false);
-            ProjectImportRequest request = new ProjectImportRequest(false);
+            ProjectImportRequest request = new ProjectImportRequest(aCreateMissingUsers);
             importedProject = exportService.importProject(request, new ZipFile(tempFile));
         }
         finally {

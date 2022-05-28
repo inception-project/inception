@@ -477,8 +477,7 @@ public class SPARQLQueryBuilder
                                     union(classPatterns.stream().toArray(GraphPattern[]::new))));
                 }
 
-                return GraphPatterns
-                        .and(rootPatterns.toArray(new GraphPattern[rootPatterns.size()]));
+                return and(rootPatterns.toArray(GraphPattern[]::new));
             }
             default:
                 throw new IllegalStateException("Can only query for root classes");
@@ -854,8 +853,9 @@ public class SPARQLQueryBuilder
                     .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelMatchingExactlyAnyOf_Fuseki_FTS(String[] aValues)
@@ -886,8 +886,9 @@ public class SPARQLQueryBuilder
                             .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelMatchingExactlyAnyOf_Stardog_FTS(String[] aValues)
@@ -907,8 +908,9 @@ public class SPARQLQueryBuilder
                             .filter(equalsPattern(VAR_MATCH_TERM, value, kb))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
@@ -926,8 +928,9 @@ public class SPARQLQueryBuilder
                     .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelMatchingExactlyAnyOf_Wikidata_FTS(String[] aValues)
@@ -949,8 +952,9 @@ public class SPARQLQueryBuilder
                             .filter(equalsPattern(VAR_MATCH_TERM, value, kb))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     @Override
@@ -1026,8 +1030,9 @@ public class SPARQLQueryBuilder
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelMatchingAnyOf_Wikidata_FTS(String[] aValues)
@@ -1050,7 +1055,7 @@ public class SPARQLQueryBuilder
 
         return and( //
                 bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelMatchingAnyOf_Virtuoso_FTS(String[] aValues)
@@ -1069,7 +1074,7 @@ public class SPARQLQueryBuilder
 
         return and( //
                 bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelMatchingAnyOf_Fuseki_FTS(String[] aValues)
@@ -1116,6 +1121,14 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
+            var labelFilterExpressions = new ArrayList<Expression<?>>();
+            labelFilterExpressions.add(Expressions.equals(str(var("label")), str(VAR_MATCH_TERM)));
+
+            String language = kb.getDefaultLanguage();
+            if (language != null) {
+                labelFilterExpressions.add(matchLanguage(VAR_MATCH_TERM, language));
+            }
+
             // If a KB item has multiple labels, we want to return only the ones which actually
             // match the query term such that the user is not confused that the results contain
             // items that don't match the query (even though they do through a label that is not
@@ -1133,8 +1146,7 @@ public class SPARQLQueryBuilder
                                     literalOf("<B>"), literalOf("")),
                             var("label")))
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM))
-                    .filter(and(Expressions.equals(str(var("label")), str(VAR_MATCH_TERM)),
-                            matchLanguage(VAR_MATCH_TERM, kb.getDefaultLanguage()))));
+                    .filter(and(labelFilterExpressions.toArray(Expression[]::new))));
         }
 
         return and( //
@@ -1202,7 +1214,7 @@ public class SPARQLQueryBuilder
         }
 
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelContainingAnyOf_RDF4J_FTS(String[] aValues)
@@ -1226,7 +1238,7 @@ public class SPARQLQueryBuilder
         }
 
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelContainingAnyOf_Fuseki_FTS(String[] aValues)
@@ -1258,7 +1270,7 @@ public class SPARQLQueryBuilder
         }
 
         return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelContainingAnyOf_Virtuoso_FTS(String[] aValues)
@@ -1276,8 +1288,9 @@ public class SPARQLQueryBuilder
                     .filter(containsPattern(VAR_MATCH_TERM, value)));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelContainingAnyOf_Stardog_FTS(String[] aValues)
@@ -1288,7 +1301,7 @@ public class SPARQLQueryBuilder
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
 
-            if (StringUtils.isBlank(sanitizedValue)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -1297,8 +1310,9 @@ public class SPARQLQueryBuilder
                             .filter(containsPattern(VAR_MATCH_TERM, value))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     private GraphPattern withLabelContainingAnyOf_Wikidata_FTS(String[] aValues)
@@ -1320,8 +1334,9 @@ public class SPARQLQueryBuilder
                             .filter(containsPattern(VAR_MATCH_TERM, value))));
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                union(valuePatterns.toArray(GraphPattern[]::new)));
     }
 
     @Override
@@ -1374,7 +1389,8 @@ public class SPARQLQueryBuilder
             returnEmptyResult = true;
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
                 VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                         .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
     }
@@ -1386,7 +1402,7 @@ public class SPARQLQueryBuilder
         // Strip single quotes and asterisks because they have special semantics
         String sanitizedValue = sanitizeQueryString_FTS(aPrefixQuery);
 
-        if (StringUtils.isBlank(sanitizedValue)) {
+        if (isBlank(sanitizedValue)) {
             returnEmptyResult = true;
         }
 
@@ -1399,7 +1415,8 @@ public class SPARQLQueryBuilder
             queryString += "*";
         }
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 new StardogEntitySearchService(VAR_MATCH_TERM, queryString)
                         .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                                 .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
@@ -1417,7 +1434,8 @@ public class SPARQLQueryBuilder
 
         String sanitizedValue = sanitizeQueryString_FTS(aPrefix);
 
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
                         .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                                 .filter(startsWithPattern(VAR_MATCH_TERM, aPrefix))));
@@ -1470,7 +1488,8 @@ public class SPARQLQueryBuilder
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                         .and(VAR_MATCH_TERM.has(FTS_VIRTUOSO, literalOf(ftsQueryString.toString())))
                         .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
@@ -1483,7 +1502,7 @@ public class SPARQLQueryBuilder
         // Strip single quotes and asterisks because they have special semantics
         String sanitizedValue = sanitizeQueryString_FTS(aPrefixQuery);
 
-        if (StringUtils.isBlank(sanitizedValue)) {
+        if (isBlank(sanitizedValue)) {
             returnEmptyResult = true;
         }
 
@@ -1498,7 +1517,8 @@ public class SPARQLQueryBuilder
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        return GraphPatterns.and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
                 VAR_SUBJECT
                         .has(FTS_LUCENE,
                                 bNode(LUCENE_QUERY, literalOf(queryString)).andHas(LUCENE_PROPERTY,
@@ -1534,13 +1554,12 @@ public class SPARQLQueryBuilder
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        return GraphPatterns
-                .and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                        collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
-                                .has(FUSEKI_QUERY,
-                                        collectionOf(VAR_MATCH_TERM_PROPERTY,
-                                                literalOf(queryString)))
-                                .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
+        return and( //
+                bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
+                collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
+                        .has(FUSEKI_QUERY,
+                                collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(queryString)))
+                        .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
     }
 
     private Expression<?> startsWithPattern(Variable aVariable, String aPrefixQuery)
@@ -1566,10 +1585,6 @@ public class SPARQLQueryBuilder
 
     private Expression<?> equalsPattern(Variable aVariable, String aValue, KnowledgeBase aKB)
     {
-        String language = aKB.getDefaultLanguage();
-
-        List<Expression<?>> expressions = new ArrayList<>();
-
         Operand variable = aVariable;
 
         String regexFlags = "";
@@ -1581,28 +1596,19 @@ public class SPARQLQueryBuilder
         // Match exactly
         String value = "^" + asRegexp(aValue) + "$";
 
+        List<Expression<?>> expressions = new ArrayList<>();
+        expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
+
+        String language = kb.getDefaultLanguage();
         if (language != null) {
-            expressions.add(and( //
-                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)), //
-                    or( // Match with default language
-                            function(LANGMATCHES, function(LANG, aVariable), literalOf(language)),
-                            // Match without language
-                            Expressions.equals(function(LANG, aVariable), EMPTY_STRING) //
-                    ).parenthesize() //
-            ).parenthesize());
-        }
-        else {
-            // Match ignoring language
-            expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
+            expressions.add(matchLanguage(aVariable, language));
         }
 
-        return or(expressions.toArray(new Expression<?>[expressions.size()]));
+        return and(expressions.toArray(Expression[]::new));
     }
 
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
     {
-        List<Expression<?>> expressions = new ArrayList<>();
-
         Operand variable = aVariable;
 
         String regexFlags = "";
@@ -1626,21 +1632,15 @@ public class SPARQLQueryBuilder
                     "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
         }
 
+        List<Expression<?>> expressions = new ArrayList<>();
+        expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
+
         String language = kb.getDefaultLanguage();
         if (language != null) {
-            expressions.add(and( //
-                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)), //
-                    matchLanguage(aVariable, language)).parenthesize());
-        }
-        else {
-            // Match ignoring language
-            expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
+            expressions.add(matchLanguage(aVariable, language));
         }
 
-        // Match with any language (the reduce code doesn't handle this properly atm)
-        // expressions.add(function(aFunction, variable, literalOf(value)));
-
-        return or(expressions.toArray(new Expression<?>[expressions.size()]));
+        return and(expressions.toArray(Expression[]::new)).parenthesize();
     }
 
     private Expression<?> matchLanguage(Variable aVariable, String language)
@@ -1824,22 +1824,17 @@ public class SPARQLQueryBuilder
 
     private void retrieveOptionalWithLanguage(RdfPredicate aProperty, Variable aVariable)
     {
-        List<GraphPattern> patterns = new ArrayList<>();
+        GraphPattern pattern = VAR_SUBJECT.has(aProperty, aVariable);
 
         String language = kb.getDefaultLanguage();
         if (language != null) {
-            patterns.add(VAR_SUBJECT.has(aProperty, aVariable) //
-                    .filter(matchLanguage(aVariable, language)));
-        }
-        else {
-            // Find all labels ignoring any language
-            patterns.add(VAR_SUBJECT.has(aProperty, aVariable));
+            pattern = pattern.filter(matchLanguage(aVariable, language));
         }
 
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would
         // normally match to be removed from the results set. Using a UNION seems to address this
         // labelPatterns.forEach(pattern -> addPattern(Priority.SECONDARY, optional(pattern)));
-        addPattern(SECONDARY, optional(union(patterns.toArray(new GraphPattern[patterns.size()]))));
+        addPattern(SECONDARY, optional(union(pattern)));
     }
 
     @Override
