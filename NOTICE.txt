@@ -1,7 +1,7 @@
 The copyright of the code in this repository belongs to the respective contributors who
 license their contribution under the terms of the Apache License 2.0.
 
-Besides invididual contributions, the copyright in this codebase largely belongs to:
+Besides individual contributions, the copyright in this codebase largely belongs to:
 
 Copyright 2018-2021 Ubiquitous Knowledge Processing (UKP) Lab
                     Technische Universität Darmstadt

@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static java.lang.System.currentTimeMillis;
 import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.containsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoi
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits_ImplBase;
@@ -97,6 +98,8 @@ public abstract class ConceptFeatureEditor_ImplBase
     protected List<KBHandle> getCandidates(IModel<AnnotatorState> aStateModel,
             AnnotationActionHandler aHandler, String aInput)
     {
+        var startTime = currentTimeMillis();
+
         if (aInput == null) {
             return emptyList();
         }
@@ -128,7 +131,7 @@ public abstract class ConceptFeatureEditor_ImplBase
         try {
             AnnotationFeature feat = getModelObject().feature;
 
-            ConceptFeatureTraits_ImplBase traits = readFeatureTraits(feat);
+            var traits = readFeatureTraits(feat);
             String repoId = traits.getRepositoryId();
             // Check if kb is actually enabled
             if (!(repoId == null || kbService.isKnowledgeBaseEnabled(feat.getProject(), repoId))) {
@@ -169,9 +172,13 @@ public abstract class ConceptFeatureEditor_ImplBase
                     .collect(Collectors.toList());
         }
 
-        return choices.stream() //
-                .limit(entityLinkingProperties.getCandidateDisplayLimit()) //
-                .collect(toList());
+        var result = choices.stream()//
+                .limit(entityLinkingProperties.getCandidateDisplayLimit())
+                .collect(Collectors.toList());
+
+        WicketUtil.serverTiming("getCandidates", currentTimeMillis() - startTime);
+
+        return result;
     }
 
     protected abstract ConceptFeatureTraits_ImplBase readFeatureTraits(

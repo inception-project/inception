@@ -1,3 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.inception.app.config.InceptionProjectInitializersAutoConfiguration,\
 de.tudarmstadt.ukp.inception.app.config.LiquibaseLockCheckAutoConfiguration

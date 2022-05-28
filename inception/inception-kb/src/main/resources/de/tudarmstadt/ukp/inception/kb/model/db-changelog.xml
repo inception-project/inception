@@ -432,4 +432,17 @@
       </column>
     </createTable>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20220527-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="knowledgebase" columnName="useFuzzy"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="knowledgebase">
+      <column name="useFuzzy" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>
 </databaseChangeLog>

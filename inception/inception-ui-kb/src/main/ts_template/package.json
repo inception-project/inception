@@ -1,6 +1,8 @@
 {
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
+  "author": "INCEpTION Team",
+  "license": "Apache-2.0",
   "description": "INCEpTION Knowledge Base UI",
   "keywords": [],
   "scripts": {

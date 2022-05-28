@@ -125,6 +125,7 @@ public class KnowledgeBaseExporter
             exportedKB.setPropertyDescriptionIri(kb.getPropertyDescriptionIri());
             exportedKB.setFullTextSearchIri(kb.getFullTextSearchIri());
             exportedKB.setReadOnly(kb.isReadOnly());
+            exportedKB.setUseFuzzy(kb.isUseFuzzy());
             exportedKB.setEnabled(kb.isEnabled());
             exportedKB.setReification(kb.getReification().toString());
             exportedKB.setSupportConceptLinking(kb.isSupportConceptLinking());
@@ -224,6 +225,7 @@ public class KnowledgeBaseExporter
                             : null);
 
             kb.setEnabled(exportedKB.isEnabled());
+            kb.setUseFuzzy(exportedKB.isUseFuzzy());
             kb.setReification(Reification.valueOf(exportedKB.getReification()));
             kb.setBasePrefix(exportedKB.getBasePrefix());
 
