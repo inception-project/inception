@@ -55,11 +55,7 @@ public class ApplicationInformation
                 ".* Apache Software License.*Version 2\\.0.*", //
                 ".*://www\\.apache\\.org/licenses/LICENSE-2\\.0.*", //
                 "Apache-2.0"));
-        LICENSES.put(
-                "Eclipse Distribution License 1.0 (https://eclipse.org/org/documents/edl-v10.php)",
-                Set.of(//
-                        "Eclipse Distribution License.*", //
-                        "EDL 1\\.0.*"));
+        LICENSES.put("ISC License (https://spdx.org/licenses/ISC#licenseText)", Set.of("ISC"));
         LICENSES.put(
                 "Eclipse Public License 1.0 (https://www.eclipse.org/org/documents/epl-1.0/EPL-1.0.txt)",
                 Set.of("Eclipse Public License.*1\\.0.*"));
@@ -73,10 +69,14 @@ public class ApplicationInformation
                 "MIT", //
                 "MIT .*", //
                 ".*MIT License.*"));
+        // According to the SPDX folks EDL 1.0 is essentially BSD-3-Clause, so there is no SPDX for
+        // EDL 1.0. So we fold it into BSD-3-Clause as well.
+        // https://lists.spdx.org/g/Spdx-legal/topic/request_for_adding_eclipse/67981884
         LICENSES.put("BSD 3-Clause (https://spdx.org/licenses/BSD 3-Clause#licenseText)", Set.of( //
                 ".*BSD.3.Clause.*", ".*://raw.github.com/jsonld-java/jsonld-java/master/LICENCE.*",
                 ".*://www.antlr.org/license.html.*",
-                ".*://raw.githubusercontent.com/jaxen-xpath/jaxen/master/LICENSE.txt.*"));
+                ".*://raw.githubusercontent.com/jaxen-xpath/jaxen/master/LICENSE.txt.*",
+                "Eclipse Distribution License.*", "EDL 1\\.0.*"));
         LICENSES.put("BSD 2-Clause (https://spdx.org/licenses/BSD-2-Clause#licenseText)", Set.of( //
                 ".*BSD.2.Clause.*", //
                 ".*://www.opensource.org/licenses/bsd-license.*"));
@@ -120,12 +120,20 @@ public class ApplicationInformation
         try {
             var deps = new LinkedHashSet<Dependency>();
             var cl = ApplicationInformation.class.getClassLoader();
+
             for (URL mavenDeps : list(cl.getResources("META-INF/DEPENDENCIES.json"))) {
                 loadMavenDependencies(mavenDeps).getDependencies()
                         .forEach(dep -> deps.add(dep.toDependency()));
             }
+
             for (URL npmDeps : list(cl.getResources("META-INF/NPM-DEPENDENCIES.json"))) {
                 loadNpmDependencies(npmDeps).values() //
+                        .forEach(dep -> deps.add(dep.toDependency()));
+            }
+
+            for (URL embeddedDeps : list(
+                    cl.getResources("META-INF/DEPENDENCIES-EMBEDDED.spdx.json"))) {
+                loadEmbeddedSpdxDependencies(embeddedDeps).getPackages() //
                         .forEach(dep -> deps.add(dep.toDependency()));
             }
 
@@ -134,6 +142,17 @@ public class ApplicationInformation
         catch (Exception e) {
             LOG.error("Unable to retrieve JSON dependency information", e);
             return Collections.emptySet();
+        }
+    }
+
+    static EmbeddedSpdxDependencies loadEmbeddedSpdxDependencies(URL aDeps) throws IOException
+    {
+        try (InputStream is = aDeps.openStream()) {
+            return JSONUtil.fromJsonStream(EmbeddedSpdxDependencies.class, is);
+        }
+        catch (Exception e) {
+            LOG.error("Unable to read [{}]", aDeps, e);
+            throw e;
         }
     }
 

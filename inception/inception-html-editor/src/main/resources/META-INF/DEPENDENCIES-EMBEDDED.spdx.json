@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.2/schemas/spdx-schema.json",
+  "packages": [
+    {
+      "name": "AnnotatorJS",
+      "versionInfo": "1.2.10",
+      "originator": "Annotator Project",
+      "homepage": "https://github.com/openannotation/annotator/",
+      "licenseDeclared": "(MIT OR GPL)",
+      "description": "Stripped-down version of AnnotatorJS converted to TypeScript",
+      "hasFiles": [
+        "src/main/ts/annotatorjs/**"
+      ]
+    }
+ ]
+}
