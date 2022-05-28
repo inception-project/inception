@@ -43,8 +43,34 @@ public class ApplicationInformation
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationInformation.class);
 
     private static final Map<String, Set<String>> LICENSES = new HashMap<>();
+    private static final Map<String, Set<String>> SOURCES = new HashMap<>();
+    private static final Map<String, Set<String>> SOURCE_BY_PACKAGE_NAME = new HashMap<>();
 
-    static {
+    private static void populateNormalisation()
+    {
+        SOURCE_BY_PACKAGE_NAME.put("emotion", Set.of( //
+                "@emotion/.*"));
+        SOURCE_BY_PACKAGE_NAME.put("Sven Sauleau", Set.of( //
+                "@webassemblyjs/.*"));
+        SOURCE_BY_PACKAGE_NAME.put("Mozilla Foundation", Set.of( //
+                "pdfjs-dist"));
+
+        SOURCES.put("Apache Software Foundation", Set.of( //
+                ".*Apache Software Foundation.*"));
+        SOURCES.put("Mozilla Foundation", Set.of( //
+                ".*Mozilla Foundation.*"));
+        SOURCES.put("Ubiquitous Knowledge Processing (UKP) Lab, Technische Universität Darmstadt",
+                Set.of( //
+                        ".*Ubiquitous Knowledge Processing.*"));
+        SOURCES.put("webpack Contrib Team", Set.of( //
+                "webpack Contrib"));
+        SOURCES.put("FasterXML", Set.of( //
+                "fasterxml\\.com"));
+        SOURCES.put("Max Ogden", Set.of( //
+                "max ogden"));
+        SOURCES.put("Oracle Corporation", Set.of( //
+                "Oracle"));
+
         LICENSES.put("Apache License 2.0 (http://www.apache.org/licenses/LICENSE-2.0)", Set.of( //
                 "ASF 2\\.0.*", //
                 "Apache-2\\.0.*", //
@@ -100,6 +126,21 @@ public class ApplicationInformation
                         ".*://oss.oracle.com/licenses/CDDL\\+GPL-1.1.*"));
     }
 
+    public static String sourceFromPackageName(String aString)
+    {
+        if (aString == null) {
+            return null;
+        }
+
+        for (var entry : SOURCE_BY_PACKAGE_NAME.entrySet()) {
+            if (entry.getValue().stream().anyMatch(pattern -> Pattern.matches(pattern, aString))) {
+                return entry.getKey();
+            }
+        }
+
+        return aString;
+    }
+
     public static String normaliseLicense(String aString)
     {
         if (aString == null) {
@@ -115,8 +156,25 @@ public class ApplicationInformation
         return aString;
     }
 
+    public static String normaliseSource(String aString)
+    {
+        if (aString == null) {
+            return null;
+        }
+
+        for (var entry : SOURCES.entrySet()) {
+            if (entry.getValue().stream().anyMatch(pattern -> Pattern.matches(pattern, aString))) {
+                return entry.getKey();
+            }
+        }
+
+        return aString;
+    }
+
     public static Set<Dependency> loadJsonDependencies()
     {
+        populateNormalisation();
+
         try {
             var deps = new LinkedHashSet<Dependency>();
             var cl = ApplicationInformation.class.getClassLoader();

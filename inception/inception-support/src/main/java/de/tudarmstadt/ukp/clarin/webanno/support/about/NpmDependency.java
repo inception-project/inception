@@ -18,10 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.about;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.normaliseLicense;
+import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.normaliseSource;
+import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.sourceFromPackageName;
 import static java.util.Arrays.asList;
 
 import java.io.Serializable;
 import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -121,18 +125,30 @@ public class NpmDependency
             @Override
             public String getSource()
             {
-                return NpmDependency.this.getPublisher();
+                if (NpmDependency.this.getPublisher() == null) {
+                    return sourceFromPackageName(getName());
+                }
+
+                return normaliseSource(NpmDependency.this.getPublisher());
             }
 
             @Override
             public String getName()
             {
+                if (StringUtils.contains(NpmDependency.this.getName(), "@")) {
+                    return StringUtils.substringBeforeLast(NpmDependency.this.getName(), "@");
+                }
+
                 return NpmDependency.this.getName();
             }
 
             @Override
             public String getVersion()
             {
+                if (StringUtils.contains(NpmDependency.this.getName(), "@")) {
+                    return StringUtils.substringAfterLast(NpmDependency.this.getName(), "@");
+                }
+
                 return null;
             }
 

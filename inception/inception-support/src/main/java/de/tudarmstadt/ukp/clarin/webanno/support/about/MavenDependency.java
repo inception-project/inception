@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.about;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.normaliseLicense;
+import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.normaliseSource;
 import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
@@ -133,7 +134,7 @@ public class MavenDependency
             @Override
             public String getSource()
             {
-                return MavenDependency.this.getOrganizationName();
+                return normaliseSource(MavenDependency.this.getOrganizationName());
             }
 
             @Override

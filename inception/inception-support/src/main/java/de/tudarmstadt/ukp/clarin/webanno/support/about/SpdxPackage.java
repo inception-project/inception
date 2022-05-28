@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.about;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.normaliseLicense;
+import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.normaliseSource;
 import static java.util.Arrays.asList;
 
 import java.io.Serializable;
@@ -171,10 +172,10 @@ public class SpdxPackage
             public String getSource()
             {
                 if (SpdxPackage.this.getOriginator() != null) {
-                    return SpdxPackage.this.getOriginator();
+                    return normaliseSource(SpdxPackage.this.getOriginator());
                 }
 
-                return SpdxPackage.this.getSupplier();
+                return normaliseSource(SpdxPackage.this.getSupplier());
             }
 
             @Override

@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.inception.ui.core.about;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.about.ApplicationInformation.loadJsonDependencies;
+import static java.lang.String.CASE_INSENSITIVE_ORDER;
 import static java.lang.String.join;
 import static java.util.Comparator.comparing;
+import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
@@ -58,12 +60,20 @@ public class AboutPage
 
         dependencies.stream() //
                 .flatMap(d -> d.getLicenses().stream()) //
-                .sorted().distinct() //
+                .sorted(comparing(identity(), CASE_INSENSITIVE_ORDER)).distinct() //
                 .forEach(l -> buf.append(l).append("\n"));
         buf.append("\n");
 
-        var groupedBySource = dependencies.stream()
-                .collect(groupingBy(d -> defaultString(d.getSource(), "UNKNOWN")));
+        buf.append("===== Sources =====\n");
+
+        dependencies.stream() //
+                .map(d -> defaultString(d.getSource(), "UNKNOWN (no source declared)")) //
+                .sorted(comparing(identity(), CASE_INSENSITIVE_ORDER)).distinct() //
+                .forEach(l -> buf.append(l).append("\n"));
+        buf.append("\n");
+
+        var groupedBySource = dependencies.stream().collect(
+                groupingBy(d -> defaultString(d.getSource(), "UNKNOWN (no source declared)")));
         for (var groupKey : groupedBySource.keySet().stream().sorted().collect(toList())) {
             buf.append("===== ").append(groupKey).append(" =====\n");
             for (var dep : groupedBySource.get(groupKey).stream()
