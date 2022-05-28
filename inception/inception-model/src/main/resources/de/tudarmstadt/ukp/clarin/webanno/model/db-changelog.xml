@@ -1325,7 +1325,7 @@
     <dropUniqueConstraint
       tableName="project"
       constraintName="UK3k75vvu7mevyvvb5may5lj8k7" />
-  </changeSet>  
+  </changeSet>
 
   <changeSet author="INCEpTION Team" id="20211212-1">
     <preConditions onFail="MARK_RAN">
@@ -1338,5 +1338,15 @@
         <constraints nullable="false"/>
       </column>
     </addColumn>
+  </changeSet>
+
+  <!--
+   - https://github.com/inception-project/inception/issues/3080
+   -->
+  <changeSet author="INCEpTION Team" id="20220528-1" runAlways="true">
+    <update tableName="annotation_feature">
+      <column name="type" type="VARCHAR(255)" value="de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures"/>
+      <where>name = 'morph' and type = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma'</where>
+    </update>
   </changeSet>
 </databaseChangeLog>

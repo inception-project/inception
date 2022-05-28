@@ -54,6 +54,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 
 /**
@@ -301,16 +304,21 @@ public class LayerExporter
         aFeature.setVisible(aExFeature.isVisible());
         aFeature.setUiName(aExFeature.getUiName());
         aFeature.setProject(aProject);
-        aFeature.setLayer(aFeature.getLayer());
+        aFeature.setName(aExFeature.getName());
         boolean isItChainedLayer = CHAIN_TYPE.equals(aFeature.getLayer().getType());
         if (isItChainedLayer && (COREFERENCE_TYPE_FEATURE.equals(aExFeature.getName())
                 || COREFERENCE_RELATION_FEATURE.equals(aExFeature.getName()))) {
             aFeature.setType(CAS.TYPE_NAME_STRING);
         }
+        else if (Token._TypeName.equals(aFeature.getLayer().getName())
+                && Token._FeatName_morph.equals(aExFeature.getName())
+                && Lemma._TypeName.equals(aExFeature.getType())) {
+            // See https://github.com/inception-project/inception/issues/3080
+            aFeature.setType(MorphologicalFeatures._TypeName);
+        }
         else {
             aFeature.setType(aExFeature.getType());
         }
-        aFeature.setName(aExFeature.getName());
         aFeature.setRemember(aExFeature.isRemember());
         aFeature.setRequired(aExFeature.isRequired());
         aFeature.setHideUnconstraintFeature(aExFeature.isHideUnconstraintFeature());
