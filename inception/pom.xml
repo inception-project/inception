@@ -2569,8 +2569,8 @@
         </file>
       </activation>
       <properties>
-        <ts-link-dependency-phase>generate-sources</ts-link-dependency-phase>
         <ts-build-phase>generate-resources</ts-build-phase>
+        <ts-link-dependency-phase>generate-sources</ts-link-dependency-phase>
         <ts-link-phase>install</ts-link-phase>
       </properties>
       <build>
@@ -2673,6 +2673,29 @@
                 </configuration>
               </execution>
               <execution>
+                <id>npm install license-checker</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <phase>${ts-build-phase}</phase>
+                <configuration>
+                  <arguments>install --no-save license-checker</arguments>
+                </configuration>
+              </execution>
+              <execution>
+                <id>npm generate license report</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <phase>${ts-build-phase}</phase>
+                <configuration>
+                  <environmentVariables>
+                    <DEBUG>license-report*</DEBUG>
+                  </environmentVariables>
+                  <arguments>exec -- license-checker --production --out ${project.build.directory}/js/META-INF/NPM-DEPENDENCIES.json --json --customPath ../../../../inception-build/src/main/resources/inception/licenseCheckerCustomFormat.json --excludePrivatePackages</arguments>
+                </configuration>
+              </execution>
+              <execution>
                 <id>npm link</id>
                 <goals>
                   <goal>npm</goal>
@@ -2690,7 +2713,7 @@
             <executions>
               <execution>
                 <id>add-js-resources</id>
-                <phase>generate-resources</phase>
+                <phase>${ts-build-phase}</phase>
                 <goals>
                   <goal>add-resource</goal>
                 </goals>

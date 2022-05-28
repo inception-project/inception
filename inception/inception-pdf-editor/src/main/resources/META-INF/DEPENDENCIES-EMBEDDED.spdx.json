@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.2/schemas/spdx-schema.json",
+  "packages": [
+    {
+      "name": "PDFAnno",
+      "versionInfo": "0.5.1",
+      "originator": "Hiroyuki Shindo, yoheiMune",
+      "homepage": "https://github.com/paperai/pdfanno",
+      "licenseDeclared": "MIT",
+      "description": "This is a heavily stripped down and modified version of PDFAnno",
+      "hasFiles": [
+        "src/main/ts/src/pdfanno/**"
+      ]
+    },
+    {
+      "name": "pdfextract",
+      "versionInfo": "0.1.1",
+      "originator": "Hiroyuki Shindo",
+      "homepage": "https://github.com/yuichiro-s/pdfextract",
+      "licenseDeclared": "(MIT OR Apache-2.0)",
+      "description": "Modified version of pdfextract which itself is derived from pdfbox",
+      "hasFiles": [
+        "src/main/java/de/tudarmstadt/ukp/inception/pdfeditor/pdfextract/**"
+      ]
+    },
+    {
+      "name": "PDF.js",
+      "versionInfo": "1.10.100",
+      "originator": "Mozilla Foundation",
+      "homepage": "https://github.com/mozilla/pdf.js/",
+      "licenseDeclared": "Apache-2.0",
+      "description": "Just a stripped down and modified frontend part is embedded, rest is obtained via npm",
+      "hasFiles": [
+        "src/main/ts/src/pdfjs/debugger.js",
+        "src/main/ts/src/pdfjs/l10n.ts",
+        "src/main/ts/src/pdfjs/viewer.css",
+        "src/main/ts/src/pdfjs/viewer.js"
+      ]
+    }
+  ]
+}

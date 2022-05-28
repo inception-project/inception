@@ -1,0 +1,9 @@
+{
+  "jquery@3.6.0": {
+    "licenses": "MIT",
+    "repository": "https://github.com/jquery/jquery",
+    "publisher": "OpenJS Foundation and other contributors",
+    "url": "https://github.com/jquery/jquery/blob/3.6.0/AUTHORS.txt",
+    "copyright": "Copyright OpenJS Foundation and other contributors, https://openjsf.org/"
+  }
+}

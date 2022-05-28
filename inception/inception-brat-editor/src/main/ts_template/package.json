@@ -1,6 +1,8 @@
 {
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
+  "author": "INCEpTION Team",
+  "license": "(MIT AND Apache-2.0)",
   "scripts": {
     "build:brat": "esbuild brat/brat.ts --target=esnext --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.js",
     "build:brat-minified": "esbuild brat/brat.ts --target=esnext --minify --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.js",

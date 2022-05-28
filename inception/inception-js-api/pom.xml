@@ -25,4 +25,5 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>inception-js-api</artifactId>
   <name>INCEpTION - JavaScript API</name>
+  <description>JavaScript APIs for INCEpTION</description>
 </project>
