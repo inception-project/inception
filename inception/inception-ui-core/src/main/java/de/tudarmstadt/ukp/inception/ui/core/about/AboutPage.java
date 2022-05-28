@@ -82,6 +82,9 @@ public class AboutPage
                 if (dep.getVersion() != null) {
                     buf.append(" ").append(dep.getVersion());
                 }
+                if (dep.getUrl() != null) {
+                    buf.append(" (").append(dep.getUrl()).append(")");
+                }
                 if (dep.getLicenses() != null && !dep.getLicenses().isEmpty()) {
                     buf.append(" licensed as ");
                     buf.append(join(", ", dep.getLicenses()));
