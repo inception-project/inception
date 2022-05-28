@@ -201,7 +201,6 @@ public class SPARQLQueryBuilderTest
     private Repository dbpedia;
     private Repository yago;
     private Repository hucit;
-    private Repository britishMuseum;
 
     @BeforeEach
     public void setUp()
@@ -222,7 +221,6 @@ public class SPARQLQueryBuilderTest
         dbpedia = buildSparqlRepository("http://de.dbpedia.org/sparql");
         yago = buildSparqlRepository("https://yago-knowledge.org/sparql/query");
         hucit = buildSparqlRepository("http://nlp.dainst.org:8888/sparql");
-        britishMuseum = buildSparqlRepository("http://collection.britishmuseum.org/sparql");
         // Web: http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/stw/query
         zbwStw = buildSparqlRepository("http://zbw.eu/beta/sparql/stw/query");
         // Web: http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/gnd/query
@@ -1622,36 +1620,6 @@ public class SPARQLQueryBuilderTest
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel).containsExactlyInAnyOrder("NN", "NNP",
                 "NNPS", "NNS");
-    }
-
-    @Tag("slow")
-    @Test
-    public void thatRootsCanBeRetrieved_BritishMuseum()
-    {
-        assertIsReachable(britishMuseum);
-
-        kb.setType(REMOTE);
-
-        List<KBHandle> results = asHandles(britishMuseum,
-                SPARQLQueryBuilder.forClasses(kb).roots());
-
-        assertThat(results).isNotEmpty();
-    }
-
-    @Tag("slow")
-    @Test
-    public void thatChildrenCanBeRetrieved_BritishMuseum()
-    {
-        assertIsReachable(britishMuseum);
-
-        kb.setType(REMOTE);
-
-        List<KBHandle> results = asHandles(britishMuseum, SPARQLQueryBuilder //
-                .forClasses(kb) //
-                .childrenOf(
-                        "file:/data-to-load/07bde589-588c-4f0d-8715-c71c0ba2bfdb/crm-extensions/E12_Production"));
-
-        assertThat(results).isNotEmpty();
     }
 
     @Tag("slow")

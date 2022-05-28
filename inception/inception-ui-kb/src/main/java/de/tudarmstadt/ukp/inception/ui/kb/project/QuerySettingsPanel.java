@@ -48,6 +48,7 @@ public class QuerySettingsPanel
 
     private final TextField<Integer> queryLimitField;
     private final CheckBox maxQueryLimitCheckBox;
+    private final CheckBox useFuzzyCheckBox;
     private final CompoundPropertyModel<KnowledgeBaseWrapper> kbModel;
 
     public QuerySettingsPanel(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
@@ -59,6 +60,9 @@ public class QuerySettingsPanel
 
         queryLimitField = queryLimitField("maxResults", kbModel.bind("kb.maxResults"));
         add(queryLimitField);
+        useFuzzyCheckBox = new CheckBox("useFuzzy", kbModel.bind("kb.useFuzzy"));
+        useFuzzyCheckBox.setOutputMarkupId(true);
+        add(useFuzzyCheckBox);
         maxQueryLimitCheckBox = maxQueryLimitCheckbox("maxQueryLimit", Model.of(false));
         add(maxQueryLimitCheckBox);
         add(ftsField("fullTextSearchIri", "kb.fullTextSearchIri"));

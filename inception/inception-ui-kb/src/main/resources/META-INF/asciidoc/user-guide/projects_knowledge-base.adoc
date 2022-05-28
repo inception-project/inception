@@ -23,20 +23,23 @@ There are various settings for knowledge bases.
 [.thumb]
 image::kb3.png[align="center"]
 
+=== Local KBs
+
+* **Read only:** Whether the KB can be modified. This setting is disabled by default. Enabling it
+  prevents making changes to the KB and allows for more effective query caching.
+
 === Remote KBs
 
 The remote knowledge bases, there are the following settings:
 
 * **SPARQL endpoint URL:** The SPARQL URL used to access the knowledge base
+* **Skip SSL certificate checks:** Enable to skip the verification of SSL certificates. This can
+  help if the remote server is using a self-signed certificate. It should be avoided to use this
+  option in production. Instead, better install the remote certificate into your Java environment
+  so it can be validated. 
 * **Default dataset:** A SPARQL endpoint may server multiple datasets. This setting can be used to
   restrict queries to a specific one. Consult with the operator of the SPARQL server to see which
   datasets are available.
-* **Result limit for SPARQL queries:** this is used to limit the amount of data retrieved from the
-  remote server, e.g when populating dropdown boxes for concept search.
-* **Full text search mode:** a SPARQL endpoint capable of full-text searching makes the knowledge
-  based considerably more responsive. Use `bif:contains` for Virtuoso servers and `lucenesail` for
-  RDF4J-based servers. Note that full-text search must be enabled on the server by the server 
-  operator.
 
 NOTE: **Changing the URL of a remote KB currently only takes affect after {product-name} is restarted!**
       The updated URL will be shown in the settings, but queries will still be sent to the old URL until you restart {product-name}.
@@ -45,9 +48,22 @@ NOTE: **Changing the URL of a remote KB currently only takes affect after {produ
       with the new URL.
 
 
+=== Query settings
+
+* **Use fuzzy matching:** enables fuzzy matching when searching the knowledge base. The effect is
+  slightly different depending on the backend being used and it can **significantly slow down** the
+  retrieval process. It is normally a good idea to leave this feature off. If you would like to 
+  retrieve items from the knowledge base which only approximately match a query (e.g. you would 
+  like that an entry `John` is matched if you enter `Johan` or vice versa), then you could try
+  this out. 
+* **Result limit for SPARQL queries:** this is used to limit the amount of data retrieved from the
+  remote server, e.g when populating dropdown boxes for concept search.
+
+
 === Schema mapping
 
-Different types of knowledge base schemata are supported via a configurable mapping mechanism. The user can choose one of the pre-configured mapping or provide a custom mapping.
+Different types of knowledge base schemata are supported via a configurable mapping mechanism. The
+user can choose one of the pre-configured mapping or provide a custom mapping.
 
 
 [cols="1,1,3a"]
