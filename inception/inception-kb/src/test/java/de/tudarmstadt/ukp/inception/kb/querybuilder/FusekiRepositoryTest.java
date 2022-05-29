@@ -73,7 +73,7 @@ public class FusekiRepositoryTest
 
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
-        kb.setType(RepositoryType.LOCAL);
+        kb.setType(RepositoryType.REMOTE);
         kb.setFullTextSearchIri(FTS_FUSEKI.stringValue());
         kb.setMaxResults(100);
 
