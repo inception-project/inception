@@ -45,4 +45,8 @@ public class BulkAnnotationEvent
         super(aSource, aDocument, aUser, aLayer);
     }
 
+    public BulkAnnotationEvent(Object aSource, SourceDocument aDocument, String aUser)
+    {
+        super(aSource, aDocument, aUser);
+    }
 }

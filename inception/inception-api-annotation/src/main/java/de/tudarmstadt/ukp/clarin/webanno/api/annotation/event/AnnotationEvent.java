@@ -52,6 +52,15 @@ public abstract class AnnotationEvent
         Validate.notNull(getUser(), "User must be specified");
     }
 
+    public AnnotationEvent(Object aSource, SourceDocument aDocument, String aUser)
+    {
+        this(aSource, aDocument != null ? aDocument.getProject() : null, aDocument, aUser, null);
+
+        Validate.notNull(getProject(), "Project must be specified");
+        Validate.notNull(getDocument(), "Document must be specified");
+        Validate.notNull(getUser(), "User must be specified");
+    }
+
     private AnnotationEvent(Object aSource, Project aProject, SourceDocument aDocument,
             String aUser, AnnotationLayer aLayer)
     {
