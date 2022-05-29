@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -81,7 +80,7 @@ public class MorphologicalFeaturesLayerInitializer
                 Token.class.getName());
 
         AnnotationFeature tokenMorphFeature = new AnnotationFeature(aProject, tokenLayer, "morph",
-                "morph", Lemma.class.getName());
+                "morph", MorphologicalFeatures.class.getName());
         annotationSchemaService.createFeature(tokenMorphFeature);
 
         AnnotationLayer morphLayer = new AnnotationLayer(MorphologicalFeatures.class.getName(),
