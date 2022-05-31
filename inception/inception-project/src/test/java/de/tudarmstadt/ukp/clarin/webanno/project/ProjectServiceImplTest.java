@@ -30,12 +30,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -43,15 +46,19 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Import;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @DataJpaTest( //
         excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
@@ -60,16 +67,22 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
                 "spring.main.banner-mode=off" })
 @EnableAutoConfiguration
 @Import({ //
+        RepositoryAutoConfiguration.class, //
         SecurityAutoConfiguration.class })
 @EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.project",
         "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 public class ProjectServiceImplTest
 {
+    @TempDir
+    File repositoryDir;
+
     private ProjectService sut;
 
     private @Autowired TestEntityManager testEntityManager;
     private @Autowired UserDao userService;
+    private @Autowired RepositoryProperties repositoryProperties;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
 
     private Project testProject;
     private Project testProject2;
@@ -82,8 +95,11 @@ public class ProjectServiceImplTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        sut = new ProjectServiceImpl(userService, null, null, null,
-                testEntityManager.getEntityManager());
+        repositoryProperties.setPath(repositoryDir);
+        MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
+        sut = new ProjectServiceImpl(userService, applicationEventPublisher, repositoryProperties,
+                null, testEntityManager.getEntityManager());
 
         // create users
         beate = new User("beate", Role.ROLE_USER, Role.ROLE_ADMIN);
@@ -269,6 +285,32 @@ public class ProjectServiceImplTest
         assertThat(sut.hasAnyRole(beate, testProject2)).isTrue();
         assertThat(sut.hasAnyRole(beate, testProjectManagedByBeate)).isTrue();
         assertThat(sut.hasAnyRole(beate, testProjectManagedByKevin)).isFalse();
+    }
+
+    @Test
+    void thatAssigningAndRevokingRolesWorks()
+    {
+        sut.revokeAllRoles(testProject, beate);
+        assertThat(sut.listRoles(testProject, beate)).isEmpty();
+
+        sut.assignRole(testProject, beate, MANAGER);
+        assertThat(sut.listRoles(testProject, beate)) //
+                .containsExactlyInAnyOrder(MANAGER);
+
+        sut.assignRole(testProject, beate, ANNOTATOR, CURATOR);
+        assertThat(sut.listRoles(testProject, beate)) //
+                .containsExactlyInAnyOrder(MANAGER, ANNOTATOR, CURATOR);
+
+        sut.revokeRole(testProject, beate, CURATOR);
+        assertThat(sut.listRoles(testProject, beate)) //
+                .containsExactlyInAnyOrder(MANAGER, ANNOTATOR);
+
+        sut.revokeRole(testProject, beate, CURATOR); // Yes, we try it a second time
+        assertThat(sut.listRoles(testProject, beate)) //
+                .containsExactlyInAnyOrder(MANAGER, ANNOTATOR);
+
+        sut.revokeRole(testProject, beate, MANAGER, ANNOTATOR);
+        assertThat(sut.listRoles(testProject, beate)).isEmpty();
     }
 
     @SpringBootConfiguration

@@ -122,12 +122,32 @@ public interface ProjectService
      */
     List<ProjectPermission> listProjectPermissionLevel(User aUser, Project aProject);
 
+    List<ProjectPermission> listProjectPermissionLevel(String aUser, Project aProject);
+
     List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
 
     List<ProjectPermission> listProjectPermissions(User aUser);
 
     void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels);
+
+    void assignRole(Project aProject, User aUser, PermissionLevel... aRoles);
+
+    /**
+     * It may be necessary to use this method e.g. when importing data in case the user does not
+     * exist in the system.
+     * 
+     * @deprecated Should not be used. Better use
+     *             {@link #assignRole(Project, User, PermissionLevel...)}
+     */
+    @Deprecated
+    void assignRole(Project aProject, String aUser, PermissionLevel... aRoles);
+
+    void revokeRole(Project aProject, User aUser, PermissionLevel... aRoles);
+
+    void revokeAllRoles(Project aProject, User aUser);
+
+    List<PermissionLevel> listRoles(Project aProject, User aUser);
 
     /**
      * List Users those with some {@link PermissionLevel}s in the project

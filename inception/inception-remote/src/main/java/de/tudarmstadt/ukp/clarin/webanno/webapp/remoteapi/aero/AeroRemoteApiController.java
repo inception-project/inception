@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -92,7 +95,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
@@ -324,12 +326,9 @@ public class AeroRemoteApiController
 
         // Create permission for the project creator
         String owner = aCreator.isPresent() ? aCreator.get() : user.getUsername();
-        projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.MANAGER));
-        projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.CURATOR));
-        projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.ANNOTATOR));
+        projectService.createProjectPermission(new ProjectPermission(project, owner, MANAGER));
+        projectService.createProjectPermission(new ProjectPermission(project, owner, CURATOR));
+        projectService.createProjectPermission(new ProjectPermission(project, owner, ANNOTATOR));
 
         RResponse<RProject> response = new RResponse<>(new RProject(project));
         return ResponseEntity.created(aUcb.path(API_BASE + "/" + PROJECTS + "/{id}")

@@ -243,7 +243,30 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
+    public List<PermissionLevel> listRoles(Project aProject, User aUser)
+    {
+        String query = String.join("\n", //
+                "SELECT level ", //
+                "FROM ProjectPermission ", //
+                "WHERE user =:user AND project =:project ", //
+                "ORDER BY level");
+
+        return entityManager.createQuery(query, PermissionLevel.class) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
     public List<ProjectPermission> listProjectPermissionLevel(User aUser, Project aProject)
+    {
+        return listProjectPermissionLevel(aUser.getUsername(), aProject);
+    }
+
+    @Override
+    @Transactional
+    public List<ProjectPermission> listProjectPermissionLevel(String aUser, Project aProject)
     {
         String query = String.join("\n", //
                 "FROM ProjectPermission ", //
@@ -251,7 +274,7 @@ public class ProjectServiceImpl
                 "ORDER BY level");
 
         return entityManager.createQuery(query, ProjectPermission.class) //
-                .setParameter("user", aUser.getUsername()) //
+                .setParameter("user", aUser) //
                 .setParameter("project", aProject) //
                 .setHint(CACHEABLE, true) //
                 .getResultList();
@@ -327,6 +350,42 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional
+    public void assignRole(Project aProject, User aUser, PermissionLevel... aRoles)
+    {
+        var roles = new LinkedHashSet<>(listRoles(aProject, aUser));
+        roles.addAll(asList(aRoles));
+        setProjectPermissionLevels(aUser, aProject, roles);
+    }
+
+    @Deprecated
+    @Override
+    @Transactional
+    public void assignRole(Project aProject, String aUser, PermissionLevel... aRoles)
+    {
+        var wrappedUser = new User(aUser);
+        var roles = new LinkedHashSet<>(listRoles(aProject, wrappedUser));
+        roles.addAll(asList(aRoles));
+        setProjectPermissionLevels(wrappedUser, aProject, roles);
+    }
+
+    @Override
+    @Transactional
+    public void revokeRole(Project aProject, User aUser, PermissionLevel... aRoles)
+    {
+        var roles = new LinkedHashSet<>(listRoles(aProject, aUser));
+        roles.removeAll(asList(aRoles));
+        setProjectPermissionLevels(aUser, aProject, roles);
+    }
+
+    @Override
+    @Transactional
+    public void revokeAllRoles(Project aProject, User aUser)
+    {
+        setProjectPermissionLevels(aUser, aProject, emptyList());
+    }
+
+    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels)
@@ -335,7 +394,7 @@ public class ProjectServiceImpl
             Set<PermissionLevel> levelsToBeGranted = new HashSet<>(aLevels);
             List<ProjectPermission> permissions = new ArrayList<>();
             try {
-                permissions.addAll(listProjectPermissionLevel(aUser, aProject));
+                permissions.addAll(listProjectPermissionLevel(aUser.getUsername(), aProject));
             }
             catch (NoResultException e) {
                 // Nothing to do
@@ -367,7 +426,7 @@ public class ProjectServiceImpl
 
                 entityManager.persist(permission);
 
-                log.info("Created permission [{}] for user [{}] on project {}", level, aUser,
+                log.info("Created permission [{}] for user {} on project {}", level, aUser,
                         aProject);
             }
 

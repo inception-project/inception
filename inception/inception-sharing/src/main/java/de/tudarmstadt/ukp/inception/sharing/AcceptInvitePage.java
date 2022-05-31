@@ -60,7 +60,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import com.github.rjeschke.txtmark.Processor;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -280,8 +279,7 @@ public class AcceptInvitePage
     private void createProjectPermissionsIfNecessary(User aUser)
     {
         if (!projectService.hasRole(aUser, getProject(), ANNOTATOR)) {
-            projectService.createProjectPermission(
-                    new ProjectPermission(getProject(), aUser.getUsername(), ANNOTATOR));
+            projectService.assignRole(getProject(), aUser, ANNOTATOR);
             getSession().success("You have successfully joined the project.");
         }
         else {
