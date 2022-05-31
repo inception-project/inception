@@ -211,8 +211,7 @@ class UserSelectionPanel
                 }
 
                 builder.append(" ");
-                builder.append(projectRepository
-                        .getProjectPermissionLevels(aUser, projectModel.getObject()).stream()
+                builder.append(projectRepository.listRoles(projectModel.getObject(), aUser).stream()
                         .map(PermissionLevel::getName).collect(joining(", ", "[", "]")));
 
                 if (!aUser.isEnabled()) {

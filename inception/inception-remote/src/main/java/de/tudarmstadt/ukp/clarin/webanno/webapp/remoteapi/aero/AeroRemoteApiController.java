@@ -96,7 +96,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -327,9 +326,7 @@ public class AeroRemoteApiController
 
         // Create permission for the project creator
         String owner = aCreator.isPresent() ? aCreator.get() : user.getUsername();
-        projectService.createProjectPermission(new ProjectPermission(project, owner, MANAGER));
-        projectService.createProjectPermission(new ProjectPermission(project, owner, CURATOR));
-        projectService.createProjectPermission(new ProjectPermission(project, owner, ANNOTATOR));
+        projectService.assignRole(project, owner, MANAGER, CURATOR, ANNOTATOR);
 
         RResponse<RProject> response = new RResponse<>(new RProject(project));
         return ResponseEntity.created(aUcb.path(API_BASE + "/" + PROJECTS + "/{id}")

@@ -156,6 +156,7 @@ public class ProjectServiceImpl
         entityManager.merge(aProject);
     }
 
+    @Deprecated
     @Override
     @Transactional
     public void createProjectPermission(ProjectPermission aPermission)
@@ -333,20 +334,12 @@ public class ProjectServiceImpl
                 .getSingleResult() > 0;
     }
 
+    @Deprecated
     @Override
     @Transactional
     public List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject)
     {
-        String query = String.join("\n", //
-                "SELECT level", //
-                "FROM ProjectPermission", //
-                "WHERE user = :user AND", //
-                "      project = :project");
-
-        return entityManager.createQuery(query, PermissionLevel.class) //
-                .setParameter("user", aUser.getUsername()) //
-                .setParameter("project", aProject) //
-                .getResultList();
+        return listRoles(aProject, aUser);
     }
 
     @Override
@@ -435,6 +428,7 @@ public class ProjectServiceImpl
         }
     }
 
+    @Deprecated
     @Override
     @Transactional
     public void leaveProject(User aObject, Project aProject)
@@ -591,6 +585,7 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
+    @Deprecated
     public void removeProjectPermission(ProjectPermission aPermission)
     {
         try (var logCtx = withProjectLogger(aPermission.getProject())) {

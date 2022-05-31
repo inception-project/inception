@@ -62,10 +62,16 @@ public interface ProjectService
      *
      * @param aPermission
      *            the permission
+     * @deprecated Use {@link #assignRole(Project, User, PermissionLevel...)} instead.
      */
+    @Deprecated
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void createProjectPermission(ProjectPermission aPermission);
 
+    /**
+     * @deprecated Use {@link #revokeRole(Project, User, PermissionLevel...)} instead.
+     */
+    @Deprecated
     void removeProjectPermission(ProjectPermission aPermission);
 
     /**
@@ -124,6 +130,10 @@ public interface ProjectService
 
     List<ProjectPermission> listProjectPermissionLevel(String aUser, Project aProject);
 
+    /**
+     * @deprecated Use {@link #listRoles(Project, User)} instead.
+     */
+    @Deprecated
     List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
 
     List<ProjectPermission> listProjectPermissions(User aUser);
