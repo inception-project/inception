@@ -2093,14 +2093,14 @@ public class RecommendationServiceImpl
                     continue;
                 }
 
-                Project project = projectService.getProject(committedKey.getProjectId());
-                if (project == null) {
-                    // Concurrent action has deleted project, so we can ignore this
-                    continue;
+                try {
+                    Project project = projectService.getProject(committedKey.getProjectId());
+                    triggerTrainingAndClassification(committedKey.getUser(), project,
+                            "Committed dirty CAS at end of request", currentDocument);
                 }
-
-                triggerTrainingAndClassification(committedKey.getUser(), project,
-                        "Committed dirty CAS at end of request", currentDocument);
+                catch (NoResultException e) {
+                    // Concurrent action has deleted project, so we can ignore this
+                }
             }
         }
     }

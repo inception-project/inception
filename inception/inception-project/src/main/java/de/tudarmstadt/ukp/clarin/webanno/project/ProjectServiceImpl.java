@@ -78,6 +78,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectPermissionsChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
@@ -577,6 +578,8 @@ public class ProjectServiceImpl
             catch (FileNotFoundException | NoSuchFileException e) {
                 log.info("Project directory to be deleted was not found: [{}]. Ignoring.", path);
             }
+
+            applicationEventPublisher.publishEvent(new AfterProjectRemovedEvent(this, aProject));
 
             log.info("Removed project {} ({})", aProject,
                     formatDurationWords(System.currentTimeMillis() - start, true, true));
