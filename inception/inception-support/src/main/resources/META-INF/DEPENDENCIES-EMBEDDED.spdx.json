@@ -14,17 +14,6 @@
       ]
     },
     {
-      "name": "wicketstuff-urlfragment UrlParametersReceivingBehavior",
-      "versionInfo": "7.8.0",
-      "originator": "Apache Software Foundation",
-      "homepage": "https://wicket.apache.org",
-      "downloadLocation": "https://github.com/wicketstuff/core/blob/wicketstuff-core-7.8.0/urlfragment-parent/urlfragment/src/main/java/org/wicketstuff/urlfragment/UrlParametersReceivingBehavior.java",
-      "licenseDeclared": "MIT",
-      "hasFiles": [
-        "de/tudarmstadt/ukp/clarin/webanno/support/wicketstuff/UrlParametersReceivingBehavior.java"
-      ]
-    },
-    {
       "name": "vue3-sfc-loader",
       "versionInfo": "0.2.21",
       "originator": "Franck Freiburger",
