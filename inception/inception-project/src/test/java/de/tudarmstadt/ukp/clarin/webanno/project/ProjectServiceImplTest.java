@@ -250,7 +250,7 @@ public class ProjectServiceImplTest
         assertThat(sut.hasRole(beate, testProject, CURATOR, ANNOTATOR)).isTrue();
         assertThat(sut.hasRole(beate, testProjectManagedByBeate, MANAGER)).isTrue();
 
-        assertThat(sut.hasRole(kevin, testProjectManagedByBeate, MANAGER)).isTrue();
+        assertThat(sut.hasRole(kevin, testProjectManagedByBeate, MANAGER)).isFalse();
 
         assertThat(sut.hasRole(noPermissionUser, testProject, ANNOTATOR, CURATOR, MANAGER))
                 .isFalse();

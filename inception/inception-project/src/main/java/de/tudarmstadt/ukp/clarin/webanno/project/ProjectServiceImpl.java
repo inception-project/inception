@@ -43,7 +43,6 @@ import java.io.OutputStream;
 import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
@@ -312,7 +311,7 @@ public class ProjectServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional
     public List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject)
     {
         String query = String.join("\n", //
@@ -321,15 +320,10 @@ public class ProjectServiceImpl
                 "WHERE user = :user AND", //
                 "      project = :project");
 
-        try {
-            return entityManager.createQuery(query, PermissionLevel.class) //
-                    .setParameter("user", aUser.getUsername()) //
-                    .setParameter("project", aProject) //
-                    .getResultList();
-        }
-        catch (NoResultException e) {
-            return Collections.emptyList();
-        }
+        return entityManager.createQuery(query, PermissionLevel.class) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("project", aProject) //
+                .getResultList();
     }
 
     @Override
@@ -390,17 +384,22 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional
     public List<User> listProjectUsersWithPermissions(Project aProject)
     {
-        String query = "SELECT DISTINCT u FROM User u, ProjectPermission pp "
-                + "WHERE pp.user = u.username " + "AND pp.project = :project "
-                + "ORDER BY u.username ASC";
+        String query = String.join("\n", //
+                "SELECT DISTINCT u FROM User u, ProjectPermission pp ", //
+                "WHERE pp.user = u.username ", //
+                "AND pp.project = :project ", //
+                "ORDER BY u.username ASC");
         List<User> users = entityManager.createQuery(query, User.class)
-                .setParameter("project", aProject).getResultList();
+                .setParameter("project", aProject) //
+                .getResultList();
         return users;
     }
 
     @Override
+    @Transactional
     public List<User> listProjectUsersWithPermissions(Project aProject,
             PermissionLevel aPermissionLevel)
     {
@@ -441,11 +440,15 @@ public class ProjectServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<ProjectPermission> getProjectPermissions(Project aProject)
     {
-        String query = "FROM ProjectPermission " + "WHERE project = :project";
-        return entityManager.createQuery(query, ProjectPermission.class)
-                .setParameter("project", aProject).getResultList();
+        String query = String.join("\n", //
+                "FROM ProjectPermission ", //
+                "WHERE project = :project");
+        return entityManager.createQuery(query, ProjectPermission.class) //
+                .setParameter("project", aProject) //
+                .getResultList();
     }
 
+    @Deprecated
     @Override
     @Transactional
     public Date getProjectTimeStamp(Project aProject, String aUsername)
@@ -456,12 +459,17 @@ public class ProjectServiceImpl
                 .setParameter("user", aUsername).getSingleResult();
     }
 
+    @Deprecated
     @Override
+    @Transactional
     public Date getProjectTimeStamp(Project aProject)
     {
-        String query = "SELECT MAX(doc.timestamp) " + "FROM SourceDocument AS doc "
-                + "WHERE doc.project = :project";
-        return entityManager.createQuery(query, Date.class).setParameter("project", aProject)
+        String query = String.join("\n", //
+                "SELECT MAX(doc.timestamp) ", //
+                "FROM SourceDocument AS doc ", //
+                "WHERE doc.project = :project");
+        return entityManager.createQuery(query, Date.class) //
+                .setParameter("project", aProject) //
                 .getSingleResult();
     }
 
@@ -806,6 +814,7 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
+    @Deprecated
     public List<Project> listProjectsForAgreement()
     {
         String query = String.join("\n", //

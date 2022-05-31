@@ -246,7 +246,9 @@ public interface ProjectService
      * @param aUsername
      *            the username.
      * @return the timestamp.
+     * @deprecated To be removed without replacement
      */
+    @Deprecated
     Date getProjectTimeStamp(Project aProject, String aUsername);
 
     /**
@@ -255,7 +257,9 @@ public interface ProjectService
      * @param aProject
      *            the project.
      * @return the timestamp.
+     * @deprecated To be removed without replacement
      */
+    @Deprecated
     Date getProjectTimeStamp(Project aProject);
 
     /**
@@ -331,7 +335,10 @@ public interface ProjectService
     /**
      * List projects that allow calculation of pairwise agreement. That means it lists all projects
      * where there are at least two annotators.
+     * 
+     * @deprecated To be removed without replacement
      */
+    @Deprecated
     List<Project> listProjectsForAgreement();
 
     File getProjectFolder(Project aProject);

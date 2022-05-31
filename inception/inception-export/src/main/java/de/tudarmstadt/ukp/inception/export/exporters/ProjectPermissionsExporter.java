@@ -187,11 +187,11 @@ public class ProjectPermissionsExporter
             User user = aRequest.getManager().get();
             String username = user.getUsername();
 
-            if (!projectService.isManager(aProject, user)) {
+            if (!projectService.hasRole(user, aProject, MANAGER)) {
                 projectService.createProjectPermission(
                         new ProjectPermission(aProject, username, MANAGER));
             }
-            if (!projectService.isCurator(aProject, user)) {
+            if (!projectService.hasRole(user, aProject, CURATOR)) {
                 projectService.createProjectPermission(
                         new ProjectPermission(aProject, username, CURATOR));
             }

@@ -642,7 +642,7 @@ public class CurationPage
 
         // Check access to project
         if (project != null
-                && !projectService.isCurator(project, userRepository.getCurrentUser())) {
+                && !projectService.hasRole(userRepository.getCurrentUser(), project, CURATOR)) {
             getSession()
                     .error("You have no permission to access project [" + project.getId() + "]");
             backToProjectPage();
