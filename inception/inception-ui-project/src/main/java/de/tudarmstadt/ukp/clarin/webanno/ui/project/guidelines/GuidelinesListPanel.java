@@ -30,7 +30,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -44,7 +44,7 @@ public class GuidelinesListPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(GuidelinesListPanel.class);
 
-    private @SpringBean ProjectService projectService;
+    private @SpringBean GuidelinesService guidelinesService;
 
     private OverviewListChoice<String> overviewList;
     private IModel<Project> project;
@@ -78,7 +78,7 @@ public class GuidelinesListPanel
 
     private List<String> listGuidelines()
     {
-        return projectService.listGuidelines(project.getObject());
+        return guidelinesService.listGuidelines(project.getObject());
     }
 
     private void actionDelete(AjaxRequestTarget aTarget)
@@ -90,7 +90,7 @@ public class GuidelinesListPanel
         }
 
         try {
-            projectService.removeGuideline(project.getObject(), guideline.getObject());
+            guidelinesService.removeGuideline(project.getObject(), guideline.getObject());
         }
         catch (IOException e) {
             LOG.error("Unable to delete document", e);

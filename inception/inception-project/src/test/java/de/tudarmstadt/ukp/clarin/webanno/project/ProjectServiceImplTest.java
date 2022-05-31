@@ -35,7 +35,6 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
@@ -44,11 +43,13 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.context.annotation.Import;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -57,28 +58,37 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
         showSql = false, //
         properties = { //
                 "spring.main.banner-mode=off" })
-@ExtendWith(SpringExtension.class)
+@EnableAutoConfiguration
+@Import({ //
+        SecurityAutoConfiguration.class })
+@EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.project",
+        "de.tudarmstadt.ukp.clarin.webanno.model",
+        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
 public class ProjectServiceImplTest
 {
     private ProjectService sut;
 
-    @Autowired
-    private TestEntityManager testEntityManager;
+    private @Autowired TestEntityManager testEntityManager;
+    private @Autowired UserDao userService;
 
     private Project testProject;
     private Project testProject2;
+    private Project testProjectManagedByKevin;
+    private Project testProjectManagedByBeate;
     private User beate;
     private User kevin;
+    private User noPermissionUser;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        sut = new ProjectServiceImpl(null, null, null, null, testEntityManager.getEntityManager());
+        sut = new ProjectServiceImpl(userService, null, null, null,
+                testEntityManager.getEntityManager());
 
         // create users
         beate = new User("beate", Role.ROLE_USER, Role.ROLE_ADMIN);
         kevin = new User("kevin", Role.ROLE_USER);
-        User noPermissionUser = new User("noPermission", Role.ROLE_USER);
+        noPermissionUser = new User("noPermission", Role.ROLE_USER);
         testEntityManager.persist(beate);
         testEntityManager.persist(noPermissionUser);
         testEntityManager.persist(kevin);
@@ -95,6 +105,16 @@ public class ProjectServiceImplTest
         testEntityManager.persist(testProject2);
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", ANNOTATOR));
         testEntityManager.persist(new ProjectPermission(testProject2, "beate", CURATOR));
+
+        testProjectManagedByKevin = new Project("managed-by-kevin");
+        testEntityManager.persist(testProjectManagedByKevin);
+        testEntityManager
+                .persist(new ProjectPermission(testProjectManagedByKevin, "kevin", MANAGER));
+
+        testProjectManagedByBeate = new Project("managed-by-beate");
+        testEntityManager.persist(testProjectManagedByBeate);
+        testEntityManager
+                .persist(new ProjectPermission(testProjectManagedByBeate, "beate", MANAGER));
     }
 
     @AfterEach
@@ -103,22 +123,25 @@ public class ProjectServiceImplTest
         testEntityManager.clear();
     }
 
-    @SpringBootConfiguration
-    @EnableAutoConfiguration
-    @EntityScan(basePackages = { "de.tudarmstadt.ukp.clarin.webanno.project",
-            "de.tudarmstadt.ukp.clarin.webanno.model",
-            "de.tudarmstadt.ukp.clarin.webanno.security.model" })
-    public static class SpringConfig
-    {
-        // No content
-    }
-
     @Test
     public void listProjectsForAgreement_ShouldReturnOneProject()
     {
         List<Project> foundProjects = sut.listProjectsForAgreement();
 
         assertThat(foundProjects).containsExactly(testProject);
+    }
+
+    @Test
+    public void thatListManageableCuratableProjectsReturnsOnlyProjectsWhereUserIsCuratorOrManager()
+    {
+        assertThat(sut.listManageableCuratableProjects(beate)) //
+                .containsExactlyInAnyOrder(testProject, testProject2, testProjectManagedByBeate);
+
+        assertThat(sut.listManageableCuratableProjects(kevin)) //
+                .containsExactlyInAnyOrder(testProjectManagedByKevin);
+
+        assertThat(sut.listManageableCuratableProjects(noPermissionUser)) //
+                .isEmpty();
     }
 
     @Test
@@ -179,6 +202,14 @@ public class ProjectServiceImplTest
     }
 
     @Test
+    public void thatManagesAnyProjectWorks()
+    {
+        assertThat(sut.managesAnyProject(noPermissionUser)).isFalse();
+        assertThat(sut.managesAnyProject(beate)).isTrue();
+        assertThat(sut.managesAnyProject(kevin)).isTrue();
+    }
+
+    @Test
     public void thatGenerationOfUniqueSlugWorks()
     {
         ProjectService projectSerivce = Mockito.spy(sut);
@@ -195,5 +226,11 @@ public class ProjectServiceImplTest
         assertThat(projectSerivce.deriveUniqueSlug(repeat('x', MAX_PROJECT_SLUG_LENGTH * 2)))
                 .isEqualTo(repeat('x', MAX_PROJECT_SLUG_LENGTH - 2) + "-9")
                 .hasSize(MAX_PROJECT_SLUG_LENGTH);
+    }
+
+    @SpringBootConfiguration
+    public static class SpringConfig
+    {
+        // No content
     }
 }

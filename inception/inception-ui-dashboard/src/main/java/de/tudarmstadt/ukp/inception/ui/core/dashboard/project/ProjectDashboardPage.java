@@ -76,7 +76,7 @@ public class ProjectDashboardPage
         User currentUser = userRepository.getCurrentUser();
 
         if (!userRepository.isAdministrator(currentUser)) {
-            requireProjectRole(currentUser);
+            requireAnyProjectRole(currentUser);
         }
 
         add(new DashboardMenu(MID_MENU, LoadableDetachableModel.of(this::getMenuItems)));

@@ -52,7 +52,6 @@ public interface ProjectService
     String PROJECT_FOLDER = "project";
     String DOCUMENT_FOLDER = "document";
     String SOURCE_FOLDER = "source";
-    String GUIDELINES_FOLDER = "guideline";
     String ANNOTATION_FOLDER = "annotation";
     String SETTINGS_FOLDER = "settings";
     String META_INF_FOLDER = "META-INF";
@@ -155,6 +154,23 @@ public interface ProjectService
      * list Projects which contain with those annotation documents state is finished
      */
     List<Project> listProjectsWithFinishedAnnos();
+
+    /**
+     * List all projects in which the given user has any of the provided roles. Note that the split
+     * into two arguments is only for the compiler to be able to check if at least one role has been
+     * specified. The first role is not privileged over the other roles in any way!
+     * 
+     * @param aUser
+     *            the user.
+     * @param aRole
+     *            at least one role must be given, but the check is against this role OR any of the
+     *            additional roles.
+     * @param aMoreRoles
+     *            more roles.
+     * @return the list of projects.
+     */
+    List<Project> listProjectsWithUserHavingRole(User aUser, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles);
 
     // --------------------------------------------------------------------------------------------
     // Methods related to Projects
@@ -298,7 +314,8 @@ public interface ProjectService
     List<Project> listManageableCuratableProjects(User aUser);
 
     /**
-     * List projects that allow calculation of pairwise agreement
+     * List projects that allow calculation of pairwise agreement. That means it lists all projects
+     * where there are at least two annotators.
      */
     List<Project> listProjectsForAgreement();
 
@@ -329,77 +346,6 @@ public interface ProjectService
      */
     void savePropertiesFile(Project aProject, InputStream aInputStream, String aFileName)
         throws IOException;
-
-    // --------------------------------------------------------------------------------------------
-    // Methods related to guidelines
-    // --------------------------------------------------------------------------------------------
-
-    /**
-     * Write this {@code content} of the guideline file in the project;
-     *
-     * @param aProject
-     *            the project.
-     * @param aContent
-     *            the guidelines.
-     * @param aFileName
-     *            the filename.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void createGuideline(Project aProject, File aContent, String aFileName) throws IOException;
-
-    void createGuideline(Project aProject, InputStream aContent, String aFileName)
-        throws IOException;
-
-    /**
-     * get the annotation guideline document from the file system
-     *
-     * @param aProject
-     *            the project.
-     * @param aFileName
-     *            the filename.
-     * @return the file.
-     */
-    File getGuideline(Project aProject, String aFileName);
-
-    /**
-     * Export the associated project guideline for this {@link Project} while copying a project
-     *
-     * @param aProject
-     *            the project.
-     * @return the file.
-     */
-    File getGuidelinesFolder(Project aProject);
-
-    /**
-     * List annotation guideline document already uploaded
-     *
-     * @param aProject
-     *            the project.
-     * @return the filenames.
-     */
-    List<String> listGuidelines(Project aProject);
-
-    /**
-     * Checks if the given project defines any guidelines.
-     *
-     * @param aProject
-     *            the project.
-     * @return the filenames.
-     */
-    boolean hasGuidelines(Project aProject);
-
-    /**
-     * Remove an annotation guideline document from the file system
-     *
-     * @param aProject
-     *            the project.
-     * @param aFileName
-     *            the filename.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void removeGuideline(Project aProject, String aFileName) throws IOException;
 
     // --------------------------------------------------------------------------------------------
     // Methods related to permissions
@@ -443,7 +389,35 @@ public interface ProjectService
      */
     boolean isAnnotator(Project aProject, User aUser);
 
-    boolean hasRole(User aUser, Project aProject, PermissionLevel... aRole);
+    /**
+     * Check whether the given user has any role at all in the given project.
+     * 
+     * @param aUser
+     *            a user.
+     * @param aProject
+     *            a project.
+     * @return whether the user has any role in the project.
+     */
+    boolean hasAnyRole(User aUser, Project aProject);
+
+    /**
+     * Check whether the given user has one or more roles in a project. Note that the split into two
+     * arguments is only for the compiler to be able to check if at least one role has been
+     * specified. The first role is not privileged over the other roles in any way!
+     * 
+     * @param aUser
+     *            a user.
+     * @param aProject
+     *            a project.
+     * @param aRole
+     *            at least one role must be given, but the check is against this role OR any of the
+     *            additional roles.
+     * @param aMoreRoles
+     *            more roles.
+     * @return whether the user has any role in the project.
+     */
+    boolean hasRole(User aUser, Project aProject, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles);
 
     // --------------------------------------------------------------------------------------------
     // Methods related to other things

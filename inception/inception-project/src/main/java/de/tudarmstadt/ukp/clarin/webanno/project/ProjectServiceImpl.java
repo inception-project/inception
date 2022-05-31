@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_L
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlugInitialCharacter;
 import static java.lang.Math.min;
-import static java.nio.file.Files.newDirectoryStream;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -36,15 +35,12 @@ import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWo
 import static org.hibernate.annotations.QueryHints.CACHEABLE;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.DirectoryStream;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -69,6 +65,7 @@ import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -260,24 +257,10 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public File getGuidelinesFolder(Project aProject)
-    {
-        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/");
-    }
-
-    @Override
     public File getMetaInfFolder(Project aProject)
     {
         return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
                 + "/" + aProject.getId() + "/" + META_INF_FOLDER + "/");
-    }
-
-    @Override
-    public File getGuideline(Project aProject, String aFilename)
-    {
-        return new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFilename);
     }
 
     @Override
@@ -313,18 +296,29 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public boolean hasRole(User aUser, Project aProject, PermissionLevel... aRoles)
+    public boolean hasAnyRole(User aUser, Project aProject)
     {
-        if (aRoles == null || aRoles.length == 0) {
-            String query = String.join("\n", //
-                    "SELECT COUNT(*) FROM ProjectPermission ", //
-                    "WHERE user = :user AND project = :project");
+        String query = String.join("\n", //
+                "SELECT COUNT(*) FROM ProjectPermission ", //
+                "WHERE user = :user AND project = :project");
 
-            return entityManager.createQuery(query, Long.class) //
-                    .setParameter("user", aUser.getUsername()) //
-                    .setParameter("project", aProject) //
-                    .getSingleResult() > 0;
+        return entityManager.createQuery(query, Long.class) //
+                .setParameter("user", aUser.getUsername()) //
+                .setParameter("project", aProject) //
+                .getSingleResult() > 0;
+    }
 
+    @Override
+    @Transactional
+    public boolean hasRole(User aUser, Project aProject, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
+    {
+        Validate.notNull(aRole, "hasRole() requires at least one role to check");
+
+        var roles = new LinkedHashSet<>();
+        roles.add(aRole);
+        if (aMoreRoles != null) {
+            roles.addAll(asList(aMoreRoles));
         }
 
         String query = String.join("\n", //
@@ -334,7 +328,7 @@ public class ProjectServiceImpl
         return entityManager.createQuery(query, Long.class) //
                 .setParameter("user", aUser.getUsername()) //
                 .setParameter("project", aProject) //
-                .setParameter("roles", asList(aRoles)) //
+                .setParameter("roles", asList(roles)) //
                 .getSingleResult() > 0;
     }
 
@@ -465,29 +459,6 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public void createGuideline(Project aProject, File aContent, String aFileName)
-        throws IOException
-    {
-        try (InputStream is = new FileInputStream(aContent)) {
-            createGuideline(aProject, is, aFileName);
-        }
-    }
-
-    @Override
-    public void createGuideline(Project aProject, InputStream aIS, String aFileName)
-        throws IOException
-    {
-        try (var logCtx = withProjectLogger(aProject)) {
-            String guidelinePath = repositoryProperties.getPath().getAbsolutePath() + "/"
-                    + PROJECT_FOLDER + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/";
-            FileUtils.forceMkdir(new File(guidelinePath));
-            copyLarge(aIS, new FileOutputStream(new File(guidelinePath + aFileName)));
-
-            log.info("Created guidelines file [{}] in project {}", aFileName, aProject);
-        }
-    }
-
-    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<ProjectPermission> getProjectPermissions(Project aProject)
     {
@@ -523,36 +494,6 @@ public class ProjectServiceImpl
                 + "WHERE ann.state = :state";
         return entityManager.createQuery(query, Project.class)
                 .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
-    }
-
-    @Override
-    public List<String> listGuidelines(Project aProject)
-    {
-        // list all guideline files
-        File[] files = getGuidelinesFolder(aProject).listFiles();
-
-        // Name of the guideline files
-        List<String> annotationGuidelineFiles = new ArrayList<>();
-        if (files != null) {
-            for (File file : files) {
-                annotationGuidelineFiles.add(file.getName());
-            }
-        }
-
-        return annotationGuidelineFiles;
-    }
-
-    @Override
-    public boolean hasGuidelines(Project aProject)
-    {
-        try (DirectoryStream<Path> d = newDirectoryStream(getGuidelinesFolder(aProject).toPath())) {
-            return d.iterator().hasNext();
-        }
-        catch (IOException e) {
-            // This may not be the best way to handle it, but if is a fairly sound assertion and
-            // saves the calling code from having to handle the exception.
-            return false;
-        }
     }
 
     @Override
@@ -596,18 +537,6 @@ public class ProjectServiceImpl
 
             log.info("Removed project {} ({})", aProject,
                     formatDurationWords(System.currentTimeMillis() - start, true, true));
-        }
-    }
-
-    @Override
-    public void removeGuideline(Project aProject, String aFileName) throws IOException
-    {
-        try (var logCtx = withProjectLogger(aProject)) {
-            FileUtils.forceDelete(
-                    new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                            + "/" + aProject.getId() + "/" + GUIDELINES_FOLDER + "/" + aFileName));
-
-            log.info("Removed guidelines file [{}] from project {}", aFileName, aProject.getName());
         }
     }
 
@@ -754,10 +683,8 @@ public class ProjectServiceImpl
             return true;
         }
 
-        for (Project project : listProjects()) {
-            if (isManager(project, user)) {
-                return true;
-            }
+        if (!listProjectsWithUserHavingRole(user, MANAGER).isEmpty()) {
+            return true;
         }
 
         return false;
@@ -946,11 +873,15 @@ public class ProjectServiceImpl
     @Transactional
     public List<Project> listProjectsForAgreement()
     {
-        String query = "SELECT DISTINCT p FROM Project p, ProjectPermission pp "
-                + "WHERE pp.project = p.id " + "AND pp.level = :annotator "
-                + "GROUP BY p.id HAVING count(*) > 1 " + "ORDER BY p.name ASC";
+        String query = String.join("\n", //
+                "SELECT DISTINCT p FROM Project p, ProjectPermission pp ", //
+                "WHERE pp.project = p.id ", //
+                "AND pp.level = :annotator ", //
+                "GROUP BY p.id HAVING count(*) > 1 ", //
+                "ORDER BY p.name ASC");
         List<Project> projects = entityManager.createQuery(query, Project.class)
-                .setParameter("annotator", PermissionLevel.ANNOTATOR).getResultList();
+                .setParameter("annotator", ANNOTATOR) //
+                .getResultList();
         return projects;
     }
 
@@ -958,16 +889,35 @@ public class ProjectServiceImpl
     @Transactional
     public List<Project> listManageableCuratableProjects(User aUser)
     {
-        String query = "SELECT DISTINCT p FROM Project p, ProjectPermission pp "
-                + "WHERE pp.project = p.id "
-                + "AND pp.user = :username AND (pp.level = :curator OR pp.level = :manager)"
-                + "ORDER BY p.name ASC";
-        List<Project> projects = entityManager.createQuery(query, Project.class) //
+        return listProjectsWithUserHavingRole(aUser, CURATOR, MANAGER);
+    }
+
+    @Override
+    @Transactional
+    public List<Project> listProjectsWithUserHavingRole(User aUser, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
+    {
+        Validate.notNull(aRole,
+                "listProjectsWithUserHavingRole() requires at least one role to check");
+
+        var roles = new LinkedHashSet<>();
+        roles.add(aRole);
+        if (aMoreRoles != null) {
+            roles.addAll(asList(aMoreRoles));
+        }
+
+        String query = String.join("\n", //
+                "SELECT DISTINCT p FROM Project p, ProjectPermission pp ", //
+                "WHERE pp.project = p.id ", //
+                "AND pp.user = :username ", //
+                "AND pp.level IN (:roles) ", //
+                "ORDER BY p.name ASC");
+        List<Project> projects = entityManager.createQuery(query, Project.class)
                 .setParameter("username", aUser.getUsername()) //
-                .setParameter("curator", PermissionLevel.CURATOR) //
-                .setParameter("manager", PermissionLevel.MANAGER) //
+                .setParameter("roles", roles) //
                 .getResultList();
         return projects;
+
     }
 
     @Override

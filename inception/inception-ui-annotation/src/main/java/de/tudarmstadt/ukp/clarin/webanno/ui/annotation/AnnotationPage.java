@@ -545,7 +545,7 @@ public class AnnotationPage
             StringValue aUserParameter, boolean aLockIfPreset)
     {
         User user = userRepository.getCurrentUser();
-        requireProjectRole(user);
+        requireAnyProjectRole(user);
 
         AnnotatorState state = getModelObject();
         Project project = getProject();
