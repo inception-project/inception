@@ -113,7 +113,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
 
 /**
  * <p>
@@ -1426,12 +1425,14 @@ public class DocumentServiceImpl
                 .setParameter("project", project) //
                 .executeUpdate();
 
-        // Delete all the source documents files for the given project
-        File docFolder = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
-                + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/");
-        if (docFolder.exists()) {
-            FastIOUtils.delete(docFolder);
-        }
+        // When a project is deleted, the repository folder of the project will be deleted anyway
+        // by the ProjectService - we don't have to clean up here
+        // // Delete all the source documents files for the given project
+        // File docFolder = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
+        // + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/");
+        // if (docFolder.exists()) {
+        // FastIOUtils.delete(docFolder);
+        // }
 
         try (var logCtx = withProjectLogger(project)) {
             log.info("Removed all documents from project {} being deleted", project);
