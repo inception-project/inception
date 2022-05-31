@@ -301,7 +301,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -348,7 +348,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -410,7 +410,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -484,7 +484,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -551,7 +551,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -642,7 +642,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
@@ -778,7 +778,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username

@@ -80,10 +80,8 @@ public class UserPermissionsPanel
         levels.setModel(new LambdaModelAdapter<Collection<PermissionLevel>>(() -> {
             return projectRepository.getProjectPermissionLevels(user.getObject(),
                     project.getObject());
-        }, (lvls) -> {
-            projectRepository.setProjectPermissionLevels(user.getObject(), project.getObject(),
-                    lvls);
-        }));
+        }, (lvls) -> projectRepository.setProjectPermissionLevels(user.getObject(),
+                project.getObject(), lvls)));
         levels.setChoices(asList(MANAGER, CURATOR, ANNOTATOR));
         levels.setChoiceRenderer(new EnumChoiceRenderer<>(levels));
         levels.add(this::ensureManagersNotRemovingThemselves);
@@ -118,7 +116,7 @@ public class UserPermissionsPanel
             return;
         }
 
-        if (!projectRepository.isManager(project.getObject(), user.getObject())) {
+        if (!projectRepository.hasRole(user.getObject(), project.getObject(), MANAGER)) {
             return;
         }
 

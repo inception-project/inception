@@ -220,7 +220,8 @@ public class AeroRemoteApiController
         assertPermission(
                 "User [" + user.getUsername() + "] is not allowed to access project [" + aProjectId
                         + "]",
-                projectService.isManager(project, user) || userRepository.isAdministrator(user));
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
 
         return project;
     }

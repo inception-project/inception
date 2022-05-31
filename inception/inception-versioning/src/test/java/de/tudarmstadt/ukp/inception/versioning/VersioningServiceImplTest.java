@@ -311,15 +311,14 @@ public class VersioningServiceImplTest
     private User createAdmin()
     {
         User admin = addUser("admin");
-        projectService.setProjectPermissionLevels(admin, testProject,
-                List.of(ANNOTATOR, CURATOR, MANAGER));
+        projectService.assignRole(testProject, admin, ANNOTATOR, CURATOR, MANAGER);
         return admin;
     }
 
     private User createAnnotator()
     {
         User annotator = addUser("annotator");
-        projectService.setProjectPermissionLevels(annotator, testProject, List.of(ANNOTATOR));
+        projectService.assignRole(testProject, annotator, ANNOTATOR);
         return annotator;
     }
 
