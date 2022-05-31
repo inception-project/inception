@@ -77,7 +77,9 @@ public interface ProjectService
      *            the project.
      *
      * @return if the project permission exists.
+     * @deprecated Use {@link #hasAnyRole(User, Project)}
      */
+    @Deprecated
     boolean existsProjectPermission(User aUser, Project aProject);
 
     /**
@@ -92,7 +94,9 @@ public interface ProjectService
      *            the permission level.
      *
      * @return if the permission exists.
+     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
      */
+    @Deprecated
     boolean existsProjectPermissionLevel(User aUser, Project aProject, PermissionLevel aLevel);
 
     /**
@@ -373,7 +377,9 @@ public interface ProjectService
      * @param aUser
      *            the user.
      * @return if the user may update a project.
+     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
      */
+    @Deprecated
     boolean isManager(Project aProject, User aUser);
 
     /**
@@ -384,7 +390,9 @@ public interface ProjectService
      * @param aUser
      *            the user.
      * @return if the user is a curator.
+     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
      */
+    @Deprecated
     boolean isCurator(Project aProject, User aUser);
 
     /**
@@ -395,7 +403,9 @@ public interface ProjectService
      * @param aUser
      *            the user.
      * @return if the user is a member.
+     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
      */
+    @Deprecated
     boolean isAnnotator(Project aProject, User aUser);
 
     /**

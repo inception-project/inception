@@ -195,7 +195,7 @@ public class ProjectPermissionsExporter
                 projectService.createProjectPermission(
                         new ProjectPermission(aProject, username, CURATOR));
             }
-            if (!projectService.isAnnotator(aProject, user)) {
+            if (!projectService.hasRole(user, aProject, ANNOTATOR)) {
                 projectService.createProjectPermission(
                         new ProjectPermission(aProject, username, ANNOTATOR));
             }

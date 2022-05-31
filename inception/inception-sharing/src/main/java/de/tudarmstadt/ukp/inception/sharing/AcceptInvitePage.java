@@ -106,7 +106,7 @@ public class AcceptInvitePage
 
         // If the current user has already accepted the invitation, directly forward to the project
         if (user != null && invitationIsValid.getObject()) {
-            if (projectService.existsProjectPermissionLevel(user, getProject(), ANNOTATOR)) {
+            if (projectService.hasRole(user, getProject(), ANNOTATOR)) {
                 backToProjectPage();
             }
         }
@@ -279,7 +279,7 @@ public class AcceptInvitePage
 
     private void createProjectPermissionsIfNecessary(User aUser)
     {
-        if (!projectService.existsProjectPermissionLevel(aUser, getProject(), ANNOTATOR)) {
+        if (!projectService.hasRole(aUser, getProject(), ANNOTATOR)) {
             projectService.createProjectPermission(
                     new ProjectPermission(getProject(), aUser.getUsername(), ANNOTATOR));
             getSession().success("You have successfully joined the project.");

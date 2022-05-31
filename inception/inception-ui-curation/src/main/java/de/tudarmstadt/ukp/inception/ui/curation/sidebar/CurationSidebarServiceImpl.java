@@ -23,6 +23,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -157,8 +158,8 @@ public class CurationSidebarServiceImpl
             if (!setting.getSelectedUserNames().isEmpty()) {
                 users = setting.getSelectedUserNames().stream()
                         .map(username -> userRegistry.get(username))
-                        .filter(user -> projectService.existsProjectPermission(user, project))
-                        .collect(Collectors.toList());
+                        .filter(user -> projectService.hasAnyRole(user, project)) //
+                        .collect(toList());
             }
             state = new CurationState(setting.getCurationUserName(), users);
         }

@@ -206,40 +206,21 @@ public class ProjectServiceImpl
         }
     }
 
+    @Deprecated
+    @Transactional
     @Override
     public boolean existsProjectPermission(User aUser, Project aProject)
     {
-        String query = "FROM ProjectPermission " + "WHERE user = :user AND project = :project";
-        List<ProjectPermission> projectPermissions = entityManager
-                .createQuery(query, ProjectPermission.class)
-                .setParameter("user", aUser.getUsername()).setParameter("project", aProject)
-                .getResultList();
-
-        // if at least one permission level exist
-        if (projectPermissions.size() > 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return hasAnyRole(aUser, aProject);
     }
 
     @Override
     @Transactional
+    @Deprecated
     public boolean existsProjectPermissionLevel(User aUser, Project aProject,
             PermissionLevel aLevel)
     {
-        String query = "FROM ProjectPermission "
-                + "WHERE user = :user AND project = :project AND level = :level";
-        try {
-            entityManager.createQuery(query, ProjectPermission.class)
-                    .setParameter("user", aUser.getUsername()).setParameter("project", aProject)
-                    .setParameter("level", aLevel).getSingleResult();
-            return true;
-        }
-        catch (NoResultException ex) {
-            return false;
-        }
+        return hasRole(aUser, aProject, aLevel);
     }
 
     @Override
@@ -666,6 +647,7 @@ public class ProjectServiceImpl
         aCallback.run();
     }
 
+    @Transactional
     @Override
     public boolean managesAnyProject(User user)
     {
@@ -684,18 +666,21 @@ public class ProjectServiceImpl
         return false;
     }
 
+    @Transactional
     @Override
     public boolean isManager(Project aProject, User aUser)
     {
         return hasRole(aUser, aProject, MANAGER);
     }
 
+    @Transactional
     @Override
     public boolean isCurator(Project aProject, User aUser)
     {
         return hasRole(aUser, aProject, CURATOR);
     }
 
+    @Transactional
     @Override
     public boolean isAnnotator(Project aProject, User aUser)
     {
