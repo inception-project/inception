@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static java.lang.String.format;
 
 import javax.servlet.ServletContext;
@@ -78,7 +79,7 @@ public class CurationPageMenuItem
 
         // Visible if the current user is a curator
         User user = userRepo.getCurrentUser();
-        return projectService.isCurator(aProject, user);
+        return projectService.hasRole(user, aProject, CURATOR);
     }
 
     @Override

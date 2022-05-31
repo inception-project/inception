@@ -55,7 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.Document
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -107,8 +106,7 @@ public class DocumentServiceImplDatabaseTest
         annotator2 = userRepository.create(new User("anno2"));
 
         project = projectService.createProject(new Project("project"));
-        projectService.createProjectPermission(
-                new ProjectPermission(project, annotator1.getUsername(), ANNOTATOR));
+        projectService.assignRole(project, annotator1, ANNOTATOR);
     }
 
     @Test

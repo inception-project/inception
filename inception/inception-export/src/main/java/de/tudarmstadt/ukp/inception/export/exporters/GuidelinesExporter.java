@@ -31,7 +31,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -55,11 +55,11 @@ public class GuidelinesExporter
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final ProjectService projectService;
+    private final GuidelinesService guidelinesService;
 
-    public GuidelinesExporter(ProjectService aProjectService)
+    public GuidelinesExporter(GuidelinesService aGuidelinesService)
     {
-        projectService = aProjectService;
+        guidelinesService = aGuidelinesService;
     }
 
     /**
@@ -72,7 +72,7 @@ public class GuidelinesExporter
     {
         File guidelineDir = new File(aStage + GUIDELINES_FOLDER);
         FileUtils.forceMkdir(guidelineDir);
-        File annotationGuidlines = projectService.getGuidelinesFolder(aRequest.getProject());
+        File annotationGuidlines = guidelinesService.getGuidelinesFolder(aRequest.getProject());
 
         if (annotationGuidlines.exists()) {
             for (File annotationGuideline : annotationGuidlines.listFiles()) {
@@ -108,7 +108,7 @@ public class GuidelinesExporter
                 if (fileName.trim().isEmpty()) {
                     continue;
                 }
-                File guidelineDir = projectService.getGuidelinesFolder(aProject);
+                File guidelineDir = guidelinesService.getGuidelinesFolder(aProject);
                 forceMkdir(guidelineDir);
                 copyInputStreamToFile(aZip.getInputStream(entry), new File(guidelineDir, fileName));
 

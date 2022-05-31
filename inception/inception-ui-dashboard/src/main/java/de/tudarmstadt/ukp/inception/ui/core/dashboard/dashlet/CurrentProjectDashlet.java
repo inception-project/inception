@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.AjaxEditableLabel;
@@ -61,8 +63,8 @@ public class CurrentProjectDashlet
             }
         };
 
-        boolean isManager = projectService.isManager(getModelObject(),
-                userRepository.getCurrentUser());
+        boolean isManager = projectService.hasRole(userRepository.getCurrentUser(),
+                getModelObject(), MANAGER);
         name.setEnabled(isManager);
         add(name);
 

@@ -348,7 +348,7 @@ public class DiamWebsocketController
 
         // Check for the access
         assertPermission("User [" + user.getUsername() + "] is not allowed to access project ["
-                + aProjectId + "]", projectService.hasRole(user, project));
+                + aProjectId + "]", projectService.hasAnyRole(user, project));
 
         return project;
     }

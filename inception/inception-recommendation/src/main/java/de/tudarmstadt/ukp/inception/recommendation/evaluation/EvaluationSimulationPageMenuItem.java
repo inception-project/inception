@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
@@ -68,7 +70,7 @@ public class EvaluationSimulationPageMenuItem
     {
         // Visible if the current user is a curator
         User user = userRepo.getCurrentUser();
-        if (!(projectService.isManager(aProject, user))) {
+        if (!(projectService.hasRole(user, aProject, MANAGER))) {
             return false;
         }
 

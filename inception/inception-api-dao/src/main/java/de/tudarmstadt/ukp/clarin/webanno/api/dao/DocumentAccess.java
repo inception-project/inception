@@ -78,8 +78,7 @@ public class DocumentAccess
             User user = getUser(aUser);
             Project project = getProject(aProjectId);
 
-            List<PermissionLevel> permissionLevels = projectService.getProjectPermissionLevels(user,
-                    project);
+            List<PermissionLevel> permissionLevels = projectService.listRoles(project, user);
 
             // Does the user have the permission to access the project at all?
             if (permissionLevels.isEmpty()) {

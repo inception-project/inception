@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
@@ -173,13 +174,11 @@ public class AnnotationPage
     {
         return LoadableDetachableModel.of(() -> {
             User user = userRepository.getCurrentUser();
-            List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
-            for (Project project : projectService.listProjects()) {
-                if (projectService.isAnnotator(project, user)) {
-                    allowedProject.add(DecoratedObject.of(project));
-                }
+            List<DecoratedObject<Project>> allowedProjects = new ArrayList<>();
+            for (Project project : projectService.listProjectsWithUserHavingRole(user, ANNOTATOR)) {
+                allowedProjects.add(DecoratedObject.of(project));
             }
-            return allowedProject;
+            return allowedProjects;
         });
     }
 
@@ -545,7 +544,7 @@ public class AnnotationPage
             StringValue aUserParameter, boolean aLockIfPreset)
     {
         User user = userRepository.getCurrentUser();
-        requireProjectRole(user);
+        requireAnyProjectRole(user);
 
         AnnotatorState state = getModelObject();
         Project project = getProject();
