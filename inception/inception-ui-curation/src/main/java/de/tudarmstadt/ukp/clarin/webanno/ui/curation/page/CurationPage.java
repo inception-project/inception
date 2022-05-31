@@ -396,17 +396,16 @@ public class CurationPage
                 List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
                 List<Project> projectsWithFinishedAnnos = projectService
                         .listProjectsWithFinishedAnnos();
-                for (Project project : projectService.listProjects()) {
-                    if (projectService.isCurator(project, user)) {
-                        DecoratedObject<Project> dp = DecoratedObject.of(project);
-                        if (projectsWithFinishedAnnos.contains(project)) {
-                            dp.setColor("green");
-                        }
-                        else {
-                            dp.setColor("red");
-                        }
-                        allowedProject.add(dp);
+                for (Project project : projectService.listProjectsWithUserHavingRole(user,
+                        CURATOR)) {
+                    DecoratedObject<Project> dp = DecoratedObject.of(project);
+                    if (projectsWithFinishedAnnos.contains(project)) {
+                        dp.setColor("green");
                     }
+                    else {
+                        dp.setColor("red");
+                    }
+                    allowedProject.add(dp);
                 }
                 return allowedProject;
             }

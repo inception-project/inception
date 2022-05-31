@@ -328,7 +328,7 @@ public class ProjectServiceImpl
         return entityManager.createQuery(query, Long.class) //
                 .setParameter("user", aUser.getUsername()) //
                 .setParameter("project", aProject) //
-                .setParameter("roles", asList(roles)) //
+                .setParameter("roles", roles) //
                 .getSingleResult() > 0;
     }
 
@@ -490,10 +490,13 @@ public class ProjectServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Project> listProjectsWithFinishedAnnos()
     {
-        String query = "SELECT DISTINCT ann.project " + "FROM AnnotationDocument AS ann "
-                + "WHERE ann.state = :state";
+        String query = String.join("\n", //
+                "SELECT DISTINCT ann.project ", //
+                "FROM AnnotationDocument AS ann ", //
+                "WHERE ann.state = :state");
         return entityManager.createQuery(query, Project.class)
-                .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .getResultList();
     }
 
     @Override
@@ -555,6 +558,7 @@ public class ProjectServiceImpl
         }
     }
 
+    @Deprecated
     @Override
     public void savePropertiesFile(Project aProject, InputStream aIs, String aFileName)
         throws IOException
@@ -570,24 +574,14 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public List<Project> listAccessibleProjects(User user)
+    public List<Project> listAccessibleProjects(User aUser)
     {
-        List<Project> allowedProject = new ArrayList<>();
-        List<Project> allProjects = listProjects();
-
         // if global admin, list all projects
-        if (userRepository.isAdministrator(user)) {
-            return allProjects;
+        if (userRepository.isAdministrator(aUser)) {
+            return listProjects();
         }
 
-        // else only list projects where she is admin / user / curator
-        for (Project project : allProjects) {
-            if (this.isManager(project, user) || this.isAnnotator(project, user)
-                    || this.isCurator(project, user)) {
-                allowedProject.add(project);
-            }
-        }
-        return allowedProject;
+        return listProjectsWithUserHavingAnyRole(aUser);
     }
 
     @Override
@@ -917,7 +911,20 @@ public class ProjectServiceImpl
                 .setParameter("roles", roles) //
                 .getResultList();
         return projects;
+    }
 
+    @Override
+    @Transactional
+    public List<Project> listProjectsWithUserHavingAnyRole(User aUser)
+    {
+        String query = String.join("\n", //
+                "SELECT DISTINCT pp.project FROM ProjectPermission pp ", //
+                "WHERE pp.user = :username ", //
+                "ORDER BY pp.project.name ASC");
+        List<Project> projects = entityManager.createQuery(query, Project.class)
+                .setParameter("username", aUser.getUsername()) //
+                .getResultList();
+        return projects;
     }
 
     @Override

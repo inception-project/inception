@@ -145,6 +145,20 @@ public class ProjectServiceImplTest
     }
 
     @Test
+    public void thatListAccessibleProjectsWorks()
+    {
+        assertThat(sut.listAccessibleProjects(beate)) //
+                .contains(testProject, testProject2, testProjectManagedByBeate,
+                        testProjectManagedByKevin);
+
+        assertThat(sut.listAccessibleProjects(kevin)) //
+                .contains(testProject, testProjectManagedByKevin);
+
+        assertThat(sut.listAccessibleProjects(noPermissionUser)) //
+                .isEmpty();
+    }
+
+    @Test
     public void listProjectUsersWithPermissions_ShouldReturnUsers()
     {
         List<User> foundUsers = sut.listProjectUsersWithPermissions(testProject);
@@ -226,6 +240,35 @@ public class ProjectServiceImplTest
         assertThat(projectSerivce.deriveUniqueSlug(repeat('x', MAX_PROJECT_SLUG_LENGTH * 2)))
                 .isEqualTo(repeat('x', MAX_PROJECT_SLUG_LENGTH - 2) + "-9")
                 .hasSize(MAX_PROJECT_SLUG_LENGTH);
+    }
+
+    @Test
+    public void thatHasRoleWorks()
+    {
+        assertThat(sut.hasRole(beate, testProject, ANNOTATOR)).isTrue();
+        assertThat(sut.hasRole(beate, testProject, CURATOR)).isTrue();
+        assertThat(sut.hasRole(beate, testProject, CURATOR, ANNOTATOR)).isTrue();
+        assertThat(sut.hasRole(beate, testProjectManagedByBeate, MANAGER)).isTrue();
+
+        assertThat(sut.hasRole(kevin, testProjectManagedByBeate, MANAGER)).isTrue();
+
+        assertThat(sut.hasRole(noPermissionUser, testProject, ANNOTATOR, CURATOR, MANAGER))
+                .isFalse();
+        assertThat(sut.hasRole(noPermissionUser, testProject2, ANNOTATOR, CURATOR, MANAGER))
+                .isFalse();
+        assertThat(sut.hasRole(noPermissionUser, testProjectManagedByBeate, ANNOTATOR, CURATOR,
+                MANAGER)).isFalse();
+        assertThat(sut.hasRole(noPermissionUser, testProjectManagedByKevin, ANNOTATOR, CURATOR,
+                MANAGER)).isFalse();
+    }
+
+    @Test
+    public void thatHasAnyRoleWorks()
+    {
+        assertThat(sut.hasAnyRole(beate, testProject)).isTrue();
+        assertThat(sut.hasAnyRole(beate, testProject2)).isTrue();
+        assertThat(sut.hasAnyRole(beate, testProjectManagedByBeate)).isTrue();
+        assertThat(sut.hasAnyRole(beate, testProjectManagedByKevin)).isFalse();
     }
 
     @SpringBootConfiguration

@@ -172,6 +172,14 @@ public interface ProjectService
     List<Project> listProjectsWithUserHavingRole(User aUser, PermissionLevel aRole,
             PermissionLevel... aMoreRoles);
 
+    /**
+     * List all projects in which the given user has any role at all.
+     * 
+     * @param aUser
+     *            the user.
+     */
+    List<Project> listProjectsWithUserHavingAnyRole(User aUser);
+
     // --------------------------------------------------------------------------------------------
     // Methods related to Projects
     // --------------------------------------------------------------------------------------------
@@ -266,8 +274,7 @@ public interface ProjectService
     Project getProject(long aId);
 
     /**
-     * List all Projects. If the user logged have a ROLE_ADMIN, he can see all the projects.
-     * Otherwise, a user will see projects only he is member of.
+     * List all Projects.
      *
      * @return the projects
      */
@@ -343,7 +350,9 @@ public interface ProjectService
      *            the file name.
      * @throws IOException
      *             if an I/O error occurs.
+     * @deprecated To be removed without replacement
      */
+    @Deprecated()
     void savePropertiesFile(Project aProject, InputStream aInputStream, String aFileName)
         throws IOException;
 
