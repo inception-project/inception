@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.search;
 import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -54,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
@@ -130,6 +133,10 @@ public class SearchServiceImpl
             pooledIndexesSnapshot = new ArrayList<>(indexes.values());
 
             for (PooledIndex pooledIndex : pooledIndexesSnapshot) {
+                if (pooledIndex.isTombstone()) {
+                    continue;
+                }
+
                 if (pooledIndex.isIdle() && (now - pooledIndex.getLastAccess() > idleAllowed)
                         || pooledIndex.isForceRecycle()) {
                     unloadIndex(pooledIndex);
@@ -188,7 +195,11 @@ public class SearchServiceImpl
 
         synchronized (indexes) {
             try {
-                indexes.remove(index.getProject().getId());
+                if (!aIndex.isTombstone()) {
+                    // We need to leave tombstones in the map - they get cleaned up once the project
+                    // is fully deleted.
+                    indexes.remove(index.getProject().getId());
+                }
 
                 if (index.getPhysicalIndex() != null) {
                     index.getPhysicalIndex().close();
@@ -265,6 +276,8 @@ public class SearchServiceImpl
         log.trace("Removing index for project {} because project is being removed", project);
 
         try (PooledIndex pooledIndex = acquireIndex(project.getId())) {
+            pooledIndex.tombstone();
+
             // Remove the index entry from the memory map
             unloadIndex(pooledIndex);
 
@@ -280,12 +293,25 @@ public class SearchServiceImpl
         }
     }
 
+    @EventListener
+    public void afterProjectRemove(AfterProjectRemovedEvent aEvent) throws IOException
+    {
+        synchronized (indexes) {
+            indexes.remove(aEvent.getProject().getId());
+        }
+    }
+
     private final Map<Long, PooledIndex> indexes = new HashMap<>();
 
     private PooledIndex acquireIndex(long aProjectId)
     {
         synchronized (indexes) {
             PooledIndex pooledIndex = indexes.get(aProjectId);
+
+            if (pooledIndex != null && pooledIndex.isTombstone()) {
+                throw new IllegalStateException("Project [" + aProjectId
+                        + "] is being deleted, index no longer accessible.");
+            }
 
             // If the index needs to be recycled, we need to wait for exclusive access and then
             // recycle it
@@ -440,7 +466,8 @@ public class SearchServiceImpl
         // If the index is dead or marked to force-recycle, we shouldn't waste time
         // rebuilding the index on it. Either we shut down or there is another
         // re-indexing scheduled that will cover for us.
-        return aPooledIndex.isDead() || aPooledIndex.isForceRecycle() || shutdown;
+        return aPooledIndex.isTombstone() || aPooledIndex.isDead() || aPooledIndex.isForceRecycle()
+                || shutdown;
     }
 
     private void indexDocument(PooledIndex aPooledIndex, AnnotationDocument aAnnotationDocument,
@@ -588,15 +615,19 @@ public class SearchServiceImpl
             // Clear the index
             index.getPhysicalIndex().clear();
 
-            // Index all the annotation documents
-            List<AnnotationDocument> annotationDocuments = new ArrayList<>();
-            for (User user : projectService.listProjectUsersWithPermissions(aProject)) {
-                annotationDocuments.addAll(documentService.listAnnotationDocuments(aProject, user));
-            }
+            Set<String> usersWithPermissions = projectService
+                    .listProjectUsersWithPermissions(aProject).stream() //
+                    .map(User::getUsername) //
+                    .collect(toUnmodifiableSet());
+            List<AnnotationDocument> annotationDocuments = documentService
+                    .listAnnotationDocuments(aProject).stream()
+                    .filter(annDoc -> usersWithPermissions.contains(annDoc.getUser())) //
+                    .collect(toList());
             List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(aProject);
 
             monitor.setTodo(annotationDocuments.size() + sourceDocuments.size());
 
+            // Index all the annotation documents
             for (AnnotationDocument doc : annotationDocuments) {
                 if (isPerformNoMoreActions(pooledIndex)) {
                     return;
@@ -795,6 +826,7 @@ public class SearchServiceImpl
 
         private AtomicBoolean forceRecycle;
         private AtomicBoolean dead;
+        private AtomicBoolean tombstone;
 
         public PooledIndex(Index aDelegate)
         {
@@ -803,6 +835,7 @@ public class SearchServiceImpl
             lastAccess = new AtomicLong(currentTimeMillis());
             forceRecycle = new AtomicBoolean(false);
             dead = new AtomicBoolean(false);
+            tombstone = new AtomicBoolean(false);
         }
 
         public Index get()
@@ -850,6 +883,16 @@ public class SearchServiceImpl
         public boolean isDead()
         {
             return dead.get();
+        }
+
+        public void tombstone()
+        {
+            tombstone.set(true);
+        }
+
+        public boolean isTombstone()
+        {
+            return tombstone.get();
         }
     }
 }
