@@ -185,20 +185,7 @@ public class ProjectPermissionsExporter
         // Give all permissions to the importing user if requested
         if (aRequest.getManager().isPresent()) {
             User user = aRequest.getManager().get();
-            String username = user.getUsername();
-
-            if (!projectService.hasRole(user, aProject, MANAGER)) {
-                projectService.createProjectPermission(
-                        new ProjectPermission(aProject, username, MANAGER));
-            }
-            if (!projectService.hasRole(user, aProject, CURATOR)) {
-                projectService.createProjectPermission(
-                        new ProjectPermission(aProject, username, CURATOR));
-            }
-            if (!projectService.hasRole(user, aProject, ANNOTATOR)) {
-                projectService.createProjectPermission(
-                        new ProjectPermission(aProject, username, ANNOTATOR));
-            }
+            projectService.assignRole(aProject, user, ANNOTATOR, CURATOR, MANAGER);
         }
 
         // Add any users that are referenced by the project but missing in the current instance.
