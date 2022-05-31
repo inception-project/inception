@@ -70,7 +70,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -101,7 +100,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.io.FastIOUtils;
  * </p>
  */
 public class ProjectServiceImpl
-    implements ProjectService, SmartLifecycle
+    implements ProjectService
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -112,7 +111,6 @@ public class ProjectServiceImpl
     private final List<ProjectInitializer> initializerProxy;
 
     private List<ProjectInitializer> initializers;
-    private boolean running = false;
 
     @Autowired
     public ProjectServiceImpl(UserDao aUserRepository,
@@ -555,6 +553,7 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Transactional
     public List<Project> listAccessibleProjects(User aUser)
     {
         // if global admin, list all projects
@@ -591,60 +590,14 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
-    public List<Project> listManageableProjects(User user)
+    public List<Project> listManageableProjects(User aUser)
     {
-        List<Project> allowedProject = new ArrayList<>();
-        List<Project> allProjects = listProjects();
-
         // if global admin, show all projects
-        if (userRepository.isAdministrator(user)) {
-            return allProjects;
+        if (userRepository.isAdministrator(aUser)) {
+            return listProjects();
         }
 
-        // else only projects she is admin of
-        for (Project project : allProjects) {
-            if (this.isManager(project, user)) {
-                allowedProject.add(project);
-            }
-        }
-        return allowedProject;
-    }
-
-    @Override
-    public boolean isRunning()
-    {
-        return running;
-    }
-
-    @Override
-    public void start()
-    {
-        running = true;
-    }
-
-    @Override
-    public void stop()
-    {
-        running = false;
-    }
-
-    @Override
-    public int getPhase()
-    {
-        return Integer.MAX_VALUE;
-    }
-
-    @Override
-    public boolean isAutoStartup()
-    {
-        return true;
-    }
-
-    @Override
-    public void stop(Runnable aCallback)
-    {
-        stop();
-        aCallback.run();
+        return listProjectsWithUserHavingRole(aUser, MANAGER);
     }
 
     @Transactional
@@ -666,6 +619,7 @@ public class ProjectServiceImpl
         return false;
     }
 
+    @Deprecated
     @Transactional
     @Override
     public boolean isManager(Project aProject, User aUser)
@@ -673,6 +627,7 @@ public class ProjectServiceImpl
         return hasRole(aUser, aProject, MANAGER);
     }
 
+    @Deprecated
     @Transactional
     @Override
     public boolean isCurator(Project aProject, User aUser)
@@ -680,6 +635,7 @@ public class ProjectServiceImpl
         return hasRole(aUser, aProject, CURATOR);
     }
 
+    @Deprecated
     @Transactional
     @Override
     public boolean isAnnotator(Project aProject, User aUser)
@@ -866,6 +822,7 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
+    @Deprecated
     public List<Project> listManageableCuratableProjects(User aUser)
     {
         return listProjectsWithUserHavingRole(aUser, CURATOR, MANAGER);

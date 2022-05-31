@@ -321,7 +321,11 @@ public interface ProjectService
      * List projects in which the given user is curator or manager
      *
      * @return list of projects manageable by the user.
+     * @deprecated Use
+     *             {{@link #listProjectsWithUserHavingRole(User, PermissionLevel, PermissionLevel...)}}
+     *             instead.
      */
+    @Deprecated
     List<Project> listManageableCuratableProjects(User aUser);
 
     /**
@@ -365,7 +369,8 @@ public interface ProjectService
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Can the given user access the project setting of <b>some</b> project.
+     * Checks if the user manages any project or has the ability to create new projects that the
+     * user would then manage.
      */
     public boolean managesAnyProject(User aUser);
 
