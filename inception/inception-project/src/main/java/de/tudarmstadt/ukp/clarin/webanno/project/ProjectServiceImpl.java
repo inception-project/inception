@@ -439,7 +439,7 @@ public class ProjectServiceImpl
     @Transactional
     public void leaveProject(User aObject, Project aProject)
     {
-        setProjectPermissionLevels(aObject, aProject, emptyList());
+        revokeAllRoles(aProject, aObject);
     }
 
     @Override

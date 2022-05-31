@@ -366,7 +366,7 @@ public class ProjectsOverviewPage
     private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, Project aProject)
     {
         confirmLeaveDialog.setConfirmAction((_target) -> {
-            projectService.leaveProject(currentUser.getObject(), aProject);
+            projectService.revokeAllRoles(aProject, currentUser.getObject());
             _target.add(projectListContainer);
             _target.addChildren(getPage(), IFeedback.class);
             success("You are no longer a member of project [" + aProject.getName() + "]");

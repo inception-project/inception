@@ -170,8 +170,11 @@ public interface ProjectService
     List<User> listProjectUsersWithPermissions(Project aProject, PermissionLevel aPermissionLevel);
 
     /**
-     * Removes all permissions for the given user to the given proejct.
+     * Removes all permissions for the given user to the given project.
+     * 
+     * @deprecated use {@link #revokeAllRoles(Project, User)}
      */
+    @Deprecated
     void leaveProject(User aObject, Project aProject);
 
     /**
