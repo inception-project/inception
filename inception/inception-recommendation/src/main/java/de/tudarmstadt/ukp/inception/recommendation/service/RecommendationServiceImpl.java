@@ -112,7 +112,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -619,6 +621,18 @@ public class RecommendationServiceImpl
         clearState(aEvent.getDocument().getProject());
     }
 
+    @EventListener
+    public void onBeforeProjectRemoved(BeforeProjectRemovedEvent aEvent)
+    {
+        clearState(aEvent.getProject());
+    }
+
+    @EventListener
+    public void onAfterProjectRemoved(AfterProjectRemovedEvent aEvent)
+    {
+        clearState(aEvent.getProject());
+    }
+
     @Override
     public void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument)
     {
@@ -744,7 +758,6 @@ public class RecommendationServiceImpl
 
         if (username != null) {
             clearState(username);
-            schedulingService.stopAllTasksForUser(username);
         }
     }
 
@@ -2182,10 +2195,10 @@ public class RecommendationServiceImpl
 
             for (var contextDirties : dirtiesByContext.entrySet()) {
                 var key = contextDirties.getKey();
-                    triggerRun(key.getUser(), affectedProjects.get(key.getProjectId()),
-                            "Committed dirty CAS at end of request", currentDocument, false,
-                            contextDirties.getValue());
-                }
+                triggerRun(key.getUser(), affectedProjects.get(key.getProjectId()),
+                        "Committed dirty CAS at end of request", currentDocument, false,
+                        contextDirties.getValue());
+            }
         }
     }
 

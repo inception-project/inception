@@ -42,10 +42,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.core.session.SessionDestroyedEvent;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 
@@ -63,6 +69,7 @@ public class SchedulingServiceImpl
     private final ApplicationContext applicationContext;
     private final ThreadPoolExecutor executor;
     private final ScheduledExecutorService watchdog;
+    private final SessionRegistry sessionRegistry;
 
     private final List<Task> runningTasks;
     private final List<Task> enqueuedTasks;
@@ -70,8 +77,9 @@ public class SchedulingServiceImpl
 
     @Autowired
     public SchedulingServiceImpl(ApplicationContext aApplicationContext,
-            SchedulingProperties aConfig)
+            SchedulingProperties aConfig, SessionRegistry aSessionRegistry)
     {
+        sessionRegistry = aSessionRegistry;
         applicationContext = aApplicationContext;
         executor = new InspectableThreadPoolExecutor(aConfig.getNumberOfThreads(),
                 aConfig.getQueueSize(), this::beforeExecute, this::afterExecute);
@@ -319,6 +327,30 @@ public class SchedulingServiceImpl
     {
         stopAllTasksForProject(aEvent.getProject());
         deletionPending.remove(aEvent.getProject());
+    }
+
+    @EventListener
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public void onSessionDestroyed(SessionDestroyedEvent event)
+    {
+        SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
+        // Could be an anonymous session without information.
+        if (info == null) {
+            return;
+        }
+
+        String username = null;
+        if (info.getPrincipal() instanceof String) {
+            username = (String) info.getPrincipal();
+        }
+
+        if (info.getPrincipal() instanceof User) {
+            username = ((User) info.getPrincipal()).getUsername();
+        }
+
+        if (username != null) {
+            stopAllTasksForUser(username);
+        }
     }
 
     @Override
