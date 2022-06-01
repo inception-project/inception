@@ -27,7 +27,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse;
 
-import org.apache.uima.cas.CAS;
 import org.springframework.http.HttpHeaders;
 
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgResponseContainer;
@@ -48,14 +47,14 @@ public class ElgServiceClientImpl
     }
 
     @Override
-    public ElgServiceResponse invokeService(String aServiceSync, String aToken, CAS aCas)
+    public ElgServiceResponse invokeService(String aServiceSync, String aToken, String aText)
         throws IOException
     {
         HttpRequest request = HttpRequest.newBuilder() //
                 .uri(URI.create(aServiceSync)) //
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + aToken) //
                 .header(HttpHeaders.CONTENT_TYPE, "text/plain")
-                .POST(BodyPublishers.ofString(aCas.getDocumentText(), UTF_8)) //
+                .POST(BodyPublishers.ofString(aText, UTF_8)) //
                 .build();
 
         HttpResponse<String> response = sendRequest(request);

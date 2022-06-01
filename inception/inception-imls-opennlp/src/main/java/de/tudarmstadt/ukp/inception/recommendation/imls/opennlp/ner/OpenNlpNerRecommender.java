@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
@@ -38,6 +38,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -117,7 +118,8 @@ public class OpenNlpNerRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         TokenNameFinderModel model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
@@ -132,15 +134,17 @@ public class OpenNlpNerRecommender
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
 
+        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
         int predictionCount = 0;
-        for (AnnotationFS sampleUnit : select(aCas, sampleUnitType)) {
+        for (AnnotationFS sampleUnit : units) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
             predictionCount++;
 
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sampleUnit);
-            String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
+            String[] tokens = tokenAnnotations.stream() //
+                    .map(AnnotationFS::getCoveredText) //
                     .toArray(String[]::new);
 
             for (Span prediction : finder.find(tokens)) {
@@ -162,6 +166,8 @@ public class OpenNlpNerRecommender
                 aCas.addFsToIndexes(annotation);
             }
         }
+
+        return new Range(units);
     }
 
     @Override

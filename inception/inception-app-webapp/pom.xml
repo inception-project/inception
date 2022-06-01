@@ -133,6 +133,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-elg</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-imls-hf</artifactId>
+    </dependency>
     <!--  
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -794,6 +798,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-elg</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-hf</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-weblicht</usedDependency>

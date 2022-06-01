@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -57,6 +59,16 @@ public class FeatureValueUpdatedEvent
     public AnnotationFeature getFeature()
     {
         return feature;
+    }
+
+    @Override
+    public Range getAffectedRange()
+    {
+        if (fs instanceof AnnotationFS) {
+            return new Range((AnnotationFS) fs);
+        }
+
+        return Range.UNDEFINED;
     }
 
     public Object getOldValue()

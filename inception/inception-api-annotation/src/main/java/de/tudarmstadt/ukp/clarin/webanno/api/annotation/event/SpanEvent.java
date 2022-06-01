@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -39,6 +40,12 @@ public abstract class SpanEvent
     public AnnotationFS getAnnotation()
     {
         return annotation;
+    }
+
+    @Override
+    public Range getAffectedRange()
+    {
+        return new Range(annotation);
     }
 
     @Override

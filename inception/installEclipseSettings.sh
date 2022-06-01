@@ -44,8 +44,10 @@ installPrefs inception-external-search-solr
 installPrefs inception-html-editor
 installPrefs inception-html-recogito-editor
 installPrefs inception-image
+installPrefs inception-imls-dl4j
 installPrefs inception-imls-elg
 installPrefs inception-imls-external
+installPrefs inception-imls-hf
 installPrefs inception-imls-lapps
 installPrefs inception-imls-opennlp
 installPrefs inception-imls-stringmatch

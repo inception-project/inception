@@ -167,6 +167,11 @@
       <artifactId>spring-tx</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
+    </dependency>
+
     <!-- Testing -->
     <dependency>
       <groupId>com.jayway.jsonpath</groupId>

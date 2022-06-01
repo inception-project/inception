@@ -30,6 +30,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -69,16 +70,41 @@ public abstract class RecommendationEngine
         throws RecommendationException;
 
     /**
-     * Given text in {@code aCas}, predict target annotations. These should be written into
-     * {@code aCas}. In order to restore data from e.g. previous training, the {@code aContext} can
-     * be used.
+     * Given text in a {@link CAS}, predict target annotations. These should be written into
+     * {@link CAS}. In order to restore data from e.g. previous training, the
+     * {@link RecommenderContext} can be used.
      * 
      * @param aContext
      *            The context of the recommender
      * @param aCas
      *            The training data
      */
-    public abstract void predict(RecommenderContext aContext, CAS aCas)
+    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    {
+        predict(aContext, aCas, 0, aCas.getDocumentText().length());
+    }
+
+    /**
+     * Given text in a {@link CAS}, predict target annotations. These should be written into
+     * {@link CAS}. In order to restore data from e.g. previous training, the
+     * {@link RecommenderContext} can be used.
+     * <p>
+     * Depending on the recommender, it may be necessary to internally extend the range in which
+     * recommendations are generated so that recommendations that partially overlap the prediction
+     * range may also be generated.
+     * 
+     * @param aContext
+     *            The context of the recommender
+     * @param aCas
+     *            The training data
+     * @param aBegin
+     *            Begin of the range in which predictions should be generated.
+     * @param aEnd
+     *            End of the range in which predictions should be generated.
+     * @return Range in which the recommender generated predictions. No suggestions in this range
+     *         should be inherited.
+     */
+    public abstract Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
         throws RecommendationException;
 
     /**
@@ -120,6 +146,16 @@ public abstract class RecommendationEngine
     public TrainingCapability getTrainingCapability()
     {
         return TrainingCapability.TRAINING_SUPPORTED;
+    }
+
+    /**
+     * Returns which prediction capabilities this engine has. If a recommender uses annotations and
+     * not only the text, then this method should be overwritten to return
+     * {@link PredictionCapability#PREDICTION_USES_ANNOTATIONS}
+     */
+    public PredictionCapability getPredictionCapability()
+    {
+        return PredictionCapability.PREDICTION_USES_TEXT_ONLY;
     }
 
     /**

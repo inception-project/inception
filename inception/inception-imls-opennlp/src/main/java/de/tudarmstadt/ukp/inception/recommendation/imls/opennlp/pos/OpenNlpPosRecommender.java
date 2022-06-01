@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
@@ -42,6 +42,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -116,7 +117,8 @@ public class OpenNlpPosRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         POSModel model = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
@@ -131,15 +133,17 @@ public class OpenNlpPosRecommender
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
+        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
         int predictionCount = 0;
-        for (AnnotationFS sampleUnit : select(aCas, sampleUnitType)) {
+        for (AnnotationFS sampleUnit : units) {
             if (predictionCount >= traits.getPredictionLimit()) {
                 break;
             }
             predictionCount++;
 
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sampleUnit);
-            String[] tokens = tokenAnnotations.stream().map(AnnotationFS::getCoveredText)
+            String[] tokens = tokenAnnotations.stream() //
+                    .map(AnnotationFS::getCoveredText) //
                     .toArray(String[]::new);
 
             Sequence[] bestSequences = tagger.topKSequences(tokens);
@@ -177,6 +181,8 @@ public class OpenNlpPosRecommender
                 }
             }
         }
+
+        return new Range(units);
     }
 
     @Override
