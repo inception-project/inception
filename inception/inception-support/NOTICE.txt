@@ -1,15 +1,9 @@
+NOTE: See META-INF/DEPENDENCIES-EMBEDDED.spdx.json
+
 de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload:
   Source: https://cwiki.apache.org/confluence/display/WICKET/AJAX+update+and+file+download+in+one+blow
   License: according to source, same as Wicket, so assuming Apache License 2.0
   
-de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior:
-  Source: org.wicketstuff.urlfragment.UrlParametersReceivingBehavior from wicketstuff-urlfragment 7.8.0
-  License: MIT license
-
-de.tudarmstadt.ukp.clarin.webanno.support.sass
-  Source: https://github.com/l0rdn1kk0n/wicket-bootstrap/pull/853
-  License: Apache License 2.0
-
 == Vue3 Single File Component loader 0.2.21
 
 Source: https://github.com/FranckFreiburger/vue3-sfc-loader

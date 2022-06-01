@@ -74,7 +74,7 @@ public class ProjectPermissionExtension
         User user = userService.get(aAuthentication.getName());
 
         if (ANY.equals(aPermission)) {
-            return projectService.hasRole(user, project);
+            return projectService.hasAnyRole(user, project);
         }
 
         return projectService.hasRole(user, project, PermissionLevel.valueOf((String) aPermission));

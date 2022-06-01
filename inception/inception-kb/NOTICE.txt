@@ -1,0 +1,4 @@
+de.tudarmstadt.ukp.inception.kb.querybuilder.backport.Bind:
+
+  Copied from RDF4J 4.0.0 (https://github.com/eclipse/rdf4j)
+  License: Eclipse Distribution License v1.0

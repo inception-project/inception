@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Page_down;
@@ -66,7 +67,7 @@ public class DocumentNavigator
         add(new LambdaAjaxLink("showExportDialog", exportDialog::show).add(visibleWhen(() -> {
             AnnotatorState state = page.getModelObject();
             return state.getProject() != null
-                    && (projectService.isManager(state.getProject(), state.getUser())
+                    && (projectService.hasRole(state.getUser(), state.getProject(), MANAGER)
                             || !state.getProject().isDisableExport());
         })));
     }

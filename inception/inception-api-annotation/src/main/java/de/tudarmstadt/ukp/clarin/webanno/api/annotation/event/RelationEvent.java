@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -55,6 +56,14 @@ public abstract class RelationEvent
     public AnnotationFS getSourceAnnotation()
     {
         return sourceAnno;
+    }
+
+    @Override
+    public Range getAffectedRange()
+    {
+        return new Range( //
+                Math.min(sourceAnno.getBegin(), targetAnno.getBegin()),
+                Math.min(sourceAnno.getEnd(), targetAnno.getEnd()));
     }
 
     @Override

@@ -17,21 +17,30 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link AnnotationSchemaServiceAutoConfiguration#annotationSchemaServiceEventAdapter}.
+ * </p>
+ */
 public class AnnotationSchemaServiceEventAdapter
 {
-    private @Autowired AnnotationSchemaService service;
+    private final AnnotationSchemaService service;
+
+    public AnnotationSchemaServiceEventAdapter(AnnotationSchemaService aService)
+    {
+        service = aService;
+    }
 
     @EventListener
     @Transactional

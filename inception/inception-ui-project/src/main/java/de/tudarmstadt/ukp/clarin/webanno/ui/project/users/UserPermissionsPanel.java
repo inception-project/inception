@@ -78,12 +78,9 @@ public class UserPermissionsPanel
         levels.setLabelPosition(LabelPosition.WRAP_AFTER);
         // This model adapter handles loading/saving permissions directly to the DB
         levels.setModel(new LambdaModelAdapter<Collection<PermissionLevel>>(() -> {
-            return projectRepository.getProjectPermissionLevels(user.getObject(),
-                    project.getObject());
-        }, (lvls) -> {
-            projectRepository.setProjectPermissionLevels(user.getObject(), project.getObject(),
-                    lvls);
-        }));
+            return projectRepository.listRoles(project.getObject(), user.getObject());
+        }, (lvls) -> projectRepository.setProjectPermissionLevels(user.getObject(),
+                project.getObject(), lvls)));
         levels.setChoices(asList(MANAGER, CURATOR, ANNOTATOR));
         levels.setChoiceRenderer(new EnumChoiceRenderer<>(levels));
         levels.add(this::ensureManagersNotRemovingThemselves);
@@ -118,7 +115,7 @@ public class UserPermissionsPanel
             return;
         }
 
-        if (!projectRepository.isManager(project.getObject(), user.getObject())) {
+        if (!projectRepository.hasRole(user.getObject(), project.getObject(), MANAGER)) {
             return;
         }
 

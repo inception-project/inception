@@ -51,6 +51,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -107,17 +108,21 @@ public class WeblichtRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
+        // Begin and end are not used here because we do not know what kind of WebLicht pipeline
+        // the user calls and whether it actually makes sense to limit it in scope.
+
         if (!chainService.existsChain(getRecommender())) {
-            return;
+            return new Range(aCas);
         }
 
         try {
             String documentText = aCas.getDocumentText();
             String documentLanguage = aCas.getDocumentLanguage();
 
-            // build http request and assign multipart upload data
+            // Build http request and assign multipart upload data
             MultipartEntityBuilder builder = MultipartEntityBuilder.create() //
                     .setMode(HttpMultipartMode.BROWSER_COMPATIBLE) //
                     .addTextBody("apikey", traits.getApiKey(), MULTIPART_FORM_DATA) //
@@ -164,7 +169,8 @@ public class WeblichtRecommender
             }
 
             HttpUriRequest request = RequestBuilder.post(traits.getUrl())//
-                    .addHeader("Accept", "*/*").setEntity(builder.build()) //
+                    .addHeader("Accept", "*/*") //
+                    .setEntity(builder.build()) //
                     .build();
 
             HttpResponse response = sendRequest(request);
@@ -200,6 +206,8 @@ public class WeblichtRecommender
         catch (Exception e) {
             throw new RecommendationException("Cannot predict", e);
         }
+
+        return new Range(aCas);
     }
 
     private File getChainFile() throws IOException

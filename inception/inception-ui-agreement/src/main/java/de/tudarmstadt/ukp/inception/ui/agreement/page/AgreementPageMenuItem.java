@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.ui.agreement.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,8 +74,7 @@ public class AgreementPageMenuItem
 
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
-        return (projectService.isCurator(aProject, user)
-                || projectService.isManager(aProject, user));
+        return projectService.hasRole(user, aProject, CURATOR, MANAGER);
     }
 
     @Override

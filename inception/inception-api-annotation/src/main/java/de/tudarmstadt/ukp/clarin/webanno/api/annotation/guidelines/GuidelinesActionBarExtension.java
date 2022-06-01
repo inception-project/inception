@@ -21,7 +21,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
@@ -30,12 +30,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 public class GuidelinesActionBarExtension
     implements ActionBarExtension
 {
-    private final ProjectService projectService;
+    private final GuidelinesService guidelinesService;
 
-    public GuidelinesActionBarExtension(ProjectService aProjectService)
+    public GuidelinesActionBarExtension(GuidelinesService aGuidelinesService)
     {
         super();
-        projectService = aProjectService;
+        guidelinesService = aGuidelinesService;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class GuidelinesActionBarExtension
         // Hide the guidelines item if there are no guidelines
         return ActionBarExtension.super.accepts(aPage)
                 && aPage.getModelObject().getProject() != null
-                && projectService.hasGuidelines(aPage.getModelObject().getProject());
+                && guidelinesService.hasGuidelines(aPage.getModelObject().getProject());
     }
 
     @Override

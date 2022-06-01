@@ -64,7 +64,7 @@ public class DocumentDetailsPage
         super(aParameters);
 
         User user = userRepository.getCurrentUser();
-        requireProjectRole(user);
+        requireAnyProjectRole(user);
 
         StringValue repositoryIdStringValue = aParameters.get(PAGE_PARAM_REPOSITORY_ID);
         StringValue collectionIdStringValue = aParameters.get(PAGE_PARAM_COLLECTION_ID);

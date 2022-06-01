@@ -112,4 +112,10 @@ public class ProjectPermission
     {
         project = aProject;
     }
+
+    @Override
+    public String toString()
+    {
+        return "[" + user + "] is [" + level + "] in " + project;
+    }
 }

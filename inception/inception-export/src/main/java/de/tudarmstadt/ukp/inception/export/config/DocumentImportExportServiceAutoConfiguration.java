@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -112,9 +113,9 @@ public class DocumentImportExportServiceAutoConfiguration
     }
 
     @Bean
-    public GuidelinesExporter guidelinesExporter(ProjectService aProjectService)
+    public GuidelinesExporter guidelinesExporter(GuidelinesService aGuidelinesService)
     {
-        return new GuidelinesExporter(aProjectService);
+        return new GuidelinesExporter(aGuidelinesService);
     }
 
     @Bean

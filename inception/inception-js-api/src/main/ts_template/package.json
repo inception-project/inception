@@ -1,20 +1,16 @@
 {
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
-  "description": "JavaScript APIs for INCEpTION",
+  "author": "INCEpTION Team",
+  "license": "Apache-2.0",
+  "private": true,
+  "homepage": "https://github.com/inception-project/inception#readme",
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
   "scripts": {
     "build": "esbuild --bundle src/index.ts --outdir=dist --minify --sourcemap"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/inception-project/inception-js-api.git"
-  },
-  "author": "INCEpTION Team",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/inception-project/inception-js-api/issues"
-  },
-  "homepage": "https://github.com/inception-project/inception-js-api#readme",
   "devDependencies": {
     "esbuild": "${esbuild.version}",
     "eslint": "${eslint.version}",

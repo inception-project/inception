@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,10 +31,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -87,17 +90,24 @@ public class NamedEntityLinker
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         Type predictedType = getPredictedType(aCas);
 
-        for (AnnotationFS sentence : selectSentences(aCas)) {
-            for (AnnotationFS annotation : CasUtil.selectCovered(aCas, predictedType, sentence)) {
+        var sentences = selectOverlapping(aCas, getType(aCas, Sentence.class), aBegin, aEnd);
+
+        for (AnnotationFS sentence : sentences) {
+
+            for (Annotation annotation : aCas.<Annotation> select(predictedType)
+                    .coveredBy(sentence)) {
                 int begin = annotation.getBegin();
                 int end = annotation.getEnd();
                 predictSingle(annotation.getCoveredText(), begin, end, aCas);
             }
         }
+
+        return new Range(sentences);
     }
 
     private void predictSingle(String aCoveredText, int aBegin, int aEnd, CAS aCas)
@@ -111,7 +121,7 @@ public class NamedEntityLinker
         if (conceptFeatureTraits.getRepositoryId() != null) {
             Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(recommender.getProject(),
                     conceptFeatureTraits.getRepositoryId());
-            if (kb.isPresent() && kb.get().isSupportConceptLinking()) {
+            if (kb.isPresent() && kb.get().isEnabled() && kb.get().isSupportConceptLinking()) {
                 handles.addAll(readCandidates(kb.get(), aCoveredText, aBegin, aCas));
             }
         }

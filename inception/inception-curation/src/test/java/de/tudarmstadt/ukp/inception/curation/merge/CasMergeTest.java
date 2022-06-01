@@ -84,6 +84,8 @@ import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrat
 public class CasMergeTest
     extends CasMergeTestBase
 {
+    private static final String DUMMY_USER = "dummyTargetUser";
+
     /**
      * If one annotator has provided an annotation at a given position and the other annotator did
      * not (i.e. the annotations are incomplete), then this should be detected as a disagreement.
@@ -108,7 +110,8 @@ public class CasMergeTest
 
         DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
-        sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
+        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(),
+                getSingleCasByUser(casByUser));
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
@@ -142,7 +145,8 @@ public class CasMergeTest
         DiffResult result = doDiff(diffAdapters, LINK_TARGET_AS_LABEL, casByUser).toResult();
 
         sut.setMergeStrategy(new MergeIncompleteStrategy());
-        sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
+        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(),
+                getSingleCasByUser(casByUser));
 
         assertThat(result.getDifferingConfigurationSets()).isEmpty();
         assertThat(result.getIncompleteConfigurationSets().values())
@@ -176,7 +180,8 @@ public class CasMergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
+        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(),
+                getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         casByUser.put("actual", asList(jcasA.getCas()));
@@ -209,7 +214,8 @@ public class CasMergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
+        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(),
+                getSingleCasByUser(casByUser));
 
         Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
         FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
@@ -243,7 +249,8 @@ public class CasMergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
+        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(),
+                getSingleCasByUser(casByUser));
 
         Type hostType = curatorCas.getCas().getTypeSystem().getType(HOST_TYPE);
         FeatureSupport<?> slotSupport = featureSupportRegistry.findExtension(slotFeature)
@@ -282,7 +289,7 @@ public class CasMergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, null, curatorCas, getSingleCasByUser(casByUser));
+        sut.reMergeCas(result, document, DUMMY_USER, curatorCas, getSingleCasByUser(casByUser));
 
         assertThat(select(curatorCas, getType(curatorCas, HOST_TYPE))).isEmpty();
     }
@@ -311,7 +318,8 @@ public class CasMergeTest
 
         // result.print(System.out);
 
-        sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
+        sut.reMergeCas(result, document, DUMMY_USER, curatorCas.getCas(),
+                getSingleCasByUser(casByUser));
 
         Type hostType = curatorCas.getTypeSystem().getType(HOST_TYPE);
 
@@ -340,7 +348,7 @@ public class CasMergeTest
         CAS curatorCas = createJCas().getCas();
         createToken(curatorCas, 0, 0);
 
-        sut.mergeSpanAnnotation(null, null, neLayer, curatorCas, clickedFs, false);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, curatorCas, clickedFs, false);
 
         assertThat(selectCovered(curatorCas, getType(curatorCas, NamedEntity.class), 0, 0))
                 .hasSize(1);
@@ -359,8 +367,8 @@ public class CasMergeTest
         existingFs.setStringValue(posValue, "NN");
         mergeCas.addFsToIndexes(existingFs);
 
-        Assertions.assertThatExceptionOfType(AnnotationException.class).isThrownBy(
-                () -> sut.mergeSpanAnnotation(null, null, posLayer, mergeCas, clickedFs, false))
+        Assertions.assertThatExceptionOfType(AnnotationException.class).isThrownBy(() -> sut
+                .mergeSpanAnnotation(document, DUMMY_USER, posLayer, mergeCas, clickedFs, false))
                 .withMessageContaining("annotation already exists");
     }
 
@@ -377,7 +385,7 @@ public class CasMergeTest
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        sut.mergeSpanAnnotation(null, null, posLayer, mergeCAs, clickedFs, false);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, posLayer, mergeCAs, clickedFs, false);
 
         assertEquals(1, CasUtil.selectCovered(mergeCAs, type, 0, 0).size());
     }
@@ -398,7 +406,7 @@ public class CasMergeTest
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        sut.mergeSpanAnnotation(null, null, neLayer, mergeCAs, clickedFs, true);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, mergeCAs, clickedFs, true);
 
         assertEquals(2, selectCovered(mergeCAs, type, 0, 0).size());
     }
@@ -421,7 +429,8 @@ public class CasMergeTest
         CurationTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 CurationTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        sut.mergeSpanAnnotation(null, null, slotLayer, mergeCAs.getCas(), clickedFs, false);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, slotLayer, mergeCAs.getCas(), clickedFs,
+                false);
 
         assertEquals(1, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -448,7 +457,8 @@ public class CasMergeTest
         CurationTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 CurationTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        sut.mergeSpanAnnotation(null, null, slotLayer, mergeCAs.getCas(), clickedFs, true);
+        sut.mergeSpanAnnotation(document, DUMMY_USER, slotLayer, mergeCAs.getCas(), clickedFs,
+                true);
 
         assertEquals(2, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -520,7 +530,7 @@ public class CasMergeTest
         createTokenAndOptionalPos(mergeCas, 0, 0, "NN");
         createTokenAndOptionalPos(mergeCas, 1, 1, "NN");
 
-        sut.mergeRelationAnnotation(null, null, depLayer, mergeCas, clickedFs, false);
+        sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer, mergeCas, clickedFs, false);
 
         assertThat(selectCovered(mergeCas, getType(mergeCas, Dependency.class), 0, 1))
                 .as("Relation was merged") //
@@ -543,8 +553,8 @@ public class CasMergeTest
 
         assertThatExceptionOfType(AnnotationException.class) //
                 .as("Cannot merge when there are multiple/stacked candidates") //
-                .isThrownBy(() -> sut.mergeRelationAnnotation(null, null, depLayer, mergeCas,
-                        clickedFs, false))
+                .isThrownBy(() -> sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
+                        mergeCas, clickedFs, false))
                 .withMessageContaining("Stacked sources exist");
     }
 
@@ -558,8 +568,9 @@ public class CasMergeTest
         createDependencyWithTokenAndPos(mergeCas, 0, 0, "NN", 1, 1, "NN");
 
         assertThatExceptionOfType(AnnotationException.class) //
-                .as("Reject merging relation which already exists").isThrownBy(() -> sut
-                        .mergeRelationAnnotation(null, null, depLayer, mergeCas, clickedFs, false))
+                .as("Reject merging relation which already exists")
+                .isThrownBy(() -> sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
+                        mergeCas, clickedFs, false))
                 .withMessageContaining("annotation already exists");
     }
 
@@ -573,8 +584,8 @@ public class CasMergeTest
         createDependencyWithTokenAndPos(mergeCas, 1, 1, "NN", 0, 0, "NN");
         createTokenAndOptionalPos(mergeCas, 2, 2, "NN");
 
-        CasMergeOperationResult result = sut.mergeRelationAnnotation(null, null, depLayer, mergeCas,
-                clickedFs, false);
+        CasMergeOperationResult result = sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
+                mergeCas, clickedFs, false);
 
         assertThat(result.getState()).isEqualTo(CREATED);
         assertThat(mergeCas.select(Dependency.class).asList()) //
@@ -598,8 +609,8 @@ public class CasMergeTest
         createDependencyWithTokenAndPos(mergeCas, 0, 0, "NN", 1, 1, "NN");
         createTokenAndOptionalPos(mergeCas, 2, 2, "NN");
 
-        CasMergeOperationResult result = sut.mergeRelationAnnotation(null, null, depLayer, mergeCas,
-                clickedFs, false);
+        CasMergeOperationResult result = sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
+                mergeCas, clickedFs, false);
 
         assertThat(result.getState()).isEqualTo(CREATED);
         assertThat(mergeCas.select(Dependency.class).asList()) //

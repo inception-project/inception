@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -45,4 +46,14 @@ public class BulkAnnotationEvent
         super(aSource, aDocument, aUser, aLayer);
     }
 
+    public BulkAnnotationEvent(Object aSource, SourceDocument aDocument, String aUser)
+    {
+        super(aSource, aDocument, aUser);
+    }
+
+    @Override
+    public Range getAffectedRange()
+    {
+        return Range.UNDEFINED;
+    }
 }

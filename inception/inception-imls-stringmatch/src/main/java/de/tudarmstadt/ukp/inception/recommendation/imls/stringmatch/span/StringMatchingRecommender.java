@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult.toEvaluationResult;
 import static java.util.Arrays.asList;
@@ -51,6 +52,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -193,7 +195,8 @@ public class StringMatchingRecommender
     }
 
     @Override
-    public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
+    public Range predict(RecommenderContext aContext, CAS aCas, int aBegin, int aEnd)
+        throws RecommendationException
     {
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseThrow(
                 () -> new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
@@ -202,8 +205,11 @@ public class StringMatchingRecommender
         Feature predictedFeature = getPredictedFeature(aCas);
         Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
+        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
 
-        List<Sample> data = predict(0, aCas, dict);
+        var units = selectOverlapping(aCas, sampleUnitType, aBegin, aEnd);
+
+        List<Sample> data = predict(aCas, units, dict);
 
         for (Sample sample : data) {
             for (Span span : sample.getSpans()) {
@@ -218,16 +224,17 @@ public class StringMatchingRecommender
                 aCas.addFsToIndexes(annotation);
             }
         }
+
+        return new Range(units);
     }
 
-    private List<Sample> predict(int aDocNo, CAS aCas, Trie<DictEntry> aDict)
+    private List<Sample> predict(CAS aCas, List<AnnotationFS> units, Trie<DictEntry> aDict)
     {
         boolean requireEndAtTokenBoundary = !CHARACTERS
                 .equals(getRecommender().getLayer().getAnchoringMode());
 
         boolean requireSingleSentence = !getRecommender().getLayer().isCrossSentence();
 
-        Type sampleUnitType = getType(aCas, SAMPLE_UNIT);
         Type tokenType = getType(aCas, Token.class);
 
         List<Sample> data = new ArrayList<>();
@@ -236,9 +243,10 @@ public class StringMatchingRecommender
             text = text.toLowerCase(Locale.ROOT);
         }
 
-        for (Annotation sampleUnit : aCas.<Annotation> select(sampleUnitType)) {
+        for (AnnotationFS sampleUnit : units) {
             List<Span> spans = new ArrayList<>();
-            List<Annotation> tokens = aCas.<Annotation> select(tokenType).coveredBy(sampleUnit)
+            List<Annotation> tokens = aCas.<Annotation> select(tokenType) //
+                    .coveredBy(sampleUnit) //
                     .asList();
             for (Annotation token : tokens) {
                 Trie<DictEntry>.MatchedNode match = aDict.getNode(text, token.getBegin());
@@ -269,7 +277,7 @@ public class StringMatchingRecommender
                 }
             }
 
-            data.add(new Sample(aDocNo, aCas.getDocumentText(), tokens, spans));
+            data.add(new Sample(0, aCas.getDocumentText(), tokens, spans));
         }
 
         return data;

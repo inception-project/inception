@@ -33,7 +33,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
@@ -45,7 +45,7 @@ public class GuidelinesDialogContent
 {
     private static final long serialVersionUID = -2102136855109258306L;
 
-    private @SpringBean ProjectService projectService;
+    private @SpringBean GuidelinesService guidelinesService;
 
     public GuidelinesDialogContent(String aId, final ModalWindow modalWindow,
             final IModel<AnnotatorState> aModel)
@@ -56,7 +56,7 @@ public class GuidelinesDialogContent
         RepeatingView guidelineRepeater = new RepeatingView("guidelineRepeater");
         add(guidelineRepeater);
 
-        for (String guidelineFileName : projectService
+        for (String guidelineFileName : guidelinesService
                 .listGuidelines(aModel.getObject().getProject())) {
             AbstractItem item = new AbstractItem(guidelineRepeater.newChildId());
 
@@ -66,7 +66,7 @@ public class GuidelinesDialogContent
             PopupSettings popupSettings = new PopupSettings(RESIZABLE | SCROLLBARS).setHeight(500)
                     .setWidth(700);
 
-            IResourceStream stream = new FileResourceStream(projectService
+            IResourceStream stream = new FileResourceStream(guidelinesService
                     .getGuideline(aModel.getObject().getProject(), guidelineFileName));
             ResourceStreamResource resource = new ResourceStreamResource(stream);
             ResourceLink<Void> rlink = new ResourceLink<>("guideine", resource);

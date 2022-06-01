@@ -60,7 +60,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import com.github.rjeschke.txtmark.Processor;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -106,7 +105,7 @@ public class AcceptInvitePage
 
         // If the current user has already accepted the invitation, directly forward to the project
         if (user != null && invitationIsValid.getObject()) {
-            if (projectService.existsProjectPermissionLevel(user, getProject(), ANNOTATOR)) {
+            if (projectService.hasRole(user, getProject(), ANNOTATOR)) {
                 backToProjectPage();
             }
         }
@@ -279,9 +278,8 @@ public class AcceptInvitePage
 
     private void createProjectPermissionsIfNecessary(User aUser)
     {
-        if (!projectService.existsProjectPermissionLevel(aUser, getProject(), ANNOTATOR)) {
-            projectService.createProjectPermission(
-                    new ProjectPermission(getProject(), aUser.getUsername(), ANNOTATOR));
+        if (!projectService.hasRole(aUser, getProject(), ANNOTATOR)) {
+            projectService.assignRole(getProject(), aUser, ANNOTATOR);
             getSession().success("You have successfully joined the project.");
         }
         else {

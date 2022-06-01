@@ -1,6 +1,13 @@
 {
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
+  "author": "INCEpTION Team",
+  "license": "Apache-2.0",
+  "private": true,
+  "homepage": "https://github.com/inception-project/inception#readme",
+  "bugs": {
+    "url": "https://github.com/inception-project/issues"
+  },
   "scripts": {
     "build": "esbuild index.ts --target=es6 --bundle --sourcemap --global-name=Diam --outfile=../../../target/js/de/tudarmstadt/ukp/inception/diam/editor/Diam.js",
     "build:minified": "esbuild index.ts --minify --target=es6 --bundle --sourcemap --global-name=Diam --outfile=../../../target/js/de/tudarmstadt/ukp/inception/diam/editor/Diam.min.js"

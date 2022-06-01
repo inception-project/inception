@@ -20,7 +20,6 @@ const { hideBin } = require('yargs/helpers')
 const pjson = require('./package.json');
 
 const esbuild = require('esbuild');
-const fs = require('fs-extra');
 
 const now = new Date()
 

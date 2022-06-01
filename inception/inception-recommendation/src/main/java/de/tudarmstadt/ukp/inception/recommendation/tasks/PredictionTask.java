@@ -21,11 +21,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static java.util.Collections.singletonList;
+import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -56,47 +55,61 @@ public class PredictionTask
 
     private final SourceDocument currentDocument;
     private final List<LogMessage> logMessages = new ArrayList<>();
+    private final int predictionBegin;
+    private final int predictionEnd;
 
     public PredictionTask(User aUser, String aTrigger, SourceDocument aCurrentDocument)
     {
+        this(aUser, aTrigger, aCurrentDocument, -1, -1);
+    }
+
+    public PredictionTask(User aUser, String aTrigger, SourceDocument aCurrentDocument, int aBegin,
+            int aEnd)
+    {
         super(aUser, aCurrentDocument.getProject(), aTrigger);
         currentDocument = aCurrentDocument;
+        predictionBegin = aBegin;
+        predictionEnd = aEnd;
     }
 
     @Override
     public void execute()
     {
         try (CasStorageSession session = CasStorageSession.open()) {
+            long startTime = System.currentTimeMillis();
             User user = getUser().orElseThrow();
             String username = user.getUsername();
-
             Project project = getProject();
+            Predictions predictions;
 
             List<SourceDocument> docs = documentService.listSourceDocuments(project);
-            List<SourceDocument> inherit = Collections.emptyList();
 
             // Limit prediction to a single document and inherit the rest?
             if (!recommendationService.isPredictForAllDocuments(username, project)) {
-                inherit = docs.stream() //
+                log.debug(
+                        "[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
+                        getId(), username, project, docs.size(), getTrigger());
+
+                predictions = recommendationService.computePredictions(user, project, docs);
+            }
+            else {
+                List<SourceDocument> inherit = docs.stream() //
                         .filter(d -> !d.equals(currentDocument)) //
                         .collect(toList());
-                docs = singletonList(currentDocument);
-                log.debug("[{}][{}]: Limiting prediction to [{}]", getId(), username,
-                        currentDocument.getName());
+
+                log.debug(
+                        "[{}][{}]: Starting prediction for project [{}] on one doc "
+                                + "(inheriting [{}]) triggered by [{}]",
+                        getId(), username, project, inherit.size(), getTrigger());
+
+                predictions = recommendationService.computePredictions(user, project,
+                        currentDocument, inherit, predictionBegin, predictionEnd);
             }
 
-            log.debug(
-                    "[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
-                    getId(), username, project, docs.size(), getTrigger());
-
-            long startTime = System.currentTimeMillis();
-
-            Predictions predictions = recommendationService.computePredictions(user, project, docs,
-                    inherit);
             predictions.inheritLog(logMessages);
 
             log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
-                    (System.currentTimeMillis() - startTime));
+                    currentTimeMillis() - startTime);
 
             recommendationService.putIncomingPredictions(user, project, predictions);
 

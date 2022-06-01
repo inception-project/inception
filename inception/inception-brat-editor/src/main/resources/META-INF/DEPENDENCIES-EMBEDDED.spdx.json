@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.2/schemas/spdx-schema.json",
+  "packages": [
+    {
+      "name": "brat",
+      "versionInfo": "1.3",
+      "originator": "brat project",
+      "homepage": "https://github.com/nlplab/brat",
+      "licenseDeclared": "(MIT AND Apache-2.0)",
+      "description": "Heavily modified version of brat.",
+      "hasFiles": [
+        "src/main/ts/brat/**"
+      ]
+    }
+ ]
+}

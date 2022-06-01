@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.refreshPage;
@@ -383,7 +384,7 @@ public class CurationSidebar
     {
         Project project = getModelObject().getProject();
         if (project.isAnonymousCuration()
-                && !projectService.isManager(project, userRepository.getCurrentUser())) {
+                && !projectService.hasRole(userRepository.getCurrentUser(), project, MANAGER)) {
             return Model.of("Anonymized annotator " + (aUserListItem.getIndex() + 1));
         }
 

@@ -241,7 +241,7 @@ public class Tsv3XCasDocumentBuilder
                                 end);
                         t.addUimaAnnotation(annotation, addDisambiguationIdIfStacked);
 
-                        if (!singleToken) {
+                        if (singleToken) {
                             doc.mapFS2Unit(annotation, t);
                         }
                     }

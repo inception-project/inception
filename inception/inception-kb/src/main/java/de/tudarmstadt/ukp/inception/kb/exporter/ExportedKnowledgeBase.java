@@ -66,6 +66,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("read_only")
     private boolean readOnly;
 
+    @JsonProperty("use_fuzzy")
+    private boolean useFuzzy;
+
     @JsonProperty("enabled")
     private boolean enabled;
 
@@ -343,5 +346,15 @@ public class ExportedKnowledgeBase
     public void setDefaultDatasetIri(String aDefaultDatasetIri)
     {
         defaultDatasetIri = aDefaultDatasetIri;
+    }
+
+    public void setUseFuzzy(boolean aUseFuzzy)
+    {
+        useFuzzy = aUseFuzzy;
+    }
+
+    public boolean isUseFuzzy()
+    {
+        return useFuzzy;
     }
 }

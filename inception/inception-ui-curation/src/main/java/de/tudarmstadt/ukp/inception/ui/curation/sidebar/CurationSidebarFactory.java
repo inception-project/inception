@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -81,7 +83,7 @@ public class CurationSidebarFactory
     public boolean applies(AnnotatorState aState)
     {
         String currentUser = userService.getCurrentUsername();
-        boolean isCurator = projectService.isCurator(aState.getProject(), aState.getUser());
+        boolean isCurator = projectService.hasRole(aState.getUser(), aState.getProject(), CURATOR);
         return isCurator && aState.getUser().getUsername().equals(currentUser);
     }
 }
