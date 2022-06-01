@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+de.tudarmstadt.ukp.inception.recommendation.imls.hf.config.HfRecommenderAutoConfiguration
