@@ -25,7 +25,6 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
@@ -141,11 +140,11 @@ public class ElgServiceImpl
 
     @Override
     @Transactional
-    public ElgServiceResponse invokeService(ElgSession aSession, String aServiceSync, CAS aCas)
+    public ElgServiceResponse invokeService(ElgSession aSession, String aServiceSync, String aText)
         throws IOException
     {
         refreshSession(aSession);
 
-        return elgServiceClient.invokeService(aServiceSync, aSession.getAccessToken(), aCas);
+        return elgServiceClient.invokeService(aServiceSync, aSession.getAccessToken(), aText);
     }
 }

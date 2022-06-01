@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.elg;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.fit.factory.CasFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -44,9 +42,8 @@ public class ElgServiceClientImplTest
     {
         String syncUrl = "https://live.european-language-grid.eu/execution/process/gatenercen";
         var token = "hahaha!";
-        CAS cas = CasFactory.createCas();
-        cas.setDocumentText("John Smith is working at IBM London.");
-        ElgServiceResponse response = sut.invokeService(syncUrl, token, cas);
+        String text = ("John Smith is working at IBM London.");
+        ElgServiceResponse response = sut.invokeService(syncUrl, token, text);
 
         System.out.println(JSONUtil.toPrettyJsonString(response));
     }

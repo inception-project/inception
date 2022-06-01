@@ -15,27 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.elg.service;
+package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-import java.io.IOException;
-import java.util.Optional;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResponse;
-import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
-
-public interface ElgService
+public enum PredictionCapability
 {
-    ElgSession signIn(Project aProject, String aSuccessCode) throws IOException;
+    /**
+     * Predictions are based on the (immutable) text only. This means that predictions need to be
+     * done only once per document and can be cached.
+     */
+    PREDICTION_USES_TEXT_ONLY,
 
-    void signOut(Project aProject);
-
-    Optional<ElgSession> getSession(Project aProject);
-
-    void refreshSession(ElgSession aSession) throws IOException;
-
-    ElgSession createOrUpdateSession(ElgSession aSession);
-
-    ElgServiceResponse invokeService(ElgSession aSession, String aServiceSync, String aText)
-        throws IOException;
+    /**
+     * Predictions make take annotations into account. When there are changes to annotations, new
+     * predictions need to be generated. If the recommender is also trainable, then recommendations
+     * should only be generated once a training phase has completed.
+     */
+    PREDICTION_USES_ANNOTATIONS;
 }
