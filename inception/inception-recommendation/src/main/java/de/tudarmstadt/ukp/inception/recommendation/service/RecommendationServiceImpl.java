@@ -106,7 +106,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -604,6 +606,18 @@ public class RecommendationServiceImpl
         clearState(aEvent.getDocument().getProject());
     }
 
+    @EventListener
+    public void onBeforeProjectRemoved(BeforeProjectRemovedEvent aEvent)
+    {
+        clearState(aEvent.getProject());
+    }
+
+    @EventListener
+    public void onAfterProjectRemoved(AfterProjectRemovedEvent aEvent)
+    {
+        clearState(aEvent.getProject());
+    }
+
     @Override
     public void triggerPrediction(String aUsername, String aEventName, SourceDocument aDocument)
     {
@@ -728,7 +742,6 @@ public class RecommendationServiceImpl
 
         if (username != null) {
             clearState(username);
-            schedulingService.stopAllTasksForUser(username);
         }
     }
 
