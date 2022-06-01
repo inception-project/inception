@@ -2182,10 +2182,10 @@ public class RecommendationServiceImpl
 
             for (var contextDirties : dirtiesByContext.entrySet()) {
                 var key = contextDirties.getKey();
-                triggerRun(key.getUser(), affectedProjects.get(key.getProjectId()),
-                        "Committed dirty CAS at end of request", currentDocument, false,
-                        contextDirties.getValue());
-            }
+                    triggerRun(key.getUser(), affectedProjects.get(key.getProjectId()),
+                            "Committed dirty CAS at end of request", currentDocument, false,
+                            contextDirties.getValue());
+                }
         }
     }
 

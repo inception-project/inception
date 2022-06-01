@@ -174,7 +174,7 @@ public class MenuBar
             return false;
         }
 
-        return projectService.hasRole(aUser, project.getObject());
+        return projectService.hasAnyRole(aUser, project.getObject());
     }
 
     private boolean requiresProjectsOverview(User aUser)

@@ -38,7 +38,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
@@ -48,7 +48,7 @@ public class ImportGuidelinesPanel
 {
     private static final long serialVersionUID = 3503932088128261675L;
 
-    private @SpringBean ProjectService projectRepository;
+    private @SpringBean GuidelinesService guidelinesService;
     private @SpringBean DocumentImportExportService importExportService;
 
     private BootstrapFileInputField fileUpload;
@@ -98,7 +98,7 @@ public class ImportGuidelinesPanel
                     IOUtils.copyLarge(is, os);
 
                     String fileName = guidelineFile.getClientFileName();
-                    projectRepository.createGuideline(project, tempFile, fileName);
+                    guidelinesService.createGuideline(project, tempFile, fileName);
                 }
                 finally {
                     tempFile.delete();

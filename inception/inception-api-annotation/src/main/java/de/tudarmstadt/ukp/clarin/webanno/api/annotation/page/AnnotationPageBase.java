@@ -54,6 +54,7 @@ import org.apache.wicket.util.string.StringValueConversionException;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.wicketstuff.urlfragment.UrlFragment;
+import org.wicketstuff.urlfragment.UrlParametersReceivingBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -75,7 +76,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.management;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.Page;
@@ -78,8 +80,7 @@ public class MatrixWorkloadManagementPageMenuItem
         // Visible if the current user is a curator or project admin
         User user = userRepo.getCurrentUser();
 
-        return (projectService.isCurator(aProject, user)
-                || projectService.isManager(aProject, user))
+        return projectService.hasRole(user, aProject, CURATOR, MANAGER)
                 && MATRIX_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadManagementService
                         .loadOrCreateWorkloadManagerConfiguration(aProject).getType());
     }

@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
@@ -33,7 +33,7 @@ public class GuidelinesActionBarItem
 
     private GuidelinesDialog guidelinesDialog;
 
-    private @SpringBean ProjectService projectService;
+    private @SpringBean GuidelinesService guidelinesService;
 
     public GuidelinesActionBarItem(String aId, AnnotationPageBase aPage)
     {
@@ -43,6 +43,7 @@ public class GuidelinesActionBarItem
         add(new LambdaAjaxLink("showGuidelinesDialog", guidelinesDialog::show));
 
         // Hide the guidelines button if there are no guidelines
-        add(visibleWhen(() -> projectService.hasGuidelines(aPage.getModelObject().getProject())));
+        add(visibleWhen(
+                () -> guidelinesService.hasGuidelines(aPage.getModelObject().getProject())));
     }
 }

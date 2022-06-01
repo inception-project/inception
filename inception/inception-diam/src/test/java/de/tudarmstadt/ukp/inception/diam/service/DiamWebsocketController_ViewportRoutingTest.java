@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.diam.service;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.apache.commons.io.IOUtils.toInputStream;
@@ -182,8 +181,7 @@ public class DiamWebsocketController_ViewportRoutingTest
 
         testProject = new Project("test-project");
         projectService.createProject(testProject);
-
-        projectService.setProjectPermissionLevels(user, testProject, asList(ANNOTATOR));
+        projectService.assignRole(testProject, user, ANNOTATOR);
 
         testDocument = new SourceDocument("test", testProject, "text");
         documentService.createSourceDocument(testDocument);

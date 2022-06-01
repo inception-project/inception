@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.activity;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static java.util.Collections.emptyList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -117,7 +118,7 @@ public class ActivitiesDashletControllerImpl
         User user = userRepository.getCurrentUser();
         Project project = projectRepository.getProject(aProjectId);
 
-        if (!projectRepository.existsProjectPermission(user, project)) {
+        if (!projectRepository.hasAnyRole(user, project)) {
             return emptyList();
         }
 
@@ -129,7 +130,7 @@ public class ActivitiesDashletControllerImpl
                 .listCuratableSourceDocuments(project).stream()
                 .collect(toMap(SourceDocument::getId, identity()));
 
-        boolean isCurator = projectRepository.isCurator(project, user);
+        boolean isCurator = projectRepository.hasRole(user, project, CURATOR);
 
         // get last annotation events
         // return filtered by user rights and document state

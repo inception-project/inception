@@ -370,8 +370,8 @@ public class CasMerge
         }
 
         if (eventPublisher != null) {
-            eventPublisher.publishEvent(
-                    new BulkAnnotationEvent(this, aTargetDocument, aTargetUsername, null));
+            eventPublisher
+                    .publishEvent(new BulkAnnotationEvent(this, aTargetDocument, aTargetUsername));
         }
 
         return messages;

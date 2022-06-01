@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -63,7 +67,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -170,12 +173,7 @@ public class LegacyRemoteApiController
         projectRepository.initializeProject(project);
 
         // Create permission for the project creator
-        projectRepository.createProjectPermission(
-                new ProjectPermission(project, username, PermissionLevel.MANAGER));
-        projectRepository.createProjectPermission(
-                new ProjectPermission(project, username, PermissionLevel.CURATOR));
-        projectRepository.createProjectPermission(
-                new ProjectPermission(project, username, PermissionLevel.ANNOTATOR));
+        projectRepository.assignRole(project, user, MANAGER, CURATOR, ANNOTATOR);
 
         // Iterate through all the files in the ZIP
 
@@ -303,7 +301,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -350,7 +348,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -412,7 +410,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -486,7 +484,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -553,7 +551,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User [" + username
@@ -644,7 +642,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username
@@ -780,7 +778,7 @@ public class LegacyRemoteApiController
         }
 
         // Check for the access
-        boolean hasAccess = projectRepository.isManager(project, user)
+        boolean hasAccess = projectRepository.hasRole(user, project, MANAGER)
                 || userRepository.isAdministrator(user);
         if (!hasAccess) {
             response.sendError(HttpStatus.FORBIDDEN.value(), "User [" + username

@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectName;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static java.util.Objects.isNull;
@@ -47,14 +50,12 @@ import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
@@ -167,16 +168,9 @@ public class ProjectDetailPanel
         boolean isNewProject = isNull(project.getId());
         if (isNewProject) {
             try {
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
+                User user = userRepository.getCurrentUser();
                 projectService.createProject(project);
-
-                projectService.createProjectPermission(
-                        new ProjectPermission(project, username, PermissionLevel.MANAGER));
-                projectService.createProjectPermission(
-                        new ProjectPermission(project, username, PermissionLevel.CURATOR));
-                projectService.createProjectPermission(
-                        new ProjectPermission(project, username, PermissionLevel.ANNOTATOR));
-
+                projectService.assignRole(project, user, ANNOTATOR, CURATOR, MANAGER);
                 projectService.initializeProject(project);
             }
             catch (IOException e) {
