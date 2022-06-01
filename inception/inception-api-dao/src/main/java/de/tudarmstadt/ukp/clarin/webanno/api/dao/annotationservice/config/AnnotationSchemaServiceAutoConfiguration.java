@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceEventAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 
 @Configuration
@@ -193,5 +194,12 @@ public class AnnotationSchemaServiceAutoConfiguration
     public SpanOverlapBehavior spanOverlapBehavior()
     {
         return new SpanOverlapBehavior();
+    }
+
+    @Bean
+    public AnnotationSchemaServiceEventAdapter annotationSchemaServiceEventAdapter(
+            AnnotationSchemaService aService)
+    {
+        return new AnnotationSchemaServiceEventAdapter(aService);
     }
 }

@@ -76,7 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -366,7 +366,7 @@ public class ProjectsOverviewPage
     private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, Project aProject)
     {
         confirmLeaveDialog.setConfirmAction((_target) -> {
-            projectService.leaveProject(currentUser.getObject(), aProject);
+            projectService.revokeAllRoles(aProject, currentUser.getObject());
             _target.add(projectListContainer);
             _target.addChildren(getPage(), IFeedback.class);
             success("You are no longer a member of project [" + aProject.getName() + "]");
@@ -457,23 +457,16 @@ public class ProjectsOverviewPage
 
     private void actionCreateProject(AjaxRequestTarget aTarget, ProjectInitializer aInitializer)
     {
-        String username = currentUser.getObject().getUsername();
+        User user = currentUser.getObject();
         aTarget.addChildren(getPage(), IFeedback.class);
-        String projectSlug = projectService.deriveSlugFromName(username);
+        String projectSlug = projectService.deriveSlugFromName(user.getUsername());
         projectSlug = projectService.deriveUniqueSlug(projectSlug);
 
         try {
             Project project = new Project(projectSlug);
-            project.setName(username + " - New project");
+            project.setName(user.getUsername() + " - New project");
             projectService.createProject(project);
-
-            projectService
-                    .createProjectPermission(new ProjectPermission(project, username, MANAGER));
-            projectService
-                    .createProjectPermission(new ProjectPermission(project, username, CURATOR));
-            projectService
-                    .createProjectPermission(new ProjectPermission(project, username, ANNOTATOR));
-
+            projectService.assignRole(project, user, ANNOTATOR, CURATOR, MANAGER);
             projectService.initializeProject(project, asList(aInitializer));
 
             PageParameters pageParameters = new PageParameters();

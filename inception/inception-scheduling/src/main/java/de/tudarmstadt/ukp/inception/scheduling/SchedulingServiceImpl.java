@@ -21,11 +21,14 @@ import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -38,7 +41,11 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.event.EventListener;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 
@@ -59,6 +66,7 @@ public class SchedulingServiceImpl
 
     private final List<Task> runningTasks;
     private final List<Task> enqueuedTasks;
+    private final Set<Project> deletionPending;
 
     @Autowired
     public SchedulingServiceImpl(ApplicationContext aApplicationContext,
@@ -69,6 +77,7 @@ public class SchedulingServiceImpl
                 aConfig.getQueueSize(), this::beforeExecute, this::afterExecute);
         runningTasks = Collections.synchronizedList(new ArrayList<>());
         enqueuedTasks = Collections.synchronizedList(new ArrayList<>());
+        deletionPending = Collections.synchronizedSet(new LinkedHashSet<>());
         watchdog = Executors.newScheduledThreadPool(1);
         watchdog.scheduleAtFixedRate(this::scheduleEligibleTasks, 5, 5, SECONDS);
     }
@@ -155,6 +164,12 @@ public class SchedulingServiceImpl
     @Override
     public synchronized void enqueue(Task aTask)
     {
+        if (aTask.getProject() != null && deletionPending.contains(aTask.getProject())) {
+            log.debug("Not enqueuing task [{}] for project {} pending deletion", aTask,
+                    aTask.getProject());
+            return;
+        }
+
         List<Task> tasksToUnqueue = new ArrayList<>();
         for (Task enqueuedTask : enqueuedTasks) {
             switch (matchTask(aTask, enqueuedTask)) {
@@ -269,6 +284,20 @@ public class SchedulingServiceImpl
                 t -> t.getUser().map(_user -> aUserName.equals(_user.getUsername())).orElse(false));
     }
 
+    /**
+     * Removes all task for the given project from the scheduler's queue.
+     * 
+     * @param aProject
+     *            The project whose tasks will be removed.
+     */
+    @Override
+    public void stopAllTasksForProject(Project aProject)
+    {
+        Validate.notNull(aProject, "Project name must be specified");
+
+        stopAllTasksMatching(t -> t.getProject().equals(aProject));
+    }
+
     @Override
     public synchronized void stopAllTasksMatching(Predicate<Task> aPredicate)
     {
@@ -276,6 +305,20 @@ public class SchedulingServiceImpl
         executor.getQueue().removeIf(runnable -> aPredicate.test((Task) runnable));
 
         // TODO: Stop the running tasks as well
+    }
+
+    @EventListener
+    public void beforeProjectRemoved(BeforeProjectRemovedEvent aEvent) throws IOException
+    {
+        deletionPending.add(aEvent.getProject());
+        stopAllTasksForProject(aEvent.getProject());
+    }
+
+    @EventListener
+    public void afterProjectRemoved(AfterProjectRemovedEvent aEvent) throws IOException
+    {
+        stopAllTasksForProject(aEvent.getProject());
+        deletionPending.remove(aEvent.getProject());
     }
 
     @Override

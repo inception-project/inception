@@ -164,4 +164,4 @@ Finally, recent versions of MySQL may need this setting to avoid schema validati
 
 ----
 spring.jpa.properties.hibernate.globally_quoted_identifiers=true
------
+----

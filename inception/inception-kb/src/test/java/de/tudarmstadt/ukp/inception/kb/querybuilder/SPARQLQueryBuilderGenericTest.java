@@ -110,8 +110,11 @@ public class SPARQLQueryBuilderGenericTest
                         .asHandles(conn, true);
 
                 return children.stream().map(KBHandle::getIdentifier)
-                        .allMatch(_child -> SPARQLQueryBuilder.forClasses(kb).parentsOf(_child)
-                                .limit(5).asHandles(conn, true).stream()
+                        .allMatch(_child -> SPARQLQueryBuilder.forClasses(kb) //
+                                .parentsOf(_child) //
+                                .limit(5) //
+                                .asHandles(conn, true) //
+                                .stream() //
                                 .map(KBHandle::getIdentifier)
                                 // .map(v -> {
                                 // System.out.printf("C: %s%n", v);

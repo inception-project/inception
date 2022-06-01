@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -92,9 +95,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -146,6 +147,7 @@ public class AeroRemoteApiController
     private static final String PARAM_PROJECT_ID = "projectId";
     private static final String PARAM_ANNOTATOR_ID = "userId";
     private static final String PARAM_DOCUMENT_ID = "documentId";
+    private static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
 
     private static final String VAL_ORIGINAL = "ORIGINAL";
 
@@ -217,7 +219,8 @@ public class AeroRemoteApiController
         assertPermission(
                 "User [" + user.getUsername() + "] is not allowed to access project [" + aProjectId
                         + "]",
-                projectService.isManager(project, user) || userRepository.isAdministrator(user));
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
 
         return project;
     }
@@ -323,12 +326,7 @@ public class AeroRemoteApiController
 
         // Create permission for the project creator
         String owner = aCreator.isPresent() ? aCreator.get() : user.getUsername();
-        projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.MANAGER));
-        projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.CURATOR));
-        projectService.createProjectPermission(
-                new ProjectPermission(project, owner, PermissionLevel.ANNOTATOR));
+        projectService.assignRole(project, owner, MANAGER, CURATOR, ANNOTATOR);
 
         RResponse<RProject> response = new RResponse<>(new RProject(project));
         return ResponseEntity.created(aUcb.path(API_BASE + "/" + PROJECTS + "/{id}")
@@ -369,6 +367,7 @@ public class AeroRemoteApiController
             consumes = MULTIPART_FORM_DATA_VALUE, //
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<RResponse<RProject>> projectImport(
+            @RequestParam(name = PARAM_CREATE_MISSING_USERS, defaultValue = "false") boolean aCreateMissingUsers, //
             @RequestPart(PARAM_FILE) MultipartFile aFile)
         throws Exception
     {
@@ -393,8 +392,7 @@ public class AeroRemoteApiController
                 throw new UnsupportedFormatException("Incompatible to webanno ZIP file");
             }
 
-            // importedProject = importService.importProject(tempFile, false);
-            ProjectImportRequest request = new ProjectImportRequest(false);
+            ProjectImportRequest request = new ProjectImportRequest(aCreateMissingUsers);
             importedProject = exportService.importProject(request, new ZipFile(tempFile));
         }
         finally {

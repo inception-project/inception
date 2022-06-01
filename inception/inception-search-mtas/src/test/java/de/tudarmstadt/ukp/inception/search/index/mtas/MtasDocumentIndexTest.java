@@ -21,7 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -685,7 +684,7 @@ public class MtasDocumentIndexTest
         assertThat(statsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
         assertThat(statsResults.getProject()).isEqualTo(project);
         assertThat(statsResults.getUser()).isEqualTo(user);
-        assertTrue(expectedResults.equals(statsResults.getResults()));
+        assertThat(statsResults.getResults()).isEqualTo(expectedResults);
 
         // Check query-based statistics
         String query = "moon";
@@ -704,8 +703,7 @@ public class MtasDocumentIndexTest
         assertThat(queryStatsResults.getMaxTokenPerDoc()).isEqualTo(maxTokenPerDoc);
         assertThat(queryStatsResults.getUser()).isEqualTo(user);
         assertThat(queryStatsResults.getProject()).isEqualTo(project);
-        assertTrue(expected.equals(queryStatsResults.getResults()));
-
+        assertThat(queryStatsResults.getResults()).isEqualTo(expected);
     }
 
     @SpringBootConfiguration

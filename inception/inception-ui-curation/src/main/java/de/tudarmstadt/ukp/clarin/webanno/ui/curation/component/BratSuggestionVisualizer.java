@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGR
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -229,7 +230,7 @@ public abstract class BratSuggestionVisualizer
     {
         Project project = aSegment.getAnnotatorState().getProject();
         if (project.isAnonymousCuration()
-                && !projectService.isManager(project, userService.getCurrentUser())) {
+                && !projectService.hasRole(userService.getCurrentUser(), project, MANAGER)) {
             return "Anonymized annotator " + (position + 1);
         }
 

@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
@@ -302,9 +303,10 @@ public class OpenDocumentDialogPanel
     private boolean isManagerForListedProjects()
     {
         User currentUser = userRepository.getCurrentUser();
-        return projectService.isManager(projectListChoice.getModelObject().get(), currentUser)
+        return projectService.hasRole(currentUser, projectListChoice.getModelObject().get(),
+                MANAGER)
                 || projects.getObject().stream()
-                        .anyMatch(p -> projectService.isManager(p.get(), currentUser));
+                        .anyMatch(p -> projectService.hasRole(currentUser, p.get(), MANAGER));
     }
 
     private List<DecoratedObject<User>> listUsers()
@@ -319,7 +321,7 @@ public class OpenDocumentDialogPanel
         User currentUser = userRepository.getCurrentUser();
         // cannot select other user than themselves if curating or not admin
         if (state.getMode().equals(Mode.CURATION)
-                || !projectService.isManager(selectedProject, currentUser)) {
+                || !projectService.hasRole(currentUser, selectedProject, MANAGER)) {
             DecoratedObject<User> du = DecoratedObject.of(currentUser);
             du.setLabel(currentUser.getUiName());
             users.add(du);

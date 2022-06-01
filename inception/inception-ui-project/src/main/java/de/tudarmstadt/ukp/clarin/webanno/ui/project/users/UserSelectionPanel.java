@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -43,7 +44,6 @@ import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -211,8 +211,7 @@ class UserSelectionPanel
                 }
 
                 builder.append(" ");
-                builder.append(projectRepository
-                        .getProjectPermissionLevels(aUser, projectModel.getObject()).stream()
+                builder.append(projectRepository.listRoles(projectModel.getObject(), aUser).stream()
                         .map(PermissionLevel::getName).collect(joining(", ", "[", "]")));
 
                 if (!aUser.isEnabled()) {
@@ -232,8 +231,7 @@ class UserSelectionPanel
     private void actionAdd(AjaxRequestTarget aTarget, Form<List<User>> aForm)
     {
         for (User user : aForm.getModelObject()) {
-            projectRepository.createProjectPermission(new ProjectPermission(
-                    projectModel.getObject(), user.getUsername(), PermissionLevel.ANNOTATOR));
+            projectRepository.assignRole(projectModel.getObject(), user, ANNOTATOR);
         }
 
         aForm.getModelObject().clear();

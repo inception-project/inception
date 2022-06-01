@@ -1,0 +1,9 @@
+#FORMAT=WebAnno TSV 3.3
+#T_SP=webanno.custom.Span|value
+#T_RL=webanno.custom.Relation|value|BT_webanno.custom.Span
+
+
+#Text=Test again
+1-1	0-4	Test	_	_	_	
+1-1.1	0-1	T	OTH	_	_	
+1-2	5-10	again	OTH	*	1-1.1	

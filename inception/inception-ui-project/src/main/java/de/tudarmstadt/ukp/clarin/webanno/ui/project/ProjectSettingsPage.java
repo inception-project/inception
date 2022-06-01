@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
@@ -134,7 +135,7 @@ public class ProjectSettingsPage
 
                 // Check access to project
                 if (!userRepository.isAdministrator(user)
-                        && !projectService.isManager(project, user)) {
+                        && !projectService.hasRole(user, project, MANAGER)) {
                     error("You have no permission to access project [" + project.getId() + "]");
                     setResponsePage(getApplication().getHomePage());
                 }

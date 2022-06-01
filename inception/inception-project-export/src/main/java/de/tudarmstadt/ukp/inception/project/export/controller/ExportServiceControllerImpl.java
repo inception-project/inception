@@ -92,8 +92,7 @@ public class ExportServiceControllerImpl
         Project project = projectService.getProject(aProjectId);
         User user = userService.get(aPrincipal.getName());
 
-        if (!projectService.existsProjectPermissionLevel(user, project, MANAGER)
-                && !userService.isAdministrator(user)) {
+        if (!projectService.hasRole(user, project, MANAGER) && !userService.isAdministrator(user)) {
             throw new AccessDeniedException("Access denied");
         }
 

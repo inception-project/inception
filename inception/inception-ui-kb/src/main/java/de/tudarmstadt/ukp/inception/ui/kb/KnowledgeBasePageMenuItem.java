@@ -21,6 +21,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
@@ -85,12 +87,12 @@ public class KnowledgeBasePageMenuItem
 
         // Not visible if the current user is not an annotator
         User user = userRepo.getCurrentUser();
-        if (!(projectService.isAnnotator(aProject, user))) {
+        if (!(projectService.hasRole(user, aProject, ANNOTATOR))) {
             return false;
         }
 
         // not visible if the current project does not have knowledge bases
-        return !kbService.getKnowledgeBases(aProject).isEmpty();
+        return !kbService.getEnabledKnowledgeBases(aProject).isEmpty();
     }
 
     @Override

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.settings;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
@@ -75,7 +77,7 @@ public class ProjectSettingsPageMenuItem
 
         // Visible if the current user is a project manager or global admin
         User user = userRepo.getCurrentUser();
-        return userRepo.isAdministrator(user) || projectService.isManager(aProject, user);
+        return userRepo.isAdministrator(user) || projectService.hasRole(user, aProject, MANAGER);
     }
 
     @Override

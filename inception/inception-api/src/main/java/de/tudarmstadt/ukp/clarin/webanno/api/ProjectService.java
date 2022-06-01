@@ -52,7 +52,6 @@ public interface ProjectService
     String PROJECT_FOLDER = "project";
     String DOCUMENT_FOLDER = "document";
     String SOURCE_FOLDER = "source";
-    String GUIDELINES_FOLDER = "guideline";
     String ANNOTATION_FOLDER = "annotation";
     String SETTINGS_FOLDER = "settings";
     String META_INF_FOLDER = "META-INF";
@@ -63,10 +62,16 @@ public interface ProjectService
      *
      * @param aPermission
      *            the permission
+     * @deprecated Use {@link #assignRole(Project, User, PermissionLevel...)} instead.
      */
+    @Deprecated
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER', 'ROLE_REMOTE')")
     void createProjectPermission(ProjectPermission aPermission);
 
+    /**
+     * @deprecated Use {@link #revokeRole(Project, User, PermissionLevel...)} instead.
+     */
+    @Deprecated
     void removeProjectPermission(ProjectPermission aPermission);
 
     /**
@@ -78,7 +83,9 @@ public interface ProjectService
      *            the project.
      *
      * @return if the project permission exists.
+     * @deprecated Use {@link #hasAnyRole(User, Project)}
      */
+    @Deprecated
     boolean existsProjectPermission(User aUser, Project aProject);
 
     /**
@@ -93,7 +100,9 @@ public interface ProjectService
      *            the permission level.
      *
      * @return if the permission exists.
+     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
      */
+    @Deprecated
     boolean existsProjectPermissionLevel(User aUser, Project aProject, PermissionLevel aLevel);
 
     /**
@@ -119,12 +128,36 @@ public interface ProjectService
      */
     List<ProjectPermission> listProjectPermissionLevel(User aUser, Project aProject);
 
+    List<ProjectPermission> listProjectPermissionLevel(String aUser, Project aProject);
+
+    /**
+     * @deprecated Use {@link #listRoles(Project, User)} instead.
+     */
+    @Deprecated
     List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
 
     List<ProjectPermission> listProjectPermissions(User aUser);
 
     void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels);
+
+    void assignRole(Project aProject, User aUser, PermissionLevel... aRoles);
+
+    /**
+     * It may be necessary to use this method e.g. when importing data in case the user does not
+     * exist in the system.
+     * 
+     * @deprecated Should not be used. Better use
+     *             {@link #assignRole(Project, User, PermissionLevel...)}
+     */
+    @Deprecated
+    void assignRole(Project aProject, String aUser, PermissionLevel... aRoles);
+
+    void revokeRole(Project aProject, User aUser, PermissionLevel... aRoles);
+
+    void revokeAllRoles(Project aProject, User aUser);
+
+    List<PermissionLevel> listRoles(Project aProject, User aUser);
 
     /**
      * List Users those with some {@link PermissionLevel}s in the project
@@ -147,14 +180,42 @@ public interface ProjectService
     List<User> listProjectUsersWithPermissions(Project aProject, PermissionLevel aPermissionLevel);
 
     /**
-     * Removes all permissions for the given user to the given proejct.
+     * Removes all permissions for the given user to the given project.
+     * 
+     * @deprecated use {@link #revokeAllRoles(Project, User)}
      */
+    @Deprecated
     void leaveProject(User aObject, Project aProject);
 
     /**
      * list Projects which contain with those annotation documents state is finished
      */
     List<Project> listProjectsWithFinishedAnnos();
+
+    /**
+     * List all projects in which the given user has any of the provided roles. Note that the split
+     * into two arguments is only for the compiler to be able to check if at least one role has been
+     * specified. The first role is not privileged over the other roles in any way!
+     * 
+     * @param aUser
+     *            the user.
+     * @param aRole
+     *            at least one role must be given, but the check is against this role OR any of the
+     *            additional roles.
+     * @param aMoreRoles
+     *            more roles.
+     * @return the list of projects.
+     */
+    List<Project> listProjectsWithUserHavingRole(User aUser, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles);
+
+    /**
+     * List all projects in which the given user has any role at all.
+     * 
+     * @param aUser
+     *            the user.
+     */
+    List<Project> listProjectsWithUserHavingAnyRole(User aUser);
 
     // --------------------------------------------------------------------------------------------
     // Methods related to Projects
@@ -218,7 +279,9 @@ public interface ProjectService
      * @param aUsername
      *            the username.
      * @return the timestamp.
+     * @deprecated To be removed without replacement
      */
+    @Deprecated
     Date getProjectTimeStamp(Project aProject, String aUsername);
 
     /**
@@ -227,7 +290,9 @@ public interface ProjectService
      * @param aProject
      *            the project.
      * @return the timestamp.
+     * @deprecated To be removed without replacement
      */
+    @Deprecated
     Date getProjectTimeStamp(Project aProject);
 
     /**
@@ -250,8 +315,7 @@ public interface ProjectService
     Project getProject(long aId);
 
     /**
-     * List all Projects. If the user logged have a ROLE_ADMIN, he can see all the projects.
-     * Otherwise, a user will see projects only he is member of.
+     * List all Projects.
      *
      * @return the projects
      */
@@ -294,12 +358,20 @@ public interface ProjectService
      * List projects in which the given user is curator or manager
      *
      * @return list of projects manageable by the user.
+     * @deprecated Use
+     *             {{@link #listProjectsWithUserHavingRole(User, PermissionLevel, PermissionLevel...)}}
+     *             instead.
      */
+    @Deprecated
     List<Project> listManageableCuratableProjects(User aUser);
 
     /**
-     * List projects that allow calculation of pairwise agreement
+     * List projects that allow calculation of pairwise agreement. That means it lists all projects
+     * where there are at least two annotators.
+     * 
+     * @deprecated To be removed without replacement
      */
+    @Deprecated
     List<Project> listProjectsForAgreement();
 
     File getProjectFolder(Project aProject);
@@ -326,87 +398,19 @@ public interface ProjectService
      *            the file name.
      * @throws IOException
      *             if an I/O error occurs.
+     * @deprecated To be removed without replacement
      */
+    @Deprecated()
     void savePropertiesFile(Project aProject, InputStream aInputStream, String aFileName)
         throws IOException;
-
-    // --------------------------------------------------------------------------------------------
-    // Methods related to guidelines
-    // --------------------------------------------------------------------------------------------
-
-    /**
-     * Write this {@code content} of the guideline file in the project;
-     *
-     * @param aProject
-     *            the project.
-     * @param aContent
-     *            the guidelines.
-     * @param aFileName
-     *            the filename.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void createGuideline(Project aProject, File aContent, String aFileName) throws IOException;
-
-    void createGuideline(Project aProject, InputStream aContent, String aFileName)
-        throws IOException;
-
-    /**
-     * get the annotation guideline document from the file system
-     *
-     * @param aProject
-     *            the project.
-     * @param aFileName
-     *            the filename.
-     * @return the file.
-     */
-    File getGuideline(Project aProject, String aFileName);
-
-    /**
-     * Export the associated project guideline for this {@link Project} while copying a project
-     *
-     * @param aProject
-     *            the project.
-     * @return the file.
-     */
-    File getGuidelinesFolder(Project aProject);
-
-    /**
-     * List annotation guideline document already uploaded
-     *
-     * @param aProject
-     *            the project.
-     * @return the filenames.
-     */
-    List<String> listGuidelines(Project aProject);
-
-    /**
-     * Checks if the given project defines any guidelines.
-     *
-     * @param aProject
-     *            the project.
-     * @return the filenames.
-     */
-    boolean hasGuidelines(Project aProject);
-
-    /**
-     * Remove an annotation guideline document from the file system
-     *
-     * @param aProject
-     *            the project.
-     * @param aFileName
-     *            the filename.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void removeGuideline(Project aProject, String aFileName) throws IOException;
 
     // --------------------------------------------------------------------------------------------
     // Methods related to permissions
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Can the given user access the project setting of <b>some</b> project.
+     * Checks if the user manages any project or has the ability to create new projects that the
+     * user would then manage.
      */
     public boolean managesAnyProject(User aUser);
 
@@ -418,7 +422,9 @@ public interface ProjectService
      * @param aUser
      *            the user.
      * @return if the user may update a project.
+     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
      */
+    @Deprecated
     boolean isManager(Project aProject, User aUser);
 
     /**
@@ -429,7 +435,9 @@ public interface ProjectService
      * @param aUser
      *            the user.
      * @return if the user is a curator.
+     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
      */
+    @Deprecated
     boolean isCurator(Project aProject, User aUser);
 
     /**
@@ -440,10 +448,40 @@ public interface ProjectService
      * @param aUser
      *            the user.
      * @return if the user is a member.
+     * @deprecated Use {@link #hasRole(User, Project, PermissionLevel, PermissionLevel...)}
      */
+    @Deprecated
     boolean isAnnotator(Project aProject, User aUser);
 
-    boolean hasRole(User aUser, Project aProject, PermissionLevel... aRole);
+    /**
+     * Check whether the given user has any role at all in the given project.
+     * 
+     * @param aUser
+     *            a user.
+     * @param aProject
+     *            a project.
+     * @return whether the user has any role in the project.
+     */
+    boolean hasAnyRole(User aUser, Project aProject);
+
+    /**
+     * Check whether the given user has one or more roles in a project. Note that the split into two
+     * arguments is only for the compiler to be able to check if at least one role has been
+     * specified. The first role is not privileged over the other roles in any way!
+     * 
+     * @param aUser
+     *            a user.
+     * @param aProject
+     *            a project.
+     * @param aRole
+     *            at least one role must be given, but the check is against this role OR any of the
+     *            additional roles.
+     * @param aMoreRoles
+     *            more roles.
+     * @return whether the user has any role in the project.
+     */
+    boolean hasRole(User aUser, Project aProject, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles);
 
     // --------------------------------------------------------------------------------------------
     // Methods related to other things

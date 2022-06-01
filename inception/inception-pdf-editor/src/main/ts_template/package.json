@@ -1,19 +1,15 @@
 {
   "name": "@inception-project/${project.artifactId}",
   "version": "${semver}",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "node build.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/inception-project/inception.git"
-  },
   "author": "hshindo, yoheiMune, INCEpTION Team",
   "license": "(MIT AND Apache-2.0)",
+  "private": true,
+  "homepage": "https://github.com/inception-project/inception#readme",
   "bugs": {
     "url": "https://github.com/inception-project/issues"
+  },
+  "scripts": {
+    "build": "node build.js"
   },
   "dependencies": {
     "@inception-project/inception-js-api": "${semver}",

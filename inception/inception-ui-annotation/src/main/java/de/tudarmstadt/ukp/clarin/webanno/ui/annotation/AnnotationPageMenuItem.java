@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static java.lang.String.format;
 
 import javax.servlet.ServletContext;
@@ -81,7 +82,7 @@ public class AnnotationPageMenuItem
 
         // Visible if the current user is an annotator
         User user = userRepo.getCurrentUser();
-        return projectService.isAnnotator(aProject, user);
+        return projectService.hasRole(user, aProject, ANNOTATOR);
     }
 
     @Override

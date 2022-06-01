@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.ranking;
 
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_FREQUENCY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_ID_RANK;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LABEL_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_QUERY;
@@ -26,6 +27,7 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_NUM_RELATIONS;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_IS_LOWER_CASE;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY_NC;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_SIGNATURE_OVERLAP_SCORE;
 
 import java.util.Comparator;
@@ -41,8 +43,9 @@ public class BaselineRankingStrategy
             // Note that the comparator sorts ascending by value, so a match is represented using
             // a 0 while a mismatch is represented using 1. The typical case is that neither
             // candidate matches the query which causes the next ranking criteria to be evaluated
-            .append(e1.get(KEY_QUERY).map(q -> q.equals(e1.getIRI()) ? 0 : 1).orElse(1),
-                    e2.get(KEY_QUERY).map(q -> q.equals(e2.getIRI()) ? 0 : 1).orElse(1))
+            .append(queryMatchesIri(e1), queryMatchesIri(e2))
+            // Prefer matches where the query appears in the label
+            .append(labelMatchesQueryNC(e1), labelMatchesQueryNC(e2))
             // Compare geometric mean of the Levenshtein distance to query and mention
             // since both are important and a very close similarity in say the mention outweighs
             // a not so close similarity in the query
@@ -67,6 +70,18 @@ public class BaselineRankingStrategy
             .append(e1.getLabel().toLowerCase(e1.getLocale()),
                     e2.getLabel().toLowerCase(e2.getLocale()))
             .toComparison();
+
+    private static double queryMatchesIri(CandidateEntity aCandidate)
+    {
+        return aCandidate.get(KEY_QUERY).map(q -> q.equals(aCandidate.getIRI()) ? 0 : 1).orElse(1);
+    }
+
+    private static double labelMatchesQueryNC(CandidateEntity aCandidate)
+    {
+        return aCandidate.get(KEY_QUERY_NC)
+                .map(q -> aCandidate.get(KEY_LABEL_NC).map(l -> l.contains(q) ? 0 : 1).orElse(1))
+                .orElse(1);
+    }
 
     private static double casedOverCaseless(CandidateEntity aCandidate)
     {

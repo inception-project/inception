@@ -123,8 +123,8 @@ public class PropertyFeatureSupport
     private String loadLabelValue(Key aKey)
     {
         try {
-            return kbService.getKnowledgeBases(aKey.getAnnotationFeature().getProject()).stream()
-                    .map(k -> kbService.readProperty(k, aKey.getLabel()))
+            return kbService.getEnabledKnowledgeBases(aKey.getAnnotationFeature().getProject())
+                    .stream().map(k -> kbService.readProperty(k, aKey.getLabel()))
                     .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
                     .map(KBProperty::getUiLabel).findAny().orElseThrow(NoSuchElementException::new);
         }

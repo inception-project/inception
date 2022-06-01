@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
+
 import java.util.ArrayList;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -102,16 +104,17 @@ public class AdditionalMatchingPropertiesPanel
     private void actionAddProperty(AjaxRequestTarget aTarget)
     {
         String concept = newPropertyIRIString.getObject();
-        if (isPropertyValid(kbModel.getObject().getKb(), concept, true)) {
-            properties.getObject().add(concept);
-            kbModel.getObject().getKb().setAdditionalMatchingProperties(properties.getObject());
-            newPropertyIRIString.setObject(null);
-        }
-        else {
+
+        if (!isPropertyValid(kbModel.getObject().getKb(), concept, true)) {
             error("Property [" + newPropertyIRIString.getObject()
-                    + "] does not exist or has already been specified");
+                    + "] is not an (absolute) IRI, does not exist, or has already been specified");
             aTarget.addChildren(getPage(), IFeedback.class);
+            return;
         }
+
+        properties.getObject().add(concept);
+        kbModel.getObject().getKb().setAdditionalMatchingProperties(properties.getObject());
+        newPropertyIRIString.setObject(null);
         aTarget.add(this);
     }
 
@@ -125,6 +128,15 @@ public class AdditionalMatchingPropertiesPanel
     public boolean isPropertyValid(KnowledgeBase aKb, String aPropertyIri, boolean aAll)
         throws QueryEvaluationException
     {
+        if (isBlank(aPropertyIri)) {
+            return false;
+        }
+
+        // Check if it looks like an (absolute) IRI
+        if (aPropertyIri.indexOf(':') < 0) {
+            return false;
+        }
+
         return !properties.getObject().contains(aPropertyIri);
         // KBs tend to not declare all their properties, so we do not try to check if it actually
         // exist...
