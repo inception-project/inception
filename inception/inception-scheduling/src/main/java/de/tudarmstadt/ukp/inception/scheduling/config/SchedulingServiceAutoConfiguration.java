@@ -21,6 +21,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.core.session.SessionRegistry;
 
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingServiceImpl;
@@ -31,8 +32,8 @@ public class SchedulingServiceAutoConfiguration
 {
     @Bean
     public SchedulingService schedulingService(ApplicationContext aApplicationContext,
-            SchedulingProperties aConfig)
+            SchedulingProperties aConfig, SessionRegistry aSessionRegistry)
     {
-        return new SchedulingServiceImpl(aApplicationContext, aConfig);
+        return new SchedulingServiceImpl(aApplicationContext, aConfig, aSessionRegistry);
     }
 }
