@@ -19,100 +19,71 @@ package de.tudarmstadt.ukp.clarin.webanno.diag;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.NoSuchElementException;
+import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
-import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.context.event.EventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
 import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
-@Component("casDoctor")
 public class CasDoctor
-    implements InitializingBean, ApplicationContextAware
 {
-    private static Logger LOG = LoggerFactory.getLogger(CasDoctor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CasDoctor.class);
 
-    private String activeChecks;
-    private String activeRepairs;
+    private final ChecksRegistry checksRegistry;
+    private final RepairsRegistry repairsRegistry;
+
+    private Set<String> activeChecks;
+    private Set<String> activeRepairs;
+
     private boolean fatalChecks = true;
     private boolean disableAutoScan = false;
 
-    private ApplicationContext context;
-
-    private List<Class<? extends Check>> checkClasses = new ArrayList<>();
-    private List<Class<? extends Repair>> repairClasses = new ArrayList<>();
-
-    @Autowired
-    public CasDoctor(CasDoctorProperties aProperties)
+    public CasDoctor(CasDoctorProperties aProperties, ChecksRegistry aChecksRegistry,
+            RepairsRegistry aRepairsRegistry)
     {
-        // Bean operation
-        activeChecks = aProperties.getChecks();
-        activeRepairs = aProperties.getRepairs();
+        checksRegistry = aChecksRegistry;
+        repairsRegistry = aRepairsRegistry;
+
         fatalChecks = aProperties.isFatal();
         disableAutoScan = aProperties.isForceReleaseBehavior();
+
+        activeChecks = new LinkedHashSet<>();
+        if (isNotBlank(aProperties.getChecks())) {
+            activeChecks.addAll(asList(aProperties.getChecks().split(",")));
+        }
+
+        activeRepairs = new LinkedHashSet<>();
+        if (isNotBlank(aProperties.getChecks())) {
+            activeRepairs.addAll(asList(aProperties.getRepairs().split(",")));
+        }
     }
 
-    /**
-     * This constructor must only be used for unit tests.
-     */
-    public CasDoctor(Class<?>... aChecksRepairs)
+    public CasDoctor(ChecksRegistry aChecksRegistry, RepairsRegistry aRepairsRegistry)
     {
-        StringBuilder checks = new StringBuilder();
-        StringBuilder repairs = new StringBuilder();
-        for (Class<?> clazz : aChecksRepairs) {
-            boolean isCheck = Check.class.isAssignableFrom(clazz);
-            boolean isRepair = Repair.class.isAssignableFrom(clazz);
+        checksRegistry = aChecksRegistry;
+        repairsRegistry = aRepairsRegistry;
 
-            if (isCheck) {
-                if (checks.length() > 0) {
-                    checks.append(',');
-                }
-                checks.append(clazz.getSimpleName());
-            }
-
-            if (isRepair) {
-                if (repairs.length() > 0) {
-                    repairs.append(',');
-                }
-                repairs.append(clazz.getSimpleName());
-            }
-
-            if (!isCheck && !isRepair) {
-                throw new IllegalArgumentException(
-                        "[" + clazz.getName() + "] is neither a check nor a repair");
-            }
-        }
-        activeChecks = checks.toString();
         fatalChecks = false;
-
-        activeRepairs = repairs.toString();
-
-        // This constructor is only used for tests. In tests we want to control which checks are
-        // used and do not want to auto-scan.
         disableAutoScan = true;
 
-        afterPropertiesSet();
+        activeChecks = new LinkedHashSet<>();
+        activeRepairs = new LinkedHashSet<>();
     }
 
     public void setFatalChecks(boolean aFatalChecks)
@@ -136,42 +107,31 @@ public class CasDoctor
 
     public boolean isRepairsActive()
     {
-        return !repairClasses.isEmpty();
+        return !activeRepairs.isEmpty();
     }
 
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        // If there are no active repairs, don't do anything
-        if (repairClasses.isEmpty()) {
-            return;
-        }
-
         // APPLY REPAIRS
-        long tStart = System.currentTimeMillis();
-        for (Class<? extends Repair> repairClass : repairClasses) {
+        long tStart = currentTimeMillis();
+        for (String repairId : activeRepairs) {
             try {
-                long tStartTask = System.currentTimeMillis();
-                Repair repair = repairClass.newInstance();
-                if (context != null) {
-                    context.getAutowireCapableBeanFactory().autowireBean(repair);
-                }
-                LOG.info("CasDoctor repair [" + repairClass.getSimpleName() + "] running...");
+                Repair repair = repairsRegistry.getExtension(repairId).orElseThrow(
+                        () -> new NoSuchElementException("Unknown repair [" + repairId + "]"));
+                long tStartTask = currentTimeMillis();
+                LOG.info("CasDoctor repair [" + repair.getId() + "] running...");
                 repair.repair(aProject, aCas, aMessages);
-                LOG.info("CasDoctor repair [" + repairClass.getSimpleName() + "] completed in "
-                        + (System.currentTimeMillis() - tStartTask) + "ms");
+                LOG.info("CasDoctor repair [" + repair.getId() + "] completed in "
+                        + (currentTimeMillis() - tStartTask) + "ms");
             }
             catch (Exception e) {
-                // aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot perform repair [%s]:
-                // %s",
-                // repairClass.getSimpleName(), ExceptionUtils.getRootCauseMessage(e)));
-                LOG.error("Cannot perform repair [" + repairClass.getSimpleName() + "]", e);
+                LOG.error("Cannot perform repair [" + repairId + "]", e);
                 throw new IllegalStateException(
                         "Repair attempt failed - ask system administrator " + "for details.");
             }
         }
 
-        LOG.info("CasDoctor completed all repairs in " + (System.currentTimeMillis() - tStart)
-                + "ms");
+        LOG.info("CasDoctor completed all repairs in " + (currentTimeMillis() - tStart) + "ms");
 
         // POST-CONDITION: CAS must be consistent
         // Ensure that the repairs actually fixed the CAS
@@ -198,29 +158,22 @@ public class CasDoctor
             boolean aFatalChecks)
         throws CasDoctorException
     {
-        if (checkClasses.isEmpty()) {
-            return true;
-        }
-
-        long tStart = System.currentTimeMillis();
+        long tStart = currentTimeMillis();
 
         boolean ok = true;
-        for (Class<? extends Check> checkClass : checkClasses) {
+        for (String checkId : activeChecks) {
             try {
-                long tStartTask = System.currentTimeMillis();
-                Check check = checkClass.newInstance();
-                if (context != null) {
-                    context.getAutowireCapableBeanFactory().autowireBean(check);
-                }
-                LOG.debug("CasDoctor analysis [" + checkClass.getSimpleName() + "] running...");
+                Check check = checksRegistry.getExtension(checkId).orElseThrow(
+                        () -> new NoSuchElementException("Unknown check [" + checkId + "]"));
+
+                long tStartTask = currentTimeMillis();
+                LOG.debug("CasDoctor analysis [" + check.getId() + "] running...");
                 ok &= check.check(aProject, aCas, aMessages);
-                LOG.debug("CasDoctor analysis [" + checkClass.getSimpleName() + "] completed in "
-                        + (System.currentTimeMillis() - tStartTask) + "ms");
+                LOG.debug("CasDoctor analysis [" + check.getId() + "] completed in "
+                        + (currentTimeMillis() - tStartTask) + "ms");
             }
-            catch (InstantiationException | IllegalAccessException e) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR, "Cannot instantiate [%s]: %s",
-                        checkClass.getSimpleName(), ExceptionUtils.getRootCauseMessage(e)));
-                LOG.error("Error running check", e);
+            catch (Exception e) {
+                LOG.error("Cannot apply check [" + checkId + "]", e);
             }
         }
 
@@ -232,38 +185,27 @@ public class CasDoctor
             throw new CasDoctorException(aMessages);
         }
 
-        long duration = System.currentTimeMillis() - tStart;
+        long duration = currentTimeMillis() - tStart;
         LOG.debug("CasDoctor completed all analyses in {}ms", duration);
-        serverTiming("Brat-AJAX", "CasDoctor (analyze)", duration);
+        serverTiming("CasDoctor", "CasDoctor (analyze)", duration);
 
         return ok;
     }
 
-    public void setCheckClasses(List<Class<? extends Check>> aCheckClasses)
+    public void setActiveChecks(String... aActiveChecks)
     {
-        checkClasses = aCheckClasses;
+        activeChecks = new LinkedHashSet<>(asList(aActiveChecks));
     }
 
-    public void setRepairClasses(List<Class<? extends Repair>> aRepairClasses)
+    public void setActiveRepairs(String... aActiveRepairs)
     {
-        repairClasses = aRepairClasses;
+        activeRepairs = new LinkedHashSet<>(asList(aActiveRepairs));
     }
 
-    public void setActiveChecks(String aActiveChecks)
+    @EventListener
+    public void onApplicationStartedEvent(ApplicationStartedEvent aEvent)
     {
-        activeChecks = aActiveChecks;
-    }
-
-    public void setActiveRepairs(String aActiveRepairs)
-    {
-        activeRepairs = aActiveRepairs;
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void afterPropertiesSet()
-    {
-        // If WebAnno is in under development, automatically enable all checks.
+        // When under development, automatically enable all checks.
         String version = SettingsUtil.getVersionProperties().getProperty(SettingsUtil.PROP_VERSION);
         if ("unknown".equals(version) || version.contains("-SNAPSHOT")
                 || version.contains("-beta-")) {
@@ -272,72 +214,17 @@ public class CasDoctor
                         + "auto-enabling checks");
             }
             else {
-                checkClasses.addAll(scanChecks());
+                checksRegistry.getExtensions().forEach(check -> activeChecks.add(check.getId()));
                 LOG.info("Detected SNAPSHOT/beta version - automatically enabling all checks");
             }
         }
 
-        if (StringUtils.isNotBlank(activeChecks)) {
-            for (String check : activeChecks.split(",")) {
-                try {
-                    Class<? extends Check> checkClass = (Class<? extends Check>) Class
-                            .forName(Check.class.getPackage().getName() + "." + check.trim());
-                    if (!checkClasses.contains(checkClass)) {
-                        checkClasses.add(checkClass);
-                    }
-                }
-                catch (ClassNotFoundException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
+        for (String checkId : activeChecks) {
+            LOG.info("Check activated: " + checkId);
         }
 
-        for (Class<? extends Check> c : checkClasses) {
-            LOG.info("Check activated: " + c.getSimpleName());
+        for (String repairId : activeRepairs) {
+            LOG.info("Repair activated: " + repairId);
         }
-
-        if (StringUtils.isNotBlank(activeRepairs)) {
-            for (String check : activeRepairs.split(",")) {
-                try {
-                    repairClasses.add((Class<? extends Repair>) Class
-                            .forName(Repair.class.getPackage().getName() + "." + check.trim()));
-                }
-                catch (ClassNotFoundException e) {
-                    throw new IllegalStateException(e);
-                }
-            }
-        }
-
-        for (Class<? extends Repair> c : repairClasses) {
-            LOG.info("Repair activated: " + c.getSimpleName());
-        }
-    }
-
-    public static List<Class<? extends Check>> scanChecks()
-    {
-        long start = currentTimeMillis();
-        Reflections reflections = new Reflections(Check.class.getPackage().getName());
-        List<Class<? extends Check>> checks = reflections.getSubTypesOf(Check.class).stream()
-                .filter(c -> !Modifier.isAbstract(c.getModifiers()))
-                .sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
-        LOG.info("Found {} checks in {}ms", checks.size(), currentTimeMillis() - start);
-        return checks;
-    }
-
-    public static List<Class<? extends Repair>> scanRepairs()
-    {
-        long start = currentTimeMillis();
-        Reflections reflections = new Reflections(Repair.class.getPackage().getName());
-        List<Class<? extends Repair>> repairs = reflections.getSubTypesOf(Repair.class).stream()
-                .filter(c -> !Modifier.isAbstract(c.getModifiers()))
-                .sorted(Comparator.comparing(Class::getName)).collect(Collectors.toList());
-        LOG.info("Found {} repairs in {}ms", repairs.size(), currentTimeMillis() - start);
-        return repairs;
-    }
-
-    @Override
-    public void setApplicationContext(ApplicationContext aContext) throws BeansException
-    {
-        context = aContext;
     }
 }

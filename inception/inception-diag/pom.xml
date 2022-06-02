@@ -59,11 +59,6 @@
       <artifactId>inception-api-annotation</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.reflections</groupId>
-      <artifactId>reflections</artifactId>
-      <version>0.9.10</version>
-    </dependency>
-    <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-segmentation-asl</artifactId>
     </dependency>
@@ -117,6 +112,5 @@
       <artifactId>dkpro-core-api-coref-asl</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
 </project>

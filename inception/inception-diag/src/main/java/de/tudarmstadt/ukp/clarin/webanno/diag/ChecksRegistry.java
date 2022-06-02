@@ -15,30 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
+package de.tudarmstadt.ukp.clarin.webanno.diag;
 
-import java.util.List;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-
-public interface Check
-    extends Extension<Void>
+public interface ChecksRegistry
+    extends ExtensionPoint<Void, Check>
 {
-    boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages);
 
-    @Override
-    default String getId()
-    {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    default boolean accepts(Void aContext)
-    {
-        return true;
-    }
 }

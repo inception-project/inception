@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.diag.repairs;
 
+import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.ArrayList;
@@ -27,6 +28,8 @@ import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
@@ -38,6 +41,12 @@ public class RemoveDanglingRelationsRepairTest
     @Test
     public void test() throws Exception
     {
+        var checksRegistry = new ChecksRegistryImpl(asList(new AllFeatureStructuresIndexedCheck()));
+        checksRegistry.init();
+        var repairsRegistry = new RepairsRegistryImpl(
+                asList(new RemoveDanglingRelationsRepair(null)));
+        repairsRegistry.init();
+
         JCas jcas = JCasFactory.createJCas();
 
         jcas.setDocumentText("This is a test.");
@@ -53,10 +62,15 @@ public class RemoveDanglingRelationsRepairTest
         dep.addToIndexes();
 
         List<LogMessage> messages = new ArrayList<>();
-        CasDoctor cd = new CasDoctor(RemoveDanglingRelationsRepair.class,
-                AllFeatureStructuresIndexedCheck.class);
+        CasDoctor cd = new CasDoctor(checksRegistry, repairsRegistry);
+        cd.setActiveChecks(
+                checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
+        cd.setActiveRepairs(repairsRegistry.getExtensions().stream().map(c -> c.getId())
+                .toArray(String[]::new));
+
         // A project is not required for this check
         boolean result = cd.analyze(null, jcas.getCas(), messages);
+
         // A project is not required for this repair
         cd.repair(null, jcas.getCas(), messages);
 

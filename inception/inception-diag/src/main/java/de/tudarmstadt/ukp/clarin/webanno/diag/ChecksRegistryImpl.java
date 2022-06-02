@@ -15,30 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
+package de.tudarmstadt.ukp.clarin.webanno.diag;
 
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
 
-public interface Check
-    extends Extension<Void>
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CasDoctorAutoConfiguration#checksRegistry}.
+ * </p>
+ */
+public class ChecksRegistryImpl
+    extends ExtensionPoint_ImplBase<Void, Check>
+    implements ChecksRegistry
 {
-    boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages);
-
-    @Override
-    default String getId()
+    public ChecksRegistryImpl(@Lazy @Autowired(required = false) List<Check> aExtensions)
     {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    default boolean accepts(Void aContext)
-    {
-        return true;
+        super(aExtensions);
     }
 }
