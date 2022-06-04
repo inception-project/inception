@@ -15,30 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
+package de.tudarmstadt.ukp.clarin.webanno.diag;
 
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
 
-public interface Check
-    extends Extension<Void>
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CasDoctorAutoConfiguration#repairsRegistry}.
+ * </p>
+ */
+public class RepairsRegistryImpl
+    extends ExtensionPoint_ImplBase<Void, Repair>
+    implements RepairsRegistry
 {
-    boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages);
-
-    @Override
-    default String getId()
+    public RepairsRegistryImpl(@Lazy @Autowired(required = false) List<Repair> aExtensions)
     {
-        return getClass().getSimpleName();
-    }
-
-    @Override
-    default boolean accepts(Void aContext)
-    {
-        return true;
+        super(aExtensions);
     }
 }

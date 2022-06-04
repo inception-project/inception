@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -26,7 +27,6 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -43,7 +43,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class RelationOffsetsCheck
     implements Check
 {
-    private @Autowired AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService annotationService;
+
+    public RelationOffsetsCheck(AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
 
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
@@ -51,7 +56,7 @@ public class RelationOffsetsCheck
         boolean ok = true;
 
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
+            if (!RELATION_TYPE.equals(layer.getType())) {
                 continue;
             }
 

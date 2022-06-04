@@ -28,7 +28,6 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -39,7 +38,13 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     implements Check
 {
-    private @Autowired AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService annotationService;
+
+    public FeatureAttachedSpanAnnotationsTrulyAttachedCheck(
+            AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
 
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)

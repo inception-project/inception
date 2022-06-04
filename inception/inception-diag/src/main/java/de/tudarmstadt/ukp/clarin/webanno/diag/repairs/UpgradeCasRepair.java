@@ -24,7 +24,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
@@ -39,9 +38,14 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class UpgradeCasRepair
     implements Repair
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Autowired AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService annotationService;
+
+    public UpgradeCasRepair(AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
 
     @Override
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
