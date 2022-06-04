@@ -81,7 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.clarin.webanno.tsv.WebAnnoTsv3FormatSupport;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 
 /**
@@ -228,12 +227,11 @@ public class AnnotationDocumentExporter
                             : aRequest.getFormat();
 
                     format = importExportService.getWritableFormatById(formatId).orElseGet(() -> {
-                        FormatSupport fallbackFormat = new WebAnnoTsv3FormatSupport();
-                        aMonitor.addMessage(LogMessage.warn(this,
-                                "Annotation: [%s] No writer "
-                                        + "found for original format [%s] - exporting as [%s] "
-                                        + "instead.",
-                                srcDoc.getName(), formatId, fallbackFormat.getName()));
+                        FormatSupport fallbackFormat = importExportService.getFallbackFormat();
+                        aMonitor.addMessage(LogMessage.warn(this, "Annotation: [%s] No writer "
+                                + "found for format [%s] - falling back to exporting as [%s] "
+                                + "instead.", srcDoc.getName(), formatId,
+                                fallbackFormat.getName()));
                         return fallbackFormat;
                     });
                 }
@@ -269,14 +267,15 @@ public class AnnotationDocumentExporter
                                 copyFileToDirectory(annFile, annDocDir);
                             }
                             finally {
-                                forceDelete(annFile);
+                                if (annFile != null) {
+                                    forceDelete(annFile);
+                                }
                             }
                         }
 
-                        log.info(
-                                "Exported annotation document content for user [{}] for source document "
-                                        + "{} in project {}",
-                                annDoc.getUser(), srcDoc, project);
+                        log.info("Exported annotation document content for user [{}] for " //
+                                + "source document {} in project {}", annDoc.getUser(), srcDoc,
+                                project);
                     }
                 }
             }
