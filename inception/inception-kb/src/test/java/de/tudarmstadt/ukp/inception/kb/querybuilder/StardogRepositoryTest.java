@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.Scenario;
 
-// The repository has to exist and stardoc has to be running for this test to run.
+// The repository has to exist and Stardog has to be running for this test to run.
 // To create the repository, use the following command:
 // stardog-admin db create -n test -o search.enabled=true --
 @Disabled("Requires manually setting up a test server")
@@ -59,7 +59,7 @@ public class StardogRepositoryTest
 
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
-        kb.setType(RepositoryType.LOCAL);
+        kb.setType(RepositoryType.REMOTE);
         kb.setFullTextSearchIri(FTS_STARDOG.stringValue());
         kb.setMaxResults(100);
 

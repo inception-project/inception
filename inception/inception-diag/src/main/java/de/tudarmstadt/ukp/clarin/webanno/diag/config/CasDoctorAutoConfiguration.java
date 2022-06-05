@@ -17,17 +17,180 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.config;
 
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
+import java.util.List;
 
-/**
- * <p>
- * This class is exposed as a Spring Component via {@link CasDoctorAutoConfiguration}.
- * </p>
- */
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.CASMetadataTypeIsPresentCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.DanglingRelationsCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.FeatureAttachedSpanAnnotationsTrulyAttachedCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.LinksReachableThroughChainsCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NoMultipleIncomingRelationsCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NoZeroSizeTokensAndSentencesCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.RelationOffsetsCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UniqueDocumentAnnotationCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReindexFeatureAttachedSpanAnnotationsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RelationOffsetsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingChainLinksRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingFeatureAttachedSpanAnnotationsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSentencesRepair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.UpgradeCasRepair;
+
 @Configuration
 @EnableConfigurationProperties(CasDoctorPropertiesImpl.class)
 public class CasDoctorAutoConfiguration
 {
-    // No beans yet
+    @Bean
+    CasDoctor casDoctor(CasDoctorProperties aProperties, ChecksRegistry aChecksRegistry,
+            RepairsRegistry aRepairsRegistry)
+    {
+        return new CasDoctor(aProperties, aChecksRegistry, aRepairsRegistry);
+    }
+
+    @Bean
+    public ChecksRegistry checksRegistry(@Lazy @Autowired(required = false) List<Check> aExtensions)
+    {
+        return new ChecksRegistryImpl(aExtensions);
+    }
+
+    @Bean
+    public RepairsRegistry repairsRegistry(
+            @Lazy @Autowired(required = false) List<Repair> aExtensions)
+    {
+        return new RepairsRegistryImpl(aExtensions);
+    }
+
+    @Bean
+    public AllFeatureStructuresIndexedCheck allFeatureStructuresIndexedCheck()
+    {
+        return new AllFeatureStructuresIndexedCheck();
+    }
+
+    @Bean
+    public CASMetadataTypeIsPresentCheck casMetadataTypeIsPresentCheck()
+    {
+        return new CASMetadataTypeIsPresentCheck();
+    }
+
+    @Bean
+    public DanglingRelationsCheck danglingRelationsCheck(AnnotationSchemaService aAnnotationService)
+    {
+        return new DanglingRelationsCheck(aAnnotationService);
+    }
+
+    @Bean
+    public FeatureAttachedSpanAnnotationsTrulyAttachedCheck featureAttachedSpanAnnotationsTrulyAttachedCheck(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new FeatureAttachedSpanAnnotationsTrulyAttachedCheck(aAnnotationService);
+    }
+
+    @Bean
+    public LinksReachableThroughChainsCheck linksReachableThroughChainsCheck(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new LinksReachableThroughChainsCheck(aAnnotationService);
+    }
+
+    @Bean
+    public NoMultipleIncomingRelationsCheck noMultipleIncomingRelationsCheck(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new NoMultipleIncomingRelationsCheck(aAnnotationService);
+    }
+
+    @Bean
+    public NoZeroSizeTokensAndSentencesCheck noZeroSizeTokensAndSentencesCheck()
+    {
+        return new NoZeroSizeTokensAndSentencesCheck();
+    }
+
+    @Bean
+    public RelationOffsetsCheck relationOffsetsCheck(AnnotationSchemaService aAnnotationService)
+    {
+        return new RelationOffsetsCheck(aAnnotationService);
+    }
+
+    @Bean
+    public UniqueDocumentAnnotationCheck uniqueDocumentAnnotationCheck()
+    {
+        return new UniqueDocumentAnnotationCheck();
+    }
+
+    @Bean
+    public ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair //
+            reattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair(
+                    AnnotationSchemaService aAnnotationService)
+    {
+        return new ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair(aAnnotationService);
+    }
+
+    @Bean
+    public ReattachFeatureAttachedSpanAnnotationsRepair reattachFeatureAttachedSpanAnnotationsRepair(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new ReattachFeatureAttachedSpanAnnotationsRepair(aAnnotationService);
+    }
+
+    @Bean
+    public ReindexFeatureAttachedSpanAnnotationsRepair reindexFeatureAttachedSpanAnnotationsRepair(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new ReindexFeatureAttachedSpanAnnotationsRepair(aAnnotationService);
+    }
+
+    @Bean
+    public RelationOffsetsRepair relationOffsetsRepair(AnnotationSchemaService aAnnotationService)
+    {
+        return new RelationOffsetsRepair(aAnnotationService);
+    }
+
+    @Bean
+    public RemoveDanglingChainLinksRepair removeDanglingChainLinksRepair(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new RemoveDanglingChainLinksRepair(aAnnotationService);
+    }
+
+    @Bean
+    public RemoveDanglingFeatureAttachedSpanAnnotationsRepair removeDanglingFeatureAttachedSpanAnnotationsRepair(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new RemoveDanglingFeatureAttachedSpanAnnotationsRepair(aAnnotationService);
+    }
+
+    @Bean
+    public RemoveDanglingRelationsRepair removeDanglingRelationsRepair(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new RemoveDanglingRelationsRepair(aAnnotationService);
+    }
+
+    @Bean
+    public RemoveZeroSizeTokensAndSentencesRepair removeZeroSizeTokensAndSentencesRepair()
+    {
+        return new RemoveZeroSizeTokensAndSentencesRepair();
+    }
+
+    @Bean
+    public UpgradeCasRepair upgradeCasRepair(AnnotationSchemaService aAnnotationService)
+    {
+        return new UpgradeCasRepair(aAnnotationService);
+    }
 }

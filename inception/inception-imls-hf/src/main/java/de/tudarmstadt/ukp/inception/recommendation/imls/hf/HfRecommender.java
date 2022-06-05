@@ -62,7 +62,7 @@ public class HfRecommender
     {
         List<HfEntityGroup> response;
         try {
-            String text = aCas.getDocumentLanguage().substring(aBegin, aEnd);
+            String text = aCas.getDocumentText().substring(aBegin, aEnd);
             response = hfInferenceClient.invokeService(traits.getModelId(), traits.getApiToken(),
                     text);
         }

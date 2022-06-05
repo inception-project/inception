@@ -26,9 +26,11 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public interface Repair
+    extends Extension<Void>
 {
     void repair(Project aProject, CAS aCas, List<LogMessage> aMessages);
 
@@ -37,5 +39,17 @@ public interface Repair
     @interface Safe
     {
         boolean value() default true;
+    }
+
+    @Override
+    default String getId()
+    {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    default boolean accepts(Void aContext)
+    {
+        return true;
     }
 }

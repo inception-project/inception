@@ -23,13 +23,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -37,7 +37,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractChoice.LabelPosition;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -51,12 +50,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
-import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
@@ -72,6 +71,8 @@ public class ProjectCasDoctorPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean DocumentImportExportService importExportService;
+    private @SpringBean RepairsRegistry repairsRegistry;
+    private @SpringBean ChecksRegistry checksRegistry;
 
     // Data properties
     private FormModel formModel = new FormModel();
@@ -85,11 +86,10 @@ public class ProjectCasDoctorPanel
         Form<FormModel> form = new Form<>("casDoctorForm", PropertyModel.of(this, "formModel"));
         add(form);
 
-        CheckBoxMultipleChoice<Class<? extends Repair>> repairs = new CheckBoxMultipleChoice<>(
-                "repairs");
+        CheckBoxMultipleChoice<String> repairs = new CheckBoxMultipleChoice<>("repairs");
         repairs.setModel(PropertyModel.of(this, "formModel.repairs"));
-        repairs.setChoices(CasDoctor.scanRepairs());
-        repairs.setChoiceRenderer(new ChoiceRenderer<>("simpleName"));
+        repairs.setChoices(repairsRegistry.getExtensions().stream() //
+                .map(r -> r.getId()).collect(toList()));
         repairs.setPrefix("<div class=\"checkbox\">");
         repairs.setSuffix("</div>");
         repairs.setLabelPosition(LabelPosition.WRAP_AFTER);
@@ -144,10 +144,9 @@ public class ProjectCasDoctorPanel
     private void actionRepair(AjaxRequestTarget aTarget, Form<?> aForm)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        CasDoctor casDoctor = new CasDoctor();
-        casDoctor.setApplicationContext(ApplicationContextProvider.getApplicationContext());
+        CasDoctor casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
         casDoctor.setFatalChecks(false);
-        casDoctor.setRepairClasses(formModel.repairs);
+        casDoctor.setActiveRepairs(formModel.repairs.toArray(String[]::new));
 
         Project project = getModelObject();
 
@@ -241,10 +240,9 @@ public class ProjectCasDoctorPanel
     private void actionCheck(AjaxRequestTarget aTarget, Form<?> aForm)
         throws IOException, UIMAException, ClassNotFoundException
     {
-        CasDoctor casDoctor = new CasDoctor();
-        casDoctor.setApplicationContext(ApplicationContextProvider.getApplicationContext());
-        casDoctor.setFatalChecks(false);
-        casDoctor.setCheckClasses(CasDoctor.scanChecks());
+        CasDoctor casDoctor = new CasDoctor(checksRegistry, repairsRegistry);
+        casDoctor.setActiveChecks(
+                checksRegistry.getExtensions().stream().map(c -> c.getId()).toArray(String[]::new));
 
         Project project = getModelObject();
 
@@ -356,21 +354,23 @@ public class ProjectCasDoctorPanel
         }
     }
 
-    private static class FormModel
+    private class FormModel
         implements Serializable
     {
         private static final long serialVersionUID = 5421427363671176637L;
 
         private List<LogMessageSet> messageSets = new ArrayList<>();
-        private List<Class<? extends Repair>> repairs;
+        private List<String> repairs;
 
         {
             // Fetch only the safe/non-destructive repairs
-            List<Class<? extends Repair>> allRepairs = CasDoctor.scanRepairs();
-            repairs = allRepairs.stream().filter(r -> {
-                Safe s = r.getAnnotation(Safe.class);
-                return s != null && s.value();
-            }).collect(Collectors.toList());
+            repairs = repairsRegistry.getExtensions().stream() //
+                    .filter(r -> {
+                        Safe s = r.getClass().getAnnotation(Safe.class);
+                        return s != null && s.value();
+                    }) //
+                    .map(r -> r.getId()) //
+                    .collect(toList());
         }
     }
 

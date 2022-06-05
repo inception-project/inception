@@ -15,17 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.settings;
+package de.tudarmstadt.ukp.clarin.webanno.diag;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 
-public abstract class ProjectExporterPanelImplBase
-    extends Panel
+public interface ChecksRegistry
+    extends ExtensionPoint<Void, Check>
 {
-    private static final long serialVersionUID = -3369730960827133042L;
 
-    public ProjectExporterPanelImplBase(String aId)
-    {
-        super(aId);
-    }
 }

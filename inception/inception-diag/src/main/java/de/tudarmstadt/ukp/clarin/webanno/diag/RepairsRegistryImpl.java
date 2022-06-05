@@ -15,17 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.project.export.settings;
+package de.tudarmstadt.ukp.clarin.webanno.diag;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import java.util.List;
 
-public abstract class ProjectExporterPanelImplBase
-    extends Panel
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+
+import de.tudarmstadt.ukp.clarin.webanno.diag.config.CasDoctorAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
+
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link CasDoctorAutoConfiguration#repairsRegistry}.
+ * </p>
+ */
+public class RepairsRegistryImpl
+    extends ExtensionPoint_ImplBase<Void, Repair>
+    implements RepairsRegistry
 {
-    private static final long serialVersionUID = -3369730960827133042L;
-
-    public ProjectExporterPanelImplBase(String aId)
+    public RepairsRegistryImpl(@Lazy @Autowired(required = false) List<Repair> aExtensions)
     {
-        super(aId);
+        super(aExtensions);
     }
 }
