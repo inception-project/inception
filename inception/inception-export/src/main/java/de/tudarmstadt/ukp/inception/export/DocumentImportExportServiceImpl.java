@@ -74,7 +74,6 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
-import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
@@ -288,7 +287,7 @@ public class DocumentImportExportServiceImpl
         }
 
         // Prepare a CAS with the project type system
-        CAS cas = CasFactory.createCas(tsd);
+        CAS cas = WebAnnoCasUtil.createCas(tsd);
 
         // Convert the source document to CAS
         FormatSupport format = getReadableFormatById(aFormatId).orElseThrow(
