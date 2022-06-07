@@ -676,7 +676,8 @@ public class SearchServiceImpl
         List<IndexingTask_ImplBase> tasks = schedulingService.getAllTasks().stream() //
                 .filter(task -> task instanceof IndexingTask_ImplBase)
                 .map(task -> (IndexingTask_ImplBase) task)
-                .filter(task -> aProject.equals(task.getProject())).collect(Collectors.toList());
+                .filter(task -> aProject.equals(task.getProject())) //
+                .collect(Collectors.toList());
 
         if (tasks.isEmpty()) {
             return Optional.empty();
