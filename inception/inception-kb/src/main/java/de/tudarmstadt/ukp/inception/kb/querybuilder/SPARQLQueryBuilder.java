@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.RdfCollection.collectionOf;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY_RESTRICTIONS;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.SECONDARY;
@@ -884,11 +883,9 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
-            valuePatterns
-                    .add(collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
-                            .has(FUSEKI_QUERY,
-                                    collectionOf(VAR_MATCH_TERM_PROPERTY,
-                                            literalOf(sanitizedValue)))
+            valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
+                            .withLimit(getLimit()) //
                             .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
         }
 
@@ -909,7 +906,8 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
-            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue) //
+                    .withLimit(getLimit()) //
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                             .filter(equalsPattern(VAR_MATCH_TERM, value, kb))));
         }
@@ -1035,7 +1033,8 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
-            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, fuzzyQuery)
+            valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, fuzzyQuery) //
+                    .withLimit(getLimit()) //
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)));
         }
 
@@ -1102,9 +1101,8 @@ public class SPARQLQueryBuilder
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
-            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
 
-            if (isBlank(sanitizedValue) || isBlank(fuzzyQuery)) {
+            if (isBlank(sanitizedValue)) {
                 continue;
             }
 
@@ -1116,8 +1114,14 @@ public class SPARQLQueryBuilder
                 sanitizedValue = sanitizedValue.toLowerCase(Locale.forLanguageTag(language));
             }
 
-            valuePatterns.add(collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM).has(FUSEKI_QUERY,
-                    collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(fuzzyQuery))));
+            String fuzzyQuery = convertToFuzzyMatchingQuery(sanitizedValue);
+
+            if (isBlank(fuzzyQuery)) {
+                continue;
+            }
+
+            valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, fuzzyQuery).withLimit(getLimit()));
         }
 
         return and(bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
@@ -1275,11 +1279,9 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
-            valuePatterns
-                    .add(collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
-                            .has(FUSEKI_QUERY,
-                                    collectionOf(VAR_MATCH_TERM_PROPERTY,
-                                            literalOf(sanitizedValue)))
+            valuePatterns.add(new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM,
+                    VAR_MATCH_TERM_PROPERTY, sanitizedValue) //
+                            .withLimit(getLimit()) //
                             .filter(containsPattern(VAR_MATCH_TERM, value)));
         }
 
@@ -1323,6 +1325,7 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns.add(new StardogEntitySearchService(VAR_MATCH_TERM, sanitizedValue)
+                    .withLimit(getLimit()) //
                     .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                             .filter(containsPattern(VAR_MATCH_TERM, value))));
         }
@@ -1434,7 +1437,8 @@ public class SPARQLQueryBuilder
 
         return and( //
                 bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
-                new StardogEntitySearchService(VAR_MATCH_TERM, queryString)
+                new StardogEntitySearchService(VAR_MATCH_TERM, queryString) //
+                        .withLimit(getLimit()) //
                         .and(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
                                 .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery))));
     }
@@ -1577,10 +1581,10 @@ public class SPARQLQueryBuilder
         // filter them by those which actually start with the prefix.
         return and( //
                 bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY), //
-                collectionOf(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM)
-                        .has(FUSEKI_QUERY,
-                                collectionOf(VAR_MATCH_TERM_PROPERTY, literalOf(queryString)))
-                        .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
+                new FusekiFtsQuery(VAR_SUBJECT, VAR_SCORE, VAR_MATCH_TERM, VAR_MATCH_TERM_PROPERTY,
+                        queryString) //
+                                .withLimit(getLimit()) //
+                                .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
     }
 
     private Expression<?> startsWithPattern(Variable aVariable, String aPrefixQuery)
