@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_STARDOG;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.RdfCollection.collectionOf;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
@@ -173,6 +174,11 @@ public class SPARQLQueryBuilder
     public static final Iri FUSEKI_QUERY = PREFIX_FUSEKI_SEARCH.iri("query");
 
     public static final Prefix PREFIX_STARDOG_SEARCH = prefix("fts", iri(PREFIX_STARDOG));
+
+    // Some versions of Virtuoso do not like it when we declare the bif prefix.
+    // public static final Prefix PREFIX_VIRTUOSO_SEARCH = prefix("bif", iri(PREFIX_VIRTUOSO));
+    // public static final Iri VIRTUOSO_QUERY = PREFIX_VIRTUOSO_SEARCH.iri("contains");
+    public static final Iri VIRTUOSO_QUERY = iri(PREFIX_VIRTUOSO, "contains");
 
     public static final Iri OWL_INTERSECTIONOF = iri(OWL.INTERSECTIONOF.stringValue());
     public static final Iri RDF_REST = iri(RDF.REST.stringValue());
@@ -915,6 +921,8 @@ public class SPARQLQueryBuilder
 
     private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
     {
+        // prefixes.add(PREFIX_VIRTUOSO_SEARCH);
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
@@ -924,7 +932,8 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns.add(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                    .and(VAR_MATCH_TERM.has(FTS_VIRTUOSO, literalOf("\"" + sanitizedValue + "\"")))
+                    .and(VAR_MATCH_TERM.has(VIRTUOSO_QUERY,
+                            literalOf("\"" + sanitizedValue + "\"")))
                     .filter(equalsPattern(VAR_MATCH_TERM, value, kb)));
         }
 
@@ -1060,6 +1069,8 @@ public class SPARQLQueryBuilder
 
     private GraphPattern withLabelMatchingAnyOf_Virtuoso_FTS(String[] aValues)
     {
+        // prefixes.add(PREFIX_VIRTUOSO_SEARCH);
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
@@ -1068,8 +1079,15 @@ public class SPARQLQueryBuilder
                 continue;
             }
 
+            // If the query string entered by the user does not end with a space character, then
+            // we assume that the user may not yet have finished writing the word and add a
+            // wildcard
+            if (!value.endsWith(" ")) {
+                sanitizedValue = virtuosoStartsWithQuery(sanitizedValue);
+            }
+
             valuePatterns.add(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM).and(
-                    VAR_MATCH_TERM.has(FTS_VIRTUOSO, literalOf("\"" + sanitizedValue + "\""))));
+                    VAR_MATCH_TERM.has(VIRTUOSO_QUERY, literalOf("\"" + sanitizedValue + "\""))));
         }
 
         return and( //
@@ -1123,11 +1141,7 @@ public class SPARQLQueryBuilder
 
             var labelFilterExpressions = new ArrayList<Expression<?>>();
             labelFilterExpressions.add(Expressions.equals(str(var("label")), str(VAR_MATCH_TERM)));
-
-            String language = kb.getDefaultLanguage();
-            if (language != null) {
-                labelFilterExpressions.add(matchLanguage(VAR_MATCH_TERM, language));
-            }
+            labelFilterExpressions.add(matchKbLanguage(VAR_MATCH_TERM));
 
             // If a KB item has multiple labels, we want to return only the ones which actually
             // match the query term such that the user is not confused that the results contain
@@ -1275,6 +1289,8 @@ public class SPARQLQueryBuilder
 
     private GraphPattern withLabelContainingAnyOf_Virtuoso_FTS(String[] aValues)
     {
+        // prefixes.add(PREFIX_VIRTUOSO_SEARCH);
+
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryString_FTS(value);
@@ -1284,7 +1300,8 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns.add(VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                    .and(VAR_MATCH_TERM.has(FTS_VIRTUOSO, literalOf("\"" + sanitizedValue + "\"")))
+                    .and(VAR_MATCH_TERM.has(VIRTUOSO_QUERY,
+                            literalOf("\"" + sanitizedValue + "\"")))
                     .filter(containsPattern(VAR_MATCH_TERM, value)));
         }
 
@@ -1443,8 +1460,7 @@ public class SPARQLQueryBuilder
 
     private GraphPattern withLabelStartingWith_Virtuoso_FTS(String aPrefixQuery)
     {
-        StringBuilder ftsQueryString = new StringBuilder();
-        ftsQueryString.append("\"");
+        // prefixes.add(PREFIX_VIRTUOSO_SEARCH);
 
         // Strip single quotes and asterisks because they have special semantics
         String sanitizedQuery = sanitizeQueryString_FTS(aPrefixQuery);
@@ -1453,36 +1469,12 @@ public class SPARQLQueryBuilder
         // we assume that the user may not yet have finished writing the word and add a
         // wildcard
         if (!aPrefixQuery.endsWith(" ")) {
-            String[] queryTokens = sanitizedQuery.split(" ");
-            for (int i = 0; i < queryTokens.length; i++) {
-                if (i > 0) {
-                    ftsQueryString.append(" ");
-                }
-
-                // Virtuoso requires that a token has at least 4 characters before it can be
-                // used with a wildcard. If the last token has less than 4 characters, we simply
-                // drop it to avoid the user hitting a point where the auto-suggesions suddenly
-                // are empty. If the token 4 or more, we add the wildcard.
-                if (i == (queryTokens.length - 1)) {
-                    if (queryTokens[i].length() >= 4) {
-                        ftsQueryString.append(queryTokens[i]);
-                        ftsQueryString.append("*");
-                    }
-                }
-                else {
-                    ftsQueryString.append(queryTokens[i]);
-                }
-            }
+            sanitizedQuery = virtuosoStartsWithQuery(sanitizedQuery);
         }
-        else {
-            ftsQueryString.append(sanitizedQuery);
-        }
-
-        ftsQueryString.append("\"");
 
         // If the query string was reduced to nothing, then the query should always return an empty
         // result.
-        if (ftsQueryString.length() == 2) {
+        if (sanitizedQuery.length() == 2) {
             returnEmptyResult = true;
         }
 
@@ -1491,8 +1483,37 @@ public class SPARQLQueryBuilder
         return and( //
                 bindMatchTermProperties(VAR_MATCH_TERM_PROPERTY),
                 VAR_SUBJECT.has(VAR_MATCH_TERM_PROPERTY, VAR_MATCH_TERM)
-                        .and(VAR_MATCH_TERM.has(FTS_VIRTUOSO, literalOf(ftsQueryString.toString())))
+                        .and(VAR_MATCH_TERM.has(VIRTUOSO_QUERY,
+                                literalOf("\"" + sanitizedQuery + "\"")))
                         .filter(startsWithPattern(VAR_MATCH_TERM, aPrefixQuery)));
+    }
+
+    private String virtuosoStartsWithQuery(String sanitizedQuery)
+    {
+        StringBuilder ftsQueryString = new StringBuilder();
+        String[] queryTokens = sanitizedQuery.split(" ");
+
+        for (int i = 0; i < queryTokens.length; i++) {
+            if (i > 0) {
+                ftsQueryString.append(" ");
+            }
+
+            // Virtuoso requires that a token has at least 4 characters before it can be
+            // used with a wildcard. If the last token has less than 4 characters, we simply
+            // drop it to avoid the user hitting a point where the auto-suggesions suddenly
+            // are empty. If the token 4 or more, we add the wildcard.
+            if (i == (queryTokens.length - 1)) {
+                if (queryTokens[i].length() >= 4) {
+                    ftsQueryString.append(queryTokens[i]);
+                    ftsQueryString.append("*");
+                }
+            }
+            else {
+                ftsQueryString.append(queryTokens[i]);
+            }
+        }
+
+        return ftsQueryString.toString();
     }
 
     private GraphPattern withLabelStartingWith_RDF4J_FTS(String aPrefixQuery)
@@ -1598,11 +1619,7 @@ public class SPARQLQueryBuilder
 
         List<Expression<?>> expressions = new ArrayList<>();
         expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
-
-        String language = kb.getDefaultLanguage();
-        if (language != null) {
-            expressions.add(matchLanguage(aVariable, language));
-        }
+        expressions.add(matchKbLanguage(aVariable));
 
         return and(expressions.toArray(Expression[]::new));
     }
@@ -1634,21 +1651,33 @@ public class SPARQLQueryBuilder
 
         List<Expression<?>> expressions = new ArrayList<>();
         expressions.add(function(REGEX, variable, literalOf(value), literalOf(regexFlags)));
-
-        String language = kb.getDefaultLanguage();
-        if (language != null) {
-            expressions.add(matchLanguage(aVariable, language));
-        }
+        expressions.add(matchKbLanguage(aVariable));
 
         return and(expressions.toArray(Expression[]::new)).parenthesize();
     }
 
-    private Expression<?> matchLanguage(Variable aVariable, String language)
+    private Expression<?> matchKbLanguage(Variable aVariable)
+    {
+        String language = kb.getDefaultLanguage();
+
+        if (language != null) {
+            return matchWithOrWithoutLanguage(aVariable, language);
+        }
+
+        return matchWithoutLanguage(aVariable);
+    }
+
+    private Expression<?> matchWithOrWithoutLanguage(Variable aVariable, String language)
     {
         return or(// Match with default language
                 function(LANGMATCHES, function(LANG, aVariable), literalOf(language)),
                 // Match without language
-                Expressions.equals(function(LANG, aVariable), EMPTY_STRING)).parenthesize(); //
+                matchWithoutLanguage(aVariable)).parenthesize(); //
+    }
+
+    private Expression<?> matchWithoutLanguage(Variable aVariable)
+    {
+        return Expressions.equals(function(LANG, aVariable), EMPTY_STRING);
     }
 
     @Override
@@ -1824,12 +1853,8 @@ public class SPARQLQueryBuilder
 
     private void retrieveOptionalWithLanguage(RdfPredicate aProperty, Variable aVariable)
     {
-        GraphPattern pattern = VAR_SUBJECT.has(aProperty, aVariable);
-
-        String language = kb.getDefaultLanguage();
-        if (language != null) {
-            pattern = pattern.filter(matchLanguage(aVariable, language));
-        }
+        GraphPattern pattern = VAR_SUBJECT.has(aProperty, aVariable) //
+                .filter(matchKbLanguage(aVariable));
 
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would
         // normally match to be removed from the results set. Using a UNION seems to address this

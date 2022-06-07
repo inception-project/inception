@@ -309,8 +309,8 @@ public class CasStorageServiceImpl
                 CasKey key = null;
                 CasHolder holder = null;
                 try {
-                    log.trace("CAS storage session [{}]: trying to borrow CAS [{}]@[{}]({})",
-                            session.hashCode(), aUsername, aDocument.getName(), aDocument.getId());
+                    log.trace("CAS storage session [{}]: trying to borrow CAS [{}]@{}",
+                            session.hashCode(), aUsername, aDocument);
 
                     key = new CasKey(aDocument, aUsername);
                     holder = borrowCas(key);
@@ -329,8 +329,7 @@ public class CasStorageServiceImpl
                             SessionManagedCas mLoaderCas = loaderSession.add(aDocument.getId(),
                                     aUsername, EXCLUSIVE_WRITE_ACCESS, holder);
                             // Do not try to release the CAS when the loader session closes because
-                            // in
-                            // fact we won't even have set the CAS in the holder by then
+                            // in fact we won't even have set the CAS in the holder by then
                             mLoaderCas.setReleaseOnClose(false);
 
                             cas = readOrCreateUnmanagedCas(aDocument, aUsername, aSupplier,
@@ -345,15 +344,13 @@ public class CasStorageServiceImpl
                                 .setOwner(_cas -> returnBorrowedCas(_cas, finalKey, finalHolder));
 
                         log.trace(
-                                "CAS storage session [{}]: borrowed CAS [{}] for [{}]@[{}]({}) loaded from storage",
-                                session.hashCode(), holder.getCasHashCode(), aUsername,
-                                aDocument.getName(), aDocument.getId());
+                                "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} loaded from storage",
+                                session.hashCode(), holder.getCasHashCode(), aUsername, aDocument);
                     }
                     else {
                         log.trace(
-                                "CAS storage session [{}]: borrowed CAS [{}] for [{}]@[{}]({}) was already in memory",
-                                session.hashCode(), holder.getCasHashCode(), aUsername,
-                                aDocument.getName(), aDocument.getId());
+                                "CAS storage session [{}]: borrowed CAS [{}] for [{}]@{} was already in memory",
+                                session.hashCode(), holder.getCasHashCode(), aUsername, aDocument);
 
                         transferCasOwnershipToCurrentThread(holder.getCas());
 
@@ -367,9 +364,8 @@ public class CasStorageServiceImpl
                     // If there was an exception, we need to return the CAS to the pool
                     if (key != null && holder != null) {
                         log.trace(
-                                "CAS storage session [{}]: returning borrowed CAS [{}] for [{}]@[{}]({}) after failure to load CAS",
-                                session.hashCode(), holder.getCasHashCode(), aUsername,
-                                aDocument.getName(), aDocument.getId());
+                                "CAS storage session [{}]: returning borrowed CAS [{}] for [{}]@{} after failure to load CAS",
+                                session.hashCode(), holder.getCasHashCode(), aUsername, aDocument);
                         try {
                             exclusiveAccessPool.returnObject(key, holder);
                             logExclusiveAccessHolders();

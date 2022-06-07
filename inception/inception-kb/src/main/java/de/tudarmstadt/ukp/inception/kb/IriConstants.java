@@ -45,6 +45,7 @@ public class IriConstants
     public static final String PREFIX_WIKIDATA_ENTITY = "http://www.wikidata.org/entity/";
     public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
     public static final String PREFIX_SCHEMA = "http://schema.org/";
+    public static final String PREFIX_VIRTUOSO = "http://www.openlinksw.com/schemas/bif#";
     public static final String PREFIX_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
     public static final String PREFIX_MWAPI = "https://www.mediawiki.org/ontology#API/";
     public static final String PREFIX_STARDOG = "tag:stardog:api:search:";
