@@ -17,7 +17,13 @@
 -->
 
 <template>
-  <div v-if="!exports.length" class="flex-content flex-h-container no-data-notice">
+  <div v-if="connectionError" class="flex-content flex-h-container no-data-notice">
+    {{ connectionError }}
+  </div>
+  <div v-if="!connected" class="flex-content flex-h-container no-data-notice">
+    Connecting...
+  </div>
+  <div v-if="connected && !exports.length" class="flex-content flex-h-container no-data-notice">
     No exports.
   </div>
   <ul v-if="exports.length" class="list-group list-group-flush">
@@ -82,7 +88,8 @@ module.exports = {
       cancelPending: new Set(),
       socket: null,
       stompClient: null,
-      connected: false
+      connected: false,
+      connectionError: false
     }
   },
   methods: {
@@ -130,7 +137,8 @@ module.exports = {
           });
         },
         function(error){
-          console.log("Websocket connection error: " + JSON.stringify(error));
+          console.log("WebSocket connection error: " + JSON.stringify(error));
+          this.connectionError = "Unable to establish WebSocket connection!";
         }
       );
     },
