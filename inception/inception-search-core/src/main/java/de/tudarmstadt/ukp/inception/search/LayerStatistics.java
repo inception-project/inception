@@ -31,6 +31,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 public class LayerStatistics
     implements Serializable
 {
+    private static final long serialVersionUID = -7451764100585199249L;
+
     public static final String STATS = Metrics.mtasRegExp();
     public static final List<String> STATS_LIST = Arrays.asList(STATS.split(","));
 
