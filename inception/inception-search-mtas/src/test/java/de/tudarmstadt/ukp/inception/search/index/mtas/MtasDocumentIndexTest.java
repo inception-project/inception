@@ -684,7 +684,7 @@ public class MtasDocumentIndexTest
         assertThat(statsResults.getMinTokenPerDoc()).isEqualTo(minTokenPerDoc);
         assertThat(statsResults.getProject()).isEqualTo(project);
         assertThat(statsResults.getUser()).isEqualTo(user);
-        assertThat(statsResults.getResults()).isEqualTo(expectedResults);
+        assertThat(statsResults.getResults()).containsAllEntriesOf(expectedResults);
 
         // Check query-based statistics
         String query = "moon";

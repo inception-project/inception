@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
@@ -268,5 +270,21 @@ public class LayerStatistics
 
         LayerStatistics ls = (LayerStatistics) o;
         return EqualsBuilder.reflectionEquals(this, ls);
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE).append("query", query)
+                .append("feature", feature).append("noOfDocuments", noOfDocuments)
+                .append("sum", sum).append("maximum", maximum).append("minimum", minimum)
+                .append("mean", mean).append("median", median)
+                .append("standardDeviation", standardDeviation)
+                .append("sumPerSentence", sumPerSentence)
+                .append("maximumPerSentence", maximumPerSentence)
+                .append("minimumPerSentence", minimumPerSentence)
+                .append("meanPerSentence", meanPerSentence)
+                .append("medianPerSentence", medianPerSentence)
+                .append("standardDeviationPerSentence", standardDeviationPerSentence).toString();
     }
 }
