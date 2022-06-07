@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb.querybuilder;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
+import static java.util.Arrays.asList;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -87,7 +88,20 @@ public class VirtuosoRepositoryTest
 
     private static List<Arguments> tests() throws Exception
     {
+        var exclusions = asList( //
+                // Virtuoso does not seem to like the VALUES clause used here. Should not be too
+                // bad because a similar query using FTS works and Virtuoso should not be used
+                // without FTS anyway
+                "testWithLabelMatchingExactlyAnyOf_subproperty_noFTS",
+                // Seems to be a limitation in Virtuoso:
+                // Virtuoso 37000 Error SP031: SPARQL compiler: Object of transitive triple pattern
+                // should be variable or QName or literal, not blank node
+                "thatPropertyQueryLimitedToDomainDoesNotReturnOutOfScopeResults",
+                // Virtuoso does not like to import the test data for this one
+                "testWithLabelStartingWith_OLIA");
+
         return SPARQLQueryBuilderTest.tests().stream() //
+                .filter(scenario -> !exclusions.contains(scenario.name))
                 .map(scenario -> Arguments.of(scenario.name, scenario))
                 .collect(Collectors.toList());
     }

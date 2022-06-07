@@ -114,7 +114,7 @@ public class IriConstants
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
 
         FTS_FUSEKI = vf.createIRI("text:query");
-        FTS_VIRTUOSO = vf.createIRI(PREFIX_VIRTUOSO, "contains");
+        FTS_VIRTUOSO = vf.createIRI("bif:contains");
         FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
         FTS_WIKIDATA = vf.createIRI(PREFIX_MWAPI, "search");
         FTS_STARDOG = vf.createIRI(PREFIX_STARDOG, "textMatch");
