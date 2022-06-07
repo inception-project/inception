@@ -35,6 +35,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -51,7 +52,9 @@ public interface DocumentService
      * The Directory where the {@link SourceDocument}s and {@link AnnotationDocument}s stored
      *
      * @return the directory.
+     * @deprecated Use {@link RepositoryProperties#getPath()} instead.
      */
+    @Deprecated
     File getDir();
 
     // --------------------------------------------------------------------------------------------
@@ -187,10 +190,8 @@ public interface DocumentService
      * @param aDocument
      *            the source document.
      * @return the source document folder.
-     * @throws IOException
-     *             if an I/O error occurs.
      */
-    File getDocumentFolder(SourceDocument aDocument) throws IOException;
+    File getSourceDocumentFolder(SourceDocument aDocument);
 
     SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
             SourceDocumentStateTransition aTransition);

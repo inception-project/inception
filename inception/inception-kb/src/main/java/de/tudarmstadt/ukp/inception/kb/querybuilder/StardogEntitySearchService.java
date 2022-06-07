@@ -21,16 +21,13 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_STARDOG;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.bNode;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
-
-import java.util.ArrayList;
-import java.util.Collection;
+import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
-import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf;
 
 public class StardogEntitySearchService
     implements GraphPattern
@@ -52,7 +49,9 @@ public class StardogEntitySearchService
     // fts:offset 5 ;
     // fts:score ?score ;
     // fts:result ?res ;
-    private final Collection<TriplePattern> patterns;
+    private final Variable result;
+    private final String query;
+    private int limit = 0;
 
     /**
      * Provides access to the Stardog search service.
@@ -64,10 +63,14 @@ public class StardogEntitySearchService
      */
     public StardogEntitySearchService(Variable aResult, String aQuery)
     {
-        patterns = new ArrayList<>();
-        patterns.add(bNode() //
-                .has(FTS_QUERY, Rdf.literalOf(aQuery)) //
-                .andHas(FTS_RESULT, aResult));
+        result = aResult;
+        query = aQuery;
+    }
+
+    public StardogEntitySearchService withLimit(int aLimit)
+    {
+        limit = aLimit;
+        return this;
     }
 
     @Override
@@ -77,10 +80,16 @@ public class StardogEntitySearchService
         sb.append("SERVICE ");
         sb.append(FTS_TEXT_MATCH.getQueryString());
         sb.append(" { \n");
-        for (TriplePattern pattern : patterns) {
-            sb.append(pattern.getQueryString());
-            sb.append(" \n");
+
+        TriplePattern pattern = bNode() //
+                .has(FTS_QUERY, literalOf(query)) //
+                .andHas(FTS_RESULT, result);
+
+        if (limit > 0) {
+            pattern = pattern.andHas(FTS_LIMIT, literalOf(2 * limit));
         }
+
+        sb.append(pattern.getQueryString());
         sb.append("}");
         return sb.toString();
     }
