@@ -337,9 +337,8 @@ public class ProjectCasDoctorPanel
                     UNMANAGED_NON_INITIALIZING_ACCESS);
         }
 
-        CAS cas = importExportService.importCasFromFile(
-                documentService.getSourceDocumentFile(aDocument), aDocument.getProject(),
-                aDocument.getFormat());
+        CAS cas = importExportService
+                .importCasFromFile(documentService.getSourceDocumentFile(aDocument), aDocument);
         aMessageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
                 "Created initial CAS for [" + aDocument.getName() + "]"));
         return cas;

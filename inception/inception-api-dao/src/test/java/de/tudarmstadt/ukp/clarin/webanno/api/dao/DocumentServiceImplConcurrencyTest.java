@@ -130,8 +130,10 @@ public class DocumentServiceImplConcurrencyTest
             return new AnnotationDocument(user, doc);
         }).when(sut).getAnnotationDocument(any(), any(String.class));
 
-        lenient().when(importExportService.importCasFromFile(any(File.class), any(Project.class),
-                any(), any())).thenReturn(CasFactory.createText("Test"));
+        lenient()
+                .when(importExportService.importCasFromFile(any(File.class),
+                        any(SourceDocument.class), any()))
+                .thenReturn(CasFactory.createText("Test"));
     }
 
     @Test
@@ -166,7 +168,7 @@ public class DocumentServiceImplConcurrencyTest
     @Test
     public void testHighConcurrencySingleUser() throws Exception
     {
-        when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
+        when(importExportService.importCasFromFile(any(File.class), any(SourceDocument.class),
                 any())).then(_invocation -> {
                     CAS cas = createCas(mergeTypeSystems(
                             asList(createTypeSystemDescription(), getInternalTypeSystem())));
@@ -231,7 +233,7 @@ public class DocumentServiceImplConcurrencyTest
     @Test
     public void testHighConcurrencyMultiUser() throws Exception
     {
-        when(importExportService.importCasFromFile(any(File.class), any(Project.class), any(),
+        when(importExportService.importCasFromFile(any(File.class), any(SourceDocument.class),
                 any())).then(_invocation -> {
                     CAS cas = createCas(mergeTypeSystems(
                             asList(createTypeSystemDescription(), getInternalTypeSystem())));

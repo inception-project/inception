@@ -17,15 +17,33 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.format;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
+import static org.apache.commons.io.FileUtils.copyFile;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.factory.ConfigurationParameterFactory.addConfigurationParameters;
+import static org.apache.uima.fit.util.LifeCycleUtil.collectionProcessComplete;
+import static org.apache.uima.fit.util.LifeCycleUtil.destroy;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
+import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.collection.CollectionException;
+import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
+import org.apache.uima.fit.util.LifeCycleUtil;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.request.resource.CssResourceReference;
+import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
+import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -86,5 +104,70 @@ public interface FormatSupport
         throws ResourceInitializationException
     {
         throw new UnsupportedOperationException("The format [" + getName() + "] cannot be written");
+    }
+
+    default void read(CAS cas, File aFile)
+        throws ResourceInitializationException, IOException, CollectionException
+    {
+        CollectionReaderDescription readerDescription = getReaderDescription(null);
+        addConfigurationParameters(readerDescription,
+                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
+                aFile.getParentFile().getAbsolutePath(),
+                ResourceCollectionReaderBase.PARAM_PATTERNS, "[+]" + aFile.getName());
+
+        CollectionReader reader = null;
+        try {
+            reader = createReader(readerDescription);
+
+            if (!reader.hasNext()) {
+                throw new FileNotFoundException("Source file [" + aFile.getName()
+                        + "] not found in [" + aFile.getPath() + "]");
+            }
+            reader.getNext(cas);
+        }
+        finally {
+            LifeCycleUtil.close(reader);
+            LifeCycleUtil.destroy(reader);
+        }
+    }
+
+    default File write(SourceDocument aDocument, File exportTempDir, CAS exportCas,
+            boolean aStripExtension)
+        throws ResourceInitializationException, AnalysisEngineProcessException, IOException
+    {
+        AnalysisEngineDescription writer = getWriterDescription(aDocument.getProject(), null,
+                exportCas);
+        addConfigurationParameters(writer, //
+                JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
+                JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
+                JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
+
+        // Not using SimplePipeline.runPipeline here now because it internally works
+        // with an aggregate engine which is slow due to
+        // https://issues.apache.org/jira/browse/UIMA-6200
+        AnalysisEngine engine = null;
+        try {
+            engine = createEngine(writer);
+            engine.process(exportCas);
+            collectionProcessComplete(engine);
+        }
+        finally {
+            destroy(engine);
+        }
+
+        // If the writer produced more than one file, we package it up as a ZIP file
+        File exportFile;
+        if (exportTempDir.listFiles().length > 1) {
+            exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
+            zipFolder(exportTempDir, exportFile);
+        }
+        else {
+            exportFile = new File(exportTempDir.getParent(),
+                    exportTempDir.listFiles()[0].getName());
+            copyFile(exportTempDir.listFiles()[0], exportFile);
+        }
+
+        return exportFile;
     }
 }
