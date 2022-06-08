@@ -36,6 +36,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
+import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServer;
@@ -62,7 +64,9 @@ import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
  * Boots INCEpTION in standalone JAR or WAR modes.
  */
 // @formatter:off
-@SpringBootApplication(scanBasePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
+@SpringBootApplication(
+        scanBasePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE },
+        exclude = { SolrAutoConfiguration.class, ElasticsearchRestClientAutoConfiguration.class} )
 @AutoConfigurationPackage(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EntityScan(basePackages = { INCEPTION_BASE_PACKAGE, WEBANNO_BASE_PACKAGE })
 @EnableAsync
