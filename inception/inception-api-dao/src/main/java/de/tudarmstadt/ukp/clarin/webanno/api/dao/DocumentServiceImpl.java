@@ -798,8 +798,8 @@ public class DocumentServiceImpl
                     // we create them here lazily
                     try {
                         return importExportService.importCasFromFile(
-                                getSourceDocumentFile(aDocument), aDocument.getProject(),
-                                aDocument.getFormat(), aFullProjectTypeSystem);
+                                getSourceDocumentFile(aDocument), aDocument,
+                                aFullProjectTypeSystem);
                     }
                     catch (UIMAException e) {
                         throw new IOException("Unable to create CAS: " + e.getMessage(), e);

@@ -598,8 +598,7 @@ public class AeroRemoteApiController
         File exportedFile = null;
         try {
             // Load the converted file into memory
-            exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format,
-                    true);
+            exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format);
             byte[] resource = FileUtils.readFileToByteArray(exportedFile);
 
             // Send it back to the client
@@ -965,7 +964,7 @@ public class AeroRemoteApiController
         try {
             tmpFile = File.createTempFile("upload", ".bin");
             aFile.transferTo(tmpFile);
-            annotationCas = importExportService.importCasFromFile(tmpFile, project, format);
+            annotationCas = importExportService.importCasFromFile(tmpFile, document, format, null);
         }
         finally {
             if (tmpFile != null) {

@@ -106,22 +106,19 @@ public interface DocumentImportExportService
     /**
      * Convert a file to a CAS. This method collects the project's type system as part of the call.
      * It is not well-suited for bulk-imports. For these, use
-     * {@link #importCasFromFile(File, Project, String, TypeSystemDescription)} instead.
+     * {@link #importCasFromFile(File, SourceDocument, TypeSystemDescription)} instead.
      *
      * @param aFile
      *            the file.
-     * @param aProject
-     *            the project to which this file belongs (required to get the type system).
-     * @param aFormatId
-     *            ID of a supported file format
+     * @param aDocument
+     *            the source document to which the file belongs ID of a supported file format
      * @return the CAS.
      * @throws UIMAException
      *             if a conversion error occurs.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    CAS importCasFromFile(File aFile, Project aProject, String aFormatId)
-        throws UIMAException, IOException;
+    CAS importCasFromFile(File aFile, SourceDocument aDocument) throws UIMAException, IOException;
 
     /**
      * Convert a file to a CAS. This method is good for bulk-importing because it accepts the
@@ -129,10 +126,8 @@ public interface DocumentImportExportService
      *
      * @param aFile
      *            the file.
-     * @param aProject
-     *            the project to which this file belongs (required to get the type system).
-     * @param aFormatId
-     *            ID of a supported file format
+     * @param aDocument
+     *            the source document to which the file belongs
      * @param aFullProjectTypeSystem
      *            the project type system. If this parameter is {@code null}, then the method will
      *            try to resolve the type system itself.
@@ -142,7 +137,11 @@ public interface DocumentImportExportService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    CAS importCasFromFile(File aFile, Project aProject, String aFormatId,
+    CAS importCasFromFile(File aFile, SourceDocument aDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
+        throws UIMAException, IOException;
+
+    CAS importCasFromFile(File aFile, SourceDocument aDocument, String aFormat,
             TypeSystemDescription aFullProjectTypeSystem)
         throws UIMAException, IOException;
 
@@ -153,8 +152,7 @@ public interface DocumentImportExportService
      * directory. This is useful as the written file can have multiple extensions based on the
      * Writer class used.
      */
-    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat,
-            boolean aStripExtension)
+    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat)
         throws IOException, UIMAException;
 
     /**
@@ -192,10 +190,6 @@ public interface DocumentImportExportService
      */
     File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
             String fileName, Mode mode)
-        throws UIMAException, IOException, ClassNotFoundException;
-
-    File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
-            String fileName, Mode mode, boolean stripExtension)
         throws UIMAException, IOException, ClassNotFoundException;
 
     File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,

@@ -230,7 +230,7 @@ public class DocumentServiceImplDatabaseTest
         {
             var tsd = createTypeSystemDescription();
             var importService = mock(DocumentImportExportService.class);
-            when(importService.importCasFromFile(any(), any(), any(), any()))
+            when(importService.importCasFromFile(any(), any(), any()))
                     .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));
             return importService;
         }
