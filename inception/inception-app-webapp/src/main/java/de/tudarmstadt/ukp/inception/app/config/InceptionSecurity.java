@@ -138,6 +138,28 @@ public class InceptionSecurity
         }
     }
 
+    @Order(2)
+    @Configuration
+    public static class ActuatorSecurity
+        extends WebSecurityConfigurerAdapter
+    {
+        @Override
+        protected void configure(HttpSecurity aHttp) throws Exception
+        {
+            // @formatter:off
+            aHttp
+                .antMatcher("/actuator/**")
+                .csrf().disable()
+                .authorizeRequests()
+                    .antMatchers("/actuator/health").permitAll()
+                    .anyRequest().denyAll()
+                .and()
+                .sessionManagement()
+                    .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+            // @formatter:on
+        }
+    }
+
     @Configuration
     @Profile("auto-mode-builtin")
     public class WebUiSecurity
