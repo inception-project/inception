@@ -164,7 +164,7 @@ public class DocumentImportExportServiceImplTest
         // formats which best retains the information from the CAS and is nicely human-readable
         // if the test needs to be debugged.
         File exportedXmi = sut.exportCasToFile(jcas.getCas(), sourceDocument, "testfile",
-                sut.getFormatById(XmiFormatSupport.ID).get(), true);
+                sut.getFormatById(XmiFormatSupport.ID).get());
 
         JCas jcas2 = loadJCasFromZippedXmi(exportedXmi);
 
@@ -191,7 +191,7 @@ public class DocumentImportExportServiceImplTest
         JCas jcas = makeJCas();
 
         File exportedXmi = sut.exportCasToFile(jcas.getCas(), sourceDocument, "testfile",
-                sut.getFormatById(XmiFormatSupport.ID).get(), true);
+                sut.getFormatById(XmiFormatSupport.ID).get());
 
         JCas jcas2 = loadJCasFromZippedXmi(exportedXmi);
         List<TOP> layerDefs = jcas2.select(TYPE_NAME_LAYER_DEFINITION).asList().stream()

@@ -598,8 +598,7 @@ public class AeroRemoteApiController
         File exportedFile = null;
         try {
             // Load the converted file into memory
-            exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format,
-                    true);
+            exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format);
             byte[] resource = FileUtils.readFileToByteArray(exportedFile);
 
             // Send it back to the client

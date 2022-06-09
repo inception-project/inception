@@ -200,17 +200,7 @@ public class DocumentImportExportServiceImpl
             FormatSupport aFormat, String aFileName, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true);
-    }
-
-    @Override
-    @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
-            FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension)
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode,
-                aStripExtension, null);
+        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true, null);
     }
 
     @Override
@@ -446,10 +436,10 @@ public class DocumentImportExportServiceImpl
 
     @Override
     public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
-            FormatSupport aFormat, boolean aStripExtension)
+            FormatSupport aFormat)
         throws IOException, UIMAException
     {
-        return exportCasToFile(aCas, aDocument, aFileName, aFormat, aStripExtension, null);
+        return exportCasToFile(aCas, aDocument, aFileName, aFormat, true, null);
     }
 
     @Override
@@ -496,7 +486,7 @@ public class DocumentImportExportServiceImpl
                     exportTempDir.delete();
                     exportTempDir.mkdirs();
 
-                    return aFormat.write(aDocument, exportTempDir, getRealCas(exportCas),
+                    return aFormat.write(aDocument, getRealCas(exportCas), exportTempDir,
                             aStripExtension);
                 }
                 finally {

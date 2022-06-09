@@ -152,8 +152,7 @@ public interface DocumentImportExportService
      * directory. This is useful as the written file can have multiple extensions based on the
      * Writer class used.
      */
-    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat,
-            boolean aStripExtension)
+    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat)
         throws IOException, UIMAException;
 
     /**
@@ -191,10 +190,6 @@ public interface DocumentImportExportService
      */
     File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
             String fileName, Mode mode)
-        throws UIMAException, IOException, ClassNotFoundException;
-
-    File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
-            String fileName, Mode mode, boolean stripExtension)
         throws UIMAException, IOException, ClassNotFoundException;
 
     File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,

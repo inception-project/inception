@@ -131,16 +131,16 @@ public interface FormatSupport
         }
     }
 
-    default File write(SourceDocument aDocument, File exportTempDir, CAS exportCas,
+    default File write(SourceDocument aDocument, CAS aCas, File aTargetFolder,
             boolean aStripExtension)
         throws ResourceInitializationException, AnalysisEngineProcessException, IOException
     {
         AnalysisEngineDescription writer = getWriterDescription(aDocument.getProject(), null,
-                exportCas);
+                aCas);
         addConfigurationParameters(writer, //
                 JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
                 JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
-                JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
+                JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, aTargetFolder,
                 JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
 
         // Not using SimplePipeline.runPipeline here now because it internally works
@@ -149,7 +149,7 @@ public interface FormatSupport
         AnalysisEngine engine = null;
         try {
             engine = createEngine(writer);
-            engine.process(exportCas);
+            engine.process(aCas);
             collectionProcessComplete(engine);
         }
         finally {
@@ -158,14 +158,14 @@ public interface FormatSupport
 
         // If the writer produced more than one file, we package it up as a ZIP file
         File exportFile;
-        if (exportTempDir.listFiles().length > 1) {
-            exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
-            zipFolder(exportTempDir, exportFile);
+        if (aTargetFolder.listFiles().length > 1) {
+            exportFile = new File(aTargetFolder.getAbsolutePath() + ".zip");
+            zipFolder(aTargetFolder, exportFile);
         }
         else {
-            exportFile = new File(exportTempDir.getParent(),
-                    exportTempDir.listFiles()[0].getName());
-            copyFile(exportTempDir.listFiles()[0], exportFile);
+            exportFile = new File(aTargetFolder.getParent(),
+                    aTargetFolder.listFiles()[0].getName());
+            copyFile(aTargetFolder.listFiles()[0], exportFile);
         }
 
         return exportFile;
