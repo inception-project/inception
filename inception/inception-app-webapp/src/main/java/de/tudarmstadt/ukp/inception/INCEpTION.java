@@ -26,39 +26,23 @@ import static org.springframework.boot.WebApplicationType.SERVLET;
 
 import java.util.Optional;
 
-import javax.validation.Validator;
-
-import org.apache.catalina.Context;
-import org.apache.catalina.connector.Connector;
-import org.apache.catalina.webresources.StandardRoot;
 import org.dkpro.core.api.resources.ResourceObjectProviderBase;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.elasticsearch.ElasticsearchRestClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.solr.SolrAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.boot.web.server.WebServer;
-import org.springframework.boot.web.servlet.ServletContextInitializer;
-import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
-import org.springframework.context.event.ContextRefreshedEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
-import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen.SplashWindow;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
-import de.tudarmstadt.ukp.inception.app.startup.StartupNoticeValve;
 
 /**
  * Boots INCEpTION in standalone JAR or WAR modes.
@@ -78,100 +62,6 @@ public class INCEpTION
 {
     static final String INCEPTION_BASE_PACKAGE = "de.tudarmstadt.ukp.inception";
     static final String WEBANNO_BASE_PACKAGE = "de.tudarmstadt.ukp.clarin.webanno";
-
-    private static final String PROTOCOL = "AJP/1.3";
-
-    @Value("${server.ajp.port:-1}")
-    private int ajpPort;
-
-    @Value("${server.ajp.secret-required:true}")
-    private String ajpSecretRequired;
-
-    @Value("${server.ajp.secret:}")
-    private String ajpSecret;
-
-    @Value("${server.ajp.address:127.0.0.1}")
-    private String ajpAddress;
-
-    private StartupNoticeValve startupNoticeValve;
-
-    // /**
-    // * Workaround for <a
-    // href="https://github.com/MarcGiffing/wicket-spring-boot/issues/186">Wicket
-    // * Spring Boot #186</a>
-    // */
-    // @Autowired
-    // public void configureBasePackagesWorkaround(WicketClassCandidatesHolder aHolder)
-    // {
-    // aHolder.getBasePackages().add(INCEPTION_BASE_PACKAGE);
-    // aHolder.getBasePackages().add(WEBANNO_BASE_PACKAGE);
-    // }
-
-    @Bean
-    @Primary
-    public Validator validator()
-    {
-        return new LocalValidatorFactoryBean();
-    }
-
-    @Bean
-    public ErrorController errorController()
-    {
-        // Disable default error controller so that Wicket can take over
-        return new ErrorController()
-        {
-        };
-    }
-
-    @Bean
-    public TomcatServletWebServerFactory servletContainer()
-    {
-        TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory()
-        {
-            @Override
-            protected void postProcessContext(Context context)
-            {
-                final int maxCacheSize = 40 * 1024;
-                StandardRoot standardRoot = new StandardRoot(context);
-                standardRoot.setCacheMaxSize(maxCacheSize);
-                context.setResources(standardRoot);
-            }
-
-            @Override
-            public WebServer getWebServer(ServletContextInitializer... initializers)
-            {
-                final WebServer container = super.getWebServer(initializers);
-
-                // Start server early so we can display the boot-up notice
-                container.start();
-
-                return container;
-            }
-        };
-
-        startupNoticeValve = new StartupNoticeValve();
-        factory.addContextValves(startupNoticeValve);
-
-        if (ajpPort > 0) {
-            Connector ajpConnector = new Connector(PROTOCOL);
-            ajpConnector.setPort(ajpPort);
-            ajpConnector.setProperty("secretRequired", ajpSecretRequired);
-            ajpConnector.setProperty("secret", ajpSecret);
-            ajpConnector.setProperty("address", ajpAddress);
-            factory.addAdditionalTomcatConnectors(ajpConnector);
-        }
-
-        return factory;
-    }
-
-    @EventListener
-    public void onApplicationEvent(ContextRefreshedEvent event)
-    {
-        if (startupNoticeValve != null && startupNoticeValve.getContainer() != null) {
-            startupNoticeValve.getContainer().getPipeline().removeValve(startupNoticeValve);
-            startupNoticeValve = null;
-        }
-    }
 
     @Override
     protected SpringApplicationBuilder createSpringApplicationBuilder()
