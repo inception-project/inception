@@ -92,7 +92,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
         DynamicWorkloadManagerAutoConfiguration.class })
 public class DynamicWorkloadExtensionImpl2Test
 {
-    static final String TEST_OUTPUT_FOLDER = "target/test-output/DefaultWorkflowExtensionTest";
+    static final String TEST_OUTPUT_FOLDER = "target/test-output/DynamicWorkloadExtensionImpl2Test";
 
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
@@ -227,7 +227,7 @@ public class DynamicWorkloadExtensionImpl2Test
         {
             var tsd = createTypeSystemDescription();
             var importService = mock(DocumentImportExportService.class);
-            when(importService.importCasFromFile(any(), any(), any(), any()))
+            when(importService.importCasFromFile(any(), any(), any()))
                     .thenReturn(CasCreationUtils.createCas(tsd, null, null, null));
             return importService;
         }

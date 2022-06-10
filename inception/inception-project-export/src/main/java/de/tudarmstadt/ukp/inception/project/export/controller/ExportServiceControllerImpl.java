@@ -159,17 +159,16 @@ public class ExportServiceControllerImpl
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        // Get project (this also ensures that it exists
+        // Get project (this also ensures that it exists). Then check user permissions.
         Project project = projectService.getProject(monitor.getProjectId());
         User user = userService.getCurrentUser();
-        if (!projectService.hasRole(user, project, PermissionLevel.MANAGER)) {
+        if (!projectService.hasRole(user, project, MANAGER) && !userService.isAdministrator(user)) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
 
-        File exportedFile = monitor.getExportedFile();
-
         // Turn the file into a resource and auto-delete the file when the resource closes the
         // stream.
+        File exportedFile = monitor.getExportedFile();
         InputStreamResource result = new InputStreamResource(new FileInputStream(exportedFile)
         {
             @Override

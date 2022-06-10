@@ -581,40 +581,37 @@ public class AeroRemoteApiController
             return new ResponseEntity<org.springframework.core.io.Resource>(resource, httpHeaders,
                     OK);
         }
-        else {
-            // Export a converted file - here we first export to a local temporary file and then
-            // send that back to the client
 
-            // Check if the format is supported
-            FormatSupport format = importExportService.getWritableFormatById(formatId)
-                    .orElseThrow(() -> new UnsupportedFormatException(
-                            "Format [%s] cannot be exported. Exportable formats are %s.", formatId,
-                            importExportService.getWritableFormats().stream()
-                                    .map(FormatSupport::getId).sorted().collect(Collectors.toList())
-                                    .toString()));
+        // Export a converted file - here we first export to a local temporary file and then
+        // send that back to the client
 
-            // Create a temporary export file from the annotations
-            CAS cas = documentService.createOrReadInitialCas(doc);
+        // Check if the format is supported
+        FormatSupport format = importExportService.getWritableFormatById(formatId)
+                .orElseThrow(() -> new UnsupportedFormatException(
+                        "Format [%s] cannot be exported. Exportable formats are %s.", formatId,
+                        importExportService.getWritableFormats().stream().map(FormatSupport::getId)
+                                .sorted().collect(Collectors.toList()).toString()));
 
-            File exportedFile = null;
-            try {
-                // Load the converted file into memory
-                exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format,
-                        true);
-                byte[] resource = FileUtils.readFileToByteArray(exportedFile);
+        // Create a temporary export file from the annotations
+        CAS cas = documentService.createOrReadInitialCas(doc);
 
-                // Send it back to the client
-                HttpHeaders httpHeaders = new HttpHeaders();
-                httpHeaders.setContentLength(resource.length);
-                httpHeaders.set("Content-Disposition",
-                        "attachment; filename=\"" + exportedFile.getName() + "\"");
+        File exportedFile = null;
+        try {
+            // Load the converted file into memory
+            exportedFile = importExportService.exportCasToFile(cas, doc, doc.getName(), format);
+            byte[] resource = FileUtils.readFileToByteArray(exportedFile);
 
-                return new ResponseEntity<>(resource, httpHeaders, OK);
-            }
-            finally {
-                if (exportedFile != null) {
-                    FileUtils.forceDelete(exportedFile);
-                }
+            // Send it back to the client
+            HttpHeaders httpHeaders = new HttpHeaders();
+            httpHeaders.setContentLength(resource.length);
+            httpHeaders.set("Content-Disposition",
+                    "attachment; filename=\"" + exportedFile.getName() + "\"");
+
+            return new ResponseEntity<>(resource, httpHeaders, OK);
+        }
+        finally {
+            if (exportedFile != null) {
+                FileUtils.forceDelete(exportedFile);
             }
         }
     }
@@ -967,7 +964,7 @@ public class AeroRemoteApiController
         try {
             tmpFile = File.createTempFile("upload", ".bin");
             aFile.transferTo(tmpFile);
-            annotationCas = importExportService.importCasFromFile(tmpFile, project, format);
+            annotationCas = importExportService.importCasFromFile(tmpFile, document, format, null);
         }
         finally {
             if (tmpFile != null) {

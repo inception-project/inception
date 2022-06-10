@@ -45,6 +45,7 @@ import java.util.List;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.function.FailableBiConsumer;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -1787,7 +1788,13 @@ public class SPARQLQueryBuilderTest
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
             String prefix = StringUtils.removeEnd(aKB.getBasePrefix(), "#");
-            conn.add(aIS, prefix, aFormat);
+            if (aKB.getDefaultDatasetIri() != null) {
+                var ctx = SimpleValueFactory.getInstance().createIRI(aKB.getDefaultDatasetIri());
+                conn.add(aIS, prefix, aFormat, ctx);
+            }
+            else {
+                conn.add(aIS, prefix, aFormat);
+            }
         }
     }
 

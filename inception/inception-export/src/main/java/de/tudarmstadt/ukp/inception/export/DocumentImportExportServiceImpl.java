@@ -29,27 +29,19 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils.zipFolder;
 import static java.io.File.createTempFile;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
-import static org.apache.commons.io.FileUtils.copyFile;
 import static org.apache.commons.io.FileUtils.forceDelete;
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
-import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
-import static org.apache.uima.fit.factory.ConfigurationParameterFactory.addConfigurationParameters;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.FSUtil.setFeature;
-import static org.apache.uima.fit.util.LifeCycleUtil.collectionProcessComplete;
-import static org.apache.uima.fit.util.LifeCycleUtil.destroy;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.text.BreakIterator;
@@ -64,21 +56,14 @@ import java.util.Map;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
-import org.apache.uima.analysis_engine.AnalysisEngine;
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.collection.CollectionReader;
-import org.apache.uima.collection.CollectionReaderDescription;
-import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
-import org.dkpro.core.api.io.ResourceCollectionReaderBase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -215,17 +200,7 @@ public class DocumentImportExportServiceImpl
             FormatSupport aFormat, String aFileName, Mode aMode)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true);
-    }
-
-    @Override
-    @Transactional
-    public File exportAnnotationDocument(SourceDocument aDocument, String aUser,
-            FormatSupport aFormat, String aFileName, Mode aMode, boolean aStripExtension)
-        throws UIMAException, IOException, ClassNotFoundException
-    {
-        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode,
-                aStripExtension, null);
+        return exportAnnotationDocument(aDocument, aUser, aFormat, aFileName, aMode, true, null);
     }
 
     @Override
@@ -270,42 +245,38 @@ public class DocumentImportExportServiceImpl
     }
 
     @Override
-    public CAS importCasFromFile(File aFile, Project aProject, String aFormatId)
+    public CAS importCasFromFile(File aFile, SourceDocument aDocument)
         throws UIMAException, IOException
     {
-        return importCasFromFile(aFile, aProject, aFormatId, null);
+        return importCasFromFile(aFile, aDocument, null);
     }
 
     @Override
-    public CAS importCasFromFile(File aFile, Project aProject, String aFormatId,
+    public CAS importCasFromFile(File aFile, SourceDocument aDocument,
+            TypeSystemDescription aFullProjectTypeSystem)
+        throws UIMAException, IOException
+    {
+        return importCasFromFile(aFile, aDocument, aDocument.getFormat(), aFullProjectTypeSystem);
+    }
+
+    @Override
+    public CAS importCasFromFile(File aFile, SourceDocument aDocument, String aFormat,
             TypeSystemDescription aFullProjectTypeSystem)
         throws UIMAException, IOException
     {
         TypeSystemDescription tsd = aFullProjectTypeSystem;
 
         if (tsd == null) {
-            tsd = annotationService.getFullProjectTypeSystem(aProject);
+            tsd = annotationService.getFullProjectTypeSystem(aDocument.getProject());
         }
-
-        // Prepare a CAS with the project type system
-        CAS cas = CasFactory.createCas(tsd);
 
         // Convert the source document to CAS
-        FormatSupport format = getReadableFormatById(aFormatId).orElseThrow(
-                () -> new IOException("No reader available for format [" + aFormatId + "]"));
+        FormatSupport format = getReadableFormatById(aFormat).orElseThrow(
+                () -> new IOException("No reader available for format [" + aFormat + "]"));
 
-        CollectionReaderDescription readerDescription = format.getReaderDescription(tsd);
-        addConfigurationParameters(readerDescription,
-                ResourceCollectionReaderBase.PARAM_SOURCE_LOCATION,
-                aFile.getParentFile().getAbsolutePath(),
-                ResourceCollectionReaderBase.PARAM_PATTERNS, "[+]" + aFile.getName());
-        CollectionReader reader = createReader(readerDescription);
-
-        if (!reader.hasNext()) {
-            throw new FileNotFoundException(
-                    "Source file [" + aFile.getName() + "] not found in [" + aFile.getPath() + "]");
-        }
-        reader.getNext(cas);
+        // Prepare a CAS with the project type system
+        CAS cas = WebAnnoCasUtil.createCas(tsd);
+        format.read(cas, aFile);
 
         // Create sentence / token annotations if they are missing - sentences first because
         // tokens are then generated inside the sentences
@@ -465,10 +436,10 @@ public class DocumentImportExportServiceImpl
 
     @Override
     public File exportCasToFile(CAS aCas, SourceDocument aDocument, String aFileName,
-            FormatSupport aFormat, boolean aStripExtension)
+            FormatSupport aFormat)
         throws IOException, UIMAException
     {
-        return exportCasToFile(aCas, aDocument, aFileName, aFormat, aStripExtension, null);
+        return exportCasToFile(aCas, aDocument, aFileName, aFormat, true, null);
     }
 
     @Override
@@ -494,7 +465,7 @@ public class DocumentImportExportServiceImpl
                 bulkOperationContext.put(exportTypeSystemKey, exportTypeSystem);
             }
 
-            try (CasStorageSession session = CasStorageSession.openNested()) {
+            try (var session = CasStorageSession.openNested()) {
                 CAS exportCas = WebAnnoCasUtil.createCas();
                 session.add(EXPORT_CAS, EXCLUSIVE_WRITE_ACCESS, exportCas);
 
@@ -510,50 +481,13 @@ public class DocumentImportExportServiceImpl
 
                 addTagsetDefinitionAnnotations(exportCas, project, bulkOperationContext);
 
-                File exportTempDir = createTempFile("webanno", "export");
+                File exportTempDir = createTempFile("inception", "export");
                 try {
                     exportTempDir.delete();
                     exportTempDir.mkdirs();
 
-                    AnalysisEngineDescription writer = aFormat.getWriterDescription(project,
-                            exportTypeSystem, exportCas);
-                    addConfigurationParameters(writer,
-                            JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
-                            JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
-                            JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
-                            JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
-
-                    // Not using SimplePipeline.runPipeline here now because it internally works
-                    // with an aggregate engine which is slow due to
-                    // https://issues.apache.org/jira/browse/UIMA-6200
-                    AnalysisEngine engine = null;
-                    try {
-                        engine = createEngine(writer);
-                        engine.process(getRealCas(exportCas));
-                        collectionProcessComplete(engine);
-                    }
-                    finally {
-                        destroy(engine);
-                    }
-
-                    // If the writer produced more than one file, we package it up as a ZIP file
-                    File exportFile;
-                    if (exportTempDir.listFiles().length > 1) {
-                        exportFile = new File(exportTempDir.getAbsolutePath() + ".zip");
-                        try {
-                            zipFolder(exportTempDir, exportFile);
-                        }
-                        catch (Exception e) {
-                            log.error("Unable to create zip File");
-                        }
-                    }
-                    else {
-                        exportFile = new File(exportTempDir.getParent(),
-                                exportTempDir.listFiles()[0].getName());
-                        copyFile(exportTempDir.listFiles()[0], exportFile);
-                    }
-
-                    return exportFile;
+                    return aFormat.write(aDocument, getRealCas(exportCas), exportTempDir,
+                            aStripExtension);
                 }
                 finally {
                     if (exportTempDir != null) {

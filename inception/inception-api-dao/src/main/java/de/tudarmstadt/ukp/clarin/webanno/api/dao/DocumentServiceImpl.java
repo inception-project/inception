@@ -39,6 +39,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
@@ -139,17 +140,18 @@ public class DocumentServiceImpl
             EntityManager aEntityManager)
     {
         repositoryProperties = aRepositoryProperties;
-        log.info("Document repository path: " + repositoryProperties.getPath());
-
         casStorageService = aCasStorageService;
         importExportService = aImportExportService;
         projectService = aProjectService;
         applicationEventPublisher = aApplicationEventPublisher;
         entityManager = aEntityManager;
+
+        log.info("Document repository path: {}", repositoryProperties.getPath());
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Deprecated
     @Override
     public File getDir()
     {
@@ -159,15 +161,31 @@ public class DocumentServiceImpl
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
     // need to be in a transaction here. Avoiding the transaction speeds up the call.
     @Override
-    public File getDocumentFolder(SourceDocument aDocument) throws IOException
+    public File getSourceDocumentFolder(SourceDocument aDocument)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aDocument.getProject().getId(),
+                "Source document's project must have an ID");
+        Validate.notNull(aDocument.getId(), "Source document must have an ID");
+
+        return repositoryProperties.getPath().toPath() //
+                .toAbsolutePath() //
+                .resolve(PROJECT_FOLDER) //
+                .resolve(Long.toString(aDocument.getProject().getId())) //
+                .resolve(DOCUMENT_FOLDER)//
+                .resolve(Long.toString(aDocument.getId())) //
+                .resolve(SOURCE_FOLDER) //
+                .toFile();
+    }
+
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public File getSourceDocumentFile(SourceDocument aDocument)
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        File sourceDocFolder = new File(repositoryProperties.getPath(),
-                "/" + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER
-                        + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
-        FileUtils.forceMkdir(sourceDocFolder);
-        return sourceDocFolder;
+        return getSourceDocumentFolder(aDocument).toPath().resolve(aDocument.getName()).toFile();
     }
 
     @Override
@@ -180,9 +198,8 @@ public class DocumentServiceImpl
             entityManager.persist(aDocument);
             return aDocument;
         }
-        else {
-            return entityManager.merge(aDocument);
-        }
+
+        return entityManager.merge(aDocument);
     }
 
     @Override
@@ -274,20 +291,6 @@ public class DocumentServiceImpl
                 .getSingleResult();
 
         return count > 0;
-    }
-
-    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
-    // need to be in a transaction here. Avoiding the transaction speeds up the call.
-    @Override
-    public File getSourceDocumentFile(SourceDocument aDocument)
-    {
-        Validate.notNull(aDocument, "Source document must be specified");
-
-        File documentUri = new File(repositoryProperties.getPath().getAbsolutePath() + "/"
-                + PROJECT_FOLDER + "/" + aDocument.getProject().getId() + "/" + DOCUMENT_FOLDER
-                + "/" + aDocument.getId() + "/" + SOURCE_FOLDER);
-
-        return new File(documentUri, aDocument.getName());
     }
 
     @Override
@@ -416,7 +419,8 @@ public class DocumentServiceImpl
         return entityManager
                 .createQuery("FROM SourceDocument WHERE name = :name AND project =:project",
                         SourceDocument.class)
-                .setParameter("name", aDocumentName).setParameter("project", aProject)
+                .setParameter("name", aDocumentName) //
+                .setParameter("project", aProject) //
                 .getSingleResult();
     }
 
@@ -427,7 +431,8 @@ public class DocumentServiceImpl
         return entityManager
                 .createQuery("FROM SourceDocument WHERE id = :docid AND project.id =:pid",
                         SourceDocument.class)
-                .setParameter("docid", aSourceDocId).setParameter("pid", aProjectId)
+                .setParameter("docid", aSourceDocId) //
+                .setParameter("pid", aProjectId) //
                 .getSingleResult();
     }
 
@@ -439,7 +444,7 @@ public class DocumentServiceImpl
         Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aState, "State must be specified");
 
-        SourceDocumentState oldState = aDocument.getState();
+        var oldState = aDocument.getState();
 
         aDocument.setState(aState);
 
@@ -472,12 +477,15 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        String query = "SELECT COUNT(*) " + "FROM AnnotationDocument "
-                + "WHERE document = :document AND state = :state";
+        String query = join("\n", //
+                "SELECT COUNT(*) ", //
+                "FROM AnnotationDocument ", //
+                "WHERE document = :document AND state = :state");
 
         long count = entityManager.createQuery(query, Long.class)
                 .setParameter("document", aDocument)
-                .setParameter("state", AnnotationDocumentState.FINISHED).getSingleResult();
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .getSingleResult();
 
         return count > 0;
     }
@@ -488,11 +496,15 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aProject, "Project must be specified");
 
-        String query = "SELECT COUNT(*) " + "FROM AnnotationDocument "
-                + "WHERE document.project = :project AND state = :state";
+        String query = join("\n", //
+                "SELECT COUNT(*) ", //
+                "FROM AnnotationDocument ", //
+                "WHERE document.project = :project AND state = :state");
 
-        long count = entityManager.createQuery(query, Long.class).setParameter("project", aProject)
-                .setParameter("state", AnnotationDocumentState.FINISHED).getSingleResult();
+        long count = entityManager.createQuery(query, Long.class) //
+                .setParameter("project", aProject) //
+                .setParameter("state", AnnotationDocumentState.FINISHED) //
+                .getSingleResult();
 
         return count > 0;
     }
@@ -504,6 +516,7 @@ public class DocumentServiceImpl
 
         // Get all annotators in the project
         List<String> users = getAllAnnotators(aProject);
+
         // Bail out already. HQL doesn't seem to like queries with an empty
         // parameter right of "in"
         if (users.isEmpty()) {
@@ -554,10 +567,11 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aProject, "Project must be specified");
 
-        return entityManager
-                .createQuery("FROM SourceDocument where project =:project ORDER BY name ASC",
-                        SourceDocument.class)
-                .setParameter("project", aProject).getResultList();
+        var query = "FROM SourceDocument where project =:project ORDER BY name ASC";
+
+        return entityManager.createQuery(query, SourceDocument.class)
+                .setParameter("project", aProject) //
+                .getResultList();
     }
 
     @Override
@@ -623,11 +637,12 @@ public class DocumentServiceImpl
                             + "the annotation document entity might not even have been created yet.");
         }
 
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "FROM AnnotationDocument", //
                 "WHERE user = :user", //
                 "AND project = :project", //
-                "AND state = :state", "ORDER BY name ASC");
+                "AND state = :state", //
+                "ORDER BY name ASC");
 
         return entityManager.createQuery(query, AnnotationDocument.class) //
                 .setParameter("project", aProject) //
@@ -661,10 +676,9 @@ public class DocumentServiceImpl
             FileUtils.forceDelete(new File(path));
         }
 
-        try (var logCtx = withProjectLogger(aDocument.getProject())) {
-            Project project = aDocument.getProject();
-            log.info("Removed source document [{}]({}) from project [{}]({})", aDocument.getName(),
-                    aDocument.getId(), project.getName(), project.getId());
+        Project project = aDocument.getProject();
+        try (var logCtx = withProjectLogger(project)) {
+            log.info("Removed source document {} from project {}", aDocument, project);
         }
     }
 
@@ -695,10 +709,10 @@ public class DocumentServiceImpl
 
         // Import the actual content
         File targetFile = getSourceDocumentFile(aDocument);
-        try (CasStorageSession session = CasStorageSession.openNested()) {
+        try (var session = CasStorageSession.openNested()) {
             FileUtils.forceMkdir(targetFile.getParentFile());
 
-            try (OutputStream os = new FileOutputStream(targetFile)) {
+            try (var os = new FileOutputStream(targetFile)) {
                 copyLarge(aIs, os);
             }
 
@@ -710,10 +724,9 @@ public class DocumentServiceImpl
             applicationEventPublisher
                     .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, cas));
 
-            try (var logCtx = withProjectLogger(aDocument.getProject())) {
-                Project project = aDocument.getProject();
-                log.info("Imported source document [{}]({}) to project [{}]({})",
-                        aDocument.getName(), aDocument.getId(), project.getName(), project.getId());
+            Project project = aDocument.getProject();
+            try (var logCtx = withProjectLogger(project)) {
+                log.info("Imported source document {} to project {}", aDocument, project);
             }
         }
         catch (IOException e) {
@@ -775,9 +788,8 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aDocument, "Source document must be specified");
 
-        log.debug("Loading initial CAS for source document [{}]({}) in project [{}]({})",
-                aDocument.getName(), aDocument.getId(), aDocument.getProject().getName(),
-                aDocument.getProject().getId());
+        log.debug("Loading initial CAS for source document {} in project {}", aDocument,
+                aDocument.getProject());
 
         return casStorageService.readOrCreateCas(aDocument, INITIAL_CAS_PSEUDO_USER, aUpgradeMode,
                 () -> {
@@ -786,8 +798,8 @@ public class DocumentServiceImpl
                     // we create them here lazily
                     try {
                         return importExportService.importCasFromFile(
-                                getSourceDocumentFile(aDocument), aDocument.getProject(),
-                                aDocument.getFormat(), aFullProjectTypeSystem);
+                                getSourceDocumentFile(aDocument), aDocument,
+                                aFullProjectTypeSystem);
                     }
                     catch (UIMAException e) {
                         throw new IOException("Unable to create CAS: " + e.getMessage(), e);
@@ -1165,17 +1177,19 @@ public class DocumentServiceImpl
     public Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject, User aUser)
     {
         // First get the source documents
+        var sourceDocsQuery = "FROM SourceDocument WHERE project = (:project)";
         List<SourceDocument> sourceDocuments = entityManager
-                .createQuery("FROM SourceDocument WHERE project = (:project)", SourceDocument.class)
-                .setParameter("project", aProject).getResultList();
+                .createQuery(sourceDocsQuery, SourceDocument.class) //
+                .setParameter("project", aProject) //
+                .getResultList();
 
         // Next we get all the annotation document records. We can use these to filter out
         // documents which are IGNOREed for given users.
+        var annDocsQuery = "FROM AnnotationDocument WHERE user = (:username) AND project = (:project)";
         List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE user = (:username) AND project = (:project)",
-                        AnnotationDocument.class)
-                .setParameter("username", aUser.getUsername()).setParameter("project", aProject)
+                .createQuery(annDocsQuery, AnnotationDocument.class)
+                .setParameter("username", aUser.getUsername()) //
+                .setParameter("project", aProject) //
                 .getResultList();
 
         // First we add all the source documents
@@ -1286,14 +1300,14 @@ public class DocumentServiceImpl
         String query = 
                 "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
                 "COUNT(*), " +
-                "SUM(CASE WHEN state = '" + NEW.getId() + "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + NEW.getId() + "' THEN 1 ELSE 0 END), " +
                 "SUM(CASE WHEN (state = '" + ANNOTATION_IN_PROGRESS.getId() + 
                         "' OR state is NULL) THEN 1 ELSE 0 END), " +
                 "SUM(CASE WHEN state = '" + ANNOTATION_FINISHED.getId() + 
                         "'  THEN 1 ELSE 0 END), " +
                 "SUM(CASE WHEN state = '" + CURATION_IN_PROGRESS.getId() + 
                         "' THEN 1 ELSE 0 END), " +
-                "SUM(CASE WHEN state = '" + CURATION_FINISHED.getId() + "'  THEN 1 ELSE 0 END)) " +
+                "SUM(CASE WHEN state = '" + CURATION_FINISHED.getId() + "' THEN 1 ELSE 0 END)) " +
                 "FROM SourceDocument " + 
                 "WHERE project = :project";
         // @formatter:on
@@ -1443,7 +1457,7 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public long countSourceDocuments()
     {
-        String query = String.join("\n", "SELECT COUNT(*)", "FROM SourceDocument");
+        String query = "SELECT COUNT(*) FROM SourceDocument";
         return entityManager.createQuery(query, Long.class).getSingleResult();
     }
 
@@ -1451,7 +1465,7 @@ public class DocumentServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public long countAnnotationDocuments()
     {
-        String query = String.join("\n", "SELECT COUNT(*)", "FROM AnnotationDocument");
+        String query = "SELECT COUNT(*) FROM AnnotationDocument";
         return entityManager.createQuery(query, Long.class).getSingleResult();
     }
 

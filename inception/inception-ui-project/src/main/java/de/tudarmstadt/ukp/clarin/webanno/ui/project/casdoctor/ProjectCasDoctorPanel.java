@@ -332,18 +332,15 @@ public class ProjectCasDoctorPanel
             LogMessageSet aMessageSet)
         throws IOException, UIMAException
     {
-        CAS cas;
         if (casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER)) {
-            cas = casStorageService.readCas(aDocument, INITIAL_CAS_PSEUDO_USER,
+            return casStorageService.readCas(aDocument, INITIAL_CAS_PSEUDO_USER,
                     UNMANAGED_NON_INITIALIZING_ACCESS);
         }
-        else {
-            cas = importExportService.importCasFromFile(
-                    documentService.getSourceDocumentFile(aDocument), aDocument.getProject(),
-                    aDocument.getFormat());
-            aMessageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
-                    "Created initial CAS for [" + aDocument.getName() + "]"));
-        }
+
+        CAS cas = importExportService
+                .importCasFromFile(documentService.getSourceDocumentFile(aDocument), aDocument);
+        aMessageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
+                "Created initial CAS for [" + aDocument.getName() + "]"));
         return cas;
     }
 
