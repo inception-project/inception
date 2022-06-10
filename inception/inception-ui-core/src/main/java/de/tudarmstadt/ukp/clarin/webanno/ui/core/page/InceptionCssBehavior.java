@@ -17,30 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.Component;
+import org.apache.wicket.behavior.Behavior;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 
-public class WebAnnoCssReference
-    extends CssResourceReference
+public class InceptionCssBehavior
+    extends Behavior
 {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 5367089196863803403L;
 
-    private static final WebAnnoCssReference INSTANCE = new WebAnnoCssReference();
+    private static final InceptionCssBehavior INSTANCE = new InceptionCssBehavior();
 
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static WebAnnoCssReference get()
+    @Override
+    public void renderHead(Component aComponent, IHeaderResponse aResponse)
     {
-        return INSTANCE;
+        // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
+        aResponse.render(CssHeaderItem.forReference(InceptionCssReference.get()));
     }
 
-    /**
-     * Private constructor
-     */
-    private WebAnnoCssReference()
+    public static InceptionCssBehavior get()
     {
-        super(WebAnnoCssReference.class, "webanno.css");
+        return INSTANCE;
     }
 }

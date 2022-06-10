@@ -42,7 +42,6 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 import org.slf4j.Logger;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceSchemaCreatedEvent;
 import org.springframework.boot.availability.AvailabilityChangeEvent;
 import org.springframework.boot.context.event.ApplicationContextInitializedEvent;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
@@ -215,10 +214,6 @@ public class LoadingSplashScreen
 
             if (aEvent instanceof ApplicationPreparedEvent) {
                 return "Application prepared";
-            }
-
-            if (aEvent instanceof DataSourceSchemaCreatedEvent) {
-                return "Data source schema created";
             }
 
             if (aEvent instanceof ServletWebServerInitializedEvent) {

@@ -20,9 +20,6 @@ package de.tudarmstadt.ukp.inception.preferences;
 import java.io.Serializable;
 import java.util.List;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
-@JsonSerialize
 public class TestTraits
     implements Serializable
 {
