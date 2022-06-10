@@ -31,10 +31,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-document-annotation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
     </dependency>
     
@@ -212,6 +208,11 @@
     
 
     <!-- TEST DEPENDENCIES -->
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-document-annotation</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-ner-asl</artifactId>

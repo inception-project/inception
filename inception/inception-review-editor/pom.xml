@@ -92,45 +92,5 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-
-    <dependency>
-      <groupId>org.danekja</groupId>
-      <artifactId>jdk-serializable-functional</artifactId>
-    </dependency>
-
-    <!-- Testing -->
-
-
   </dependencies>
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.rat</groupId>
-          <artifactId>apache-rat-plugin</artifactId>
-          <executions>
-            <execution>
-              <id>default</id>
-              <configuration>
-                <excludes combine.children="append">
-                  <!-- These upstream files do not contain license headers -->
-                  <exclude>cache/**/*</exclude>
-                </excludes>
-              </configuration>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-  <profiles>
-    <profile>
-      <id>jenkins</id>
-      <activation>
-        <property>
-          <name>JENKINS_HOME</name>
-        </property>
-      </activation>
-    </profile>
-  </profiles>
 </project>
