@@ -44,3 +44,45 @@ webhooks.globalHooks[0].topics[1]=ANNOTATION_STATE
 webhooks.globalHooks[0].topics[2]=PROJECT_STATE
 webhooks.globalHooks[0].verify-certificates=false
 ----
+
+TIP: You can test receiving WebHooks e.g. using link:https://pypi.org/project/pyserv/[pyserv] or link:https://en.wikipedia.org/wiki/Netcat[netcat].
+
+When {product-name} triggers a webhook, it sends a HTTP `POST` request. The `X-AERO-Notification` header
+indicates the topic and the body of the request is a JSON structure providing details about the
+state change. The JSON in the examples below have been pretty-printed for your convenient - the
+messages sent by INCEpTION are not pretty-printed.
+
+.Example `PROJECT_STATE`
+----
+{
+  "projectId": 123,
+  "projectName": "Example project",
+  "projectPreviousState": "CURATION-IN-PROGRESS",
+  "projectState": "ANNOTATION-IN-PROGRESS"
+}
+----
+
+.Example `DOCUMENT_STATE`
+----
+{
+  "projectId": 123,
+  "projectName": "Example project",
+  "documentId": 565,
+  "documentName": "document.txt",
+  "documentPreviousState": "CURATION-IN-PROGRESS",
+  "documentState": "ANNOTATION-IN-PROGRESS"
+}
+----
+
+.Example `ANNOTATION_STATE`
+----
+{
+  "projectId": 123,
+  "projectName": "Example project",
+  "documentId": 565,
+  "documentName": "document.txt",
+  "annotationUser": "annotator1",
+  "annotationPreviousState": "COMPLETE",
+  "annotationState": "LOCKED"
+}
+----
