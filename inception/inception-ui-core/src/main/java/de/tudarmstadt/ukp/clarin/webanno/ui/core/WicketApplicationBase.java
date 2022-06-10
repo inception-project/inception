@@ -21,28 +21,27 @@ import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.CoepMode.ENFORCING;
 import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
+import static org.apache.wicket.settings.ExceptionSettings.SHOW_INTERNAL_ERROR_PAGE;
 
-import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Page;
 import org.apache.wicket.authorization.strategies.CompoundAuthorizationStrategy;
 import org.apache.wicket.authroles.authorization.strategies.role.RoleAuthorizationStrategy;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration;
 import org.apache.wicket.coep.CrossOriginEmbedderPolicyRequestCycleListener;
 import org.apache.wicket.devutils.stateless.StatelessChecker;
+import org.apache.wicket.markup.html.IPackageResourceGuard;
+import org.apache.wicket.markup.html.SecurePackageResourceGuard;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebResponse;
-import org.apache.wicket.request.resource.PackageResourceReference;
-import org.apache.wicket.request.resource.SharedResourceReference;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.resource.JQueryResourceReference;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
@@ -53,7 +52,6 @@ import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplicatio
 import de.agilecoders.wicket.core.Bootstrap;
 import de.agilecoders.wicket.core.settings.IBootstrapSettings;
 import de.agilecoders.wicket.webjars.WicketWebjars;
-import de.tudarmstadt.ukp.clarin.webanno.support.FileSystemResource;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
@@ -61,7 +59,11 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.InceptionCssBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptBehavior;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
+import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
+import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
 
 /**
  * The Wicket application class. Sets up pages, authentication, theme, and other application-wide
@@ -128,14 +130,16 @@ public abstract class WicketApplicationBase
 
         initWebFrameworks();
 
-        initLogoReference();
-
         // Allow fetching the current page from non-Wicket code
         initPageRequestTracker();
 
         initServerTimeReporting();
 
         initNonCachingInDevEnvironment();
+
+        initAccessToVueComponents();
+
+        initErrorPage();
     }
 
     private void initNonCachingInDevEnvironment()
@@ -170,6 +174,10 @@ public abstract class WicketApplicationBase
         addJQueryUIResourcesToAllPages();
 
         addFontAwesomeToAllPages();
+
+        addWebAnnoJavascriptToAllPages();
+
+        initDefaultPageInceptionResources();
     }
 
     protected void initBootstrap()
@@ -219,22 +227,13 @@ public abstract class WicketApplicationBase
         });
     }
 
-    protected void initLogoReference()
+    protected void addWebAnnoJavascriptToAllPages()
     {
-        Properties settings = SettingsUtil.getSettings();
-        String logoValue = settings.getProperty(SettingsUtil.CFG_STYLE_LOGO);
-        if (StringUtils.isNotBlank(logoValue) && new File(logoValue).canRead()) {
-            getSharedResources().add("logo", new FileSystemResource(new File(logoValue)));
-            mountResource("/assets/logo.png", new SharedResourceReference("logo"));
-        }
-        else {
-            mountResource("/assets/logo.png", new PackageResourceReference(getLogoLocation()));
-        }
-    }
-
-    protected String getLogoLocation()
-    {
-        return "/de/tudarmstadt/ukp/clarin/webanno/ui/core/logo/logo.png";
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new WebAnnoJavascriptBehavior());
+            }
+        });
     }
 
     protected void initJQueryResourceReference()
@@ -287,4 +286,46 @@ public abstract class WicketApplicationBase
     {
         return ApplicationSession.class;
     }
+
+    private void initErrorPage()
+    {
+        // Instead of configuring the different types of errors to refer to our error page, we
+        // use @WicketInternalErrorPage and friends on our ErrorPage
+        getExceptionSettings().setUnexpectedExceptionDisplay(SHOW_INTERNAL_ERROR_PAGE);
+        getRequestCycleListeners().add(new ErrorListener());
+
+        // When running in development mode, we mount the exception test page
+        if (DEVELOPMENT.equals(getConfigurationType())) {
+            mountPage("/whoops/test", ErrorTestPage.class);
+        }
+    }
+
+    private void initAccessToVueComponents()
+    {
+        IPackageResourceGuard resourceGuard = getResourceSettings().getPackageResourceGuard();
+        if (resourceGuard instanceof SecurePackageResourceGuard) {
+            SecurePackageResourceGuard securePackageResourceGuard = (SecurePackageResourceGuard) resourceGuard;
+            securePackageResourceGuard.addPattern("+*.vue");
+        }
+    }
+
+    @Override
+    public String getMimeType(String aFileName)
+    {
+        if (aFileName.endsWith(".vue")) {
+            return "text/javascript";
+        }
+
+        return super.getMimeType(aFileName);
+    }
+
+    protected void initDefaultPageInceptionResources()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(InceptionCssBehavior.get());
+            }
+        });
+    }
+
 }

@@ -124,10 +124,6 @@
     </dependency>
     <dependency>
       <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-document-annotation</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
     </dependency>
 
@@ -189,6 +185,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-document-annotation</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

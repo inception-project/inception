@@ -43,13 +43,44 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
 
 @Configuration
-public class InceptionWebInitializer
+public class InceptionServletContextInitializer
     implements ServletContextInitializer
 {
     private @Autowired RepositoryProperties repoProperties;
 
     @Override
     public void onStartup(ServletContext aServletContext) throws ServletException
+    {
+        configureCoep(aServletContext);
+        configureLogging(aServletContext);
+        configurePerRequestJpaSession(aServletContext);
+        configureSpringSessionLookup(aServletContext);
+    }
+
+    private void configureSpringSessionLookup(ServletContext aServletContext)
+    {
+        // Provide Spring with access to the HTTP sessions
+        aServletContext.addListener(HttpSessionEventPublisher.class);
+    }
+
+    private void configurePerRequestJpaSession(ServletContext aServletContext)
+    {
+        // Make sure we have one JPA session/transaction per request. Closes session at the
+        // end, without this, changed data may not be automatically saved to the DB.
+        FilterRegistration openSessionInViewFilter = aServletContext.addFilter("opensessioninview",
+                OpenEntityManagerInViewFilter.class);
+        openSessionInViewFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST), false, "/*");
+    }
+
+    private void configureLogging(ServletContext aServletContext)
+    {
+        // Make username / repository accessible to logging framework
+        FilterRegistration loggingFilter = aServletContext.addFilter("logging",
+                new LoggingFilter(repoProperties.getPath().getAbsolutePath().toString()));
+        loggingFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST, FORWARD, ASYNC), false, "/*");
+    }
+
+    private void configureCoep(ServletContext aServletContext)
     {
         FilterRegistration coepFilter = aServletContext.addFilter("coep", new Filter()
         {
@@ -66,18 +97,5 @@ public class InceptionWebInitializer
             }
         });
         coepFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST, FORWARD, ASYNC), false, "/*");
-
-        // Make username / repository accessible to logging framework
-        FilterRegistration loggingFilter = aServletContext.addFilter("logging",
-                new LoggingFilter(repoProperties.getPath().getAbsolutePath().toString()));
-        loggingFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST, FORWARD, ASYNC), false, "/*");
-
-        // Make sure we have one JPA session/transaction per request. Closes session at the
-        // end, without this, changed data may not be automatically saved to the DB.
-        FilterRegistration openSessionInViewFilter = aServletContext.addFilter("opensessioninview",
-                OpenEntityManagerInViewFilter.class);
-        openSessionInViewFilter.addMappingForUrlPatterns(EnumSet.of(REQUEST), false, "/*");
-
-        aServletContext.addListener(HttpSessionEventPublisher.class);
     }
 }

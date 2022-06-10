@@ -15,33 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.config;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
-import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
-import de.tudarmstadt.ukp.inception.app.css.InceptionCssReference;
-
-public class InceptionResourcesBehavior
+public class WebAnnoJavascriptBehavior
     extends Behavior
 {
-    private static final long serialVersionUID = 5367089196863803403L;
+    private static final long serialVersionUID = 7273796736107186833L;
 
-    private static final InceptionResourcesBehavior INSTANCE = new InceptionResourcesBehavior();
+    private static final WebAnnoJavascriptBehavior INSTANCE = new WebAnnoJavascriptBehavior();
 
     @Override
     public void renderHead(Component aComponent, IHeaderResponse aResponse)
     {
-        // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
-        aResponse.render(CssHeaderItem.forReference(InceptionCssReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
     }
 
-    public static InceptionResourcesBehavior get()
+    public static WebAnnoJavascriptBehavior get()
     {
         return INSTANCE;
     }

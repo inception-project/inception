@@ -61,10 +61,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-dao</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-project</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>javax.persistence</groupId>
@@ -94,10 +90,6 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
 
@@ -106,10 +98,6 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -122,10 +110,6 @@
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimafit-core</artifactId>
     </dependency>
 
     <!-- WICKET DEPENDENCIES -->
@@ -182,6 +166,26 @@
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-text</artifactId>

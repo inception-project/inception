@@ -56,6 +56,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-doc</artifactId>
     </dependency>
     <dependency>
@@ -812,6 +816,7 @@
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-plugin-manager</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>

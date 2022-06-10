@@ -62,23 +62,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-curation</artifactId>
     </dependency>
-    
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimafit-core</artifactId>
-    </dependency>
-    
+        
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
     </dependency>
 
     <dependency>
@@ -94,6 +81,11 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-core</artifactId>
     </dependency>
     
     <dependency>
@@ -114,15 +106,7 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-autoconfigure</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core</artifactId>
     </dependency>
 
     <dependency>
@@ -161,11 +145,17 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-jquery-ui</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.danekja</groupId>
-      <artifactId>jdk-serializable-functional</artifactId>
-    </dependency>
     
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project</artifactId>
@@ -183,6 +173,11 @@
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-test-autoconfigure</artifactId>
       <scope>test</scope>
     </dependency>
@@ -196,6 +191,11 @@
           <artifactId>spring-boot-starter-logging</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.hsqldb</groupId>
@@ -217,6 +217,8 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <ignoredDependencies>
+              <!-- Plugin does not properly detect it -->
+              <ignoredDependency>org.apache.uima:uimaj-core</ignoredDependency>
               <!--
                - Test dependencies used via auto-configuration and reflection
                -->
