@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -23,9 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.error;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.info;
-import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.warn;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static java.lang.String.format;
@@ -58,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -68,13 +60,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
-import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * This consumer trains a new classifier model, if a classification tool was selected before.
  */
 public class TrainingTask
-    extends Task
+    extends RecommendationTask_ImplBase
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -85,7 +76,6 @@ public class TrainingTask
     private @Autowired ApplicationEventPublisher appEventPublisher;
 
     private final SourceDocument currentDocument;
-    private final List<LogMessage> logMessages = new ArrayList<>();
 
     public TrainingTask(User aUser, Project aProject, String aTrigger,
             SourceDocument aCurrentDocument)
@@ -103,7 +93,7 @@ public class TrainingTask
 
             log.debug("[{}][{}]: Starting training for project {} triggered by [{}]...", getId(),
                     user.getUsername(), project, getTrigger());
-            logMessages.add(info(this, "Starting training triggered by [%s]...", getTrigger()));
+            info("Starting training triggered by [%s]...", getTrigger());
 
             // Read the CASes only when they are accessed the first time. This allows us to skip
             // reading the CASes in case that no layer / recommender is available or if no
@@ -131,9 +121,8 @@ public class TrainingTask
                 if (recommenders.isEmpty()) {
                     log.trace("[{}][{}][{}]: No active recommenders, skipping training.", getId(),
                             user.getUsername(), layer.getUiName());
-                    logMessages.add(
-                            info(this, "No active recommenders for layer [%s], skipping training.",
-                                    layer.getUiName()));
+                    info("No active recommenders for layer [%s], skipping training.",
+                            layer.getUiName());
                     continue;
                 }
 
@@ -176,9 +165,8 @@ public class TrainingTask
                                     "[{}][{}][{}]: Recommender configured with invalid layer or "
                                             + "feature - skipping recommender",
                                     getId(), user.getUsername(), r.getRecommender().getName());
-                            logMessages.add(error(this,
-                                    "Recommender [%s] configured with invalid layer or feature - skipping recommender.",
-                                    r.getRecommender().getName()));
+                            error("Recommender [%s] configured with invalid layer or feature - skipping recommender.",
+                                    r.getRecommender().getName());
                             appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
                                     user.getUsername(),
                                     "Recommender configured with invalid layer or feature - skipping training recommender.",
@@ -219,9 +207,8 @@ public class TrainingTask
                             log.debug(
                                     "[{}][{}][{}]: There are no annotations available to train on",
                                     getId(), user.getUsername(), recommender.getName());
-                            logMessages.add(warn(this,
-                                    "There are no [%s] annotations available to train on.",
-                                    layer.getUiName()));
+                            warn("There are no [%s] annotations available to train on.",
+                                    layer.getUiName());
                             // This can happen if there were already predictions based on existing
                             // annotations, but all annotations have been removed/deleted. To ensure
                             // that the prediction run removes the stale predictions, we need to
@@ -233,12 +220,11 @@ public class TrainingTask
                         log.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...",
                                 getId(), user.getUsername(), recommender.getName(),
                                 cassesForTraining.size(), casses.get().size());
-                        logMessages.add(info(this,
-                                "Training model for [%s] on [%d] out of [%d] documents ...",
-                                layer.getUiName(), cassesForTraining.size(), casses.get().size()));
+                        info("Training model for [%s] on [%d] out of [%d] documents ...",
+                                layer.getUiName(), cassesForTraining.size(), casses.get().size());
 
                         recommendationEngine.train(ctx, cassesForTraining);
-                        logMessages.addAll(ctx.getMessages());
+                        inheritLog(ctx.getMessages());
 
                         long duration = System.currentTimeMillis() - startTime;
 
@@ -249,8 +235,7 @@ public class TrainingTask
                                     "[{}][{}][{}]: Training on [{}] out of [{}] documents not successful ({} ms)",
                                     getId(), user.getUsername(), recommender.getName(), trainDocNum,
                                     docNum, duration);
-                            logMessages
-                                    .add(info(this, "Training not successful (%d ms).", duration));
+                            info("Training not successful (%d ms).", duration);
                             appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
                                     user.getUsername(),
                                     format("Training on %d out of %d documents not successful (%d ms)",
@@ -263,9 +248,8 @@ public class TrainingTask
                                 "[{}][{}][{}]: Training successful on [{}] out of [{}] documents ({} ms)",
                                 getId(), user.getUsername(), recommender.getName(),
                                 cassesForTraining.size(), casses.get().size(), duration);
-                        logMessages.add(info(this,
-                                "Training successful on [%d] out of [%d] documents (%d ms)",
-                                cassesForTraining.size(), casses.get().size(), duration));
+                        info("Training successful on [%d] out of [%d] documents (%d ms)",
+                                cassesForTraining.size(), casses.get().size(), duration);
                         seenSuccessfulTraining = true;
 
                         ctx.close();
@@ -278,8 +262,7 @@ public class TrainingTask
                         log.error("[{}][{}][{}]: Training failed ({} ms)", getId(),
                                 user.getUsername(), recommender.getName(),
                                 (System.currentTimeMillis() - startTime), e);
-                        logMessages.add(error(this, "Training failed (%d ms): %s", duration,
-                                getRootCauseMessage(e)));
+                        error("Training failed (%d ms): %s", duration, getRootCauseMessage(e));
                         appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
                                 user.getUsername(), String.format("Training failed (%d ms) with %s",
                                         duration, e.getMessage()),
@@ -298,7 +281,7 @@ public class TrainingTask
 
             PredictionTask predictionTask = new PredictionTask(user,
                     String.format("TrainingTask %s complete", getId()), currentDocument);
-            predictionTask.inheritLog(logMessages);
+            predictionTask.inheritLog(this);
             schedulingService.enqueue(predictionTask);
         }
     }
@@ -348,11 +331,6 @@ public class TrainingTask
         }
 
         return CasUtil.iterator(aCas, type).hasNext();
-    }
-
-    public void inheritLog(List<LogMessage> aLogMessages)
-    {
-        logMessages.addAll(aLogMessages);
     }
 
     private static class TrainingDocument

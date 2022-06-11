@@ -17,28 +17,41 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.KEY_RECOMMENDER_GENERAL_SETTINGS;
+import static java.util.stream.Collectors.toList;
 
+import java.util.List;
+
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RecommenderGeneralSettings;
 
 public class RecommenderListPanel
     extends ListPanel_ImplBase
 {
     private static final long serialVersionUID = -9151455840010092452L;
 
+    private static final String MID_CREATE_BUTTON = "create";
+
     private @SpringBean RecommendationService recommendationService;
+    private @SpringBean PreferencesService preferencesService;
 
     private IModel<Project> projectModel;
     private IModel<Recommender> selectedRecommender;
@@ -58,22 +71,37 @@ public class RecommenderListPanel
         overviewList = new OverviewListChoice<>("recommenders");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         overviewList.setModel(selectedRecommender);
-        overviewList.setChoices(LambdaModel.of(this::listRecommenders));
+        overviewList.setChoices(LoadableDetachableModel.of(this::listRecommenders));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
 
-        LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink("create", this::actionCreate);
+        LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink(MID_CREATE_BUTTON, this::actionCreate);
+        lambdaAjaxLink.setVisible(showCreateButton);
         add(lambdaAjaxLink);
 
-        if (!showCreateButton) {
-            lambdaAjaxLink.setVisible(false);
-        }
+        RecommenderGeneralSettings settings = preferencesService.loadDefaultTraitsForProject(
+                KEY_RECOMMENDER_GENERAL_SETTINGS, projectModel.getObject());
+
+        var form = new Form<>("form", CompoundPropertyModel.of(settings));
+        form.setOutputMarkupId(true);
+        form.add(new CheckBox("waitForRecommendersOnOpenDocument").setOutputMarkupId(true));
+        form.add(new LambdaAjaxButton<>("save", this::actionSaveSettings));
+        add(form);
+    }
+
+    private void actionSaveSettings(AjaxRequestTarget aTarget,
+            Form<RecommenderGeneralSettings> aForm)
+    {
+        preferencesService.saveDefaultTraitsForProject(KEY_RECOMMENDER_GENERAL_SETTINGS,
+                projectModel.getObject(), aForm.getModelObject());
+        success("General recommender settings updated");
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private List<Recommender> listRecommenders()
     {
         return recommendationService.listRecommenders(projectModel.getObject()).stream()
                 .filter(e -> recommendationService.getRecommenderFactory(e).isPresent())
-                .collect(Collectors.toList());
+                .collect(toList());
     }
 }

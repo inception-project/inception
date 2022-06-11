@@ -85,7 +85,7 @@ public class RecommendationServiceImplIntegrationTest
     {
         openMocks(this);
 
-        sut = new RecommendationServiceImpl(null, null, recommenderFactoryRegistry, null,
+        sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,
                 annoService, null, null, testEntityManager.getEntityManager());
 
         project = createProject(PROJECT_NAME);

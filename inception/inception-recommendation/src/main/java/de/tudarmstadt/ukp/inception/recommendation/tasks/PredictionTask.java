@@ -1,8 +1,4 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab
- * Technische Universität Darmstadt
- * 
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.tasks;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -36,17 +31,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
-import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for
  * this layer was selected previously.
  */
 public class PredictionTask
-    extends Task
+    extends RecommendationTask_ImplBase
 {
     private Logger log = LoggerFactory.getLogger(getClass());
 
@@ -54,7 +47,6 @@ public class PredictionTask
     private @Autowired DocumentService documentService;
 
     private final SourceDocument currentDocument;
-    private final List<LogMessage> logMessages = new ArrayList<>();
     private final int predictionBegin;
     private final int predictionEnd;
 
@@ -75,7 +67,7 @@ public class PredictionTask
     @Override
     public void execute()
     {
-        try (CasStorageSession session = CasStorageSession.open()) {
+        try (CasStorageSession session = CasStorageSession.openNested()) {
             long startTime = System.currentTimeMillis();
             User user = getUser().orElseThrow();
             String username = user.getUsername();
@@ -85,7 +77,7 @@ public class PredictionTask
             List<SourceDocument> docs = documentService.listSourceDocuments(project);
 
             // Limit prediction to a single document and inherit the rest?
-            if (!recommendationService.isPredictForAllDocuments(username, project)) {
+            if (recommendationService.isPredictForAllDocuments(username, project)) {
                 log.debug(
                         "[{}][{}]: Starting prediction for project [{}] on [{}] docs triggered by [{}]",
                         getId(), username, project, docs.size(), getTrigger());
@@ -106,7 +98,7 @@ public class PredictionTask
                         currentDocument, inherit, predictionBegin, predictionEnd);
             }
 
-            predictions.inheritLog(logMessages);
+            predictions.inheritLog(getLogMessages());
 
             log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), username,
                     currentTimeMillis() - startTime);
@@ -118,10 +110,5 @@ public class PredictionTask
             // - ActiveLearningSideBar::moveToNextRecommendation
             recommendationService.setPredictForAllDocuments(username, project, false);
         }
-    }
-
-    public void inheritLog(List<LogMessage> aLogMessages)
-    {
-        logMessages.addAll(aLogMessages);
     }
 }
