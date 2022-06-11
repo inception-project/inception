@@ -76,4 +76,6 @@ public interface SchedulingService
      *            The project whose tasks will be removed.
      */
     void stopAllTasksForProject(Project aProject);
+
+    void executeSync(Task aTask);
 }

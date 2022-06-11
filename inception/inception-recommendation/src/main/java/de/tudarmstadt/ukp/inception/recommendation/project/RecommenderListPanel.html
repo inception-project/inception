@@ -23,9 +23,35 @@
       <div class="card-header">
         <wicket:message key="recommenders"/>
         <div class="actions">
+          <span class="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
+              <i class="fas fa-cog"></i>
+            </button>
+            <div class="dropdown-menu shadow-lg pt-0 pb-0" role="menu" style="min-width: 440px;">
+              <form wicket:id="form" class="card">
+                <div class="card-body">
+                  <div class="row form-row" wicket:enclosure="waitForRecommendersOnOpenDocument">
+                    <div class="col-sm-12">
+                      <div class="form-check">
+                        <input wicket:id="waitForRecommendersOnOpenDocument" class="form-check-input" type="checkbox"/>
+                        <label wicket:for="waitForRecommendersOnOpenDocument">
+                          <wicket:message key="waitForRecommendersOnOpenDocument"/>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer text-end">
+                  <button wicket:id="save" class="btn btn-primary">
+                    <i class="fas fa-save"></i>&nbsp;
+                    <wicket:message key="save"/>
+                  </button> 
+                </div>
+              </form>
+            </div>
+          </span>
           <button wicket:id="create" class="btn btn-primary">
-            <i class="fas fa-plus-square"></i>&nbsp;
-            <wicket:message key="create"/>
+            <i class="fas fa-plus-square"></i>&nbsp;<wicket:message key="create"/>
           </button>
         </div>
       </div>

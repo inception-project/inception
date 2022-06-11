@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.RecommendationEditorExtension;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -70,13 +71,14 @@ public class RecommenderServiceAutoConfiguration
 
     @Bean
     @Autowired
-    public RecommendationService recommendationService(SessionRegistry aSessionRegistry,
-            UserDao aUserRepository, RecommenderFactoryRegistry aRecommenderFactoryRegistry,
+    public RecommendationService recommendationService(PreferencesService aPreferencesService,
+            SessionRegistry aSessionRegistry, UserDao aUserRepository,
+            RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, LearningRecordService aLearningRecordService,
             ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
     {
-        return new RecommendationServiceImpl(aSessionRegistry, aUserRepository,
+        return new RecommendationServiceImpl(aPreferencesService, aSessionRegistry, aUserRepository,
                 aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aDocumentService,
                 aLearningRecordService, aProjectService, entityManager, aApplicationEventPublisher);
     }
