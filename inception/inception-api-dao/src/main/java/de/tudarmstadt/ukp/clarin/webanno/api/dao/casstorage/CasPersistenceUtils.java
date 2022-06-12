@@ -54,6 +54,17 @@ public final class CasPersistenceUtils
     {
         FileUtils.forceMkdir(aFile.getParentFile());
 
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+
+        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
+            os.writeObject(serializer);
+        }
+    }
+
+    public static void writeSerializedCasParanoid(CAS aCas, File aFile) throws IOException
+    {
+        FileUtils.forceMkdir(aFile.getParentFile());
+
         CASCompleteSerializer serializer = null;
 
         CAS realCas = getRealCas(aCas);

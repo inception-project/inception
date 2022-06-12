@@ -188,7 +188,12 @@ public class FileSystemCasStorageDriver
 
             // Now write the new version to "<username>.ser" or CURATION_USER.ser
             setDocumentId(aCas, aUserName);
-            CasPersistenceUtils.writeSerializedCas(aCas, currentVersion);
+            if (repositoryProperties.isParanoidCasSerialization()) {
+                CasPersistenceUtils.writeSerializedCasParanoid(aCas, currentVersion);
+            }
+            else {
+                CasPersistenceUtils.writeSerializedCas(aCas, currentVersion);
+            }
         }
         catch (Exception e) {
             log.error("There was an error while trying to write the CAS to [" + currentVersion
