@@ -35,6 +35,7 @@ public class RepositoryProperties
 {
     private File path;
 
+    private boolean paranoidCasSerialization = false;
     private boolean traceAccess = false;
 
     public void setTraceAccess(boolean aTraceAccess)
@@ -45,6 +46,16 @@ public class RepositoryProperties
     public boolean isTraceAccess()
     {
         return traceAccess;
+    }
+
+    public void setParanoidCasSerialization(boolean aParanoidCasSerialization)
+    {
+        paranoidCasSerialization = aParanoidCasSerialization;
+    }
+
+    public boolean isParanoidCasSerialization()
+    {
+        return paranoidCasSerialization;
     }
 
     public File getPath()
