@@ -21,10 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -37,6 +40,8 @@ import org.apache.uima.util.CasIOUtils;
 import org.apache.uima.util.TypeSystemUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xerial.snappy.SnappyFramedInputStream;
+import org.xerial.snappy.SnappyFramedOutputStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -53,12 +58,15 @@ public final class CasPersistenceUtils
     public static void writeSerializedCas(CAS aCas, File aFile) throws IOException
     {
         FileUtils.forceMkdir(aFile.getParentFile());
-
         CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+        write(aFile, serializer);
+    }
 
-        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
-            os.writeObject(serializer);
-        }
+    public static void writeSerializedCasCompressed(CAS aCas, File aFile) throws IOException
+    {
+        FileUtils.forceMkdir(aFile.getParentFile());
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+        writeSnappyCompressed(aFile, serializer);
     }
 
     public static void writeSerializedCasParanoid(CAS aCas, File aFile) throws IOException
@@ -88,9 +96,24 @@ public final class CasPersistenceUtils
                 throw new IOException(e);
             }
 
-            try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
-                os.writeObject(serializer);
-            }
+            write(aFile, serializer);
+        }
+    }
+
+    private static void write(File aFile, CASCompleteSerializer serializer)
+        throws IOException, FileNotFoundException
+    {
+        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
+            os.writeObject(serializer);
+        }
+    }
+
+    private static void writeSnappyCompressed(File aFile, CASCompleteSerializer serializer)
+        throws IOException, FileNotFoundException
+    {
+        try (ObjectOutputStream os = new ObjectOutputStream(
+                new SnappyFramedOutputStream(new FileOutputStream(aFile)))) {
+            os.writeObject(serializer);
         }
     }
 
@@ -129,23 +152,60 @@ public final class CasPersistenceUtils
         CAS realCas = getRealCas(aCas);
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
         synchronized (((CASImpl) realCas).getBaseCAS()) {
-            try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
-                CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
-                deserializeCASComplete(serializer, (CASImpl) realCas);
-
-                // Workaround for UIMA adding back deleted DocumentAnnotations
-                // https://issues.apache.org/jira/browse/UIMA-6199
-                // If there is a DocumentMetaData annotation, then we can drop any of the default
-                // UIMA DocumentAnnotation instances (excluding the DocumentMetaData of course)
-                if (!aCas.select(DocumentMetaData.class.getName()).isEmpty()) {
-                    aCas.select(CAS.TYPE_NAME_DOCUMENT_ANNOTATION).filter(
-                            fs -> !DocumentMetaData.class.getName().equals(fs.getType().getName()))
-                            .forEach(aCas::removeFsFromIndexes);
-                }
-            }
-            catch (ClassNotFoundException e) {
-                throw new IOException(e);
+            try (BufferedInputStream bis = new BufferedInputStream(new FileInputStream(aFile))) {
+                readSerializedCas(realCas, maybeUncompress(bis));
             }
         }
+    }
+
+    private static void readSerializedCas(CAS aCas, InputStream is) throws IOException
+    {
+        try (ObjectInputStream ois = new ObjectInputStream(is)) {
+            CASCompleteSerializer serializer = (CASCompleteSerializer) ois.readObject();
+            deserializeCASComplete(serializer, (CASImpl) aCas);
+
+            // Workaround for UIMA adding back deleted DocumentAnnotations
+            // https://issues.apache.org/jira/browse/UIMA-6199
+            // If there is a DocumentMetaData annotation, then we can drop any of the default UIMA
+            // DocumentAnnotation instances (excluding the DocumentMetaData of course)
+            if (!aCas.select(DocumentMetaData.class.getName()).isEmpty()) {
+                aCas.select(CAS.TYPE_NAME_DOCUMENT_ANNOTATION).filter(
+                        fs -> !DocumentMetaData.class.getName().equals(fs.getType().getName()))
+                        .forEach(aCas::removeFsFromIndexes);
+            }
+        }
+        catch (ClassNotFoundException e) {
+            throw new IOException(e);
+        }
+    }
+
+    private static InputStream maybeUncompress(BufferedInputStream bis) throws IOException
+    {
+        byte[] buf = new byte[32];
+        bis.mark(buf.length);
+        int bytesRead = bis.read(buf);
+        bis.reset();
+
+        InputStream is = bis;
+        if (isSnappyStream(buf, bytesRead)) {
+            is = new SnappyFramedInputStream(bis);
+        }
+        return is;
+    }
+
+    private static boolean isSnappyStream(byte[] aBuffer, int aLen)
+    {
+        byte[] snappyMagic = { (byte) 0xff, 0x06, 0x00, 0x00, 0x73, 0x4e, 0x61, 0x50, 0x70, 0x59, };
+        if (aLen < snappyMagic.length) {
+            return false;
+        }
+
+        for (int i = 0; i < snappyMagic.length; i++) {
+            if (aBuffer[i] != snappyMagic[i]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
