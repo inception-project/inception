@@ -35,6 +35,7 @@ public class RepositoryProperties
 {
     private File path;
 
+    private boolean compressedCasSerialization = false;
     private boolean paranoidCasSerialization = false;
     private boolean traceAccess = false;
 
@@ -56,6 +57,16 @@ public class RepositoryProperties
     public boolean isParanoidCasSerialization()
     {
         return paranoidCasSerialization;
+    }
+
+    public void setCompressedCasSerialization(boolean aCompressedCasSerialization)
+    {
+        compressedCasSerialization = aCompressedCasSerialization;
+    }
+
+    public boolean isCompressedCasSerialization()
+    {
+        return compressedCasSerialization;
     }
 
     public File getPath()

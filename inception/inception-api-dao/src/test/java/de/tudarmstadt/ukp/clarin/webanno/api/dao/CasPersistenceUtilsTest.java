@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.CASImpl;
@@ -36,23 +37,20 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 public class CasPersistenceUtilsTest
 {
-    public @TempDir File testFolder;
-
     {
         System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
     }
 
     @Test
-    public void thatDocumentAnnotationIsNotDuplicatedDuringLoad() throws Exception
+    void thatDocumentAnnotationIsNotDuplicatedDuringLoad(@TempDir Path aTempDir) throws Exception
     {
         CAS cas = CasFactory.createCas();
-
         cas.setDocumentLanguage("en");
 
         DocumentMetaData dmd = DocumentMetaData.create(cas);
         dmd.setLanguage("en");
 
-        File file = testFolder.toPath().resolve("tempFile").toFile();
+        File file = aTempDir.resolve("tempFile").toFile();
 
         CasPersistenceUtils.writeSerializedCas(cas, file);
 
@@ -66,5 +64,50 @@ public class CasPersistenceUtilsTest
         assertThat(cas2.select(DocumentAnnotation.class).asList())
                 .extracting(fs -> fs.getType().getName())
                 .containsExactly(DocumentMetaData.class.getName());
+    }
+
+    @Test
+    void thatUncompressedCasCanBeSavedAndLoaded(@TempDir Path aTempDir) throws Exception
+    {
+        File target = aTempDir.resolve("out.ser").toFile();
+
+        CAS originalCas = CasFactory.createText("This is a test.", "en");
+        CasPersistenceUtils.writeSerializedCas(originalCas, target);
+
+        CAS actualCas = CasFactory.createCas();
+        CasPersistenceUtils.readSerializedCas(actualCas, target);
+
+        assertThat(actualCas.getDocumentText()).isEqualTo(originalCas.getDocumentText());
+        assertThat(actualCas.getDocumentLanguage()).isEqualTo(originalCas.getDocumentLanguage());
+    }
+
+    @Test
+    void thatCompressedCasCanBeSavedAndLoaded(@TempDir Path aTempDir) throws Exception
+    {
+        File target = aTempDir.resolve("out.ser").toFile();
+
+        CAS originalCas = CasFactory.createText("This is a test.", "en");
+        CasPersistenceUtils.writeSerializedCasCompressed(originalCas, target);
+
+        CAS actualCas = CasFactory.createCas();
+        CasPersistenceUtils.readSerializedCas(actualCas, target);
+
+        assertThat(actualCas.getDocumentText()).isEqualTo(originalCas.getDocumentText());
+        assertThat(actualCas.getDocumentLanguage()).isEqualTo(originalCas.getDocumentLanguage());
+    }
+
+    @Test
+    void thatParanoidCasCanBeSavedAndLoaded(@TempDir Path aTempDir) throws Exception
+    {
+        File target = aTempDir.resolve("out.ser").toFile();
+
+        CAS originalCas = CasFactory.createText("This is a test.", "en");
+        CasPersistenceUtils.writeSerializedCasParanoid(originalCas, target);
+
+        CAS actualCas = CasFactory.createCas();
+        CasPersistenceUtils.readSerializedCas(actualCas, target);
+
+        assertThat(actualCas.getDocumentText()).isEqualTo(originalCas.getDocumentText());
+        assertThat(actualCas.getDocumentLanguage()).isEqualTo(originalCas.getDocumentLanguage());
     }
 }

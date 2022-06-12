@@ -191,6 +191,9 @@ public class FileSystemCasStorageDriver
             if (repositoryProperties.isParanoidCasSerialization()) {
                 CasPersistenceUtils.writeSerializedCasParanoid(aCas, currentVersion);
             }
+            else if (repositoryProperties.isCompressedCasSerialization()) {
+                CasPersistenceUtils.writeSerializedCasCompressed(aCas, currentVersion);
+            }
             else {
                 CasPersistenceUtils.writeSerializedCas(aCas, currentVersion);
             }
