@@ -48,12 +48,34 @@ public class VDocument
     private final Map<Long, AnnotationLayer> annotationLayers = new LinkedHashMap<>();
     private final List<VMarker> markers = new ArrayList<>();
 
+    private int windowBegin;
+    private int windowEnd;
+    private String text;
+
     public VDocument()
     {
         // Nothing to do
     }
 
-    private String text;
+    public void setWindowBegin(int aWindowBegin)
+    {
+        windowBegin = aWindowBegin;
+    }
+
+    public int getWindowBegin()
+    {
+        return windowBegin;
+    }
+
+    public void setWindowEnd(int aWindowEnd)
+    {
+        windowEnd = aWindowEnd;
+    }
+
+    public int getWindowEnd()
+    {
+        return windowEnd;
+    }
 
     public void setText(String aText)
     {

@@ -188,7 +188,15 @@ public class FileSystemCasStorageDriver
 
             // Now write the new version to "<username>.ser" or CURATION_USER.ser
             setDocumentId(aCas, aUserName);
-            CasPersistenceUtils.writeSerializedCas(aCas, currentVersion);
+            if (repositoryProperties.isParanoidCasSerialization()) {
+                CasPersistenceUtils.writeSerializedCasParanoid(aCas, currentVersion);
+            }
+            else if (repositoryProperties.isCompressedCasSerialization()) {
+                CasPersistenceUtils.writeSerializedCasCompressed(aCas, currentVersion);
+            }
+            else {
+                CasPersistenceUtils.writeSerializedCas(aCas, currentVersion);
+            }
         }
         catch (Exception e) {
             log.error("There was an error while trying to write the CAS to [" + currentVersion
@@ -215,9 +223,12 @@ public class FileSystemCasStorageDriver
             throw e;
         }
 
-        if (oldVersion.exists() && (currentVersion.length() < oldVersion.length())) {
+        if (oldVersion.exists() && (currentVersion.length() < (oldVersion.length()
+                * (repositoryProperties.isCompressedCasSerialization() ? 0.95d : 1.0d)))) {
+            // If compression is enabled, then it is not so uncommon that the file size may also
+            // become smaller at times, so we allow a bit of slip
             log.debug(
-                    "Annotations truncated for user [{}] on document {} in project "
+                    "Annotations shrunk for user [{}] on document {} in project "
                             + "{}: {} -> {} bytes ({} bytes removed)",
                     aUserName, aDocument, aDocument.getProject(), oldVersion.length(),
                     currentVersion.length(), currentVersion.length() - oldVersion.length());
@@ -241,11 +252,13 @@ public class FileSystemCasStorageDriver
         manageHistory(currentVersion, aDocument, aUserName);
 
         long duration = currentTimeMillis() - t0;
+
         if (log.isDebugEnabled()) {
-            log.debug(
-                    "Updated annotations for user [{}] on document {} in project {} in {}ms (file timestamp: {})",
-                    aUserName, aDocument, aDocument.getProject(), duration,
-                    TIMESTAMP_FORMATTER.format(lastModified));
+            log.debug("Updated annotations for user [{}] on document {} in project {} " //
+                    + "{} bytes in {}ms (file timestamp: {}, compression: {})", aUserName,
+                    aDocument, aDocument.getProject(), currentVersion.length(), duration,
+                    TIMESTAMP_FORMATTER.format(lastModified),
+                    repositoryProperties.isCompressedCasSerialization());
         }
 
         WicketUtil.serverTiming("realWriteCas", duration);
