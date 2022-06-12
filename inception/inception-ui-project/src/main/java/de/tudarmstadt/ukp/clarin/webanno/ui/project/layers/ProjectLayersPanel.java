@@ -88,6 +88,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.LayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SentenceLayerInitializer;
+import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -293,6 +295,10 @@ public class ProjectLayersPanel
             return repository.listProjectInitializers().stream()
                     .filter(initializer -> initializer instanceof LayerInitializer)
                     .filter(initializer -> !initializer.alreadyApplied(getModelObject()))
+                    .filter(initializer -> !(initializer instanceof TokenLayerInitializer)
+                            || annotationEditorProperties.isTokenLayerEditable())
+                    .filter(initializer -> !(initializer instanceof SentenceLayerInitializer)
+                            || annotationEditorProperties.isSentenceLayerEditable())
                     .sorted(comparing(ProjectInitializer::getName)) //
                     .collect(toList());
         }
