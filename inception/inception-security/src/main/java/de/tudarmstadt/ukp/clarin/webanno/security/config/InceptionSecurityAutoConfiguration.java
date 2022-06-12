@@ -15,32 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
+package de.tudarmstadt.ukp.clarin.webanno.security.config;
 
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.stereotype.Component;
 
-public class WebAnnoCssReference
-    extends CssResourceReference
+@Component
+public class InceptionSecurityAutoConfiguration
 {
-    private static final long serialVersionUID = 1L;
-
-    private static final WebAnnoCssReference INSTANCE = new WebAnnoCssReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static WebAnnoCssReference get()
+    @Autowired
+    public void configureGlobal(AuthenticationProvider authenticationProvider,
+            AuthenticationManagerBuilder auth)
     {
-        return INSTANCE;
-    }
-
-    /**
-     * Private constructor
-     */
-    private WebAnnoCssReference()
-    {
-        super(WebAnnoCssReference.class, "webanno.css");
+        auth.authenticationProvider(authenticationProvider);
+        auth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
     }
 }

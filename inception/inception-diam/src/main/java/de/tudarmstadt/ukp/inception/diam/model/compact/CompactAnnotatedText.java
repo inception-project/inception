@@ -25,6 +25,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import de.tudarmstadt.ukp.inception.diam.model.Offsets;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 
 public class CompactAnnotatedText
@@ -33,6 +34,7 @@ public class CompactAnnotatedText
     public static final String COMMAND = "getAnnotatedDocument";
 
     private @JsonInclude(NON_NULL) String text;
+    private Offsets window;
 
     private @JsonInclude(NON_EMPTY) List<CompactRelation> relations = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<CompactSpan> spans = new ArrayList<>();
@@ -52,6 +54,16 @@ public class CompactAnnotatedText
     public void setText(String aText)
     {
         text = aText;
+    }
+
+    public void setWindow(Offsets aWindow)
+    {
+        window = aWindow;
+    }
+
+    public Offsets getWindow()
+    {
+        return window;
     }
 
     public List<CompactRelation> getRelations()

@@ -369,4 +369,13 @@ public class SchedulingServiceImpl
         getScheduledTasks().forEach(t -> log.debug("Scheduled: {}", t));
         getRunningTasks().forEach(t -> log.debug("Running  : {}", t));
     }
+
+    @Override
+    public void executeSync(Task aTask)
+    {
+        AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
+        factory.autowireBean(aTask);
+        factory.initializeBean(aTask, "transientTask");
+        aTask.execute(); // Execute synchronously - blocking
+    }
 }

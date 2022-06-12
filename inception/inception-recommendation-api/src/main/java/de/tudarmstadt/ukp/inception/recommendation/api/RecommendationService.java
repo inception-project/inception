@@ -31,11 +31,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
+import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Progress;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.RecommenderGeneralSettings;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
@@ -43,11 +45,14 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 /**
- * The main contact point of the Recommendation module. This interface can be injected in the wicket
+ * The main contact point of the Recommendation module. This interface can be injected in the Wicket
  * pages. It is used to pull the latest recommendations for an annotation layer and render them.
  */
 public interface RecommendationService
 {
+    Key<RecommenderGeneralSettings> KEY_RECOMMENDER_GENERAL_SETTINGS = new Key<>(
+            RecommenderGeneralSettings.class, "recommendation/general");
+
     String FEATURE_NAME_IS_PREDICTION = "inception_internal_predicted";
     String FEATURE_NAME_SCORE_SUFFIX = "_score";
     String FEATURE_NAME_SCORE_EXPLANATION_SUFFIX = "_score_explanation";

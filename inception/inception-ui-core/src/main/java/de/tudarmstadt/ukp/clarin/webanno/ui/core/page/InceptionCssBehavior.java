@@ -15,30 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
-import org.apache.wicket.Page;
+import org.apache.wicket.Component;
+import org.apache.wicket.behavior.Behavior;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.WicketApplicationBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
-import de.tudarmstadt.ukp.inception.ui.core.menubar.MenuBar;
-
-@org.springframework.stereotype.Component("wicketApplication")
-public class WicketApplication
-    extends WicketApplicationBase
+public class InceptionCssBehavior
+    extends Behavior
 {
-    @Override
-    protected void initOnce()
-    {
-        super.initOnce();
+    private static final long serialVersionUID = 5367089196863803403L;
 
-        setMetaData(ApplicationPageBase.MENUBAR_CLASS, MenuBar.class);
+    private static final InceptionCssBehavior INSTANCE = new InceptionCssBehavior();
+
+    @Override
+    public void renderHead(Component aComponent, IHeaderResponse aResponse)
+    {
+        // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
+        aResponse.render(CssHeaderItem.forReference(InceptionCssReference.get()));
     }
 
-    @Override
-    public Class<? extends Page> getHomePage()
+    public static InceptionCssBehavior get()
     {
-        return ProjectsOverviewPage.class;
+        return INSTANCE;
     }
 }

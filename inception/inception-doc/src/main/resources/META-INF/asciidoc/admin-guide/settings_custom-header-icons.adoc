@@ -35,11 +35,6 @@ style.header.icon.mySupport.imageUrl=http://my.org/help.png
 | Default
 | Example
 
-| style.logo
-| Logo image displayed in the upper-right corner
-| _unset_
-| _path to an image file_
-
 | style.header.icon...
 | Icons/links to display in the page header. For details, see below.
 | _unset_

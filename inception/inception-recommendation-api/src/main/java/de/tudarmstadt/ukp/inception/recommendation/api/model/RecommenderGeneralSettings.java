@@ -15,22 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.config;
+package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.stereotype.Component;
+import java.io.Serializable;
 
-@Component
-public class InceptionSecurityAutoConfiguration
+public class RecommenderGeneralSettings
+    implements Serializable
 {
-    @Autowired
-    public void configureGlobal(AuthenticationProvider authenticationProvider,
-            AuthenticationManagerBuilder auth)
+    private static final long serialVersionUID = -1889889346307217345L;
+
+    private boolean waitForRecommendersOnOpenDocument = false;
+
+    public boolean isWaitForRecommendersOnOpenDocument()
     {
-        auth.authenticationProvider(authenticationProvider);
-        auth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
+        return waitForRecommendersOnOpenDocument;
+    }
+
+    public void setWaitForRecommendersOnOpenDocument(boolean aWaitForRecommendersOnOpenDocument)
+    {
+        waitForRecommendersOnOpenDocument = aWaitForRecommendersOnOpenDocument;
     }
 }

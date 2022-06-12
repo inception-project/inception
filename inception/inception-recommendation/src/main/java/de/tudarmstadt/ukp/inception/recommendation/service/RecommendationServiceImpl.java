@@ -128,6 +128,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
@@ -154,6 +155,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.model.DirtySpot;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.NonTrainableRecommenderActivationTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
@@ -188,6 +190,7 @@ public class RecommendationServiceImpl
     private final LearningRecordService learningRecordService;
     private final ProjectService projectService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final PreferencesService preferencesService;
 
     private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
@@ -211,13 +214,15 @@ public class RecommendationServiceImpl
     };
 
     @Autowired
-    public RecommendationServiceImpl(SessionRegistry aSessionRegistry, UserDao aUserRepository,
+    public RecommendationServiceImpl(PreferencesService aPreferencesService,
+            SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, LearningRecordService aLearningRecordService,
             ProjectService aProjectService, EntityManager aEntityManager,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
+        preferencesService = aPreferencesService;
         sessionRegistry = aSessionRegistry;
         userRepository = aUserRepository;
         recommenderFactoryRegistry = aRecommenderFactoryRegistry;
@@ -233,20 +238,16 @@ public class RecommendationServiceImpl
         states = new ConcurrentHashMap<>();
     }
 
-    public RecommendationServiceImpl(SessionRegistry aSessionRegistry, UserDao aUserRepository,
+    public RecommendationServiceImpl(PreferencesService aPreferencesService,
+            SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, LearningRecordService aLearningRecordService,
             EntityManager aEntityManager)
     {
-        this(aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry, aSchedulingService,
-                aAnnoService, aDocumentService, aLearningRecordService, (ProjectService) null,
-                aEntityManager, null);
-    }
-
-    public RecommendationServiceImpl(EntityManager aEntityManager)
-    {
-        this(null, null, null, null, null, null, null, (ProjectService) null, aEntityManager, null);
+        this(aPreferencesService, aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry,
+                aSchedulingService, aAnnoService, aDocumentService, aLearningRecordService,
+                (ProjectService) null, aEntityManager, null);
     }
 
     @Override
@@ -496,10 +497,34 @@ public class RecommendationServiceImpl
         Project project = aEvent.getDocument().getProject();
         String username = aEvent.getAnnotator();
         SourceDocument doc = aEvent.getDocument();
+        Predictions predictions = getState(username, project).getActivePredictions();
+
+        User user = userRepository.get(username);
+        if (user == null) {
+            return;
+        }
+
+        // We want to get predictions from all trained recommenders immediately - be they externally
+        // pre-trained or possibly internal recommenders that have been trained due to earlier
+        // actions.
+        if (predictions == null) {
+            // Activate all non-trainable recommenders - execute synchronously - blocking
+            schedulingService.executeSync(new NonTrainableRecommenderActivationTask(user, project,
+                    "DocumentOpenedEvent"));
+        }
+
+        boolean predictionTriggered = false;
+        if (predictions == null || !predictions.hasRunPredictionOnDocument(aEvent.getDocument())) {
+            var settings = preferencesService
+                    .loadDefaultTraitsForProject(KEY_RECOMMENDER_GENERAL_SETTINGS, project);
+            if (settings.isWaitForRecommendersOnOpenDocument()) {
+                schedulingService.executeSync(new PredictionTask(user, "DocumentOpenedEvent", doc));
+                switchPredictions(user, project);
+            }
+        }
 
         // If there already is a state, we just re-use it. We only trigger a new training if no
         // predictions object has been created yet.
-        Predictions predictions = getState(username, project).getActivePredictions();
         if (predictions == null) {
             triggerTrainingAndPrediction(username, project, "DocumentOpenedEvent", doc);
             return;
@@ -507,14 +532,16 @@ public class RecommendationServiceImpl
 
         if (predictions.hasRunPredictionOnDocument(aEvent.getDocument())) {
             log.debug(
-                    "Not starting prediction task after document was opened as we already have predictions");
+                    "Not scheduling prediction task after document was opened as we already have predictions");
             return;
         }
 
         // If we already trained, predicted only for the last document and open a new document, we
         // start the predictions so that the user gets recommendations as quickly as possible
         // without any interaction needed
-        triggerPrediction(username, "DocumentOpenedEvent", doc);
+        if (!predictionTriggered) {
+            triggerPrediction(username, "DocumentOpenedEvent", doc);
+        }
     }
 
     /*
@@ -1169,26 +1196,27 @@ public class RecommendationServiceImpl
 
         public boolean switchPredictions()
         {
-            // If the predictions have already been switch, do not switch again
+            // If the predictions have already been switched, do not switch again
             RequestCycle requestCycle = RequestCycle.get();
             if (requestCycle != null) {
                 Boolean switched = requestCycle.getMetaData(PredictionSwitchPerformedKey.INSTANCE);
                 if (switched != null && switched) {
                     return false;
                 }
-                // We are not really interested whether an actual switch was performed here, only
-                // whether a switch has already been requested and triggered if applicable
+            }
+
+            if (incomingPredictions == null) {
+                return false;
+            }
+
+            activePredictions = incomingPredictions;
+            incomingPredictions = null;
+
+            if (requestCycle != null) {
                 requestCycle.setMetaData(PredictionSwitchPerformedKey.INSTANCE, true);
             }
 
-            if (incomingPredictions != null) {
-                activePredictions = incomingPredictions;
-                incomingPredictions = null;
-                return true;
-            }
-            else {
-                return false;
-            }
+            return true;
         }
 
         /**
