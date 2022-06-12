@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "begin", "unicode", "fontX", "fontY", "fontWidth", "fontHeight" })
+@JsonPropertyOrder(value = { "begin", "unicode", "base", "extent" })
 public class VGlyph
     implements Serializable
 {
@@ -35,27 +35,40 @@ public class VGlyph
     private final int page;
     private final int begin;
     private final String unicode;
+    private final float dir;
+    private final float base;
+    private final float extent;
     private final float fontX;
     private final float fontY;
     private final float fontWidth;
     private final float fontHeight;
 
-    public VGlyph(int aBegin, int aPage, String aUnicode, Rectangle2D.Double aFontShape)
+    public VGlyph(int aBegin, int aPage, String aUnicode, float aDir, Rectangle2D.Double aFontShape)
     {
-        this(aBegin, aPage, aUnicode, (float) aFontShape.x, (float) aFontShape.y,
+        this(aBegin, aPage, aUnicode, aDir, (float) aFontShape.x, (float) aFontShape.y,
                 (float) aFontShape.width, (float) aFontShape.height);
     }
 
-    public VGlyph(int aBegin, int aPage, String aUnicode, float aFontX, float aFontY,
+    public VGlyph(int aBegin, int aPage, String aUnicode, float aDir, float aFontX, float aFontY,
             float aFontWidth, float aFontHeight)
     {
         page = aPage;
         begin = aBegin;
         unicode = aUnicode;
+        dir = aDir;
         fontX = aFontX;
         fontY = aFontY;
         fontWidth = aFontWidth;
         fontHeight = aFontHeight;
+
+        if (dir == 0 || dir == 180) {
+            base = fontX;
+            extent = fontWidth;
+        }
+        else {
+            base = fontY;
+            extent = fontHeight;
+        }
     }
 
     public int getBegin()
@@ -91,6 +104,21 @@ public class VGlyph
     public float getFontHeight()
     {
         return fontHeight;
+    }
+
+    public float getDir()
+    {
+        return dir;
+    }
+
+    public float getBase()
+    {
+        return base;
+    }
+
+    public float getExtent()
+    {
+        return extent;
     }
 
     @Override

@@ -99,7 +99,7 @@ public class VisualPDFTextStripper
         PDRectangle visibleArea = getCurrentPage().getCropBox();
 
         pages.add(new VPage(pageIndex, visibleArea.getWidth(), visibleArea.getHeight(),
-                pageBeginOffset, pageEndOffset, pageText, lines.toArray(VLine[]::new)));
+                pageBeginOffset, pageEndOffset, pageText, lines));
     }
 
     @Override
@@ -160,24 +160,41 @@ public class VisualPDFTextStripper
 
         List<VGlyph> glyphs = new ArrayList<>();
 
+        float lineBase = Float.MAX_VALUE;
+        float lineHeight = Float.MIN_VALUE;
         int begin = getBuffer().length();
         int cursor = begin;
+
+        assert aTextPositions.stream().mapToDouble(TextPosition::getDir).distinct()
+                .count() <= 1 : "All glyphs in the string should have the same direction";
+
+        float dir = 0;
         for (var pos : aTextPositions) {
             Rectangle2D.Double f = fontPositionCache.get(pos);
 
             // Account for glyphs that were mapped to more than one character by normalization
             // e.g. expanded ligatures
-            String normalizedGlyph = normalizeWord(pos.getUnicode());
-            VGlyph p = new VGlyph(cursor, pageIndex, normalizedGlyph, f);
-            glyphs.add(p);
-            cursor += normalizedGlyph.length();
+            String normalizedUnicode = normalizeWord(pos.getUnicode());
+            VGlyph glyph = new VGlyph(cursor, pageIndex, normalizedUnicode, pos.getDir(), f);
+            glyphs.add(glyph);
+            cursor += normalizedUnicode.length();
+
+            dir = pos.getDir();
+            if (dir == 90 || dir == 270) {
+                lineBase = Math.min(lineBase, glyph.getFontX());
+                lineHeight = Math.max(lineHeight, glyph.getFontWidth());
+            }
+            else {
+                lineBase = Math.min(lineBase, glyph.getFontY());
+                lineHeight = Math.max(lineHeight, glyph.getFontHeight());
+            }
         }
 
         super.writeString(aText, aTextPositions);
 
         int end = getBuffer().length();
 
-        lines.add(new VLine(begin, end, aText, glyphs));
+        lines.add(new VLine(begin, end, aText, dir, lineBase, lineHeight, glyphs));
     }
 
     private void assertAlignedTextPositions(String aText, List<TextPosition> aTextPositions)

@@ -65,7 +65,32 @@ class VisualPDFTextStripperTest
         // System.out.println(target.toString().length());
         // System.out.println(target.toString());
 
+        assertValidGlyphCoordindates(vModel);
         assertValidGlyphOffsets(vModel.getPages());
+    }
+
+    private void assertValidGlyphCoordindates(VModel vModel)
+    {
+        for (VPage vPage : vModel.getPages()) {
+            for (VLine vLine : vPage.getLines()) {
+                for (VGlyph vGlyph : vLine.getGlyphs()) {
+                    float d = vLine.getDir();
+                    float x = (d == 0 || d == 180) ? vGlyph.getBase() : vLine.getBase();
+                    float y = (d == 0 || d == 180) ? vLine.getBase() : vGlyph.getBase();
+                    float w = (d == 0 || d == 180) ? vGlyph.getExtent() : vLine.getExtent();
+                    float h = (d == 0 || d == 180) ? vLine.getExtent() : vGlyph.getExtent();
+
+                    // Font (screen) coordinates should be within the line boundaries
+                    assertThat(vGlyph.getFontX()).isBetween(x, x + w);
+                    assertThat(vGlyph.getFontWidth()).isLessThanOrEqualTo(w);
+                    assertThat(vGlyph.getFontY()).isBetween(y, y + h);
+                    assertThat(vGlyph.getFontHeight()).isLessThanOrEqualTo(h);
+
+                    System.out.printf("%.0f %f %f -- (%f %f %f %f) -- %s%n", vLine.getDir(),
+                            vLine.getBase(), vLine.getExtent(), x, y, w, h, vGlyph);
+                }
+            }
+        }
     }
 
     private void assertValidGlyphOffsets(Collection<VPage> aPages)

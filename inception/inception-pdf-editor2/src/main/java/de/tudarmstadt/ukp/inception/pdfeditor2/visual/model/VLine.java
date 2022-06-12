@@ -19,18 +19,32 @@ package de.tudarmstadt.ukp.inception.pdfeditor2.visual.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
+
+@JsonSerialize(using = BeanAsArraySerializer.class)
+@JsonPropertyOrder(value = { "dir", "base", "extent", "glyphs" })
 public class VLine
 {
     private final List<VGlyph> glyphs;
+    private final float dir;
+    private final float base;
+    private final float extent;
     private final int begin;
     private final int end;
     private final String text;
 
-    public VLine(int aBegin, int aEnd, String aText, List<VGlyph> aGlyphs)
+    public VLine(int aBegin, int aEnd, String aText, float aDir, float aBase, float aExtent,
+            List<VGlyph> aGlyphs)
     {
         begin = aBegin;
         end = aEnd;
         text = aText;
+        dir = aDir;
+        base = aBase;
+        extent = aExtent;
         glyphs = aGlyphs;
     }
 
@@ -52,5 +66,20 @@ public class VLine
     public String getText()
     {
         return text;
+    }
+
+    public float getDir()
+    {
+        return dir;
+    }
+
+    public float getBase()
+    {
+        return base;
+    }
+
+    public float getExtent()
+    {
+        return extent;
     }
 }

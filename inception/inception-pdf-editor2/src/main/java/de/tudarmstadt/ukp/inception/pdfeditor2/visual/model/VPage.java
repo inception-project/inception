@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.pdfeditor2.visual.model;
 
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.toList;
 
 import java.io.Serializable;
 import java.util.List;
@@ -29,7 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "index", "begin", "end", "glyphs" })
+@JsonPropertyOrder(value = { "index", "begin", "end", "lines" })
 public class VPage
     implements Serializable
 {
@@ -37,7 +36,6 @@ public class VPage
 
     private final int index;
     private final List<VLine> lines;
-    private final List<VGlyph> glyphs;
     private final int begin;
     private final int end;
     private final String text;
@@ -47,43 +45,49 @@ public class VPage
     public VPage(int aIndex, float aWidth, float aHeight, int aBegin, int aEnd, String aText,
             VLine... aLines)
     {
+        this(aIndex, aWidth, aHeight, aBegin, aEnd, aText, asList(aLines));
+    }
+
+    public VPage(int aIndex, float aWidth, float aHeight, int aBegin, int aEnd, String aText,
+            List<VLine> aLines)
+    {
         index = aIndex;
         width = aWidth;
         height = aHeight;
-        lines = asList(aLines);
-        glyphs = lines.stream() //
-                .flatMap(l -> l.getGlyphs().stream()) //
-                .collect(toList());
+        lines = aLines;
         text = aText;
         begin = aBegin;
         end = aEnd;
     }
 
-    public VPage(int aIndex, int aBegin, int aEnd, String aText, VGlyph... aGlyphs)
-    {
-        this(aIndex, aBegin, aEnd, aText, asList(aGlyphs));
-    }
-
-    public VPage(int aIndex, int aBegin, int aEnd, String aText, List<VGlyph> aGlyphs)
-    {
-        width = -1;
-        height = -1;
-        index = aIndex;
-        glyphs = aGlyphs;
-        lines = asList(new VLine(aBegin, aEnd, aText, glyphs));
-        text = aText;
-        begin = aBegin;
-        end = aEnd;
-    }
+    // public VPage(int aIndex, int aBegin, int aEnd, String aText, VGlyph... aGlyphs)
+    // {
+    // this(aIndex, aBegin, aEnd, aText, asList(aGlyphs));
+    // }
+    //
+    // public VPage(int aIndex, int aBegin, int aEnd, String aText, List<VGlyph> aGlyphs)
+    // {
+    // width = -1;
+    // height = -1;
+    // index = aIndex;
+    // glyphs = aGlyphs;
+    // text = aText;
+    // begin = aBegin;
+    // end = aEnd;
+    //
+    // float lineY = -1;
+    // float lineHeight = -1;
+    // for (var glyph : aGlyphs) {
+    // lineY = Math.min(glyph.getFontY(), lineY);
+    // lineHeight = Math.max(glyph.getFontHeight(), lineHeight);
+    // }
+    //
+    // lines = asList(new VLine(aBegin, aEnd, aText, lineY, lineHeight, glyphs));
+    // }
 
     public int getIndex()
     {
         return index;
-    }
-
-    public List<VGlyph> getGlyphs()
-    {
-        return glyphs;
     }
 
     public List<VLine> getLines()
