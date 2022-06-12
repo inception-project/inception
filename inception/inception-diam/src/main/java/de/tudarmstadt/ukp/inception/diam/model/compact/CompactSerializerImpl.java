@@ -59,6 +59,8 @@ public class CompactSerializerImpl
     {
         CompactAnnotatedText aResponse = new CompactAnnotatedText();
 
+        aResponse.setWindow(new Offsets(aVDoc.getWindowBegin(), aVDoc.getWindowEnd()));
+
         renderText(aVDoc, aResponse, aRequest);
 
         renderLayers(aResponse, aVDoc);

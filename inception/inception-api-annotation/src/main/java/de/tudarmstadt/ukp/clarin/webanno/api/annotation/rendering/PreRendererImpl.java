@@ -105,6 +105,9 @@ public class PreRendererImpl
         int renderEnd = Math.min(documentText.length(), aRequest.getWindowEndOffset());
         aResponse.setText(documentText.substring(renderBegin, renderEnd));
 
+        aResponse.setWindowBegin(renderBegin);
+        aResponse.setWindowEnd(renderEnd);
+
         Project project = aRequest.getProject();
 
         // Listing the features once is faster than repeatedly hitting the DB to list features for
