@@ -21,6 +21,8 @@ import java.io.File;
 
 import org.slf4j.MDC;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.jmx.export.annotation.ManagedAttribute;
+import org.springframework.jmx.export.annotation.ManagedResource;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
@@ -31,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
  * </p>
  */
 @ConfigurationProperties("repository")
+@ManagedResource
 public class RepositoryProperties
 {
     private File path;
@@ -49,21 +52,25 @@ public class RepositoryProperties
         return traceAccess;
     }
 
+    @ManagedAttribute
     public void setParanoidCasSerialization(boolean aParanoidCasSerialization)
     {
         paranoidCasSerialization = aParanoidCasSerialization;
     }
 
+    @ManagedAttribute
     public boolean isParanoidCasSerialization()
     {
         return paranoidCasSerialization;
     }
 
+    @ManagedAttribute
     public void setCompressedCasSerialization(boolean aCompressedCasSerialization)
     {
         compressedCasSerialization = aCompressedCasSerialization;
     }
 
+    @ManagedAttribute
     public boolean isCompressedCasSerialization()
     {
         return compressedCasSerialization;
