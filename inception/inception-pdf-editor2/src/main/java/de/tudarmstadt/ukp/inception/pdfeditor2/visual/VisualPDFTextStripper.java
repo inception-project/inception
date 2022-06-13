@@ -170,16 +170,16 @@ public class VisualPDFTextStripper
 
         float dir = 0;
         for (var pos : aTextPositions) {
+            dir = ((pos.getRotation() - pos.getDir()) + 360) % 360;
             Rectangle2D.Double f = fontPositionCache.get(pos);
 
             // Account for glyphs that were mapped to more than one character by normalization
             // e.g. expanded ligatures
             String normalizedUnicode = normalizeWord(pos.getUnicode());
-            VGlyph glyph = new VGlyph(cursor, pageIndex, normalizedUnicode, pos.getDir(), f);
+            VGlyph glyph = new VGlyph(cursor, pageIndex, normalizedUnicode, dir, f);
             glyphs.add(glyph);
             cursor += normalizedUnicode.length();
 
-            dir = pos.getDir();
             if (dir == 90 || dir == 270) {
                 lineBase = Math.min(lineBase, glyph.getFontX());
                 lineHeight = Math.max(lineHeight, glyph.getFontWidth());
