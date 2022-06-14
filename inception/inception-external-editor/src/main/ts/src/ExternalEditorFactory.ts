@@ -61,16 +61,24 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
   loadIFrameContent(iframe: HTMLIFrameElement): Promise<Window> {
     return new Promise(resolve => {
+      const iframeUrl = iframe.src;
+      iframe.src = 'about:blank';
       const eventHandler = () => {
         iframe.removeEventListener('load', eventHandler);
+        let content = iframe.contentDocument || iframe.contentWindow?.document;
+        console.debug(`IFrame has loaded: ${content?.location}`);
         resolve(iframe.contentWindow);
       };
+      console.debug("Waiting for IFrame content to load...");
       iframe.addEventListener('load', eventHandler);
+      iframe.src = iframeUrl;
     });
   }
 
   loadEditorResources(win: Window, props: AnnotationEditorProperties): Promise<Window> {
     return new Promise(resolve => {
+      console.debug("Preparing to load editor resources...");
+
       // Make sure body is accessible via body property - seems the browser does not always ensure
       // this...
       if (win.document instanceof HTMLDocument) {
@@ -95,6 +103,8 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
   initEditor(contextWindow: Window, targetElement: HTMLElement | Document, diam: DiamClientFactory, props: AnnotationEditorProperties): Promise<AnnotationEditor> {
     return new Promise(resolve => {
+      console.debug("Preparing to initialize editor...");
+
       const editorFactory = (contextWindow as any).eval(props.editorFactory) as AnnotationEditorFactory;
       editorFactory.getOrInitialize(targetElement, diam, props).then(editor => {
         console.info("Editor initialized");
@@ -115,6 +125,8 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
   loadStylesheet(document: Document, styleSheetSource: string): Promise<void> {
     return new Promise(resolve => {
+      console.debug(`Preparing to load stylesheet: ${styleSheetSource} ...`);
+
       var css = document.createElement("link");
       css.rel = "stylesheet";
       css.type = "text/css";
@@ -130,6 +142,8 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
   loadScript(document: Document, scriptSource: string): Promise<void> {
     return new Promise(resolve => {
+      console.debug(`Preparing to load script: ${scriptSource} ...`);
+
       var script = document.createElement("script");
       script.type = "text/javascript";
       script.src = scriptSource;
