@@ -50,7 +50,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
-import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfEditorProperties;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
 
@@ -62,7 +61,6 @@ public class PdfDocumentIFrameView
     private static final long serialVersionUID = 4202869513273132875L;
 
     private @SpringBean DocumentService documentService;
-    private @SpringBean PdfEditorProperties pdfEditorProperties;
 
     private AbstractAjaxBehavior pdfProvider;
     private AbstractAjaxBehavior pdftxtProvider;
@@ -148,7 +146,7 @@ public class PdfDocumentIFrameView
     @Override
     protected void onComponentTag(ComponentTag aTag)
     {
-        String indexFile = pdfEditorProperties.isDebug() ? "index-debug.html" : "index.html";
+        String indexFile = "viewer.html";
 
         UrlRenderer urlRenderer = RequestCycle.get().getUrlRenderer();
 

@@ -32,13 +32,17 @@ export function initPdfAnno() {
   // Enable a view mode.
   UI.enableViewMode()
 
-  // The event called at page rendered by pdfjs.
-  window.addEventListener('pagerendered', ev => onPageRendered(ev))
-  // Adapt to scale change.
-  window.addEventListener('scalechange', ev => onScaleChange(ev))
-
-  // Show loading.
-  showLoader(true)
+  //document.addEventListener("webviewerloaded", function() {
+    window.PDFViewerApplication.initializedPromise.then(function() {
+      // The event called at page rendered by pdfjs.
+      window.PDFViewerApplication.eventBus.on('pagerendered', ev => onPageRendered(ev));
+      // Adapt to scale change.
+      window.PDFViewerApplication.eventBus.on('scalechanged', ev => onScaleChange(ev));
+      window.PDFViewerApplication.eventBus.on('zoomin', ev => onScaleChange(ev));
+      window.PDFViewerApplication.eventBus.on('zoomout', ev => onScaleChange(ev));
+      window.PDFViewerApplication.eventBus.on('zoomreset', ev => onScaleChange(ev));
+    });
+  //});
 
   // Init viewer.
   annoPage.initializeViewer(null)
@@ -55,7 +59,7 @@ export function initPdfAnno() {
 
 
 function onPageRendered(ev) {
-  console.log('pagerendered:', ev.detail.pageNumber)
+  console.log('pagerendered:', ev.pageNumber)
 
   // No action, if the viewer is closed.
   if (!window.PDFViewerApplication.pdfViewer.getPageView(0)) {
@@ -67,7 +71,7 @@ function onPageRendered(ev) {
 }
 
 function onScaleChange(ev) {
-  console.log('scalechange')
+  console.log('scalechanged')
   adjustPageGaps()
   removeAnnoLayer()
   renderAnno()
@@ -198,57 +202,48 @@ async function displayViewer() {
   window.apiUrl = q.api
 
   // Load a PDF file.
-  try {
-    let { pdf, analyzeResult } = await annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
-
-    setTimeout(() => {
-      annoPage.displayViewer(getPDFName(pdfURL), pdf)
-    }, 500)
-
-    const listenPageRendered = async () => {
-      showLoader(false)
-      window.removeEventListener('pagerendered', listenPageRendered)
-    }
-    window.addEventListener('pagerendered', listenPageRendered)
-
-    // Init textLayers.
-    textLayer.setup(analyzeResult)
-
-    const renderTimeout = 500
-    window.pagechangeEventCounter = 0
-    window.pageRender = 1;
-    let initAnnotations = function (e) {
+    Promise.all([
+      annoPage.loadPdftxt(pdftxtURL),
+      annoPage.displayViewer(getPDFName(pdfURL), pdfURL)
+    ])
+    .then(([analyzeResult]) => {
       try {
-        getAnnotations()
-      } finally {
-        document.removeEventListener('pagerendered', initAnnotations)
-      }
-    }
-    document.addEventListener('pagerendered', initAnnotations)
-    document.addEventListener('pagechange', function (e) {
-      pagechangeEventCounter++
-      if (e.pageNumber !== window.pageRender) {
-        const snapshot = window.pagechangeEventCounter
-        setTimeout(() => {
-          if (snapshot === pagechangeEventCounter && e.pageNumber !== window.pageRender) {
-            window.pageRender = e.pageNumber
-            window.pagechangeEventCounter = 0
+        // Init textLayers.
+        textLayer.setup(analyzeResult)
+
+        window.pagechangeEventCounter = 0
+        window.pageRender = 1;
+        let initAnnotations = function (e) {
+          try {
             getAnnotations()
+          } finally {
+            window.PDFViewerApplication.eventBus.off('pagerendered', initAnnotations)
           }
-        }, renderTimeout)
-      }
-    })
+        }
+        window.PDFViewerApplication.eventBus.on('pagerendered',initAnnotations);
+        window.PDFViewerApplication.eventBus.on('pagechanging', function (e) {
+          pagechangeEventCounter++
+          if (e.pageNumber !== window.pageRender) {
+            const snapshot = window.pagechangeEventCounter
+            const renderTimeout = 500
+            setTimeout(() => {
+              if (snapshot === pagechangeEventCounter && e.pageNumber !== window.pageRender) {
+                window.pageRender = e.pageNumber
+                window.pagechangeEventCounter = 0
+                getAnnotations()
+              }
+            }, renderTimeout)
+          }
+        })
+    } catch (err) {
+      console.error('Failed to analyze the PDF.', err);
 
-  } catch (err) {
-    // Hide a loading, and show the error message.
-    showLoader(false)
-    console.error('Failed to analyze the PDF.', err);
-
-    // Init viewer.
-    annoPage.initializeViewer(null)
-    // Start application.
-    annoPage.startViewerApplication()
-  }
+      // Init viewer.
+      annoPage.initializeViewer(null)
+      // Start application.
+      annoPage.startViewerApplication()
+    }
+  });
 }
 
 /**
@@ -257,18 +252,4 @@ async function displayViewer() {
 function getPDFName(url) {
   const a = url.split('/')
   return a[a.length - 1]
-}
-
-/**
- * Show or hide a loding.
- */
-function showLoader(display: boolean) {
-  if (display) {
-    document.querySelectorAll('#pdfLoading').forEach(e => e.classList.remove('close', 'hidden'))
-  } else {
-    document.querySelectorAll('#pdfLoading').forEach(e => e.classList.add('close'))
-    setTimeout(function () {
-      document.querySelectorAll('#pdfLoading').forEach(e => e.classList.add('hidden'))
-    }, 1000)
-  }
 }
