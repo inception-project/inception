@@ -29,6 +29,8 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     this.ajax = ajax;
     this.root = element;
 
+    console.info("PdfAnnotationEditor reporting for duty!")
+
     initPdfAnno();
 
     element.addEventListener('annotationSelected', ev => this.onAnnotationSelected(ev));

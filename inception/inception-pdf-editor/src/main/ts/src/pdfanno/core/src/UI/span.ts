@@ -3,7 +3,7 @@ import SpanAnnotation from '../annotation/span'
 import { findIndex, getGlyphsInRange, findGlyphAtPoint } from '../../../page/textLayer'
 
 function scale() {
-  return window.PDFView.pdfViewer.getPageView(0).viewport.scale
+  return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
 }
 
 /**
