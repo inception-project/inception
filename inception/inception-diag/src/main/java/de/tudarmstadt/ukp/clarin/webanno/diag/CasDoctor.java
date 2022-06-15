@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.diag;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.collections4.CollectionUtils.isNotEmpty;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -64,13 +64,13 @@ public class CasDoctor
         disableAutoScan = aProperties.isForceReleaseBehavior();
 
         activeChecks = new LinkedHashSet<>();
-        if (isNotBlank(aProperties.getChecks())) {
-            activeChecks.addAll(asList(aProperties.getChecks().split(",")));
+        if (isNotEmpty(aProperties.getChecks())) {
+            activeChecks.addAll(aProperties.getChecks());
         }
 
         activeRepairs = new LinkedHashSet<>();
-        if (isNotBlank(aProperties.getChecks())) {
-            activeRepairs.addAll(asList(aProperties.getRepairs().split(",")));
+        if (isNotEmpty(aProperties.getRepairs())) {
+            activeRepairs.addAll(aProperties.getRepairs());
         }
     }
 

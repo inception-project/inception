@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.config;
 
+import java.util.List;
+
 public interface CasDoctorProperties
 {
-    String getChecks();
+    List<String> getChecks();
 
-    String getRepairs();
+    List<String> getRepairs();
 
     boolean isFatal();
 

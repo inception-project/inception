@@ -65,18 +65,29 @@ and saving inconsistent documents.
 | debug.casDoctor.checks
 | Extra checks to perform when a CAS is saved (also on load if any repairs are enabled)
 | _unset_
-| comma-separated list of <<sect_checks,checks>>
+| list of <<sect_checks,checks>>
 
 | debug.casDoctor.repairs
 | Repairs to be performed when a CAS is loaded - order matters!
 | _unset_
-| comma-separated list of <<sect_repairs,repairs>>
+| list of <<sect_repairs,repairs>>
 
 | debug.casDoctor.forceReleaseBehavior
 | Behave as like a release version even if it is a beta or snapshot version.
 | false
 | true
 |===
+
+To specify a list of repairs or checks in the `settings.properties` file, use the following syntax:
+
+----
+debug.casDoctor.checks[0]=Check1
+debug.casDoctor.checks[1]=Check2
+debug.casDoctor.checks[...]=CheckN
+debug.casDoctor.repairs[0]=Repair1
+debug.casDoctor.repairs[1]=Repair2
+debug.casDoctor.repairs[...]=RepairN
+----
 
 [[sect_checks]]
 == Checks
