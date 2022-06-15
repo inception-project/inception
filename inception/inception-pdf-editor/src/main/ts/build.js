@@ -15,26 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+const path = require('path');
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
 const esbuild = require('esbuild')
 const fs = require('fs-extra');
+const alias = require('esbuild-plugin-alias');
+
+const argv = yargs(hideBin(process.argv)).argv
 
 let outbase = "../../../target/js/de/tudarmstadt/ukp/inception/pdfeditor/resources/";
 
-fs.emptyDirSync(outbase)
-fs.mkdirsSync(`${outbase}/pdfjs/`)
+if (!argv.live) {
+  fs.emptyDirSync(outbase)
+}
+fs.mkdirsSync(`${outbase}`)
 
 defaults = {
   bundle: true,
   sourcemap: true,
-  minify: true,
+  minify: !argv.live,
   target: "es6",
   loader: { ".ts": "ts" },
-  logLevel: 'info'
+  logLevel: 'info',
+  plugins: [
+    alias({
+      'pdfjs-lib': path.resolve(__dirname, 'node_modules/pdfjs-dist/build/pdf.js'),
+      'pdfjs-web/genericcom.js': path.resolve(__dirname, 'src/pdfjs/genericcom.js'),
+      'pdfjs-web/pdf_print_service.js': path.resolve(__dirname, 'src/pdfjs/pdf_print_service.js'),
+    }),
+  ],
 }
-
-const argv = yargs(hideBin(process.argv)).argv
 
 if (argv.live) {
   defaults['watch'] = {
@@ -52,36 +63,7 @@ esbuild.build(Object.assign({
   globalName: "PdfAnnotationEditor",
 }, defaults))
 
-// esbuild.build(Object.assign({
-//   entryPoints: ["src/pdfanno/pdfanno.ts"],
-//   outfile: `${outbase}/pdfanno.page.bundle.js`,
-//   globalName: "pdfanno.page",
-// }, defaults))
-
-esbuild.build(Object.assign({
-  entryPoints: ["src/pdfjs/viewer.js"],
-  outfile: `${outbase}/viewer.bundle.js`,
-  globalName: "viewer",
-  external: ['images/*']
-}, defaults))
-
-esbuild.build(Object.assign({
-  entryPoints: ["src/pdfjs/l10n.ts"],
-  outfile: `${outbase}/l10n.bundle.js`,
-  globalName: "l10n",
-}, defaults))
-
-fs.copySync('index.html', `${outbase}/index.html`)
-fs.copySync('index-debug.html', `${outbase}/index-debug.html`)
-fs.copySync('../pdfjs/images', `${outbase}/images`)
-fs.copySync('../pdfjs/locale', `${outbase}/locale`)
+fs.copySync('pdfjs-web', `${outbase}`)
+fs.copySync('node_modules/pdfjs-dist/build', `${outbase}`)
 fs.copySync('node_modules/pdfjs-dist/cmaps', `${outbase}/cmaps`)
-fs.copySync('node_modules/pdfjs-dist/web/compatibility.js', `${outbase}/compatibility.bundle.js`)
-fs.copySync('node_modules/pdfjs-dist/web/compatibility.js.map', `${outbase}/compatibility.bundle.js.map`)
-
-fs.copySync('node_modules/pdfjs-dist/build/pdf.js', `${outbase}/pdfjs/pdf.js`)
-fs.copySync('node_modules/pdfjs-dist/build/pdf.js.map', `${outbase}/pdfjs/pdf.js.map`)
-fs.copySync('node_modules/pdfjs-dist/build/pdf.min.js', `${outbase}/pdfjs/pdf.min.js`)
-fs.copySync('node_modules/pdfjs-dist/build/pdf.worker.js', `${outbase}/pdfjs/pdf.worker.js`)
-fs.copySync('node_modules/pdfjs-dist/build/pdf.worker.js.map', `${outbase}/pdfjs/pdf.worker.js.map`)
-fs.copySync('node_modules/pdfjs-dist/build/pdf.worker.min.js', `${outbase}/pdfjs/pdf.worker.min.js`)
+fs.copySync('node_modules/pdfjs-dist/standard_fonts', `${outbase}/standard_fonts`)

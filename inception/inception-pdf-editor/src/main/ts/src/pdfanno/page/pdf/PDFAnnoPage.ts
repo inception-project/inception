@@ -35,16 +35,15 @@ export default class PDFAnnoPage {
     adjustViewerSize()
   }
 
-  displayViewer(name: string, pdf) {
+  displayViewer(name: string, pdfURL) {
     // Reset settings.
     this.resetPDFViewerSettings()
 
     // Load PDF.
-    const uint8Array = new Uint8Array(pdf)
-    window.PDFViewerApplication.open(uint8Array)
-
-    // Set the PDF file name.
-    window.PDFViewerApplication.url = name
+    return window.PDFViewerApplication.open(pdfURL).then(() => { 
+      // Set the PDF file name.
+      window.PDFViewerApplication.url = name
+    });
   }
 
   /**
@@ -171,7 +170,7 @@ export default class PDFAnnoPage {
    * Get the viewport of the viewer.
    */
   getViewerViewport() {
-    return window.PDFView.pdfViewer.getPageView(0).viewport
+    return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
   }
 
   /**
@@ -220,12 +219,10 @@ export default class PDFAnnoPage {
    */
   loadPDFFromServer(pdfURL: string, pdftxtURL: string): Promise<Object> {
     return Promise.all([
-      this.loadPdf(pdfURL),
       this.loadPdftxt(pdftxtURL)
     ]).then(results => {
       return {
-        pdf: results[0],
-        analyzeResult: results[1]
+        analyzeResult: results[0]
       }
     })
   }
