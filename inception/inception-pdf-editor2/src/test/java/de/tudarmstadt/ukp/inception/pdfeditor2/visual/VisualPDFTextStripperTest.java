@@ -80,8 +80,8 @@ class VisualPDFTextStripperTest
                     float w = (d == 0 || d == 180) ? vGlyph.getExtent() : vLine.getExtent();
                     float h = (d == 0 || d == 180) ? vLine.getExtent() : vGlyph.getExtent();
 
-                    System.out.printf("%.0f %f %f -- (%f %f %f %f) -- %s%n", vLine.getDir(),
-                            vLine.getBase(), vLine.getExtent(), x, y, w, h, vGlyph);
+                    // System.out.printf("%.0f %f %f -- (%f %f %f %f) -- %s%n", vLine.getDir(),
+                    // vLine.getBase(), vLine.getExtent(), x, y, w, h, vGlyph);
 
                     // Font (screen) coordinates should be within the line boundaries
                     assertThat(vGlyph.getFontX()).isBetween(x, x + w);
