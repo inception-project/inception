@@ -265,9 +265,9 @@ function withinMargin(x: number, base: number, margin: number) {
  * assumed.
  */
 function scale() {
-  if (window.PDFView.pdfViewer.getPageView(0) === undefined) {
+  if (window.PDFViewerApplication.pdfViewer.getPageView(0) === undefined) {
     return 1;
   } else {
-    return window.PDFView.pdfViewer.getPageView(0).viewport.scale;
+    return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale;
   }
 }
