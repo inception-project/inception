@@ -28,9 +28,9 @@ export function renderSpan(a: SpanAnnotation, svg): HTMLElement {
   const pageView = window.PDFViewerApplication.pdfViewer.getPageView(0)
   const viewport = pageView.viewport
   const scale = viewport.scale
-  let merginBetweenPages = 1
+  let marginBetweenPages = 1
   let pageContainer = document.querySelector(`.page[data-page-number="${a.page}"]`)
-  let pageTopY = pageContainer.offsetTop / scale + paddingTop + merginBetweenPages
+  let pageTopY = pageContainer.offsetTop / scale + paddingTop + marginBetweenPages
 
   const rectangles = a.rectangles.map(r => {
     return {
