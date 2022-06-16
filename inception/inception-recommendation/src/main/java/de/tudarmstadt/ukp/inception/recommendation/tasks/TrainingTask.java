@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGR
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
@@ -236,11 +235,13 @@ public class TrainingTask
                                     getId(), user.getUsername(), recommender.getName(), trainDocNum,
                                     docNum, duration);
                             info("Training not successful (%d ms).", duration);
-                            appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
-                                    user.getUsername(),
-                                    format("Training on %d out of %d documents not successful (%d ms)",
-                                            trainDocNum, docNum, duration),
-                                    recommender));
+                            // The recommender may decide for legitimate reasons not to train and
+                            // then this event is annoying
+                            // appEventPublisher.publishEvent(new RecommenderTaskEvent(this,
+                            // user.getUsername(),
+                            // format("Training on %d out of %d documents not successful (%d ms)",
+                            // trainDocNum, docNum, duration),
+                            // recommender));
                             continue;
                         }
 
