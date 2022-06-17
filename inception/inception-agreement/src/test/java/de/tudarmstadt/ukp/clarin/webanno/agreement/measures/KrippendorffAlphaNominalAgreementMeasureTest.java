@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
 import static java.lang.Double.NaN;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
@@ -31,6 +34,9 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.Kr
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 public class KrippendorffAlphaNominalAgreementMeasureTest
     extends AgreementMeasureTestSuite_ImplBase
@@ -52,8 +58,9 @@ public class KrippendorffAlphaNominalAgreementMeasureTest
     @Test
     public void multiLinkWithRoleLabelDifference() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = multiLinkWithRoleLabelDifferenceTest(
-                sut);
+        when(annotationService.listSupportedFeatures(any(Project.class))).thenReturn(features);
+
+        var agreement = multiLinkWithRoleLabelDifferenceTest(sut);
 
         CodingAgreementResult result = agreement.getStudy("user1", "user2");
 
@@ -139,8 +146,13 @@ public class KrippendorffAlphaNominalAgreementMeasureTest
     @Test
     public void fullSingleCategoryAgreementWithTagsetTest() throws Exception
     {
-        PairwiseAnnotationResult<CodingAgreementResult> agreement = fullSingleCategoryAgreementWithTagset(
-                sut, traits);
+        TagSet tagset = new TagSet(project, "tagset");
+        Tag tag1 = new Tag(tagset, "+");
+        Tag tag2 = new Tag(tagset, "-");
+        when(annotationService.listTags(tagset)).thenReturn(asList(tag1, tag2));
+        when(annotationService.listSupportedFeatures(any(Project.class))).thenReturn(features);
+
+        var agreement = fullSingleCategoryAgreementWithTagset(sut, traits);
 
         CodingAgreementResult result = agreement.getStudy("user1", "user2");
 

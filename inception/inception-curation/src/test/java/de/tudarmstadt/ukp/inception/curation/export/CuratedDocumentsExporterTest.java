@@ -25,10 +25,8 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipFile;
@@ -36,10 +34,11 @@ import java.util.zip.ZipFile;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
@@ -61,6 +60,7 @@ import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePro
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportServiceImpl;
 
+@ExtendWith(MockitoExtension.class)
 public class CuratedDocumentsExporterTest
 {
     public @TempDir File tempFolder;
@@ -81,8 +81,6 @@ public class CuratedDocumentsExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
-
         workFolder = tempFolder;
 
         project = new Project();
@@ -102,16 +100,6 @@ public class CuratedDocumentsExporterTest
 
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
                 asList(new XmiFormatSupport()), casStorageService, schemaService, properties);
-
-        // documentService.exportCas() is just a stupid wrapper around storageService.exportCas()
-        // and it is easiest we emulate it here
-        Mockito.doAnswer(invocation -> {
-            casStorageService.exportCas( //
-                    invocation.getArgument(0, SourceDocument.class),
-                    invocation.getArgument(1, String.class),
-                    invocation.getArgument(2, OutputStream.class));
-            return null;
-        }).when(documentService).exportCas(any(), any(), any());
 
         // Dynamically generate a SourceDocument with an incrementing ID when asked for one
         when(documentService.getSourceDocument(any(), any())).then(invocation -> {

@@ -24,7 +24,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +35,9 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
@@ -51,7 +52,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptLabelCache;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
 
+@ExtendWith(MockitoExtension.class)
 public class ConceptFeatureIndexingSupportTest
 {
     private Project project;
@@ -75,8 +76,6 @@ public class ConceptFeatureIndexingSupportTest
     @BeforeEach
     public void setup() throws Exception
     {
-        initMocks(this);
-
         project = new Project();
         project.setId(1l);
         project.setName("test project");
@@ -122,11 +121,6 @@ public class ConceptFeatureIndexingSupportTest
 
         AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
                 SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
-        when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
-                .thenReturn(asList(layer));
-
-        when(kbService.readInstance(any(Project.class), any(String.class)))
-                .thenReturn(Optional.of(new KBInstance("urn:dummy-concept", "Dummy concept")));
 
         KBHandle kbHandle = new KBHandle("urn:dummy-concept", "Dummy concept");
         kbHandle.setKB(kb);
