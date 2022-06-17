@@ -1929,22 +1929,22 @@ export class Visualizer {
 
           // find the gap to fit the backwards arcs, but only on
           // head fragment - other fragments don't have arcs
-          span.incoming.map(arc => {
+          for (const arc of span.incoming) {
             const leftSpan = this.data.spans[arc.origin]
             checkLeftRightArcs(arc, leftSpan, leftSpan)
-          })
+          }
 
-          span.outgoing.map(arc => {
+          for (const arc of span.outgoing) {
             const leftSpan = this.data.spans[arc.target]
             checkLeftRightArcs(arc, span, leftSpan)
-          })
+          }
 
-          span.incoming.map(arc => {
+          for (const arc of span.incoming) {
             const origin = this.data.spans[arc.origin].headFragment.chunk
             if (chunk.index === origin.index) {
               hasInternalArcs = true
             }
-          })
+          }
         }
 
         fragmentHeight += span.floor || Configuration.visual.curlyHeight
@@ -2379,12 +2379,12 @@ export class Visualizer {
     }
 
     // draw the markedText
-    textMarkedRows.map(textRowDesc => {
+    for (const textRowDesc of textMarkedRows) {
       this.svg.rect(textRowDesc[2] - textRowDesc[1] + 4, this.data.sizes.fragments.height + 4)
         .translate(textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height)
         .addClass(textRowDesc[3])
         .addTo(this.highlightGroup)
-    })
+    }
   }
 
   renderBumpFragmentHeightsMinimumToArcStartHeight (fragmentHeights: number[]) {
@@ -2579,7 +2579,7 @@ export class Visualizer {
       }
 
       // find the next height
-      let height: number
+      let height = 0
       let fromIndex2: number, toIndex2: number
       if (left.chunk.index === right.chunk.index) {
         fromIndex2 = left.towerId * 2 + left.chunk.row.heightsAdjust
@@ -2704,9 +2704,9 @@ export class Visualizer {
 
         // guess at the correct baseline shift to get vertical centering.
         // (CSS dominant-baseline can't be used as not all SVG renders support it.)
-        const baseline_shift = this.data.sizes.arcs.height / 4
+        const baselineShift = this.data.sizes.arcs.height / 4
         this.svg.plain(labelText)
-          .amove((from + to) / 2, -height + baseline_shift)
+          .amove((from + to) / 2, -height + baselineShift)
           .attr({
             // 'fill': color,
             fill: '#000000',
@@ -2936,7 +2936,7 @@ export class Visualizer {
   }
 
   renderFragmentConnectors (rows) {
-    $.each(this.data.spans, (spanNo, span) => {
+    for (const span of Object.values(this.data.spans)) {
       const numConnectors = span.fragments.length - 1
       for (let connectorNo = 0; connectorNo < numConnectors; connectorNo++) {
         const left = span.fragments[connectorNo]
@@ -2979,7 +2979,7 @@ export class Visualizer {
           }
         } // rowIndex
       } // connectorNo
-    }) // spans
+    }
   }
 
   /**

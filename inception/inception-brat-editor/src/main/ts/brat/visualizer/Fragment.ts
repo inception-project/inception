@@ -41,13 +41,14 @@
 import { SVGTypeMapping } from '@svgdotjs/svg.js'
 import { Chunk } from './Chunk'
 import { Entity } from './Entity'
+import { RectBox } from './RectBox'
 
 export class Fragment {
   id: number = undefined
   span: Entity = undefined
   from: number = undefined
   to: number = undefined
-  rectBox = undefined
+  rectBox: RectBox = undefined
   text : string = undefined
   chunk: Chunk = undefined
   indexNumber = undefined
@@ -59,8 +60,8 @@ export class Fragment {
   glyphedLabelText: string = undefined
   group: SVGTypeMapping<SVGGElement> = undefined
   rect: SVGTypeMapping<SVGElement> = undefined
-  left = undefined
-  right = undefined
+  left: number = undefined
+  right: number = undefined
   width: number = undefined
   height: number = undefined
   nestingHeight: number = undefined

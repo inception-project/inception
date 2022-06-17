@@ -61,12 +61,12 @@ export class Chunk {
   markedTextStart: Array<unknown> = undefined
   // chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
   markedTextEnd: Array<unknown> = undefined
-  right = undefined
+  right: number = undefined
   row: Row = undefined
   textX: number = undefined
   translation: { x: number, y: number } = { x: 0, y: 0 }
-  firstFragmentIndex = undefined
-  lastFragmentIndex = undefined
+  firstFragmentIndex : number = undefined
+  lastFragmentIndex : number = undefined
   rtlsizes: { charDirection: Array<'rtl' | 'ltr'>, charAttrs: Array<{order: number, width: number, direction: 'rtl' | 'ltr'}>, corrFactor: number } = undefined
 
   constructor (index: number, text: string, from: number, to: number, space: string) {
