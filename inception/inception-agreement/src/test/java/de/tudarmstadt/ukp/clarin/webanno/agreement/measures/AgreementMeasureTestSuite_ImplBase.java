@@ -37,9 +37,6 @@ import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.fit.factory.CasFactory.createCas;
 import static org.apache.uima.fit.factory.CasFactory.createText;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -52,7 +49,9 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.statistics.agreement.IAnnotationStudy;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
@@ -75,6 +74,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
+@ExtendWith(MockitoExtension.class)
 public class AgreementMeasureTestSuite_ImplBase
 {
     protected @Mock AnnotationSchemaService annotationService;
@@ -82,12 +82,11 @@ public class AgreementMeasureTestSuite_ImplBase
     protected Project project;
     protected List<AnnotationLayer> layers;
     protected List<AnnotationFeature> features;
+    protected LayerSupportRegistryImpl layerRegistry;
 
     @BeforeEach
     public void setup()
     {
-        initMocks(this);
-
         project = new Project();
         layers = new ArrayList<>();
         features = new ArrayList<>();
@@ -100,24 +99,11 @@ public class AgreementMeasureTestSuite_ImplBase
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
-        LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
+        layerRegistry = new LayerSupportRegistryImpl(asList(
                 new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
-
-        when(annotationService.listSupportedLayers(any())).thenReturn(layers);
-        when(annotationService.listAnnotationLayer(any())).thenReturn(layers);
-        when(annotationService.listSupportedFeatures(any(AnnotationLayer.class)))
-                .thenReturn(features);
-        when(annotationService.listSupportedFeatures(any(Project.class))).thenReturn(features);
-        when(annotationService.listAnnotationFeature(any(AnnotationLayer.class)))
-                .thenReturn(features);
-        when(annotationService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
-            AnnotationLayer l = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(l).createAdapter(l,
-                    () -> annotationService.listAnnotationFeature(l));
-        });
     }
 
     public <R extends Serializable, T extends DefaultAgreementTraits, S extends IAnnotationStudy> //
@@ -301,7 +287,7 @@ public class AgreementMeasureTestSuite_ImplBase
         TagSet tagset = new TagSet(project, "tagset");
         Tag tag1 = new Tag(tagset, "+");
         Tag tag2 = new Tag(tagset, "-");
-        when(annotationService.listTags(tagset)).thenReturn(asList(tag1, tag2));
+        // when(annotationService.listTags(tagset)).thenReturn(asList(tag1, tag2));
 
         AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
                 SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -337,7 +323,7 @@ public class AgreementMeasureTestSuite_ImplBase
         TagSet tagset = new TagSet(project, "tagset");
         Tag tag1 = new Tag(tagset, "+");
         Tag tag2 = new Tag(tagset, "-");
-        when(annotationService.listTags(tagset)).thenReturn(asList(tag1, tag2));
+        // when(annotationService.listTags(tagset)).thenReturn(asList(tag1, tag2));
 
         AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
                 SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);

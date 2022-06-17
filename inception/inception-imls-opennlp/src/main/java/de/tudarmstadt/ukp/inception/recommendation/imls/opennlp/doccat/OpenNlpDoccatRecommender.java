@@ -98,6 +98,12 @@ public class OpenNlpDoccatRecommender
             return;
         }
 
+        if (docSamples.stream().map(DocumentSample::getCategory).distinct().count() <= 1) {
+            aContext.warn("Training data requires at least two different labels",
+                    docSamples.size());
+            return;
+        }
+
         // The beam size controls how many results are returned at most. But even if the user
         // requests only few results, we always use at least the default bean size recommended by
         // OpenNLP
@@ -202,8 +208,19 @@ public class OpenNlpDoccatRecommender
             }
 
             String info = String.format(
-                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s].",
+                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s]",
                     trainingSetSize, testSetSize, data.size());
+            LOG.info(info);
+
+            EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
+                    SAMPLE_UNIT.getSimpleName(), trainingSetSize, testSetSize, trainRatio);
+            result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
+            return result;
+        }
+
+        if (trainingSet.stream().map(DocumentSample::getCategory).distinct().count() <= 1) {
+            String info = String.format("Training data requires at least two different labels");
             LOG.info(info);
 
             EvaluationResult result = new EvaluationResult(DATAPOINT_UNIT.getSimpleName(),
@@ -280,7 +297,7 @@ public class OpenNlpDoccatRecommender
         }
         catch (IOException e) {
             throw new RecommendationException(
-                    "Exception during training the OpenNLP Document Categorizer model.", e);
+                    "Exception during training the OpenNLP Document Categorizer model", e);
         }
     }
 }

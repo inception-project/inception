@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,8 +69,8 @@ public class LinksReachableThroughChainsCheck
                 continue;
             }
 
-            List<FeatureStructure> chains = new ArrayList<>(selectFS(aCas, chainType));
-            List<AnnotationFS> links = new ArrayList<>(select(aCas, linkType));
+            var chains = aCas.select(chainType).asList();
+            var links = new ArrayList<>(select(aCas, linkType));
 
             for (FeatureStructure chain : chains) {
                 AnnotationFS link = FSUtil.getFeature(chain, "first", AnnotationFS.class);

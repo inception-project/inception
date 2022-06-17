@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render.model;
 
+import static com.fasterxml.jackson.core.JsonToken.END_ARRAY;
+import static com.fasterxml.jackson.core.JsonToken.START_ARRAY;
+import static com.fasterxml.jackson.core.JsonToken.VALUE_NUMBER_INT;
+
 import java.io.IOException;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -92,26 +95,28 @@ public class Offsets
         {
             Offsets offsets = new Offsets();
 
-            if (aJp.getCurrentToken() != JsonToken.START_ARRAY) {
-                aCtxt.mappingException("Expecting array begin");
+            if (aJp.getCurrentToken() != START_ARRAY) {
+                aCtxt.reportWrongTokenException(this, START_ARRAY, "Expecting array begin");
             }
 
-            if (aJp.nextToken() == JsonToken.VALUE_NUMBER_INT) {
+            if (aJp.nextToken() == VALUE_NUMBER_INT) {
                 offsets.begin = aJp.getIntValue();
             }
             else {
-                aCtxt.mappingException("Expecting begin offset as integer");
+                aCtxt.reportWrongTokenException(this, VALUE_NUMBER_INT,
+                        "Expecting begin offset as integer");
             }
 
-            if (aJp.nextToken() == JsonToken.VALUE_NUMBER_INT) {
+            if (aJp.nextToken() == VALUE_NUMBER_INT) {
                 offsets.end = aJp.getIntValue();
             }
             else {
-                aCtxt.mappingException("Expecting end offset as integer");
+                aCtxt.reportWrongTokenException(this, VALUE_NUMBER_INT,
+                        "Expecting end offset as integer");
             }
 
-            if (aJp.getCurrentToken() != JsonToken.END_ARRAY) {
-                aCtxt.mappingException("Expecting array end");
+            if (aJp.getCurrentToken() != END_ARRAY) {
+                aCtxt.reportWrongTokenException(this, END_ARRAY, "Expecting array end");
             }
 
             return offsets;
