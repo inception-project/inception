@@ -18,22 +18,18 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratProtocolNames.ACTION_CONTEXT_MENU;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getActionFromRequest;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getVidFromRequest;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
-import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.serverTiming;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
-import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
@@ -41,10 +37,12 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptReferenceHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.Request;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,10 +51,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.flipkart.zjsonpatch.JsonDiff;
-import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
@@ -78,9 +74,13 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.ServerTimingWatch;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 /**
  * Brat annotator component.
@@ -109,6 +109,10 @@ public class BratAnnotationEditor
     private String lastRenderedJson;
     private int lastRenderedWindowStart = -1;
 
+    private GetCollectionInformationHandler collectionInformationHandler = new GetCollectionInformationHandler();
+    private ShowContextMenuHandler contextMenuHandler = new ShowContextMenuHandler();
+    private LoadConfHandler loadConfHandler = new LoadConfHandler();
+
     public BratAnnotationEditor(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
@@ -134,12 +138,6 @@ public class BratAnnotationEditor
                     return;
                 }
 
-                long timerStart = System.currentTimeMillis();
-
-                // Get action from the request
-                String action = getActionFromRequest(getRequest().getPostParameters());
-                LOG.trace("AJAX-RPC CALLED: [{}]", action);
-
                 Object result = null;
                 try {
                     result = handleRequest(aTarget);
@@ -149,10 +147,7 @@ public class BratAnnotationEditor
                 }
 
                 // Serialize updated document to JSON
-                if (result == null) {
-                    LOG.trace("AJAX-RPC: Action [{}] produced no result!", action);
-                }
-                else {
+                if (result != null) {
                     try {
                         BratRequestUtils.attachResponse(aTarget, vis, result);
                     }
@@ -160,11 +155,6 @@ public class BratAnnotationEditor
                         handleError("Unable to produce JSON response", e);
                     }
                 }
-
-                long duration = System.currentTimeMillis() - timerStart;
-                LOG.trace("AJAX-RPC DONE: [{}] completed in {}ms", action, duration);
-
-                serverTiming("Brat-AJAX", "Brat-AJAX (" + action + ")", duration);
             }
 
             private Object handleRequest(AjaxRequestTarget aTarget) throws IOException
@@ -172,51 +162,33 @@ public class BratAnnotationEditor
                 IRequestParameters requestParameters = getRequest().getPostParameters();
                 String action = getActionFromRequest(requestParameters);
 
-                if (LoadConfResponse.is(action)) {
-                    return new LoadConfResponse(bratProperties);
-                }
+                try (var watch = new ServerTimingWatch("brat", "brat (" + action + ")")) {
+                    if (loadConfHandler.accepts(getRequest())) {
+                        return loadConfHandler.handle(aTarget, getRequest());
+                    }
 
-                if (GetCollectionInformationResponse.is(action)) {
-                    return actionGetCollectionInformation();
-                }
+                    if (collectionInformationHandler.accepts(getRequest())) {
+                        return collectionInformationHandler.handle(aTarget, getRequest());
+                    }
 
-                if (GetDocumentResponse.is(action)) {
-                    return actionGetDocument();
-                }
+                    if (GetDocumentResponse.is(action)) {
+                        return actionGetDocument();
+                    }
 
-                // FIXME Should we un-arm the active slot when the context menu is opened?
-                final VID paramId = getVidFromRequest(requestParameters);
-                if (ACTION_CONTEXT_MENU.equals(action.toString()) && !paramId.isSlotSet()) {
-                    final CAS cas = getCasProvider().get();
-                    actionOpenContextMenu(aTarget, requestParameters, cas, paramId);
-                    return null;
-                }
+                    // FIXME Should we un-arm the active slot when the context menu is opened?
+                    final VID paramId = getVidFromRequest(requestParameters);
+                    if (contextMenuHandler.accepts(getRequest()) && !paramId.isSlotSet()) {
+                        return contextMenuHandler.handle(aTarget, getRequest());
+                    }
 
-                return handlers.getHandler(getRequest()) //
-                        .map(handler -> handler.handle(aTarget, getRequest())) //
-                        .orElse(null);
+                    return handlers.getHandler(getRequest()) //
+                            .map(handler -> handler.handle(aTarget, getRequest())) //
+                            .orElse(null);
+                }
             }
         };
 
         add(requestHandler);
-    }
-
-    private void actionOpenContextMenu(AjaxRequestTarget aTarget, IRequestParameters request,
-            CAS aCas, VID paramId)
-    {
-        List<IMenuItem> items = contextMenu.getItemList();
-        items.clear();
-
-        if (getModelObject().getSelection().isSpan()) {
-            items.add(new LambdaMenuItem("Link to ...",
-                    _target -> actionArcRightClick(_target, paramId)));
-        }
-
-        extensionRegistry.generateContextMenuItems(items);
-
-        if (!items.isEmpty()) {
-            contextMenu.onOpen(aTarget);
-        }
     }
 
     private void actionArcRightClick(AjaxRequestTarget aTarget, VID paramId)
@@ -250,40 +222,22 @@ public class BratAnnotationEditor
         getActionHandler().actionCreateOrUpdate(aTarget, cas);
     }
 
-    private GetCollectionInformationResponse actionGetCollectionInformation()
-    {
-        GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-        if (getModelObject().getProject() != null) {
-            info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(getModelObject().getProject(),
-                    getModelObject().getAnnotationLayers()));
-            info.getVisualOptions()
-                    .setArcBundle(getModelObject().getPreferences().isCollapseArcs()
-                            ? VisualOptions.ARC_BUNDLE_ALL
-                            : VisualOptions.ARC_BUNDLE_NONE);
-        }
-        return info;
-    }
-
     private String actionGetDocument() throws IOException
     {
         if (getModelObject().getProject() == null) {
             return toJson(new GetDocumentResponse());
         }
 
-        StopWatch timer = new StopWatch();
-        timer.start();
+        try (var watch = new ServerTimingWatch("brat-json", "brat JSON generation (FULL)")) {
+            final CAS cas = getCasProvider().get();
 
-        final CAS cas = getCasProvider().get();
+            String json = toJson(render(cas));
+            lastRenderedJson = json;
+            lastRenderedJsonParsed = null;
 
-        String json = toJson(render(cas));
-        lastRenderedJson = json;
-        lastRenderedJsonParsed = null;
-
-        timer.stop();
-        metrics.renderComplete(RenderType.FULL, timer.getTime(), json, null);
-        serverTiming("Brat-JSON", "Brat JSON generation (FULL)", timer.getTime());
-
-        return json;
+            metrics.renderComplete(RenderType.FULL, watch.stop(), json, null);
+            return json;
+        }
     }
 
     @Override
@@ -301,12 +255,7 @@ public class BratAnnotationEditor
 
         // CSS
         aResponse.render(CssHeaderItem.forReference(BratCssReference.get()));
-        aResponse.render(CssHeaderItem
-                .forReference(new WebjarsCssResourceReference("animate.css/current/animate.css")));
-
-        // Libraries
-        aResponse.render(forReference(JQueryUILibrarySettings.get().getJavaScriptReference()));
-        aResponse.render(forReference(BratResourceReference.get()));
+        aResponse.render(JavaScriptReferenceHeaderItem.forReference(BratResourceReference.get()));
 
         // When the page is re-loaded or when the component is added to the page, we need to
         // initialize the brat stuff.
@@ -331,94 +280,92 @@ public class BratAnnotationEditor
     {
         LOG.trace("[{}][{}] bratRenderCommand", getMarkupId(), vis.getMarkupId());
 
-        StopWatch timer = new StopWatch();
-        timer.start();
+        try (var watch = new ServerTimingWatch("brat-json")) {
+            GetDocumentResponse response = render(aCas);
 
-        GetDocumentResponse response = render(aCas);
+            ObjectMapper mapper = JSONUtil.getObjectMapper();
+            JsonNode current = mapper.valueToTree(response);
+            String json = toJson(current);
 
-        ObjectMapper mapper = JSONUtil.getObjectMapper();
-        JsonNode current = mapper.valueToTree(response);
-        String json = toJson(current);
+            // By default, we do a full rendering...
+            RenderType renderType = FULL;
+            String cmd = "renderData";
+            String responseJson = json;
+            JsonNode diff;
+            String diffJsonStr = null;
 
-        // By default, we do a full rendering...
-        RenderType renderType = FULL;
-        String cmd = "renderData";
-        String responseJson = json;
-        JsonNode diff;
-        String diffJsonStr = null;
+            // Here, we try to balance server CPU load against network load. So if we have a chance
+            // of significantly reducing the data sent to the client via a differential update, then
+            // we try that. However, if it is pretty obvious that we won't save a lot, then we will
+            // not even try. I.e. we apply some heuristics to see if large parts of the editor have
+            // changed.
+            AnnotatorState aState = getModelObject();
+            boolean tryDifferentialUpdate = lastRenderedWindowStart >= 0
+                    // Check if we did a far scroll or switch pages
+                    && Math.abs(lastRenderedWindowStart - aState.getWindowBeginOffset()) < aState
+                            .getPreferences().getWindowSize() / 3;
 
-        // Here, we try to balance server CPU load against network load. So if we have a chance
-        // of significantly reducing the data sent to the client via a differential update, then
-        // we try that. However, if it is pretty obvious that we won't save a lot, then we will
-        // not even try. I.e. we apply some heuristics to see if large parts of the editor have
-        // changed.
-        AnnotatorState aState = getModelObject();
-        boolean tryDifferentialUpdate = lastRenderedWindowStart >= 0
-                // Check if we did a far scroll or switch pages
-                && Math.abs(lastRenderedWindowStart - aState.getWindowBeginOffset()) < aState
-                        .getPreferences().getWindowSize() / 3;
-
-        if (tryDifferentialUpdate) {
-            // ... try to render diff
-            JsonNode previous = null;
-            try {
-                if (lastRenderedJsonParsed != null) {
-                    previous = lastRenderedJsonParsed;
+            if (tryDifferentialUpdate) {
+                // ... try to render diff
+                JsonNode previous = null;
+                try {
+                    if (lastRenderedJsonParsed != null) {
+                        previous = lastRenderedJsonParsed;
+                    }
+                    else {
+                        previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson)
+                                : null;
+                    }
                 }
-                else {
-                    previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
+                catch (IOException e) {
+                    LOG.error("Unable to generate diff, falling back to full render.", e);
+                    // Fall-through
+                }
+
+                if (previous != null && current != null) {
+                    diff = JsonDiff.asJson(previous, current);
+                    diffJsonStr = diff.toString();
+
+                    if (diff instanceof ArrayNode && ((ArrayNode) diff).isEmpty()) {
+                        // No difference? Well, don't render at all :)
+                        renderType = SKIP;
+                    }
+                    else if (diffJsonStr.length() < json.length()) {
+                        // Only sent a patch if it is smaller than sending the full data. E.g. when
+                        // switching pages, the patch usually ends up being twice as large as the
+                        // full
+                        // data.
+                        cmd = "renderDataPatch";
+                        responseJson = diffJsonStr;
+                        renderType = DIFFERENTIAL;
+                    }
+
+                    // LOG.info("Diff: " + diff);
+                    // LOG.info("Full: {} Patch: {} Diff time: {}", json.length(), diff.length(),
+                    // timer);
                 }
             }
-            catch (IOException e) {
-                LOG.error("Unable to generate diff, falling back to full render.", e);
-                // Fall-through
+
+            // Storing the last rendered JSON as string because JsonNodes are not serializable.
+            lastRenderedJson = json;
+            lastRenderedJsonParsed = current;
+            lastRenderedWindowStart = aState.getWindowBeginOffset();
+
+            watch.setDescription("Brat-JSON generation (" + renderType + ")");
+            metrics.renderComplete(renderType, watch.stop(), json, diffJsonStr);
+
+            if (SKIP.equals(renderType)) {
+                return Optional.empty();
             }
 
-            if (previous != null && current != null) {
-                diff = JsonDiff.asJson(previous, current);
-                diffJsonStr = diff.toString();
-
-                if (diff instanceof ArrayNode && ((ArrayNode) diff).isEmpty()) {
-                    // No difference? Well, don't render at all :)
-                    renderType = SKIP;
-                }
-                else if (diffJsonStr.length() < json.length()) {
-                    // Only sent a patch if it is smaller than sending the full data. E.g. when
-                    // switching pages, the patch usually ends up being twice as large as the full
-                    // data.
-                    cmd = "renderDataPatch";
-                    responseJson = diffJsonStr;
-                    renderType = DIFFERENTIAL;
-                }
-
-                // LOG.info("Diff: " + diff);
-                // LOG.info("Full: {} Patch: {} Diff time: {}", json.length(), diff.length(),
-                // timer);
-            }
+            return Optional.of("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd
+                    + "', [" + responseJson + "]);");
         }
-
-        // Storing the last rendered JSON as string because JsonNodes are not serializable.
-        lastRenderedJson = json;
-        lastRenderedJsonParsed = current;
-        lastRenderedWindowStart = aState.getWindowBeginOffset();
-
-        timer.stop();
-
-        metrics.renderComplete(renderType, timer.getTime(), json, diffJsonStr);
-        serverTiming("Brat-JSON", "Brat-JSON generation (" + renderType + ")", timer.getTime());
-
-        if (SKIP.equals(renderType)) {
-            return Optional.empty();
-        }
-
-        return Optional.of("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd + "', ["
-                + responseJson + "]);");
     }
 
     private GetDocumentResponse render(CAS aCas)
     {
         AnnotatorState aState = getModelObject();
-
         return render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
                 bratSerializer);
     }
@@ -447,17 +394,14 @@ public class BratAnnotationEditor
     {
         LOG.trace("[{}][{}] bratLoadCollectionCommand", getMarkupId(), vis.getMarkupId());
 
-        GetCollectionInformationResponse response = actionGetCollectionInformation();
-        response.setEntityTypes(bratSchemaGenerator.buildEntityTypes(getModelObject().getProject(),
-                getModelObject().getAnnotationLayers()));
-        String json = toJson(response);
-
+        GetCollectionInformationResponse response = collectionInformationHandler
+                .getCollectionInformation();
         StringBuilder js = new StringBuilder();
         if (bratProperties.isClientSideTraceLog()) {
             js.append("console.log('Loading collection (" + vis.getMarkupId() + ")...');");
         }
         js.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', ["
-                + json + "]);");
+                + toJson(response) + "]);");
         return js.toString();
     }
 
@@ -528,5 +472,95 @@ public class BratAnnotationEditor
             handleError("Unable to produce JSON response", e);
         }
         return json;
+    }
+
+    private class LoadConfHandler
+        extends EditorAjaxRequestHandlerBase
+    {
+
+        @Override
+        public String getCommand()
+        {
+            return LoadConfResponse.COMMAND;
+        }
+
+        @Override
+        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        {
+            return new LoadConfResponse(bratProperties);
+        }
+    }
+
+    private class GetCollectionInformationHandler
+        extends EditorAjaxRequestHandlerBase
+    {
+        @Override
+        public String getCommand()
+        {
+            return GetCollectionInformationResponse.COMMAND;
+        }
+
+        @Override
+        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        {
+            return getCollectionInformation();
+        }
+
+        public GetCollectionInformationResponse getCollectionInformation()
+        {
+            GetCollectionInformationResponse info = new GetCollectionInformationResponse();
+            if (getModelObject().getProject() != null) {
+                info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(
+                        getModelObject().getProject(), getModelObject().getAnnotationLayers()));
+                info.getVisualOptions()
+                        .setArcBundle(getModelObject().getPreferences().isCollapseArcs()
+                                ? VisualOptions.ARC_BUNDLE_ALL
+                                : VisualOptions.ARC_BUNDLE_NONE);
+            }
+            return info;
+        }
+    }
+
+    private class ShowContextMenuHandler
+        extends EditorAjaxRequestHandlerBase
+    {
+        @Override
+        public String getCommand()
+        {
+            return ACTION_CONTEXT_MENU;
+        }
+
+        @Override
+        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        {
+            VID vid = VID.parseOptional(
+                    aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
+
+            if (vid.isNotSet() || vid.isSynthetic()) {
+                return new DefaultAjaxResponse(getAction(aRequest));
+            }
+
+            try {
+                List<IMenuItem> items = contextMenu.getItemList();
+                items.clear();
+
+                if (getModelObject().getSelection().isSpan()) {
+                    items.add(new LambdaMenuItem("Link to ...",
+                            _target -> actionArcRightClick(_target, vid)));
+                }
+
+                extensionRegistry.generateContextMenuItems(items);
+
+                if (!items.isEmpty()) {
+                    contextMenu.onOpen(aTarget);
+                }
+            }
+            catch (Exception e) {
+                handleError("Unable to load data", e);
+            }
+
+            return new DefaultAjaxResponse(getAction(aRequest));
+        }
+
     }
 }
