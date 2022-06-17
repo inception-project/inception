@@ -67,9 +67,8 @@ export class Ajax {
 
   // merge data will get merged into the response data
   // before calling the callback
-  ajaxCall (data, callback, merge) {
+  ajaxCall (data, callback: Function, merge) {
     merge = merge || {}
-    this.dispatcher.post('spin')
     this.pending++
     const id = this.count++
 
@@ -155,13 +154,11 @@ export class Ajax {
             this.dispatcher.postAsync(callback, [response])
           }
         }
-        this.dispatcher.post('unspin')
         // WEBANNO EXTENSION BEGIN
       }],
       // error
       fh: [() => {
         this.pending--
-        this.dispatcher.post('unspin')
         // TODO find some way or access or pass on the response, textStatus and errorThrown from BratAnnotator or Wicket.
         // In the original ajax.js, these are parameters to the error callback.
         //            dispatcher.post('messages', [[['Error: Action' + data.action + ' failed on error ' + response.statusText, 'error']]]);

@@ -39,7 +39,7 @@
  */
 
 export type Message = 'dispatchAsynchError' | 'collectionLoaded' | 'requestRenderData' | 'messages'
-  | 'startedRendering' | 'doneRendering' | 'dataReady' | 'spin' | 'unspin' | 'getValidArcTypesForDrag'
+  | 'startedRendering' | 'doneRendering' | 'dataReady' | 'getValidArcTypesForDrag'
   | 'ajax' | 'acceptButtonClicked' | 'rejectButtonClicked' | 'allowReloadByURL' | 'rerender'
   | 'svgWidth' | 'configurationUpdated' | 'newSourceData' | 'init' | 'click'
   | 'contextmenu' | 'isReloadOkay' | 'screamingHalt' | 'spanAndAttributeTypesLoaded'
@@ -48,9 +48,9 @@ export type Message = 'dispatchAsynchError' | 'collectionLoaded' | 'requestRende
   | 'resize' | 'displaySpanButtons';
 
 export class Dispatcher {
-  table = {}
+  table : Record<string, [Object, Function][]> = {}
 
-  on (message: Message, host, handler) {
+  on (message: Message, host: Object, handler: Function) {
     if (this.table[message] === undefined) {
       this.table[message] = []
     }
@@ -102,11 +102,9 @@ export class Dispatcher {
     // a proper message, propagate to all interested parties
     const todo = this.table[message]
     if (todo !== undefined) {
-      $.each(todo, (itemNo, item) => {
-        let result
-        result = item[1].apply(item[0], args)
-        results.push(result)
-      })
+      for (const [host, handler] of todo) {
+        results.push(handler.apply(host, args))
+      }
       /* DEBUG
                 } else {
                   console.warn('Message ' + message + ' has no subscribers.'); // DEBUG

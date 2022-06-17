@@ -3393,7 +3393,6 @@ export class Visualizer {
     }
 
     this.dispatcher.post('startedRendering', [this.args])
-    this.dispatcher.post('spin')
 
     setTimeout(() => {
       try {
@@ -3404,8 +3403,6 @@ export class Visualizer {
         console.error('Rendering terminated due to: ' + e, e.stack)
         this.dispatcher.post('renderError: Fatal', [sourceData, e])
       }
-
-      this.dispatcher.post('unspin')
     }, 0)
   }
 
@@ -3415,7 +3412,6 @@ export class Visualizer {
    */
   rerender () {
     this.dispatcher.post('startedRendering', [this.args])
-    this.dispatcher.post('spin')
 
     try {
       this.renderDataReal(this.sourceData)
@@ -3426,8 +3422,6 @@ export class Visualizer {
       console.warn('Rendering terminated due to: ' + e, e.stack)
       this.dispatcher.post('renderError: Fatal', [this.sourceData, e])
     }
-
-    this.dispatcher.post('unspin')
   }
 
   /**
