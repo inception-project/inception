@@ -15,12 +15,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const path = require('path');
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
 const esbuild = require('esbuild')
 const fs = require('fs-extra');
-const alias = require('esbuild-plugin-alias');
 
 const argv = yargs(hideBin(process.argv)).argv
 
@@ -37,14 +35,7 @@ defaults = {
   minify: !argv.live,
   target: "es6",
   loader: { ".ts": "ts" },
-  logLevel: 'info',
-  plugins: [
-    alias({
-      'pdfjs-lib': path.resolve(__dirname, 'node_modules/pdfjs-dist/build/pdf.js'),
-      'pdfjs-web/genericcom.js': path.resolve(__dirname, 'src/pdfjs/genericcom.js'),
-      'pdfjs-web/pdf_print_service.js': path.resolve(__dirname, 'src/pdfjs/pdf_print_service.js'),
-    }),
-  ],
+  logLevel: 'info'
 }
 
 if (argv.live) {
