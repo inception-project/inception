@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderT
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.Optional;
@@ -109,9 +110,9 @@ public class BratAnnotationEditor
     private String lastRenderedJson;
     private int lastRenderedWindowStart = -1;
 
-    private GetCollectionInformationHandler collectionInformationHandler = new GetCollectionInformationHandler();
-    private ShowContextMenuHandler contextMenuHandler = new ShowContextMenuHandler();
-    private LoadConfHandler loadConfHandler = new LoadConfHandler();
+    private GetCollectionInformationHandler collectionInformationHandler;
+    private ShowContextMenuHandler contextMenuHandler;
+    private LoadConfHandler loadConfHandler;
 
     public BratAnnotationEditor(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
@@ -189,6 +190,16 @@ public class BratAnnotationEditor
         };
 
         add(requestHandler);
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        collectionInformationHandler = new GetCollectionInformationHandler(bratSchemaGenerator);
+        contextMenuHandler = new ShowContextMenuHandler();
+        loadConfHandler = new LoadConfHandler(bratProperties);
     }
 
     private void actionArcRightClick(AjaxRequestTarget aTarget, VID paramId)
@@ -395,7 +406,7 @@ public class BratAnnotationEditor
         LOG.trace("[{}][{}] bratLoadCollectionCommand", getMarkupId(), vis.getMarkupId());
 
         GetCollectionInformationResponse response = collectionInformationHandler
-                .getCollectionInformation();
+                .getCollectionInformation(getModelObject());
         StringBuilder js = new StringBuilder();
         if (bratProperties.isClientSideTraceLog()) {
             js.append("console.log('Loading collection (" + vis.getMarkupId() + ")...');");
@@ -474,9 +485,18 @@ public class BratAnnotationEditor
         return json;
     }
 
-    private class LoadConfHandler
+    private static class LoadConfHandler
         extends EditorAjaxRequestHandlerBase
+        implements Serializable
     {
+        private static final long serialVersionUID = 586794742935679178L;
+
+        private final BratAnnotationEditorProperties bratProperties;
+
+        public LoadConfHandler(BratAnnotationEditorProperties aBratProperties)
+        {
+            bratProperties = aBratProperties;
+        }
 
         @Override
         public String getCommand()
@@ -491,9 +511,19 @@ public class BratAnnotationEditor
         }
     }
 
-    private class GetCollectionInformationHandler
+    private static class GetCollectionInformationHandler
         extends EditorAjaxRequestHandlerBase
+        implements Serializable
     {
+        private static final long serialVersionUID = 6922527877385787431L;
+
+        private final BratSchemaGenerator bratSchemaGenerator;
+
+        public GetCollectionInformationHandler(BratSchemaGenerator aBratSchemaGenerator)
+        {
+            bratSchemaGenerator = aBratSchemaGenerator;
+        }
+
         @Override
         public String getCommand()
         {
@@ -503,17 +533,17 @@ public class BratAnnotationEditor
         @Override
         public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
         {
-            return getCollectionInformation();
+            return getCollectionInformation(getAnnotatorState());
         }
 
-        public GetCollectionInformationResponse getCollectionInformation()
+        public GetCollectionInformationResponse getCollectionInformation(AnnotatorState aState)
         {
             GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-            if (getModelObject().getProject() != null) {
-                info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(
-                        getModelObject().getProject(), getModelObject().getAnnotationLayers()));
+            if (aState.getProject() != null) {
+                info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(aState.getProject(),
+                        aState.getAnnotationLayers()));
                 info.getVisualOptions()
-                        .setArcBundle(getModelObject().getPreferences().isCollapseArcs()
+                        .setArcBundle(aState.getPreferences().isCollapseArcs()
                                 ? VisualOptions.ARC_BUNDLE_ALL
                                 : VisualOptions.ARC_BUNDLE_NONE);
             }
@@ -523,7 +553,10 @@ public class BratAnnotationEditor
 
     private class ShowContextMenuHandler
         extends EditorAjaxRequestHandlerBase
+        implements Serializable
     {
+        private static final long serialVersionUID = 2566256640285857435L;
+
         @Override
         public String getCommand()
         {
@@ -561,6 +594,5 @@ public class BratAnnotationEditor
 
             return new DefaultAjaxResponse(getAction(aRequest));
         }
-
     }
 }

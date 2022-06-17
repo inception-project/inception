@@ -4,10 +4,7 @@
   "author": "INCEpTION Team",
   "license": "(MIT AND Apache-2.0)",
   "scripts": {
-    "build:brat": "esbuild brat/brat.ts --target=esnext --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.js",
-    "build:brat-minified": "esbuild brat/brat.ts --target=esnext --minify --bundle --sourcemap --global-name=Brat --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.js",
-    "build:brat-curation": "esbuild brat/brat_curation.ts --target=esnext --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.js",
-    "build:brat-curation-minified": "esbuild brat/brat_curation.ts --target=esnext --minify --bundle --sourcemap --global-name=BratCuration --outfile=../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat_curation.min.js",
+    "build:brat": "node build.js",
     "build:brat-css": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.css",
     "build:brat-css-minified": "sass scss/brat.scss ../../../target/js/de/tudarmstadt/ukp/clarin/webanno/brat/resource/brat.min.css --style compressed"
   },
@@ -15,17 +12,24 @@
     "@inception-project/inception-js-api": "${semver}",
     "@inception-project/inception-diam": "${semver}",
     "fast-json-patch": "^3.1.0",
-    "@types/jquery": "^2.0.46",
     "@svgdotjs/svg.js": "^3.1.1",
     "@svgdotjs/svg.filter.js": "^3.0.8"
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",
-    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
     "eslint": "${eslint.version}",
     "typescript": "${typescript.version}",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
     "@typescript-eslint/parser": "${typescript-eslint.version}",
-    "sass": "^1.45.1"
+    "fs-extra": "^10.0.0",
+    "@types/events": "^3.0.0",
+    "@types/urijs": "^1.19.11",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "@types/jquery": "^2.0.46",
+    "esbuild-sass-plugin": "${esbuild-sass-plugin.version}",
+    "sass": "^1.45.1",
+    "yargs": "^17.3.1"
   }
 }
