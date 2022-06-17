@@ -27,7 +27,7 @@ function transform (node: HTMLElement, viewport): HTMLElement {
 export default function appendChild (svg, annotation: AbstractAnnotation, viewport?): HTMLElement {
   // TODO no need third argument(viewport) ?
   if (!viewport) {
-    viewport = window.PDFView.pdfViewer.getPageView(0).viewport
+    viewport = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
   }
 
   let child: HTMLElement

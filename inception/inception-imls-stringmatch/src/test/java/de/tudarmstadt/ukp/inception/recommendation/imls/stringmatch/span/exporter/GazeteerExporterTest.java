@@ -27,7 +27,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 import java.util.List;
@@ -38,10 +37,12 @@ import org.apache.commons.io.FileUtils;
 import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -56,6 +57,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetee
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.exporter.GazeteerExporter;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.Gazeteer;
 
+@ExtendWith(MockitoExtension.class)
 public class GazeteerExporterTest
 {
     private @Mock GazeteerService gazeteerService;
@@ -78,8 +80,6 @@ public class GazeteerExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
-
         sourceProject = new Project();
         sourceProject.setId(1l);
         sourceProject.setName("Test Project");

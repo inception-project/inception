@@ -17,35 +17,37 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.config;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "debug.cas-doctor")
 public class CasDoctorPropertiesImpl
     implements CasDoctorProperties
 {
-    private String checks;
-    private String repairs;
+    private List<String> checks;
+    private List<String> repairs;
     private boolean fatal = true;
     private boolean forceReleaseBehavior = false;
 
     @Override
-    public String getChecks()
+    public List<String> getChecks()
     {
         return checks;
     }
 
-    public void setChecks(String aChecks)
+    public void setChecks(List<String> aChecks)
     {
         checks = aChecks;
     }
 
     @Override
-    public String getRepairs()
+    public List<String> getRepairs()
     {
         return repairs;
     }
 
-    public void setRepairs(String aRepairs)
+    public void setRepairs(List<String> aRepairs)
     {
         repairs = aRepairs;
     }
