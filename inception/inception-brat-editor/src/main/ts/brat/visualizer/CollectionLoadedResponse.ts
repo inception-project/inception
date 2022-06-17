@@ -40,19 +40,33 @@
 
 import { VisualOptions } from './VisualOptions'
 
+export interface RelationType {
+  type: string
+  color: string
+  arrowHead: string
+  targets: string
+  dashArray: string
+}
+
+export interface EntityType {
+  name: string
+  type: string
+  fgColor: string
+  bgColor: string
+  borderColor: string
+  labels: string[]
+  arcs: RelationType[]
+}
+
 /**
  * Class currently defined only for documentation purposes
  */
-export class CollectionLoadedResponse {
-  event_attribute_types
-  entity_attribute_types
-  entity_types
-  event_types
-  unconfigured_types
-  relation_types
+export interface CollectionLoadedResponse {
+  entity_types: EntityType[]
   visual_options: VisualOptions
-
-  constructor () {
-    // Object.seal(this);
-  }
+  // event_attribute_types
+  // entity_attribute_types
+  // event_types
+  // unconfigured_types
+  // relation_types
 }

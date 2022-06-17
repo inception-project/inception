@@ -161,7 +161,6 @@ export class Visualizer {
   private highlightSpans
 
   // OPTIONS
-  private forceWidth: number = undefined
   private collapseArcs = false
   private collapseArcSpace = false
   private roundCoordinates = true // try to have exact pixel offsets
@@ -313,7 +312,7 @@ export class Visualizer {
     for (const marker of this.args[markedType]) {
       if (marker[0] === 'sent') {
         this.data.markedSent[marker[1]] = true
-        return
+        continue
       }
 
       if (marker[0] === 'equiv') { // [equiv, Equiv, T1]
@@ -333,12 +332,12 @@ export class Visualizer {
             }
           }
         })
-        return
+        continue
       }
 
       if (marker.length === 2) {
         this.markedText.push([parseInt(marker[0], 10), parseInt(marker[1], 10), markedType])
-        return
+        continue
       }
 
       const span = this.data.spans[marker[0]]
@@ -353,7 +352,7 @@ export class Visualizer {
           span.marked = markedType
         }
 
-        return
+        continue
       }
 
       const eventDesc = this.data.eventDescs[marker[0]]
@@ -363,7 +362,8 @@ export class Visualizer {
             arc.marked = markedType
           }
         }
-        return
+
+        continue
       }
 
       // try for trigger
@@ -411,11 +411,13 @@ export class Visualizer {
    * Collect fragment texts into span texts
    */
   collectFragmentTextsIntoSpanTexts (spans: Entity[]) {
-    spans.map(span => {
-      const fragmentTexts = []
-      span.fragments && span.fragments.map(fragment => fragmentTexts.push(fragment.text))
+    for (const span of spans) {
+      const fragmentTexts : string[] = []
+      for (const fragment of (span.fragments || [])) {
+        fragmentTexts.push(fragment.text)
+      }
       span.text = fragmentTexts.join('')
-    })
+    }
   }
 
   /**
@@ -515,13 +517,13 @@ export class Visualizer {
       const span = this.data.spans[target]
       if (span) {
         span.normalizations.push([refdb, refid, reftext])
-        return
+        continue
       }
 
       const arc = this.data.arcById[target]
       if (arc) {
         arc.normalizations.push([refdb, refid, reftext])
-        return
+        continue
       }
 
       this.dispatcher.post('messages', [[['Annotation ' + target + ' does not exist.', 'error']]])
@@ -633,12 +635,12 @@ export class Visualizer {
       const okEquivSpans: Array<VID> = []
 
       // collect the equiv spans in an array
-      equivSpans.map(equivSpan => {
+      for (const equivSpan of equivSpans) {
         if (spans[equivSpan]) {
           okEquivSpans.push(equivSpan)
         }
         // TODO: #404, inform the user with a message?
-      })
+      }
 
       // sort spans in the equiv by their midpoint
       okEquivSpans.sort((a, b) => Entity.compare(spans, a, b))
@@ -715,7 +717,7 @@ export class Visualizer {
 
       if (!span) {
         this.dispatcher.post('messages', [[['Annotation ' + spanId + ', referenced from attribute ' + id + ', does not exist.', 'error']]])
-        return
+        continue
       }
 
       const valText = (attrValue && attrValue.name) || value
@@ -746,7 +748,7 @@ export class Visualizer {
           text = this.data.sentComment[sent].text + '<br/>' + text
         }
         this.data.sentComment[sent] = { type: comment[1], text }
-        return
+        continue
       }
 
       const id = (comment[0] as string)
@@ -873,7 +875,7 @@ export class Visualizer {
     let chunkNo = 0
     let sentenceNo = firstSentence
 
-    sentenceOffsets.map(offset => {
+    for (const offset of sentenceOffsets) {
       const from = offset[0]
       const to = offset[1]
 
@@ -885,13 +887,13 @@ export class Visualizer {
 
       // No more chunks
       if (chunkNo >= numChunks) {
-        return false
+        continue
       }
 
       // If the current chunk is not within the current sentence, then it was an empty sentence
       if (chunks[chunkNo].from >= to) {
         sentenceNo++
-        return
+        continue
       }
 
       sentenceNo++
@@ -899,7 +901,7 @@ export class Visualizer {
       // console.trace("ASSIGN: line break ", sentenceNo ," at ", chunk);
       // increase chunkNo counter for next seek iteration
       chunkNo++
-    })
+    }
   }
 
   assignFragmentsToChunks (sortedFragments: Fragment[]) {
@@ -1096,6 +1098,7 @@ export class Visualizer {
         if (fragment.span.labelText) {
           fragment.labelText = fragment.span.labelText
         }
+
         const svgtext = this.svg.plain('').build(true) // one "text" element per row
         const postfixArray = []
         let prefix = ''
@@ -1136,11 +1139,13 @@ export class Visualizer {
             }
           }
         })
+
         let text = fragment.labelText
         if (prefix !== '') {
           text = prefix + ' ' + text
           svgtext.plain(' ')
         }
+
         svgtext.plain(fragment.labelText)
         if (postfixArray.length) {
           text += ' ' + postfix
@@ -3026,8 +3031,8 @@ export class Visualizer {
   renderRows (rows: Row[], sentNumGroup: SVGTypeMapping<SVGGElement>, backgroundGroup: SVGTypeMapping<SVGGElement>): number {
     // position the rows
     let y = Configuration.visual.margin.y
-    let currentSent: number
-    rows.map(row => {
+    let currentSent = 0
+    for (const row of rows) {
       // find the maximum fragment height
       row.updateFragmentHeight()
       row.updateRowBoxHeight(this.rowSpacing, this.rowPadding)
@@ -3051,7 +3056,7 @@ export class Visualizer {
       this.fastTranslate(row, 0, rowY)
 
       y += Configuration.visual.margin.y
-    })
+    }
 
     y += Configuration.visual.margin.y
 
@@ -3283,8 +3288,8 @@ export class Visualizer {
 
     const scrollable = findClosestVerticalScrollable($(this.svg.node))
     const svgWidth = $(this.svgContainer).width()
-    this.baseCanvasWidth = this.forceWidth || svgWidth
-    this.canvasWidth = this.forceWidth || (svgWidth - (!scrollable ? scrollbarWidth() : 0))
+    this.baseCanvasWidth = svgWidth
+    this.canvasWidth = svgWidth - (!scrollable ? scrollbarWidth() : 0)
 
     this.addHeaderAndDefs()
 
@@ -3765,16 +3770,16 @@ export class Visualizer {
 
     this.entityTypes = {}
     this.loadSpanTypes(response.entity_types)
-    this.loadSpanTypes(response.event_types)
-    this.loadSpanTypes(response.unconfigured_types)
+    // this.loadSpanTypes(response.event_types)
+    // this.loadSpanTypes(response.unconfigured_types)
 
     this.relationTypes = {}
     this.loadRelationTypes(response.relation_types)
-    this.loadRelationTypes(response.unconfigured_types)
-
+    // this.loadRelationTypes(response.unconfigured_types)
     // TODO XXX: isn't the following completely redundant with
     // loadRelationTypes?
     $.each(response.relation_types, (relTypeNo, relType) => this.relationTypes[relType.type] = relType)
+
     const arcBundle = (response.visual_options || {}).arc_bundle || 'none'
     this.collapseArcs = arcBundle === 'all'
     this.collapseArcSpace = arcBundle !== 'none'

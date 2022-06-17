@@ -48,7 +48,7 @@ export class Fragment {
   from: number = undefined
   to: number = undefined
   rectBox = undefined
-  text = undefined
+  text : string = undefined
   chunk: Chunk = undefined
   indexNumber = undefined
   drawOrder: number = undefined
