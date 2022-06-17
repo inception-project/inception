@@ -79,7 +79,6 @@ public class BasicDocumentLabelingProjectInitializer
         return asList(
                 // Because all projects should have a Token layer
                 TokenLayerInitializer.class, //
-                // Because locks to token boundaries
                 BasicDocumentLabelLayerInitializer.class);
     }
 

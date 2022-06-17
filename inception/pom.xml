@@ -779,6 +779,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-project-initializers-sentencelabeling</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-project-initializers-wikidatalinking</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
@@ -1956,6 +1961,7 @@
     <module>inception-project-initializers</module>
     <module>inception-project-initializers-basic</module>
     <module>inception-project-initializers-doclabeling</module>
+    <module>inception-project-initializers-sentencelabeling</module>
     <module>inception-project-initializers-wikidatalinking</module>
     <module>inception-project-export</module>
     <module>inception-remote</module>
