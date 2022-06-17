@@ -45,7 +45,7 @@ export type Message = 'dispatchAsynchError' | 'collectionLoaded' | 'requestRende
   | 'contextmenu' | 'isReloadOkay' | 'screamingHalt' | 'spanAndAttributeTypesLoaded'
   | 'keydown' | 'dragstart' | 'mousedown' | 'mouseup' | 'mousemove'
   | 'displaySpanComment' | 'displayArcComment' | 'displaySentComment' | 'hideComment'
-  | 'resize' | 'displaySpanButtons';
+  | 'resize' | 'displaySpanButtons' | 'renderError: Fatal' | 'configurationChanged';
 
 export class Dispatcher {
   table : Record<string, [Object, Function][]> = {}

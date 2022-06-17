@@ -53,7 +53,7 @@ export class Arc {
   equiv = false
   eventDescId: string
   relation = false
-  normalizations: Array<[string, string, string]> = []
+  normalizations: Array<[string?, string?, string?]> = []
   marked: MarkerType
   hidden = false
 

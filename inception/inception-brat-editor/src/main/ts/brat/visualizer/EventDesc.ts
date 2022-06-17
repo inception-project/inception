@@ -42,10 +42,10 @@ import { Arc } from './Arc'
 import { Comment } from './Comment'
 import { Role } from './Role'
 
+export type GeneralEventType = string;
+
 export const EQUIV: GeneralEventType = 'equiv'
 export const RELATION: GeneralEventType = 'relation'
-
-export type GeneralEventType = string;
 
 /**
  * An n-ary relation which is used to represent either a simple relation (relation === true) or

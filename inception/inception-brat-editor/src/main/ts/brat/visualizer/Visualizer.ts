@@ -51,7 +51,7 @@ import { RectBox } from './RectBox'
 import { AttributeType } from './AttributeType'
 import { CollectionLoadedResponse } from './CollectionLoadedResponse'
 import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
-import type { Dispatcher } from '../dispatcher/Dispatcher'
+import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
 import * as jsonpatch from 'fast-json-patch'
 import { Operation } from 'fast-json-patch'
 import { scrollbarWidth } from '../util/ScrollbarWidth'
@@ -310,18 +310,18 @@ export class Visualizer {
       return
     }
 
-    this.args[markedType].map(marked => {
-      if (marked[0] === 'sent') {
-        this.data.markedSent[marked[1]] = true
+    for (const marker of this.args[markedType]) {
+      if (marker[0] === 'sent') {
+        this.data.markedSent[marker[1]] = true
         return
       }
 
-      if (marked[0] === 'equiv') { // [equiv, Equiv, T1]
+      if (marker[0] === 'equiv') { // [equiv, Equiv, T1]
         $.each(this.sourceData.equivs, (equivNo, equiv) => {
-          if (equiv[1] === marked[1]) {
+          if (equiv[1] === marker[1]) {
             let len = equiv.length
             for (let i = 2; i < len; i++) {
-              if (equiv[i] === marked[2]) {
+              if (equiv[i] === marker[2]) {
                 // found it
                 len -= 3
                 for (let n = 1; n <= len; n++) {
@@ -336,16 +336,16 @@ export class Visualizer {
         return
       }
 
-      if (marked.length === 2) {
-        this.markedText.push([parseInt(marked[0], 10), parseInt(marked[1], 10), markedType])
+      if (marker.length === 2) {
+        this.markedText.push([parseInt(marker[0], 10), parseInt(marker[1], 10), markedType])
         return
       }
 
-      const span = this.data.spans[marked[0]]
+      const span = this.data.spans[marker[0]]
       if (span) {
-        if (marked.length === 3) { // arc
+        if (marker.length === 3) { // arc
           $.each(span.outgoing, (arcNo, arc) => {
-            if (arc.target === marked[2] && arc.type === marked[1]) {
+            if (arc.target === marker[2] && arc.type === marker[1]) {
               arc.marked = markedType
             }
           })
@@ -356,23 +356,23 @@ export class Visualizer {
         return
       }
 
-      const eventDesc = this.data.eventDescs[marked[0]]
+      const eventDesc = this.data.eventDescs[marker[0]]
       if (eventDesc) { // relation
-        $.each(this.data.spans[eventDesc.triggerId].outgoing, (arcNo, arc) => {
-          if (arc.eventDescId === marked[0]) {
+        for (const arc of this.data.spans[eventDesc.triggerId].outgoing) {
+          if (arc.eventDescId === marker[0]) {
             arc.marked = markedType
           }
-        })
+        }
         return
       }
 
       // try for trigger
-      $.each(this.data.eventDescs, (eventDescNo, eventDesc) => {
-        if (eventDesc.triggerId === marked[0]) {
+      for (const eventDesc of Object.values(this.data.eventDescs)) {
+        if (eventDesc.triggerId === marker[0]) {
           this.data.spans[eventDesc.id].marked = markedType
         }
-      })
-    })
+      }
+    }
   }
 
   findArcHeight (fromIndex: number, toIndex: number, fragmentHeights: number[]) {
@@ -402,7 +402,9 @@ export class Visualizer {
    * Calculate average arc distances. Average distance of arcs (0 for no arcs).
    */
   calculateAverageArcDistances (spans: Entity[]) {
-    spans.map(span => span.avgDist = span.numArcs ? span.totalDist / span.numArcs : 0)
+    for (const span of spans) {
+      span.avgDist = span.numArcs ? span.totalDist / span.numArcs : 0
+    }
   }
 
   /**
@@ -440,16 +442,16 @@ export class Visualizer {
   }
 
   organizeFragmentsIntoTowers (sortedFragments: Array<Fragment>) {
-    let lastFragment = null
+    let lastFragment : Fragment | undefined
     let towerId = -1
 
-    sortedFragments.map(fragment => {
+    for (const fragment of sortedFragments) {
       if (!lastFragment || (lastFragment.from !== fragment.from || lastFragment.to !== fragment.to)) {
         towerId++
       }
       fragment.towerId = towerId
       lastFragment = fragment
-    })
+    }
   }
 
   applyMarkedTextToChunks (markedText: Array<MarkedText>, chunks: Array<Chunk>) {
@@ -504,11 +506,11 @@ export class Visualizer {
       return
     }
 
-    normalizations.map(norm => {
+    for (const norm of normalizations) {
       const target = norm[0]
       const refdb = norm.length > 1 ? norm[1] : '#' // See Renderer.QUERY_LAYER_LEVEL_DETAILS
       const refid = norm.length > 2 ? norm[2] : ''
-      const reftext = norm.length > 3 ? norm[3] : null
+      const reftext = norm.length > 3 ? norm[3] : undefined
 
       const span = this.data.spans[target]
       if (span) {
@@ -523,7 +525,7 @@ export class Visualizer {
       }
 
       this.dispatcher.post('messages', [[['Annotation ' + target + ' does not exist.', 'error']]])
-    })
+    }
   }
 
   buildSpansFromEntities (documentText: string, entities: Array<EntityDto>): Record<VID, Entity> {
@@ -532,7 +534,7 @@ export class Visualizer {
     }
 
     const spans: Record<VID, Entity> = {}
-    entities.map(entity => {
+    for (const entity of entities) {
       const id = entity[0]
       const type = entity[1]
       const offsets = entity[2] // offsets given as array of (start, end) pairs
@@ -561,7 +563,7 @@ export class Visualizer {
       span.splitMultilineOffsets(documentText)
 
       spans[id] = span
-    })
+    }
 
     return spans
   }
@@ -575,14 +577,15 @@ export class Visualizer {
     }
 
     const triggerHash: Record<string, [Entity, Array<EventDesc>]> = {}
-    triggers.map(trigger => {
+    for (const trigger of triggers) {
       //                          (id,         type,       offsets,    generalType)
       const triggerSpan = new Entity(trigger[0], trigger[1], trigger[2], TRIGGER)
 
       triggerSpan.splitMultilineOffsets(this.data.text)
 
       triggerHash[trigger[0]] = [triggerSpan, []] // triggerSpan, eventlist
-    })
+    }
+
     return triggerHash
   }
 
@@ -594,7 +597,7 @@ export class Visualizer {
       return
     }
 
-    this.sourceData.events.map(eventRow => {
+    for (const eventRow of this.sourceData.events) {
       const id = eventRow[0]
       const triggerId = eventRow[1]
       const roles = eventRow[2]
@@ -604,7 +607,7 @@ export class Visualizer {
       const span = trigger[0].copy(eventDesc.id)
       trigger[1].push(span)
       this.data.spans[eventDesc.id] = span
-    })
+    }
   }
 
   splitSpansIntoFragments (spans: Entity[]) {
@@ -658,7 +661,7 @@ export class Visualizer {
       return
     }
 
-    relations.map(rel => {
+    for (const rel of relations) {
       // rel[2] is args, rel[2][a][0] is role and rel[2][a][1] is value for a in (0,1)
       let argsDesc = this.relationTypes[rel[1]]
       argsDesc = argsDesc && argsDesc.args
@@ -687,7 +690,7 @@ export class Visualizer {
       if (rel[4]) {
         eventDescs[rel[0]].color = rel[4]
       }
-    })
+    }
   }
 
   /**
@@ -698,7 +701,7 @@ export class Visualizer {
       return
     }
 
-    attributes.map(attr => {
+    for (const attr of attributes) {
       const id = attr[0]
       const name = attr[1]
       const spanId = attr[2]
@@ -723,7 +726,7 @@ export class Visualizer {
       span.attributes[name] = value
 
       $.extend(span.attributeMerge, attrValue)
-    })
+    }
   }
 
   assignComments (comments: Array<CommentDto>, triggerHash: Record<string, unknown>) {
@@ -731,7 +734,7 @@ export class Visualizer {
       return
     }
 
-    comments.map(comment => {
+    for (const comment of comments) {
       // comment: [entityId, type, text]
       // TODO error handling
       // sentence id: ['sent', sentId]
@@ -756,7 +759,7 @@ export class Visualizer {
             ? [this.data.eventDescs[id]] // arc: [eventDesc]
             : []
 
-      commentEntities.map((entity: Entity) => {
+      for (const entity of commentEntities) {
         // if duplicate comment for entity:
         // overwrite type, concatenate comment with a newline
         if (!entity.comment) {
@@ -775,8 +778,8 @@ export class Visualizer {
         if (this.commentPriority(comment[1]) > this.commentPriority(entity.shadowClass)) {
           entity.shadowClass = comment[1]
         }
-      })
-    })
+      }
+    }
   }
 
   buildSortedFragments (spans: Record<string, Entity>): Fragment[] {
@@ -3588,7 +3591,7 @@ export class Visualizer {
 
     const originSpanType = this.data.spans[originSpanId].type || ''
     const targetSpanType = this.data.spans[targetSpanId].type || ''
-    let normalizations = []
+    let normalizations : Array<[string, string, string]> = []
     if (arcId) {
       normalizations = this.data.arcById[arcId].normalizations
     }
@@ -3707,10 +3710,10 @@ export class Visualizer {
   }
 
   // register event listeners
-  registerHandlers (element, events) {
-    $.each(events, (eventNo, eventName) => {
+  registerHandlers (element, events : Message[]) {
+    for (const eventName of events) {
       element.bind(eventName, (evt) => this.dispatcher.post(eventName, [evt], 'all'))
-    })
+    }
   }
 
   loadSpanTypes (types) {
@@ -3725,9 +3728,9 @@ export class Visualizer {
     })
   }
 
-  loadAttributeTypes (response_types) {
+  loadAttributeTypes (responseTypes) {
     const processed = {}
-    $.each(response_types, (aTypeNo, aType) => {
+    $.each(responseTypes, (aTypeNo, aType) => {
       processed[aType.type] = aType
       // count the values; if only one, it's a boolean attribute
       const values = []
@@ -3743,8 +3746,8 @@ export class Visualizer {
     return processed
   }
 
-  loadRelationTypes (relation_types) {
-    $.each(relation_types, (relTypeNo, relType) => {
+  loadRelationTypes (relationTypes) {
+    $.each(relationTypes, (relTypeNo, relType) => {
       if (relType) {
         this.relationTypes[relType.type] = relType
         const children = relType.children
@@ -4052,8 +4055,8 @@ function tokenise (text: string): Array<Offsets> {
  */
 function sentenceSplit (text: string): Array<Offsets> {
   const sentenceOffsets: Array<Offsets> = []
-  let sentStart: number = null
-  let lastCharPos: number = null
+  let sentStart: number | null = null
+  let lastCharPos = -1
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i]

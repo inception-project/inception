@@ -61,17 +61,17 @@ export class Row {
   constructor (svg: Svg) {
     this.group = svg.group().addClass('row')
     this.background = svg.group().addTo(this.group)
-    Object.seal(this)
+    // Object.seal(this)
   }
 
   updateFragmentHeight () {
-    this.chunks.map(chunk => {
-      chunk.fragments.map(fragment => {
+    for (const chunk of this.chunks) {
+      for (const fragment of chunk.fragments) {
         if (this.maxSpanHeight < fragment.height) {
           this.maxSpanHeight = fragment.height
         }
-      })
-    })
+      }
+    }
   }
 
   updateRowBoxHeight (rowSpacing: number, rowPadding: number) {

@@ -72,10 +72,10 @@ export class Entity {
   attributeText: string[] = []
   attributeCues = {}
   attributeCueFor = {}
-  annotatorNotes = undefined
+  annotatorNotes? : string
   attributeMerge: Record<string, unknown> = {} // for box, cross, etc. that are span-global
   fragments: Fragment[] = []
-  normalizations: Array<[string, string, string]> = []
+  normalizations: Array<[string?, string?, string?]> = []
   wholeFrom: number = undefined
   wholeTo: number = undefined
   comment: Comment = undefined
