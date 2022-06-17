@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,6 +26,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -56,11 +55,9 @@ public class RemoveDanglingChainLinksRepair
                 continue;
             }
 
-            List<FeatureStructure> chains = new ArrayList<>(
-                    selectFS(aCas, getType(aCas, layer.getName() + "Chain")));
-
-            List<AnnotationFS> links = new ArrayList<>(
-                    select(aCas, getType(aCas, layer.getName() + "Link")));
+            var chains = aCas.select(getType(aCas, layer.getName() + "Chain"));
+            var links = new ArrayList<>(
+                    aCas.<Annotation> select(getType(aCas, layer.getName() + "Link")).asList());
 
             for (FeatureStructure chain : chains) {
                 AnnotationFS link = FSUtil.getFeature(chain, "first", AnnotationFS.class);

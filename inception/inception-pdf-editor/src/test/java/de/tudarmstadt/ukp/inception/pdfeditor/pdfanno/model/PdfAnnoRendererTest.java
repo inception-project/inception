@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -41,7 +40,9 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.dkpro.core.io.tcf.TcfReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
@@ -72,12 +73,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer;
 
+@ExtendWith(MockitoExtension.class)
 public class PdfAnnoRendererTest
 {
     private @Mock AnnotationSchemaService schemaService;
@@ -90,12 +88,11 @@ public class PdfAnnoRendererTest
     private AnnotationFeature posFeature;
 
     private PreRenderer preRenderer;
+    private LayerSupportRegistryImpl layerRegistry;
 
     @BeforeEach
     public void setup()
     {
-        initMocks(this);
-
         project = new Project();
         sourceDocument = new SourceDocument("test.txt", project, null);
 
@@ -137,23 +134,11 @@ public class PdfAnnoRendererTest
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
-        LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
+        layerRegistry = new LayerSupportRegistryImpl(asList(
                 new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
-
-        when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
-        when(schemaService.listSupportedLayers(any())).thenReturn(asList(posLayer));
-        when(schemaService.listAnnotationFeature(any(Project.class)))
-                .thenReturn(asList(posFeature));
-        when(schemaService.listSupportedFeatures(any(Project.class)))
-                .thenReturn(asList(posFeature));
-        when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
-            AnnotationLayer layer = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
-                    () -> schemaService.listAnnotationFeature(layer));
-        });
 
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
     }
@@ -164,6 +149,17 @@ public class PdfAnnoRendererTest
     @Test
     public void testRender() throws Exception
     {
+        when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
+        when(schemaService.listAnnotationFeature(any(Project.class)))
+                .thenReturn(asList(posFeature));
+        when(schemaService.listSupportedFeatures(any(Project.class)))
+                .thenReturn(asList(posFeature));
+        when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
+            AnnotationLayer layer = _call.getArgument(0);
+            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
+                    () -> schemaService.listAnnotationFeature(layer));
+        });
+
         String file = "src/test/resources/tcf04-karin-wl.xml";
         String pdftxt = new Scanner(new File("src/test/resources/rendererTestPdfExtract.txt"))
                 .useDelimiter("\\Z").next();
