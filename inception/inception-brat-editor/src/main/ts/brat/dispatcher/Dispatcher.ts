@@ -72,15 +72,25 @@ export class Dispatcher {
     }
   }
 
-  post (asynch: number | null, message: Message | Function, args?, returnType?: 'any' | 'all') {
-    if (typeof (asynch) !== 'number') {
-      // no asynch parameter
-      returnType = args
-      args = message
-      message = asynch as unknown as Message
-      asynch = null
+  postAsync (callback: Function | Message, args?) {
+    if (args === undefined) {
+      args = []
     }
 
+    setTimeout(() => {
+      try {
+        if (typeof (callback) === 'function') {
+          (callback as Function)(...args)
+        } else {
+          this.post(callback as Message, args)
+        }
+      } catch (e) {
+        this.handleAsynchError(e)
+      }
+    }, 0)
+  }
+
+  post (message: Message, args?, returnType?: 'any' | 'all') {
     console.debug(`brat dispacher processing ${message}`)
 
     if (args === undefined) {
@@ -89,45 +99,18 @@ export class Dispatcher {
 
     const results : unknown[] = []
 
-    if (typeof (message) === 'function') {
-      // someone was lazy and sent a simple function
-      let result = null
-      if (asynch !== null) {
-        result = setTimeout(() => {
-          try {
-            (message as Function)(...args)
-          } catch (e) {
-            this.handleAsynchError(e)
-          }
-        }, asynch)
-      } else {
-        result = message(...args)
-      }
-      results.push(result)
-    } else {
-      // a proper message, propagate to all interested parties
-      const todo = this.table[message]
-      if (todo !== undefined) {
-        $.each(todo, (itemNo, item) => {
-          let result
-          if (asynch !== null) {
-            result = setTimeout(() => {
-              try {
-                item[1].apply(item[0], args)
-              } catch (e) {
-                this.handleAsynchError(e)
-              }
-            }, asynch)
-          } else {
-            result = item[1].apply(item[0], args)
-          }
-          results.push(result)
-        })
-        /* DEBUG
-                  } else {
-                    console.warn('Message ' + message + ' has no subscribers.'); // DEBUG
-        */
-      }
+    // a proper message, propagate to all interested parties
+    const todo = this.table[message]
+    if (todo !== undefined) {
+      $.each(todo, (itemNo, item) => {
+        let result
+        result = item[1].apply(item[0], args)
+        results.push(result)
+      })
+      /* DEBUG
+                } else {
+                  console.warn('Message ' + message + ' has no subscribers.'); // DEBUG
+      */
     }
 
     if (returnType === 'any') {

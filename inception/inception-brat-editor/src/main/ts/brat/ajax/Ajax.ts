@@ -146,13 +146,13 @@ export class Ajax {
           }
 
           delete this.pendingList[id]
-          
-          if (response.exception == true) {
-            // if .exception is just Boolean true, do not process the callback; 
+
+          if (response.exception === true) {
+            // if .exception is just Boolean true, do not process the callback;
           } else if (callback) {
             // if it is anything else, the callback is responsible for handling it
-            $.extend(response, merge);
-            this.dispatcher.post(0, callback, [response]);
+            $.extend(response, merge)
+            this.dispatcher.postAsync(callback, [response])
           }
         }
         this.dispatcher.post('unspin')
