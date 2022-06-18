@@ -55,16 +55,16 @@ export class EventDesc {
   id: VID
   triggerId: VID
   roles: Array<Role> = []
-  equivArc: Arc = undefined
+  equivArc: Arc
   equiv = false
   relation = false
-  leftSpans: Array<VID> = undefined
-  rightSpans: Array<VID> = undefined
-  annotatorNotes = undefined
-  comment: Comment = undefined
-  labelText: string = undefined
-  color: ColorCode = undefined
-  shadowClass: string = undefined
+  leftSpans: Array<VID>
+  rightSpans: Array<VID>
+  annotatorNotes
+  comment: Comment
+  labelText: string
+  color: ColorCode
+  shadowClass: string
 
   constructor (id: VID, triggerId: VID, roles: Array<RoleDto>, generalType?: GeneralEventType) {
     this.id = id

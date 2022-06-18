@@ -19,9 +19,11 @@
 import { Offsets } from '@inception-project/inception-js-api'
 
 export type VID = string;
-export type CommentType = string;
-export type MarkerType = string;
-export type ClippedState = '' | 's' | 'e' | 'se';
+export type CommentType = 'AnnotatorNotes' | 'EditHighlight' | 'AnnotationError'
+| 'AnnotationIncomplete' | 'AnnotationUnconfirmed' | 'AnnotationWarning' | 'MissingAnnotation'
+| 'ChangedAnnotation' | 'Normalized' | 'True_positive' | 'False_positive' | 'False_negative'
+export type MarkerType = 'edited' | 'focus' | 'matchfocus' | 'match'
+export type ClippedState = '' | 's' | 'e' | 'se'
 export type ColorCode = string;
 
 /**

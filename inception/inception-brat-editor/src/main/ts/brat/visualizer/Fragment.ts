@@ -44,46 +44,40 @@ import { Entity } from './Entity'
 import { RectBox } from './RectBox'
 
 export class Fragment {
-  id: number = undefined
-  span: Entity = undefined
-  from: number = undefined
-  to: number = undefined
-  rectBox: RectBox = undefined
-  text : string = undefined
-  chunk: Chunk = undefined
-  indexNumber : number = undefined
-  drawOrder: number = undefined
-  towerId : number = undefined
-  curly: { from: number, to: number } = undefined
+  id: number
+  span: Entity
+  from: number
+  to: number
+  rectBox: RectBox
+  text : string
+  chunk: Chunk
+  indexNumber : number
+  drawOrder: number
+  towerId : number
+  curly: { from: number, to: number }
   drawCurly = false
-  labelText: string = undefined
-  glyphedLabelText: string = undefined
-  group: SVGTypeMapping<SVGGElement> = undefined
-  rect: SVGTypeMapping<SVGElement> = undefined
-  left: number = undefined
-  right: number = undefined
-  width: number = undefined
-  height: number = undefined
-  nestingHeight: number = undefined
-  nestingHeightLR: number = undefined
-  nestingHeightRL: number = undefined
-  nestingDepth: number = undefined
-  nestingDepthLR: number = undefined
-  nestingDepthRL: number = undefined
-  highlightPos: {x: number, y: number, w: number, h: number} = undefined
+  labelText: string
+  glyphedLabelText: string
+  group: SVGTypeMapping<SVGGElement>
+  rect: SVGTypeMapping<SVGElement>
+  left: number
+  right: number
+  width: number
+  height: number
+  nestingHeight: number
+  nestingHeightLR: number
+  nestingHeightRL: number
+  nestingDepth: number
+  nestingDepthLR: number
+  nestingDepthRL: number
+  highlightPos: {x: number, y: number, w: number, h: number}
 
-  /**
-   * @param {Number} id
-   * @param {Entity} span
-   * @param {Number} from
-   * @param {Number} to
-   */
   constructor (id: number, span: Entity, from: number, to: number) {
     this.id = id
     this.span = span
     this.from = from
     this.to = to
-    Object.seal(this)
+    // Object.seal(this)
   }
 
   /**
@@ -91,7 +85,7 @@ export class Fragment {
    * which would then force a slow re-layout.
    */
   rowBBox () {
-    const box = $.extend({}, this.rectBox) // clone
+    const box = Object.assign({}, this.rectBox) // clone
     const chunkTranslation = this.chunk.translation
     box.x += chunkTranslation.x
     box.y += chunkTranslation.y

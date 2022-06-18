@@ -590,25 +590,25 @@ export class Visualizer {
   /**
    * @deprecated Not used by INCEpTION
    */
-  buildEventDescsFromTriggers (triggerHash: Record<string, [Entity, Array<EventDesc>]>) {
+  private buildEventDescsFromTriggers (docData: DocumentData, sourceData: SourceData, triggerHash: Record<string, [Entity, Array<EventDesc>]>) {
     if (!triggerHash) {
       return
     }
 
-    for (const eventRow of this.sourceData.events) {
+    for (const eventRow of sourceData.events) {
       const id = eventRow[0]
       const triggerId = eventRow[1]
       const roles = eventRow[2]
 
-      const eventDesc = this.data.eventDescs[id] = new EventDesc(id, triggerId, roles)
+      const eventDesc = docData.eventDescs[id] = new EventDesc(id, triggerId, roles)
       const trigger = triggerHash[eventDesc.triggerId]
       const span = trigger[0].copy(eventDesc.id)
       trigger[1].push(span)
-      this.data.spans[eventDesc.id] = span
+      docData.spans[eventDesc.id] = span
     }
   }
 
-  splitSpansIntoFragments (spans: Entity[]) {
+  private splitSpansIntoFragments (spans: Entity[]) {
     if (!spans) {
       return
     }
@@ -619,7 +619,7 @@ export class Visualizer {
   /**
    * @deprecated INCEpTION does not use equivs
    */
-  buildEventDescsFromEquivs (equivs: Array<EquivDto>, spans: Record<VID, Entity>, eventDescs: Record<VID, EventDesc>) {
+  private buildEventDescsFromEquivs (equivs: Array<EquivDto>, spans: Record<VID, Entity>, eventDescs: Record<VID, EventDesc>) {
     if (!equivs) {
       return
     }
@@ -694,7 +694,7 @@ export class Visualizer {
   /**
    * @deprecated INCEpTION does not use attributes
    */
-  assignAttributesToSpans (attributes: Array<AttributeDto>, spans: Record<VID, Entity>) {
+  private assignAttributesToSpans (attributes: Array<AttributeDto>, spans: Record<VID, Entity>) {
     if (!attributes) {
       return
     }
@@ -727,7 +727,7 @@ export class Visualizer {
     }
   }
 
-  assignComments (comments: Array<CommentDto>, triggerHash: Record<string, unknown>) {
+  private assignComments (docData: DocumentData, comments: Array<CommentDto>, triggerHash: Record<string, unknown>) {
     if (!comments) {
       return
     }
@@ -740,10 +740,10 @@ export class Visualizer {
         // sentence comment
         const sent = comment[0][1]
         let text = comment[2]
-        if (this.data.sentComment[sent]) {
-          text = this.data.sentComment[sent].text + '<br/>' + text
+        if (docData.sentComment[sent]) {
+          text = docData.sentComment[sent].text + '<br/>' + text
         }
-        this.data.sentComment[sent] = { type: comment[1], text }
+        docData.sentComment[sent] = { type: comment[1], text }
         continue
       }
 
@@ -751,10 +751,10 @@ export class Visualizer {
       const trigger = triggerHash[id]
       const commentEntities = trigger
         ? trigger[1] // trigger: [span, ...]
-        : id in this.data.spans
-          ? [this.data.spans[id]] // span: [span]
-          : id in this.data.eventDescs
-            ? [this.data.eventDescs[id]] // arc: [eventDesc]
+        : id in docData.spans
+          ? [docData.spans[id]] // span: [span]
+          : id in docData.eventDescs
+            ? [docData.eventDescs[id]] // arc: [eventDesc]
             : []
 
       for (const entity of commentEntities) {
@@ -988,14 +988,14 @@ export class Visualizer {
     // doesn't do brat-style events/trigger. We prepare spans-with-slots on the server side
     // already and render them as brat-entities and brat-relations
     const triggerHash = this.buildSpansFromTriggers(this.sourceData.triggers)
-    this.buildEventDescsFromTriggers(triggerHash)
+    this.buildEventDescsFromTriggers(this.data, this.sourceData, triggerHash)
 
     // split spans into span fragments (for discontinuous spans)
     this.splitSpansIntoFragments(Object.values(this.data.spans))
     this.buildEventDescsFromEquivs(this.sourceData.equivs, this.data.spans, this.data.eventDescs)
     this.buildEventDescsFromRelations(this.sourceData.relations, this.data.eventDescs)
     this.assignAttributesToSpans(this.sourceData.attributes, this.data.spans)
-    this.assignComments(this.sourceData.comments, triggerHash)
+    this.assignComments(this.data, this.sourceData.comments, triggerHash)
 
     // prepare span boundaries for token containment testing
     // sort fragments by beginning, then by end

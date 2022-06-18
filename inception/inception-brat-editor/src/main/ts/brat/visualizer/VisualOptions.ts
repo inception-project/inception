@@ -38,13 +38,10 @@
  * SOFTWARE.
  */
 
-/**
- * Class currently defined only for documentation purposes
- */
-export class VisualOptions {
-  arc_bundle: string = undefined
+export interface VisualOptions {
+  arc_bundle: string
 
-  constructor () {
-    Object.seal(this)
-  }
+  // constructor () {
+  // Object.seal(this)
+  // }
 }

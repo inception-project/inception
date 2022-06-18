@@ -43,19 +43,19 @@ import { Chunk } from './Chunk'
 export class Row {
   group: SVGTypeMapping<SVGGElement>
   background: SVGTypeMapping<SVGGElement>
-  arcs: SVGTypeMapping<SVGGElement> = undefined
+  arcs: SVGTypeMapping<SVGGElement>
   chunks: Chunk[] = []
   hasAnnotations = false
   maxArcHeight = 0
   maxSpanHeight = 0
   boxHeight = 0
-  sentence: number = undefined
-  index: number = undefined
-  backgroundIndex: number = undefined
-  heightsStart: number = undefined
-  heightsEnd: number = undefined
-  heightsAdjust: number = undefined
-  textY: number = undefined
+  sentence: number
+  index: number
+  backgroundIndex: number
+  heightsStart: number
+  heightsEnd: number
+  heightsAdjust: number
+  textY: number
   translation: { x: number, y: number } = { x: 0, y: 0 }
 
   constructor (svg: Svg) {

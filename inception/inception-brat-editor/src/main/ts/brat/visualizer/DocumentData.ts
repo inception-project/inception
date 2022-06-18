@@ -54,7 +54,7 @@ import { VID } from '../protocol/Protocol'
  * which doesn't yet create the actual SVG representation.
  */
 export class DocumentData {
-  text: string = undefined
+  text: string
   chunks: Array<Chunk> = []
   spans: Record<VID, Entity> = {}
   arcById: Record<VID, Arc> = {}
@@ -69,11 +69,11 @@ export class DocumentData {
   spanAnnTexts: Record<string, SVGText> = {}
   towers: Record<string, Fragment[]> = {}
   spanDrawOrderPermutation: Array<string> = []
-  sizes: Sizes = undefined
+  sizes: Sizes
   exception = false
 
   constructor (text: string) {
     this.text = text
-    Object.seal(this)
+    // Object.seal(this)
   }
 }

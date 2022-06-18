@@ -129,44 +129,34 @@ export class Util {
     const arcTypes = (type && type.arcs) || []
     let arcDesc : RelationTypeDto | null = null
     // also consider matches without suffix number, if any
-    let noNumArcType : string
+    let noNumArcType : string | undefined
     if (arcType) {
       const splitType = arcType.match(/^(.*?)(\d*)$/)
       noNumArcType = splitType[1]
     }
 
-    $.each(arcTypes, (arcno, arcDescI) => {
+    for (const arcDescI of arcTypes) {
       if (arcDescI.type === arcType || arcDescI.type === noNumArcType) {
         arcDesc = arcDescI
-        return false
+        break
       }
-    })
+    }
 
     // fall back to relation types for unconfigured or missing def
-    if (!arcDesc) {
-      arcDesc = $.extend({}, relationTypesHash[arcType] || relationTypesHash[noNumArcType])
+    if (!arcDesc && noNumArcType) {
+      arcDesc = Object.assign({}, relationTypesHash[arcType] || relationTypesHash[noNumArcType])
     }
     // WEBANNO EXTENSION BEGIN - #709 - Optimize render data size for annotations without labels
     /*
           return arcDesc && arcDesc.labels || [];
     */
-    return (arcDesc && $.map(arcDesc.labels, label => '(' + label + ')')) || []
+    return (arcDesc && arcDesc.labels.map(label => '(' + label + ')')) || []
     // WEBANNO EXTENSION END - #709 - Optimize render data size for annotations without labels
   }
 
   arcDisplayForm (spanTypes: Record<string, EntityTypeDto>, spanType: string, arcType: string, relationTypesHash) {
     const labels = this.getArcLabels(spanTypes, spanType, arcType, relationTypesHash)
     return labels[0] || arcType
-  }
-
-  // TODO: switching to use of $.param(), this function should
-  // be deprecated and removed.
-  objectToUrlStr (o: unknown) {
-    const a : string[] = []
-    $.each(o, (key, value) => {
-      a.push(key + '=' + encodeURIComponent(value))
-    })
-    return a.join('&')
   }
 
   // color name RGB list, converted from
@@ -357,7 +347,7 @@ export class Util {
     if (result) { return [parseInt(result[1] + result[1], 16), parseInt(result[2] + result[2], 16), parseInt(result[3] + result[3], 16)] }
 
     // Otherwise, we're most likely dealing with a named color
-    return this.colors[$.trim(color).toLowerCase()]
+    return this.colors[(color && color.trim().toLowerCase()) || '']
   }
 
   rgbToStr (rgb : [number, number, number]) {
@@ -523,7 +513,7 @@ export class Util {
   //   simple `embed` instead)
   // callback: optional; the callback to call afterwards; it will be
   //   passed the embedded visualizer's dispatcher object
-  embedByURL (container, collDataURL: string, docDataURL: string, callback?) {
+  embedByURL (container: string | JQuery, collDataURL: string, docDataURL: string, callback?: Function) {
     let collData, docData
     const handler = () => {
       if (collData && docData) {

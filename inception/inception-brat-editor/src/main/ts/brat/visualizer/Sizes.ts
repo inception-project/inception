@@ -44,7 +44,7 @@ export class Sizes {
   fragments: Measurements
   arcs: Measurements
 
-  constructor (texts, arcSizes, fragments) {
+  constructor (texts: Measurements, arcSizes: Measurements, fragments: Measurements) {
     this.texts = texts
     this.arcs = arcSizes
     this.fragments = fragments

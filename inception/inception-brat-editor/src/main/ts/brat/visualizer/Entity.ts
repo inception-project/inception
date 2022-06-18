@@ -44,22 +44,21 @@ import { Arc } from './Arc'
 import { Comment } from './Comment'
 import { Fragment } from './Fragment'
 
+export type GeneralEntityType = string;
 export const TRIGGER: GeneralEntityType = 'trigger'
 export const ENTITY: GeneralEntityType = 'entity'
-
-export type GeneralEntityType = string;
 
 /**
  * The visual model of a span annotation. This is traditionally called "entity" in many places, but
  * also at times "span".
  */
 export class Entity {
-  id: VID = undefined
-  type: string = undefined
+  id: VID
+  type: string
   totalDist = 0
   numArcs = 0
-  generalType: GeneralEntityType = undefined
-  headFragment: Fragment = undefined
+  generalType: GeneralEntityType
+  headFragment: Fragment
   unsegmentedOffsets: Array<Offsets> = []
   offsets: Array<Offsets> = []
   segmentedOffsetsMap = {}
@@ -76,12 +75,12 @@ export class Entity {
   attributeMerge: Record<string, unknown> = {} // for box, cross, etc. that are span-global
   fragments: Fragment[] = []
   normalizations: Array<[string?, string?, string?]> = []
-  wholeFrom: number = undefined
-  wholeTo: number = undefined
-  comment: Comment = undefined
+  wholeFrom: number
+  wholeTo: number
+  comment: Comment
   drawCurly = false
   labelText: string
-  refedIndexSum: number = undefined
+  refedIndexSum: number
   color: string
   shadowClass: string
   floor: number
@@ -130,7 +129,7 @@ export class Entity {
     this.segmentedOffsetsMap = {}
 
     for (let fi = 0, nfi = 0; fi < this.unsegmentedOffsets.length; fi++) {
-      let begin = this.unsegmentedOffsets[fi][0]
+      let begin : number | null = this.unsegmentedOffsets[fi][0]
       const end = this.unsegmentedOffsets[fi][1]
 
       for (let ti = begin; ti < end; ti++) {
@@ -158,8 +157,8 @@ export class Entity {
    *
    * @returns the copy.
    */
-  copy (id: string) {
-    const span = $.extend(new Entity(id, undefined, this.unsegmentedOffsets.slice(), undefined), this) // clone
+  copy (id: string) : Entity {
+    const span = Object.assign((new Entity(id, undefined, this.unsegmentedOffsets.slice(), undefined), this)) // clone
     // read-only; shallow copy is fine
     span.offsets = this.offsets
     span.segmentedOffsetsMap = this.segmentedOffsetsMap
@@ -167,12 +166,12 @@ export class Entity {
   }
 
   buildFragments (): void {
-    $.each(this.offsets, (offsetsNo, offsets) => {
+    for (const [offsetsNo, offsets] of this.offsets.entries()) {
       const from = offsets[0]
       const to = offsets[1]
       const fragment = new Fragment(offsetsNo, this, from, to)
       this.fragments.push(fragment)
-    })
+    }
 
     // ensure ascending order
     this.fragments.sort(Fragment.midpointComparator)
