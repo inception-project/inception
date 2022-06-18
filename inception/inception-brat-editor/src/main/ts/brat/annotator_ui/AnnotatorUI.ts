@@ -38,31 +38,30 @@
  * SOFTWARE.
  */
 import { Dispatcher } from '../dispatcher/Dispatcher'
-import { Box, Svg, SVGTypeMapping } from '@svgdotjs/svg.js'
+import { Box, Svg, SVGTypeMapping, Point } from '@svgdotjs/svg.js'
 import { DocumentData } from '../visualizer/DocumentData'
 import { Entity } from '../visualizer/Entity'
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
 import { DiamAjax, Offsets } from '@inception-project/inception-js-api'
 import { EntityTypeDto } from '../protocol/Protocol'
-import { Point } from '@svgdotjs/svg.js'
 
 export class AnnotatorUI {
-  private data: DocumentData = null
+  private data: DocumentData
 
   private arcDragOrigin: string
   private arcDragOriginBox : Box
   private arcDragOriginGroup: SVGTypeMapping<SVGGElement>
-  private arcDragArc: SVGTypeMapping<SVGPathElement> = null
+  private arcDragArc: SVGTypeMapping<SVGPathElement>
   private arcDragJustStarted = false
   private spanDragJustStarted = false
-  private dragStartedAt? : MouseEvent
+  private dragStartedAt? : MouseEvent & { target: Element }
 
-  private spanOptions = null
-  private arcOptions? : { type?: string, old_target?, action?: string, origin?: string, target?: string }
-  private editedSpan: Entity = null
-  private editedFragment = null
-  private spanTypes: Record<string, EntityTypeDto> = null
+  private spanOptions? : { action: string, offsets: Array<Offsets>, type: string, id: string }
+  private arcOptions? : { type?: string, old_target?: string, action?: string, origin?: string, target?: string, old_type?: string, left?: string, right?: string }
+  private editedSpan: Entity
+  private editedFragment : string | null = null
+  private spanTypes: Record<string, EntityTypeDto>
   private selRect: SVGRectElement[]
   private lastStartRec = null
   private lastEndRec = null
@@ -189,12 +188,19 @@ export class AnnotatorUI {
     }
   }
 
-  private customArcAction (evt: MouseEvent & { target: HTMLElement }) {
+  private customArcAction (evt: MouseEvent) {
+    if (!(evt.target instanceof HTMLElement)) return
+
     const id = evt.target.getAttribute('data-arc-ed')
     const type = evt.target.getAttribute('data-arc-role')
-    const originSpan = this.data.spans[evt.target.getAttribute('data-arc-origin')]
-    const targetSpan = this.data.spans[evt.target.getAttribute('data-arc-target')]
-    this.sendTriggerCustomArcAction(id, type, originSpan, targetSpan)
+    const attrOrigin = evt.target.getAttribute('data-arc-origin')
+    const attrTarget = evt.target.getAttribute('data-arc-target')
+
+    if (id && type && attrOrigin && attrTarget) {
+      const originSpan = this.data.spans[attrOrigin]
+      const targetSpan = this.data.spans[attrTarget]
+      this.sendTriggerCustomArcAction(id, type, originSpan, targetSpan)
+    }
   }
 
   private sendTriggerCustomArcAction (id: string, type: string, originSpan: Entity, targetSpan: Entity) {
@@ -211,10 +217,13 @@ export class AnnotatorUI {
 
   private customSpanAction (evt: MouseEvent & { target: HTMLElement }) {
     const id = evt.target.getAttribute('data-span-id')
-    evt.preventDefault()
-    this.editedSpan = this.data.spans[id]
-    this.editedFragment = evt.target.getAttribute('data-fragment-id')
-    this.sendTriggerCustomSpanAction(id, this.editedSpan.fragmentOffsets)
+
+    if (id) {
+      evt.preventDefault()
+      this.editedSpan = this.data.spans[id]
+      this.editedFragment = evt.target.getAttribute('data-fragment-id')
+      this.sendTriggerCustomSpanAction(id, this.editedSpan.fragmentOffsets)
+    }
   }
 
   private sendTriggerCustomSpanAction (id: string, offsets: ReadonlyArray<Offsets>) {
@@ -248,11 +257,11 @@ export class AnnotatorUI {
     const type = evt.target.getAttribute('data-arc-role')
     this.arcOptions = {
       action: 'createArc',
-      origin: originSpanId,
-      target: targetSpanId,
-      old_target: targetSpanId,
-      type,
-      old_type: type
+      origin: originSpanId !== null ? originSpanId : undefined,
+      target: targetSpanId !== null ? targetSpanId : undefined,
+      old_target: targetSpanId !== null ? targetSpanId : undefined,
+      type: type !== null ? type : undefined,
+      old_type: type !== null ? type : undefined
     }
 
     const eventDescId = evt.target.getAttribute('data-arc-ed')
@@ -262,27 +271,32 @@ export class AnnotatorUI {
         this.arcOptions.left = eventDesc.leftSpans.join(',')
         this.arcOptions.right = eventDesc.rightSpans.join(',')
       }
-    }
 
-    this.ajax.selectAnnotation(eventDescId)
+      this.ajax.selectAnnotation(eventDescId)
+    }
   }
 
   private selectSpanAnnotation (evt: MouseEvent) {
-    const target = $(evt.target)
-    const id = target.attr('data-span-id')
-    this.clearSelection()
-    this.editedSpan = this.data.spans[id]
-    this.editedFragment = target.attr('data-fragment-id')
-    const offsets: Array<Offsets> = this.editedSpan.fragmentOffsets
+    if (!(evt.target instanceof Element)) return
 
-    this.spanOptions = {
-      action: 'createSpan',
-      offsets,
-      type: this.editedSpan.type,
-      id
+    const target = evt.target
+    const id = target.getAttribute('data-span-id')
+
+    if (id) {
+      this.clearSelection()
+      this.editedSpan = this.data.spans[id]
+      this.editedFragment = target.getAttribute('data-fragment-id')
+      const offsets: Array<Offsets> = this.editedSpan.fragmentOffsets
+
+      this.spanOptions = {
+        action: 'createSpan',
+        offsets,
+        type: this.editedSpan.type,
+        id
+      }
+
+      this.ajax.selectAnnotation(id)
     }
-
-    this.ajax.selectAnnotation(id)
   }
 
   private startArcDrag (originId) {
@@ -326,17 +340,19 @@ export class AnnotatorUI {
     return result
   }
 
-  onMouseDown (evt: MouseEvent) {
+  onMouseDown (evt: MouseEvent & { target: Element }) {
+    if (!(evt.target instanceof Element)) return
+
     // Instead of calling startArcDrag() immediately, we defer this to onMouseMove
     if (this.arcDragOrigin) return
 
     // is it arc drag start?
-    if ($(evt.target).attr('data-span-id')) {
+    if (evt.target.getAttribute('data-span-id')) {
       this.dragStartedAt = evt // XXX do we really need the whole evt?
       return false
     }
 
-    if ($(evt.target).attr('data-chunk-id')) {
+    if (evt.target.getAttribute('data-chunk-id')) {
       this.spanDragJustStarted = true
     }
   }
@@ -352,8 +368,8 @@ export class AnnotatorUI {
       const deltaY = Math.abs(this.dragStartedAt.pageY - evt.pageY)
       if (deltaX > 5 || deltaY > 5) {
         this.arcOptions = undefined
-        const target = $(this.dragStartedAt.target)
-        const id = target.attr('data-span-id')
+        const target = this.dragStartedAt.target
+        const id = target.getAttribute('data-span-id')
         this.startArcDrag(id)
       }
     }
