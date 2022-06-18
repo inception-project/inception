@@ -58,11 +58,11 @@ export class Chunk {
   group: SVGTypeMapping<SVGGElement> = undefined
   highlightGroup: SVGTypeMapping<SVGGElement> = undefined
   // chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
-  markedTextStart: Array<unknown> = undefined
+  markedTextStart: Array<[string, boolean, number, number, string]> = []
   // chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
-  markedTextEnd: Array<unknown> = undefined
+  markedTextEnd: Array<[string, boolean, number, number]> = []
   right: number = undefined
-  row: Row = undefined
+  row?: Row = undefined
   textX: number = undefined
   translation: { x: number, y: number } = { x: 0, y: 0 }
   firstFragmentIndex : number = undefined

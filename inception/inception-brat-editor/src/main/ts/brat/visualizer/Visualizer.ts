@@ -48,7 +48,7 @@ import { Fragment } from './Fragment'
 import { Arc } from './Arc'
 import { Row } from './Row'
 import { RectBox } from './RectBox'
-import { AttributeType } from './AttributeType'
+import { AttributeType, ValType } from './AttributeType'
 import { CollectionLoadedResponse } from './CollectionLoadedResponse'
 import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
 import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
@@ -1016,62 +1016,60 @@ export class Visualizer {
       this.collectFragmentTextsIntoSpanTexts(Object.values(this.data.spans))
     }
 
-    this.calculateDrawingOrder(sortedFragments)
+    this.calculateFragmentDrawingOrder(this.data, sortedFragments)
 
+    this.renderText(this.data) // chunks
+
+    // sort by "from"; we don't need to sort by "to" as well,
+    // because unlike spans, chunks are disjunct
+    this.markedText.sort((a, b) => Util.cmp(a[0], b[0]))
+    this.applyMarkedTextToChunks(this.markedText, this.data.chunks)
+
+    this.dispatcher.post('dataReady', [this.data])
+  }
+
+  private renderText (docData: DocumentData) {
     const spanAnnTexts = {}
-    this.data.chunks.map(chunk => {
+    for (const chunk of docData.chunks) {
       chunk.markedTextStart = []
       chunk.markedTextEnd = []
 
-      $.each(chunk.fragments, (fragmentNo, fragment) => {
+      for (const fragment of chunk.fragments) {
         if (chunk.firstFragmentIndex === undefined) {
           chunk.firstFragmentIndex = fragment.towerId
         }
         chunk.lastFragmentIndex = fragment.towerId
 
-        const spanLabels = Util.getSpanLabels(this.entityTypes, fragment.span.type)
-        fragment.labelText = Util.spanDisplayForm(this.entityTypes, fragment.span.type)
-        // Find the most appropriate label according to text width
-        if (Configuration.abbrevsOn && spanLabels) {
-          let labelIdx = 1 // first abbrev
-          const maxLength = (fragment.to - fragment.from) / 0.8
-          while (fragment.labelText.length > maxLength &&
-            spanLabels[labelIdx]) {
-            fragment.labelText = spanLabels[labelIdx]
-            labelIdx++
-          }
-        }
-
-        fragment.labelText = '(' + fragment.labelText + ')'
-        if (fragment.span.labelText) {
-          fragment.labelText = fragment.span.labelText
-        }
+        this.updateFragmentLabelText(fragment)
 
         const svgtext = this.svg.plain('').build(true) // one "text" element per row
-        const postfixArray = []
+        const postfixArray : [AttributeType, ValType][] = []
         let prefix = ''
         let postfix = ''
         let warning = false
-        $.each(fragment.span.attributes, (attrType, valType) => {
+        for (const [attrType, valType] of Object.entries(fragment.span.attributes)) {
           // TODO: might wish to check what's appropriate for the type
           // instead of using the first attribute def found
           const attr = (this.eventAttributeTypes[attrType] || this.entityAttributeTypes[attrType])
           if (!attr) {
             // non-existent type
             warning = true
-            return
+            continue
           }
+
           const val = attr.values[attr.bool || valType]
           if (!val) {
             // non-existent value
             warning = true
-            return
+            continue
           }
+
           if ($.isEmptyObject(val)) {
             // defined, but lacks any visual presentation
             warning = true
-            return
+            continue
           }
+
           if (val.glyph) {
             if (val.position === 'left') {
               prefix = val.glyph + prefix
@@ -1086,7 +1084,7 @@ export class Visualizer {
               postfix += val.glyph
             }
           }
-        })
+        }
 
         let text = fragment.labelText
         if (prefix !== '') {
@@ -1098,14 +1096,15 @@ export class Visualizer {
         if (postfixArray.length) {
           text += ' ' + postfix
           svgtext.plain(' ')
-          $.each(postfixArray, function (elNo, el) {
+          for (const el of postfixArray) {
             const t = svgtext.tspan(el[1].glyph)
             t.addClass('glyph')
             if (el[1].glyphColor) {
               t.fill(el[1].glyphColor)
             }
-          })
+          }
         }
+
         if (warning) {
           svgtext.tspan('#').addClass('glyph').addClass('attribute_warning')
           text += ' #'
@@ -1114,24 +1113,37 @@ export class Visualizer {
 
         if (!spanAnnTexts[text]) {
           spanAnnTexts[text] = true
-          this.data.spanAnnTexts[text] = svgtext
+          docData.spanAnnTexts[text] = svgtext
         }
-      }) // chunk.fragments
-    }) // chunks
-
-    // sort by "from"; we don't need to sort by "to" as well,
-    // because unlike spans, chunks are disjunct
-    this.markedText.sort((a, b) => Util.cmp(a[0], b[0]))
-    this.applyMarkedTextToChunks(this.markedText, this.data.chunks)
-
-    this.dispatcher.post('dataReady', [this.data])
+      }
+    }
   }
 
-  private calculateDrawingOrder (sortedFragments: Fragment[]) {
+  private updateFragmentLabelText (fragment: Fragment) {
+    const spanLabels = Util.getSpanLabels(this.entityTypes, fragment.span.type)
+    fragment.labelText = Util.spanDisplayForm(this.entityTypes, fragment.span.type)
+    // Find the most appropriate label according to text width
+    if (Configuration.abbrevsOn && spanLabels) {
+      let labelIdx = 1 // first abbrev
+      const maxLength = (fragment.to - fragment.from) / 0.8
+      while (fragment.labelText.length > maxLength &&
+        spanLabels[labelIdx]) {
+        fragment.labelText = spanLabels[labelIdx]
+        labelIdx++
+      }
+    }
+
+    fragment.labelText = '(' + fragment.labelText + ')'
+    if (fragment.span.labelText) {
+      fragment.labelText = fragment.span.labelText
+    }
+  }
+
+  private calculateFragmentDrawingOrder (docData: DocumentData, sortedFragments: Fragment[]) {
     for (let i = 0; i < 2; i++) {
       // preliminary sort to assign heights for basic cases
       // (first round) and cases resolved in the previous round(s).
-      for (const chunk of this.data.chunks) {
+      for (const chunk of docData.chunks) {
         // sort and then re-number
         chunk.fragments.sort(Fragment.compare)
         for (const [fragmentNo, fragment] of chunk.fragments.entries()) {
@@ -1140,20 +1152,20 @@ export class Visualizer {
       }
 
       // nix the sums, so we can sum again
-      for (const span of Object.values(this.data.spans)) {
+      for (const span of Object.values(docData.spans)) {
         span.refedIndexSum = 0
       }
 
       // resolved cases will now have indexNumber set to indicate their relative order. Sum those
       // for referencing cases for use in iterative resorting
-      for (const arc of this.data.arcs) {
-        this.data.spans[arc.origin].refedIndexSum += this.data.spans[arc.target].headFragment.indexNumber
+      for (const arc of docData.arcs) {
+        docData.spans[arc.origin].refedIndexSum += docData.spans[arc.target].headFragment.indexNumber
       }
     }
 
     // Final sort of fragments in chunks for drawing purposes
     // Also identify the marked text boundaries regarding chunks
-    for (const chunk of this.data.chunks) {
+    for (const chunk of docData.chunks) {
       // and make the next sort take this into account. Note that this will
       // now resolve first-order dependencies between sort orders but not
       // second-order or higher.
@@ -1163,7 +1175,7 @@ export class Visualizer {
       }
     }
 
-    this.data.spanDrawOrderPermutation = this.determineDrawOrder(this.data.spans)
+    docData.spanDrawOrderPermutation = this.determineDrawOrder(docData.spans)
 
     // resort the fragments for linear order by center so we can organize them into towers
     sortedFragments.sort(Fragment.midpointComparator)
@@ -1171,22 +1183,24 @@ export class Visualizer {
     this.organizeFragmentsIntoTowers(sortedFragments)
 
     // find curlies (only the first fragment drawn in a tower)
-    for (const spanId of this.data.spanDrawOrderPermutation) {
-      const span = this.data.spans[spanId]
+    for (const spanId of docData.spanDrawOrderPermutation) {
+      const span = docData.spans[spanId]
 
       for (const fragment of span.fragments) {
-        if (!this.data.towers[fragment.towerId]) {
-          this.data.towers[fragment.towerId] = []
+        if (!docData.towers[fragment.towerId]) {
+          docData.towers[fragment.towerId] = []
           fragment.drawCurly = true
           fragment.span.drawCurly = true
         }
-        this.data.towers[fragment.towerId].push(fragment)
+        docData.towers[fragment.towerId].push(fragment)
       }
     }
   }
 
   resetData () {
-    this.setData(this.sourceData)
+    if (this.sourceData) {
+      this.setData(this.sourceData)
+    }
     this.renderData(undefined)
   }
 
@@ -1216,7 +1230,7 @@ export class Visualizer {
   /**
    * @param cssClass arguments to the {@link SVGWrapper.group}} call creating the temporary group used for measurement
    */
-  getTextMeasurements (textsHash: Record<string, Array<unknown>>, cssClass: string, callback?): Measurements {
+  getTextMeasurements (textsHash: Record<string, Array<unknown>>, cssClass?: string, callback?: Function): Measurements {
     // make some text elements, find out the dimensions
     const textMeasureGroup: Container = this.svg.group().addTo(this.svg)
     if (cssClass) {
@@ -1232,14 +1246,14 @@ export class Visualizer {
 
     // measuring goes on here
     const widths: Record<string, number> = {}
-    textMeasureGroup.children().map(svgText => {
+    for (const svgText of textMeasureGroup.children()) {
       const text = (svgText as SVGText).text()
       widths[text] = (svgText.node as SVGTextContentElement).getComputedTextLength()
 
       if (callback) {
         textsHash[text].map(object => callback(object, svgText.node))
       }
-    })
+    }
 
     const bbox = textMeasureGroup.bbox()
     textMeasureGroup.remove()
@@ -1250,18 +1264,18 @@ export class Visualizer {
   /**
    * @return {Sizes}
    */
-  calculateTextMeasurements (): Sizes {
-    const textSizes = this.calculateChunkTextMeasures()
-    const fragmentSizes = this.calculateFragmentTextMeasures()
-    const arcSizes = this.calculateArcTextMeasurements()
+  calculateTextMeasurements (docData: DocumentData): Sizes {
+    const textSizes = this.calculateChunkTextMeasures(docData)
+    const fragmentSizes = this.calculateFragmentTextMeasures(docData)
+    const arcSizes = this.calculateArcTextMeasurements(docData)
 
     return new Sizes(textSizes, arcSizes, fragmentSizes)
   }
 
-  calculateChunkTextMeasures (): Measurements {
+  calculateChunkTextMeasures (docData: DocumentData): Measurements {
     // get the span text sizes
     const chunkTexts: Record<string, Array<unknown>> = {} // set of span texts
-    this.data.chunks.map(chunk => {
+    for (const chunk of docData.chunks) {
       chunk.row = undefined // reset
       if (!Object.prototype.hasOwnProperty.call(chunkTexts, chunk.text)) {
         chunkTexts[chunk.text] = []
@@ -1274,13 +1288,13 @@ export class Visualizer {
       // and also the markedText boundaries
       chunkText.push(...chunk.markedTextStart)
       chunkText.push(...chunk.markedTextEnd)
-    })
+    }
 
     return this.getTextMeasurements(chunkTexts, undefined, (fragment, text) =>
       this.calculateChunkTextElementMeasure(fragment, text))
   }
 
-  calculateChunkTextElementMeasure (fragment: Fragment | number[], text: SVGTextElement) {
+  private calculateChunkTextElementMeasure (fragment: Fragment | number[], text: SVGTextElement) {
     if (!(fragment instanceof Fragment)) {
       // it's markedText [id, start?, char#, offset]
       if (fragment[2] < 0) { fragment[2] = 0 }
@@ -1342,7 +1356,7 @@ export class Visualizer {
     }
   }
 
-  calculateSubstringWidthRobust (fragment: Fragment, text: SVGTextElement, firstChar: number, lastChar: number) {
+  private calculateSubstringWidthRobust (fragment: Fragment, text: SVGTextElement, firstChar: number, lastChar: number) {
     let charDirection: Array<'rtl' | 'ltr'>
     let charAttrs: Array<{ order: number, width: number, direction: 'rtl' | 'ltr' }>
     let corrFactor = 1
@@ -1359,21 +1373,24 @@ export class Visualizer {
 
       // Cannot use fragment.chunk.text.length here because invisible characters do not count.
       // Using text.getNumberOfChars() instead.
-      for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
-        const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x
-        const dir = isRTL(text.textContent.charCodeAt(idx)) ? 'rtl' : 'ltr'
-        charAttrs.push({
-          order: idx,
-          width: Math.abs(cw),
-          direction: dir
-        })
-        charDirection.push(dir)
-        //		            	  console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
-        //		            	  		"begin:" + text.getStartPositionOfChar(idx).x +
-        //		            	  		" end:" + text.getEndPositionOfChar(idx).x +
-        //		            	  		" width:" + Math.abs(cw) +
-        //		            	  		" dir:" + charDirection[charDirection.length-1]);
+      if (text.textContent !== null) {
+        for (let idx = 0; idx < text.getNumberOfChars(); idx++) {
+          const cw = text.getEndPositionOfChar(idx).x - text.getStartPositionOfChar(idx).x
+          const dir = isRTL(text.textContent.charCodeAt(idx)) ? 'rtl' : 'ltr'
+          charAttrs.push({
+            order: idx,
+            width: Math.abs(cw),
+            direction: dir
+          })
+          charDirection.push(dir)
+          // console.log("char " +  idx + " [" + text.textContent[idx] + "] " +
+          //   "begin:" + text.getStartPositionOfChar(idx).x +
+          //   " end:" + text.getEndPositionOfChar(idx).x +
+          //   " width:" + Math.abs(cw) +
+          //   " dir:" + charDirection[charDirection.length-1]);
+        }
       }
+
       // Re-order widths if necessary
       if (charAttrs.length > 1) {
         const idx = 0
@@ -1395,7 +1412,8 @@ export class Visualizer {
           blockBegin = blockEnd
         }
       }
-      //	          console.log("order: " + charOrder);
+
+      // console.log("order: " + charOrder);
       // The actual character width on screen is not necessarily the width that can be
       // obtained by subtracting start from end position. In particular Arabic connects
       // characters quite a bit such that the width on screen may be less. Here we
@@ -1405,9 +1423,9 @@ export class Visualizer {
         widthsSum += charAttrs[idx].width
       }
       corrFactor = text.getComputedTextLength() / widthsSum
-      //	          	  console.log("width sums: " + widthsSum);
-      //	          	  console.log("computed length: " + text.getComputedTextLength());
-      //	          	  console.log("corrFactor: " + corrFactor);
+      // console.log("width sums: " + widthsSum);
+      // console.log("computed length: " + text.getComputedTextLength());
+      // console.log("corrFactor: " + corrFactor);
       fragment.chunk.rtlsizes = {
         charDirection,
         charAttrs,
@@ -1449,8 +1467,8 @@ export class Visualizer {
     return [startPos, endPos]
   }
 
-  calculateSubstringWidthFast (text, firstChar, lastChar) {
-    let startPos
+  private calculateSubstringWidthFast (text: SVGTextContentElement, firstChar: number, lastChar: number) {
+    let startPos: number
     if (firstChar < text.getNumberOfChars()) {
       startPos = text.getStartPositionOfChar(firstChar).x
     } else {
@@ -1464,22 +1482,20 @@ export class Visualizer {
 
   /**
    * Get the fragment annotation text sizes.
-   *
-   * @return {Measurements}
    */
-  calculateFragmentTextMeasures (): Measurements {
+  private calculateFragmentTextMeasures (docData: DocumentData): Measurements {
     const fragmentTexts = {}
 
     let noSpans = true
-    if (this.data.spans) {
-      Object.values(this.data.spans).map(span => {
+    if (docData.spans) {
+      for (const span of Object.values(docData.spans)) {
         if (span.fragments) {
-          span.fragments.map(fragment => {
+          for (const fragment of span.fragments) {
             fragmentTexts[fragment.glyphedLabelText] = true
             noSpans = false
-          })
+          }
         }
-      })
+      }
     }
 
     if (noSpans) {
@@ -1494,10 +1510,10 @@ export class Visualizer {
    *
    * @return {Measurements}
    */
-  calculateArcTextMeasurements (): Measurements {
-    const arcs = this.data.arcs
-    const spans = this.data.spans
-    const eventDescs = this.data.eventDescs
+  private calculateArcTextMeasurements (docData: DocumentData): Measurements {
+    const arcs = docData.arcs
+    const spans = docData.spans
+    const eventDescs = docData.eventDescs
 
     const arcTexts = {}
     if (arcs) {
@@ -1521,19 +1537,16 @@ export class Visualizer {
   /**
    * Adjust all fragments in a tower so they have the same width.
    */
-  adjustTowerAnnotationSizes () {
-    const fragmentWidths = this.data.sizes.fragments.widths
-    Object.values(this.data.towers).map(tower => {
+  private adjustTowerAnnotationSizes (docData: DocumentData) {
+    const fragmentWidths = docData.sizes.fragments.widths
+    Object.values(docData.towers).map(tower => {
       let maxWidth = 0
       tower.map(fragment => maxWidth = Math.max(maxWidth, fragmentWidths[fragment.glyphedLabelText]))
       tower.map(fragment => fragment.width = maxWidth)
     })
   }
 
-  /**
-   * @return {string|undefined}
-   */
-  makeArrow (spec: string): string | undefined {
+  private makeArrow (spec: string): string | undefined {
     const parsedSpec = spec.split(',')
     const type = parsedSpec[0]
     if (type === 'none') {
@@ -1583,9 +1596,6 @@ export class Visualizer {
     return arrowId
   }
 
-  /**
-   * @return {number}
-   */
   calculateMaxTextWidth (sizes: Sizes): number {
     let maxTextWidth = 0
     for (const text in sizes.texts.widths) {
@@ -1596,7 +1606,7 @@ export class Visualizer {
     return maxTextWidth
   }
 
-  renderLayoutFloorsAndCurlies (spanDrawOrderPermutation: string[]) {
+  private renderLayoutFloorsAndCurlies (docData: DocumentData, spanDrawOrderPermutation: string[]) {
     // reserve places for spans
     const floors : number[] = []
     // reservations[chunk][floor] = [[from, to, headroom]...]
@@ -1604,7 +1614,7 @@ export class Visualizer {
     const inf = 1.0 / 0.0
 
     $.each(spanDrawOrderPermutation, (spanIdNo, spanId) => {
-      const span = this.data.spans[spanId]
+      const span = docData.spans[spanId]
       const spanDesc = this.entityTypes[span.type]
       const bgColor = ((spanDesc && spanDesc.bgColor) || '#ffffff')
 
@@ -1617,11 +1627,11 @@ export class Visualizer {
       const f2 = span.fragments[span.fragments.length - 1]
 
       const x1 = (f1.curly.from + f1.curly.to - f1.width) / 2 -
-        Configuration.visual.margin.x - (this.data.sizes.fragments.height / 2)
+        Configuration.visual.margin.x - (docData.sizes.fragments.height / 2)
       const i1 = f1.chunk.index
 
       const x2 = (f2.curly.from + f2.curly.to + f2.width) / 2 +
-        Configuration.visual.margin.x + (this.data.sizes.fragments.height / 2)
+        Configuration.visual.margin.x + (docData.sizes.fragments.height / 2)
       const i2 = f2.chunk.index
 
       // Start from the ground level, going up floor by floor.
@@ -1641,7 +1651,7 @@ export class Visualizer {
       // actual positions of curlies
       let carpet : number | null = 0
       const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0
-      const height = this.data.sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
+      const height = docData.sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
         2 * Configuration.visual.margin.y - 3
       $.each(floors, (floorNo, floor) => {
         let floorAvailable = true
@@ -1702,6 +1712,7 @@ export class Visualizer {
         }
         return floorNo
       }
+
       const ceiling = carpet + height
       makeNewFloorIfNeeded(ceiling)
       const carpetNo = makeNewFloorIfNeeded(carpet)
@@ -1718,11 +1729,12 @@ export class Visualizer {
           reservations[i][floor].push([from, to, headroom]) // XXX maybe add fragment; probably unnecessary
         }
       }
+
       span.floor = carpet + thisCurlyHeight
     })
   }
 
-  renderChunks (sourceData: SourceData, chunks: Chunk[], maxTextWidth: number): [Row[], number[], unknown[]] {
+  private renderChunks (docData: DocumentData, sourceData: SourceData, chunks: Chunk[], maxTextWidth: number): [Row[], number[], unknown[]] {
     let currentX: number
     if (this.rtlmode) {
       currentX = this.canvasWidth - (Configuration.visual.margin.x + this.sentNumMargin + this.rowPadding)
@@ -1768,7 +1780,9 @@ export class Visualizer {
       chunk.highlightGroup = this.svg.group().addTo(chunk.group)
 
       let y = 0
-      let hasLeftArcs: boolean, hasRightArcs: boolean, hasInternalArcs: boolean
+      let hasLeftArcs = false
+      let hasRightArcs = false
+      let hasInternalArcs = false
       let hasAnnotations = false
       let chunkFrom = Infinity
       let chunkTo = 0
@@ -1804,15 +1818,15 @@ export class Visualizer {
         fragment.group = this.svg.group().addTo(chunk.group).addClass('span')
 
         if (!y) {
-          y = -this.data.sizes.texts.height
+          y = -docData.sizes.texts.height
         }
         // x : center of fragment on x axis
         let x = (fragment.curly.from + fragment.curly.to) / 2
 
         // XXX is it maybe sizes.texts?
-        let yy = y + this.data.sizes.fragments.y
+        let yy = y + docData.sizes.fragments.y
         // hh : fragment height
-        let hh = this.data.sizes.fragments.height
+        let hh = docData.sizes.fragments.height
         // ww : fragment width
         let ww = fragment.width
         // xx : left edge of fragment
@@ -1880,7 +1894,7 @@ export class Visualizer {
           this.renderFragmentCrossOut(xx, yy, hh, fragment)
         }
 
-        fragment.group.add(this.data.spanAnnTexts[fragment.glyphedLabelText].clone()
+        fragment.group.add(docData.spanAnnTexts[fragment.glyphedLabelText].clone()
           .amove(x, y - span.floor)
           .fill(fgColor))
 
@@ -1914,14 +1928,14 @@ export class Visualizer {
             let labels = Util.getArcLabels(this.entityTypes, refSpan.type, arc.type, this.relationTypes)
             if (!labels.length) { labels = [arc.type] }
 
-            if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
-              if (this.data.eventDescs[arc.eventDescId].labelText) {
-                labels = [this.data.eventDescs[arc.eventDescId].labelText]
+            if (arc.eventDescId && docData.eventDescs[arc.eventDescId]) {
+              if (docData.eventDescs[arc.eventDescId].labelText) {
+                labels = [docData.eventDescs[arc.eventDescId].labelText]
               }
             }
 
             const labelNo = Configuration.abbrevsOn ? labels.length - 1 : 0
-            const smallestLabelWidth = this.data.sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant
+            const smallestLabelWidth = docData.sizes.arcs.widths[labels[labelNo]] + 2 * this.minArcSlant
 
             const gap = Math.abs(currentX + (this.rtlmode ? -bx : bx) - border)
 
@@ -1940,17 +1954,17 @@ export class Visualizer {
           // find the gap to fit the backwards arcs, but only on
           // head fragment - other fragments don't have arcs
           for (const arc of span.incoming) {
-            const leftSpan = this.data.spans[arc.origin]
+            const leftSpan = docData.spans[arc.origin]
             checkLeftRightArcs(arc, leftSpan, leftSpan)
           }
 
           for (const arc of span.outgoing) {
-            const leftSpan = this.data.spans[arc.target]
+            const leftSpan = docData.spans[arc.target]
             checkLeftRightArcs(arc, span, leftSpan)
           }
 
           for (const arc of span.incoming) {
-            const origin = this.data.spans[arc.origin].headFragment.chunk
+            const origin = docData.spans[arc.origin].headFragment.chunk
             if (chunk.index === origin.index) {
               hasInternalArcs = true
             }
@@ -1967,8 +1981,8 @@ export class Visualizer {
 
       // positioning of the chunk
       chunk.right = chunkTo
-      const textWidth = this.data.sizes.texts.widths[chunk.text]
-      chunkHeight += this.data.sizes.texts.height
+      const textWidth = docData.sizes.texts.widths[chunk.text]
+      chunkHeight += docData.sizes.texts.height
       // If chunkFrom becomes negative (LTR) or chunkTo becomes positive (RTL), then boxX becomes positive
       const boxX = this.rtlmode ? chunkTo : -Math.min(chunkFrom, 0)
 
@@ -2049,7 +2063,7 @@ export class Visualizer {
         }
 
         if (hasLeftArcs) {
-          const adjustedCurTextWidth = this.data.sizes.texts.widths[chunk.text] + this.arcHorizontalSpacing
+          const adjustedCurTextWidth = docData.sizes.texts.widths[chunk.text] + this.arcHorizontalSpacing
           if (adjustedCurTextWidth > maxTextWidth) {
             maxTextWidth = adjustedCurTextWidth
           }
@@ -2131,7 +2145,7 @@ export class Visualizer {
             spacingChunkId = firstChunkInRow.index + 1
           }
           for (let chunkIndex = spacingChunkId; chunkIndex < chunk.index; chunkIndex++) {
-            const movedChunk = this.data.chunks[chunkIndex]
+            const movedChunk = docData.chunks[chunkIndex]
             this.fastTranslate(movedChunk, movedChunk.translation.x + spacing, 0)
             movedChunk.textX += spacing
           }
@@ -2187,7 +2201,7 @@ export class Visualizer {
     }
 
     let prevChunk: Chunk
-    let rowTextGroup: SVGTypeMapping<SVGGElement>
+    let rowTextGroup: SVGTypeMapping<SVGGElement> | undefined
     $.each(docData.chunks, (chunkNo, chunk) => {
       // context for sort
       currentChunk = chunk
@@ -2266,13 +2280,14 @@ export class Visualizer {
         // and a right-to-left traversal.
         orderedIdx.sort(lrChunkComp)
 
+        // eslint-disable-next-line no-lone-blocks
         {
-          let openFragments = []
+          let openFragments : Fragment[] = []
           for (let i = 0; i < orderedIdx.length; i++) {
             const current = chunk.fragments[orderedIdx[i]]
             current.nestingHeightLR = 0
             current.nestingDepthLR = 0
-            const stillOpen = []
+            const stillOpen : Fragment[] = []
             for (let o = 0; o < openFragments.length; o++) {
               if (openFragments[o].to > current.from) {
                 stillOpen.push(openFragments[o])
@@ -2288,13 +2303,14 @@ export class Visualizer {
         // re-sort for right-to-left traversal by end position
         orderedIdx.sort(rlChunkComp)
 
+        // eslint-disable-next-line no-lone-blocks
         {
-          let openFragments = []
+          let openFragments : Fragment[] = []
           for (let i = 0; i < orderedIdx.length; i++) {
             const current = chunk.fragments[orderedIdx[i]]
             current.nestingHeightRL = 0
             current.nestingDepthRL = 0
-            const stillOpen = []
+            const stillOpen : Fragment[] = []
             for (let o = 0; o < openFragments.length; o++) {
               if (openFragments[o].from < current.to) {
                 stillOpen.push(openFragments[o])
@@ -2333,11 +2349,9 @@ export class Visualizer {
             bgColor = fragment.span.color
           }
 
-          // Tweak for nesting depth/height. Recognize just three
-          // levels for now: normal, nested, and nesting, where
-          // nested+nesting yields normal. (Currently testing
-          // minor tweak: don't shrink for depth 1 as the nesting
-          // highlight will grow anyway [check nestingDepth > 1])
+          // Tweak for nesting depth/height. Recognize just three levels for now: normal, nested,
+          // and nesting, where nested+nesting yields normal. (Currently testing minor tweak: don't
+          // shrink for depth 1 as the nesting highlight will grow anyway [check nestingDepth > 1])
           let shrink = 0
           if (fragment.nestingDepth > 1 && fragment.nestingHeight === 0) {
             shrink = 1
@@ -2349,9 +2363,8 @@ export class Visualizer {
           const xShrink = shrink * this.nestingAdjustXStepSize
           // bit lighter
           const lightBgColor = Util.adjustColorLightness(bgColor, 0.8)
-          // tweak for Y start offset (and corresponding height
-          // reduction): text rarely hits font max height, so this
-          // tends to look better
+          // tweak for Y start offset (and corresponding height reduction): text rarely hits font
+          // max height, so this tends to look better
           const yStartTweak = 1
 
           // Store highlight coordinates
@@ -2381,7 +2394,7 @@ export class Visualizer {
     })
 
     // Prevent text selection from being jumpy
-    if (rowTextGroup) {
+    if (rowTextGroup && currentChunk) {
       this.horizontalSpacer(rowTextGroup, 0, currentChunk.row.textY, 1, {
         'data-chunk-id': currentChunk.index,
         class: 'row-final spacing'
@@ -3304,14 +3317,14 @@ export class Visualizer {
       Util.profileEnd('init')
 
       Util.profileStart('measures')
-      this.data.sizes = this.calculateTextMeasurements()
-      this.adjustTowerAnnotationSizes()
+      this.data.sizes = this.calculateTextMeasurements(this.data)
+      this.adjustTowerAnnotationSizes(this.data)
       const maxTextWidth = this.calculateMaxTextWidth(this.data.sizes)
       Util.profileEnd('measures')
 
       Util.profileStart('chunks')
-      this.renderLayoutFloorsAndCurlies(this.data.spanDrawOrderPermutation)
-      const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(this.sourceData, this.data.chunks, maxTextWidth)
+      this.renderLayoutFloorsAndCurlies(this.data, this.data.spanDrawOrderPermutation)
+      const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(this.data, this.sourceData, this.data.chunks, maxTextWidth)
       Util.profileEnd('chunks')
 
       Util.profileStart('arcsPrep')
