@@ -344,8 +344,7 @@ public class BratAnnotationEditor
                     else if (diffJsonStr.length() < json.length()) {
                         // Only sent a patch if it is smaller than sending the full data. E.g. when
                         // switching pages, the patch usually ends up being twice as large as the
-                        // full
-                        // data.
+                        // full data.
                         cmd = "renderDataPatch";
                         responseJson = diffJsonStr;
                         renderType = DIFFERENTIAL;

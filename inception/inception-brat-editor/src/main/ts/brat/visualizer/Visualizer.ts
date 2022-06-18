@@ -60,6 +60,7 @@ import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathComm
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
 import { Offsets } from '@inception-project/inception-js-api'
+import { stringify } from 'querystring'
 declare const $: JQueryStatic
 
 /**
@@ -110,19 +111,14 @@ function setSourceDataDefaults (sourceData: SourceData) {
 // Set default values for a variety of collection attributes
 function setCollectionDefaults (collectionData) {
   // The following are empty lists if not set
-  $.each([
-    'entity_attribute_types',
-    'entity_types',
-    'event_attribute_types',
-    'event_types',
-    'relation_attribute_types',
-    'relation_types',
-    'unconfigured_types'
-  ], (attrNo, attr) => {
+  const attrs = ['entity_attribute_types', 'entity_types',
+    'event_attribute_types', 'event_types',
+    'relation_attribute_types', 'relation_types']
+  for (const attr of attrs) {
     if (collectionData[attr] === undefined) {
       collectionData[attr] = []
     }
-  })
+  }
 }
 
 export class Visualizer {
@@ -138,8 +134,8 @@ export class Visualizer {
   private baseCanvasWidth = 0
   private canvasWidth = 0
 
-  private data: DocumentData = null
-  private sourceData: SourceData = null
+  private data?: DocumentData
+  private sourceData?: SourceData
   private requestedData: SourceData = null // FIXME Do we really need requestedData AND sourceData?
 
   private args: Record<MarkerType, MarkerDto> = null
@@ -156,9 +152,9 @@ export class Visualizer {
   private isCollectionLoaded = false
 
   private markedText: Array<MarkedText> = []
-  private highlight: Array<Rect> | undefined
-  private highlightArcs
-  private highlightSpans
+  private highlight: Array<Rect> = []
+  private highlightArcs?: JQuery
+  private highlightSpans?: JQuery
 
   // OPTIONS
   private collapseArcs = false
@@ -866,7 +862,7 @@ export class Visualizer {
     return chunks
   }
 
-  assignSentenceNumbersToChunks (firstSentence, sentenceOffsets, chunks) {
+  assignSentenceNumbersToChunks (firstSentence: number, sentenceOffsets: Offsets[], chunks: Chunk[]) {
     if (!sentenceOffsets) {
       return
     }
@@ -880,14 +876,14 @@ export class Visualizer {
       const to = offset[1]
 
       // Skip all chunks that belonged to the previous sentence
-      let chunk
+      let chunk : Chunk
       while (chunkNo < numChunks && (chunk = chunks[chunkNo]).from < from) {
         chunkNo++
       }
 
       // No more chunks
       if (chunkNo >= numChunks) {
-        continue
+        break
       }
 
       // If the current chunk is not within the current sentence, then it was an empty sentence
@@ -1020,55 +1016,7 @@ export class Visualizer {
       this.collectFragmentTextsIntoSpanTexts(Object.values(this.data.spans))
     }
 
-    for (let i = 0; i < 2; i++) {
-      // preliminary sort to assign heights for basic cases
-      // (first round) and cases resolved in the previous round(s).
-      this.data.chunks.map(chunk => {
-        // sort and then re-number
-        chunk.fragments.sort(Fragment.compare)
-        chunk.fragments.map((fragment, fragmentNo) => fragment.indexNumber = fragmentNo)
-      })
-
-      // nix the sums, so we can sum again
-      Object.values(this.data.spans).map(span => span.refedIndexSum = 0)
-
-      // resolved cases will now have indexNumber set to indicate their relative order. Sum those
-      // for referencing cases for use in iterative resorting
-      this.data.arcs.map(arc => {
-        this.data.spans[arc.origin].refedIndexSum += this.data.spans[arc.target].headFragment.indexNumber
-      })
-    }
-
-    // Final sort of fragments in chunks for drawing purposes
-    // Also identify the marked text boundaries regarding chunks
-    this.data.chunks.map(chunk => {
-      // and make the next sort take this into account. Note that this will
-      // now resolve first-order dependencies between sort orders but not
-      // second-order or higher.
-      chunk.fragments.sort(Fragment.compare)
-      chunk.fragments.map((fragment, fragmentNo) => fragment.drawOrder = fragmentNo)
-    })
-
-    this.data.spanDrawOrderPermutation = this.determineDrawOrder(this.data.spans)
-
-    // resort the fragments for linear order by center so we can organize them into towers
-    sortedFragments.sort(Fragment.midpointComparator)
-    // sort fragments into towers, calculate average arc distances
-    this.organizeFragmentsIntoTowers(sortedFragments)
-
-    // find curlies (only the first fragment drawn in a tower)
-    this.data.spanDrawOrderPermutation.map(spanId => {
-      const span = this.data.spans[spanId]
-
-      span.fragments.map(fragment => {
-        if (!this.data.towers[fragment.towerId]) {
-          this.data.towers[fragment.towerId] = []
-          fragment.drawCurly = true
-          fragment.span.drawCurly = true
-        }
-        this.data.towers[fragment.towerId].push(fragment)
-      })
-    })
+    this.calculateDrawingOrder(sortedFragments)
 
     const spanAnnTexts = {}
     this.data.chunks.map(chunk => {
@@ -1177,6 +1125,64 @@ export class Visualizer {
     this.applyMarkedTextToChunks(this.markedText, this.data.chunks)
 
     this.dispatcher.post('dataReady', [this.data])
+  }
+
+  private calculateDrawingOrder (sortedFragments: Fragment[]) {
+    for (let i = 0; i < 2; i++) {
+      // preliminary sort to assign heights for basic cases
+      // (first round) and cases resolved in the previous round(s).
+      for (const chunk of this.data.chunks) {
+        // sort and then re-number
+        chunk.fragments.sort(Fragment.compare)
+        for (const [fragmentNo, fragment] of chunk.fragments.entries()) {
+          fragment.indexNumber = fragmentNo
+        }
+      }
+
+      // nix the sums, so we can sum again
+      for (const span of Object.values(this.data.spans)) {
+        span.refedIndexSum = 0
+      }
+
+      // resolved cases will now have indexNumber set to indicate their relative order. Sum those
+      // for referencing cases for use in iterative resorting
+      for (const arc of this.data.arcs) {
+        this.data.spans[arc.origin].refedIndexSum += this.data.spans[arc.target].headFragment.indexNumber
+      }
+    }
+
+    // Final sort of fragments in chunks for drawing purposes
+    // Also identify the marked text boundaries regarding chunks
+    for (const chunk of this.data.chunks) {
+      // and make the next sort take this into account. Note that this will
+      // now resolve first-order dependencies between sort orders but not
+      // second-order or higher.
+      chunk.fragments.sort(Fragment.compare)
+      for (const [fragmentNo, fragment] of chunk.fragments.entries()) {
+        fragment.drawOrder = fragmentNo
+      }
+    }
+
+    this.data.spanDrawOrderPermutation = this.determineDrawOrder(this.data.spans)
+
+    // resort the fragments for linear order by center so we can organize them into towers
+    sortedFragments.sort(Fragment.midpointComparator)
+    // sort fragments into towers, calculate average arc distances
+    this.organizeFragmentsIntoTowers(sortedFragments)
+
+    // find curlies (only the first fragment drawn in a tower)
+    for (const spanId of this.data.spanDrawOrderPermutation) {
+      const span = this.data.spans[spanId]
+
+      for (const fragment of span.fragments) {
+        if (!this.data.towers[fragment.towerId]) {
+          this.data.towers[fragment.towerId] = []
+          fragment.drawCurly = true
+          fragment.span.drawCurly = true
+        }
+        this.data.towers[fragment.towerId].push(fragment)
+      }
+    }
   }
 
   resetData () {
@@ -1592,8 +1598,9 @@ export class Visualizer {
 
   renderLayoutFloorsAndCurlies (spanDrawOrderPermutation: string[]) {
     // reserve places for spans
-    const floors = []
-    const reservations = [] // reservations[chunk][floor] = [[from, to, headroom]...]
+    const floors : number[] = []
+    // reservations[chunk][floor] = [[from, to, headroom]...]
+    const reservations : Array<Array<Array<[from: number, to: number, headroom: number]>>> = []
     const inf = 1.0 / 0.0
 
     $.each(spanDrawOrderPermutation, (spanIdNo, spanId) => {
@@ -1632,7 +1639,7 @@ export class Visualizer {
       //
       // TODO drawCurly and height could be prettified to only check
       // actual positions of curlies
-      let carpet = 0
+      let carpet : number | null = 0
       const thisCurlyHeight = span.drawCurly ? Configuration.visual.curlyHeight : 0
       const height = this.data.sizes.fragments.height + thisCurlyHeight + Configuration.visual.boxSpacing +
         2 * Configuration.visual.margin.y - 3
@@ -1651,6 +1658,7 @@ export class Visualizer {
             }
           })
         }
+
         if (floorAvailable) {
           if (carpet === null) {
             carpet = floor
@@ -1664,7 +1672,7 @@ export class Visualizer {
       })
 
       const reslen = reservations.length
-      const makeNewFloorIfNeeded = function (floor) {
+      const makeNewFloorIfNeeded = function (floor: number) {
         let floorNo = $.inArray(floor, floors)
         if (floorNo === -1) {
           floors.push(floor)
@@ -1678,15 +1686,16 @@ export class Visualizer {
                 if (!reservations[i][parquet]) {
                   reservations[i][parquet] = []
                 }
+
                 const footroom = floor - parquet
-                $.each(reservations[i][parquet], function (resNo, res) {
+                for (const res of reservations[i][parquet]) {
                   if (res[2] > footroom) {
                     if (!reservations[i][floor]) {
                       reservations[i][floor] = []
                     }
                     reservations[i][floor].push([res[0], res[1], res[2] - footroom])
                   }
-                })
+                }
               }
             }
           }
@@ -1697,13 +1706,14 @@ export class Visualizer {
       makeNewFloorIfNeeded(ceiling)
       const carpetNo = makeNewFloorIfNeeded(carpet)
       // make the reservation
-      let floor, floorNo
+      let floor : number
+      let floorNo : number
       for (floorNo = carpetNo; (floor = floors[floorNo]) !== undefined && floor < ceiling; floorNo++) {
         const headroom = ceiling - floor
         for (let i = i1; i <= i2; i++) {
           const from = (i === i1) ? x1 : 0
           const to = (i === i2) ? x2 : inf
-          if (!reservations[i]) { reservations[i] = {} }
+          if (!reservations[i]) { reservations[i] = [] }
           if (!reservations[i][floor]) { reservations[i][floor] = [] }
           reservations[i][floor].push([from, to, headroom]) // XXX maybe add fragment; probably unnecessary
         }
@@ -2155,7 +2165,7 @@ export class Visualizer {
     return [rows, fragmentHeights, textMarkedRows]
   }
 
-  renderChunksPass2 (textGroup: SVGTypeMapping<SVGGElement>, textMarkedRows) {
+  private renderChunksPass2 (docData: DocumentData, textGroup: SVGTypeMapping<SVGGElement>, textMarkedRows) {
     // chunk index sort functions for overlapping fragment drawing
     // algorithm; first for left-to-right pass, sorting primarily
     // by start offset, second for right-to-left pass by end
@@ -2178,7 +2188,7 @@ export class Visualizer {
 
     let prevChunk: Chunk
     let rowTextGroup: SVGTypeMapping<SVGGElement>
-    $.each(this.data.chunks, (chunkNo, chunk) => {
+    $.each(docData.chunks, (chunkNo, chunk) => {
       // context for sort
       currentChunk = chunk
 
@@ -2194,7 +2204,7 @@ export class Visualizer {
       }
       prevChunk = chunk
 
-      const nextChunk = this.data.chunks[chunkNo + 1]
+      const nextChunk = docData.chunks[chunkNo + 1]
 
       if (this.rtlmode) {
         // Render every text chunk as a SVG text so we maintain control over the layout. When
@@ -2213,8 +2223,8 @@ export class Visualizer {
         // item that stretches across the entire inter-chunk space. This ensures a
         // smooth selection.
         if (nextChunk) {
-          const spaceX = chunk.textX - this.data.sizes.texts.widths[chunk.text]
-          const spaceWidth = chunk.textX - this.data.sizes.texts.widths[chunk.text] - nextChunk.textX
+          const spaceX = chunk.textX - docData.sizes.texts.widths[chunk.text]
+          const spaceWidth = chunk.textX - docData.sizes.texts.widths[chunk.text] - nextChunk.textX
           this.horizontalSpacer(rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
             'data-chunk-id': chunk.index
           })
@@ -2234,7 +2244,7 @@ export class Visualizer {
         // item that stretches across the entire inter-chunk space. This ensures a
         // smooth selection.
         if (nextChunk) {
-          const spaceX = chunk.textX + this.data.sizes.texts.widths[chunk.text]
+          const spaceX = chunk.textX + docData.sizes.texts.widths[chunk.text]
           const spaceWidth = nextChunk.textX - spaceX
           this.horizontalSpacer(rowTextGroup, spaceX, chunk.row.textY, spaceWidth, {
             'data-chunk-id': chunk.index
@@ -2347,9 +2357,9 @@ export class Visualizer {
           // Store highlight coordinates
           fragment.highlightPos = {
             x: chunk.textX + (this.rtlmode ? (fragment.curly.from - xShrink) : (fragment.curly.from + xShrink)),
-            y: chunk.row.textY + this.data.sizes.texts.y + yShrink + yStartTweak,
+            y: chunk.row.textY + docData.sizes.texts.y + yShrink + yStartTweak,
             w: fragment.curly.to - fragment.curly.from - 2 * xShrink,
-            h: this.data.sizes.texts.height - 2 * yShrink - yStartTweak
+            h: docData.sizes.texts.height - 2 * yShrink - yStartTweak
           }
 
           // Avoid exception because width < 0 is not allowed
@@ -2380,14 +2390,14 @@ export class Visualizer {
 
     // draw the markedText
     for (const textRowDesc of textMarkedRows) {
-      this.svg.rect(textRowDesc[2] - textRowDesc[1] + 4, this.data.sizes.fragments.height + 4)
-        .translate(textRowDesc[1] - 2, textRowDesc[0].textY - this.data.sizes.fragments.height)
+      this.svg.rect(textRowDesc[2] - textRowDesc[1] + 4, docData.sizes.fragments.height + 4)
+        .translate(textRowDesc[1] - 2, textRowDesc[0].textY - docData.sizes.fragments.height)
         .addClass(textRowDesc[3])
         .addTo(this.highlightGroup)
     }
   }
 
-  renderBumpFragmentHeightsMinimumToArcStartHeight (fragmentHeights: number[]) {
+  private renderBumpFragmentHeightsMinimumToArcStartHeight (fragmentHeights: number[]) {
     const actStartHeight = Configuration.visual.arcStartHeight * (this.fontZoom / 100.0)
     for (let i = 0; i < fragmentHeights.length; i++) {
       if (!fragmentHeights[i] || fragmentHeights[i] < actStartHeight) {
@@ -2396,12 +2406,12 @@ export class Visualizer {
     }
   }
 
-  renderCalculateArcJumpHeight (fragmentHeights: number[]) {
+  private renderCalculateArcJumpHeight (docData: DocumentData, fragmentHeights: number[]) {
     // find out how high the arcs have to go
-    $.each(this.data.arcs, (arcNo, arc) => {
+    for (const arc of docData.arcs) {
       arc.jumpHeight = 0
-      let fromFragment = this.data.spans[arc.origin].headFragment
-      let toFragment = this.data.spans[arc.target].headFragment
+      let fromFragment = docData.spans[arc.origin].headFragment
+      let toFragment = docData.spans[arc.target].headFragment
       if (fromFragment.span.hidden || toFragment.span.hidden) {
         arc.hidden = true
         return
@@ -2428,12 +2438,12 @@ export class Visualizer {
           arc.jumpHeight = targetJumpHeight
         }
       }
-    })
+    }
   }
 
-  renderSortArcs () {
+  private renderSortArcs (docData: DocumentData) {
     // sort the arcs
-    this.data.arcs.sort((a, b) => {
+    docData.arcs.sort((a, b) => {
       // first write those that have less to jump over
       let tmp = a.jumpHeight - b.jumpHeight
       if (tmp) { return tmp < 0 ? -1 : 1 }
@@ -2441,18 +2451,18 @@ export class Visualizer {
       tmp = a.dist - b.dist
       if (tmp) { return tmp < 0 ? -1 : 1 }
       // if equal, then those where heights of the targets are smaller
-      tmp = this.data.spans[a.origin].headFragment.height + this.data.spans[a.target].headFragment.height -
-        this.data.spans[b.origin].headFragment.height - this.data.spans[b.target].headFragment.height
+      tmp = docData.spans[a.origin].headFragment.height + docData.spans[a.target].headFragment.height -
+      docData.spans[b.origin].headFragment.height - docData.spans[b.target].headFragment.height
       if (tmp) { return tmp < 0 ? -1 : 1 }
       // if equal, then those with the lower origin
-      tmp = this.data.spans[a.origin].headFragment.height - this.data.spans[b.origin].headFragment.height
+      tmp = docData.spans[a.origin].headFragment.height - docData.spans[b.origin].headFragment.height
       if (tmp) { return tmp < 0 ? -1 : 1 }
       // if equal, they're just equal.
       return 0
     })
   }
 
-  renderAssignFragmentsToRows (rows: Row[], fragmentHeights: number[]) {
+  private renderAssignFragmentsToRows (rows: Row[], fragmentHeights: number[]) {
     const arcStartHeight = Configuration.visual.arcStartHeight * (this.fontZoom / 100.0)
 
     // see which fragments are in each row
@@ -2486,7 +2496,7 @@ export class Visualizer {
     })
   }
 
-  renderDragArcMarker (defs: Defs) {
+  private renderDragArcMarker (defs: Defs) {
     // draw the drag arc marker
     const arrowhead = this.svg.marker(5, 5)
       .id('drag_arrow')
@@ -2499,444 +2509,437 @@ export class Visualizer {
     this.svg.polyline([[0, 0], [5, 2.5], [0, 5], [0.2, 2.5]]).addTo(arrowhead)
   }
 
-  renderArcs (rows: Row[], fragmentHeights: number[]) {
-    const arrows = {}
+  private renderArcs (docData: DocumentData, rows: Row[], fragmentHeights: number[]) {
+    const arrows : Record<string, string> = {}
     const arrow = this.makeArrow('none')
     if (arrow) {
       arrows.none = arrow
     }
 
     const arcCache = {}
+    for (const arc of docData.arcs) {
+      this.renderArc(docData, arc, arrows, rows, fragmentHeights, arcCache)
+    }
+  }
 
-    // add the arcs
-    $.each(this.data.arcs, (arcNo, arc) => {
-      if (arc.hidden) {
-        return
+  private renderArc (docData: DocumentData, arc: Arc, arrows : Record<string, string>, rows: Row[], fragmentHeights: number[], arcCache) {
+    if (arc.hidden) return
+
+    const originSpan = docData.spans[arc.origin]
+    const targetSpan = docData.spans[arc.target]
+
+    const leftToRight = originSpan.headFragment.towerId < targetSpan.headFragment.towerId
+    const left = leftToRight ? originSpan.headFragment : targetSpan.headFragment
+    const right = leftToRight ? targetSpan.headFragment : originSpan.headFragment
+
+    // fall back on relation types in case we still don't have
+    // an arc description, with final fallback to unnumbered relation
+    let arcDesc = this.relationTypes[arc.type]
+
+    // if it's not a relationship, see if we can find it in span descriptions
+    // TODO: might make more sense to reformat this as dict instead of searching through the list every type
+    const spanDesc = this.entityTypes[originSpan.type]
+    if (!arcDesc && spanDesc && spanDesc.arcs) {
+      for (const arcDescIter of spanDesc.arcs) {
+        if (arcDescIter.type === arc.type) {
+          arcDesc = arcDescIter
+        }
       }
+    }
 
-      const originSpan = this.data.spans[arc.origin]
-      const targetSpan = this.data.spans[arc.target]
+    let color = ((arcDesc && arcDesc.color) || '#000000')
+    if (color === 'hidden') {
+      return
+    }
 
-      const leftToRight = originSpan.headFragment.towerId < targetSpan.headFragment.towerId
-      let left : Fragment
-      let right : Fragment
-      if (leftToRight) {
-        left = originSpan.headFragment
-        right = targetSpan.headFragment
+    if (arc.eventDescId && docData.eventDescs[arc.eventDescId]) {
+      if (docData.eventDescs[arc.eventDescId].color) {
+        color = docData.eventDescs[arc.eventDescId].color
+      }
+    }
+
+    const symmetric = arcDesc && arcDesc.properties && arcDesc.properties.symmetric
+    const dashArray = arcDesc && arcDesc.dashArray
+    const arrowHead = ((arcDesc && arcDesc.arrowHead) || 'triangle,5') + ',' + color
+    const labelArrowHead = ((arcDesc && arcDesc.labelArrow) || 'triangle,5') + ',' + color
+
+    const leftBox = left.rowBBox()
+    const rightBox = right.rowBBox()
+    const leftRow = left.chunk.row.index
+    const rightRow = right.chunk.row.index
+
+    if (!arrows[arrowHead]) {
+      const arrow = this.makeArrow(arrowHead)
+      if (arrow) {
+        arrows[arrowHead] = arrow
+      }
+    }
+
+    if (!arrows[labelArrowHead]) {
+      const arrow = this.makeArrow(labelArrowHead)
+      if (arrow) {
+        arrows[labelArrowHead] = arrow
+      }
+    }
+
+    // find the next height
+    let height = 0
+    let fromIndex2: number, toIndex2: number
+    if (left.chunk.index === right.chunk.index) {
+      fromIndex2 = left.towerId * 2 + left.chunk.row.heightsAdjust
+      toIndex2 = right.towerId * 2 + right.chunk.row.heightsAdjust
+    } else {
+      fromIndex2 = left.towerId * 2 + 1 + left.chunk.row.heightsAdjust
+      toIndex2 = right.towerId * 2 - 1 + right.chunk.row.heightsAdjust
+    }
+
+    if (!this.collapseArcSpace) {
+      height = this.findArcHeight(fromIndex2, toIndex2, fragmentHeights)
+      this.adjustFragmentHeights(fromIndex2, toIndex2, fragmentHeights, height)
+
+      // Adjust the height to align with pixels when rendered
+      // TODO: on at least Chrome, it doesn't make a difference: lines come out pixel-width even without it. Check.
+      height += 0.5
+    }
+
+    let chunkReverse = false
+    const ufoCatcher = originSpan.headFragment.chunk.index === targetSpan.headFragment.chunk.index
+    if (ufoCatcher) {
+      if (this.rtlmode) {
+        chunkReverse = leftBox.x + leftBox.width / 2 > rightBox.x + rightBox.width / 2
       } else {
-        left = targetSpan.headFragment
-        right = originSpan.headFragment
+        chunkReverse = leftBox.x + leftBox.width / 2 < rightBox.x + rightBox.width / 2
+      }
+    }
+    const ufoCatcherMod = ufoCatcher ? chunkReverse ? -0.5 : 0.5 : 1
+
+    for (let rowIndex = leftRow; rowIndex <= rightRow; rowIndex++) {
+      const row = rows[rowIndex]
+      if (!row.chunks.length) {
+        continue
       }
 
-      // fall back on relation types in case we still don't have
-      // an arc description, with final fallback to unnumbered relation
-      let arcDesc = this.relationTypes[arc.type]
+      row.hasAnnotations = true
 
-      // if it's not a relationship, see if we can find it in span descriptions
-      // TODO: might make more sense to reformat this as dict instead of searching through the list every type
-      const spanDesc = this.entityTypes[originSpan.type]
-      if (!arcDesc && spanDesc && spanDesc.arcs) {
-        $.each(spanDesc.arcs, (arcDescNo, arcDescIter) => {
-          if (arcDescIter.type === arc.type) {
-            arcDesc = arcDescIter
-          }
-        })
+      const fromIndex2R = rowIndex === leftRow ? fromIndex2 : row.heightsStart
+      const toIndex2R = rowIndex === rightRow ? toIndex2 : row.heightsEnd
+      if (this.collapseArcSpace) {
+        height = this.findArcHeight(fromIndex2R, toIndex2R, fragmentHeights)
       }
 
-      let color = ((arcDesc && arcDesc.color) || '#000000')
-      if (color === 'hidden') {
-        return
-      }
+      const arcGroup = this.svg.group()
+        .attr('data-from', arc.origin)
+        .attr('data-to', arc.target)
+        .attr('data-id', arc.eventDescId)
+        .addTo(row.arcs)
 
-      if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
-        if (this.data.eventDescs[arc.eventDescId].color) {
-          color = this.data.eventDescs[arc.eventDescId].color
+      let from: number
+      if (rowIndex === leftRow) {
+        if (this.rtlmode) {
+          from = leftBox.x + (chunkReverse ? leftBox.width : 0)
+        } else {
+          from = leftBox.x + (chunkReverse ? 0 : leftBox.width)
         }
-      }
-
-      const symmetric = arcDesc && arcDesc.properties && arcDesc.properties.symmetric
-      const dashArray = arcDesc && arcDesc.dashArray
-      const arrowHead = ((arcDesc && arcDesc.arrowHead) || 'triangle,5') + ',' + color
-      const labelArrowHead = ((arcDesc && arcDesc.labelArrow) || 'triangle,5') + ',' + color
-
-      const leftBox = left.rowBBox()
-      const rightBox = right.rowBBox()
-      const leftRow = left.chunk.row.index
-      const rightRow = right.chunk.row.index
-
-      if (!arrows[arrowHead]) {
-        const arrow = this.makeArrow(arrowHead)
-        if (arrow) {
-          arrows[arrowHead] = arrow
-        }
-      }
-
-      if (!arrows[labelArrowHead]) {
-        const arrow = this.makeArrow(labelArrowHead)
-        if (arrow) {
-          arrows[labelArrowHead] = arrow
-        }
-      }
-
-      // find the next height
-      let height = 0
-      let fromIndex2: number, toIndex2: number
-      if (left.chunk.index === right.chunk.index) {
-        fromIndex2 = left.towerId * 2 + left.chunk.row.heightsAdjust
-        toIndex2 = right.towerId * 2 + right.chunk.row.heightsAdjust
       } else {
-        fromIndex2 = left.towerId * 2 + 1 + left.chunk.row.heightsAdjust
-        toIndex2 = right.towerId * 2 - 1 + right.chunk.row.heightsAdjust
+        from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin
       }
 
-      if (!this.collapseArcSpace) {
-        height = this.findArcHeight(fromIndex2, toIndex2, fragmentHeights)
-        this.adjustFragmentHeights(fromIndex2, toIndex2, fragmentHeights, height)
+      let to: number
+      if (rowIndex === rightRow) {
+        if (this.rtlmode) {
+          to = rightBox.x + (chunkReverse ? 0 : rightBox.width)
+        } else {
+          to = rightBox.x + (chunkReverse ? rightBox.width : 0)
+        }
+      } else {
+        to = this.rtlmode ? 0 : this.canvasWidth - 2 * Configuration.visual.margin.y
+      }
+
+      let adjustHeight = true
+      if (this.collapseArcs) {
+        let arcCacheKey = arc.type + ' ' + rowIndex + ' ' + from + ' ' + to
+        if (rowIndex === leftRow) { arcCacheKey = left.span.id + ' ' + arcCacheKey }
+        if (rowIndex === rightRow) { arcCacheKey += ' ' + right.span.id }
+        const rowHeight = arcCache[arcCacheKey]
+        if (rowHeight !== undefined) {
+          height = rowHeight
+          adjustHeight = false
+        } else {
+          arcCache[arcCacheKey] = height
+        }
+      }
+
+      if (this.collapseArcSpace && adjustHeight) {
+        this.adjustFragmentHeights(fromIndex2R, toIndex2R, fragmentHeights, height)
 
         // Adjust the height to align with pixels when rendered
-        // TODO: on at least Chrome, it doesn't make a difference: lines come out pixel-width even without it. Check.
+        // TODO: on at least Chrome, this doesn't make a difference:
+        // the lines come out pixel-width even without it. Check.
         height += 0.5
       }
 
-      let chunkReverse = false
-      const ufoCatcher = originSpan.headFragment.chunk.index === targetSpan.headFragment.chunk.index
-      if (ufoCatcher) {
-        if (this.rtlmode) {
-          chunkReverse = leftBox.x + leftBox.width / 2 > rightBox.x + rightBox.width / 2
-        } else {
-          chunkReverse = leftBox.x + leftBox.width / 2 < rightBox.x + rightBox.width / 2
+      const originType = docData.spans[arc.origin].type
+      const arcLabels = Util.getArcLabels(this.entityTypes, originType, arc.type, this.relationTypes)
+      let labelText = Util.arcDisplayForm(this.entityTypes, originType, arc.type, this.relationTypes)
+      // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
+      if (Configuration.abbrevsOn && arcLabels) {
+        let labelIdx = 1 // first abbreviation
+
+        // strictly speaking 2*arcSlant would be needed to allow for
+        // the full-width arcs to fit, but judged abbreviated text
+        // to be more important than the space for arcs.
+        const maxLength = (to - from) - (this.arcSlant)
+        while (docData.sizes.arcs.widths[labelText] > maxLength && arcLabels[labelIdx]) {
+          labelText = arcLabels[labelIdx]
+          labelIdx++
         }
       }
-      const ufoCatcherMod = ufoCatcher ? chunkReverse ? -0.5 : 0.5 : 1
 
-      for (let rowIndex = leftRow; rowIndex <= rightRow; rowIndex++) {
-        const row = rows[rowIndex]
-        if (!row.chunks.length) {
-          continue
+      if (arc.eventDescId && docData.eventDescs[arc.eventDescId]) {
+        if (docData.eventDescs[arc.eventDescId].labelText) {
+          labelText = docData.eventDescs[arc.eventDescId].labelText
         }
+      }
 
-        row.hasAnnotations = true
+      let shadowGroup: SVGTypeMapping<SVGGElement> | undefined
+      if (arc.shadowClass || arc.marked) {
+        shadowGroup = this.svg.group().addTo(arcGroup)
+      }
 
-        const fromIndex2R = rowIndex === leftRow ? fromIndex2 : row.heightsStart
-        const toIndex2R = rowIndex === rightRow ? toIndex2 : row.heightsEnd
-        if (this.collapseArcSpace) {
-          height = this.findArcHeight(fromIndex2R, toIndex2R, fragmentHeights)
-        }
+      // guess at the correct baseline shift to get vertical centering.
+      // (CSS dominant-baseline can't be used as not all SVG renders support it.)
+      const baselineShift = docData.sizes.arcs.height / 4
+      this.svg.plain(labelText)
+        .amove((from + to) / 2, -height + baselineShift)
+        .attr({
+          // 'fill': color,
+          fill: '#000000',
+          'data-arc-role': arc.type,
+          'data-arc-origin': arc.origin,
+          'data-arc-target': arc.target,
+          // TODO: confirm this is unused and remove.
+          // 'data-arc-id': arc.id,
+          'data-arc-ed': arc.eventDescId
+        })
+        .addTo(arcGroup)
 
-        const arcGroup = this.svg.group()
-          .attr('data-from', arc.origin)
-          .attr('data-to', arc.target)
-          .attr('data-id', arc.eventDescId)
-          .addTo(row.arcs)
+      const width = docData.sizes.arcs.widths[labelText]
+      const textBox = {
+        x: (from + to - width) / 2,
+        width,
+        y: -height - docData.sizes.arcs.height / 2,
+        height: docData.sizes.arcs.height
+      }
 
-        let from: number
-        if (rowIndex === leftRow) {
-          if (this.rtlmode) {
-            from = leftBox.x + (chunkReverse ? leftBox.width : 0)
-          } else {
-            from = leftBox.x + (chunkReverse ? 0 : leftBox.width)
-          }
-        } else {
-          from = this.rtlmode ? this.canvasWidth - 2 * Configuration.visual.margin.y - this.sentNumMargin : this.sentNumMargin
-        }
-
-        let to: number
-        if (rowIndex === rightRow) {
-          if (this.rtlmode) {
-            to = rightBox.x + (chunkReverse ? 0 : rightBox.width)
-          } else {
-            to = rightBox.x + (chunkReverse ? rightBox.width : 0)
-          }
-        } else {
-          to = this.rtlmode ? 0 : this.canvasWidth - 2 * Configuration.visual.margin.y
-        }
-
-        let adjustHeight = true
-        if (this.collapseArcs) {
-          let arcCacheKey = arc.type + ' ' + rowIndex + ' ' + from + ' ' + to
-          if (rowIndex === leftRow) { arcCacheKey = left.span.id + ' ' + arcCacheKey }
-          if (rowIndex === rightRow) { arcCacheKey += ' ' + right.span.id }
-          const rowHeight = arcCache[arcCacheKey]
-          if (rowHeight !== undefined) {
-            height = rowHeight
-            adjustHeight = false
-          } else {
-            arcCache[arcCacheKey] = height
-          }
-        }
-
-        if (this.collapseArcSpace && adjustHeight) {
-          this.adjustFragmentHeights(fromIndex2R, toIndex2R, fragmentHeights, height)
-
-          // Adjust the height to align with pixels when rendered
-          // TODO: on at least Chrome, this doesn't make a difference:
-          // the lines come out pixel-width even without it. Check.
-          height += 0.5
-        }
-
-        const originType = this.data.spans[arc.origin].type
-        const arcLabels = Util.getArcLabels(this.entityTypes, originType, arc.type, this.relationTypes)
-        let labelText = Util.arcDisplayForm(this.entityTypes, originType, arc.type, this.relationTypes)
-        // if (Configuration.abbrevsOn && !ufoCatcher && arcLabels) {
-        if (Configuration.abbrevsOn && arcLabels) {
-          let labelIdx = 1 // first abbreviation
-
-          // strictly speaking 2*arcSlant would be needed to allow for
-          // the full-width arcs to fit, but judged abbreviated text
-          // to be more important than the space for arcs.
-          const maxLength = (to - from) - (this.arcSlant)
-          while (this.data.sizes.arcs.widths[labelText] > maxLength && arcLabels[labelIdx]) {
-            labelText = arcLabels[labelIdx]
-            labelIdx++
-          }
-        }
-
-        if (arc.eventDescId && this.data.eventDescs[arc.eventDescId]) {
-          if (this.data.eventDescs[arc.eventDescId].labelText) {
-            labelText = this.data.eventDescs[arc.eventDescId].labelText
-          }
-        }
-
-        let shadowGroup: SVGTypeMapping<SVGGElement>
-        if (arc.shadowClass || arc.marked) {
-          shadowGroup = this.svg.group().addTo(arcGroup)
-        }
-
-        // guess at the correct baseline shift to get vertical centering.
-        // (CSS dominant-baseline can't be used as not all SVG renders support it.)
-        const baselineShift = this.data.sizes.arcs.height / 4
-        this.svg.plain(labelText)
-          .amove((from + to) / 2, -height + baselineShift)
+      if (arc.marked && shadowGroup) {
+        this.svg.rect()
+          .move(textBox.x - this.markedArcSize, textBox.y - this.markedArcSize)
+          .width(textBox.width + 2 * this.markedArcSize)
+          .height(textBox.height + 2 * this.markedArcSize)
           .attr({
-            // 'fill': color,
-            fill: '#000000',
-            'data-arc-role': arc.type,
-            'data-arc-origin': arc.origin,
-            'data-arc-target': arc.target,
-            // TODO: confirm this is unused and remove.
-            // 'data-arc-id': arc.id,
-            'data-arc-ed': arc.eventDescId
+            filter: 'url(#Gaussian_Blur)',
+            class: 'shadow_EditHighlight',
+            rx: this.markedArcSize,
+            ry: this.markedArcSize
+          })
+          .addTo(shadowGroup)
+      }
+
+      if (arc.shadowClass && shadowGroup) {
+        this.renderArcShadow(arc, shadowGroup, textBox)
+      }
+      let textStart = textBox.x
+      let textEnd = textBox.x + textBox.width
+
+      // adjust by margin for arc drawing
+      textStart -= Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
+      textEnd += Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
+
+      if (from > to) {
+        const tmp = textStart
+        textStart = textEnd
+        textEnd = tmp
+      }
+
+      if (this.roundCoordinates) {
+        // don't ask
+        height = (height | 0) + 0.5
+      }
+      if (height > row.maxArcHeight) { row.maxArcHeight = height }
+
+      let myArrowHead = (arcDesc && arcDesc.arrowHead)
+      let arrowName = (symmetric
+        ? myArrowHead || 'none'
+        : (leftToRight ? 'none' : myArrowHead || 'triangle,5')
+      ) + ',' + color
+      let arrowType = arrows[arrowName]
+      let arrowDecl = arrowType && ('url(#' + arrowType + ')')
+
+      let arrowAtLabelAdjust = 0
+      const labelArrowDecl = null
+      const myLabelArrowHead = (arcDesc && arcDesc.labelArrow)
+      if (myLabelArrowHead) {
+        const labelArrowName = (leftToRight
+          ? (symmetric && myLabelArrowHead) || 'none'
+          : myLabelArrowHead || 'triangle,5') + ',' + color
+        const labelArrowSplit = labelArrowName.split(',')
+        arrowAtLabelAdjust = (labelArrowSplit[0] !== 'none' && parseInt(labelArrowSplit[1], 10)) || 0
+        if (ufoCatcher) {
+          arrowAtLabelAdjust = -arrowAtLabelAdjust
+        }
+      }
+
+      const renderCurlyPath = (path: PathCommand[]) => {
+        this.svg.path(path)
+          .css('stroke', color)
+          .stroke({ dasharray: dashArray })
+          .attr({
+            'marker-start': labelArrowDecl,
+            'marker-end': arrowDecl
           })
           .addTo(arcGroup)
 
-        const width = this.data.sizes.arcs.widths[labelText]
-        const textBox = {
-          x: (from + to - width) / 2,
-          width,
-          y: -height - this.data.sizes.arcs.height / 2,
-          height: this.data.sizes.arcs.height
-        }
-
-        if (arc.marked) {
-          this.svg.rect()
-            .move(textBox.x - this.markedArcSize, textBox.y - this.markedArcSize)
-            .width(textBox.width + 2 * this.markedArcSize)
-            .height(textBox.height + 2 * this.markedArcSize)
-            .attr({
-              filter: 'url(#Gaussian_Blur)',
-              class: 'shadow_EditHighlight',
-              rx: this.markedArcSize,
-              ry: this.markedArcSize
+        if (arc.marked && shadowGroup) {
+          this.svg.path(path)
+            .addClass('shadow_EditHighlight_arc')
+            .stroke({
+              width: this.markedArcStroke,
+              dasharray: dashArray
             })
             .addTo(shadowGroup)
         }
 
-        if (arc.shadowClass) {
-          this.renderArcShadow(arc, shadowGroup, textBox)
-        }
-        let textStart = textBox.x
-        let textEnd = textBox.x + textBox.width
-
-        // adjust by margin for arc drawing
-        textStart -= Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
-        textEnd += Configuration.visual.arcTextMargin * (this.fontZoom / 100.0)
-
-        if (from > to) {
-          const tmp = textStart
-          textStart = textEnd
-          textEnd = tmp
-        }
-
-        if (this.roundCoordinates) {
-          // don't ask
-          height = (height | 0) + 0.5
-        }
-        if (height > row.maxArcHeight) { row.maxArcHeight = height }
-
-        let myArrowHead = (arcDesc && arcDesc.arrowHead)
-        let arrowName = (symmetric
-          ? myArrowHead || 'none'
-          : (leftToRight ? 'none' : myArrowHead || 'triangle,5')
-        ) + ',' + color
-        let arrowType = arrows[arrowName]
-        let arrowDecl = arrowType && ('url(#' + arrowType + ')')
-
-        let arrowAtLabelAdjust = 0
-        const labelArrowDecl = null
-        const myLabelArrowHead = (arcDesc && arcDesc.labelArrow)
-        if (myLabelArrowHead) {
-          const labelArrowName = (leftToRight
-            ? symmetric && myLabelArrowHead || 'none'
-            : myLabelArrowHead || 'triangle,5') + ',' + color
-          const labelArrowSplit = labelArrowName.split(',')
-          arrowAtLabelAdjust = labelArrowSplit[0] !== 'none' && parseInt(labelArrowSplit[1], 10) || 0
-          if (ufoCatcher) {
-            arrowAtLabelAdjust = -arrowAtLabelAdjust
-          }
-        }
-
-        const renderCurlyPath = (path: PathCommand[]) => {
+        if (arc.shadowClass && shadowGroup) {
           this.svg.path(path)
-            .css('stroke', color)
-            .stroke({ dasharray: dashArray })
-            .attr({
-              'marker-start': labelArrowDecl,
-              'marker-end': arrowDecl
+            .addClass(`shadow_${arc.shadowClass}`)
+            .stroke({
+              width: this.shadowStroke,
+              dasharray: dashArray
             })
-            .addTo(arcGroup)
-
-          if (arc.marked) {
-            this.svg.path(path)
-              .addClass('shadow_EditHighlight_arc')
-              .stroke({
-                width: this.markedArcStroke,
-                dasharray: dashArray
-              })
-              .addTo(shadowGroup)
-          }
-
-          if (arc.shadowClass) {
-            this.svg.path(path)
-              .addClass(`shadow_${arc.shadowClass}`)
-              .stroke({
-                width: this.shadowStroke,
-                dasharray: dashArray
-              })
-              .addTo(shadowGroup)
-          }
+            .addTo(shadowGroup)
         }
+      }
 
-        const arrowStart = textStart - arrowAtLabelAdjust
-        let path: PathCommand[] = [['M', arrowStart, -height]]
-        if (rowIndex === leftRow) {
-          let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
-          if (this.rtlmode) {
-            if (!ufoCatcher && cornerx < arrowStart + 1) {
-              cornerx = arrowStart + 1
-            }
-          } else {
-            if (!ufoCatcher && cornerx > arrowStart - 1) {
-              cornerx = arrowStart - 1
-            }
-          }
-
-          if (this.smoothArcCurves) {
-            let controlx: number
-            let endy: number
-            if (this.rtlmode) {
-              controlx = ufoCatcher
-                ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
-                : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
-              endy = leftBox.y + (leftToRight && !arc.equiv
-                ? Configuration.visual.margin.y
-                : leftBox.height / 2)
-            } else {
-              controlx = ufoCatcher
-                ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
-                : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
-              endy = leftBox.y + (leftToRight || arc.equiv
-                ? leftBox.height / 2
-                : Configuration.visual.margin.y)
-            }
-
-            // no curving for short lines covering short vertical
-            // distances, the arrowheads can go off (#925)
-            if (Math.abs(-height - endy) < 2 &&
-              Math.abs(cornerx - from) < 5) {
-              endy = -height
-            }
-            path.push(['L', cornerx, -height])
-            path.push(['Q', controlx, -height, from, endy])
-          } else {
-            path.push(['L', cornerx, -height])
-            path.push(['L', from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y)])
+      const arrowStart = textStart - arrowAtLabelAdjust
+      let path: PathCommand[] = [['M', arrowStart, -height]]
+      if (rowIndex === leftRow) {
+        let cornerx = from + (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
+        if (this.rtlmode) {
+          if (!ufoCatcher && cornerx < arrowStart + 1) {
+            cornerx = arrowStart + 1
           }
         } else {
-          path.push(['L', from, -height])
+          if (!ufoCatcher && cornerx > arrowStart - 1) {
+            cornerx = arrowStart - 1
+          }
         }
 
-        renderCurlyPath(path)
-
-        if (!symmetric) {
-          myArrowHead = (arcDesc && arcDesc.arrowHead)
-          arrowName = (leftToRight
-            ? myArrowHead || 'triangle,5'
-            : 'none') + ',' + color
-        }
-
-        arrowType = arrows[arrowName]
-        arrowDecl = arrowType && ('url(#' + arrowType + ')')
-
-        const arrowEnd = textEnd + arrowAtLabelAdjust
-        path = [['M', arrowEnd, -height]]
-        if (rowIndex === rightRow) {
-          let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
-
-          // TODO: duplicates above in part, make funcs
-          // for normal cases, should not be past textEnd even if narrow
+        if (this.smoothArcCurves) {
+          let controlx: number
+          let endy: number
           if (this.rtlmode) {
-            if (!ufoCatcher && cornerx > arrowEnd - 1) {
-              cornerx = arrowEnd - 1
-            }
+            controlx = ufoCatcher
+              ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
+              : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
+            endy = leftBox.y + (leftToRight && !arc.equiv
+              ? Configuration.visual.margin.y
+              : leftBox.height / 2)
           } else {
-            if (!ufoCatcher && cornerx < arrowEnd + 1) {
-              cornerx = arrowEnd + 1
-            }
+            controlx = ufoCatcher
+              ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
+              : this.smoothArcSteepness * from + (1 - this.smoothArcSteepness) * cornerx
+            endy = leftBox.y + (leftToRight || arc.equiv
+              ? leftBox.height / 2
+              : Configuration.visual.margin.y)
           }
 
-          if (this.smoothArcCurves) {
-            let controlx: number
-            let endy: number
-            if (this.rtlmode) {
-              controlx = ufoCatcher
-                ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
-                : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
-              endy = rightBox.y + (leftToRight && !arc.equiv
-                ? Configuration.visual.margin.y
-                : rightBox.height / 2)
-            } else {
-              controlx = ufoCatcher
-                ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
-                : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
-              endy = rightBox.y + (leftToRight && !arc.equiv
-                ? Configuration.visual.margin.y
-                : rightBox.height / 2)
-            }
+          // no curving for short lines covering short vertical
+          // distances, the arrowheads can go off (#925)
+          if (Math.abs(-height - endy) < 2 &&
+            Math.abs(cornerx - from) < 5) {
+            endy = -height
+          }
+          path.push(['L', cornerx, -height])
+          path.push(['Q', controlx, -height, from, endy])
+        } else {
+          path.push(['L', cornerx, -height])
+          path.push(['L', from, leftBox.y + (leftToRight || arc.equiv ? leftBox.height / 2 : Configuration.visual.margin.y)])
+        }
+      } else {
+        path.push(['L', from, -height])
+      }
 
-            // no curving for short lines covering short vertical
-            // distances, the arrowheads can go off (#925)
-            if (Math.abs(-height - endy) < 2 &&
-              Math.abs(cornerx - to) < 5) {
-              endy = -height
-            }
+      renderCurlyPath(path)
 
-            path.push(['L', cornerx, -height])
-            path.push(['Q', controlx, -height, to, endy])
-          } else {
-            path.push(['L', cornerx, -height])
-            path.push(['L', to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2)])
+      if (!symmetric) {
+        myArrowHead = (arcDesc && arcDesc.arrowHead)
+        arrowName = (leftToRight
+          ? myArrowHead || 'triangle,5'
+          : 'none') + ',' + color
+      }
+
+      arrowType = arrows[arrowName]
+      arrowDecl = arrowType && ('url(#' + arrowType + ')')
+
+      const arrowEnd = textEnd + arrowAtLabelAdjust
+      path = [['M', arrowEnd, -height]]
+      if (rowIndex === rightRow) {
+        let cornerx = to - (this.rtlmode ? -1 : 1) * ufoCatcherMod * this.arcSlant
+
+        // TODO: duplicates above in part, make funcs
+        // for normal cases, should not be past textEnd even if narrow
+        if (this.rtlmode) {
+          if (!ufoCatcher && cornerx > arrowEnd - 1) {
+            cornerx = arrowEnd - 1
           }
         } else {
-          path.push(['L', to, -height])
+          if (!ufoCatcher && cornerx < arrowEnd + 1) {
+            cornerx = arrowEnd + 1
+          }
         }
 
-        renderCurlyPath(path)
-      } // arc rows
-    }) // arcs
+        if (this.smoothArcCurves) {
+          let controlx: number
+          let endy: number
+          if (this.rtlmode) {
+            controlx = ufoCatcher
+              ? cornerx + 2 * ufoCatcherMod * this.reverseArcControlx
+              : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
+            endy = rightBox.y + (leftToRight && !arc.equiv
+              ? Configuration.visual.margin.y
+              : rightBox.height / 2)
+          } else {
+            controlx = ufoCatcher
+              ? cornerx - 2 * ufoCatcherMod * this.reverseArcControlx
+              : this.smoothArcSteepness * to + (1 - this.smoothArcSteepness) * cornerx
+            endy = rightBox.y + (leftToRight && !arc.equiv
+              ? Configuration.visual.margin.y
+              : rightBox.height / 2)
+          }
+
+          // no curving for short lines covering short vertical
+          // distances, the arrowheads can go off (#925)
+          if (Math.abs(-height - endy) < 2 &&
+            Math.abs(cornerx - to) < 5) {
+            endy = -height
+          }
+
+          path.push(['L', cornerx, -height])
+          path.push(['Q', controlx, -height, to, endy])
+        } else {
+          path.push(['L', cornerx, -height])
+          path.push(['L', to, rightBox.y + (leftToRight && !arc.equiv ? Configuration.visual.margin.y : rightBox.height / 2)])
+        }
+      } else {
+        path.push(['L', to, -height])
+      }
+
+      renderCurlyPath(path)
+    } // arc rows
   }
 
-  renderFragmentConnectors (rows) {
-    for (const span of Object.values(this.data.spans)) {
+  renderFragmentConnectors (docData: DocumentData, rows: Row[]) {
+    for (const span of Object.values(docData.spans)) {
       const numConnectors = span.fragments.length - 1
       for (let connectorNo = 0; connectorNo < numConnectors; connectorNo++) {
         const left = span.fragments[connectorNo]
@@ -2985,7 +2988,7 @@ export class Visualizer {
   /**
    * @return {number} how much the actual horizontal space required extends over the allocated space
    */
-  renderResizeSvg (y: number, textGroup: SVGTypeMapping<SVGGElement>, maxTextWidth: number): number {
+  renderResizeSvg (docData: DocumentData, y: number, textGroup: SVGTypeMapping<SVGGElement>, maxTextWidth: number): number {
     // resize the SVG
     let width = maxTextWidth + this.sentNumMargin + 2 * Configuration.visual.margin.x + 1
 
@@ -2995,7 +2998,7 @@ export class Visualizer {
     textGroup.children().filter(e => e.hasClass('text-row')).map(textRow => {
       // const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
       const rowFinalSpacing = textRow.children().filter(e => e.hasClass('row-final'))[0]
-      const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev().node.textContent]
+      const lastChunkWidth = docData.sizes.texts.widths[rowFinalSpacing.prev().node.textContent]
       const lastChunkOffset = parseFloat(rowFinalSpacing.prev().node.getAttribute('x'))
       if (this.rtlmode) {
         // Not sure what to calculate here
@@ -3028,7 +3031,7 @@ export class Visualizer {
     return oversized
   }
 
-  renderRows (rows: Row[], sentNumGroup: SVGTypeMapping<SVGGElement>, backgroundGroup: SVGTypeMapping<SVGGElement>): number {
+  renderRows (docData: DocumentData, rows: Row[], sentNumGroup: SVGTypeMapping<SVGGElement>, backgroundGroup: SVGTypeMapping<SVGGElement>): number {
     // position the rows
     let y = Configuration.visual.margin.y
     let currentSent = 0
@@ -3041,13 +3044,13 @@ export class Visualizer {
         currentSent = row.sentence
       }
 
-      this.renderRowBackground(backgroundGroup, row, y, currentSent)
+      this.renderRowBackground(docData, backgroundGroup, row, y, currentSent)
 
       y += row.boxHeight
-      y += this.data.sizes.texts.height
+      y += docData.sizes.texts.height
       row.textY = y - this.rowPadding
 
-      this.renderRowNumber(sentNumGroup, row, y)
+      this.renderRowNumber(docData, sentNumGroup, row, y)
 
       let rowY = y - this.rowPadding
       if (this.roundCoordinates) {
@@ -3063,7 +3066,7 @@ export class Visualizer {
     return y
   }
 
-  renderRowBackground (backgroundGroup: SVGTypeMapping<SVGGElement>, row: Row, y: number, currentSent: number) {
+  renderRowBackground (docData: DocumentData, backgroundGroup: SVGTypeMapping<SVGGElement>, row: Row, y: number, currentSent: number) {
     let bgClass: string
     if (Configuration.textBackgrounds === 'striped') {
       // give every other sentence a different bg class
@@ -3073,13 +3076,13 @@ export class Visualizer {
       bgClass = 'background0'
     }
 
-    const textSizes = this.data.sizes.texts
+    const textSizes = docData.sizes.texts
     this.svg.rect(this.canvasWidth, row.boxHeight + textSizes.height + 1)
       .move(0, y + textSizes.y + textSizes.height)
       .addClass(bgClass)
       .addTo(backgroundGroup)
 
-    if (row.sentence && this.data.markedSent[currentSent]) {
+    if (row.sentence && docData.markedSent[currentSent]) {
       this.svg.rect()
         .move(this.rtlmode ? this.canvasWidth - this.sentNumMargin : 0, y + textSizes.y + textSizes.height)
         .width(this.sentNumMargin)
@@ -3089,7 +3092,7 @@ export class Visualizer {
     }
   }
 
-  renderRowNumber (sentNumGroup: SVGTypeMapping<SVGGElement>, row: Row, y: number) {
+  renderRowNumber (docData: DocumentData, sentNumGroup: SVGTypeMapping<SVGGElement>, row: Row, y: number) {
     if (row.sentence) {
       // Render sentence number as link
       let textX: number
@@ -3107,7 +3110,7 @@ export class Visualizer {
       text.node.setAttribute('y', `${y - this.rowPadding}`)
       text.addTo(sentNumGroup)
 
-      const sentComment = this.data.sentComment[row.sentence]
+      const sentComment = docData.sentComment[row.sentence]
       if (sentComment) {
         const box = text.rbox(sentNumGroup)
         // TODO: using rectShadowSize, but this shadow should probably have its own setting for shadow size
@@ -3133,11 +3136,10 @@ export class Visualizer {
   }
 
   renderAdjustLayoutForScriptDirection (oversized, rows: Row[], textGroup: SVGTypeMapping<SVGGElement>, sentNumGroup: SVGTypeMapping<SVGGElement>) {
-    if (oversized <= 0) {
-      return
-    }
+    if (oversized <= 0) return
 
     const scrollable = findClosestHorizontalScrollable($(this.svg.node))
+
     if (this.rtlmode) {
       rows.map(row => this.fastTranslate(row, oversized, row.translation.y))
 
@@ -3155,18 +3157,12 @@ export class Visualizer {
     }
   }
 
-  /**
-   * @param backgroundGroup
-   */
   renderAdjustBackgroundsForOversize (oversized: number, backgroundGroup: SVGTypeMapping<SVGGElement>) {
-    if (oversized <= 0) {
-      return
-    }
+    if (oversized <= 0) return
 
     // Allow some extra space for arcs
     backgroundGroup.width(this.canvasWidth)
-    // $(backgroundGroup).attr('width', this.canvasWidth);
-    backgroundGroup.children().map(element => {
+    for (const element of backgroundGroup.children()) {
       // We render the backgroundHighlight only in the margin, so we have to translate
       // it instead of transforming it.
 
@@ -3177,16 +3173,16 @@ export class Visualizer {
       } else {
         element.width(this.canvasWidth)
       }
-    })
+    }
   }
 
-  renderAdjustLayoutRowSpacing (textGroup: SVGTypeMapping<SVGGElement>) {
+  renderAdjustLayoutRowSpacing (docData: DocumentData, textGroup: SVGTypeMapping<SVGGElement>) {
     // Go through each row and adjust the row-initial and row-final spacing
-    textGroup.children().filter(c => c.hasClass('text-row')).map(textRow => {
+    for (const textRow of textGroup.children().filter(c => c.hasClass('text-row'))) {
       const rowInitialSpacing = textRow.children().filter(c => c.hasClass('row-initial'))[0]
       const rowFinalSpacing = textRow.children().filter(c => c.hasClass('row-final'))[0]
-      // const firstChunkWidth = this.data.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
-      const lastChunkWidth = this.data.sizes.texts.widths[rowFinalSpacing.prev().node.textContent]
+      // const firstChunkWidth = docData.sizes.texts.widths[rowInitialSpacing.next()[0].textContent];
+      const lastChunkWidth = docData.sizes.texts.widths[rowFinalSpacing.prev().node.textContent]
       const lastChunkOffset = parseFloat(rowFinalSpacing.prev().node.getAttribute('x'))
 
       if (this.rtlmode) {
@@ -3210,10 +3206,10 @@ export class Visualizer {
         rowFinalSpacing.attr('x', finalSpacingX) // Faster than x() which calls bbox()
         rowFinalSpacing.attr('textLength', finalSpacingWidth)
       }
-    })
+    }
   }
 
-  renderAdjustLayoutInterRowSpacers (y: number, textGroup: SVGTypeMapping<SVGGElement>) {
+  renderAdjustLayoutInterRowSpacers (docData: DocumentData, y: number, textGroup: SVGTypeMapping<SVGGElement>) {
     // Go through each row and add an unselectable spacer between this row and the next row
     // While the space is unselectable, it will still help in guiding the browser into which
     // direction the selection should in principle go and thus avoids jumpyness.
@@ -3222,7 +3218,7 @@ export class Visualizer {
     const textRows = $(textGroup.node).children('.text-row')
     textRows.each((rowIndex, textRow) => {
       const rowRect = {
-        y: parseFloat($(textRow).children()[0].getAttribute('y')) + 2, height: this.data.sizes.texts.height
+        y: parseFloat($(textRow).children()[0].getAttribute('y')) + 2, height: docData.sizes.texts.height
       }
       const spaceHeight = rowRect.y - (prevRowRect.y + rowRect.height) + 2
 
@@ -3248,133 +3244,141 @@ export class Visualizer {
   /**
    * @param {SourceData} sourceData
    */
-  renderDataReal (sourceData: SourceData) {
-    Util.profileEnd('before render')
-    Util.profileStart('render')
+  renderDataReal (sourceData?: SourceData) {
+    try {
+      Util.profileEnd('before render')
+      Util.profileStart('render')
+      this.dispatcher.post('startedRendering', [this.args])
 
-    if (!sourceData && !this.data) {
-      this.dispatcher.post('doneRendering', [this.args])
-      return
-    }
+      if (!sourceData && !this.data) {
+        this.dispatcher.post('doneRendering', [this.args])
+        return
+      }
 
-    this.svgContainer.style.visibility = 'visible'
-    if (this.drawing) {
-      this.redraw = true
-      this.dispatcher.post('doneRendering', [this.args])
-      return
-    }
+      this.svgContainer.style.visibility = 'visible'
+      if (this.drawing) {
+        this.redraw = true
+        this.dispatcher.post('doneRendering', [this.args])
+        return
+      }
 
-    this.redraw = false
-    this.drawing = true
-
-    if (sourceData) {
-      this.setData(sourceData)
-    }
-
-    this.svg.clear()
-    this.svg.attr('direction', null)
-
-    if (!this.data) {
-      return
-    }
-
-    Util.profileStart('init')
-    if (this.rtlmode) {
-      this.svg.attr('direction', 'rtl')
-    }
-
-    this.svg.attr('style', `font-size: ${this.fontZoom}%;`)
-    this.sentNumMargin = 40 * (this.fontZoom / 100.0)
-
-    const scrollable = findClosestVerticalScrollable($(this.svg.node))
-    const svgWidth = $(this.svgContainer).width()
-    this.baseCanvasWidth = svgWidth
-    this.canvasWidth = svgWidth - (!scrollable ? scrollbarWidth() : 0)
-
-    this.addHeaderAndDefs()
-
-    const backgroundGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
-      .addClass('background')
-      .attr('pointer-events', 'none')
-
-    const sentNumGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
-      .addClass('sentnum').addClass('unselectable')
-
-    this.highlightGroup = this.svg.group().addClass('highlight')
-
-    const textGroup: SVGTypeMapping<SVGGElement> = this.svg.group().addClass('text')
-    Util.profileEnd('init')
-
-    Util.profileStart('measures')
-    this.data.sizes = this.calculateTextMeasurements()
-    this.adjustTowerAnnotationSizes()
-    const maxTextWidth = this.calculateMaxTextWidth(this.data.sizes)
-    Util.profileEnd('measures')
-
-    Util.profileStart('chunks')
-    this.renderLayoutFloorsAndCurlies(this.data.spanDrawOrderPermutation)
-    const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(sourceData, this.data.chunks, maxTextWidth)
-    Util.profileEnd('chunks')
-
-    Util.profileStart('arcsPrep')
-    this.renderBumpFragmentHeightsMinimumToArcStartHeight(fragmentHeights)
-    this.renderCalculateArcJumpHeight(fragmentHeights)
-    this.renderSortArcs()
-    this.renderAssignFragmentsToRows(rows, fragmentHeights)
-    Util.profileEnd('arcsPrep')
-
-    Util.profileStart('arcsPrep')
-    this.renderArcs(rows, fragmentHeights)
-    Util.profileEnd('arcs')
-
-    Util.profileStart('fragmentConnectors')
-    this.renderFragmentConnectors(rows)
-    Util.profileEnd('fragmentConnectors')
-
-    Util.profileStart('rows')
-    const y = this.renderRows(rows, sentNumGroup, backgroundGroup)
-    Util.profileEnd('rows')
-
-    Util.profileStart('chunkFinish')
-    this.renderChunksPass2(textGroup, textMarkedRows)
-    Util.profileEnd('chunkFinish')
-
-    Util.profileStart('finish')
-
-    Util.profileStart('adjust margin')
-    this.renderAdjustMargin(y, sentNumGroup)
-    Util.profileEnd('adjust margin')
-
-    Util.profileStart('resize SVG')
-    const oversized = this.renderResizeSvg(y, textGroup, maxTextWidth)
-    Util.profileEnd('resize SVG')
-
-    Util.profileStart('adjust for oversize depending on script')
-    this.renderAdjustLayoutForScriptDirection(oversized, rows, textGroup, sentNumGroup)
-    Util.profileEnd('adjust for oversize depending on script')
-
-    Util.profileStart('adjust backgrounds')
-    this.renderAdjustBackgroundsForOversize(oversized, backgroundGroup)
-    Util.profileEnd('adjust backgrounds')
-
-    Util.profileStart('row-spacing-adjust')
-    this.renderAdjustLayoutRowSpacing(textGroup)
-    Util.profileEnd('row-spacing-adjust')
-
-    Util.profileStart('inter-row space')
-    this.renderAdjustLayoutInterRowSpacers(y, textGroup)
-    Util.profileEnd('inter-row space')
-
-    Util.profileEnd('finish')
-    Util.profileEnd('render')
-    Util.profileReport()
-
-    this.drawing = false
-    if (this.redraw) {
       this.redraw = false
-    }
+      this.drawing = true
 
-    this.dispatcher.post('doneRendering', [this.args])
+      if (sourceData) {
+        this.setData(sourceData)
+      }
+
+      this.svg.clear()
+      this.svg.attr('direction', null)
+
+      if (!this.data || !this.sourceData) {
+        return
+      }
+
+      Util.profileStart('init')
+      if (this.rtlmode) {
+        this.svg.attr('direction', 'rtl')
+      }
+
+      this.svg.attr('style', `font-size: ${this.fontZoom}%;`)
+      this.sentNumMargin = 40 * (this.fontZoom / 100.0)
+
+      const scrollable = findClosestVerticalScrollable($(this.svg.node))
+      const svgWidth = $(this.svgContainer).width()
+      this.baseCanvasWidth = svgWidth
+      this.canvasWidth = svgWidth - (!scrollable ? scrollbarWidth() : 0)
+
+      this.addHeaderAndDefs()
+
+      const backgroundGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
+        .addClass('background')
+        .attr('pointer-events', 'none')
+
+      const sentNumGroup: SVGTypeMapping<SVGGElement> = this.svg.group()
+        .addClass('sentnum').addClass('unselectable')
+
+      this.highlightGroup = this.svg.group().addClass('highlight')
+
+      const textGroup: SVGTypeMapping<SVGGElement> = this.svg.group().addClass('text')
+      Util.profileEnd('init')
+
+      Util.profileStart('measures')
+      this.data.sizes = this.calculateTextMeasurements()
+      this.adjustTowerAnnotationSizes()
+      const maxTextWidth = this.calculateMaxTextWidth(this.data.sizes)
+      Util.profileEnd('measures')
+
+      Util.profileStart('chunks')
+      this.renderLayoutFloorsAndCurlies(this.data.spanDrawOrderPermutation)
+      const [rows, fragmentHeights, textMarkedRows] = this.renderChunks(this.sourceData, this.data.chunks, maxTextWidth)
+      Util.profileEnd('chunks')
+
+      Util.profileStart('arcsPrep')
+      this.renderBumpFragmentHeightsMinimumToArcStartHeight(fragmentHeights)
+      this.renderCalculateArcJumpHeight(this.data, fragmentHeights)
+      this.renderSortArcs(this.data)
+      this.renderAssignFragmentsToRows(rows, fragmentHeights)
+      Util.profileEnd('arcsPrep')
+
+      Util.profileStart('arcsPrep')
+      this.renderArcs(this.data, rows, fragmentHeights)
+      Util.profileEnd('arcs')
+
+      Util.profileStart('fragmentConnectors')
+      this.renderFragmentConnectors(this.data, rows)
+      Util.profileEnd('fragmentConnectors')
+
+      Util.profileStart('rows')
+      const y = this.renderRows(this.data, rows, sentNumGroup, backgroundGroup)
+      Util.profileEnd('rows')
+
+      Util.profileStart('chunkFinish')
+      this.renderChunksPass2(this.data, textGroup, textMarkedRows)
+      Util.profileEnd('chunkFinish')
+
+      Util.profileStart('finish')
+
+      Util.profileStart('adjust margin')
+      this.renderAdjustMargin(y, sentNumGroup)
+      Util.profileEnd('adjust margin')
+
+      Util.profileStart('resize SVG')
+      const oversized = this.renderResizeSvg(this.data, y, textGroup, maxTextWidth)
+      Util.profileEnd('resize SVG')
+
+      Util.profileStart('adjust for oversize depending on script')
+      this.renderAdjustLayoutForScriptDirection(oversized, rows, textGroup, sentNumGroup)
+      Util.profileEnd('adjust for oversize depending on script')
+
+      Util.profileStart('adjust backgrounds')
+      this.renderAdjustBackgroundsForOversize(oversized, backgroundGroup)
+      Util.profileEnd('adjust backgrounds')
+
+      Util.profileStart('row-spacing-adjust')
+      this.renderAdjustLayoutRowSpacing(this.data, textGroup)
+      Util.profileEnd('row-spacing-adjust')
+
+      Util.profileStart('inter-row space')
+      this.renderAdjustLayoutInterRowSpacers(this.data, y, textGroup)
+      Util.profileEnd('inter-row space')
+
+      Util.profileEnd('finish')
+      Util.profileEnd('render')
+      Util.profileReport()
+
+      this.drawing = false
+      if (this.redraw) {
+        this.redraw = false
+      }
+
+      this.dispatcher.post('doneRendering', [this.args])
+    } catch (e) {
+    // We are sure not to be drawing anymore, reset the state
+      this.drawing = false
+      console.error('Rendering terminated due to: ' + e, e.stack)
+      this.dispatcher.post('renderError: Fatal', [sourceData, e])
+    }
   }
 
   private renderAdjustMargin (y: number, sentNumGroup: SVGTypeMapping<SVGGElement>) {
@@ -3392,7 +3396,7 @@ export class Visualizer {
   /**
    * @param {SourceData} sourceData
    */
-  renderData (sourceData: SourceData) {
+  renderData (sourceData?: SourceData) {
     Util.profileEnd('invoke getDocument')
 
     // Fill in default values that don't necessarily go over the protocol
@@ -3400,18 +3404,7 @@ export class Visualizer {
       setSourceDataDefaults(sourceData)
     }
 
-    this.dispatcher.post('startedRendering', [this.args])
-
-    setTimeout(() => {
-      try {
-        this.renderDataReal(sourceData)
-      } catch (e) {
-        // We are sure not to be drawing anymore, reset the state
-        this.drawing = false
-        console.error('Rendering terminated due to: ' + e, e.stack)
-        this.dispatcher.post('renderError: Fatal', [sourceData, e])
-      }
-    }, 0)
+    setTimeout(() => { this.renderDataReal(sourceData) }, 0)
   }
 
   /**
@@ -3419,23 +3412,11 @@ export class Visualizer {
    * due to a partial update from the server.
    */
   rerender () {
-    this.dispatcher.post('startedRendering', [this.args])
-
-    try {
-      this.renderDataReal(this.sourceData)
-    } catch (e) {
-      // We are sure not to be drawing anymore, reset the state
-      this.drawing = false
-      // TODO: Hook printout into dispatch elsewhere?
-      console.warn('Rendering terminated due to: ' + e, e.stack)
-      this.dispatcher.post('renderError: Fatal', [this.sourceData, e])
-    }
+    this.renderDataReal(this.sourceData)
   }
 
   /**
    * Differential updates for brat view.
-   *
-   * @param {*} patchData
    */
   renderDataPatch (patchData: ReadonlyArray<Operation>) {
     Util.profileEnd('invoke getDocument')
@@ -3445,9 +3426,7 @@ export class Visualizer {
 
   renderDocument () {
     Util.profileStart('invoke getDocument')
-    this.dispatcher.post('ajax', [
-      { action: 'getDocument' },
-      'renderData'])
+    this.dispatcher.post('ajax', [{ action: 'getDocument' }, 'renderData'])
   }
 
   triggerRender () {
@@ -3504,22 +3483,7 @@ export class Visualizer {
 
     if (span.hidden) { return }
 
-    const spanDesc = this.entityTypes[span.type]
-    const bgColor = span.color || ((spanDesc && spanDesc.bgColor) || '#ffffff')
-
-    this.highlight = []
-    span.fragments.map(fragment => {
-      const highlightBox = this.svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
-        .translate(fragment.highlightPos.x, fragment.highlightPos.y)
-        .fill(bgColor)
-        .opacity(0.75)
-        .attr({
-          rx: this.highlightRounding.x,
-          ry: this.highlightRounding.y
-        })
-        .addTo(this.highlightGroup)
-      this.highlight.push(highlightBox)
-    })
+    this.renderHighlightBoxes(span)
 
     if (this.arcDragOrigin) {
       target.parent().addClass('highlight')
@@ -3534,7 +3498,9 @@ export class Visualizer {
       if (arc.equiv) {
         equivs[arc.eventDescId.substr(0, arc.eventDescId.indexOf('*', 2) + 1)] = true
         const eventDesc = this.data.eventDescs[arc.eventDescId]
-        $.each(eventDesc.leftSpans.concat(eventDesc.rightSpans), (ospanId, ospan) => spans[ospan] = true)
+        for (const ospan of eventDesc.leftSpans.concat(eventDesc.rightSpans)) {
+          spans[ospan] = true
+        }
       } else {
         spans[arc.origin] = true
       }
@@ -3559,6 +3525,29 @@ export class Visualizer {
         .find(spanIds.join(', '))
         .map(e => e.parent().addClass('highlight'))
     }
+  }
+
+  private renderHighlightBoxes (span: Entity) {
+    const spanDesc = this.entityTypes[span.type]
+    const bgColor = span.color || ((spanDesc && spanDesc.bgColor) || '#ffffff')
+
+    this.highlight = []
+    for (const fragment of span.fragments) {
+      this.renderHighlightBox(fragment, bgColor)
+    }
+  }
+
+  private renderHighlightBox (fragment: Fragment, bgColor: string) {
+    const highlightBox = this.svg.rect(fragment.highlightPos.w, fragment.highlightPos.h)
+      .translate(fragment.highlightPos.x, fragment.highlightPos.y)
+      .fill(bgColor)
+      .opacity(0.75)
+      .attr({
+        rx: this.highlightRounding.x,
+        ry: this.highlightRounding.y
+      })
+      .addTo(this.highlightGroup)
+    this.highlight.push(highlightBox)
   }
 
   onMouseOverArc (evt: MouseEvent) {
@@ -3596,7 +3585,7 @@ export class Visualizer {
 
     const originSpanType = this.data.spans[originSpanId].type || ''
     const targetSpanType = this.data.spans[targetSpanId].type || ''
-    let normalizations : Array<[string, string, string]> = []
+    let normalizations : Array<[string?, string?, string?]> = []
     if (arcId) {
       normalizations = this.data.arcById[arcId].normalizations
     }
@@ -3633,34 +3622,41 @@ export class Visualizer {
   }
 
   onMouseOver (evt: MouseEvent) {
-    const target = $(evt.target)
-    if (target.attr('data-span-id')) {
+    if (!(evt.target instanceof Element)) return
+
+    const target = evt.target
+    if (target.getAttribute('data-span-id')) {
       this.onMouseOverSpan(evt)
       return
     }
 
-    if (!this.arcDragOrigin && target.attr('data-arc-role')) {
+    if (!this.arcDragOrigin && target.getAttribute('data-arc-role')) {
       this.onMouseOverArc(evt)
       return
     }
 
-    if (target.attr('data-sent')) {
+    if (target.getAttribute('data-sent')) {
       this.onMouseOverSentence(evt)
     }
   }
 
   onMouseOut (evt: MouseEvent) {
-    const target = $(evt.target)
-    target.removeClass('badTarget')
+    if (!(evt.target instanceof Element)) return
+
+    const target = evt.target
+    target.classList.remove('badTarget')
     this.dispatcher.post('hideComment')
 
     if (this.highlight) {
       this.highlight.map(h => h.remove())
-      this.highlight = undefined
+      this.highlight = []
+    }
+
+    if (this.highlightArcs) {
+      this.highlightArcs.removeClass('highlight')
     }
 
     if (this.highlightSpans) {
-      this.highlightArcs.removeClass('highlight')
       this.highlightSpans.removeClass('highlight')
       this.highlightSpans = undefined
     }
@@ -3706,7 +3702,7 @@ export class Visualizer {
     this.dispatcher.post('configurationChanged')
   }
 
-  setSvgWidth (_width) {
+  setSvgWidth (_width: string) {
     this.svg.attr('width', `${_width}`)
     if (Configuration.svgWidth !== _width) {
       Configuration.svgWidth = _width
@@ -3715,7 +3711,7 @@ export class Visualizer {
   }
 
   // register event listeners
-  registerHandlers (element, events : Message[]) {
+  registerHandlers (element: JQuery, events : Message[]) {
     for (const eventName of events) {
       element.bind(eventName, (evt) => this.dispatcher.post(eventName, [evt], 'all'))
     }
@@ -3751,8 +3747,8 @@ export class Visualizer {
     return processed
   }
 
-  loadRelationTypes (relationTypes) {
-    $.each(relationTypes, (relTypeNo, relType) => {
+  loadRelationTypes (relationTypes: RelationTypeDto[]) {
+    for (const relType of relationTypes) {
       if (relType) {
         this.relationTypes[relType.type] = relType
         const children = relType.children
@@ -3760,25 +3756,22 @@ export class Visualizer {
           this.loadRelationTypes(children)
         }
       }
-    })
+    }
   }
 
   collectionLoaded (response: CollectionLoadedResponse) {
     setCollectionDefaults(response)
-    this.eventAttributeTypes = this.loadAttributeTypes(response.event_attribute_types)
-    this.entityAttributeTypes = this.loadAttributeTypes(response.entity_attribute_types)
+    // INCEpTION does not use event attributes and entity attributes
+    // this.eventAttributeTypes = this.loadAttributeTypes(response.event_attribute_types)
+    // this.entityAttributeTypes = this.loadAttributeTypes(response.entity_attribute_types)
 
     this.entityTypes = {}
     this.loadSpanTypes(response.entity_types)
+    // INCEpTION does not use events
     // this.loadSpanTypes(response.event_types)
-    // this.loadSpanTypes(response.unconfigured_types)
 
     this.relationTypes = {}
     this.loadRelationTypes(response.relation_types)
-    // this.loadRelationTypes(response.unconfigured_types)
-    // TODO XXX: isn't the following completely redundant with
-    // loadRelationTypes?
-    $.each(response.relation_types, (relTypeNo, relType) => this.relationTypes[relType.type] = relType)
 
     const arcBundle = (response.visual_options || {}).arc_bundle || 'none'
     this.collapseArcs = arcBundle === 'all'

@@ -143,6 +143,7 @@ export type RelationTypeDto = {
   labelArrow: string; // deprecated? not supported server-side
   args; // Absolutely no clue; deprecated? not supported server-side
   properties: RelationProperties; // deprecated? not supported server-side
+  children: RelationTypeDto[] // deprecated? not supported server-side
 }
 
 /**

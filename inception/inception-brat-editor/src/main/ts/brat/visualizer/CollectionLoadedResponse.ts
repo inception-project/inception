@@ -38,35 +38,18 @@
  * SOFTWARE.
  */
 
+import { EntityTypeDto, RelationTypeDto } from '../protocol/Protocol'
 import { VisualOptions } from './VisualOptions'
-
-export interface RelationType {
-  type: string
-  color: string
-  arrowHead: string
-  targets: string
-  dashArray: string
-}
-
-export interface EntityType {
-  name: string
-  type: string
-  fgColor: string
-  bgColor: string
-  borderColor: string
-  labels: string[]
-  arcs: RelationType[]
-}
 
 /**
  * Class currently defined only for documentation purposes
  */
 export interface CollectionLoadedResponse {
-  entity_types: EntityType[]
+  entity_types: EntityTypeDto[]
+  // server currently does not send this, rel types are in the arcs properties of the entity types
+  relation_types: RelationTypeDto[]
   visual_options: VisualOptions
   // event_attribute_types
   // entity_attribute_types
   // event_types
-  // unconfigured_types
-  // relation_types
 }

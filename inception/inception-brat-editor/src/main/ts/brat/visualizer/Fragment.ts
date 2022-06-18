@@ -51,7 +51,7 @@ export class Fragment {
   rectBox: RectBox = undefined
   text : string = undefined
   chunk: Chunk = undefined
-  indexNumber = undefined
+  indexNumber : number = undefined
   drawOrder: number = undefined
   towerId : number = undefined
   curly: { from: number, to: number } = undefined
