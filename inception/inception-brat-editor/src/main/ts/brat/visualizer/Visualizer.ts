@@ -808,7 +808,7 @@ export class Visualizer {
    * @param {Fragment[]} sortedFragments
    * @return {Chunk[]}
    */
-  buildChunksFromTokenOffsets (tokenOffsets: number[][], sortedFragments: Fragment[]): Chunk[] {
+  buildChunksFromTokenOffsets (docData: DocumentData, tokenOffsets: number[][], sortedFragments: Fragment[]): Chunk[] {
     if (!tokenOffsets) {
       return []
     }
@@ -817,10 +817,10 @@ export class Visualizer {
     let startFragmentId = 0
     const numFragments = sortedFragments.length
     let lastTo = 0
-    let firstFrom = null
+    let firstFrom : number
     let chunkNo = 0
-    let space
-    let chunk = null
+    let space : string
+    let chunk : Chunk
     const chunks = []
 
     tokenOffsets.map(offset => {
@@ -846,8 +846,8 @@ export class Visualizer {
       }
 
       // otherwise, create the chunk found so far
-      space = this.data.text.substring(lastTo, firstFrom)
-      const text = this.data.text.substring(firstFrom, to)
+      space = docData.text.substring(lastTo, firstFrom)
+      const text = docData.text.substring(firstFrom, to)
       if (chunk) {
         chunk.nextSpace = space
       }
@@ -876,7 +876,7 @@ export class Visualizer {
       const to = offset[1]
 
       // Skip all chunks that belonged to the previous sentence
-      let chunk : Chunk
+      let chunk : Chunk | undefined
       while (chunkNo < numChunks && (chunk = chunks[chunkNo]).from < from) {
         chunkNo++
       }
@@ -893,28 +893,28 @@ export class Visualizer {
       }
 
       sentenceNo++
-      chunk.sentence = sentenceNo
+      if (chunk) chunk.sentence = sentenceNo
       // console.trace("ASSIGN: line break ", sentenceNo ," at ", chunk);
       // increase chunkNo counter for next seek iteration
       chunkNo++
     }
   }
 
-  assignFragmentsToChunks (sortedFragments: Fragment[]) {
+  assignFragmentsToChunks (chunks: Chunk[], sortedFragments: Fragment[]) {
     if (!sortedFragments) {
       return
     }
 
     let currentChunkId = 0
-    let chunk
-    sortedFragments.map((fragment: Fragment) => {
-      while (fragment.to > (chunk = this.data.chunks[currentChunkId]).to) {
+    let chunk: Chunk
+    for (const fragment of sortedFragments) {
+      while (fragment.to > (chunk = chunks[currentChunkId]).to) {
         currentChunkId++
       }
       chunk.fragments.push(fragment)
       fragment.text = chunk.text.substring(fragment.from - chunk.from, fragment.to - chunk.from)
       fragment.chunk = chunk
-    })
+    }
   }
 
   /**
@@ -924,28 +924,28 @@ export class Visualizer {
    * - Fields on spans are changed: totalDist, numArcs, outgoing, incoming
    * - data.arcById index is populated.
    */
-  assignArcsToSpans (eventDescs: Record<string, EventDesc>, spans: Record<string, Entity>): Arc[] {
+  assignArcsToSpans (docData: DocumentData, eventDescs: Record<string, EventDesc>, spans: Record<string, Entity>): Arc[] {
     if (!eventDescs || !spans) {
       return []
     }
 
-    const arcs = []
+    const arcs : Arc[] = []
 
-    Object.entries(eventDescs).map(([eventNo, eventDesc]) => {
+    for (const [eventNo, eventDesc] of Object.entries(eventDescs)) {
       const origin = spans[eventDesc.id]
 
       if (!origin) {
         // TODO: include missing trigger ID in error message
         this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>Trigger for event "' + eventDesc.id + '" not found <br/>(please correct the source data)', 'error', 5]]])
-        return
+        continue
       }
 
       const here = origin.headFragment.from + origin.headFragment.to
-      eventDesc.roles.map(role => {
+      for (const role of eventDesc.roles) {
         const target = spans[role.targetId]
         if (!target) {
           this.dispatcher.post('messages', [[['<strong>ERROR</strong><br/>"' + role.targetId + '" (referenced from "' + eventDesc.id + '") not found <br/>(please correct the source data)', 'error', 5]]])
-          return
+          continue
         }
 
         const there = target.headFragment.from + target.headFragment.to
@@ -961,9 +961,9 @@ export class Visualizer {
         target.incoming.push(arc)
 
         arcs.push(arc)
-        this.data.arcById[arc.eventDescId] = arc
-      }) // roles
-    }) // eventDescs
+        docData.arcById[arc.eventDescId] = arc
+      } // roles
+    } // eventDescs
 
     return arcs
   }
@@ -1002,12 +1002,12 @@ export class Visualizer {
     const sortedFragments = this.buildSortedFragments(this.data.spans)
 
     // token containment testing (chunk recognition)
-    this.data.chunks = this.buildChunksFromTokenOffsets(this.sourceData.token_offsets, sortedFragments)
+    this.data.chunks = this.buildChunksFromTokenOffsets(this.data, this.sourceData.token_offsets, sortedFragments)
 
     this.assignSentenceNumbersToChunks(this.sourceData.sentence_number_offset - 1,
       this.sourceData.sentence_offsets, this.data.chunks)
-    this.assignFragmentsToChunks(sortedFragments)
-    this.data.arcs = this.assignArcsToSpans(this.data.eventDescs, this.data.spans)
+    this.assignFragmentsToChunks(this.data.chunks, sortedFragments)
+    this.data.arcs = this.assignArcsToSpans(this.data, this.data.eventDescs, this.data.spans)
     this.applyNormalizations(this.sourceData.normalizations)
     this.applyHighlighting()
 

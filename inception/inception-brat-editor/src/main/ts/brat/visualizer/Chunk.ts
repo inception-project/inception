@@ -37,8 +37,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-import { SVGTypeMapping } from '@svgdotjs/svg.js'
-import { Svg } from '@svgdotjs/svg.js'
+import { SVGTypeMapping, Svg } from '@svgdotjs/svg.js'
 import { Fragment } from './Fragment'
 import { Row } from './Row'
 
@@ -46,28 +45,28 @@ import { Row } from './Row'
  * Chunk of text generated from the token offsets and representing one or more tokens.
  */
 export class Chunk {
-  index: number = undefined
-  text: string = undefined
-  from: number = undefined
-  to: number = undefined
-  space: string = undefined
+  index: number
+  text: string
+  from: number
+  to: number
+  space: string
   fragments: Fragment[] = []
-  lastSpace: number[] = undefined
-  nextSpace = undefined
-  sentence: number = undefined
-  group: SVGTypeMapping<SVGGElement> = undefined
-  highlightGroup: SVGTypeMapping<SVGGElement> = undefined
+  lastSpace: number[]
+  nextSpace: string
+  sentence: number
+  group: SVGTypeMapping<SVGGElement>
+  highlightGroup: SVGTypeMapping<SVGGElement>
   // chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
   markedTextStart: Array<[string, boolean, number, number, string]> = []
   // chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
   markedTextEnd: Array<[string, boolean, number, number]> = []
-  right: number = undefined
-  row?: Row = undefined
-  textX: number = undefined
+  right: number
+  row: Row
+  textX: number
   translation: { x: number, y: number } = { x: 0, y: 0 }
-  firstFragmentIndex : number = undefined
-  lastFragmentIndex : number = undefined
-  rtlsizes: { charDirection: Array<'rtl' | 'ltr'>, charAttrs: Array<{order: number, width: number, direction: 'rtl' | 'ltr'}>, corrFactor: number } = undefined
+  firstFragmentIndex : number
+  lastFragmentIndex : number
+  rtlsizes: { charDirection: Array<'rtl' | 'ltr'>, charAttrs: Array<{order: number, width: number, direction: 'rtl' | 'ltr'}>, corrFactor: number }
 
   constructor (index: number, text: string, from: number, to: number, space: string) {
     this.index = index
@@ -75,7 +74,7 @@ export class Chunk {
     this.from = from
     this.to = to
     this.space = space
-    Object.seal(this)
+    // Object.seal(this)
   }
 
   renderText (svg: Svg, rowTextGroup: SVGTypeMapping<SVGGElement>) {

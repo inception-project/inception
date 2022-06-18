@@ -242,7 +242,6 @@ export type TriggerDto = [
  */
 export type SourceData = {
   text: string;
-  attributes: Array<AttributeDto>;
   comments: Array<CommentDto>;
   entities: Array<EntityDto>;
   normalizations: Array<NormalizationDto>;
@@ -253,6 +252,11 @@ export type SourceData = {
   rtl_mode: boolean;
   font_zoom: number;
   args: Record<MarkerType, MarkerDto>;
+
+  /**
+   * @deprecated INCEpTION does not use attributes
+   */
+  attributes: Array<AttributeDto>;
 
   /**
    * @deprecated INCEpTION does not use triggers
