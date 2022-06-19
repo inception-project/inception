@@ -273,7 +273,7 @@ export class Visualizer {
       .on('textBackgrounds', this, this.setTextBackgrounds) //
       .on('layoutDensity', this, this.setLayoutDensity) //
       .on('svgWidth', this, this.setSvgWidth) //
-      .on('current', this, this.gotCurrent) //
+      .on('loadAnnotations', this, this.loadAnnotations) //
       .on('mouseover', this, this.onMouseOver) //
       .on('mouseout', this, this.onMouseOut)
 
@@ -3468,13 +3468,9 @@ export class Visualizer {
     this.isCollectionLoaded = false
   }
 
-  gotCurrent (args, reloadData) {
-    this.args = args
-
-    if (reloadData) {
-      this.isRenderRequested = true
-      this.triggerRender()
-    }
+  loadAnnotations () {
+    this.isRenderRequested = true
+    this.triggerRender()
   }
 
   onMouseOverSpan (evt: MouseEvent) {

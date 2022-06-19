@@ -49,7 +49,7 @@ import { EntityTypeDto } from '../protocol/Protocol'
 export class AnnotatorUI {
   private data: DocumentData
 
-  private arcDragOrigin: string
+  private arcDragOrigin?: string
   private arcDragOriginBox : Box
   private arcDragOriginGroup: SVGTypeMapping<SVGGElement>
   private arcDragArc: SVGTypeMapping<SVGPathElement>
@@ -57,7 +57,7 @@ export class AnnotatorUI {
   private spanDragJustStarted = false
   private dragStartedAt? : MouseEvent & { target: Element }
 
-  private spanOptions? : { action: string, offsets: Array<Offsets>, type: string, id: string }
+  private spanOptions? : { action?: string, offsets?: Array<Offsets>, type?: string, id?: string }
   private arcOptions? : { type?: string, old_target?: string, action?: string, origin?: string, target?: string, old_type?: string, left?: string, right?: string }
   private editedSpan: Entity
   private editedFragment : string | null = null
@@ -663,10 +663,10 @@ export class AnnotatorUI {
     }
   }
 
-  stopArcDrag (target?) {
+  stopArcDrag (target?: JQuery) {
     // BEGIN WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
     // Clear the dragStartAt saved event
-    this.dragStartedAt = null
+    this.dragStartedAt = undefined
     // END WEBANNO EXTENSION - #1610 - Improve brat visualization interaction performance
     if (this.arcDragOrigin) {
       if (!target) {
@@ -684,7 +684,7 @@ export class AnnotatorUI {
           // Ignore - could be spurious TypeError: null is not an object (evaluating 'a.parentNode.removeChild')
         }
       }
-      this.arcDragOrigin = null
+      this.arcDragOrigin = undefined
       if (this.arcOptions) {
         $('g[data-from="' + this.arcOptions.origin + '"][data-to="' + this.arcOptions.target + '"]').removeClass('reselect')
       }
@@ -776,9 +776,9 @@ export class AnnotatorUI {
 
       // BEGIN WEBANNO EXTENSION - #316 Text selection behavior while dragging mouse
       // BEGIN WEBANNO EXTENSION - #724 - Cross-row selection is jumpy
-      if (focusNode && anchorNode && focusNode[0] == anchorNode[0] && focusNode.hasClass('spacing')) {
+      if (focusNode && anchorNode && focusNode[0] === anchorNode[0] && focusNode.hasClass('spacing')) {
         if (evt.shiftKey) {
-          if (anchorOffset == 0) {
+          if (anchorOffset === 0) {
             // Move anchor to the end of the previous node
             anchorNode = focusNode = anchorNode.prev()
             anchorOffset = focusOffset = anchorNode.text().length

@@ -48,7 +48,7 @@ export type Message = 'dispatchAsynchError' | 'collectionLoaded' | 'requestRende
   | 'resize' | 'displaySpanButtons' | 'renderError: Fatal' | 'configurationChanged'
   | 'mouseover' | 'mouseout' | 'dblclick' | 'keypress' | 'touchstart' | 'touchend'
   | 'collectionChanged' | 'renderData' | 'renderDataPatch' | 'triggerRender'
-  | 'resetData' | 'abbrevs' | 'textBackgrounds' | 'layoutDensity' | 'current';
+  | 'resetData' | 'abbrevs' | 'textBackgrounds' | 'layoutDensity' | 'loadAnnotations';
 
 export class Dispatcher {
   table : Record<string, [Object, Function][]> = {}
@@ -94,7 +94,7 @@ export class Dispatcher {
   }
 
   post (message: Message, args?, returnType?: 'any' | 'all') {
-    console.debug(`brat dispacher processing ${message}`)
+    // console.debug(`brat dispacher processing ${message}`)
 
     if (args === undefined) {
       args = []

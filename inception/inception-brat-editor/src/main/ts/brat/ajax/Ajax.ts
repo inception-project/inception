@@ -105,47 +105,18 @@ export class Ajax {
         // WEBANNO EXTENSION END
 
         this.pending--
+
         // If no exception is set, verify the server results
         if (response.exception === undefined && response.action !== data.action) {
-          console.error('Action ' + data.action +
-            ' returned the results of action ' + response.action)
+          console.error(`Action ${data.action} returned the results of action ${response.action}`)
           response.exception = true
-          this.dispatcher.post('messages', [[['Protocol error: Action' + data.action + ' returned the results of action ' + response.action + ' maybe the server is unable to run, please run tools/troubleshooting.sh from your installation to diagnose it', 'error', -1]]])
+          this.dispatcher.post('messages', [[[`Protocol error: Action ${data.action} returned the results of action ${response.action} maybe the server is unable to run, please run tools/troubleshooting.sh from your installation to diagnose it`, 'error', -1]]])
         }
 
         // If the request is obsolete, do nothing; if not...
         if (Object.prototype.hasOwnProperty.call(this.pendingList, id)) {
           this.dispatcher.post('messages', [response.messages])
-          if (response.exception === 'configurationError' ||
-            response.exception === 'protocolVersionMismatch') {
-            // this is a no-rescue critical failure.
-            // Stop *everything*.
-            this.pendingList = {}
-            this.dispatcher.post('screamingHalt')
-            // If we had a protocol mismatch, prompt the user for a reload
-            if (response.exception === 'protocolVersionMismatch') {
-              if (confirm('The server is running a different version ' +
-                'from brat than your client, possibly due to a ' +
-                'server upgrade. Would you like to reload the ' +
-                'current page to update your client to the latest ' +
-                'version?')) {
-                // The boolean parameter here is supposed to trigger a force-reload in Firefox and
-                // other browsers ignore it.
-                // Cf. https://developer.mozilla.org/en-US/docs/Web/API/Location/reload
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                window.location.reload(true)
-              } else {
-                this.dispatcher.post('messages', [[['Fatal Error: Protocol ' +
-                  'version mismatch, please contact the administrator',
-                'error', -1]]])
-              }
-            }
-            return
-          }
-
           delete this.pendingList[id]
-
           if (response.exception === true) {
             // if .exception is just Boolean true, do not process the callback;
           } else if (callback) {

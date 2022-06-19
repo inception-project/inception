@@ -20,16 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getActionFromRequest;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getVidFromRequest;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.DIFFERENTIAL;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.FULL;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType.SKIP;
+import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.RenderType.FULL;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -49,9 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.flipkart.zjsonpatch.JsonDiff;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -64,12 +59,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
-import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
@@ -89,7 +80,12 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 public class BratAnnotationEditor
     extends AnnotationEditorBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final String BRAT_EVENT_COLLECTION_LOADED = "collectionLoaded";
+    private static final String BRAT_EVENT_LOAD_ANNOTATIONS = "loadAnnotations";
+    private static final String BRAT_EVENT_RENDER_DATA_PATCH = "renderDataPatch";
+    private static final String BRAT_EVENT_RENDER_DATA = "renderData";
+
+    static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final long serialVersionUID = -1537506294440056609L;
 
@@ -106,18 +102,18 @@ public class BratAnnotationEditor
     private WebMarkupContainer vis;
     private AbstractAjaxBehavior requestHandler;
 
-    private transient JsonNode lastRenderedJsonParsed;
-    private String lastRenderedJson;
-    private int lastRenderedWindowStart = -1;
-
     private GetCollectionInformationHandler collectionInformationHandler;
     private ShowContextMenuHandler contextMenuHandler;
     private LoadConfHandler loadConfHandler;
+
+    private DifferentialRenderingSupport diffRenderSupport;
 
     public BratAnnotationEditor(String id, IModel<AnnotatorState> aModel,
             final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(id, aModel, aActionHandler, aCasProvider);
+
+        add(visibleWhen(getModel().map(AnnotatorState::getProject).isPresent()));
 
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
@@ -127,6 +123,8 @@ public class BratAnnotationEditor
 
         contextMenu = new ContextMenu("contextMenu");
         add(contextMenu);
+
+        diffRenderSupport = new DifferentialRenderingSupport(metrics);
 
         requestHandler = new AbstractDefaultAjaxBehavior()
         {
@@ -239,24 +237,9 @@ public class BratAnnotationEditor
             return toJson(new GetDocumentResponse());
         }
 
-        try (var watch = new ServerTimingWatch("brat-json", "brat JSON generation (FULL)")) {
-            final CAS cas = getCasProvider().get();
-
-            String json = toJson(render(cas));
-            lastRenderedJson = json;
-            lastRenderedJsonParsed = null;
-
-            metrics.renderComplete(RenderType.FULL, watch.stop(), json, null);
-            return json;
-        }
-    }
-
-    @Override
-    protected void onConfigure()
-    {
-        super.onConfigure();
-
-        setVisible(getModelObject() != null && getModelObject().getProject() != null);
+        var cas = getCasProvider().get();
+        var bratDocModel = render(cas);
+        return diffRenderSupport.fullRendering(bratDocModel).getJsonStr();
     }
 
     @Override
@@ -287,94 +270,15 @@ public class BratAnnotationEditor
         aResponse.render(OnDomReadyHeaderItem.forScript(js));
     }
 
-    private Optional<String> bratRenderCommand(CAS aCas)
+    private String bratDispatcherPost(String cmd, String responseJson)
     {
-        LOG.trace("[{}][{}] bratRenderCommand", getMarkupId(), vis.getMarkupId());
-
-        try (var watch = new ServerTimingWatch("brat-json")) {
-            GetDocumentResponse response = render(aCas);
-
-            ObjectMapper mapper = JSONUtil.getObjectMapper();
-            JsonNode current = mapper.valueToTree(response);
-            String json = toJson(current);
-
-            // By default, we do a full rendering...
-            RenderType renderType = FULL;
-            String cmd = "renderData";
-            String responseJson = json;
-            JsonNode diff;
-            String diffJsonStr = null;
-
-            // Here, we try to balance server CPU load against network load. So if we have a chance
-            // of significantly reducing the data sent to the client via a differential update, then
-            // we try that. However, if it is pretty obvious that we won't save a lot, then we will
-            // not even try. I.e. we apply some heuristics to see if large parts of the editor have
-            // changed.
-            AnnotatorState aState = getModelObject();
-            boolean tryDifferentialUpdate = lastRenderedWindowStart >= 0
-                    // Check if we did a far scroll or switch pages
-                    && Math.abs(lastRenderedWindowStart - aState.getWindowBeginOffset()) < aState
-                            .getPreferences().getWindowSize() / 3;
-
-            if (tryDifferentialUpdate) {
-                // ... try to render diff
-                JsonNode previous = null;
-                try {
-                    if (lastRenderedJsonParsed != null) {
-                        previous = lastRenderedJsonParsed;
-                    }
-                    else {
-                        previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson)
-                                : null;
-                    }
-                }
-                catch (IOException e) {
-                    LOG.error("Unable to generate diff, falling back to full render.", e);
-                    // Fall-through
-                }
-
-                if (previous != null && current != null) {
-                    diff = JsonDiff.asJson(previous, current);
-                    diffJsonStr = diff.toString();
-
-                    if (diff instanceof ArrayNode && ((ArrayNode) diff).isEmpty()) {
-                        // No difference? Well, don't render at all :)
-                        renderType = SKIP;
-                    }
-                    else if (diffJsonStr.length() < json.length()) {
-                        // Only sent a patch if it is smaller than sending the full data. E.g. when
-                        // switching pages, the patch usually ends up being twice as large as the
-                        // full data.
-                        cmd = "renderDataPatch";
-                        responseJson = diffJsonStr;
-                        renderType = DIFFERENTIAL;
-                    }
-
-                    // LOG.info("Diff: " + diff);
-                    // LOG.info("Full: {} Patch: {} Diff time: {}", json.length(), diff.length(),
-                    // timer);
-                }
-            }
-
-            // Storing the last rendered JSON as string because JsonNodes are not serializable.
-            lastRenderedJson = json;
-            lastRenderedJsonParsed = current;
-            lastRenderedWindowStart = aState.getWindowBeginOffset();
-
-            watch.setDescription("Brat-JSON generation (" + renderType + ")");
-            metrics.renderComplete(renderType, watch.stop(), json, diffJsonStr);
-
-            if (SKIP.equals(renderType)) {
-                return Optional.empty();
-            }
-
-            return Optional.of("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd
-                    + "', [" + responseJson + "]);");
-        }
+        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd + "', ["
+                + responseJson + "]);";
     }
 
     private GetDocumentResponse render(CAS aCas)
     {
+        LOG.trace("[{}][{}] render", getMarkupId(), vis.getMarkupId());
         AnnotatorState aState = getModelObject();
         return render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
                 bratSerializer);
@@ -403,16 +307,8 @@ public class BratAnnotationEditor
     private String bratLoadCollectionCommand()
     {
         LOG.trace("[{}][{}] bratLoadCollectionCommand", getMarkupId(), vis.getMarkupId());
-
-        GetCollectionInformationResponse response = collectionInformationHandler
-                .getCollectionInformation(getModelObject());
-        StringBuilder js = new StringBuilder();
-        if (bratProperties.isClientSideTraceLog()) {
-            js.append("console.log('Loading collection (" + vis.getMarkupId() + ")...');");
-        }
-        js.append("Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('collectionLoaded', ["
-                + toJson(response) + "]);");
-        return js.toString();
+        var collInfo = collectionInformationHandler.getCollectionInformation(getModelObject());
+        return bratDispatcherPost(BRAT_EVENT_COLLECTION_LOADED, toJson(collInfo));
     }
 
     /**
@@ -423,8 +319,7 @@ public class BratAnnotationEditor
     private String bratRenderLaterCommand()
     {
         LOG.trace("[{}][{}] bratRenderLaterCommand", getMarkupId(), vis.getMarkupId());
-
-        return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('current', [{}, true]);";
+        return bratDispatcherPost(BRAT_EVENT_LOAD_ANNOTATIONS, "[]");
     }
 
     @Override
@@ -433,7 +328,8 @@ public class BratAnnotationEditor
         LOG.trace("[{}][{}] render (AJAX)", getMarkupId(), vis.getMarkupId());
 
         try {
-            bratRenderCommand(getCasProvider().get()).ifPresent(cmd -> {
+            var bratDocModel = render(getCasProvider().get());
+            diffRenderSupport.differentialRendering(bratDocModel).ifPresent(rr -> {
                 StringBuilder js = new StringBuilder();
 
                 if (bratProperties.isDeferredRendering()) {
@@ -449,7 +345,8 @@ public class BratAnnotationEditor
                     js.append("console.log('Rendering (" + vis.getMarkupId() + ")...');");
                 }
 
-                js.append(cmd);
+                js.append(bratDispatcherPost(rr.getRenderType() == FULL ? BRAT_EVENT_RENDER_DATA
+                        : BRAT_EVENT_RENDER_DATA_PATCH, rr.getJsonStr()));
 
                 if (bratProperties.isClientSideProfiling()) {
                     js.append("Util.profileReport();");
@@ -482,72 +379,6 @@ public class BratAnnotationEditor
             handleError("Unable to produce JSON response", e);
         }
         return json;
-    }
-
-    private static class LoadConfHandler
-        extends EditorAjaxRequestHandlerBase
-        implements Serializable
-    {
-        private static final long serialVersionUID = 586794742935679178L;
-
-        private final BratAnnotationEditorProperties bratProperties;
-
-        public LoadConfHandler(BratAnnotationEditorProperties aBratProperties)
-        {
-            bratProperties = aBratProperties;
-        }
-
-        @Override
-        public String getCommand()
-        {
-            return LoadConfResponse.COMMAND;
-        }
-
-        @Override
-        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
-        {
-            return new LoadConfResponse(bratProperties);
-        }
-    }
-
-    private static class GetCollectionInformationHandler
-        extends EditorAjaxRequestHandlerBase
-        implements Serializable
-    {
-        private static final long serialVersionUID = 6922527877385787431L;
-
-        private final BratSchemaGenerator bratSchemaGenerator;
-
-        public GetCollectionInformationHandler(BratSchemaGenerator aBratSchemaGenerator)
-        {
-            bratSchemaGenerator = aBratSchemaGenerator;
-        }
-
-        @Override
-        public String getCommand()
-        {
-            return GetCollectionInformationResponse.COMMAND;
-        }
-
-        @Override
-        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
-        {
-            return getCollectionInformation(getAnnotatorState());
-        }
-
-        public GetCollectionInformationResponse getCollectionInformation(AnnotatorState aState)
-        {
-            GetCollectionInformationResponse info = new GetCollectionInformationResponse();
-            if (aState.getProject() != null) {
-                info.setEntityTypes(bratSchemaGenerator.buildEntityTypes(aState.getProject(),
-                        aState.getAnnotationLayers()));
-                info.getVisualOptions()
-                        .setArcBundle(aState.getPreferences().isCollapseArcs()
-                                ? VisualOptions.ARC_BUNDLE_ALL
-                                : VisualOptions.ARC_BUNDLE_NONE);
-            }
-            return info;
-        }
     }
 
     private class ShowContextMenuHandler
