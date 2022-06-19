@@ -817,10 +817,10 @@ export class Visualizer {
     let startFragmentId = 0
     const numFragments = sortedFragments.length
     let lastTo = 0
-    let firstFrom : number
+    let firstFrom: number | null = null
     let chunkNo = 0
-    let space : string
-    let chunk : Chunk
+    let space: string
+    let chunk: Chunk
     const chunks = []
 
     tokenOffsets.map(offset => {
