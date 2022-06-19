@@ -19,12 +19,13 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toInterpretableJsonString;
 
+import java.io.IOException;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
@@ -72,42 +73,56 @@ public class LoadAnnotationsHandler
     public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
         try {
-            AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
-            AnnotatorState state = getAnnotatorState();
-
-            int begin = aRequest.getRequestParameters().getParameterValue(PARAM_BEGIN)
-                    .toInt(state.getWindowBeginOffset());
-            int end = aRequest.getRequestParameters().getParameterValue(PARAM_END)
-                    .toInt(state.getWindowEndOffset());
-            boolean includeText = aRequest.getRequestParameters().getParameterValue(PARAM_TEXT)
-                    .toBoolean(true);
-
-            RenderRequest request = RenderRequest.builder() //
-                    .withState(state) //
-                    .withCas(page.getEditorCas()) //
-                    .withWindow(begin, end) //
-                    .withText(includeText) //
-                    .withVisibleLayers(state.getAnnotationLayers()) //
-                    .build();
-
-            VDocument vdoc = renderingPipeline.render(request);
-
-            String format = aRequest.getRequestParameters().getParameterValue(PARAM_FORMAT)
-                    .toString(CompactSerializerImpl.ID);
-
-            VDocumentSerializer<?> ser = vDocumentSerializerExtensionPoint.getExtension(format)
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "Unknown serializer: [" + format + "]"));
-
-            String token = aRequest.getRequestParameters().getParameterValue(PARAM_TOKEN)
-                    .toString();
-            String json = toInterpretableJsonString(ser.render(vdoc, request));
-            aTarget.prependJavaScript(
-                    "document['DIAM_TRANSPORT_BUFFER']['" + token + "'] = " + json + ";");
+            var request = prepareRenderRequest(aRequest);
+            var vdoc = renderingPipeline.render(request);
+            var json = serializeToWireFormat(aRequest, request, vdoc);
+            attachResponse(aTarget, aRequest, json);
             return new DefaultAjaxResponse();
         }
         catch (Exception e) {
             return handleError("Unable to load data", e);
         }
+    }
+
+    private void attachResponse(AjaxRequestTarget aTarget, Request aRequest, String json)
+    {
+        String token = aRequest.getRequestParameters().getParameterValue(PARAM_TOKEN).toString();
+        aTarget.prependJavaScript(
+                "document['DIAM_TRANSPORT_BUFFER']['" + token + "'] = " + json + ";");
+    }
+
+    private RenderRequest prepareRenderRequest(Request aRequest) throws IOException
+    {
+        var page = getPage();
+        AnnotatorState state = getAnnotatorState();
+
+        int begin = aRequest.getRequestParameters().getParameterValue(PARAM_BEGIN)
+                .toInt(state.getWindowBeginOffset());
+        int end = aRequest.getRequestParameters().getParameterValue(PARAM_END)
+                .toInt(state.getWindowEndOffset());
+        boolean includeText = aRequest.getRequestParameters().getParameterValue(PARAM_TEXT)
+                .toBoolean(true);
+
+        RenderRequest request = RenderRequest.builder() //
+                .withState(state) //
+                .withCas(page.getEditorCas()) //
+                .withWindow(begin, end) //
+                .withText(includeText) //
+                .withVisibleLayers(state.getAnnotationLayers()) //
+                .build();
+        return request;
+    }
+
+    private String serializeToWireFormat(Request aRequest, RenderRequest request, VDocument vdoc)
+        throws IOException
+    {
+        String format = aRequest.getRequestParameters().getParameterValue(PARAM_FORMAT)
+                .toString(CompactSerializerImpl.ID);
+
+        VDocumentSerializer<?> ser = vDocumentSerializerExtensionPoint.getExtension(format)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Unknown serializer: [" + format + "]"));
+
+        return toInterpretableJsonString(ser.render(vdoc, request));
     }
 }

@@ -61,9 +61,6 @@ public class LoadConfResponse
         public final boolean abbrevsOn = true;
         public final String textBackgrounds = "striped";
         public final String svgWidth = "100%";
-        public final boolean rapidModeOn = false;
-        public final boolean confirmModeOn = true;
-        public final boolean autorefreshOn = false;
 
         /**
          * Whether annotations are selected for editing on a single click or on a double click.

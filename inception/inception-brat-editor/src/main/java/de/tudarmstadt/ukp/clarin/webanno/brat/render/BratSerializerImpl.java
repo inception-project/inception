@@ -101,9 +101,10 @@ public class BratSerializerImpl
     public GetDocumentResponse render(VDocument aVDoc, RenderRequest aRequest)
     {
         GetDocumentResponse aResponse = new GetDocumentResponse();
-
         aResponse.setRtlMode(RTL == aRequest.getState().getScriptDirection());
         aResponse.setFontZoom(aRequest.getState().getPreferences().getFontZoom());
+        aResponse.setWindowBegin(aVDoc.getWindowBegin());
+        aResponse.setWindowEnd(aVDoc.getWindowEnd());
 
         renderText(aVDoc, aResponse, aRequest);
 

@@ -1,6 +1,8 @@
 {
   "action" : "getDocument",
   "text" : "Zero  One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty. One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty.  One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty. ",
+  "windowBegin" : 0,
+  "windowEnd" : 406,
   "args" : { },
   "rtl_mode" : false,
   "font_zoom" : 100,

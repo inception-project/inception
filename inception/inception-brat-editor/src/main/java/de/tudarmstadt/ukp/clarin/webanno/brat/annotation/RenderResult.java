@@ -15,31 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.message;
+package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
-
-/**
- * Response for the {@code arcOpenDialog} command.
- * 
- * This command is part of WebAnno and not contained in the original brat.
- * 
- * @deprecated Should not be needed anymore since the DIAM Ajax requests do not verify the action in
- *             the result.
- */
-@Deprecated
-public class ArcAnnotationResponse
-    extends AjaxResponse
+public class RenderResult
 {
-    public static final String COMMAND = "arcOpenDialog";
+    private final RenderType renderType;
+    private final String jsonStr;
 
-    public ArcAnnotationResponse()
+    public RenderResult(RenderType aRenderType, String aJsonStr)
     {
-        super(COMMAND);
+        renderType = aRenderType;
+        jsonStr = aJsonStr;
     }
 
-    public static boolean is(String aCommand)
+    public RenderType getRenderType()
     {
-        return COMMAND.equals(aCommand);
+        return renderType;
+    }
+
+    public String getJsonStr()
+    {
+        return jsonStr;
     }
 }
