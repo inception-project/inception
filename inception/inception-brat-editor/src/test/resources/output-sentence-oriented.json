@@ -1,6 +1,8 @@
 {
   "action" : "getDocument",
   "text" : "Karin fliegt nach New York . Sie will dort Urlaub machen .",
+  "windowBegin" : 0,
+  "windowEnd" : 58,
   "entities" : [ [ "15", "2", [ [ 0, 5 ] ], {
     "l" : "NE",
     "c" : "#8dd3c7"
