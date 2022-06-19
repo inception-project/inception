@@ -1,13 +1,5 @@
 {
   "action" : "getCollectionInformation",
-  "description" : null,
-  "parent" : null,
-  "header" : [ [ "Document", "string" ], [ "Modified", "time" ], [ "Entities", "int" ], [ "Relations", "int" ], [ "Events", "int" ] ],
-  "items" : [ [ "c", null, "/Collection1/" ], [ "c", null, "/Collection2/" ], [ "c", null, "/Collection3/" ], [ "d", null, "/Collection1/doc1" ], [ "d", null, "/Collection2/doc1" ], [ "d", null, "/Collection3/doc1" ], [ "d", null, "/Collection1/doc2" ], [ "d", null, "/Collection2/doc2" ], [ "d", null, "/Collection3/doc2" ] ],
-  "disambiguator_config" : [ ],
-  "search_config" : [ ],
-  "ner_taggers" : null,
-  "annotation_logging" : false,
   "entity_types" : [ ],
   "visual_options" : {
     "arc_bundle" : "none"

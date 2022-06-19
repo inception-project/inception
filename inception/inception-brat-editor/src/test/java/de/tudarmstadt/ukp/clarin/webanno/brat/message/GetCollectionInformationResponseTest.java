@@ -70,18 +70,18 @@ public class GetCollectionInformationResponseTest
 
         layerList.add(layer);
 
-        collectionInformation.addCollection("/Collection1/");
-        collectionInformation.addCollection("/Collection2/");
-        collectionInformation.addCollection("/Collection3/");
-
-        collectionInformation.addDocument("/Collection1/doc1");
-        collectionInformation.addDocument("/Collection2/doc1");
-        collectionInformation.addDocument("/Collection3/doc1");
-        collectionInformation.addDocument("/Collection1/doc2");
-        collectionInformation.addDocument("/Collection2/doc2");
-        collectionInformation.addDocument("/Collection3/doc2");
-
-        collectionInformation.setSearchConfig(new ArrayList<>());
+        // collectionInformation.addCollection("/Collection1/");
+        // collectionInformation.addCollection("/Collection2/");
+        // collectionInformation.addCollection("/Collection3/");
+        //
+        // collectionInformation.addDocument("/Collection1/doc1");
+        // collectionInformation.addDocument("/Collection2/doc1");
+        // collectionInformation.addDocument("/Collection3/doc1");
+        // collectionInformation.addDocument("/Collection1/doc2");
+        // collectionInformation.addDocument("/Collection2/doc2");
+        // collectionInformation.addDocument("/Collection3/doc2");
+        //
+        // collectionInformation.setSearchConfig(new ArrayList<>());
 
         List<String> tagSetNames = new ArrayList<>();
         tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.POS);

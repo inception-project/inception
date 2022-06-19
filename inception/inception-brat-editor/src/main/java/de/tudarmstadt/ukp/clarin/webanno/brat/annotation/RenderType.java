@@ -15,31 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.message;
+package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
-
-/**
- * Response for the {@code spanOpenDialog} command.
- *
- * This command is part of WebAnno and not contained in the original brat.
- * 
- * @deprecated Should not be needed anymore since the DIAM Ajax requests do not verify the action in
- *             the result.
- */
-@Deprecated
-public class SpanAnnotationResponse
-    extends AjaxResponse
+public enum RenderType
 {
-    public static final String COMMAND = "spanOpenDialog";
-
-    public SpanAnnotationResponse()
-    {
-        super(COMMAND);
-    }
-
-    public static boolean is(String aCommand)
-    {
-        return COMMAND.equals(aCommand);
-    }
+    FULL, DIFFERENTIAL, SKIP;
 }
