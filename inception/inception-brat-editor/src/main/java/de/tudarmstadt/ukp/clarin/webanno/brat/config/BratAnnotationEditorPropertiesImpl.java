@@ -27,9 +27,7 @@ public class BratAnnotationEditorPropertiesImpl
     implements BratAnnotationEditorProperties
 {
     private boolean singleClickSelection = false;
-    private boolean deferredRendering = false;
     private boolean clientSideProfiling = false;
-    private boolean clientSideTraceLog = false;
     private String whiteSpaceReplacementCharacter = REPLACEMENT_CHARACTER;
 
     @ManagedAttribute
@@ -47,19 +45,6 @@ public class BratAnnotationEditorPropertiesImpl
 
     @ManagedAttribute
     @Override
-    public boolean isDeferredRendering()
-    {
-        return deferredRendering;
-    }
-
-    @ManagedAttribute
-    public void setDeferredRendering(boolean aDeferredRendering)
-    {
-        deferredRendering = aDeferredRendering;
-    }
-
-    @ManagedAttribute
-    @Override
     public boolean isClientSideProfiling()
     {
         return clientSideProfiling;
@@ -69,19 +54,6 @@ public class BratAnnotationEditorPropertiesImpl
     public void setClientSideProfiling(boolean aClientSideProfiling)
     {
         clientSideProfiling = aClientSideProfiling;
-    }
-
-    @ManagedAttribute
-    @Override
-    public boolean isClientSideTraceLog()
-    {
-        return clientSideTraceLog;
-    }
-
-    @ManagedAttribute
-    public void setClientSideTraceLog(boolean aClientSideTraceLog)
-    {
-        clientSideTraceLog = aClientSideTraceLog;
     }
 
     @Override

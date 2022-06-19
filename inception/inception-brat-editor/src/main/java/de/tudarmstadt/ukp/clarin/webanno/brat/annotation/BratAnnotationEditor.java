@@ -288,19 +288,10 @@ public class BratAnnotationEditor
     {
         LOG.trace("[{}][{}] bratInitCommand", getMarkupId(), vis.getMarkupId());
 
-        // REC 2014-10-18 - For a reason that I do not understand, the dispatcher cannot be a local
-        // variable. If I put a "var" here, then communication fails with messages such as
-        // "action 'openSpanDialog' returned result of action 'loadConf'" in the browsers's JS
-        // console.
         StringBuilder js = new StringBuilder();
-
         js.append("(function() {");
-        if (bratProperties.isClientSideTraceLog()) {
-            js.append("  console.log('Initializing (" + vis.getMarkupId() + ")...');");
-        }
         js.append("  Brat('" + vis.getMarkupId() + "', '" + requestHandler.getCallbackUrl() + "')");
         js.append("})();");
-
         return js.toString();
     }
 
@@ -332,28 +323,19 @@ public class BratAnnotationEditor
             diffRenderSupport.differentialRendering(bratDocModel).ifPresent(rr -> {
                 StringBuilder js = new StringBuilder();
 
-                if (bratProperties.isDeferredRendering()) {
-                    js.append("setTimeout(function() {");
-                }
-
                 if (bratProperties.isClientSideProfiling()) {
                     js.append("Util.profileEnable(true);");
                     js.append("Util.profileClear();");
                 }
 
-                if (bratProperties.isClientSideTraceLog()) {
-                    js.append("console.log('Rendering (" + vis.getMarkupId() + ")...');");
-                }
-
-                js.append(bratDispatcherPost(rr.getRenderType() == FULL ? BRAT_EVENT_RENDER_DATA
-                        : BRAT_EVENT_RENDER_DATA_PATCH, rr.getJsonStr()));
+                js.append(bratDispatcherPost( //
+                        rr.getRenderType() == FULL //
+                                ? BRAT_EVENT_RENDER_DATA //
+                                : BRAT_EVENT_RENDER_DATA_PATCH, //
+                        rr.getJsonStr()));
 
                 if (bratProperties.isClientSideProfiling()) {
                     js.append("Util.profileReport();");
-                }
-
-                if (bratProperties.isDeferredRendering()) {
-                    js.append("}, 1);");
                 }
 
                 aTarget.appendJavaScript(js);
