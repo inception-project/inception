@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getVidFromRequest;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -142,7 +141,7 @@ public class BratAnnotationEditor
                     result = handleRequest(aTarget);
                 }
                 catch (Exception e) {
-                    handleError("Error: " + getRootCauseMessage(e), e);
+                    handleError("Error", e);
                 }
 
                 // Serialize updated document to JSON
@@ -343,6 +342,9 @@ public class BratAnnotationEditor
         }
         catch (IOException e) {
             handleError("Unable to load data", e);
+        }
+        catch (Exception e) {
+            handleError("Unable to render document", e);
         }
     }
 

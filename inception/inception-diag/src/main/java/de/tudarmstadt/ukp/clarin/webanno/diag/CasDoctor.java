@@ -86,6 +86,11 @@ public class CasDoctor
         activeRepairs = new LinkedHashSet<>();
     }
 
+    public Set<String> getActiveChecks()
+    {
+        return activeChecks;
+    }
+
     public void setFatalChecks(boolean aFatalChecks)
     {
         fatalChecks = aFatalChecks;
@@ -186,7 +191,7 @@ public class CasDoctor
         }
 
         long duration = currentTimeMillis() - tStart;
-        LOG.debug("CasDoctor completed all analyses in {}ms", duration);
+        LOG.debug("CasDoctor completed {} checks in {}ms", activeChecks.size(), duration);
         serverTiming("CasDoctor", "CasDoctor (analyze)", duration);
 
         return ok;

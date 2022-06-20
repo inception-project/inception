@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
+import static java.lang.String.format;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -54,6 +56,12 @@ public class TokenWrappingPagingStrategy
         int currentUnitEnd = 0;
         while (tokenIterator.hasNext()) {
             AnnotationFS currentToken = tokenIterator.next();
+
+            if (currentToken.getBegin() < currentUnitEnd) {
+                throw new IllegalStateException(format(
+                        "Unable to render: Token at [%d-%d] illegally overlaps with previous token ending at [%d].",
+                        currentToken.getBegin(), currentToken.getEnd(), currentUnitEnd));
+            }
 
             String gap = aCas.getDocumentText().substring(currentUnitEnd, currentToken.getBegin());
             int gapStart = currentUnitEnd;

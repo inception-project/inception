@@ -17,50 +17,32 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.getNonIndexedFSesWithOwner;
+import static de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage.error;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.jcas.tcas.Annotation;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
-public class AllFeatureStructuresIndexedCheck
+public class NegativeSizeAnnotationsCheck
     implements Check
 {
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        Map<FeatureStructure, FeatureStructure> nonIndexed = getNonIndexedFSesWithOwner(aCas);
+        boolean ok = true;
 
-        if (nonIndexed.isEmpty()) {
-            return true;
-        }
-
-        aMessages
-                .add(LogMessage.error(this, "Unindexed feature structures: %d", nonIndexed.size()));
-
-        int count = 0;
-        for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {
-            if (count >= 100) {
-                break;
+        for (Annotation ann : aCas.select(Annotation.class)) {
+            if (ann.getBegin() > ann.getEnd()) {
+                aMessages.add(error(this, "[%s] at [%d-%d] has negative size (starts after ending)",
+                        ann.getType().getName(), ann.getBegin(), ann.getEnd()));
+                ok = false;
             }
-
-            aMessages.add(LogMessage.error(this,
-                    "Non-indexed feature structure [%s] reachable through [%s]", e.getKey(),
-                    e.getValue()));
-            count++;
         }
 
-        if (count >= 100) {
-            aMessages.add(LogMessage.error(this,
-                    "In total [%d] annotations were reachable but not indexed", count));
-        }
-
-        return nonIndexed.isEmpty();
+        return ok;
     }
 }

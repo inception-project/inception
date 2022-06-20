@@ -448,22 +448,14 @@ public class AnnotationPage
                 currentprojectId = state.getProject().getId();
             }
 
-            // Set the actual editor component. This has to happen *before* any AJAX refreshs are
+            // Set the actual editor component. This has to happen *before* any AJAX refreshes are
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
             createAnnotationEditor();
-            // update paging, only do it during document load so we load the cas after it has been
+
+            // update paging, only do it during document load so we load the CAS after it has been
             // upgraded
-            try {
-                state.getPagingStrategy().recalculatePage(state, getEditorCas());
-            }
-            catch (Exception e) {
-                LOG.info("Error reading CAS: {}", e.getMessage());
-                error("Error reading CAS " + e.getMessage());
-                if (aTarget != null) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                }
-            }
+            state.getPagingStrategy().recalculatePage(state, editorCas);
 
             // Initialize the visible content - this has to happen after the annotation editor
             // component has been created because only then the paging strategy is known

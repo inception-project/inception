@@ -241,7 +241,7 @@ public abstract class AnnotationEditorBase
             return;
         }
 
-        LOG.error("{}", aMessage, e);
-        error(aMessage);
+        LOG.error("{}: {}", aMessage, e.getMessage(), e);
+        error(aMessage + ": " + e.getMessage());
     }
 }
