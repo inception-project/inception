@@ -54,23 +54,9 @@ public class GetDocumentResponse
 
     private String text;
 
-    // /**
-    // * @deprecated Not used
-    // */
-    // @JsonProperty("source_files")
-    // private @JsonInclude(NON_EMPTY) List<String> sourceFiles = new ArrayList<>();
+    private int windowBegin;
 
-    // private long ctime;
-    // private long mtime;
-
-    // This seems to be no longer used in brat
-    // https://github.com/nlplab/brat/blob/master/server/src/document.py#L794
-    // private int offset;
-
-    // /**
-    // * @deprecated Not used
-    // */
-    // private @JsonInclude(NON_NULL) GetCollectionInformationResponse info;
+    private int windowEnd;
 
     /**
      * [ 0, 3 ]
@@ -95,40 +81,12 @@ public class GetDocumentResponse
     private @JsonInclude(NON_EMPTY) List<Comment> comments = new ArrayList<>();
     private @JsonInclude(NON_EMPTY) List<Normalization> normalizations = new ArrayList<>();
 
-    /**
-     * @deprecated not used
-     */
-    @Deprecated
-    private @JsonInclude(NON_EMPTY) List<String> attributes = new ArrayList<>();
-
-    /**
-     * @deprecated not used
-     */
-    @Deprecated
-    private @JsonInclude(NON_EMPTY) List<String> equivs = new ArrayList<>();
-
-    /**
-     * @deprecated not used
-     */
-    @Deprecated
-    private @JsonInclude(NON_EMPTY) List<String> modifications = new ArrayList<>();
-
     private Map<String, List<Marker>> args = new HashMap<>();
 
     public GetDocumentResponse()
     {
         super(COMMAND);
     }
-
-    // public GetCollectionInformationResponse getInfo()
-    // {
-    // return info;
-    // }
-    //
-    // public void setInfo(GetCollectionInformationResponse aInfo)
-    // {
-    // info = aInfo;
-    // }
 
     public void addToken(int aBegin, int aEnd)
     {
@@ -138,16 +96,6 @@ public class GetDocumentResponse
     public void addSentence(int aBegin, int aEnd)
     {
         sentenceOffsets.add(new Offsets(aBegin, aEnd));
-    }
-
-    public List<String> getModifications()
-    {
-        return modifications;
-    }
-
-    public void setModifications(List<String> aModifications)
-    {
-        modifications = aModifications;
     }
 
     public String getText()
@@ -189,79 +137,6 @@ public class GetDocumentResponse
     {
         normalizations.add(aNormalization);
     }
-
-    // /**
-    // * Get source files for the annotations.
-    // *
-    // * @return the source files.
-    // */
-    // public List<String> getSourceFiles()
-    // {
-    // return sourceFiles;
-    // }
-    //
-    // /**
-    // * Set source files for the annotations.
-    // *
-    // * @param aSourceFiles
-    // * the source files.
-    // */
-    // public void setSourceFiles(List<String> aSourceFiles)
-    // {
-    // sourceFiles = aSourceFiles;
-    // }
-
-    // /**
-    // * Get creation time.
-    // *
-    // * @return the timestamp.
-    // */
-    // public long getCtime()
-    // {
-    // return ctime;
-    // }
-    //
-    // /**
-    // * Set creation time.
-    // *
-    // * @param aCtime
-    // * creation time.
-    // */
-    // public void setCtime(long aCtime)
-    // {
-    // ctime = aCtime;
-    // }
-    //
-    // /**
-    // * Get last modification time.
-    // *
-    // * @return last modification time.
-    // */
-    // public long getMtime()
-    // {
-    // return mtime;
-    // }
-    //
-    // /**
-    // * Set last modification time.
-    // *
-    // * @param aMtime
-    // * last modfication time.
-    // */
-    // public void setMtime(long aMtime)
-    // {
-    // mtime = aMtime;
-    // }
-
-    // public int getOffset()
-    // {
-    // return offset;
-    // }
-    //
-    // public void setOffset(int aOffset)
-    // {
-    // offset = aOffset;
-    // }
 
     public List<Offsets> getTokenOffsets()
     {
@@ -313,26 +188,6 @@ public class GetDocumentResponse
         entities.add(aEntity);
     }
 
-    // public List<String> getAttributes()
-    // {
-    // return attributes;
-    // }
-    //
-    // public void setAttributes(List<String> aAttributes)
-    // {
-    // attributes = aAttributes;
-    // }
-    //
-    // public List<String> getEquivs()
-    // {
-    // return equivs;
-    // }
-    //
-    // public void setEquivs(List<String> aEquivs)
-    // {
-    // equivs = aEquivs;
-    // }
-
     public int getSentenceNumberOffset()
     {
         return sentenceNumberOffset;
@@ -381,6 +236,26 @@ public class GetDocumentResponse
     public void setArgs(Map<String, List<Marker>> aArgs)
     {
         args = aArgs;
+    }
+
+    public void setWindowBegin(int aWindowBegin)
+    {
+        windowBegin = aWindowBegin;
+    }
+
+    public int getWindowBegin()
+    {
+        return windowBegin;
+    }
+
+    public void setWindowEnd(int aWindowEnd)
+    {
+        windowEnd = aWindowEnd;
+    }
+
+    public int getWindowEnd()
+    {
+        return windowEnd;
     }
 
     public static boolean is(String aCommand)

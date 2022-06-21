@@ -24,6 +24,8 @@ import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.RenderType;
+
 @ManagedResource
 @Component
 public class BratMetricsImpl

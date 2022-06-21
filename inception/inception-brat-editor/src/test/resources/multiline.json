@@ -1,6 +1,8 @@
 {
   "action" : "getDocument",
   "text" : "This is line 1.  This is line 3. This is line 4. ",
+  "windowBegin" : 0,
+  "windowEnd" : 49,
   "args" : { },
   "rtl_mode" : false,
   "font_zoom" : 100,

@@ -16,18 +16,21 @@
     "events": "^3.3.0",
     "toml": "github:yoheiMune/toml-node",
     "urijs": "^1.19.11",
-    "pdfjs-dist": "^2.14.305",
-    "yargs": "^17.3.1"
+    "pdfjs-dist": "^2.14.305"
   },
   "devDependencies": {
     "esbuild": "${esbuild.version}",
     "eslint": "${eslint.version}",
-    "esbuild-plugin-alias": "^0.2.1",
     "typescript": "${typescript.version}",
-    "fs-extra": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "${typescript-eslint.version}",
     "@typescript-eslint/parser": "${typescript-eslint.version}",
+    "fs-extra": "^10.0.0",
+    "@types/events": "^3.0.0",
     "@types/urijs": "^1.19.11",
-    "@types/events": "^3.0.0"
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.2",
+    "eslint-plugin-promise": "^6.0.0",
+    "yargs": "^17.3.1"
   }
 }

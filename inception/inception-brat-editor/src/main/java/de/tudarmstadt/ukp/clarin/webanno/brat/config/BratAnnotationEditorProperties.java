@@ -29,26 +29,11 @@ public interface BratAnnotationEditorProperties
     boolean isSingleClickSelection();
 
     /**
-     * Controls whether rendering should happen within the AJAX request or after the AJAX request.
-     * Doing it within the request has the benefit of the browser only having to recalculate the
-     * layout once at the end of the AJAX request (at least theoretically) while deferring the
-     * rendering causes the AJAX request to complete faster, but then the browser needs to
-     * recalculate its layout twice - once of any Wicket components being re-rendered and once for
-     * the brat view to re-render.
-     */
-    boolean isDeferredRendering();
-
-    /**
      * Whether the profiling built into the the brat visualization JS should be enabled. If this is
      * enabled, profiling data is collected and a report is printed to the browser's JS console
      * after every rendering action
      */
     boolean isClientSideProfiling();
-
-    /**
-     * Log messages in the browser as part of JS commands
-     */
-    boolean isClientSideTraceLog();
 
     /**
      * Some browsers (e.g. Firefox) do not count invisible chars in some functions

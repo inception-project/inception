@@ -32,7 +32,6 @@ export function initPdfAnno() {
   // Enable a view mode.
   UI.enableViewMode()
 
-  //document.addEventListener("webviewerloaded", function() {
     window.PDFViewerApplication.initializedPromise.then(function() {
       // The event called at page rendered by pdfjs.
       window.PDFViewerApplication.eventBus.on('pagerendered', ev => onPageRendered(ev));
@@ -41,8 +40,7 @@ export function initPdfAnno() {
       window.PDFViewerApplication.eventBus.on('zoomin', ev => onScaleChange(ev));
       window.PDFViewerApplication.eventBus.on('zoomout', ev => onScaleChange(ev));
       window.PDFViewerApplication.eventBus.on('zoomreset', ev => onScaleChange(ev));
-    });
-  //});
+	    });
 
   // Init viewer.
   annoPage.initializeViewer(null)
@@ -170,10 +168,12 @@ function renderAnnotations() {
   if (annotations.length === 0) {
     return
   }
+  
   annotations.forEach((a: AbstractAnnotation) => {
     a.render()
     a.enableViewMode()
   })
+
   dispatchWindowEvent('annotationrendered')
 }
 
