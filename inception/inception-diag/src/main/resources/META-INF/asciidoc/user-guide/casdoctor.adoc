@@ -108,6 +108,7 @@ accessible through relations which had used the span as a source or target.
 
 This check is very extensive and slow. 
 
+
 [[check_FeatureAttachedSpanAnnotationsTrulyAttachedCheck]]
 === Feature-attached spans truly attached
 
@@ -120,6 +121,7 @@ from that second layer. For example, annotations in the POS layer must always be
 a Token annotation via the Token feature `pos`. This check ensures that annotations on layers such
 as the POS layer are properly referenced from the attaching layer (e.g. the Token layer).
 
+
 [[check_LinksReachableThroughChainsCheck]]
 === Links reachable through chains
 
@@ -131,6 +133,7 @@ Each chain in a chain layers consist of a *chain* and several *links*. The chain
 points to the first link and each link points to the following link. If the CAS contains any links
 that are not reachable through a chain, then this is likely due to a bug.
 
+
 [[check_NoMultipleIncomingRelationsCheck]]
 === No multiple incoming relations
 
@@ -141,6 +144,7 @@ Check that nodes have only one in-going dependency relation inside the same anno
 Since dependency relations form a tree, every node of this tree can only have at most one parent node.
 This check outputs a message that includes the sentence number (useful to jump directly to the problem) and the actual offending dependency edges.
 
+
 [[check_NoZeroSizeTokensAndSentencesCheck]]
 === No 0-sized tokens and sentences
 
@@ -149,6 +153,7 @@ ID:: `NoZeroSizeTokensAndSentencesCheck`
 Related repairs:: <<repair_RemoveZeroSizeTokensAndSentencesRepair>>
 
 Zero-sized tokens and sentences are not valid and can cause undefined behavior.
+
 
 [[check_RelationOffsetsCheck]]
 === Relation offsets consistency
@@ -160,6 +165,7 @@ Related repairs:: <<repair_RelationOffsetsRepair>>
 Checks that the offsets of relations match the target of the relation. This mirrors the DKPro
 Core convention that the offsets of a dependency relation must match the offsets of the 
 dependent.
+
 
 [[check_CASMetadataTypeIsPresentCheck]]
 === CASMetadata presence
@@ -179,6 +185,30 @@ Related repairs:: <<repair_RemoveDanglingRelationsRepair>>
 Checks if there are any relations that do not have a source or target. Either the source/end are
 not set at all or they refer to an unset attach feature in another layer. Note that relations
 referring to non-indexed end-points are handled by <<check_AllFeatureStructuresIndexedCheck>>.
+
+
+[[check_NegativeSizeAnnotationsCheck]]
+=== Negative-sized annotations check
+[horizontal]
+ID:: `NegativeSizeAnnotationsCheck`
+Related repairs:: <<repair_SwitchBeginAndEndOnNegativeSizedAnnotationsRepair>>
+
+Checks if there are any annotations with a begin offset that is larger than their end offset. Such
+annotations are invalid and may cause errors in many functionalities of {product-name}.
+
+
+[[check_AllAnnotationsStartAndEndWithinSentencesCheck]]
+=== Negative-sized annotations check
+[horizontal]
+ID:: `AllAnnotationsStartAndEndWithinSentencesCheck`
+Related repairs:: <<repair_CoverAllTextInSentencesRepair>>
+
+Checks that the begins and ends of all annotations are within the boundaries of a sentence.
+Annotations that are not within sentence boundaries may not be shown by certain annotation editors
+such as the default sentence-oriented brat editor. Also, sentence-oriented formats such as WebAnno
+TSV or CoNLL formats will not include any text and annotations of parts of the documents that is
+not covered by sentences or may produce errors during export.
+
 
 
 [[sect_repairs]]
@@ -223,6 +253,7 @@ indexed in the CAS. Such annotations are then added back to the CAS indexes.
 
 This is a safe repair action as it does not delete anything.
 
+
 [[repair_RelationOffsetsRepair]]
 === Repair relation offsets
 
@@ -232,6 +263,7 @@ ID:: `RelationOffsetsRepair`
 Fixes that the offsets of relations match the target of the relation. This mirrors the DKPro
 Core convention that the offsets of a dependency relation must match the offsets of the 
 dependent.
+
 
 [[repair_RemoveDanglingChainLinksRepair]]
 === Remove dangling chain links
@@ -257,6 +289,7 @@ affects mainly the DKPro Core POS and Lemma layers.
 Although this is a destructive repair action, it is sometimes a desired action because the user may
 know that they do not care to resurrect the deleted annotation as per <<repair_ReindexFeatureAttachedSpanAnnotationsRepair>>.
 
+
 [[repair_RemoveDanglingRelationsRepair]]
 === Remove dangling relations
 
@@ -276,6 +309,7 @@ any of the following conditions:
 * the annotation pointed to by  attach-feature in the annotation pointed to by source or target is
   not indexed
 
+
 [[repair_RemoveZeroSizeTokensAndSentencesRepair]]
 === Remove 0-size tokens and sentences
 
@@ -288,6 +322,7 @@ lemma, POS, or stem are removed, thus this action could theoretically leave dang
 behind. Thus, the <<repair_RemoveDanglingRelationsRepair>> repair action should be configured
 *after* this repair action in the settings file.
 
+
 [[repair_UpgradeCasRepair]]
 === Upgrade CAS
 
@@ -299,3 +334,24 @@ which is regularly performed when a user opens a document for annotation/curatio
 
 This is considered to be safe repair action as it only garbage-collects data from the CAS that is
 no longer reachable anyway.
+
+
+[[repair_SwitchBeginAndEndOnNegativeSizedAnnotationsRepair]]
+=== Switch begin and end offsets on negative-sized annotations
+
+[horizontal]
+ID:: `SwitchBeginAndEndOnNegativeSizedAnnotationsRepair`
+
+This repair switches the begin and end offsets on all annotations where the begin offset is larger
+than the begin offset.
+
+
+[[repair_CoverAllTextInSentencesRepair]]
+=== Cover all text in sentences
+
+[horizontal]
+ID:: `CoverAllTextInSentencesRepair`
+
+This repair checks if there is any text not covered by sentences. If there is, it creates a new
+sentence annotation on this text starting at the end of the last sentence before it (or the start
+of the document text) and the begin of the next sentence (or the end of the document text).
