@@ -98,6 +98,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
@@ -172,44 +173,11 @@ public class SearchAnnotationSidebar
 
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
+        mainContainer.add(createSearchOptionsForm("searchOptionsForm"));
+        mainContainer.add(createSearchForm("searchForm"));
         add(mainContainer);
 
-        Form<SearchOptions> searchForm = new Form<>("searchForm", searchOptions);
-        searchForm.add(new TextArea<>("queryInput", targetQuery));
-        LambdaAjaxButton<SearchOptions> searchButton = new LambdaAjaxButton<>("search",
-                this::actionSearch);
-        searchForm.add(searchButton);
-        searchForm.setDefaultButton(searchButton);
-
-        mainContainer.add(searchForm);
-
-        WebMarkupContainer searchOptionsPanel = new WebMarkupContainer("searchOptionsPanel");
-        searchOptionsPanel.add(new CheckBox("limitedToCurrentDocument").setOutputMarkupId(true));
-        searchOptionsPanel.add(createLayerDropDownChoice("groupingLayer",
-                annotationService.listAnnotationLayer(getModelObject().getProject())));
-        groupingFeature = new DropDownChoice<>("groupingFeature", emptyList(),
-                new ChoiceRenderer<>("uiName"));
-        groupingFeature.setNullValid(true);
-
-        searchOptionsPanel.add(groupingFeature);
-        searchOptionsPanel.add(createResultsPerPageSelection("itemsPerPage"));
-        searchOptionsPanel.add(visibleWhen(() -> searchForm.getModelObject().isVisible()));
-        searchOptionsPanel.add(lowLevelPagingCheckBox = createLowLevelPagingCheckBox());
-        searchOptionsPanel.setOutputMarkupPlaceholderTag(true);
-        searchForm.add(searchOptionsPanel);
-
-        searchForm.add(new LambdaAjaxLink("toggleOptionsVisibility", _target -> {
-            searchForm.getModelObject().toggleVisibility();
-            _target.add(searchOptionsPanel);
-        }));
-
         resultsProvider.emptyQuery();
-
-        // Add link for re-indexing the project
-        searchOptionsPanel.add(new LambdaAjaxLink("reindexProject", t -> {
-            searchService.enqueueReindexTask(getAnnotationPage().getModelObject().getProject(),
-                    "user");
-        }));
 
         resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
         resultsGroupContainer.setOutputMarkupId(true);
@@ -304,6 +272,44 @@ public class SearchAnnotationSidebar
         mainContainer.add(annotationForm);
     }
 
+    private Form<Void> createSearchForm(String aId)
+    {
+        Form<Void> searchForm = new Form<>(aId);
+        searchForm.add(new TextArea<>("queryInput", targetQuery));
+        LambdaAjaxButton<SearchOptions> searchButton = new LambdaAjaxButton<>("search",
+                this::actionSearch);
+        searchForm.add(searchButton);
+        searchForm.setDefaultButton(searchButton);
+        return searchForm;
+    }
+
+    private Form<SearchOptions> createSearchOptionsForm(String aId)
+    {
+        Form<SearchOptions> searchOptionsForm = new Form<>(aId, searchOptions);
+        searchOptionsForm.add(new CheckBox("limitedToCurrentDocument").setOutputMarkupId(true) //
+                .add(new LambdaAjaxFormComponentUpdatingBehavior()));
+        searchOptionsForm.add(createLayerDropDownChoice("groupingLayer",
+                annotationService.listAnnotationLayer(getModelObject().getProject())));
+
+        groupingFeature = new DropDownChoice<>("groupingFeature", emptyList(),
+                new ChoiceRenderer<>("uiName"));
+        groupingFeature.setNullValid(true);
+        groupingFeature.add(new LambdaAjaxFormComponentUpdatingBehavior());
+        searchOptionsForm.add(groupingFeature);
+
+        searchOptionsForm.add(createResultsPerPageSelection("itemsPerPage"));
+        searchOptionsForm.add(lowLevelPagingCheckBox = createLowLevelPagingCheckBox());
+        searchOptionsForm.setOutputMarkupPlaceholderTag(true);
+        searchOptionsForm.add(new LambdaAjaxLink("reindexProject", this::actionRebuildIndex));
+
+        return searchOptionsForm;
+    }
+
+    private void actionRebuildIndex(AjaxRequestTarget aTarget)
+    {
+        searchService.enqueueReindexTask(getAnnotationPage().getModelObject().getProject(), "user");
+    }
+
     @Override
     protected void onConfigure()
     {
@@ -347,7 +353,10 @@ public class SearchAnnotationSidebar
     {
         List<Long> choices = Arrays.stream(searchProperties.getPageSizes()).boxed()
                 .collect(Collectors.toList());
-        return new DropDownChoice<>(aId, choices);
+
+        var dropdown = new DropDownChoice<>(aId, choices);
+        dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior());
+        return dropdown;
     }
 
     private DropDownChoice<AnnotationLayer> createLayerDropDownChoice(String aId,
@@ -382,6 +391,7 @@ public class SearchAnnotationSidebar
                 && searchOptions.getObject().getGroupingFeature() == null));
         checkbox.add(AttributeModifier.append("title",
                 new StringResourceModel("lowLevelPagingMouseover", this)));
+        checkbox.add(new LambdaAjaxFormComponentUpdatingBehavior());
         return checkbox;
     }
 

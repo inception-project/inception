@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
+import java.io.Serializable;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public class SearchOptions
-    extends Options
+    implements Serializable
 {
     private static final long serialVersionUID = 3030323391922717647L;
 

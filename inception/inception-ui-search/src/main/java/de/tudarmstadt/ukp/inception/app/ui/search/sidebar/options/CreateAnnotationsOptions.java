@@ -17,13 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
+import java.io.Serializable;
+
 public class CreateAnnotationsOptions
-    extends Options
+    implements Serializable
 {
+    private static final long serialVersionUID = -1452718944910179490L;
+
     /**
      * Whether or not to override existing annotations of the same layer
      */
     private boolean overrideExistingAnnotations = false;
+    private boolean visible = false;
 
     public boolean isOverrideExistingAnnotations()
     {
@@ -33,5 +38,20 @@ public class CreateAnnotationsOptions
     public void setOverrideExistingAnnotations(boolean aOverrideExistingAnnotations)
     {
         overrideExistingAnnotations = aOverrideExistingAnnotations;
+    }
+
+    public void setVisible(boolean aVisible)
+    {
+        visible = aVisible;
+    }
+
+    public boolean isVisible()
+    {
+        return visible;
+    }
+
+    public void toggleVisibility()
+    {
+        visible = !visible;
     }
 }

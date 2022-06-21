@@ -17,10 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
+import java.io.Serializable;
+
 public class DeleteAnnotationsOptions
-    extends Options
+    implements Serializable
 {
+    private static final long serialVersionUID = -2990536765778081634L;
+
     private boolean deleteOnlyMatchingFeatureValues = true;
+    private boolean visible = false;
 
     public boolean isDeleteOnlyMatchingFeatureValues()
     {
@@ -30,5 +35,20 @@ public class DeleteAnnotationsOptions
     public void setDeleteOnlyMatchingFeatureValues(boolean aDeleteOnlyMatchingFeatureValues)
     {
         deleteOnlyMatchingFeatureValues = aDeleteOnlyMatchingFeatureValues;
+    }
+
+    public void setVisible(boolean aVisible)
+    {
+        visible = aVisible;
+    }
+
+    public boolean isVisible()
+    {
+        return visible;
+    }
+
+    public void toggleVisibility()
+    {
+        visible = !visible;
     }
 }
