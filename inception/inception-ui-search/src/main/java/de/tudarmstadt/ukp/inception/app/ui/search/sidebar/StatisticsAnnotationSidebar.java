@@ -56,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -79,6 +78,8 @@ import de.tudarmstadt.ukp.inception.support.help.DocLink;
 public class StatisticsAnnotationSidebar
     extends AnnotationSidebar_ImplBase
 {
+    private static final long serialVersionUID = 2796916194245461498L;
+
     private static final Logger LOG = LoggerFactory.getLogger(StatisticsAnnotationSidebar.class);
 
     private static final String GRANULARITY = "granularity";
@@ -123,7 +124,7 @@ public class StatisticsAnnotationSidebar
 
     private List<LayerStatistics> layerStatsList;
     private List<AnnotationFeature> features;
-    private List<AnnotationLayer> layers;
+    // private List<AnnotationLayer> layers;
     Set<Long> hiddenLayerIds;
 
     private CompoundPropertyModel<StatisticsOptions> statisticsOptions = CompoundPropertyModel
@@ -168,8 +169,6 @@ public class StatisticsAnnotationSidebar
          * features = new ArrayList<AnnotationFeature>(); for (AnnotationFeature feature:
          * annotationService.listAnnotationFeature(projectModel.getObject())) { if
          * (!hiddenLayerIds.contains(feature.getLayer().getId())) { features.add(feature); } }
-         * 
-         * 
          */
 
         features = annotationService.listAnnotationFeature(projectModel.getObject());
