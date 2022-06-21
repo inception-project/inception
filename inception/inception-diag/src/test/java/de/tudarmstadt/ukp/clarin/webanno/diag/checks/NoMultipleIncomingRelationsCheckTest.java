@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,7 +47,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 @ExtendWith(SpringExtension.class)
 public class NoMultipleIncomingRelationsCheckTest
 {
-
     @Configuration
     @Import({ AnnotationSchemaService.class, NoMultipleIncomingRelationsCheck.class })
     static class Config
@@ -57,17 +57,16 @@ public class NoMultipleIncomingRelationsCheckTest
     private AnnotationSchemaService annotationService;
 
     @Autowired
-    NoMultipleIncomingRelationsCheck check;
+    NoMultipleIncomingRelationsCheck sut;
 
     @Test
     public void testFail() throws Exception
     {
-
         AnnotationLayer relationLayer = new AnnotationLayer();
         relationLayer.setName(Dependency.class.getName());
 
         relationLayer.setType(WebAnnoConst.RELATION_TYPE);
-        Mockito.when(annotationService.listAnnotationLayer(Mockito.isNull()))
+        when(annotationService.listAnnotationLayer(Mockito.isNull()))
                 .thenReturn(Arrays.asList(relationLayer));
 
         JCas jcas = JCasFactory.createJCas();
@@ -95,7 +94,7 @@ public class NoMultipleIncomingRelationsCheckTest
 
         List<LogMessage> messages = new ArrayList<>();
 
-        boolean result = check.check(null, jcas.getCas(), messages);
+        boolean result = sut.check(null, jcas.getCas(), messages);
 
         messages.forEach(System.out::println);
 
@@ -144,7 +143,7 @@ public class NoMultipleIncomingRelationsCheckTest
 
         List<LogMessage> messages = new ArrayList<>();
 
-        boolean result = check.check(null, jcas.getCas(), messages);
+        boolean result = sut.check(null, jcas.getCas(), messages);
 
         messages.forEach(System.out::println);
 
@@ -187,7 +186,7 @@ public class NoMultipleIncomingRelationsCheckTest
 
         List<LogMessage> messages = new ArrayList<>();
 
-        boolean result = check.check(null, jcas.getCas(), messages);
+        boolean result = sut.check(null, jcas.getCas(), messages);
 
         messages.forEach(System.out::println);
 

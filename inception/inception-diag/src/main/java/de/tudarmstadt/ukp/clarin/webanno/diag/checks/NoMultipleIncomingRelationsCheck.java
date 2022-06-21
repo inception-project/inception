@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -28,16 +29,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
@@ -54,85 +54,87 @@ public class NoMultipleIncomingRelationsCheck
     @Override
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
-        boolean ok = true;
         if (annotationService == null) {
-            return ok;
+            return true;
         }
+
         List<AnnotationLayer> allAnnoLayers = annotationService.listAnnotationLayer(aProject);
-        if (allAnnoLayers != null) {
-            for (AnnotationLayer layer : allAnnoLayers) {
+        if (CollectionUtils.isEmpty(allAnnoLayers)) {
+            return true;
+        }
 
-                if (!WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
-                    continue;
-                }
+        boolean ok = true;
+        for (AnnotationLayer layer : allAnnoLayers) {
 
-                if (!Dependency.class.getName().equals(layer.getName())) {
-                    continue;
-                }
+            if (!RELATION_TYPE.equals(layer.getType())) {
+                continue;
+            }
 
-                Type type;
-                try {
-                    type = getType(aCas, layer.getName());
-                }
-                catch (IllegalArgumentException e) {
-                    // If the type does not exist, the CAS has not been upgraded. In this case, we
-                    // can skip checking the layer because there will be no annotations anyway.
-                    continue;
-                }
+            if (!Dependency.class.getName().equals(layer.getName())) {
+                continue;
+            }
 
-                // Remember all nodes that already have a known incoming relation.
-                // Map from the target to the existing source, so the source can be used
-                // to provide a better debugging output.
-                Map<AnnotationFS, AnnotationFS> incoming = new HashMap<>();
+            Type type;
+            try {
+                type = getType(aCas, layer.getName());
+            }
+            catch (IllegalArgumentException e) {
+                // If the type does not exist, the CAS has not been upgraded. In this case, we
+                // can skip checking the layer because there will be no annotations anyway.
+                continue;
+            }
 
-                for (AnnotationFS rel : select(aCas, type)) {
+            // Remember all nodes that already have a known incoming relation.
+            // Map from the target to the existing source, so the source can be used
+            // to provide a better debugging output.
+            Map<AnnotationFS, AnnotationFS> incoming = new HashMap<>();
 
-                    AnnotationFS source = getFeature(rel, FEAT_REL_SOURCE, AnnotationFS.class);
-                    AnnotationFS target = getFeature(rel, FEAT_REL_TARGET, AnnotationFS.class);
+            for (AnnotationFS rel : select(aCas, type)) {
 
-                    AnnotationFS existingSource = incoming.get(target);
-                    if (existingSource != null) {
+                AnnotationFS source = getFeature(rel, FEAT_REL_SOURCE, AnnotationFS.class);
+                AnnotationFS target = getFeature(rel, FEAT_REL_TARGET, AnnotationFS.class);
 
-                        // Debug output should include sentence number to make the orientation
-                        // easier
-                        Optional<Integer> sentenceNumber = Optional.empty();
-                        try {
-                            sentenceNumber = Optional.of(WebAnnoCasUtil
-                                    .getSentenceNumber(target.getCAS(), target.getBegin()));
-                        }
-                        catch (IndexOutOfBoundsException e) {
-                            // ignore this error and don't output sentence number
-                            sentenceNumber = Optional.empty();
-                        }
+                AnnotationFS existingSource = incoming.get(target);
+                if (existingSource != null) {
 
-                        if (sentenceNumber.isPresent()) {
-                            aMessages.add(new LogMessage(this, LogLevel.WARN,
-                                    "Sentence %d: Relation [%s] -> [%s] points to span that already has an "
-                                            + "incoming relation [%s] -> [%s].",
-                                    sentenceNumber.get(), source.getCoveredText(),
-                                    target.getCoveredText(), existingSource.getCoveredText(),
-                                    target.getCoveredText()));
-                        }
-                        else {
+                    // Debug output should include sentence number to make the orientation
+                    // easier
+                    Optional<Integer> sentenceNumber = Optional.empty();
+                    try {
+                        sentenceNumber = Optional.of(WebAnnoCasUtil
+                                .getSentenceNumber(target.getCAS(), target.getBegin()));
+                    }
+                    catch (IndexOutOfBoundsException e) {
+                        // ignore this error and don't output sentence number
+                        sentenceNumber = Optional.empty();
+                    }
 
-                            aMessages.add(new LogMessage(this, LogLevel.WARN,
-                                    "Relation [%s] -> [%s] points to span that already has an "
-                                            + "incoming relation [%s] -> [%s].",
-                                    source.getCoveredText(), target.getCoveredText(),
-                                    existingSource.getCoveredText(), target.getCoveredText()));
-                        }
-
-                        // This check only logs warnings - it should not fail. Having multiple
-                        // incoming edges is not a serious problem.
-                        // ok = false;
+                    if (sentenceNumber.isPresent()) {
+                        aMessages.add(LogMessage.warn(this,
+                                "Sentence %d: Relation [%s] -> [%s] points to span that already has an "
+                                        + "incoming relation [%s] -> [%s].",
+                                sentenceNumber.get(), source.getCoveredText(),
+                                target.getCoveredText(), existingSource.getCoveredText(),
+                                target.getCoveredText()));
                     }
                     else {
-                        incoming.put(target, source);
+
+                        aMessages.add(LogMessage.warn(this,
+                                "Relation [%s] -> [%s] points to span that already has an "
+                                        + "incoming relation [%s] -> [%s].",
+                                source.getCoveredText(), target.getCoveredText(),
+                                existingSource.getCoveredText(), target.getCoveredText()));
                     }
+
+                    // This check only logs warnings - it should not fail. Having multiple
+                    // incoming edges is not a serious problem.
+                    // ok = false;
+                }
+                else {
+                    incoming.put(target, source);
                 }
             }
         }
-
         return ok;
     }
 }

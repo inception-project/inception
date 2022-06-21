@@ -129,7 +129,7 @@ public class BratSerializerImpl
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<Offsets> offsets = vspan.getRanges().stream() //
                         .flatMap(range -> split(aResponse.getSentenceOffsets(), aVDoc.getText(),
-                                range.getBegin(), range.getEnd()).stream())
+                                aVDoc.getWindowBegin(), range.getBegin(), range.getEnd()).stream())
                         .map(range -> {
                             int[] span = { range.getBegin(), range.getEnd() };
                             TrimUtils.trim(aResponse.getText(), span);
@@ -297,13 +297,13 @@ public class BratSerializerImpl
             cur = bi.next();
         }
 
+        var rows = aResponse.getSentenceOffsets();
         for (Offsets offsets : bratTokenOffsets) {
-            split(aResponse.getSentenceOffsets(), //
-                    visibleText, //
-                    offsets.getBegin(), //
-                    offsets.getEnd()).forEach(range -> {
-                        aResponse.addToken(range.getBegin(), range.getEnd());
-                    });
+            var ranges = split(rows, visibleText, aVDoc.getWindowBegin(), offsets.getBegin(),
+                    offsets.getEnd());
+            for (var range : ranges) {
+                aResponse.addToken(range.getBegin(), range.getEnd());
+            }
         }
     }
 
@@ -339,9 +339,11 @@ public class BratSerializerImpl
      *            the span begin (window-relative positions)
      * @param aEnd
      *            (window-relative positions)
+     * @param aI
      * @return list of ranges.
      */
-    private List<Offsets> split(List<Offsets> aRows, String aText, int aBegin, int aEnd)
+    private List<Offsets> split(List<Offsets> aRows, String aText, int aWindowBegin, int aBegin,
+            int aEnd)
     {
         // Zero-width spans never need to be split
         if (aBegin == aEnd) {
@@ -354,18 +356,26 @@ public class BratSerializerImpl
         // smaller than the end of a covering annotation to be considered properly
         // covered.
         Offsets beginRow = aRows.stream()
-                .filter(span -> span.getBegin() <= aBegin && aBegin < span.getEnd()).findFirst()
+                .filter(span -> span.getBegin() <= aBegin && aBegin < span.getEnd()) //
+                .findFirst() //
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Position [" + aBegin + "] is not in any row"));
+                        "Start position of range [" + (aWindowBegin + aBegin) + "-"
+                                + (aWindowBegin + aEnd) + "] is not part of any visible row. In a "
+                                + "sentence-based editor, this is most likely caused by "
+                                + "annotations outside sentences."));
 
         // Zero-width annotations that are on the boundary of two directly
         // adjacent sentences (i.e. without whitespace between them) are considered
         // to be at the end of the first sentence rather than at the beginning of the
         // second sentence.
         Offsets endRow = aRows.stream()
-                .filter(span -> span.getBegin() <= aEnd && aEnd <= span.getEnd()).findFirst()
+                .filter(span -> span.getBegin() <= aEnd && aEnd <= span.getEnd()) //
+                .findFirst() //
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Position [" + aEnd + "] is not in any row"));
+                        "End position of range [" + (aWindowBegin + aBegin) + "-"
+                                + (aWindowBegin + aEnd) + "] is not part of any visible row. In a "
+                                + "sentence-based editor, this is most likely caused by "
+                                + "annotations outside sentences."));
 
         // No need to split
         if (beginRow == endRow) {
