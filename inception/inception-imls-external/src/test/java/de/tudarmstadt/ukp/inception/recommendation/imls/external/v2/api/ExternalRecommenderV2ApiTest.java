@@ -26,14 +26,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
-import org.junit.Ignore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
-@Ignore
+@Disabled("Requires starting a test server")
 public class ExternalRecommenderV2ApiTest
 {
 
