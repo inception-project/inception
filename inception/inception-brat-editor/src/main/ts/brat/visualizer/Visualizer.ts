@@ -60,7 +60,6 @@ import { SVG, Element as SVGJSElement, Svg, Container, Text as SVGText, PathComm
 import { INSTANCE as Configuration } from '../configuration/Configuration'
 import { INSTANCE as Util } from '../util/Util'
 import { Offsets } from '@inception-project/inception-js-api'
-import { stringify } from 'querystring'
 declare const $: JQueryStatic
 
 /**
@@ -138,7 +137,7 @@ export class Visualizer {
   private sourceData?: SourceData
   private requestedData: SourceData = null // FIXME Do we really need requestedData AND sourceData?
 
-  private args: Record<MarkerType, MarkerDto> = null
+  private args: Record<MarkerType, MarkerDto> = {}
 
   private isRenderRequested = false
   private drawing = false
@@ -153,8 +152,8 @@ export class Visualizer {
 
   private markedText: Array<MarkedText> = []
   private highlight: Array<Rect> = []
-  private highlightArcs?: JQuery
-  private highlightSpans?: JQuery
+  private highlightArcs?: SVGJSElement[]
+  private highlightSpans?: SVGJSElement[]
 
   // OPTIONS
   private collapseArcs = false
@@ -244,18 +243,18 @@ export class Visualizer {
     this.svg = SVG().addTo(this.svgContainer)
     this.triggerRender()
 
-    this.registerHandlers($(this.svgContainer), [
+    this.registerHandlers(this.svgContainer, [
       'mouseover', 'mouseout', 'mousemove', 'mouseup', 'mousedown',
       'dragstart', 'dblclick', 'click',
       'contextmenu'
     ])
 
-    this.registerHandlers($(document), [
+    this.registerHandlers(document, [
       'keydown', 'keypress',
       'touchstart', 'touchend'
     ])
 
-    this.registerHandlers($(window), [
+    this.registerHandlers(window, [
       'resize'
     ])
 
@@ -300,19 +299,19 @@ export class Visualizer {
     return 0
   }
 
-  setMarked (markedType: MarkerType) {
+  setMarked (docData: DocumentData, sourceData: SourceData, markedType: MarkerType) {
     if (!this.args[markedType]) {
       return
     }
 
     for (const marker of this.args[markedType]) {
       if (marker[0] === 'sent') {
-        this.data.markedSent[marker[1]] = true
+        docData.markedSent[marker[1]] = true
         continue
       }
 
       if (marker[0] === 'equiv') { // [equiv, Equiv, T1]
-        $.each(this.sourceData.equivs, (equivNo, equiv) => {
+        for (const equiv of sourceData.equivs) {
           if (equiv[1] === marker[1]) {
             let len = equiv.length
             for (let i = 2; i < len; i++) {
@@ -320,14 +319,15 @@ export class Visualizer {
                 // found it
                 len -= 3
                 for (let n = 1; n <= len; n++) {
-                  const arc = this.data.eventDescs[equiv[0] + '*' + n].equivArc
+                  const arc = docData.eventDescs[equiv[0] + '*' + n].equivArc
                   arc.marked = markedType
                 }
-                return // next equiv
+                continue // next equiv
               }
             }
           }
-        })
+        }
+
         continue
       }
 
@@ -386,12 +386,12 @@ export class Visualizer {
     }
   }
 
-  applyHighlighting () {
+  applyHighlighting (docData: DocumentData, sourceData: SourceData) {
     this.markedText = []
-    this.setMarked(EDITED) // set by editing process
-    this.setMarked(FOCUS) // set by URL
-    this.setMarked(MATCH_FOCUS) // set by search process, focused match
-    this.setMarked(MATCH) // set by search process, other (non-focused) match
+    this.setMarked(docData, sourceData, EDITED) // set by editing process
+    this.setMarked(docData, sourceData, FOCUS) // set by URL
+    this.setMarked(docData, sourceData, MATCH_FOCUS) // set by search process, focused match
+    this.setMarked(docData, sourceData, MATCH) // set by search process, other (non-focused) match
   }
 
   /**
@@ -723,7 +723,7 @@ export class Visualizer {
       span.attributeText.push(attrText)
       span.attributes[name] = value
 
-      $.extend(span.attributeMerge, attrValue)
+      Object.assign(span.attributeMerge, attrValue)
     }
   }
 
@@ -1009,7 +1009,7 @@ export class Visualizer {
     this.assignFragmentsToChunks(this.data.chunks, sortedFragments)
     this.data.arcs = this.assignArcsToSpans(this.data, this.data.eventDescs, this.data.spans)
     this.applyNormalizations(this.sourceData.normalizations)
-    this.applyHighlighting()
+    this.applyHighlighting(this.data, this.sourceData)
 
     if (this.data.spans) {
       this.calculateAverageArcDistances(Object.values(this.data.spans))
@@ -3008,7 +3008,7 @@ export class Visualizer {
     // Loops over the rows to check if the width calculated so far is still not enough. This
     // currently happens sometimes if there is a single annotation on many words preventing
     // wrapping within the annotation (aka oversizing).
-    textGroup.children().filter(e => e.hasClass('text-row')).map(textRow => {
+    for (const textRow of textGroup.children().filter(e => e.hasClass('text-row'))) {
       // const rowInitialSpacing = $($(textRow).children('.row-initial')[0]);
       const rowFinalSpacing = textRow.children().filter(e => e.hasClass('row-final'))[0]
       const lastChunkWidth = docData.sizes.texts.widths[rowFinalSpacing.prev().node.textContent]
@@ -3020,7 +3020,7 @@ export class Visualizer {
           width = lastChunkOffset + lastChunkWidth
         }
       }
-    })
+    }
 
     let oversized = Math.max(width - this.canvasWidth, 0)
     if (oversized > 0) {
@@ -3474,6 +3474,8 @@ export class Visualizer {
   }
 
   onMouseOverSpan (evt: MouseEvent) {
+    if (!this.data) return
+
     const target = $(evt.target)
     const id = target.attr('data-span-id')
     const span = this.data.spans[id]
@@ -3525,14 +3527,20 @@ export class Visualizer {
     if (equivSelector.length) {
       this.highlightArcs.push(...this.svg
         .find(equivSelector.join(', '))
-        .map(e => e.parent().addClass('highlight')))
+        .map(e => {
+          e.parent()?.addClass('highlight')
+          return e
+        }))
     }
 
     const spanIds = Object.keys(spans).map(spanId => `[data-span-id="${spanId}"]`)
     if (spanIds.length) {
       this.highlightSpans = this.svg
         .find(spanIds.join(', '))
-        .map(e => e.parent().addClass('highlight'))
+        .map(e => {
+          e.parent()?.addClass('highlight')
+          return e
+        })
     }
   }
 
@@ -3560,6 +3568,8 @@ export class Visualizer {
   }
 
   onMouseOverArc (evt: MouseEvent) {
+    if (!this.data) return
+
     const target = $(evt.target)
     const originSpanId = target.attr('data-arc-origin')
     const targetSpanId = target.attr('data-arc-target')
@@ -3618,15 +3628,21 @@ export class Visualizer {
 
     this.highlightSpans = this.svg
       .find(`[data-span-id="${originSpanId}"], [data-span-id="${targetSpanId}"]`)
-      .map(e => e.parent().addClass('highlight'))
+      .map(e => {
+        e.parent()?.addClass('highlight')
+        return e
+      })
   }
 
   onMouseOverSentence (evt: MouseEvent) {
-    const target = $(evt.target)
-    const id = target.attr('data-sent')
-    const comment = this.data.sentComment[id]
-    if (comment) {
-      this.dispatcher.post('displaySentComment', [evt, target, comment.text, comment.type])
+    if (!this.data || !(evt.target instanceof Element)) return
+
+    const id = evt.target.getAttribute('data-sent')
+    if (id) {
+      const comment = this.data.sentComment[id]
+      if (comment) {
+        this.dispatcher.post('displaySentComment', [evt, comment.text, comment.type])
+      }
     }
   }
 
@@ -3662,11 +3678,15 @@ export class Visualizer {
     }
 
     if (this.highlightArcs) {
-      this.highlightArcs.removeClass('highlight')
+      for (const arc of this.highlightArcs) {
+        arc.removeClass('highlight')
+      }
     }
 
     if (this.highlightSpans) {
-      this.highlightSpans.removeClass('highlight')
+      for (const arc of this.highlightSpans) {
+        arc.removeClass('highlight')
+      }
       this.highlightSpans = undefined
     }
   }
@@ -3677,12 +3697,12 @@ export class Visualizer {
     this.dispatcher.post('configurationChanged')
   }
 
-  setTextBackgrounds (_textBackgrounds) {
+  setTextBackgrounds (_textBackgrounds : 'striped' | 'none') {
     Configuration.textBackgrounds = _textBackgrounds
     this.dispatcher.post('configurationChanged')
   }
 
-  setLayoutDensity (_density) {
+  setLayoutDensity (_density: number) {
     // dispatcher.post('messages', [[['Setting layout density ' + _density, 'comment']]]);
     // TODO: store standard settings instead of hard-coding
     // them here (again)
@@ -3720,14 +3740,15 @@ export class Visualizer {
   }
 
   // register event listeners
-  registerHandlers (element: JQuery, events : Message[]) {
+  registerHandlers (element: Element | Window | Document, events : Message[]) {
+    const target = $(element)
     for (const eventName of events) {
-      element.bind(eventName, (evt) => this.dispatcher.post(eventName, [evt], 'all'))
+      target.bind(eventName, (evt) => this.dispatcher.post(eventName, [evt], 'all'))
     }
   }
 
-  loadSpanTypes (types) {
-    $.each(types, (typeNo, type) => {
+  loadSpanTypes (types: EntityTypeDto[]) {
+    for (const type of types) {
       if (type) {
         this.entityTypes[type.type] = type
         const children = type.children
@@ -3735,7 +3756,7 @@ export class Visualizer {
           this.loadSpanTypes(children)
         }
       }
-    })
+    }
   }
 
   loadAttributeTypes (responseTypes) {
@@ -4031,8 +4052,8 @@ function findClosestVerticalScrollable (node: JQuery) {
  */
 function tokenise (text: string): Array<Offsets> {
   const tokenOffsets: Array<Offsets> = []
-  let tokenStart: number = null
-  let lastCharPos: number = null
+  let tokenStart: number | null = null
+  let lastCharPos: number | null = null
 
   for (let i = 0; i < text.length; i++) {
     const c = text[i]
@@ -4049,8 +4070,9 @@ function tokenise (text: string): Array<Offsets> {
       lastCharPos = i
     }
   }
+
   // Do we have a trailing token?
-  if (tokenStart != null) {
+  if (tokenStart !== null && lastCharPos !== null) {
     tokenOffsets.push([tokenStart, lastCharPos + 1])
   }
 

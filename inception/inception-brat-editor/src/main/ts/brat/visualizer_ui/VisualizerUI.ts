@@ -114,7 +114,11 @@ export class VisualizerUI {
     element.css({ top: y, left: x })
   }
 
-  displayComment (evt: MouseEvent, target, comment: string, commentText: string, commentType: CommentType, immediately?: boolean) {
+  displaySentComment (evt: MouseEvent, commentText: string, commentType: CommentType) {
+    this.displayComment(evt, '', commentText, commentType)
+  }
+
+  displayComment (evt: MouseEvent, comment: string, commentText: string, commentType: CommentType, immediately?: boolean) {
     let idtype = ''
     if (commentType) {
       // label comment by type, with special case for default note type
@@ -184,7 +188,7 @@ export class VisualizerUI {
     comment += this.processNormalizations(normalizations, normsToQuery)
 
     // display initial comment HTML
-    this.displayComment(evt, target, comment, commentText, commentType, immediately)
+    this.displayComment(evt, comment, commentText, commentType, immediately)
 
     // initiate AJAX calls for the normalization data to query
     $.each(normsToQuery, (normNo, norm) => this.initiateNormalizationAjaxCall(spanId, spanType, norm))
@@ -207,7 +211,7 @@ export class VisualizerUI {
     const normsToQuery = []
     comment += this.processNormalizations(normalizations, normsToQuery)
 
-    this.displayComment(evt, target, comment, commentText, commentType)
+    this.displayComment(evt, comment, commentText, commentType)
 
     // initiate AJAX calls for the normalization data to query
     $.each(normsToQuery, (normNo, norm) => this.initiateNormalizationAjaxCall(arcId, arcRole, norm))
@@ -312,10 +316,6 @@ export class VisualizerUI {
         }
       }
     }])
-  }
-
-  displaySentComment (evt: MouseEvent, target, commentText, commentType) {
-    this.displayComment(evt, target, '', commentText, commentType)
   }
 
   hideComment () {
