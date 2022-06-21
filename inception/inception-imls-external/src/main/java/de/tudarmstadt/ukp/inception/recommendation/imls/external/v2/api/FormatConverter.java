@@ -92,7 +92,9 @@ public class FormatConverter
             AnnotationFS fs = aCas.createAnnotation(targetType, begin, end);
             String featureValue = annotation.getFeatures().get(TARGET_FEATURE);
             fs.setStringValue(feature, featureValue);
-            fs.setBooleanValue(isPredicted, true);
+            if (isPredicted != null) {
+                fs.setBooleanValue(isPredicted, true);
+            }
             aCas.addFsToIndexes(fs);
         }
     }
