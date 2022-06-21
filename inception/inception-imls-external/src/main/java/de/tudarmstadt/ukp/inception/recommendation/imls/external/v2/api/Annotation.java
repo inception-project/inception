@@ -73,10 +73,12 @@ public class Annotation
     @Override
     public boolean equals(Object o)
     {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
         Annotation that = (Annotation) o;
         return getBegin() == that.getBegin() && getEnd() == that.getEnd()
                 && getFeatures().equals(that.getFeatures());

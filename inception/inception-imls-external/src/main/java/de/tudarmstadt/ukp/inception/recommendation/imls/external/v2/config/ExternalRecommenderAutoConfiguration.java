@@ -25,7 +25,8 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.external.v2.ExternalRecommenderFactory;
 
 @Configuration
-@ConditionalOnProperty(prefix = "recommender.external.v2", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "recommender.external.v2", name = "enabled", havingValue = "true", //
+        matchIfMissing = true)
 @EnableConfigurationProperties(ExternalRecommenderPropertiesImpl.class)
 public class ExternalRecommenderAutoConfiguration
 {

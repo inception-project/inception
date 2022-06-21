@@ -68,10 +68,12 @@ public class Document
     @Override
     public boolean equals(Object o)
     {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
         Document document = (Document) o;
         return getVersion() == document.getVersion() && getText().equals(document.getText())
                 && getAnnotations().equals(document.getAnnotations());
