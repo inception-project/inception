@@ -18,13 +18,13 @@
 
 import { Offsets } from '@inception-project/inception-js-api'
 
-export type VID = string;
+export type VID = string
 export type CommentType = 'AnnotatorNotes' | 'EditHighlight' | 'AnnotationError'
-| 'AnnotationIncomplete' | 'AnnotationUnconfirmed' | 'AnnotationWarning' | 'MissingAnnotation'
-| 'ChangedAnnotation' | 'Normalized' | 'True_positive' | 'False_positive' | 'False_negative'
+  | 'AnnotationIncomplete' | 'AnnotationUnconfirmed' | 'AnnotationWarning' | 'MissingAnnotation'
+  | 'ChangedAnnotation' | 'Normalized' | 'True_positive' | 'False_positive' | 'False_negative'
 export type MarkerType = 'edited' | 'focus' | 'matchfocus' | 'match'
 export type ClippedState = '' | 's' | 'e' | 'se'
-export type ColorCode = string;
+export type ColorCode = string
 
 /**
  * @property {string} l - label
@@ -47,7 +47,7 @@ export type AnnotationCommentDto = [
   id: VID,
   commentType: CommentType,
   comment: string
-];
+]
 
 export type SentenceCommentDto = [
   anchor: ['sent', number],
@@ -183,6 +183,7 @@ export type EntityTypeDto = {
   borderColor: ColorCode;
   labels: Array<string>;
   arcs: Array<RelationTypeDto>;
+  children: Array<EntityTypeDto>;
   // children: Array<SpanType>; // deprecated?
   // attributes: Array<string>; // deprecated?
   // unused: boolean; // deprecated?
