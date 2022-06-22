@@ -25,26 +25,30 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "dir", "base", "extent", "glyphs" })
-public class VLine
+@JsonPropertyOrder(value = { "dir", "x", "y", "w", "h", "glyphs" })
+public class VChunk
 {
     private final List<VGlyph> glyphs;
     private final float dir;
-    private final float base;
-    private final float extent;
+    private final float x;
+    private final float y;
+    private final float w;
+    private final float h;
     private final int begin;
     private final int end;
     private final String text;
 
-    public VLine(int aBegin, int aEnd, String aText, float aDir, float aBase, float aExtent,
-            List<VGlyph> aGlyphs)
+    public VChunk(int aBegin, int aEnd, String aText, float aDir, float aX, float aY, float aW,
+            float aH, List<VGlyph> aGlyphs)
     {
         begin = aBegin;
         end = aEnd;
         text = aText;
         dir = aDir;
-        base = aBase;
-        extent = aExtent;
+        x = aX;
+        y = aY;
+        w = aW;
+        h = aH;
         glyphs = aGlyphs;
     }
 
@@ -73,13 +77,23 @@ public class VLine
         return dir;
     }
 
-    public float getBase()
+    public float getX()
     {
-        return base;
+        return x;
     }
 
-    public float getExtent()
+    public float getY()
     {
-        return extent;
+        return y;
+    }
+
+    public float getH()
+    {
+        return h;
+    }
+
+    public float getW()
+    {
+        return w;
     }
 }

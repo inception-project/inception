@@ -20,6 +20,9 @@ package de.tudarmstadt.ukp.inception.pdfeditor2.visual.model;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -124,20 +127,13 @@ public class VGlyph
     @Override
     public String toString()
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append(begin);
-        sb.append('\t');
-        sb.append(page + 1);
-        sb.append('\t');
-        sb.append(unicode);
-        sb.append('\t');
-        sb.append(fontX);
-        sb.append(' ');
-        sb.append(fontY);
-        sb.append(' ');
-        sb.append(fontWidth);
-        sb.append(' ');
-        sb.append(fontHeight);
-        return sb.toString();
+        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("page", page)
+                .append("begin", begin).append("unicode", unicode).append("dir", dir)
+                .append("base", base).append("extent", extent)
+                /*
+                 * .append("fontX", fontX) .append("fontY", fontY).append("fontWidth", fontWidth)
+                 * .append("fontHeight", fontHeight)
+                 */.toString();
     }
+
 }

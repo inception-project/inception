@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils.
 import static de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils.makeFlipAT;
 import static de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils.makeRotateAT;
 import static de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils.normalizeWord;
+import static java.util.stream.Collectors.joining;
 
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
@@ -41,8 +42,9 @@ import org.apache.pdfbox.text.TextPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils;
+import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VChunk;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VGlyph;
-import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VLine;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VModel;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VPage;
 
@@ -57,7 +59,7 @@ public class VisualPDFTextStripper
     private AffineTransform rotateAT;
 
     private int pageIndex;
-    private List<VLine> lines;
+    private List<VChunk> lines;
 
     private Map<TextPosition, Rectangle2D.Double> fontPositionCache;
 
@@ -160,13 +162,25 @@ public class VisualPDFTextStripper
 
         List<VGlyph> glyphs = new ArrayList<>();
 
-        float lineBase = Float.MAX_VALUE;
-        float lineHeight = Float.MIN_VALUE;
+        float x0 = Float.MAX_VALUE;
+        float y0 = Float.MAX_VALUE;
+        float y1 = Float.MIN_VALUE;
+        float x1 = Float.MIN_VALUE;
         int begin = getBuffer().length();
-        int cursor = begin;
+        int cursor = 0;
 
         assert aTextPositions.stream().mapToDouble(TextPosition::getDir).distinct()
                 .count() <= 1 : "All glyphs in the string should have the same direction";
+
+        int unicodeLength;
+        assert (unicodeLength = aTextPositions.stream().map(TextPosition::getUnicode)
+                .map(GlyphPositionUtils::normalizeWord).mapToInt(String::length).sum()) == aText
+                        .length() : "Line length [" + aText.length()
+                                + "] should match glyph unicode length [" + unicodeLength + "] - ["
+                                + aText + "] <-> ["
+                                + aTextPositions.stream().map(TextPosition::getUnicode)
+                                        .map(GlyphPositionUtils::normalizeWord).collect(joining())
+                                + "]";
 
         float dir = 0;
         for (var pos : aTextPositions) {
@@ -176,25 +190,28 @@ public class VisualPDFTextStripper
             // Account for glyphs that were mapped to more than one character by normalization
             // e.g. expanded ligatures
             String normalizedUnicode = normalizeWord(pos.getUnicode());
-            VGlyph glyph = new VGlyph(cursor, pageIndex, normalizedUnicode, dir, f);
+            VGlyph glyph = new VGlyph(cursor + begin, pageIndex, normalizedUnicode, dir, f);
             glyphs.add(glyph);
+
+            assert aText.startsWith(normalizedUnicode, cursor) : "Line text at " + cursor
+                    + " should start with [" + normalizedUnicode + "] but was ["
+                    + aText.substring(cursor) + "]";
+
             cursor += normalizedUnicode.length();
 
-            if (dir == 90 || dir == 270) {
-                lineBase = Math.min(lineBase, glyph.getFontX());
-                lineHeight = Math.max(lineHeight, glyph.getFontWidth());
-            }
-            else {
-                lineBase = Math.min(lineBase, glyph.getFontY());
-                lineHeight = Math.max(lineHeight, glyph.getFontHeight());
-            }
+            x1 = Math.max(x1, glyph.getFontX() + glyph.getFontWidth());
+            y1 = Math.max(y1, glyph.getFontY() + glyph.getFontHeight());
+            x0 = Math.min(x0, glyph.getFontX());
+            y0 = Math.min(y0, glyph.getFontY());
         }
 
         super.writeString(aText, aTextPositions);
 
         int end = getBuffer().length();
+        var w = x1 - x0;
+        var h = y1 - y0;
 
-        lines.add(new VLine(begin, end, aText, dir, lineBase, lineHeight, glyphs));
+        lines.add(new VChunk(begin, end, aText, dir, x0, y0, w, h, glyphs));
     }
 
     private void assertAlignedTextPositions(String aText, List<TextPosition> aTextPositions)

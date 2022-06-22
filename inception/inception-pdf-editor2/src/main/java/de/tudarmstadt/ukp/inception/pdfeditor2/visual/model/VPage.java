@@ -35,7 +35,7 @@ public class VPage
     private static final long serialVersionUID = -919352254298051756L;
 
     private final int index;
-    private final List<VLine> lines;
+    private final List<VChunk> lines;
     private final int begin;
     private final int end;
     private final String text;
@@ -43,13 +43,13 @@ public class VPage
     private final float height;
 
     public VPage(int aIndex, float aWidth, float aHeight, int aBegin, int aEnd, String aText,
-            VLine... aLines)
+            VChunk... aLines)
     {
         this(aIndex, aWidth, aHeight, aBegin, aEnd, aText, asList(aLines));
     }
 
     public VPage(int aIndex, float aWidth, float aHeight, int aBegin, int aEnd, String aText,
-            List<VLine> aLines)
+            List<VChunk> aLines)
     {
         index = aIndex;
         width = aWidth;
@@ -90,7 +90,7 @@ public class VPage
         return index;
     }
 
-    public List<VLine> getLines()
+    public List<VChunk> getLines()
     {
         return lines;
     }
