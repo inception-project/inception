@@ -98,11 +98,11 @@ class VisualPDFTextStripperTest
             var expectedPage = expected.getPages().get(p);
             var actualPage = actual.getPages().get(p);
 
-            assertThat(actualPage.getLines()).hasSameSizeAs(expectedPage.getLines());
+            assertThat(actualPage.getChunks()).hasSameSizeAs(expectedPage.getChunks());
 
-            for (int l = 0; l < expectedPage.getLines().size(); l++) {
-                var expectedLine = expectedPage.getLines().get(l);
-                var actualLine = actualPage.getLines().get(l);
+            for (int l = 0; l < expectedPage.getChunks().size(); l++) {
+                var expectedLine = expectedPage.getChunks().get(l);
+                var actualLine = actualPage.getChunks().get(l);
 
                 assertThat(actualLine.getGlyphs()) //
                         .hasSameSizeAs(expectedLine.getGlyphs());
@@ -128,7 +128,7 @@ class VisualPDFTextStripperTest
     private void assertValidGlyphCoordindates(VModel vModel)
     {
         for (VPage vPage : vModel.getPages()) {
-            for (VChunk vLine : vPage.getLines()) {
+            for (VChunk vLine : vPage.getChunks()) {
                 for (VGlyph vGlyph : vLine.getGlyphs()) {
                     float d = vLine.getDir();
                     float x = (d == 0 || d == 180) ? vGlyph.getBase() : vLine.getX();
@@ -153,7 +153,7 @@ class VisualPDFTextStripperTest
     private void assertValidGlyphOffsets(Collection<VPage> aPages)
     {
         for (VPage page : aPages) {
-            for (VChunk line : page.getLines()) {
+            for (VChunk line : page.getChunks()) {
                 assertValidGlyphOffsets(line);
             }
         }

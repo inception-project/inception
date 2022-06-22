@@ -35,7 +35,7 @@ public class VPage
     private static final long serialVersionUID = -919352254298051756L;
 
     private final int index;
-    private final List<VChunk> lines;
+    private final List<VChunk> chunks;
     private final int begin;
     private final int end;
     private final String text;
@@ -49,50 +49,25 @@ public class VPage
     }
 
     public VPage(int aIndex, float aWidth, float aHeight, int aBegin, int aEnd, String aText,
-            List<VChunk> aLines)
+            List<VChunk> aChunks)
     {
         index = aIndex;
         width = aWidth;
         height = aHeight;
-        lines = aLines;
+        chunks = aChunks;
         text = aText;
         begin = aBegin;
         end = aEnd;
     }
-
-    // public VPage(int aIndex, int aBegin, int aEnd, String aText, VGlyph... aGlyphs)
-    // {
-    // this(aIndex, aBegin, aEnd, aText, asList(aGlyphs));
-    // }
-    //
-    // public VPage(int aIndex, int aBegin, int aEnd, String aText, List<VGlyph> aGlyphs)
-    // {
-    // width = -1;
-    // height = -1;
-    // index = aIndex;
-    // glyphs = aGlyphs;
-    // text = aText;
-    // begin = aBegin;
-    // end = aEnd;
-    //
-    // float lineY = -1;
-    // float lineHeight = -1;
-    // for (var glyph : aGlyphs) {
-    // lineY = Math.min(glyph.getFontY(), lineY);
-    // lineHeight = Math.max(glyph.getFontHeight(), lineHeight);
-    // }
-    //
-    // lines = asList(new VLine(aBegin, aEnd, aText, lineY, lineHeight, glyphs));
-    // }
 
     public int getIndex()
     {
         return index;
     }
 
-    public List<VChunk> getLines()
+    public List<VChunk> getChunks()
     {
-        return lines;
+        return chunks;
     }
 
     public String getText()

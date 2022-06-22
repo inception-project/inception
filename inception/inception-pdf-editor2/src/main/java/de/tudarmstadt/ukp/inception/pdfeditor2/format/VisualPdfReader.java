@@ -73,26 +73,26 @@ public class VisualPdfReader
             pdfPage.setHeight(vPage.getHeight());
             pdfPage.addToIndexes();
 
-            for (VChunk vLine : vPage.getLines()) {
-                FloatArray glyphArray = new FloatArray(aJCas, vLine.getGlyphs().size());
-                IntegerArray charArray = new IntegerArray(aJCas, vLine.getGlyphs().size());
+            for (VChunk vChunk : vPage.getChunks()) {
+                FloatArray glyphArray = new FloatArray(aJCas, vChunk.getGlyphs().size());
+                IntegerArray charArray = new IntegerArray(aJCas, vChunk.getGlyphs().size());
 
                 int i = 0;
-                for (VGlyph vGlyph : vLine.getGlyphs()) {
+                for (VGlyph vGlyph : vChunk.getGlyphs()) {
                     charArray.set(i, vGlyph.getEnd() - vGlyph.getBegin());
                     glyphArray.set(i, vGlyph.getBase());
                     i++;
                 }
 
-                PdfChunk pdfLine = new PdfChunk(aJCas, vLine.getBegin(), vLine.getEnd());
-                pdfLine.setD(vLine.getDir());
-                pdfLine.setX(vLine.getX());
-                pdfLine.setY(vLine.getY());
-                pdfLine.setW(vLine.getW());
-                pdfLine.setH(vLine.getH());
-                pdfLine.setC(charArray);
-                pdfLine.setG(glyphArray);
-                pdfLine.addToIndexes();
+                PdfChunk pdfChunk = new PdfChunk(aJCas, vChunk.getBegin(), vChunk.getEnd());
+                pdfChunk.setD(vChunk.getDir());
+                pdfChunk.setX(vChunk.getX());
+                pdfChunk.setY(vChunk.getY());
+                pdfChunk.setW(vChunk.getW());
+                pdfChunk.setH(vChunk.getH());
+                pdfChunk.setC(charArray);
+                pdfChunk.setG(glyphArray);
+                pdfChunk.addToIndexes();
             }
         }
     }
@@ -102,49 +102,49 @@ public class VisualPdfReader
         VModel vModel;
         List<VPage> vPages = new ArrayList<>();
         for (PdfPage pdfPage : pdfPages) {
-            List<VChunk> vLines = new ArrayList<>();
-            for (var pdfLine : cas.select(PdfChunk.class).coveredBy(pdfPage)) {
-                float d = pdfLine.getD();
+            List<VChunk> vChunks = new ArrayList<>();
+            for (var pdfChunk : cas.select(PdfChunk.class).coveredBy(pdfPage)) {
+                float d = pdfChunk.getD();
                 List<VGlyph> vGlyphs = new ArrayList<>();
-                IntegerArray charWidths = pdfLine.getC();
-                FloatArray glyphStarts = pdfLine.getG();
+                IntegerArray charWidths = pdfChunk.getC();
+                FloatArray glyphStarts = pdfChunk.getG();
                 float b0, le, ef;
                 switch ((int) d) {
                 case 0:
-                    b0 = pdfLine.getX();
-                    le = pdfLine.getW();
+                    b0 = pdfChunk.getX();
+                    le = pdfChunk.getW();
                     ef = 1;
                     break;
                 case 90:
-                    b0 = pdfLine.getY();
-                    le = pdfLine.getH();
+                    b0 = pdfChunk.getY();
+                    le = pdfChunk.getH();
                     ef = 1;
                     break;
                 case 180:
-                    b0 = pdfLine.getX() + pdfLine.getW();
-                    le = pdfLine.getW();
+                    b0 = pdfChunk.getX() + pdfChunk.getW();
+                    le = pdfChunk.getW();
                     ef = -1;
                     break;
                 case 270:
-                    b0 = pdfLine.getY() + pdfLine.getH();
-                    le = pdfLine.getH();
+                    b0 = pdfChunk.getY() + pdfChunk.getH();
+                    le = pdfChunk.getH();
                     ef = -1;
                     break;
                 default:
                     throw new IllegalStateException(
                             "Only directions 0, 90, 180, 270 supported: " + d);
                 }
-                int begin = pdfLine.getBegin();
+                int begin = pdfChunk.getBegin();
                 int glyphCount = glyphStarts.size();
                 for (int i = 0; i < glyphCount; i++) {
                     var b = glyphStarts.get(i);
-                    var isLastGlyphInLine = i == glyphCount - 1;
-                    var e = ((isLastGlyphInLine ? b0 + le : glyphStarts.get(i + 1)) - b) * ef;
+                    var isLastGlyphInChunk = i == glyphCount - 1;
+                    var e = ((isLastGlyphInChunk ? b0 + le : glyphStarts.get(i + 1)) - b) * ef;
                     // assert e >= 0;
-                    float x = (d == 0 || d == 180) ? b : pdfLine.getX();
-                    float y = (d == 0 || d == 180) ? pdfLine.getY() : b;
-                    float w = (d == 0 || d == 180) ? e : pdfLine.getW();
-                    float h = (d == 0 || d == 180) ? pdfLine.getH() : e;
+                    float x = (d == 0 || d == 180) ? b : pdfChunk.getX();
+                    float y = (d == 0 || d == 180) ? pdfChunk.getY() : b;
+                    float w = (d == 0 || d == 180) ? e : pdfChunk.getW();
+                    float h = (d == 0 || d == 180) ? pdfChunk.getH() : e;
 
                     int end = begin + charWidths.get(i);
                     String coveredText = cas.getDocumentText().substring(begin, end);
@@ -155,13 +155,13 @@ public class VisualPdfReader
                     begin += charWidths.get(i);
                 }
 
-                vLines.add(new VChunk(pdfLine.getBegin(), pdfLine.getEnd(),
-                        pdfLine.getCoveredText(), pdfLine.getD(), pdfLine.getX(), pdfLine.getY(),
-                        pdfLine.getW(), pdfLine.getH(), vGlyphs));
+                vChunks.add(new VChunk(pdfChunk.getBegin(), pdfChunk.getEnd(),
+                        pdfChunk.getCoveredText(), pdfChunk.getD(), pdfChunk.getX(), pdfChunk.getY(),
+                        pdfChunk.getW(), pdfChunk.getH(), vGlyphs));
             }
 
             vPages.add(new VPage(pdfPage.getPageNumber(), pdfPage.getWidth(), pdfPage.getHeight(),
-                    pdfPage.getBegin(), pdfPage.getEnd(), pdfPage.getCoveredText(), vLines));
+                    pdfPage.getBegin(), pdfPage.getEnd(), pdfPage.getCoveredText(), vChunks));
         }
         vModel = new VModel(vPages);
         return vModel;
