@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.StringWriter;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -42,12 +43,11 @@ class VisualPDFTextStripperTest
 {
     public static Iterable<File> pdfFiles()
     {
-        // return asList(new File("src/test/resources/pdfbox-testfiles/").listFiles()).stream()
-        // .filter(file -> file.getName().endsWith(".pdf")) //
-        // // We have trouble with RTL text in PDF atm
-        // .filter(file -> !asList("FC60_Times.pdf", "hello3.pdf").contains(file.getName())) //
-        // .collect(Collectors.toList());
-        return asList(new File("/Users/bluefire/texts/three_pages.pdf"));
+        return asList(new File("src/test/resources/pdfbox-testfiles/").listFiles()).stream()
+                .filter(file -> file.getName().endsWith(".pdf")) //
+                // We have trouble with RTL text in PDF atm
+                .filter(file -> !asList("FC60_Times.pdf", "hello3.pdf").contains(file.getName())) //
+                .collect(Collectors.toList());
     }
 
     @ParameterizedTest(name = "{index}: reading PDF file {0}")
