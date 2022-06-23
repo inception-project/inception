@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.API_BASE;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -131,6 +132,7 @@ public class AeroRemoteApiControllerTest
 
         if (!initialized) {
             userRepository.create(new User("admin", ROLE_ADMIN));
+            userRepository.create(new User("user", ROLE_USER));
             initialized = true;
         }
     }
@@ -291,6 +293,93 @@ public class AeroRemoteApiControllerTest
             .andExpect(jsonPath("$.body[0].id").value("1"))
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("ANNOTATION-IN-PROGRESS"));
+        // @formatter:on
+    }
+
+    @Test
+    public void t006_testPermissionCreate() throws Exception
+    {
+        // @formatter:off
+        mvc.perform(post(API_BASE + "/projects/1/permissions/user")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("projectId", "1")
+                .param("userId", "user")
+                .param("roles", "ANNOTATOR", "CURATOR"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.body[0].project").value("1"))
+            .andExpect(jsonPath("$.body[0].user").value("user"))
+            .andExpect(jsonPath("$.body[0].role").value("CURATOR"))
+            .andExpect(jsonPath("$.body[1].project").value("1"))
+            .andExpect(jsonPath("$.body[1].user").value("user"))
+            .andExpect(jsonPath("$.body[1].role").value("ANNOTATOR"));
+        // @formatter:on
+    }
+
+    @Test
+    public void t007_testPermissionListForUser() throws Exception
+    {
+        // @formatter:off
+        mvc.perform(get(API_BASE + "/projects/1/permissions/user")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("projectId", "1")
+                .param("userId", "user"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.body[0].project").value("1"))
+            .andExpect(jsonPath("$.body[0].user").value("user"))
+            .andExpect(jsonPath("$.body[0].role").value("CURATOR"))
+            .andExpect(jsonPath("$.body[1].project").value("1"))
+            .andExpect(jsonPath("$.body[1].user").value("user"))
+            .andExpect(jsonPath("$.body[1].role").value("ANNOTATOR"));
+        // @formatter:on
+    }
+
+    @Test
+    public void t008_testPermissionListAll() throws Exception
+    {
+        // @formatter:off
+        mvc.perform(get(API_BASE + "/projects/1/permissions")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("projectId", "1"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.body[0].project").value("1"))
+            .andExpect(jsonPath("$.body[0].user").value("admin"))
+            .andExpect(jsonPath("$.body[0].role").value("MANAGER"))
+            .andExpect(jsonPath("$.body[1].project").value("1"))
+            .andExpect(jsonPath("$.body[1].user").value("admin"))
+            .andExpect(jsonPath("$.body[1].role").value("CURATOR"))
+            .andExpect(jsonPath("$.body[2].project").value("1"))
+            .andExpect(jsonPath("$.body[2].user").value("admin"))
+            .andExpect(jsonPath("$.body[2].role").value("ANNOTATOR"))
+            .andExpect(jsonPath("$.body[3].project").value("1"))
+            .andExpect(jsonPath("$.body[3].user").value("user"))
+            .andExpect(jsonPath("$.body[3].role").value("CURATOR"))
+            .andExpect(jsonPath("$.body[4].project").value("1"))
+            .andExpect(jsonPath("$.body[4].user").value("user"))
+            .andExpect(jsonPath("$.body[4].role").value("ANNOTATOR"));
+        // @formatter:on
+    }
+
+    @Test
+    public void t009_testPermissionDelete() throws Exception
+    {
+        // @formatter:off
+        mvc.perform(delete(API_BASE + "/projects/1/permissions/user")
+                .with(csrf().asHeader())
+                .with(user("admin").roles("ADMIN"))
+                .param("projectId", "1")
+                .param("userId", "user")
+                .param("roles", "CURATOR"))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+            .andExpect(jsonPath("$.body[0].project").value("1"))
+            .andExpect(jsonPath("$.body[0].user").value("user"))
+            .andExpect(jsonPath("$.body[0].role").value("ANNOTATOR"));
         // @formatter:on
     }
 
