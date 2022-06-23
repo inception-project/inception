@@ -497,3 +497,29 @@ div.left-tabpanel div.tab-row a:hover {
     box-shadow: $btn-focus-box-shadow;
   }
 }
+
+.w-min-220px {
+  min-width: 220px;
+}
+
+.w-min-440px {
+  min-width: 440px;
+}
+
+.h-max-400px {
+  max-height: 440px;
+}
+
+@for $i from 1 through 10 {
+  @media only screen and (min-height: #{$i * 200}px) {
+    .dropdown-menu { max-height: #{$i * 100}px; overflow-y: auto; }
+  }   
+}
+
+.form-row {
+  @extend .mb-2;
+}
+
+.above-modal {
+  z-index: 30000;
+}

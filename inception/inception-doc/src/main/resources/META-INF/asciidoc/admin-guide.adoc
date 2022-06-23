@@ -92,6 +92,8 @@ include::{include-dir}settings_document-import-export.adoc[leveloffset=+1]
 
 include::{include-dir}settings_custom-header-icons.adoc[leveloffset=+1]
 
+include::{include-dir}settings_theming.adoc[leveloffset=+1]
+
 include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
 
 include::{include-dir}settings_annotation-editor_pdf.adoc[leveloffset=+1]

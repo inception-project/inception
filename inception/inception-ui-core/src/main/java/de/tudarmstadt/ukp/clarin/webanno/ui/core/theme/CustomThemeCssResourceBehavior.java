@@ -15,29 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
+package de.tudarmstadt.ukp.clarin.webanno.ui.core.theme;
+
+import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getApplicationHome;
+
+import java.io.File;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.resource.FileSystemResourceReference;
 
-public class InceptionCssBehavior
+public class CustomThemeCssResourceBehavior
     extends Behavior
 {
-    private static final long serialVersionUID = 5367089196863803403L;
-
-    private static final InceptionCssBehavior INSTANCE = new InceptionCssBehavior();
+    private static final long serialVersionUID = 5519463574787275765L;
 
     @Override
     public void renderHead(Component aComponent, IHeaderResponse aResponse)
     {
-        // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
-        aResponse.render(CssHeaderItem.forReference(InceptionCssReference.get()));
-    }
-
-    public static InceptionCssBehavior get()
-    {
-        return INSTANCE;
+        File customCss = new File(getApplicationHome(), "theme.css");
+        aResponse.render(CssHeaderItem
+                .forReference(new FileSystemResourceReference("theme.css", customCss.toPath())));
     }
 }
