@@ -273,7 +273,7 @@ public class ProjectServiceImpl
         String query = String.join("\n", //
                 "FROM ProjectPermission ", //
                 "WHERE user =:user AND project =:project ", //
-                "ORDER BY level");
+                "ORDER BY user, level");
 
         return entityManager.createQuery(query, ProjectPermission.class) //
                 .setParameter("user", aUser) //
@@ -496,7 +496,8 @@ public class ProjectServiceImpl
     {
         String query = String.join("\n", //
                 "FROM ProjectPermission ", //
-                "WHERE project = :project");
+                "WHERE project = :project", //
+                "ORDER BY user, level");
         return entityManager.createQuery(query, ProjectPermission.class) //
                 .setParameter("project", aProject) //
                 .getResultList();
