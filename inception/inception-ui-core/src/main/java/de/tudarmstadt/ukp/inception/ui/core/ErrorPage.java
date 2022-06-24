@@ -18,12 +18,15 @@
 package de.tudarmstadt.ukp.inception.ui.core;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toPrettyJsonString;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.parseMediaTypes;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.Map;
 import java.util.Optional;
 
@@ -38,6 +41,8 @@ import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.TextRequestHandler;
 import org.apache.wicket.request.http.WebRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -49,7 +54,6 @@ import com.giffing.wicket.spring.boot.context.scan.WicketAccessDeniedPage;
 import com.giffing.wicket.spring.boot.context.scan.WicketExpiredPage;
 import com.giffing.wicket.spring.boot.context.scan.WicketInternalErrorPage;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
@@ -61,6 +65,7 @@ public class ErrorPage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = 7848496813044538495L;
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     public ErrorPage()
     {
@@ -73,12 +78,15 @@ public class ErrorPage
     {
         String response;
         try {
-            response = JSONUtil.toPrettyJsonString(Map.of( //
-                    "status", getStatusCode(), //
-                    "message", getStatusReasonPhrase()));
+            response = toPrettyJsonString(Map.of( //
+                    "messages", asList( //
+                            Map.of( //
+                                    "level", "ERROR", //
+                                    "message", getStatusReasonPhrase()))));
         }
         catch (IOException e) {
-            response = "[\"ERROR\"]";
+            response = "{\"messages\": [{\"level\": \"ERROR\", \"message\": \"Unable to render error.\"}] }";
+            LOG.error("Unable to render error message", e);
         }
 
         getRequestCycle().scheduleRequestHandlerAfterCurrent(
