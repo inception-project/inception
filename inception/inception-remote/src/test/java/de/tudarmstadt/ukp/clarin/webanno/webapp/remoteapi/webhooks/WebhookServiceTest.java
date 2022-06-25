@@ -59,8 +59,10 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 
 @SpringBootApplication(exclude = { //
+        EventLoggingAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         LiquibaseAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, //

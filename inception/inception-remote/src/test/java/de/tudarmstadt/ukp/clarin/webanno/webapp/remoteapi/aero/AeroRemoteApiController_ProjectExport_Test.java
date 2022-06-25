@@ -18,19 +18,20 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
-import static org.hamcrest.Matchers.containsString;
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.apache.commons.io.FileUtils.writeByteArrayToFile;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -59,14 +60,16 @@ import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoC
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 
-@EnableAutoConfiguration(exclude = { LiquibaseAutoConfiguration.class,
-        EventLoggingAutoConfiguration.class })
+@EnableAutoConfiguration(exclude = { //
+        LiquibaseAutoConfiguration.class, EventLoggingAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
                 "remote-api.enabled=true", //
-                "repository.path=" + AeroRemoteApiController_Project_Test.TEST_OUTPUT_FOLDER })
+                "repository.path="
+                        + AeroRemoteApiController_ProjectExport_Test.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity
 @Import({ //
         ProjectServiceAutoConfiguration.class, //
@@ -76,16 +79,17 @@ import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAu
         CurationDocumentServiceAutoConfiguration.class, //
         TextFormatsAutoConfiguration.class, //
         DocumentImportExportServiceAutoConfiguration.class, //
+        MatrixWorkloadManagerAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         RemoteApiAutoConfiguration.class })
 @EntityScan({ //
-        "de.tudarmstadt.ukp.clarin.webanno.model", //
-        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+        "de.tudarmstadt.ukp.inception", //
+        "de.tudarmstadt.ukp.clarin.webanno" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DirtiesContext(classMode = ClassMode.BEFORE_EACH_TEST_METHOD)
-public class AeroRemoteApiController_Project_Test
+public class AeroRemoteApiController_ProjectExport_Test
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/AeroRemoteApiController_Project_Test";
 
@@ -109,35 +113,22 @@ public class AeroRemoteApiController_Project_Test
     }
 
     @Test
-    void testCreateAndDelete() throws Exception
+    void testExportAndImport(@TempDir Path aTempDir) throws Exception
     {
-        adminActor.listProjects() //
-                .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages").isEmpty());
-
         adminActor.createProject("project1") //
                 .andExpect(status().isCreated()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
-                .andExpect(jsonPath("$.body.name").value("project1"));
+                .andExpect(jsonPath("$.body.id").value("1"));
 
-        adminActor.listProjects() //
+        var result = adminActor.exportProject(1l) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body[0].id").value("1")) //
-                .andExpect(jsonPath("$.body[0].name").value("project1"));
+                .andExpect(content().contentType("application/zip")).andReturn();
 
-        adminActor.deleteProject(1l) //
-                .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages[0].level").value("INFO")) //
-                .andExpect(jsonPath("$.messages[0].message").value(containsString("deleted")));
+        File exportFile = aTempDir.resolve("export.zip").toFile();
+        writeByteArrayToFile(exportFile, result.getResponse().getContentAsByteArray());
 
-        adminActor.listProjects() //
+        adminActor.importProject(exportFile) //
                 .andExpect(status().isOk()) //
-                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.messages").isEmpty());
+                .andExpect(jsonPath("$.body.id").value("2"));
     }
 
     @SpringBootConfiguration

@@ -58,9 +58,11 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 
-@EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
+@EnableAutoConfiguration(exclude = { LiquibaseAutoConfiguration.class,
+        EventLoggingAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
@@ -109,7 +111,7 @@ public class AeroRemoteApiController_Document_Test
         userRepository.create(new User("admin", ROLE_ADMIN));
         userRepository.create(new User("user", ROLE_USER));
 
-        adminActor.performCreateProject("project1") //
+        adminActor.createProject("project1") //
                 .andExpect(status().isCreated()) //
                 .andExpect(jsonPath("$.body.id").value("1"));
     }
@@ -119,28 +121,28 @@ public class AeroRemoteApiController_Document_Test
     {
         String documentName = "test.txt";
 
-        adminActor.performListDocuments(1l) //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
                 .andExpect(jsonPath("$.messages").isEmpty());
 
-        adminActor.performImportTextDocument(1l, documentName, "This is a test.") //
+        adminActor.importTextDocument(1l, documentName, "This is a test.") //
                 .andExpect(status().isCreated()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
                 .andExpect(jsonPath("$.body.id").value("1")) //
                 .andExpect(jsonPath("$.body.name").value(documentName));
 
-        adminActor.performListDocuments(1l) //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
                 .andExpect(jsonPath("$.body[0].id").value("1")) //
                 .andExpect(jsonPath("$.body[0].name").value(documentName)) //
                 .andExpect(jsonPath("$.body[0].state").value("NEW"));
 
-        adminActor.performDeleteDocument(1l, 1l) //
+        adminActor.deleteDocument(1l, 1l) //
                 .andExpect(status().isOk());
 
-        adminActor.performListDocuments(1l) //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
                 .andExpect(jsonPath("$.body").isEmpty());
@@ -152,13 +154,13 @@ public class AeroRemoteApiController_Document_Test
         String documentName = "test.txt";
         String documentContent = "This is a test.";
 
-        adminActor.performImportTextDocument(1l, documentName, documentContent) //
+        adminActor.importTextDocument(1l, documentName, documentContent) //
                 .andExpect(status().isCreated()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
                 .andExpect(jsonPath("$.body.id").value("1")) //
                 .andExpect(jsonPath("$.body.name").value(documentName));
 
-        adminActor.performExportTextDocument(1l, 1l) //
+        adminActor.exportTextDocument(1l, 1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(TEXT_PLAIN_VALUE)) //
                 .andExpect(content().string(documentContent));
@@ -167,16 +169,16 @@ public class AeroRemoteApiController_Document_Test
     @Test
     void thatNonManagerCannotImportDocuments() throws Exception
     {
-        adminActor.performGrantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
                 .andExpect(status().isOk()); //
 
-        userActor.performImportTextDocument(1l, "test.txt", "This is a test.") //
+        userActor.importTextDocument(1l, "test.txt", "This is a test.") //
                 .andExpect(status().isForbidden());
 
-        adminActor.performGrantProjectRole(1, "user", "MANAGER") //
+        adminActor.grantProjectRole(1, "user", "MANAGER") //
                 .andExpect(status().isOk()); //
 
-        userActor.performImportTextDocument(1l, "test.txt", "This is a test.") //
+        userActor.importTextDocument(1l, "test.txt", "This is a test.") //
                 .andExpect(status().isCreated());
     }
 

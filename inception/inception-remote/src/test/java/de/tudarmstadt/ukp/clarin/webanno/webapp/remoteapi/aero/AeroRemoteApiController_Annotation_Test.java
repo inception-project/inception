@@ -57,9 +57,11 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 
-@EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
+@EnableAutoConfiguration(exclude = { LiquibaseAutoConfiguration.class,
+        EventLoggingAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
@@ -93,54 +95,70 @@ public class AeroRemoteApiController_Annotation_Test
     private MockAeroClient adminActor;
 
     @BeforeAll
-    public static void setupClass()
+    static void setupClass()
     {
         FileSystemUtils.deleteRecursively(new File(TEST_OUTPUT_FOLDER));
     }
 
     @BeforeEach
-    public void setup() throws Exception
+    void setup() throws Exception
     {
         adminActor = new MockAeroClient(context, "admin", "ADMIN");
 
         userRepository.create(new User("admin", ROLE_ADMIN));
         userRepository.create(new User("user", ROLE_USER));
 
-        adminActor.performCreateProject("project1").andExpect(status().isCreated())
+        adminActor.createProject("project1").andExpect(status().isCreated())
                 .andExpect(jsonPath("$.body.id").value("1"))
                 .andExpect(jsonPath("$.body.name").value("project1"));
 
-        adminActor.performImportTextDocument(1l, "test.txt", "This is a test.")
+        adminActor.importTextDocument(1l, "test.txt", "This is a test.")
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.body.id").value("1"));
     }
 
     @Test
-    public void testAnnotationCreate() throws Exception
+    void testAnnotationCreate() throws Exception
     {
-        // @formatter:off
-        adminActor.performListAnnotations(1,1)
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.messages").isEmpty());
-        
-        adminActor.performCreateAnnotations(1, 1, "admin", "This is a test.", "IN-PROGRESS")
-            .andExpect(status().isCreated())
-            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.body.user").value("admin"))
-            .andExpect(jsonPath("$.body.state").value("IN-PROGRESS"))
-            .andExpect(jsonPath("$.body.timestamp").doesNotExist());
-     
-        adminActor.performListAnnotations(1,1)
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(APPLICATION_JSON_VALUE))
-            .andExpect(jsonPath("$.body[0].user").value("admin"))
-            .andExpect(jsonPath("$.body[0].state").value("IN-PROGRESS"))
-            .andExpect(jsonPath("$.body[0].timestamp").doesNotExist());
-        // @formatter:on
+        adminActor.listAnnotations(1, 1) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.messages").isEmpty());
+
+        adminActor.createAnnotations(1, 1, "admin", "This is a test.", "IN-PROGRESS") //
+                .andExpect(status().isCreated()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body.user").value("admin"))
+                .andExpect(jsonPath("$.body.state").value("IN-PROGRESS"))
+                .andExpect(jsonPath("$.body.timestamp").doesNotExist());
+
+        adminActor.listAnnotations(1, 1) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body[0].user").value("admin"))
+                .andExpect(jsonPath("$.body[0].state").value("IN-PROGRESS"))
+                .andExpect(jsonPath("$.body[0].timestamp").doesNotExist());
+    }
+
+    @Test
+    void testUpdatingTheAnnotationState() throws Exception
+    {
+        adminActor.createAnnotations(1, 1, "admin", "This is a test.") //
+                .andExpect(status().isCreated()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body.user").value("admin"))
+                .andExpect(jsonPath("$.body.state").value("NEW"))
+                .andExpect(jsonPath("$.body.timestamp").doesNotExist());
+
+        adminActor.updateAnnotationState(1, 1, "admin", "LOCKED") //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.body.user").value("admin"))
+                .andExpect(jsonPath("$.body.state").value("LOCKED"))
+                .andExpect(jsonPath("$.body.timestamp").doesNotExist());
     }
 
     @SpringBootConfiguration
-    public static class TestContext
+    static class TestContext
     {
         // All handled by auto-config
     }

@@ -57,9 +57,11 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 
-@EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
+@EnableAutoConfiguration(exclude = { LiquibaseAutoConfiguration.class,
+        EventLoggingAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
@@ -108,7 +110,7 @@ public class AeroRemoteApiController_Permissions_Test
         userRepository.create(new User("admin", ROLE_ADMIN));
         userRepository.create(new User("user", ROLE_USER));
 
-        adminActor.performCreateProject("project1").andExpect(status().isCreated())
+        adminActor.createProject("project1").andExpect(status().isCreated())
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body.id").value("1"))
                 .andExpect(jsonPath("$.body.name").value("project1"));
@@ -117,12 +119,12 @@ public class AeroRemoteApiController_Permissions_Test
     @Test
     public void testGrantAndRevokePermissions() throws Exception
     {
-        adminActor.performListPermissionsForUser(1, "user") //
+        adminActor.listPermissionsForUser(1, "user") //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body").isEmpty());
 
-        adminActor.performGrantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body[0].project").value("1"))
@@ -132,14 +134,14 @@ public class AeroRemoteApiController_Permissions_Test
                 .andExpect(jsonPath("$.body[1].user").value("user"))
                 .andExpect(jsonPath("$.body[1].role").value("ANNOTATOR"));
 
-        adminActor.performRevokeProjectRole(1, "user", "CURATOR") //
+        adminActor.revokeProjectRole(1, "user", "CURATOR") //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body[0].project").value("1"))
                 .andExpect(jsonPath("$.body[0].user").value("user"))
                 .andExpect(jsonPath("$.body[0].role").value("ANNOTATOR"));
 
-        adminActor.performRevokeProjectRole(1, "user", "ANNOTATOR") //
+        adminActor.revokeProjectRole(1, "user", "ANNOTATOR") //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body").isEmpty());
@@ -148,10 +150,10 @@ public class AeroRemoteApiController_Permissions_Test
     @Test
     public void testPermissionListAll() throws Exception
     {
-        adminActor.performGrantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
                 .andExpect(status().isOk());
 
-        adminActor.performListPermissionsForProject(1) //
+        adminActor.listPermissionsForProject(1) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body[0].project").value("1"))
@@ -174,26 +176,26 @@ public class AeroRemoteApiController_Permissions_Test
     @Test
     public void thatNonAdminCannotChangePermissions() throws Exception
     {
-        userActor.performGrantProjectRole(1, "user", "MANAGER") //
+        userActor.grantProjectRole(1, "user", "MANAGER") //
                 .andExpect(status().isForbidden());
 
-        userActor.performRevokeProjectRole(1, "user", "MANAGER") //
+        userActor.revokeProjectRole(1, "user", "MANAGER") //
                 .andExpect(status().isForbidden());
     }
 
     @Test
     public void thatManagerCanChangePermissions() throws Exception
     {
-        adminActor.performGrantProjectRole(1, "user", "MANAGER") //
+        adminActor.grantProjectRole(1, "user", "MANAGER") //
                 .andExpect(status().isOk()); //
 
-        userActor.performGrantProjectRole(1, "user", "CURATOR") //
+        userActor.grantProjectRole(1, "user", "CURATOR") //
                 .andExpect(status().isOk()); //
 
-        adminActor.performRevokeProjectRole(1, "user", "MANAGER") //
+        adminActor.revokeProjectRole(1, "user", "MANAGER") //
                 .andExpect(status().isOk()); //
 
-        userActor.performRevokeProjectRole(1, "user", "CURATOR") //
+        userActor.revokeProjectRole(1, "user", "CURATOR") //
                 .andExpect(status().isForbidden());
 
     }

@@ -57,9 +57,11 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 
-@EnableAutoConfiguration(exclude = LiquibaseAutoConfiguration.class)
+@EnableAutoConfiguration(exclude = { LiquibaseAutoConfiguration.class,
+        EventLoggingAutoConfiguration.class })
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
@@ -106,43 +108,43 @@ public class AeroRemoteApiController_Curation_Test
         userRepository.create(new User("admin", ROLE_ADMIN));
         userRepository.create(new User("user", ROLE_USER));
 
-        adminActor.performCreateProject("project1").andExpect(status().isCreated())
+        adminActor.createProject("project1").andExpect(status().isCreated())
                 .andExpect(jsonPath("$.body.id").value("1"))
                 .andExpect(jsonPath("$.body.name").value("project1"));
 
-        adminActor.performImportTextDocument(1l, "test.txt", "This is a test.")
+        adminActor.importTextDocument(1l, "test.txt", "This is a test.")
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.body.id").value("1"));
     }
 
     @Test
     public void testCurationCreateDelete() throws Exception
     {
-        adminActor.performListDocuments(1l) //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body[0].id").value("1"))
                 .andExpect(jsonPath("$.body[0].name").value("test.txt"))
                 .andExpect(jsonPath("$.body[0].state").value("NEW"));
 
-        adminActor.performImportCurations(1, 1, "This is a test.", "CURATION-COMPLETE") //
+        adminActor.importCurations(1, 1, "This is a test.", "CURATION-COMPLETE") //
                 .andExpect(status().isCreated()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body.user").value("CURATION_USER"))
                 .andExpect(jsonPath("$.body.state").value("COMPLETE"))
                 .andExpect(jsonPath("$.body.timestamp").exists());
 
-        adminActor.performListDocuments(1l) //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body[0].id").value("1"))
                 .andExpect(jsonPath("$.body[0].name").value("test.txt"))
                 .andExpect(jsonPath("$.body[0].state").value("CURATION-COMPLETE"));
 
-        adminActor.performDeleteCurations(1, 1) //
+        adminActor.deleteCurations(1, 1) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE));
 
-        adminActor.performListDocuments(1l) //
+        adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.body[0].id").value("1"))
