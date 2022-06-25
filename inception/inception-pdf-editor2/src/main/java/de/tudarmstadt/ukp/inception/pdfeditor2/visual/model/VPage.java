@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "index", "begin", "end", "lines" })
+@JsonPropertyOrder(value = { "index", "begin", "end", "chunks" })
 public class VPage
     implements Serializable
 {
