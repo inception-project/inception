@@ -688,10 +688,13 @@ public class AeroRemoteApiController
                 parseAnnotationDocumentState(aState.get()));
         documentService.createAnnotationDocument(anno);
 
-        return ResponseEntity.ok(new RResponse<>(INFO,
+        RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
+        response.addMessage(INFO,
                 "State of annotations of user [" + aAnnotatorId + "] on document ["
                         + document.getId() + "] set to ["
-                        + annotationDocumentStateToString(anno.getState()) + "]"));
+                        + annotationDocumentStateToString(anno.getState()) + "]");
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Create or update annotations for a document in a project")
@@ -1182,7 +1185,7 @@ public class AeroRemoteApiController
         }
     }
 
-    @Operation(summary = "List all permissions in the given project")
+    @Operation(summary = "List all permissions in the given project (non-AERO)")
     @GetMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS, //
             produces = { APPLICATION_JSON_VALUE })
@@ -1208,7 +1211,7 @@ public class AeroRemoteApiController
         return ResponseEntity.ok(new RResponse<>(permissions));
     }
 
-    @Operation(summary = "List permissions for a user in the given project")
+    @Operation(summary = "List permissions for a user in the given project (non-AERO)")
     @GetMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
                     + PARAM_ANNOTATOR_ID + "}", //
@@ -1238,7 +1241,7 @@ public class AeroRemoteApiController
         return ResponseEntity.ok(new RResponse<>(permissions));
     }
 
-    @Operation(summary = "Assign roles to a user in the given project")
+    @Operation(summary = "Assign roles to a user in the given project (non-AERO)")
     @PostMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
                     + PARAM_ANNOTATOR_ID + "}", //
@@ -1273,7 +1276,7 @@ public class AeroRemoteApiController
         return ResponseEntity.ok(new RResponse<>(permissions));
     }
 
-    @Operation(summary = "Revoke roles to a user in the given project")
+    @Operation(summary = "Revoke roles to a user in the given project (non-AERO)")
     @DeleteMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
                     + PARAM_ANNOTATOR_ID + "}", //
