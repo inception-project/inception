@@ -44,6 +44,7 @@ import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -61,13 +62,14 @@ class UserSelectionPanel
     private @SpringBean UserSelectionPanelConfiguration config;
 
     private IModel<Project> projectModel;
-    private IModel<User> userModel;
+    private IModel<ProjectUserPermissions> userModel;
 
-    private OverviewListChoice<User> overviewList;
+    private OverviewListChoice<ProjectUserPermissions> overviewList;
     private MultiSelect<User> usersToAdd;
     private Map<String, User> recentUsers;
 
-    public UserSelectionPanel(String id, IModel<Project> aProject, IModel<User> aUser)
+    public UserSelectionPanel(String id, IModel<Project> aProject,
+            IModel<ProjectUserPermissions> aUser)
     {
         super(id);
 
@@ -152,7 +154,8 @@ class UserSelectionPanel
                 }
 
                 if (!result.isEmpty()) {
-                    result.removeAll(listUsersWithPermissions());
+                    result.removeAll(projectRepository
+                            .listProjectUsersWithPermissions(projectModel.getObject()));
                 }
 
                 return result;
@@ -193,39 +196,50 @@ class UserSelectionPanel
         form.add(new LambdaAjaxButton<>("add", this::actionAdd));
     }
 
-    private IChoiceRenderer<User> makeUserChoiceRenderer()
+    private IChoiceRenderer<ProjectUserPermissions> makeUserChoiceRenderer()
     {
-        return new org.apache.wicket.markup.html.form.ChoiceRenderer<User>()
+        return new org.apache.wicket.markup.html.form.ChoiceRenderer<ProjectUserPermissions>()
         {
             private static final long serialVersionUID = 4607720784161484145L;
 
             @Override
-            public Object getDisplayValue(User aUser)
+            public Object getDisplayValue(ProjectUserPermissions aUser)
             {
+                String username = aUser.getUsername();
+
                 StringBuilder builder = new StringBuilder();
-                builder.append(aUser.getUiName());
-                if (!aUser.getUsername().equals(aUser.getUiName())) {
-                    builder.append(" (");
-                    builder.append(aUser.getUsername());
-                    builder.append(")");
-                }
+
+                aUser.getUser().ifPresentOrElse( //
+                        user -> {
+                            builder.append(user.getUiName());
+                            if (!aUser.getUsername().equals(user.getUiName())) {
+                                builder.append(" (");
+                                builder.append(aUser.getUsername());
+                                builder.append(")");
+                            }
+                        }, //
+                        () -> builder.append(username));
 
                 builder.append(" ");
-                builder.append(projectRepository.listRoles(projectModel.getObject(), aUser).stream()
-                        .map(PermissionLevel::getName).collect(joining(", ", "[", "]")));
+                builder.append(aUser.getRoles().stream().map(PermissionLevel::getName) //
+                        .collect(joining(", ", "[", "]")));
 
-                if (!aUser.isEnabled()) {
-                    builder.append(" (disabled)");
-                }
+                aUser.getUser().ifPresentOrElse( //
+                        user -> { //
+                            if (!user.isEnabled()) {
+                                builder.append(" (disabled)");
+                            }
+                        }, //
+                        () -> builder.append(" (missing!)"));
 
                 return builder.toString();
             }
         };
     }
 
-    private List<User> listUsersWithPermissions()
+    private List<ProjectUserPermissions> listUsersWithPermissions()
     {
-        return projectRepository.listProjectUsersWithPermissions(projectModel.getObject());
+        return projectRepository.listProjectUserPermissions(projectModel.getObject());
     }
 
     private void actionAdd(AjaxRequestTarget aTarget, Form<List<User>> aForm)
