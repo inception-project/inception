@@ -26,9 +26,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Project.MIN_PROJECT_SLUG_L
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlug;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Project.isValidProjectSlugInitialCharacter;
 import static java.lang.Math.min;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.io.IOUtils.copyLarge;
 import static org.apache.commons.lang3.time.DurationFormatUtils.formatDurationWords;
@@ -45,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -88,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -247,6 +252,13 @@ public class ProjectServiceImpl
     @Transactional
     public List<PermissionLevel> listRoles(Project aProject, User aUser)
     {
+        return listRoles(aProject, aUser.getUsername());
+    }
+
+    @Override
+    @Transactional
+    public List<PermissionLevel> listRoles(Project aProject, String aUser)
+    {
         String query = String.join("\n", //
                 "SELECT level ", //
                 "FROM ProjectPermission ", //
@@ -254,7 +266,7 @@ public class ProjectServiceImpl
                 "ORDER BY level");
 
         return entityManager.createQuery(query, PermissionLevel.class) //
-                .setParameter("user", aUser.getUsername()) //
+                .setParameter("user", aUser) //
                 .setParameter("project", aProject) //
                 .getResultList();
     }
@@ -299,6 +311,43 @@ public class ProjectServiceImpl
 
     @Override
     @Transactional
+    public List<ProjectPermission> listProjectPermissions(Project aProject)
+    {
+        String query = String.join("\n", //
+                "FROM ProjectPermission ", //
+                "WHERE project = :project", //
+                "ORDER BY user, level");
+
+        return entityManager.createQuery(query, ProjectPermission.class) //
+                .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public List<ProjectUserPermissions> listProjectUserPermissions(Project aProject)
+    {
+        var userMap = new HashMap<String, User>();
+        listProjectUsersWithPermissions(aProject).stream() //
+                .forEach(user -> userMap.put(user.getUsername(), user));
+
+        var perUserPermissions = listProjectPermissions(aProject).stream() //
+                .collect(groupingBy(ProjectPermission::getUser));
+
+        return perUserPermissions.entrySet().stream() //
+                .map(entry -> {
+                    var username = entry.getKey();
+                    var user = userMap.get(entry.getKey());
+                    var roles = entry.getValue().stream().map(ProjectPermission::getLevel) //
+                            .sorted() //
+                            .collect(toCollection(LinkedHashSet::new));
+                    return new ProjectUserPermissions(aProject, username, user, roles);
+                }) //
+                .collect(toList());
+    }
+
+    @Override
+    @Transactional
     public boolean hasAnyRole(User aUser, Project aProject)
     {
         String query = String.join("\n", //
@@ -316,6 +365,14 @@ public class ProjectServiceImpl
     public boolean hasRole(User aUser, Project aProject, PermissionLevel aRole,
             PermissionLevel... aMoreRoles)
     {
+        return hasRole(aUser.getUsername(), aProject, aRole, aMoreRoles);
+    }
+
+    @Override
+    @Transactional
+    public boolean hasRole(String aUser, Project aProject, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
+    {
         Validate.notNull(aRole, "hasRole() requires at least one role to check");
 
         var roles = new LinkedHashSet<>();
@@ -329,7 +386,7 @@ public class ProjectServiceImpl
                 "WHERE user = :user AND project = :project AND level IN (:roles)");
 
         return entityManager.createQuery(query, Long.class) //
-                .setParameter("user", aUser.getUsername()) //
+                .setParameter("user", aUser) //
                 .setParameter("project", aProject) //
                 .setParameter("roles", roles) //
                 .getSingleResult() > 0;
@@ -384,11 +441,19 @@ public class ProjectServiceImpl
     public void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels)
     {
+        setProjectPermissionLevels(aUser.getUsername(), aProject, aLevels);
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public void setProjectPermissionLevels(String aUser, Project aProject,
+            Collection<PermissionLevel> aLevels)
+    {
         try (var logCtx = withProjectLogger(aProject)) {
             Set<PermissionLevel> levelsToBeGranted = new HashSet<>(aLevels);
             List<ProjectPermission> permissions = new ArrayList<>();
             try {
-                permissions.addAll(listProjectPermissionLevel(aUser.getUsername(), aProject));
+                permissions.addAll(listProjectPermissionLevel(aUser, aProject));
             }
             catch (NoResultException e) {
                 // Nothing to do
@@ -413,8 +478,7 @@ public class ProjectServiceImpl
             // Grant new permissions
             List<ProjectPermission> grantedPermissions = new ArrayList<>();
             for (PermissionLevel level : levelsToBeGranted) {
-                ProjectPermission permission = new ProjectPermission(aProject, aUser.getUsername(),
-                        level);
+                ProjectPermission permission = new ProjectPermission(aProject, aUser, level);
 
                 grantedPermissions.add(permission);
 
@@ -441,15 +505,14 @@ public class ProjectServiceImpl
     @Transactional
     public List<User> listProjectUsersWithPermissions(Project aProject)
     {
-        String query = String.join("\n", //
+        String query = join("\n", //
                 "SELECT DISTINCT u FROM User u, ProjectPermission pp ", //
                 "WHERE pp.user = u.username ", //
                 "AND pp.project = :project ", //
                 "ORDER BY u.username ASC");
-        List<User> users = entityManager.createQuery(query, User.class)
-                .setParameter("project", aProject) //
+
+        return entityManager.createQuery(query, User.class).setParameter("project", aProject) //
                 .getResultList();
-        return users;
     }
 
     @Override
@@ -490,17 +553,11 @@ public class ProjectServiceImpl
                 .getSingleResult();
     }
 
+    @Deprecated
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
     public List<ProjectPermission> getProjectPermissions(Project aProject)
     {
-        String query = String.join("\n", //
-                "FROM ProjectPermission ", //
-                "WHERE project = :project", //
-                "ORDER BY user, level");
-        return entityManager.createQuery(query, ProjectPermission.class) //
-                .setParameter("project", aProject) //
-                .getResultList();
+        return listProjectPermissions(aProject);
     }
 
     @Deprecated
@@ -508,10 +565,15 @@ public class ProjectServiceImpl
     @Transactional
     public Date getProjectTimeStamp(Project aProject, String aUsername)
     {
-        String query = "SELECT MAX(ann.timestamp) " + "FROM AnnotationDocument AS ann "
-                + "WHERE ann.project = :project AND ann.user = :user";
-        return entityManager.createQuery(query, Date.class).setParameter("project", aProject)
-                .setParameter("user", aUsername).getSingleResult();
+        String query = String.join("\n", //
+                "SELECT MAX(ann.timestamp) ", //
+                "FROM AnnotationDocument AS ann ", //
+                "WHERE ann.project = :project AND ann.user = :user");
+
+        return entityManager.createQuery(query, Date.class) //
+                .setParameter("project", aProject) //
+                .setParameter("user", aUsername) //
+                .getSingleResult();
     }
 
     @Deprecated
@@ -523,6 +585,7 @@ public class ProjectServiceImpl
                 "SELECT MAX(doc.timestamp) ", //
                 "FROM SourceDocument AS doc ", //
                 "WHERE doc.project = :project");
+
         return entityManager.createQuery(query, Date.class) //
                 .setParameter("project", aProject) //
                 .getSingleResult();

@@ -40,8 +40,8 @@ import org.apache.wicket.validation.ValidationError;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -55,11 +55,12 @@ public class UserPermissionsPanel
     private @SpringBean UserDao userRepository;
 
     private IModel<Project> project;
-    private IModel<User> user;
+    private IModel<ProjectUserPermissions> user;
     private Form<Void> form;
     private CheckBoxMultipleChoice<PermissionLevel> levels;
 
-    public UserPermissionsPanel(String aId, IModel<Project> aProject, IModel<User> aUser)
+    public UserPermissionsPanel(String aId, IModel<Project> aProject,
+            IModel<ProjectUserPermissions> aUser)
     {
         super(aId);
 
@@ -77,10 +78,14 @@ public class UserPermissionsPanel
         levels.setSuffix("</div>");
         levels.setLabelPosition(LabelPosition.WRAP_AFTER);
         // This model adapter handles loading/saving permissions directly to the DB
-        levels.setModel(new LambdaModelAdapter<Collection<PermissionLevel>>(() -> {
-            return projectRepository.listRoles(project.getObject(), user.getObject());
-        }, (lvls) -> projectRepository.setProjectPermissionLevels(user.getObject(),
-                project.getObject(), lvls)));
+        levels.setModel(new LambdaModelAdapter<Collection<PermissionLevel>>( //
+                () -> {
+                    return projectRepository.listRoles(project.getObject(),
+                            user.map(ProjectUserPermissions::getUsername).getObject());
+                }, //
+                (lvls) -> projectRepository.setProjectPermissionLevels(
+                        user.map(ProjectUserPermissions::getUsername).getObject(),
+                        project.getObject(), lvls)));
         levels.setChoices(asList(MANAGER, CURATOR, ANNOTATOR));
         levels.setChoiceRenderer(new EnumChoiceRenderer<>(levels));
         levels.add(this::ensureManagersNotRemovingThemselves);
@@ -111,11 +116,12 @@ public class UserPermissionsPanel
             IValidatable<Collection<PermissionLevel>> aValidatable)
     {
         if (!userRepository.getCurrentUsername()
-                .equals(user.map(User::getUsername).orElse(null).getObject())) {
+                .equals(user.map(ProjectUserPermissions::getUsername).orElse(null).getObject())) {
             return;
         }
 
-        if (!projectRepository.hasRole(user.getObject(), project.getObject(), MANAGER)) {
+        if (!projectRepository.hasRole(user.map(ProjectUserPermissions::getUsername).getObject(),
+                project.getObject(), MANAGER)) {
             return;
         }
 
