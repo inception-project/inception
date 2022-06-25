@@ -23,7 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.Webhoo
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookService.X_AERO_NOTIFICATION;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -126,7 +126,7 @@ public class WebhookServiceTest
 
         @RequestMapping(value = "/subscribe", method = RequestMethod.POST, headers = X_AERO_NOTIFICATION
                 + "="
-                + PROJECT_STATE, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
+                + PROJECT_STATE, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> onProjectStateEvent(@RequestBody ProjectStateChangeMessage aMsg)
             throws Exception
         {
@@ -136,7 +136,7 @@ public class WebhookServiceTest
 
         @RequestMapping(value = "/subscribe", method = RequestMethod.POST, headers = X_AERO_NOTIFICATION
                 + "="
-                + DOCUMENT_STATE, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
+                + DOCUMENT_STATE, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> onDocumentStateEvent(
                 @RequestBody DocumentStateChangeMessage aMsg)
             throws Exception
@@ -147,7 +147,7 @@ public class WebhookServiceTest
 
         @RequestMapping(value = "/subscribe", method = RequestMethod.POST, headers = X_AERO_NOTIFICATION
                 + "="
-                + ANNOTATION_STATE, consumes = APPLICATION_JSON_UTF8_VALUE, produces = APPLICATION_JSON_UTF8_VALUE)
+                + ANNOTATION_STATE, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> onAnnotationStateEvent(
                 @RequestBody AnnotationStateChangeMessage aMsg)
             throws Exception
