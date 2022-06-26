@@ -32,20 +32,20 @@ export default function appendChild (svg, annotation: AbstractAnnotation, viewpo
 
   let child: HTMLElement
   switch (annotation.type) {
-  case 'span':
-    child = renderSpan(annotation as SpanAnnotation, svg)
-    break
-  case 'relation':
-    child = renderRelation(annotation as RelationAnnotation, svg)
-    break
+    case 'span':
+      child = renderSpan(annotation as SpanAnnotation, svg)
+      break
+    case 'relation':
+      child = renderRelation(annotation as RelationAnnotation, svg)
+      break
   }
 
   // If no type was provided for an annotation it will result in node being null.
   // Skip appending/transforming if node doesn't exist.
   if (child) {
-    let elm = transform(child, viewport)
+    const elm = transform(child, viewport)
 
-    svg.append(elm);
+    svg.append(elm)
   }
   return child
 }

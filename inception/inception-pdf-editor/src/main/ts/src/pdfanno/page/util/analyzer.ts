@@ -20,43 +20,43 @@ export interface Page {
 }
 
 export type Info = [
-  position: number, 
-  page: number, 
-  type: string, 
-  char: string, 
+  position: number,
+  page: number,
+  type: string,
+  char: string,
   meta: number[]
 ]
 
 export class Meta {
-  position: number;
-  pageNumber: number;
-  type: string;
-  glyph: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  position: number
+  pageNumber: number
+  type: string
+  glyph: string
+  x: number
+  y: number
+  w: number
+  h: number
 
-  static parse(info: Info): Meta {
+  static parse (info: Info): Meta {
     const [x, y, w, h] = info[4]
-    const m = new Meta();
-    m.position = info[0];
-    m.pageNumber = info[1];
-    m.type = 'TEXT';
-    m.glyph = info[3];
-    m.x = x;
-    m.y = y;
-    m.w = w;
-    m.h = h;
-    return m;
+    const m = new Meta()
+    m.position = info[0]
+    m.pageNumber = info[1]
+    m.type = 'TEXT'
+    m.glyph = info[3]
+    m.x = x
+    m.y = y
+    m.w = w
+    m.h = h
+    return m
   }
 }
 
-export function loadPageInformation(pdftxt: string): Page[] {
-  let pages: Page[] = []
-  let page: number;
-  let body: string;
-  let meta: Info[];
+export function loadPageInformation (pdftxt: string): Page[] {
+  const pages: Page[] = []
+  let page: number
+  let body: string
+  let meta: Info[]
   let tokenId = 0
 
   pdftxt.split('\n').forEach(line => {
@@ -66,14 +66,14 @@ export function loadPageInformation(pdftxt: string): Page[] {
       body += ' '
       meta.push(undefined)
       return
-    } 
+    }
 
-    let lineFields = line.split('\t')
+    const lineFields = line.split('\t')
     if (!isTextLine(lineFields)) {
       return
     }
 
-    let info = parseInfo(tokenId, lineFields)
+    const info = parseInfo(tokenId, lineFields)
 
     let { pageNumber, type, glyph } = extractMeta(info)
 
@@ -81,8 +81,7 @@ export function loadPageInformation(pdftxt: string): Page[] {
       page = pageNumber
       body = ''
       meta = []
-    }
-    else if (page !== pageNumber) {
+    } else if (page !== pageNumber) {
       pages.push({ body, glyphs: meta, page })
       body = ''
       meta = []
@@ -107,7 +106,7 @@ export function loadPageInformation(pdftxt: string): Page[] {
 /**
  * Check the line is TEXT.
  */
-function isTextLine(lineFields: string[]): boolean {
+function isTextLine (lineFields: string[]): boolean {
   // info must be "page<TAB>char<TAB>x y w h"
   if (lineFields.length === 3 && lineFields[2].split(' ').length === 4) {
     if (lineFields[1].length >= 2 && lineFields[1].startsWith('[')) {
@@ -124,7 +123,7 @@ function isTextLine(lineFields: string[]): boolean {
 /**
  * Parse Info data.
  */
-function parseInfo(tokenId: number, lineFields: string[]): Info {
+function parseInfo (tokenId: number, lineFields: string[]): Info {
   return [
     tokenId,
     parseInt(lineFields[0]),
@@ -137,6 +136,6 @@ function parseInfo(tokenId: number, lineFields: string[]): Info {
 /**
  * Interpret the meta data.
  */
-export function extractMeta(meta): Meta {
-  return Meta.parse(meta);
+export function extractMeta (meta): Meta {
+  return Meta.parse(meta)
 }

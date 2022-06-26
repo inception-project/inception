@@ -10,16 +10,15 @@ import RelationAnnotation from '../../core/src/annotation/relation'
  * PDFAnno's Annotation functions for Page produced by .
  */
 export default class PDFAnnoPage {
+  annotationContainer: AnnotationContainer
+  pdftxt
 
-  annotationContainer: AnnotationContainer;
-  pdftxt;
-
-  constructor(annotationContainer: AnnotationContainer) {
-    this.annotationContainer = annotationContainer;
+  constructor (annotationContainer: AnnotationContainer) {
+    this.annotationContainer = annotationContainer
     this.autoBind()
   }
 
-  autoBind() {
+  autoBind () {
     Object.getOwnPropertyNames(this.constructor.prototype)
       .filter(prop => typeof this[prop] === 'function')
       .forEach(method => {
@@ -30,27 +29,26 @@ export default class PDFAnnoPage {
   /**
    * Start PDFAnno Application.
    */
-  startViewerApplication() {
+  startViewerApplication () {
     // Adjust the height of viewer.
     adjustViewerSize()
   }
 
-  displayViewer(name: string, pdfURL) {
+  displayViewer (name: string, pdfURL) {
     // Reset settings.
     this.resetPDFViewerSettings()
 
     // Load PDF.
-    return window.PDFViewerApplication.open(pdfURL).then(() => { 
+    return window.PDFViewerApplication.open(pdfURL).then(() => {
       // Set the PDF file name.
       window.PDFViewerApplication.url = name
-    });
+    })
   }
 
   /**
    * Start the viewer.
    */
-  initializeViewer(viewerSelector = '#viewer') {
-
+  initializeViewer (viewerSelector = '#viewer') {
     window.pdf = null
     window.pdfName = null
 
@@ -61,7 +59,7 @@ export default class PDFAnnoPage {
   /**
    * Close the viewer.
    */
-  closePDFViewer() {
+  closePDFViewer () {
     if (window.PDFViewerApplication) {
       window.PDFViewerApplication.close()
       $('#numPages', window.document).text('')
@@ -73,21 +71,21 @@ export default class PDFAnnoPage {
   /**
    * Reset the setting of PDFViewer.
    */
-  resetPDFViewerSettings() {
-    localStorage.removeItem('database')
+  resetPDFViewerSettings () {
+    localStorage.removeItem('pdfjs.history')
   }
 
   /**
    * Find an annotation by id.
    */
-  findAnnotationById(id: String): AbstractAnnotation{
+  findAnnotationById (id: String): AbstractAnnotation {
     return this.annotationContainer.findById(id)
   }
 
   /**
    * Clear the all annotations from the view and storage.
    */
-  clearAllAnnotations() {
+  clearAllAnnotations () {
     if (this.annotationContainer) {
       this.annotationContainer.getAllAnnotations().forEach(a => a.destroy())
     }
@@ -96,12 +94,12 @@ export default class PDFAnnoPage {
   /**
    * Add an annotation to the container.
    */
-  addAnnotation(annotation: AbstractAnnotation) {
+  addAnnotation (annotation: AbstractAnnotation) {
     this.annotationContainer.add(annotation)
   }
 
-  validateSchemaErrors(errors) {
-    let messages = []
+  validateSchemaErrors (errors) {
+    const messages : string[] = []
     errors.forEach(error => {
       Object.keys(error).forEach(key => {
         let value = error[key]
@@ -116,7 +114,7 @@ export default class PDFAnnoPage {
   /**
    * Import annotations from UI.
    */
-  importAnnotation(paperData, isPrimary: boolean) {
+  importAnnotation (paperData, isPrimary: boolean) {
     this.annotationContainer.importAnnotations(paperData, isPrimary).then(() => {
       // Notify annotations added.
       dispatchWindowEvent('annotationrendered')
@@ -125,37 +123,35 @@ export default class PDFAnnoPage {
       if (Array.isArray(errors)) {
         message = this.validateSchemaErrors(errors)
       }
-      console.error('Unable to import annotations.', errors);
+      console.error('Unable to import annotations.', errors)
     })
   }
 
   /**
    * Scroll window to the annotation.
    */
-  scrollToAnnotation(id: String) {
-
-    let annotation = this.findAnnotationById(id)
+  scrollToAnnotation (id: String) {
+    const annotation = this.findAnnotationById(id)
 
     if (annotation) {
-
       // scroll to.
       let pageNumber: number
       let y: number
       if (annotation.type === 'span') {
-        let spanAnnotation = annotation as SpanAnnotation;
+        const spanAnnotation = annotation as SpanAnnotation
         pageNumber = spanAnnotation.page
         y = spanAnnotation.rectangles[0].y
       }
-      
+
       if (annotation.type === 'relation') {
-        let relationAnnotation = annotation as RelationAnnotation;
-        let d = convertToExportY(relationAnnotation.y1)
+        const relationAnnotation = annotation as RelationAnnotation
+        const d = convertToExportY(relationAnnotation.y1)
         pageNumber = d.pageNumber
         y = d.y
       }
 
-      let pageHeight = this.getViewerViewport().height
-      let scale = this.getViewerViewport().scale
+      const pageHeight = this.getViewerViewport().height
+      const scale = this.getViewerViewport().scale
       let _y = (pageHeight + paddingBetweenPages) * (pageNumber - 1) + y * scale
       _y -= 100
       $('#viewer').parent()[0].scrollTop = _y
@@ -169,7 +165,7 @@ export default class PDFAnnoPage {
   /**
    * Get the viewport of the viewer.
    */
-  getViewerViewport() {
+  getViewerViewport () {
     return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
   }
 
@@ -177,9 +173,9 @@ export default class PDFAnnoPage {
    * Load PDF data from url.
    * @memberof PDFAnnoPage
    */
-  loadPdf(url: String): Promise<Uint8Array> {
+  loadPdf (url: String): Promise<Uint8Array> {
     // add noise to the query parameters so caching is prevented
-    var antiCacheUrl = url + "&time=" + new Date().getTime();
+    const antiCacheUrl = url + '&time=' + new Date().getTime()
     return fetch(antiCacheUrl, {
       method: 'GET',
       mode: 'cors'
@@ -198,9 +194,9 @@ export default class PDFAnnoPage {
    * Load pdftxt data from url.
    * @memberof PDFAnnoPage
    */
-  loadPdftxt(url: string): Promise<String> {
+  loadPdftxt (url: string): Promise<String> {
     // add noise to the query parameters so caching is prevented
-    var antiCacheUrl = url + "&time=" + new Date().getTime();
+    const antiCacheUrl = url + '&time=' + new Date().getTime()
     return fetch(antiCacheUrl, {
       method: 'GET',
       mode: 'cors'
@@ -217,7 +213,7 @@ export default class PDFAnnoPage {
    * Load PDF and pdftxt from url.
    * @memberof PDFAnnoPage
    */
-  loadPDFFromServer(pdfURL: string, pdftxtURL: string): Promise<Object> {
+  loadPDFFromServer (pdfURL: string, pdftxtURL: string): Promise<Object> {
     return Promise.all([
       this.loadPdftxt(pdftxtURL)
     ]).then(results => {

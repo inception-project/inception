@@ -7,21 +7,20 @@ export const DEFAULT_RADIUS = 7
  * Create a bounding circle.
  * @param {Object} the data for rendering.
  */
-export function renderKnob ({ x, y, readOnly, text, color}): HTMLElement {
-
+export function renderKnob ({ x, y, readOnly, text, color }): HTMLElement {
   // Adjust the position.
   [x, y] = adjustPoint(x, (y - (DEFAULT_RADIUS + 2)), DEFAULT_RADIUS)
 
-  const knob = document.createElement('div');
+  const knob = document.createElement('div')
   knob.setAttribute('title', text)
-  knob.classList.add('anno-knob')  
+  knob.classList.add('anno-knob')
   if (readOnly) {
-    knob.classList.add('is-readonly')  
+    knob.classList.add('is-readonly')
   }
   knob.style.top = `${y}px`
-  knob.style.left = `${x}px`,
-  knob.style.width = DEFAULT_RADIUS + 'px',
-  knob.style.height = DEFAULT_RADIUS + 'px',
+  knob.style.left = `${x}px`
+  knob.style.width = DEFAULT_RADIUS + 'px'
+  knob.style.height = DEFAULT_RADIUS + 'px'
   knob.style.backgroundColor = color
   return knob
 }
@@ -30,9 +29,8 @@ export function renderKnob ({ x, y, readOnly, text, color}): HTMLElement {
  * Adjust the circle position not overlay anothers.
  */
 function adjustPoint (x, y, radius) {
-
   // Get all knobs.
-  const circles = document.querySelectorAll('.anno-knob') as NodeListOf<HTMLElement>;
+  const circles = document.querySelectorAll('.anno-knob') as NodeListOf<HTMLElement>
 
   // Find a position where all knobs are not placed at.
   while (true) {
