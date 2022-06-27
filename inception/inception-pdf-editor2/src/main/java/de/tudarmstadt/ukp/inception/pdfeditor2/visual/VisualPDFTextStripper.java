@@ -188,9 +188,9 @@ public class VisualPDFTextStripper
             // Account for glyphs that were mapped to more than one character by normalization
             // e.g. expanded ligatures
             String normalizedUnicode = normalizeWord(pos.getUnicode());
-            assert aText.startsWith(normalizedUnicode, cs.cursor) : "Line text at " + cs.cursor
-                    + " should start with [" + normalizedUnicode + "] but was ["
-                    + aText.substring(cs.cursor) + "]";
+            assert aText.startsWith(normalizedUnicode, cs.cursor + cs.offset) : "Line text at "
+                    + cs.cursor + cs.offset + " should start with [" + normalizedUnicode
+                    + "] but was [" + aText.substring(cs.cursor + cs.offset) + "]";
 
             var glyph = new VGlyph(cs.cursor + cs.begin, pageIndex, normalizedUnicode, cs.dir, f);
             cs.addGlyph(glyph);
