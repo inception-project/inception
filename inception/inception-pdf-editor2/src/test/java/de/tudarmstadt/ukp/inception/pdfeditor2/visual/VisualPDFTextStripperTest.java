@@ -21,14 +21,17 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.pdf.type.PdfPage;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -54,10 +57,17 @@ class VisualPDFTextStripperTest
     @MethodSource("pdfFiles")
     void thatPdfCanBeParsed(File aFile) throws Exception
     {
+        assertConsistentVisualModel(aFile, true);
+        assertConsistentVisualModel(aFile, false);
+    }
+
+    private void assertConsistentVisualModel(File aFile, boolean aSortByPosition) throws IOException
+    {
         VModel vModel;
         var target = new StringWriter();
         try (PDDocument doc = PDDocument.load(aFile)) {
             var extractor = new VisualPDFTextStripper();
+            extractor.setSortByPosition(aSortByPosition);
             extractor.writeText(doc, target);
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
                 var page = doc.getPage(i);
@@ -79,10 +89,18 @@ class VisualPDFTextStripperTest
     @MethodSource("pdfFiles")
     void thatVModelEncodedInCasCanBeRecovered(File aFile) throws Exception
     {
+        assertRecoverableVisualModel(aFile, true);
+        assertRecoverableVisualModel(aFile, false);
+    }
+
+    private void assertRecoverableVisualModel(File aFile, boolean aSortByPosition)
+        throws IOException, ResourceInitializationException, CASException
+    {
         VModel expected;
         var textBuffer = new StringWriter();
         try (PDDocument doc = PDDocument.load(aFile)) {
             var extractor = new VisualPDFTextStripper();
+            extractor.setSortByPosition(aSortByPosition);
             extractor.writeText(doc, textBuffer);
             expected = extractor.getVisualModel();
         }
@@ -160,25 +178,25 @@ class VisualPDFTextStripperTest
         }
     }
 
-    private void assertValidGlyphOffsets(VChunk aLine)
+    private void assertValidGlyphOffsets(VChunk aChunk)
     {
-        int cumulativePositionLength = aLine.getGlyphs().stream()
+        int cumulativePositionLength = aChunk.getGlyphs().stream()
                 .mapToInt(t -> t.getUnicode().length()) //
                 .sum();
 
-        int textLength = aLine.getText().length();
+        int textLength = aChunk.getText().length();
         if (textLength != cumulativePositionLength) {
             System.out.printf("%d (%d) vs %d (%d)%n", textLength,
-                    aLine.getText().codePoints().count(), cumulativePositionLength,
-                    aLine.getGlyphs().size());
-            System.out.println(" Text [" + aLine.getText() + "]");
+                    aChunk.getText().codePoints().count(), cumulativePositionLength,
+                    aChunk.getGlyphs().size());
+            System.out.println(" Text [" + aChunk.getText() + "]");
             StringBuilder sb = new StringBuilder();
-            for (VGlyph g : aLine.getGlyphs()) {
+            for (VGlyph g : aChunk.getGlyphs()) {
                 sb.append(g.getUnicode());
             }
             String posText = sb.toString();
             System.out.println(" Pos [" + posText + "]");
-            System.out.println(" Diff [" + StringUtils.difference(posText, aLine.getText()) + "]");
+            System.out.println(" Diff [" + StringUtils.difference(posText, aChunk.getText()) + "]");
 
             assertThat(textLength) //
                     .as("Text positions account for a string length of [" + cumulativePositionLength

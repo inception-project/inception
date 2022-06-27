@@ -59,14 +59,14 @@ public class VisualPDFTextStripper
     private AffineTransform rotateAT;
 
     private int pageIndex;
-    private List<VChunk> lines;
+    private List<VChunk> chunks;
 
     private Map<TextPosition, Rectangle2D.Double> fontPositionCache;
 
     public VisualPDFTextStripper() throws IOException
     {
         setAddMoreFormatting(true);
-        setSortByPosition(true);
+        setSortByPosition(false);
         setShouldSeparateByBeads(true);
     }
 
@@ -82,7 +82,7 @@ public class VisualPDFTextStripper
 
         fontPositionCache = new HashMap<>();
 
-        lines = new ArrayList<>();
+        chunks = new ArrayList<>();
         flipAT = makeFlipAT(aPage);
         rotateAT = makeRotateAT(aPage);
 
@@ -101,7 +101,7 @@ public class VisualPDFTextStripper
         PDRectangle visibleArea = getCurrentPage().getCropBox();
 
         pages.add(new VPage(pageIndex, visibleArea.getWidth(), visibleArea.getHeight(),
-                pageBeginOffset, pageEndOffset, pageText, lines));
+                pageBeginOffset, pageEndOffset, pageText, chunks));
     }
 
     @Override
@@ -160,17 +160,8 @@ public class VisualPDFTextStripper
     {
         assertAlignedTextPositions(aText, aTextPositions);
 
-        List<VGlyph> glyphs = new ArrayList<>();
-
-        float x0 = Float.MAX_VALUE;
-        float y0 = Float.MAX_VALUE;
-        float y1 = Float.MIN_VALUE;
-        float x1 = Float.MIN_VALUE;
-        int begin = getBuffer().length();
-        int cursor = 0;
-
-        assert aTextPositions.stream().mapToDouble(TextPosition::getDir).distinct()
-                .count() <= 1 : "All glyphs in the string should have the same direction";
+        // assert aTextPositions.stream().mapToDouble(TextPosition::getDir).distinct()
+        // .count() <= 1 : "All glyphs in the string should have the same direction";
 
         int unicodeLength;
         assert (unicodeLength = aTextPositions.stream().map(TextPosition::getUnicode)
@@ -182,36 +173,88 @@ public class VisualPDFTextStripper
                                         .map(GlyphPositionUtils::normalizeWord).collect(joining())
                                 + "]";
 
-        float dir = 0;
+        var cs = new ProtoVChunk(getBuffer().length(), aText);
+
         for (var pos : aTextPositions) {
-            dir = ((pos.getRotation() - pos.getDir()) + 360) % 360;
+            // Start a new chunk if the direction changes
+            var dir = ((pos.getRotation() - pos.getDir()) + 360) % 360;
+            if (dir != cs.dir && cs.cursor > 0) {
+                chunks.add(cs.endChunk());
+                cs.dir = dir;
+            }
+
             Rectangle2D.Double f = fontPositionCache.get(pos);
 
             // Account for glyphs that were mapped to more than one character by normalization
             // e.g. expanded ligatures
             String normalizedUnicode = normalizeWord(pos.getUnicode());
-            VGlyph glyph = new VGlyph(cursor + begin, pageIndex, normalizedUnicode, dir, f);
-            glyphs.add(glyph);
-
-            assert aText.startsWith(normalizedUnicode, cursor) : "Line text at " + cursor
+            assert aText.startsWith(normalizedUnicode, cs.cursor) : "Line text at " + cs.cursor
                     + " should start with [" + normalizedUnicode + "] but was ["
-                    + aText.substring(cursor) + "]";
+                    + aText.substring(cs.cursor) + "]";
 
-            cursor += normalizedUnicode.length();
+            var glyph = new VGlyph(cs.cursor + cs.begin, pageIndex, normalizedUnicode, cs.dir, f);
+            cs.addGlyph(glyph);
+        }
+
+        if (cs.cursor > 0) {
+            chunks.add(cs.endChunk());
+        }
+
+        super.writeString(aText, aTextPositions);
+    }
+
+    private class ProtoVChunk
+    {
+        final String text;
+        final int begin;
+        int offset = 0;
+
+        List<VGlyph> glyphs = new ArrayList<>();
+        int cursor = 0;
+        float dir = 0;
+        float x0 = Float.MAX_VALUE;
+        float y0 = Float.MAX_VALUE;
+        float y1 = Float.MIN_VALUE;
+        float x1 = Float.MIN_VALUE;
+
+        public ProtoVChunk(int aBegin, String aText)
+        {
+            begin = aBegin;
+            text = aText;
+        }
+
+        void addGlyph(VGlyph glyph)
+        {
+            cursor += glyph.getUnicode().length();
 
             x1 = Math.max(x1, glyph.getFontX() + glyph.getFontWidth());
             y1 = Math.max(y1, glyph.getFontY() + glyph.getFontHeight());
             x0 = Math.min(x0, glyph.getFontX());
             y0 = Math.min(y0, glyph.getFontY());
+
+            glyphs.add(glyph);
         }
 
-        super.writeString(aText, aTextPositions);
+        VChunk endChunk()
+        {
+            int end = begin + offset + cursor;
+            var w = x1 - x0;
+            var h = y1 - y0;
 
-        int end = getBuffer().length();
-        var w = x1 - x0;
-        var h = y1 - y0;
+            var chunkText = text.substring(offset, offset + cursor);
+            VChunk chunk = new VChunk(begin, end, chunkText, dir, x0, y0, w, h, glyphs);
 
-        lines.add(new VChunk(begin, end, aText, dir, x0, y0, w, h, glyphs));
+            offset += cursor;
+            glyphs = new ArrayList<>();
+            cursor = 0;
+            dir = 0;
+            x0 = Float.MAX_VALUE;
+            y0 = Float.MAX_VALUE;
+            y1 = Float.MIN_VALUE;
+            x1 = Float.MIN_VALUE;
+
+            return chunk;
+        }
     }
 
     private void assertAlignedTextPositions(String aText, List<TextPosition> aTextPositions)
