@@ -2,15 +2,14 @@ import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
 import { findIndex, getGlyphsInRange, findGlyphAtPoint } from '../../../page/textLayer'
 
-function scale() {
+function scale () {
   return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
 }
 
 /**
  * Merge user selections.
  */
-function mergeRects(rects) {
-
+function mergeRects (rects) {
   // Remove null.
   rects = rects.filter(rect => rect)
 
@@ -27,9 +26,8 @@ function mergeRects(rects) {
   const error = 5 * scale()
 
   let tmp = convertToObject(rects[0])
-  let newRects = [tmp]
+  const newRects = [tmp]
   for (let i = 1; i < rects.length; i++) {
-
     // Same line -> Merge rects.
     if (withinMargin(rects[i].top, tmp.top, error)) {
       tmp.top = Math.min(tmp.top, rects[i].top)
@@ -54,7 +52,7 @@ function mergeRects(rects) {
 /**
  * Convert a DOMList to a javascript plan object.
  */
-function convertToObject(rect) {
+function convertToObject (rect) {
   return {
     top: rect.top,
     left: rect.left,
@@ -70,14 +68,14 @@ function convertToObject(rect) {
 /**
  * Check the value(x) within the range.
  */
-function withinMargin(x, base, margin) {
+function withinMargin (x, base, margin) {
   return (base - margin) <= x && x <= (base + margin)
 }
 
 /**
  * Save a rect annotation.
  */
-export function saveSpan({
+export function saveSpan ({
   text = '',
   rects = [],
   textRange = [],
@@ -90,12 +88,11 @@ export function saveSpan({
   knob = true,
   border = true
 }) {
-
   if (!rects) {
     return
   }
 
-  let annotation = {
+  const annotation = {
     rectangles: rects,
     selectedText,
     text,
@@ -108,7 +105,7 @@ export function saveSpan({
   }
 
   // Save.
-  let spanAnnotation = SpanAnnotation.newInstance(annotation)
+  const spanAnnotation = SpanAnnotation.newInstance(annotation)
   if (save) {
     spanAnnotation.save()
   }
@@ -126,34 +123,28 @@ window.saveSpan = saveSpan
 /**
  * Get the rect area of User selected.
  */
-export function getRectangles() {
-
+export function getRectangles () {
   if (!currentPage || !startPosition || !endPosition) {
     return null
-
   } else {
-    let targets = getGlyphsInRange(currentPage, startPosition, endPosition)
+    const targets = getGlyphsInRange(currentPage, startPosition, endPosition)
     return mergeRects(targets)
   }
-
 }
 
 /**
  * Create a span by current texts selection.
  */
-export function createSpan({ text = null, zIndex = 10, color = null }) {
-
+export function createSpan ({ text = null, zIndex = 10, color = null }) {
   if (!currentPage || !startPosition || !endPosition) {
     return null
-
   } else {
-
-    let targets = getGlyphsInRange(currentPage, startPosition, endPosition)
+    const targets = getGlyphsInRange(currentPage, startPosition, endPosition)
     if (targets.length === 0) {
       return null
     }
 
-    let selectedText = targets.map(t => {
+    const selectedText = targets.map(t => {
       return t ? t.char : ' '
     }).join('')
 
@@ -179,16 +170,13 @@ export function createSpan({ text = null, zIndex = 10, color = null }) {
 
     return annotation
   }
-
 }
 
-export function installSpanSelection() {
-
-  function setPositions(e) {
-
+export function installSpanSelection () {
+  function setPositions (e) {
     const canvasElement = (e.target as HTMLElement).closest('.canvasWrapper')
     if (!canvasElement) {
-      return;
+      return
     }
 
     const pageElement = canvasElement.parentNode
@@ -218,8 +206,7 @@ export function installSpanSelection() {
     }
   }
 
-  function makeSelections(e) {
-
+  function makeSelections (e) {
     setPositions(e)
 
     if (spanAnnotation) {
@@ -227,8 +214,8 @@ export function installSpanSelection() {
       spanAnnotation = null
     }
 
-    let targets = getGlyphsInRange(currentPage, startPosition, endPosition)
-    let selectedText = ""
+    const targets = getGlyphsInRange(currentPage, startPosition, endPosition)
+    let selectedText = ''
     targets.forEach(m => selectedText += m.glyph)
     console.log(selectedText)
     if (targets.length > 0) {
@@ -251,9 +238,9 @@ export function installSpanSelection() {
   const canvasWrappers = viewer.querySelectorAll('.canvasWrapper')
 
   viewer.addEventListener('mousedown', e => {
-    let canvasWrapper = (e.target as HTMLElement).closest('.canvasWrapper')
+    const canvasWrapper = (e.target as HTMLElement).closest('.canvasWrapper')
     if (!canvasWrapper) {
-      return;
+      return
     }
 
     if (otherAnnotationTreating || e.shiftKey) {
@@ -270,12 +257,12 @@ export function installSpanSelection() {
       spanAnnotation = null
     }
     makeSelections(e)
-  });
+  })
 
   viewer.addEventListener('mousemove', e => {
-    let canvasWrapper = (e.target as HTMLElement).closest('.canvasWrapper')
+    const canvasWrapper = (e.target as HTMLElement).closest('.canvasWrapper')
     if (!canvasWrapper) {
-      return;
+      return
     }
 
     if (mouseDown) {
@@ -284,9 +271,9 @@ export function installSpanSelection() {
   })
 
   viewer.addEventListener('mouseup', e => {
-    let canvasWrapper = (e.target as HTMLElement).closest('.canvasWrapper')
+    const canvasWrapper = (e.target as HTMLElement).closest('.canvasWrapper')
     if (!canvasWrapper) {
-      return;
+      return
     }
 
     if (mouseDown) {
@@ -295,11 +282,11 @@ export function installSpanSelection() {
         spanAnnotation.deselect()
       }
       if (startPosition !== null && endPosition !== null) {
-        let event = new CustomEvent('createSpanAnnotation', {
+        const event = new CustomEvent('createSpanAnnotation', {
           bubbles: true,
           detail: { begin: startPosition, end: endPosition + 1 }
-        });
-        viewer.dispatchEvent(event);
+        })
+        viewer.dispatchEvent(event)
         // wait a second before destroying selection for better user experience
         setTimeout(function () {
           if (spanAnnotation) {
@@ -314,7 +301,7 @@ export function installSpanSelection() {
   viewer.addEventListener('click', e => {
     const canvasElement = (e.target as HTMLElement).closest('.canvasWrapper')
     if (!canvasElement) {
-      return;
+      return
     }
 
     if (e.shiftKey) {
@@ -332,11 +319,11 @@ export function installSpanSelection() {
         return
       }
 
-      let event = new CustomEvent('createSpanAnnotation', {
+      const event = new CustomEvent('createSpanAnnotation', {
         bubbles: true,
         detail: { begin: position, end: position }
-      });
-      viewer.dispatchEvent(event);
+      })
+      viewer.dispatchEvent(event)
       // wait a second before destroying selection for better user experience
       setTimeout(function () {
         if (spanAnnotation) {
@@ -365,4 +352,3 @@ let startPosition: number = null
 let endPosition: number = null
 let currentPage: number = null
 let spanAnnotation: SpanAnnotation = null
-
