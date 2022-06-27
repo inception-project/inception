@@ -31,16 +31,20 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsStartAndEndWithinSentencesCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.CASMetadataTypeIsPresentCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.DanglingRelationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.FeatureAttachedSpanAnnotationsTrulyAttachedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.LinksReachableThroughChainsCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NegativeSizeAnnotationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NoMultipleIncomingRelationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.NoZeroSizeTokensAndSentencesCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.RelationOffsetsCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.TokensAndSententencedDoNotOverlapCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UniqueDocumentAnnotationCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.CoverAllTextInSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReindexFeatureAttachedSpanAnnotationsRepair;
@@ -50,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingFeatureAttac
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.SwitchBeginAndEndOnNegativeSizedAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.UpgradeCasRepair;
 
 @Configuration
@@ -192,5 +197,36 @@ public class CasDoctorAutoConfiguration
     public UpgradeCasRepair upgradeCasRepair(AnnotationSchemaService aAnnotationService)
     {
         return new UpgradeCasRepair(aAnnotationService);
+    }
+
+    @Bean
+    public SwitchBeginAndEndOnNegativeSizedAnnotationsRepair switchBeginAndEndOnNegativeSizedAnnotationsRepair()
+    {
+        return new SwitchBeginAndEndOnNegativeSizedAnnotationsRepair();
+    }
+
+    @Bean
+    public NegativeSizeAnnotationsCheck noNegativeSizeAnnotationsCheck()
+    {
+        return new NegativeSizeAnnotationsCheck();
+    }
+
+    @Bean
+    public AllAnnotationsStartAndEndWithinSentencesCheck allAnnotationsStartAndEndWithinSentencesCheck(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new AllAnnotationsStartAndEndWithinSentencesCheck(aAnnotationService);
+    }
+
+    @Bean
+    public CoverAllTextInSentencesRepair coverAllTextInSentencesRepair()
+    {
+        return new CoverAllTextInSentencesRepair();
+    }
+
+    @Bean
+    public TokensAndSententencedDoNotOverlapCheck tokensAndSententencedDoNotOverlapCheck()
+    {
+        return new TokensAndSententencedDoNotOverlapCheck();
     }
 }

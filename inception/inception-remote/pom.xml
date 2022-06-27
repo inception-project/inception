@@ -174,6 +174,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
       <scope>test</scope>
@@ -215,6 +220,11 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-log</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-config</artifactId>
       <scope>test</scope>
@@ -222,6 +232,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload-matrix</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -275,6 +290,7 @@
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:webanno-io-text</ignoredDependency>
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:webanno-project</ignoredDependency>
               <ignoredDependency>de.tudarmstadt.ukp.inception.app:webanno-api-dao</ignoredDependency>
+              <ignoredDependency>de.tudarmstadt.ukp.inception.app:inception-workload-matrix</ignoredDependency>
               <ignoredDependency>org.springframework.boot:spring-boot-test-autoconfigure</ignoredDependency>
               <ignoredDependency>org.springframework.security:spring-security-config</ignoredDependency>
             </ignoredDependencies>

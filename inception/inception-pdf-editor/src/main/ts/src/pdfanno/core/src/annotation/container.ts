@@ -9,22 +9,21 @@ import AbstractAnnotation from './abstract'
  * Annotation Container.
  */
 export default class AnnotationContainer {
-
   set = new Set<AbstractAnnotation>()
   ajv = new Ajv({ allErrors: true })
-  validate : ValidateFunction;
+  validate : ValidateFunction
 
   /**
    * Constructor.
    */
-  constructor() {
+  constructor () {
     this.validate = this.ajv.compile(require('../../../schemas/pdfanno-schema.json'))
   }
 
   /**
    * Add an annotation to the container.
    */
-  add(annotation: AbstractAnnotation) {
+  add (annotation: AbstractAnnotation) {
     this.set.add(annotation)
     dispatchWindowEvent('annotationUpdated')
   }
@@ -32,7 +31,7 @@ export default class AnnotationContainer {
   /**
    * Remove the annotation from the container.
    */
-  remove(annotation: AbstractAnnotation) {
+  remove (annotation: AbstractAnnotation) {
     this.set.delete(annotation)
     dispatchWindowEvent('annotationUpdated')
   }
@@ -40,7 +39,7 @@ export default class AnnotationContainer {
   /**
    * Remove all annotations.
    */
-  destroy() {
+  destroy () {
     console.log('AnnotationContainer#destroy')
     this.set.forEach(a => a.destroy())
     this.set = new Set()
@@ -49,8 +48,8 @@ export default class AnnotationContainer {
   /**
    * Get all annotations from the container.
    */
-  getAllAnnotations() : AbstractAnnotation[] {
-    let list = []
+  getAllAnnotations () : AbstractAnnotation[] {
+    const list = []
     this.set.forEach(a => list.push(a))
     return list
   }
@@ -58,14 +57,14 @@ export default class AnnotationContainer {
   /**
    * Get annotations which user select.
    */
-  getSelectedAnnotations() : AbstractAnnotation[] {
+  getSelectedAnnotations () : AbstractAnnotation[] {
     return this.getAllAnnotations().filter(a => a.selected)
   }
 
   /**
    * Find an annotation by the id which an annotation has.
    */
-  findById(uuid) {
+  findById (uuid) {
     uuid = String(uuid) // `uuid` must be string.
     let annotation = null
     this.set.forEach(a => {
@@ -76,7 +75,7 @@ export default class AnnotationContainer {
     return annotation
   }
 
-  _findSpan(tomlObject, id) {
+  _findSpan (tomlObject, id) {
     return tomlObject.spans.find(v => {
       return id === v.id
     })
@@ -85,12 +84,11 @@ export default class AnnotationContainer {
   /**
    * Import annotations.
    */
-  importAnnotations(data, isPrimary: boolean) {
-
+  importAnnotations (data, isPrimary: boolean) {
     const readOnly = !isPrimary
     const colorMap = data.colorMap
 
-    function getColor(index, type, text) {
+    function getColor (index, type, text) {
       let color = colorMap.default
       if (colorMap[type] && colorMap[type][text]) {
         color = colorMap[type][text]
@@ -99,7 +97,6 @@ export default class AnnotationContainer {
     }
 
     return new Promise((resolve, reject) => {
-
       // Delete old ones.
       this.getAllAnnotations()
         .filter(a => a.readOnly === readOnly)
@@ -107,9 +104,8 @@ export default class AnnotationContainer {
 
       // Add annotations.
       data.annotations.forEach((tomlString, i) => {
-
         // Create a object from TOML string.
-        let tomlObject = fromTomlString(tomlString)
+        const tomlObject = fromTomlString(tomlString)
         if (!tomlObject) {
           return
         }
@@ -130,8 +126,7 @@ export default class AnnotationContainer {
   /**
    * Import annotations.
    */
-  importAnnotations041(tomlObject, tomlIndex, readOnly, getColor) {
-
+  importAnnotations041 (tomlObject, tomlIndex, readOnly, getColor) {
     // order is important.
     ;['spans', 'relations'].forEach(key => {
       const objs = tomlObject[key]
@@ -145,7 +140,6 @@ export default class AnnotationContainer {
             span.save()
             span.render()
             span.enableViewMode()
-
           } else if (key === 'relations') {
             const span1 = this._findSpan(tomlObject, obj.head)
             const span2 = this._findSpan(tomlObject, obj.tail)

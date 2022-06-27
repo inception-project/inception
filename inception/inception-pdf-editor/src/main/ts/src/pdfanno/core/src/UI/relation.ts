@@ -10,7 +10,7 @@ let drawing = false
 /**
  * Create a new Relation annotation.
  */
-export function createRelation({ type, anno1, anno2, text, color }) {
+export function createRelation ({ type, anno1, anno2, text, color }) {
   // TODO No need?
   // for old style.
   if (arguments.length === 3) {
@@ -19,7 +19,7 @@ export function createRelation({ type, anno1, anno2, text, color }) {
     anno2 = arguments[2]
   }
 
-  let annotation = new RelationAnnotation()
+  const annotation = new RelationAnnotation()
   annotation.direction = type
   annotation.rel1Annotation = anno1
   annotation.rel2Annotation = anno2
@@ -41,8 +41,7 @@ export function createRelation({ type, anno1, anno2, text, color }) {
   return annotation
 }
 
-export function installRelationSelection() {
-
+export function installRelationSelection () {
   const viewer = document.getElementById('viewer')
 
   window.addEventListener('annotationHoverIn', (e) => {
@@ -55,7 +54,7 @@ export function installRelationSelection() {
 
   viewer.addEventListener('mousedown', ev => {
     if (!(ev.target as HTMLElement).closest('.anno-knob')) {
-      return;
+      return
     }
 
     mousedownFired = true
@@ -71,7 +70,7 @@ export function installRelationSelection() {
   viewer.addEventListener('mousemove', (e) => {
     if (mousedownFired && onAnnotation) {
       drawing = true
-      let p = scaleDown(getClientXY(e))
+      const p = scaleDown(getClientXY(e))
       relationAnnotation.x2 = p.x
       relationAnnotation.y2 = p.y
       relationAnnotation.render()
@@ -80,13 +79,14 @@ export function installRelationSelection() {
 
   viewer.addEventListener('mouseup', () => {
     if (mousedownFired && onAnnotation && drawing && hoveredAnnotation) {
-      let event = new CustomEvent('createRelationAnnotation', {
+      const event = new CustomEvent('createRelationAnnotation', {
         bubbles: true,
-        detail: { 
-          origin: relationAnnotation.rel1Annotation.uuid, 
-          target: hoveredAnnotation.uuid }
-      });
-      viewer.dispatchEvent(event);
+        detail: {
+          origin: relationAnnotation.rel1Annotation.uuid,
+          target: hoveredAnnotation.uuid
+        }
+      })
+      viewer.dispatchEvent(event)
     }
     if (relationAnnotation) {
       relationAnnotation.destroy()
@@ -98,9 +98,9 @@ export function installRelationSelection() {
   })
 }
 
-function getClientXY(e) {
-  let rect = document.getElementById('annoLayer').getBoundingClientRect()
-  let x = e.clientX - rect.left
-  let y = e.clientY - rect.top
+function getClientXY (e) {
+  const rect = document.getElementById('annoLayer').getBoundingClientRect()
+  const x = e.clientX - rect.left
+  const y = e.clientY - rect.top
   return { x, y }
 }

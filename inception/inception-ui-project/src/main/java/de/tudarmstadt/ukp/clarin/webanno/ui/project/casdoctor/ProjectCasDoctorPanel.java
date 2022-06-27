@@ -34,6 +34,7 @@ import java.util.List;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractChoice.LabelPosition;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
@@ -57,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
@@ -164,9 +164,9 @@ public class ProjectCasDoctorPanel
                             true);
                 }
                 catch (Exception e) {
-                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
-                            "Error repairing initial CAS for [" + sd.getName() + "]: "
-                                    + e.getMessage()));
+                    messageSet.messages.add(
+                            LogMessage.error(getClass(), "Error repairing initial CAS for [%s]: %s",
+                                    sd.getName(), e.getMessage()));
                     LOG.error("Error repairing initial CAS for [{}]", sd.getName(), e);
                 }
 
@@ -198,9 +198,9 @@ public class ProjectCasDoctorPanel
                     }
                 }
                 catch (Exception e) {
-                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
-                            "Error checking annotations for [" + CURATION_USER + "] for ["
-                                    + sd.getName() + "]: " + e.getMessage()));
+                    messageSet.messages.add(LogMessage.error(getClass(),
+                            "Error checking annotations for [%s] for [%s]: %s", CURATION_USER,
+                            sd.getName(), e.getMessage()));
                     LOG.error("Error checking annotations for [{}] for [{}]", CURATION_USER,
                             sd.getName(), e);
                 }
@@ -222,9 +222,9 @@ public class ProjectCasDoctorPanel
                                 true);
                     }
                     catch (Exception e) {
-                        messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
-                                "Error repairing annotations of user [" + ad.getUser() + "] for ["
-                                        + sd.getName() + "]: " + e.getMessage()));
+                        messageSet.messages.add(LogMessage.error(getClass(),
+                                "Error repairing annotations of user [%s] for [%s]: %s",
+                                ad.getUser(), sd.getName(), e.getMessage()));
                         LOG.error("Error repairing annotations of user [{}] for [{}]", ad.getUser(),
                                 sd.getName(), e);
                     }
@@ -248,21 +248,23 @@ public class ProjectCasDoctorPanel
 
         formModel.messageSets = new ArrayList<>();
 
+        int objectCount = 0;
         for (SourceDocument sd : documentService.listSourceDocuments(project)) {
             // Check INITIAL CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
 
                 try {
+                    objectCount++;
                     casStorageService.forceActionOnCas(sd, INITIAL_CAS_PSEUDO_USER,
                             (doc, user) -> createOrReadInitialCasWithoutSaving(doc, messageSet),
                             (cas) -> casDoctor.analyze(project, cas, messageSet.messages), //
                             false);
                 }
                 catch (Exception e) {
-                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
-                            "Error checking initial CAS for [" + sd.getName() + "]: "
-                                    + e.getMessage()));
+                    messageSet.messages.add(
+                            LogMessage.error(getClass(), "Error checking initial CAS for [%s]: %s",
+                                    sd.getName(), e.getMessage()));
                     LOG.error("Error checking initial CAS for [{}]", sd.getName(), e);
                 }
 
@@ -275,6 +277,7 @@ public class ProjectCasDoctorPanel
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CURATION_USER + "]");
                 try {
+                    objectCount++;
                     casStorageService.forceActionOnCas(sd, CURATION_USER,
                             (doc, user) -> casStorageService.readCas(doc, user,
                                     UNMANAGED_NON_INITIALIZING_ACCESS),
@@ -288,9 +291,9 @@ public class ProjectCasDoctorPanel
                             LogMessage.info(getClass(), "Curation seems to have not yet started."));
                 }
                 catch (Exception e) {
-                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
-                            "Error checking annotations for [" + CURATION_USER + "] for ["
-                                    + sd.getName() + "]: " + e.getMessage()));
+                    messageSet.messages.add(LogMessage.error(getClass(),
+                            "Error checking annotations for [%s] for [%s]: %s", CURATION_USER,
+                            sd.getName(), e.getMessage()));
                     LOG.error("Error checking annotations for [{}] for [{}]", CURATION_USER,
                             sd.getName(), e);
                 }
@@ -305,6 +308,7 @@ public class ProjectCasDoctorPanel
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
                     try {
+                        objectCount++;
                         casStorageService.forceActionOnCas(ad.getDocument(), ad.getUser(),
                                 (doc, user) -> casStorageService.readCas(doc, user,
                                         UNMANAGED_NON_INITIALIZING_ACCESS),
@@ -312,9 +316,9 @@ public class ProjectCasDoctorPanel
                                 false);
                     }
                     catch (Exception e) {
-                        messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
-                                "Error checking annotations of user [" + ad.getUser() + "] for ["
-                                        + sd.getName() + "]: " + e.getMessage()));
+                        messageSet.messages.add(LogMessage.error(getClass(),
+                                "Error checking annotations of user [%s] for [%s]: %s",
+                                ad.getUser(), sd.getName(), e.getMessage()));
                         LOG.error("Error checking annotations of user [{}] for [{}]", ad.getUser(),
                                 sd.getName(), e);
                     }
@@ -324,6 +328,15 @@ public class ProjectCasDoctorPanel
                 }
             }
         }
+
+        if (objectCount > 0) {
+            info("Applied " + casDoctor.getActiveChecks().size() + " checks to " + objectCount
+                    + " annotation objects - see report for details");
+        }
+        else {
+            warn("Project does not contain any annotation objects that can be checked");
+        }
+        aTarget.addChildren(getPage(), IFeedback.class);
 
         aTarget.add(this);
     }
@@ -339,15 +352,15 @@ public class ProjectCasDoctorPanel
 
         CAS cas = importExportService
                 .importCasFromFile(documentService.getSourceDocumentFile(aDocument), aDocument);
-        aMessageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
-                "Created initial CAS for [" + aDocument.getName() + "]"));
+        aMessageSet.messages.add(
+                LogMessage.info(getClass(), "Created initial CAS for [%s]", aDocument.getName()));
         return cas;
     }
 
     private void noticeIfThereAreNoMessages(LogMessageSet aSet)
     {
         if (aSet.messages.isEmpty()) {
-            aSet.messages.add(new LogMessage(getClass(), LogLevel.INFO, "Nothing to report."));
+            aSet.messages.add(LogMessage.info(getClass(), "Nothing to report."));
         }
     }
 

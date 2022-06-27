@@ -15,25 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
-import java.io.Serializable;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 
-public abstract class Options
-    implements Serializable
+public class RPermission
 {
-    private boolean visible = false;
+    public long project;
+    public String user;
+    public String role;
 
-    /**
-     * Whether or not the options form should be displayed
-     */
-    public boolean isVisible()
+    public RPermission(ProjectPermission aPermission)
     {
-        return visible;
+        project = aPermission.getProject().getId();
+        user = aPermission.getUser();
+        role = aPermission.getLevel().name();
     }
 
-    public void toggleVisibility()
+    public RPermission(long aProject, String aUser, String aRole)
     {
-        visible = !visible;
+        project = aProject;
+        user = aUser;
+        role = aRole;
     }
 }
