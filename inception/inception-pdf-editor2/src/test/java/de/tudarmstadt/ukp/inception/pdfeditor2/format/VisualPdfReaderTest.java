@@ -45,6 +45,7 @@ class VisualPdfReaderTest
     {
         CollectionReader reader = createReader( //
                 VisualPdfReader.class, //
+                VisualPdfReader.PARAM_SORT_BY_POSITION, true, //
                 VisualPdfReader.PARAM_SOURCE_LOCATION, testFilesBase + "eu-001.pdf");
         reader.getNext(cas);
         assertThat(cas.select(PdfChunk.class).asList()).hasSize(163);
