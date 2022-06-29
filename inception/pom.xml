@@ -69,9 +69,9 @@
     <uima.version>3.2.0</uima.version>
     <uimafit.version>3.2.0</uimafit.version>
 
-    <spring.version>5.3.20</spring.version>
-    <spring.boot.version>2.6.8</spring.boot.version>
-    <spring.security.version>5.6.5</spring.security.version>
+    <spring.version>5.3.21</spring.version>
+    <spring.boot.version>2.6.9</spring.boot.version>
+    <spring.security.version>5.6.6</spring.security.version>
     <springdoc.version>1.6.8</springdoc.version>
     <swagger.version>2.2.0</swagger.version>
 
@@ -81,7 +81,7 @@
 
     <groovy.version>3.0.10</groovy.version>
 
-    <tomcat.version>9.0.63</tomcat.version>
+    <tomcat.version>9.0.64</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.5</mariadb.driver.version>
