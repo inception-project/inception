@@ -253,6 +253,8 @@ public class SPARQLQueryBuilderTest
                         SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_FTS_2),
                 new Scenario("testWithLabelStartingWith_withLanguage_FTS_3",
                         SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_FTS_3),
+                new Scenario("testWithLabelStartingWith_withLanguage_FTS_4",
+                        SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_FTS_4),
                 new Scenario("testWithLabelStartingWith_withLanguage_noFTS",
                         SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_noFTS),
                 new Scenario("testWithLabelContainingAnyOf_pets_ttl_noFTS",
@@ -1294,6 +1296,29 @@ public class SPARQLQueryBuilderTest
                 .withLabelStartingWith("Green Go "));
 
         assertThat(results).isEmpty();
+    }
+
+    static void testWithLabelStartingWith_withLanguage_FTS_4(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
+    {
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+
+        // Two words with the second being very short - this is no problem for the LUCENE FTS
+        // and we simply add a wildcard to match "Green Go*"
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
+                .withLabelStartingWith("Green     Go"));
+
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.startsWith("Green Go"));
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results)
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "description", "language")
+                .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
+                        "Green Goblin", null, "en"));
     }
 
     @Tag("slow")

@@ -33,6 +33,7 @@ import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static mtas.codec.MtasCodec.MTAS_CODEC_NAME;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;
 
 import java.io.File;
 import java.io.IOException;
@@ -752,8 +753,8 @@ public class MtasDocumentIndex
                 aRequest.getUser());
 
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher, false,
-                boost);
+        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
+                COMPLETE_NO_SCORES, boost);
 
         long numResults = 0;
 
@@ -858,7 +859,7 @@ public class MtasDocumentIndex
 
         // Here, the query comes into play
         SpanWeight spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
-                false, 0);
+                COMPLETE_NO_SCORES, 0);
 
         // cycle through all the leaves
         for (LeafReaderContext leafReaderContext : aLeaves) {
@@ -914,8 +915,8 @@ public class MtasDocumentIndex
                 .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher, false,
-                boost);
+        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
+                COMPLETE_NO_SCORES, boost);
 
         long offset = aRequest.getOffset();
         long count = aRequest.getCount();

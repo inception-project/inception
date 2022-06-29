@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;
+
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -190,7 +192,8 @@ public class MtasUimaParserLuceneTest
         ListIterator<LeafReaderContext> iterator = indexReader.leaves().listIterator();
         IndexSearcher searcher = new IndexSearcher(indexReader);
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(indexReader).createWeight(searcher, false, boost);
+        SpanWeight spanweight = q.rewrite(indexReader).createWeight(searcher, COMPLETE_NO_SCORES,
+                boost);
 
         while (iterator.hasNext()) {
             System.out.println("#### new iteration ####");

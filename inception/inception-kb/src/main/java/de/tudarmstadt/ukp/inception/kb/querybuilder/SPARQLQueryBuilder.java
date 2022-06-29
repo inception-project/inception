@@ -1604,7 +1604,7 @@ public class SPARQLQueryBuilder
         // value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]", "\\\\\\\\$0");
         value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]+", ".+");
         // Replace consecutive whitespace or control chars with a whitespace matcher
-        value = value.replaceAll("[\\p{Space}\\p{Cntrl}]+", "\\\\\\\\s+");
+        value = value.replaceAll("[\\p{Space}\\p{Cntrl}]+", "\\\\s+");
         return value;
     }
 
