@@ -15,11 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.kb;
 
 import static de.tudarmstadt.ukp.inception.kb.reification.Reification.WIKIDATA;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
@@ -102,8 +101,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
     public static Collection<Object[]> data()
     {
-        return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
-                .collect(Collectors.toList());
+        return Arrays.stream(Reification.values()) //
+                .map(r -> new Object[] { r }) //
+                .collect(toList());
     }
 
     @BeforeAll
@@ -129,11 +129,6 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         testEntityManager.clear();
         sut.destroy();
-    }
-
-    public void thatApplicationContextStarts()
-    {
-
     }
 
     @ParameterizedTest(name = "Reification = {0}")

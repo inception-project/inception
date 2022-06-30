@@ -1,0 +1,18 @@
+<#green-goblin>
+    rdfs:label 'Green Goblin' ;
+    rdfs:label 'Green Goblin'@en ;
+    rdfs:label 'Grüner Goblin'@de ;
+    rdfs:label 'Goblin vert'@fr ;
+    rdfs:comment 'Little green monster' ;
+    rdfs:comment 'Little green monster'@en ;
+    rdfs:comment 'Kleines grünes Monster'@de .
+
+<#lucky-green>
+    rdfs:label 'Lucky Green' ;
+    rdfs:label 'Lucky Green'@en ;
+    rdfs:comment 'Lucky Irish charm' ;
+    rdfs:comment 'Lucky Irish charm'@en .
+
+<#red-goblin>
+    rdfs:label 'Red Goblin' ;
+    rdfs:comment 'Little red monster' .
