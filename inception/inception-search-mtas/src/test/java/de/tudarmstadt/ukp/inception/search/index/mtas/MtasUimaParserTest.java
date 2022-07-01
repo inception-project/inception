@@ -110,7 +110,7 @@ public class MtasUimaParserTest
         // Only tokens and sentences here, no extra layers
         when(annotationSchemaService.listAnnotationLayer(project)).thenReturn(asList());
 
-        MtasUimaParser sut = new MtasUimaParser(asList(), annotationSchemaService,
+        var sut = new MtasUimaParser(asList(), annotationSchemaService,
                 featureIndexingSupportRegistry);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
@@ -119,11 +119,14 @@ public class MtasUimaParserTest
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
 
-        assertThat(tokens).filteredOn(t -> "Token".equals(t.getPrefix()))
-                .extracting(MtasToken::getPostfix).containsExactly("This", "is", "a", "test", ".",
-                        "This", "is", "sentence", "two", ".");
+        assertThat(tokens) //
+                .filteredOn(t -> "Token".equals(t.getPrefix())) //
+                .extracting(MtasToken::getPostfix) //
+                .containsExactly( //
+                        "This", "is", "a", "test", ".", "This", "is", "sentence", "two", ".");
 
-        assertThat(tokens).filteredOn(t -> "s".equals(t.getPrefix()))
+        assertThat(tokens) //
+                .filteredOn(t -> "s".equals(t.getPrefix())) //
                 .extracting(MtasToken::getPostfix)
                 .containsExactly("This is a test .", "This is sentence two .");
     }
@@ -162,12 +165,15 @@ public class MtasUimaParserTest
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
 
-        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-                .extracting(MtasToken::getPrefix)
+        assertThat(tokens) //
+                .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
+                .extracting(MtasToken::getPrefix) //
                 .containsExactly("Named_Entity", "Named_Entity.value");
 
-        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-                .extracting(MtasToken::getPostfix).containsExactly("", "PER");
+        assertThat(tokens) //
+                .filteredOn(t -> t.getPrefix().startsWith("Named_Entity")) //
+                .extracting(MtasToken::getPostfix) //
+                .containsExactly("", "PER");
     }
 
     @Test
@@ -196,8 +202,9 @@ public class MtasUimaParserTest
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
 
-        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-                .extracting(MtasToken::getPrefix).isEmpty();
+        assertThat(tokens) //
+                .filteredOn(t -> t.getPrefix().startsWith("Named_Entity")) //
+                .isEmpty();
     }
 
     @Test
@@ -272,9 +279,14 @@ public class MtasUimaParserTest
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
 
-        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Dependency"))
-                .extracting(t -> t.getPrefix() + "=" + t.getPostfix()).containsExactly(
-                        "Dependency=b", "Dependency-source=a", "Dependency-source.PosValue=A",
-                        "Dependency-target=b", "Dependency-target.PosValue=B");
+        assertThat(tokens) //
+                .filteredOn(t -> t.getPrefix().startsWith("Dependency"))
+                .extracting(t -> t.getPrefix() + "=" + t.getPostfix()) //
+                .containsExactly( //
+                        "Dependency=b", //
+                        "Dependency-source=a", //
+                        "Dependency-source.PosValue=A", //
+                        "Dependency-target=b", //
+                        "Dependency-target.PosValue=B");
     }
 }

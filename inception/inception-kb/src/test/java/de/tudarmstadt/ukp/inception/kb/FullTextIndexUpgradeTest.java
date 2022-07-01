@@ -122,7 +122,7 @@ public class FullTextIndexUpgradeTest
     @Test
     void thatExistingKnowledgeBaseCanBeRead() throws Exception
     {
-        copyDirectory(new File(REF_DIR, "lucene-7.7.1"), new File(WORK_DIR));
+        copyDirectory(new File(REF_DIR, "lucene-7.7.3"), new File(WORK_DIR));
 
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 
@@ -146,7 +146,7 @@ public class FullTextIndexUpgradeTest
     @Test
     void thatExistingKnowledgeBaseCanBeUpdated() throws Exception
     {
-        FileUtils.copyDirectory(new File(REF_DIR, "lucene-7.7.1"), new File(WORK_DIR));
+        FileUtils.copyDirectory(new File(REF_DIR, "lucene-7.7.3"), new File(WORK_DIR));
 
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 

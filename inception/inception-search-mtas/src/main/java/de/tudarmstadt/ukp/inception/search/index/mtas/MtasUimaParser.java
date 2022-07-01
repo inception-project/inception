@@ -119,32 +119,37 @@ public class MtasUimaParser
     {
         super(config);
 
-        // Perform dependency injection
-        AutowireCapableBeanFactory factory = ApplicationContextProvider.getApplicationContext()
-                .getAutowireCapableBeanFactory();
-        factory.autowireBean(this);
-        factory.initializeBean(this, "transientParser");
+        try {
+            // Perform dependency injection
+            AutowireCapableBeanFactory factory = ApplicationContextProvider.getApplicationContext()
+                    .getAutowireCapableBeanFactory();
+            factory.autowireBean(this);
+            factory.initializeBean(this, "transientParser");
 
-        JSONObject jsonParserConfiguration = new JSONObject(
-                config.attributes.get(ARGUMENT_PARSER_ARGS));
-        Project project = projectService
-                .getProject(jsonParserConfiguration.getLong(PARAM_PROJECT_ID));
+            JSONObject jsonParserConfiguration = new JSONObject(
+                    config.attributes.get(ARGUMENT_PARSER_ARGS));
+            Project project = projectService
+                    .getProject(jsonParserConfiguration.getLong(PARAM_PROJECT_ID));
 
-        // Initialize and populate the hash maps for the layers and features
-        annotationSchemaService.listAnnotationLayer(project).stream()
-                .filter(layer -> layer.isEnabled()) //
-                .forEach(layer -> {
-                    layers.put(layer.getName(), layer);
-                    layerFeatures.put(layer.getName(), new ArrayList<>());
-                });
+            // Initialize and populate the hash maps for the layers and features
+            annotationSchemaService.listAnnotationLayer(project).stream()
+                    .filter(layer -> layer.isEnabled()) //
+                    .forEach(layer -> {
+                        layers.put(layer.getName(), layer);
+                        layerFeatures.put(layer.getName(), new ArrayList<>());
+                    });
 
-        annotationSchemaService.listAnnotationFeature(project).stream()
-                .filter(feature -> feature.isEnabled() && feature.getLayer().isEnabled())
-                .forEach(feature -> {
-                    layerFeatures
-                            .computeIfAbsent(feature.getLayer().getName(), key -> new ArrayList<>())
-                            .add(feature);
-                });
+            annotationSchemaService.listAnnotationFeature(project).stream()
+                    .filter(feature -> feature.isEnabled() && feature.getLayer().isEnabled())
+                    .forEach(feature -> {
+                        layerFeatures.computeIfAbsent(feature.getLayer().getName(),
+                                key -> new ArrayList<>()).add(feature);
+                    });
+        }
+        catch (Exception e) {
+            LOG.error("Unable to initialize MtasUimaParser", e);
+            throw e;
+        }
     }
 
     // This constructor is used for testing
