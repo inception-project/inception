@@ -59,6 +59,12 @@ public class AnnotationStateChangedEventAdapter
     }
 
     @Override
+    public String getUser(AnnotationStateChangeEvent aEvent)
+    {
+        return aEvent.getUser();
+    }
+
+    @Override
     public String getDetails(AnnotationStateChangeEvent aEvent) throws IOException
     {
         StateChangeDetails details = new StateChangeDetails();
