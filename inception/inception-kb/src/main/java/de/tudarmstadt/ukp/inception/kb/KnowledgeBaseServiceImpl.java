@@ -52,9 +52,11 @@ import javax.persistence.TypedQuery;
 
 import org.apache.commons.compress.compressors.CompressorException;
 import org.apache.commons.compress.compressors.CompressorStreamFactory;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.lucene.index.IndexFormatTooNewException;
 import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
@@ -1307,6 +1309,19 @@ public class KnowledgeBaseServiceImpl
                 try (RepositoryConnection conn = getConnection(aKB)) {
                     luceneSail.reindex();
                     conn.commit();
+                }
+                catch (IndexFormatTooNewException e) {
+                    log.warn("Unable to access index: {}", e.getMessage());
+                    log.info("Downgrade detected - trying to rebuild index from scratch...");
+                    // Try once to rebuild
+                    String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
+                    luceneSail.shutDown();
+                    FileUtils.deleteQuietly(new File(luceneDir));
+                    luceneSail.initialize();
+                    try (RepositoryConnection conn = getConnection(aKB)) {
+                        luceneSail.reindex();
+                        conn.commit();
+                    }
                 }
             }
         }
