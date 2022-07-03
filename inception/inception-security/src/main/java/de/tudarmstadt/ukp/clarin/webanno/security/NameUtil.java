@@ -15,18 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
+package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import static org.apache.commons.lang3.StringUtils.containsNone;
 
 public class NameUtil
 {
-    public static final String WEBANNO_ILLEGAL_CHARACTERS = "^/\\&*?+$![]";
+    public static final String WEBANNO_ILLEGAL_CHARACTERS = "^/\\&*?+$![] ";
 
     public static final String BAD_FOR_FILENAMES = "#%&{}\\<>*?/ $!'\":@+`|=";
 
     /**
-     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
+     * Check if the name is valid, special characters are not allowed as a project/user name as it
      * will conflict with file naming system
      * 
      * @param aName
