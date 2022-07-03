@@ -176,13 +176,25 @@ public class WebhookService
                 }
                 catch (Exception e) {
                     if (hookAndCount.getValue().get() < configuration.getRetryCount()) {
-                        log.error("Unable to send webhook [{}] ... retrying in a moment",
-                                hookAndCount.getKey(), e);
+                        if (log.isDebugEnabled()) {
+                            log.error("Unable to send webhook [{}]: {} - retrying in a moment",
+                                    hookAndCount.getKey().getUrl(), e.getMessage(), e);
+                        }
+                        else {
+                            log.error("Unable to send webhook [{}]: {} - retrying in a moment",
+                                    hookAndCount.getKey().getUrl(), e.getMessage());
+                        }
                         hookAndCount.getValue().incrementAndGet();
                     }
                     else {
-                        log.error("Unable to invoke webhook [{}] - giving up",
-                                hookAndCount.getKey(), e);
+                        if (log.isDebugEnabled()) {
+                            log.error("Unable to invoke webhook [{}]: {} - giving up",
+                                    hookAndCount.getKey().getUrl(), e.getMessage(), e);
+                        }
+                        else {
+                            log.error("Unable to invoke webhook [{}]: {} - giving up",
+                                    hookAndCount.getKey().getUrl(), e.getMessage());
+                        }
                         i.remove();
                     }
                 }
