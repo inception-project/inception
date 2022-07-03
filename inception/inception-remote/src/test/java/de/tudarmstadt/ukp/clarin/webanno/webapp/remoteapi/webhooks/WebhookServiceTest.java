@@ -137,6 +137,7 @@ public class WebhookServiceTest
         ann.setId(3l);
         ann.setDocument(doc);
         ann.setState(AnnotationDocumentState.FINISHED);
+        ann.setAnnotatorState(AnnotationDocumentState.IN_PROGRESS);
     }
 
     @Test

@@ -33,10 +33,12 @@ public class AnnotationStateChangeMessage
     private long documentId;
     private String documentName;
 
+    private String user;
     private String annotationUser;
 
     private String annotationPreviousState;
     private String annotationState;
+    private String annotatorAnnotationState;
 
     public AnnotationStateChangeMessage()
     {
@@ -53,12 +55,15 @@ public class AnnotationStateChangeMessage
         documentId = aEvent.getDocument().getId();
         documentName = aEvent.getDocument().getName();
 
+        user = aEvent.getUser();
         annotationUser = aEvent.getAnnotationDocument().getUser();
 
         annotationState = AeroRemoteApiController
                 .annotationDocumentStateToString(aEvent.getNewState());
         annotationPreviousState = AeroRemoteApiController
                 .annotationDocumentStateToString(aEvent.getPreviousState());
+        annotatorAnnotationState = AeroRemoteApiController.annotationDocumentStateToString(
+                aEvent.getAnnotationDocument().getAnnotatorState());
     }
 
     public long getTimestamp()
@@ -141,14 +146,35 @@ public class AnnotationStateChangeMessage
         annotationUser = aAnnotationUser;
     }
 
+    public String getUser()
+    {
+        return user;
+    }
+
+    public void setUser(String aUser)
+    {
+        user = aUser;
+    }
+
+    public String getAnnotatorAnnotationState()
+    {
+        return annotatorAnnotationState;
+    }
+
+    public void setAnnotatorAnnotationState(String aAnnotatorAnnotationState)
+    {
+        annotatorAnnotationState = aAnnotatorAnnotationState;
+    }
+
     @Override
     public String toString()
     {
         return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("timestamp", timestamp)
                 .append("projectId", projectId).append("projectName", projectName)
                 .append("documentId", documentId).append("documentName", documentName)
-                .append("annotationUser", annotationUser)
+                .append("user", user).append("annotationUser", annotationUser)
                 .append("annotationPreviousState", annotationPreviousState)
-                .append("annotationState", annotationState).toString();
+                .append("annotationState", annotationState)
+                .append("annotatorAnnotationState", annotatorAnnotationState).toString();
     }
 }
