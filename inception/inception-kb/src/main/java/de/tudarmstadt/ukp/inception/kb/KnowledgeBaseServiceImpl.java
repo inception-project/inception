@@ -1252,7 +1252,7 @@ public class KnowledgeBaseServiceImpl
                 || propertyIdentifier.equals(aKB.getTypeIri());
     }
 
-    private void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
+    void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
     {
         /*
         // @formatter:off

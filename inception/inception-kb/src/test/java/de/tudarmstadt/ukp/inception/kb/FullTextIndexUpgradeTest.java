@@ -127,6 +127,7 @@ public class FullTextIndexUpgradeTest
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 
         kb.setRepositoryId("pid-1-kbid-");
+        sut.reconfigureLocalKnowledgeBase(kb);
 
         var builder = SPARQLQueryBuilder //
                 .forItems(kb) //

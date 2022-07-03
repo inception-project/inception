@@ -615,7 +615,12 @@ public class SearchServiceImpl
             index.setInvalid(true);
 
             // Clear the index
-            index.getPhysicalIndex().clear();
+            try {
+                index.getPhysicalIndex().clear();
+            }
+            catch (IndexRebuildRequiredException e) {
+                // We can ignore this since we are rebuilding the index already anyway
+            }
 
             Set<String> usersWithPermissions = projectService
                     .listProjectUsersWithPermissions(aProject).stream() //

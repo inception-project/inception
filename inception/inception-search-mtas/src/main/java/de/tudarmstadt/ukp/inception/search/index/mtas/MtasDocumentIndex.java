@@ -111,6 +111,7 @@ import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.StatisticRequest;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
+import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -205,9 +206,6 @@ public class MtasDocumentIndex
             return _indexWriter;
         }
 
-        // log.debug("Opening index for project [{}]({})", project.getName(), project.getId(),
-        // new RuntimeException());
-
         try {
             // After the index has been initialized, assign the _indexWriter - this is also used
             // by isOpen() to check if the index writer is available.
@@ -227,15 +225,8 @@ public class MtasDocumentIndex
             // If the index is corrupt, delete it so it can be rebuilt from scratch
             delete();
 
-            try {
-                _indexWriter = createIndexWriter();
-                return _indexWriter;
-            }
-            catch (IOException e1) {
-                log.error("Unable to initialize MTAS index for rebuild: {}", e1.getMessage(), e1);
-                _indexWriter = null;
-                throw e1;
-            }
+            _indexWriter = null;
+            throw new IndexRebuildRequiredException(e);
         }
     }
 
