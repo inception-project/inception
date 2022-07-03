@@ -1297,38 +1297,38 @@ public class KnowledgeBaseServiceImpl
             throw new IllegalArgumentException("Reindexing is only supported on local KBs");
         }
 
-        boolean reindexSupported = false;
+        var repo = repoManager.getRepository(aKB.getRepositoryId());
 
-        // Handle re-indexing of local repos that use a Lucene FTS
-        if (repoManager.getRepository(aKB.getRepositoryId()) instanceof SailRepository) {
-            SailRepository sailRepo = (SailRepository) repoManager
-                    .getRepository(aKB.getRepositoryId());
-            if (sailRepo.getSail() instanceof LuceneSail) {
-                reindexSupported = true;
-                LuceneSail luceneSail = (LuceneSail) (sailRepo.getSail());
-                try (RepositoryConnection conn = getConnection(aKB)) {
-                    luceneSail.reindex();
-                    conn.commit();
-                }
-                catch (IndexFormatTooNewException e) {
-                    log.warn("Unable to access index: {}", e.getMessage());
-                    log.info("Downgrade detected - trying to rebuild index from scratch...");
-                    // Try once to rebuild
-                    String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
-                    luceneSail.shutDown();
-                    FileUtils.deleteQuietly(new File(luceneDir));
-                    luceneSail.initialize();
-                    try (RepositoryConnection conn = getConnection(aKB)) {
-                        luceneSail.reindex();
-                        conn.commit();
-                    }
-                }
-            }
+        if (!(repo instanceof SailRepository)) {
+            throw new IllegalArgumentException(
+                    "Reindexing is not supported on [" + repo.getClass() + "] repositories");
         }
 
-        if (!reindexSupported) {
+        var sail = ((SailRepository) repo).getSail();
+        if (!(sail instanceof LuceneSail)) {
             throw new IllegalArgumentException(
-                    aKB + "] does not support rebuilding its full text index.");
+                    "Reindexing is not supported on [" + sail.getClass() + "] repositories");
+        }
+
+        var luceneSail = (LuceneSail) sail;
+        try (RepositoryConnection conn = getConnection(aKB)) {
+            luceneSail.reindex();
+            conn.commit();
+        }
+        catch (IndexFormatTooNewException e) {
+            log.warn("Unable to access index: {}", e.getMessage());
+            log.info("Downgrade detected - trying to rebuild index from scratch...");
+
+            String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
+            luceneSail.shutDown();
+            FileUtils.deleteQuietly(new File(luceneDir));
+            luceneSail.initialize();
+
+            // Only try to rebuild once - so no recursion here!
+            try (RepositoryConnection conn = getConnection(aKB)) {
+                luceneSail.reindex();
+                conn.commit();
+            }
         }
     }
 
