@@ -15,32 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.search.index;
 
-package de.tudarmstadt.ukp.inception.search;
+import java.io.IOException;
 
-public class ExecutionException
-    extends Exception
+public class IndexRebuildRequiredException
+    extends IOException
 {
-    private static final long serialVersionUID = 8455453314467783901L;
+    private static final long serialVersionUID = 2930155943618341291L;
 
-    public ExecutionException(String message)
+    public IndexRebuildRequiredException(String aMessage, Throwable aCause)
     {
-        super(message);
+        super(aMessage, aCause);
     }
 
-    public ExecutionException(Throwable cause)
+    public IndexRebuildRequiredException(Throwable aCause)
     {
-        super(cause);
-    }
-
-    public ExecutionException(String message, Throwable cause)
-    {
-        super(message, cause);
-    }
-
-    public ExecutionException(String message, Throwable cause, boolean enableSuppression,
-            boolean writableStackTrace)
-    {
-        super(message, cause, enableSuppression, writableStackTrace);
+        super(aCause);
     }
 }

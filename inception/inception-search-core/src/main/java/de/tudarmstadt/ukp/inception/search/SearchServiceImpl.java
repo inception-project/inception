@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
+import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
@@ -433,9 +434,7 @@ public class SearchServiceImpl
             log.trace(
                     "Index in project {} has not yet been initialized. Scheduling an asynchronous re-indexing.",
                     project);
-            index.setInvalid(true);
-            entityManager.merge(index);
-            enqueueReindexTask(project, "indexDocument");
+            invalidateIndexAndForceIndexRebuild(project, index, "indexDocument");
             return;
         }
 
@@ -444,6 +443,9 @@ public class SearchServiceImpl
         // be thread-safe...
         try {
             index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
+        }
+        catch (IndexRebuildRequiredException e) {
+            invalidateIndexAndForceIndexRebuild(project, index, "indexDocument[error]");
         }
         catch (IOException e) {
             log.error("Error indexing source document {} in project {}", aSourceDocument, project,
@@ -489,9 +491,7 @@ public class SearchServiceImpl
             log.trace(
                     "Index in project {} has not yet been initialized. Scheduling an asynchronous re-indexing.",
                     project);
-            index.setInvalid(true);
-            entityManager.merge(index);
-            enqueueReindexTask(project, aTrigger);
+            invalidateIndexAndForceIndexRebuild(project, index, "indexDocument");
             return;
         }
 
@@ -504,6 +504,9 @@ public class SearchServiceImpl
             log.trace("Indexing new version of annotation document {} in project {}",
                     aAnnotationDocument, project);
             index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
+        }
+        catch (IndexRebuildRequiredException e) {
+            invalidateIndexAndForceIndexRebuild(project, index, "indexDocument[error]");
         }
         catch (IOException e) {
             log.error("Error indexing annotation document {} in project {}", aAnnotationDocument,
@@ -544,7 +547,6 @@ public class SearchServiceImpl
 
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
             Index index = pooledIndex.get();
-
             ensureIndexIsCreatedAndValid(aProject, index);
 
             return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser,
@@ -600,7 +602,7 @@ public class SearchServiceImpl
     @Transactional
     public void reindex(Project aProject, Monitor aMonitor) throws IOException
     {
-        log.info("Re-indexing project {}", aProject);
+        log.info("Re-indexing project {}. This may take a while...", aProject);
 
         Monitor monitor = aMonitor != null ? aMonitor : new Monitor();
 
@@ -670,6 +672,8 @@ public class SearchServiceImpl
             index.setInvalid(false);
             entityManager.merge(index);
         }
+
+        log.info("Re-indexing project {} complete!", aProject);
     }
 
     /**
@@ -744,13 +748,8 @@ public class SearchServiceImpl
     {
         // Does the index exist at all?
         if (!aIndex.getPhysicalIndex().isCreated()) {
-            // Set the invalid flag
-            aIndex.setInvalid(true);
-            entityManager.merge(aIndex);
-
-            // Schedule new re-indexing process
-            enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
-
+            invalidateIndexAndForceIndexRebuild(aProject, aIndex,
+                    "ensureIndexIsCreatedAndValid[doesNotExist]");
             // Throw execution exception so that the user knows the query was not run
             throw (new ExecutionException("Index still building. Try again later."));
         }
@@ -765,6 +764,28 @@ public class SearchServiceImpl
             // Throw execution exception so that the user knows the query was not run
             throw (new ExecutionException("Index still building. Try again later."));
         }
+
+        // Is the index usable - it might be corrupt and needs rebuilding
+        try {
+            aIndex.getPhysicalIndex().open();
+        }
+        catch (IndexRebuildRequiredException e) {
+            invalidateIndexAndForceIndexRebuild(aProject, aIndex,
+                    "ensureIndexIsCreatedAndValid[error]");
+            // Throw execution exception so that the user knows the query was not run
+            throw (new ExecutionException("Index still building. Try again later."));
+        }
+        catch (IOException e) {
+            throw new ExecutionException("Unable to access index", e);
+        }
+    }
+
+    private void invalidateIndexAndForceIndexRebuild(Project aProject, Index aIndex, String aReason)
+    {
+        aIndex.setInvalid(true);
+        entityManager.merge(aIndex);
+
+        enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
     }
 
     @Override

@@ -48,6 +48,8 @@ public interface PhysicalIndex
 
     boolean isOpen();
 
+    void open() throws IOException;
+
     void close();
 
     Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest)
@@ -69,6 +71,7 @@ public interface PhysicalIndex
 
     void deindexDocument(AnnotationDocument aDocument) throws IOException;
 
+    @Deprecated
     void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException;
 
     void indexDocument(AnnotationDocument aDocument, byte[] aBinaryCas) throws IOException;

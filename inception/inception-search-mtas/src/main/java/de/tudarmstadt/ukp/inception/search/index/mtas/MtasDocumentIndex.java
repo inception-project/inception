@@ -71,7 +71,6 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.CorruptIndexException;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
@@ -95,7 +94,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.openjson.JSONObject;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -180,7 +178,6 @@ public class MtasDocumentIndex
     private final FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final DocumentService documentService;
-    private final AnnotationSchemaService schemaService;
     private final Project project;
     private final File repositoryDir;
     private final ScheduledExecutorService schedulerService;
@@ -189,12 +186,10 @@ public class MtasDocumentIndex
     private ReferenceManager<IndexSearcher> _searcherManager;
     private ScheduledFuture<?> _commitFuture;
 
-    public MtasDocumentIndex(Project aProject, DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService, String aDir,
+    public MtasDocumentIndex(Project aProject, DocumentService aDocumentService, String aDir,
             FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        schemaService = aSchemaService;
         documentService = aDocumentService;
         project = aProject;
         featureIndexingSupportRegistry = aFeatureIndexingSupportRegistry;
@@ -217,23 +212,30 @@ public class MtasDocumentIndex
             // After the index has been initialized, assign the _indexWriter - this is also used
             // by isOpen() to check if the index writer is available.
             _indexWriter = createIndexWriter();
-            ;
             return _indexWriter;
-        }
-        catch (CorruptIndexException e) {
-            // If the index is corrupt, try once to delete and create from scratch
-            delete();
-
-            // After the index has been initialized, assign the _indexWriter - this is also used
-            // by isOpen() to check if the index writer is available.
-            _indexWriter = createIndexWriter();
-            ;
-            return _indexWriter;
-
         }
         catch (IOException e) {
-            _indexWriter = null;
-            throw e;
+            if (log.isDebugEnabled()) {
+                log.warn("Unable to read MTAS index: {}. Deleting index so it can be rebuilt.",
+                        e.getMessage(), e);
+            }
+            else {
+                log.warn("Unable to read MTAS index: {}. Deleting index so it can be rebuilt.",
+                        e.getMessage());
+            }
+
+            // If the index is corrupt, delete it so it can be rebuilt from scratch
+            delete();
+
+            try {
+                _indexWriter = createIndexWriter();
+                return _indexWriter;
+            }
+            catch (IOException e1) {
+                log.error("Unable to initialize MTAS index for rebuild: {}", e1.getMessage(), e1);
+                _indexWriter = null;
+                throw e1;
+            }
         }
     }
 
@@ -334,8 +336,7 @@ public class MtasDocumentIndex
                 _indexWriter.close();
             }
             catch (IOException e) {
-                log.error("Error closing index for project [{}]({})", project.getName(),
-                        project.getId(), e);
+                log.error("Error closing index for project {}", project, e);
             }
 
             if (_searcherManager != null) {
@@ -343,15 +344,14 @@ public class MtasDocumentIndex
                     _searcherManager.close();
                 }
                 catch (IOException e) {
-                    log.error("Error closing index for project [{}]({})", project.getName(),
-                            project.getId(), e);
+                    log.error("Error closing index for project {}", project, e);
                 }
             }
         }
         finally {
             _indexWriter = null;
             _searcherManager = null;
-            log.debug("Closed index for project [{}]({})", project.getName(), project.getId());
+            log.debug("Closed index for project {}", project);
         }
     }
 
@@ -376,8 +376,7 @@ public class MtasDocumentIndex
             return;
         }
 
-        log.debug("Enqueuing new future to index for project [{}]({})", project.getName(),
-                project.getId());
+        log.debug("Enqueuing new future to index for project {}", project);
 
         _commitFuture = schedulerService.schedule(this::commit, 3, SECONDS);
     }
@@ -385,12 +384,10 @@ public class MtasDocumentIndex
     private void commit()
     {
         try {
-            log.debug("Executing future to index for project [{}]({})", project.getName(),
-                    project.getId());
+            log.debug("Executing future to index for project {}", project);
             if (_indexWriter != null && _indexWriter.isOpen()) {
                 _indexWriter.commit();
-                log.debug("Committed changes to index for project [{}]({})", project.getName(),
-                        project.getId());
+                log.debug("Committed changes to index for project {}", project);
 
                 if (_searcherManager != null) {
                     _searcherManager.maybeRefresh();
@@ -398,8 +395,7 @@ public class MtasDocumentIndex
             }
         }
         catch (IOException e) {
-            log.error("Unable to commit to index of project [{}]({})", project.getName(),
-                    project.getId());
+            log.error("Unable to commit to index of project {}", project);
         }
     }
 
@@ -412,6 +408,12 @@ public class MtasDocumentIndex
     public boolean isOpen()
     {
         return _indexWriter != null ? _indexWriter.isOpen() : false;
+    }
+
+    @Override
+    public void open() throws IOException
+    {
+        getIndexWriter();
     }
 
     @Override
@@ -546,8 +548,8 @@ public class MtasDocumentIndex
         Map<String, Object> resultsMap = null;
         Map<String, Object> resultsMapSentence = null;
 
-        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
-                aStatisticRequest.getProject(), aStatisticRequest.getUser());
+        // Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
+        // aStatisticRequest.getProject(), aStatisticRequest.getUser());
         Double minToken = aStatisticRequest.getMinTokenPerDoc().isPresent()
                 ? (double) aStatisticRequest.getMinTokenPerDoc().getAsInt()
                 : null;
@@ -1354,6 +1356,7 @@ public class MtasDocumentIndex
      * @param aDocument
      *            The document to be removed
      */
+    @Deprecated
     @Override
     public void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException
     {
