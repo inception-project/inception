@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json;
 
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.projectStateToString;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 
 public class ProjectStateChangeMessage
@@ -81,5 +84,16 @@ public class ProjectStateChangeMessage
     public void setProjectState(String aProjectState)
     {
         projectState = aProjectState;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.SIMPLE_STYLE) //
+                .append("projectId", projectId) //
+                .append("projectName", projectName) //
+                .append("projectPreviousState", projectPreviousState) //
+                .append("projectState", projectState) //
+                .toString();
     }
 }

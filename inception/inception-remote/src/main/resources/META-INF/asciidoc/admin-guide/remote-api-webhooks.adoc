@@ -47,6 +47,18 @@ webhooks.globalHooks[0].verify-certificates=false
 
 TIP: You can test receiving WebHooks e.g. using link:https://pypi.org/project/pyserv/[pyserv] or link:https://en.wikipedia.org/wiki/Netcat[netcat].
 
+== Authentication headers
+
+If the recipient of the webhook requires an authentication header, you can configure the header and
+its value.
+
+```
+webhooks.globalHooks[0].auth-header=Bearer
+webhooks.globalHooks[0].auth-header-value=MY-SECRET-TOKEN
+```
+
+== Message examples
+
 When {product-name} triggers a webhook, it sends a HTTP `POST` request. The `X-AERO-Notification` header
 indicates the topic and the body of the request is a JSON structure providing details about the
 state change. The JSON in the examples below have been pretty-printed for your convenient - the
