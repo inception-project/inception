@@ -2183,6 +2183,7 @@
             <dependency>com.squareup.okhttp3:mockwebserver</dependency>
             <dependency>com.squareup.okhttp3:okhttp</dependency>
             <dependency>com.squareup.okio:okio</dependency>
+            <dependency>com.squareup.okio:okio-jvm</dependency>
             <dependency>org.awaitility:awaitility</dependency>
             <dependency>org.springframework:spring-test</dependency>
             <dependency>org.springframework.boot:spring-boot-starter-web</dependency>
