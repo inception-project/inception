@@ -21,9 +21,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
+
+/**
+ * <p>
+ * This class is loaded via {@link RemoteApiAutoConfiguration}.
+ * </p>
+ */
 @ConfigurationProperties(prefix = WebhooksConfiguration.PROPERTY_PREFIX)
 public class WebhooksConfiguration
 {

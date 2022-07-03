@@ -37,7 +37,6 @@ import org.apache.http.ssl.TrustStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.http.HttpEntity;
@@ -45,7 +44,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,11 +51,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RemoteApiAutoConfiguration#webhookService}.
+ * </p>
+ */
 public class WebhookService
     implements InitializingBean
 {
@@ -80,14 +84,18 @@ public class WebhookService
         EVENT_TOPICS = Collections.unmodifiableMap(names);
     }
 
-    private @Autowired WebhooksConfiguration configuration;
-    private @Autowired RestTemplateBuilder restTemplateBuilder;
+    private final WebhooksConfiguration configuration;
+    private final RestTemplateBuilder restTemplateBuilder;
 
     private HttpComponentsClientHttpRequestFactory nonValidatingRequestFactory = null;
 
-    public WebhookService()
+    public WebhookService(WebhooksConfiguration aConfiguration,
+            RestTemplateBuilder aRestTemplateBuilder)
         throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
     {
+        configuration = aConfiguration;
+        restTemplateBuilder = aRestTemplateBuilder;
+
         TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
 
         SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
@@ -158,7 +166,7 @@ public class WebhookService
                 }
 
                 HttpHeaders requestHeaders = new HttpHeaders();
-                requestHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
+                requestHeaders.setContentType(MediaType.APPLICATION_JSON);
                 requestHeaders.set(X_AERO_NOTIFICATION, topic);
 
                 // If a secret is set, then add a digest header that allows the client to verify
