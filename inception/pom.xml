@@ -65,7 +65,7 @@
 
     <junit-jupiter.version>5.8.2</junit-jupiter.version>
     <mockito.version>4.6.1</mockito.version>
-    <assertj.version>3.22.0</assertj.version>
+    <assertj.version>3.23.1</assertj.version>
     <awaitility.version>4.2.0</awaitility.version>
     <xmlunit.version>1.6</xmlunit.version>
 
@@ -74,22 +74,22 @@
     <uimafit.version>3.3.0</uimafit.version>
 
     <spring.version>5.3.21</spring.version>
-    <spring.boot.version>2.7.0</spring.boot.version>
-    <spring.security.version>5.7.1</spring.security.version>
+    <spring.boot.version>2.7.1</spring.boot.version>
+    <spring.security.version>5.7.2</spring.security.version>
     <springdoc.version>1.6.9</springdoc.version>
     <swagger.version>2.2.1</swagger.version>
 
     <slf4j.version>1.7.36</slf4j.version>
-    <log4j2.version>2.17.2</log4j2.version>
-    <jboss.logging.version>3.4.2.Final</jboss.logging.version>
+    <log4j2.version>2.18.0</log4j2.version>
+    <jboss.logging.version>3.5.0.Final</jboss.logging.version>
 
-    <groovy.version>3.0.10</groovy.version>
+    <groovy.version>3.0.11</groovy.version>
 
     <tomcat.version>9.0.64</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.5</mariadb.driver.version>
-    <hibernate.version>5.6.8.Final</hibernate.version>
+    <hibernate.version>5.6.9.Final</hibernate.version>
     <hibernate.validator.version>6.2.3.Final</hibernate.validator.version>
 
     <wicket.version>9.10.0</wicket.version>
@@ -131,13 +131,13 @@
     <!--   4.4.0    dropped ElasticSearch -->
 
     <asciidoctor.plugin.version>2.2.1</asciidoctor.plugin.version>
-    <asciidoctor.version>2.5.3</asciidoctor.version>
-    <asciidoctor-diagram.version>2.2.1</asciidoctor-diagram.version>
+    <asciidoctor.version>2.5.4</asciidoctor.version>
+    <asciidoctor-diagram.version>2.2.3</asciidoctor-diagram.version>
 
     <json.version>20180813</json.version>
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.13.3</jackson.version>
-    <okhttp.version>4.9.3</okhttp.version>
+    <okhttp.version>4.10.0</okhttp.version>
     
     <node.version>16.14.2</node.version>
     <npm.version>8.5.0</npm.version>
@@ -1647,7 +1647,7 @@
       <dependency>
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
-        <version>3.0.6</version>
+        <version>3.1.1</version>
       </dependency>
       <dependency>
         <groupId>org.xerial.snappy</groupId>
