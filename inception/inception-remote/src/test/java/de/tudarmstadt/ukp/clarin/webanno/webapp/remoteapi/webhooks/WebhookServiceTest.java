@@ -182,6 +182,25 @@ public class WebhookServiceTest
                 .containsExactly(asList(headerValue));
     }
 
+    @Test
+    public void thatDeliveryIsRetried()
+    {
+        webhooksConfiguration.setRetryCount(3);
+        webhooksConfiguration.setRetryDelay(50);
+        hook.setUrl("http://localhost:" + port + "/test/failFirstTime");
+        hook.setTopics(asList(ANNOTATION_STATE));
+
+        var event = new AnnotationStateChangeEvent(this, ann, AnnotationDocumentState.IN_PROGRESS);
+        applicationEventPublisher.publishEvent(event);
+
+        assertThat(testService.callCount).isEqualTo(2);
+
+        assertThat(testService.annStateChangeMsgs) //
+                .extracting(Pair::getLeft) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .containsExactly(new AnnotationStateChangeMessage(event));
+    }
+
     @RequestMapping("/test")
     @Controller
     public static class TestService
@@ -189,12 +208,14 @@ public class WebhookServiceTest
         private List<Pair<ProjectStateChangeMessage, HttpHeaders>> projectStateChangeMsgs = new ArrayList<>();
         private List<Pair<DocumentStateChangeMessage, HttpHeaders>> docStateChangeMsgs = new ArrayList<>();
         private List<Pair<AnnotationStateChangeMessage, HttpHeaders>> annStateChangeMsgs = new ArrayList<>();
+        private int callCount;
 
         public void reset()
         {
             projectStateChangeMsgs.clear();
             docStateChangeMsgs.clear();
             annStateChangeMsgs.clear();
+            callCount = 0;
         }
 
         @PostMapping( //
@@ -232,6 +253,25 @@ public class WebhookServiceTest
                 @RequestBody AnnotationStateChangeMessage aMsg)
             throws Exception
         {
+            annStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
+            return ResponseEntity.ok().build();
+        }
+
+        @PostMapping( //
+                value = "/failFirstTime", //
+                headers = X_AERO_NOTIFICATION + "=" + ANNOTATION_STATE, //
+                consumes = APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> failFirstTime( //
+                @RequestHeader HttpHeaders aHeaders, //
+                @RequestBody AnnotationStateChangeMessage aMsg)
+            throws Exception
+        {
+            callCount++;
+
+            if (callCount == 1) {
+                return ResponseEntity.internalServerError().build();
+            }
+
             annStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }
