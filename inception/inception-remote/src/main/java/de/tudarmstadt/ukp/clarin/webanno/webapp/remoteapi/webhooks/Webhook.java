@@ -24,6 +24,8 @@ public class Webhook
 {
     private String url;
     private String secret;
+    private String authHeader;
+    private String authHeaderValue;
     private boolean enabled = true;
     private List<String> topics = new ArrayList<>();
     private boolean verifyCertificates = true;
@@ -76,6 +78,26 @@ public class Webhook
     public void setVerifyCertificates(boolean aVerifyCertificates)
     {
         verifyCertificates = aVerifyCertificates;
+    }
+
+    public String getAuthHeader()
+    {
+        return authHeader;
+    }
+
+    public void setAuthHeader(String aAuthHeader)
+    {
+        authHeader = aAuthHeader;
+    }
+
+    public String getAuthHeaderValue()
+    {
+        return authHeaderValue;
+    }
+
+    public void setAuthHeaderValue(String aAuthHeaderValue)
+    {
+        authHeaderValue = aAuthHeaderValue;
     }
 
     @Override

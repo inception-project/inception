@@ -169,6 +169,10 @@ public class WebhookService
                     requestHeaders.set(X_AERO_SIGNATURE, digest);
                 }
 
+                if (isNotBlank(hook.getAuthHeader()) && isNotBlank(hook.getAuthHeaderValue())) {
+                    requestHeaders.set(hook.getAuthHeader(), hook.getAuthHeaderValue());
+                }
+
                 HttpEntity<?> httpEntity = new HttpEntity<Object>(json, requestHeaders);
                 restTemplate.postForEntity(hook.getUrl(), httpEntity, Void.class);
             }
