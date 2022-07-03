@@ -15,6 +15,6 @@
               sail:sailType "openrdf:NativeStore"
             ];
           sail:sailType "openrdf:LuceneSail";
-          sl:indexDir "/Users/bluefire/git/inception-application/inception/inception-kb/target/test-output/KnowledgeBaseUpgradeTest/kb/indexes/pid-1-kbid-"
+          sl:indexDir ".../kb/indexes/pid-1-kbid-"
         ]
     ] .

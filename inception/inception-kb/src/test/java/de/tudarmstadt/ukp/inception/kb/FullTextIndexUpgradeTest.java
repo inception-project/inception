@@ -152,6 +152,7 @@ public class FullTextIndexUpgradeTest
         sut = new KnowledgeBaseServiceImpl(repoProperties, kbProperties, entityManager);
 
         kb.setRepositoryId("pid-1-kbid-");
+        sut.reconfigureLocalKnowledgeBase(kb);
 
         try (var is = newInputStream(
                 Paths.get("src/test/resources/turtle/data_additional_search_properties.ttl"))) {
