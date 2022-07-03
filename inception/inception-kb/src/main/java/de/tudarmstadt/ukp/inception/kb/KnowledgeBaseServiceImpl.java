@@ -1322,7 +1322,7 @@ public class KnowledgeBaseServiceImpl
             String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
             luceneSail.shutDown();
             FileUtils.deleteQuietly(new File(luceneDir));
-            luceneSail.initialize();
+            luceneSail.init();
 
             // Only try to rebuild once - so no recursion here!
             try (RepositoryConnection conn = getConnection(aKB)) {
