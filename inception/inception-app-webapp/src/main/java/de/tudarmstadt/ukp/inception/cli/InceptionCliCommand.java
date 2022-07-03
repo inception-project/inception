@@ -15,26 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externaleditor.config;
+package de.tudarmstadt.ukp.inception.cli;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.context.annotation.Bean;
+import java.util.concurrent.Callable;
 
-import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
-import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlDocumentIFrameViewFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
+import org.springframework.stereotype.Component;
 
-@ConditionalOnWebApplication
-public class ExternalEditorAutoConfiguration
+import picocli.CommandLine.Command;
+
+@ConditionalOnNotWebApplication
+@Component
+@Command(name = "inception", mixinStandardHelpOptions = true)
+public class InceptionCliCommand
+    implements Callable<Integer>
 {
-    @Bean
-    public XHtmlXmlDocumentIFrameViewFactory xHtmlXmlDocumentIFrameViewFactory()
-    {
-        return new XHtmlXmlDocumentIFrameViewFactory();
-    }
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Bean
-    public XmlDocumentIFrameViewFactory xmlDocumentIFrameViewFactory()
+    @Override
+    public Integer call() throws Exception
     {
-        return new XmlDocumentIFrameViewFactory();
+        log.error(
+                "When you start the application with no parameters, the server should be started. No idea how you got here...");
+
+        return 0;
     }
 }

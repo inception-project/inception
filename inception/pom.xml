@@ -128,7 +128,7 @@
     <pf4j.version>2.6.0</pf4j.version>
     <jackson.version>2.13.3</jackson.version>
     <okhttp.version>4.9.3</okhttp.version>
-    
+
     <node.version>16.14.2</node.version>
     <npm.version>8.5.0</npm.version>
     <typescript.version>^4.6.3</typescript.version>
@@ -1216,7 +1216,7 @@
         <artifactId>slf4j-jdk14</artifactId>
         <version>${slf4j.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.jboss.logging</groupId>
         <artifactId>jboss-logging</artifactId>
@@ -1874,6 +1874,17 @@
         <version>1.10.12</version>
       </dependency>
 
+      <dependency>
+        <groupId>info.picocli</groupId>
+        <artifactId>picocli</artifactId>
+        <version>4.6.3</version>
+      </dependency>
+      <dependency>
+        <groupId>info.picocli</groupId>
+        <artifactId>picocli-spring-boot-starter</artifactId>
+        <version>4.6.3</version>
+      </dependency>
+      
       <dependency>
         <!-- Import dependency management from Spring Boot -->
         <groupId>org.springframework.boot</groupId>

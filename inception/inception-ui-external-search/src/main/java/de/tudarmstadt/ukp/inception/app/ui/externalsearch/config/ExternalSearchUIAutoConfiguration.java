@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch.config;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,6 +36,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConf
 /**
  * Provides all UI-level Spring beans for the external search functionality.
  */
+@ConditionalOnWebApplication
 @Configuration
 @AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
 @ConditionalOnBean(ExternalSearchService.class)

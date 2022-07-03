@@ -15,26 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externaleditor.config;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.config;
+
+import javax.servlet.ServletContext;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
-import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlDocumentIFrameViewFactory;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
 
 @ConditionalOnWebApplication
-public class ExternalEditorAutoConfiguration
+@Configuration
+public class AnnotationUIAutoConfiguration
 {
     @Bean
-    public XHtmlXmlDocumentIFrameViewFactory xHtmlXmlDocumentIFrameViewFactory()
+    AnnotationPageMenuItem annotationPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
+            ServletContext aServletContext)
     {
-        return new XHtmlXmlDocumentIFrameViewFactory();
-    }
-
-    @Bean
-    public XmlDocumentIFrameViewFactory xmlDocumentIFrameViewFactory()
-    {
-        return new XmlDocumentIFrameViewFactory();
+        return new AnnotationPageMenuItem(aUserRepo, aProjectService, aServletContext);
     }
 }
