@@ -57,12 +57,23 @@ webhooks.globalHooks[0].auth-header=Bearer
 webhooks.globalHooks[0].auth-header-value=MY-SECRET-TOKEN
 ```
 
+== Retries
+
+In some cases, the recipient of a webhook notification may be temporarily unavailable. It is possible to retry the delivery of a notification several times before giving up. By default,
+only one delivery attempt is made (`webhooks.retry-count=0`). However, you can configure up to three additional attempts with a delay of up to 5000ms between them.
+
+```
+webhooks.retry-count=3
+webhooks.retry-delay=5000
+```
+
+NOTE: Events being triggered while {product-name} is being shut down may not trigger any webhook deliveries.
+
 == Message examples
 
-When {product-name} triggers a webhook, it sends a HTTP `POST` request. The `X-AERO-Notification` header
-indicates the topic and the body of the request is a JSON structure providing details about the
-state change. The JSON in the examples below have been pretty-printed for your convenient - the
-messages sent by INCEpTION are not pretty-printed.
+When a webhook is triggered, it sends a HTTP `POST` request to the configured URL. The `X-AERO-Notification` header indicates the topic and the body of the request is a JSON structure providing
+details about the state change. The JSON in the examples below have been pretty-printed for your
+convenient - the actual messages are not pretty-printed.
 
 .Example `PROJECT_STATE`
 ----

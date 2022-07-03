@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -26,10 +28,12 @@ import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.SSLContext;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -37,7 +41,6 @@ import org.apache.http.ssl.TrustStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.http.HttpEntity;
@@ -45,7 +48,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,11 +55,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RemoteApiAutoConfiguration#webhookService}.
+ * </p>
+ */
 public class WebhookService
     implements InitializingBean
 {
@@ -80,14 +88,18 @@ public class WebhookService
         EVENT_TOPICS = Collections.unmodifiableMap(names);
     }
 
-    private @Autowired WebhooksConfiguration configuration;
-    private @Autowired RestTemplateBuilder restTemplateBuilder;
+    private final WebhooksConfiguration configuration;
+    private final RestTemplateBuilder restTemplateBuilder;
 
     private HttpComponentsClientHttpRequestFactory nonValidatingRequestFactory = null;
 
-    public WebhookService()
+    public WebhookService(WebhooksConfiguration aConfiguration,
+            RestTemplateBuilder aRestTemplateBuilder)
         throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
     {
+        configuration = aConfiguration;
+        restTemplateBuilder = aRestTemplateBuilder;
+
         TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> true;
 
         SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
@@ -141,45 +153,80 @@ public class WebhookService
             return;
         }
 
-        for (Webhook hook : configuration.getGlobalHooks()) {
-            if (!hook.isEnabled() || !hook.getTopics().contains(topic)) {
-                continue;
+        dispatch(topic, message);
+    }
+
+    private void dispatch(String topic, Object message)
+    {
+        var relevantHooks = configuration.getGlobalHooks().stream() //
+                .filter(Webhook::isEnabled) //
+                .filter(h -> h.getTopics().contains(topic)) //
+                .map(h -> Pair.of(h, new AtomicInteger(0))) //
+                .collect(toList());
+
+        while (!relevantHooks.isEmpty()) {
+            var i = relevantHooks.iterator();
+
+            while (i.hasNext()) {
+                var hookAndCount = i.next();
+
+                try {
+                    sendNotification(topic, message, hookAndCount.getKey());
+                    i.remove();
+                }
+                catch (Exception e) {
+                    if (hookAndCount.getValue().get() < configuration.getRetryCount()) {
+                        log.error("Unable to send webhook [{}] ... retrying in a moment",
+                                hookAndCount.getKey(), e);
+                        hookAndCount.getValue().incrementAndGet();
+                    }
+                    else {
+                        log.error("Unable to invoke webhook [{}] - giving up",
+                                hookAndCount.getKey(), e);
+                        i.remove();
+                    }
+                }
             }
 
             try {
-                // Configure rest template without SSL certification check if that is disabled.
-                RestTemplate restTemplate;
-                if (hook.isVerifyCertificates()) {
-                    restTemplate = restTemplateBuilder.build();
-                }
-                else {
-                    restTemplate = restTemplateBuilder
-                            .requestFactory(this::getNonValidatingRequestFactory).build();
-                }
-
-                HttpHeaders requestHeaders = new HttpHeaders();
-                requestHeaders.setContentType(MediaType.APPLICATION_JSON_UTF8);
-                requestHeaders.set(X_AERO_NOTIFICATION, topic);
-
-                // If a secret is set, then add a digest header that allows the client to verify
-                // the message integrity
-                String json = JSONUtil.toJsonString(message);
-                if (isNotBlank(hook.getSecret())) {
-                    String digest = DigestUtils.shaHex(hook.getSecret() + json);
-                    requestHeaders.set(X_AERO_SIGNATURE, digest);
-                }
-
-                if (isNotBlank(hook.getAuthHeader()) && isNotBlank(hook.getAuthHeaderValue())) {
-                    requestHeaders.set(hook.getAuthHeader(), hook.getAuthHeaderValue());
-                }
-
-                HttpEntity<?> httpEntity = new HttpEntity<Object>(json, requestHeaders);
-                restTemplate.postForEntity(hook.getUrl(), httpEntity, Void.class);
+                Thread.sleep(configuration.getRetryDelay());
             }
-            catch (Exception e) {
-                log.error("Unable to invoke webhook [{}]", hook, e);
+            catch (InterruptedException e) {
+                // Ignore
             }
         }
+    }
+
+    private void sendNotification(String topic, Object message, Webhook hook) throws IOException
+    {
+        // Configure rest template without SSL certification check if that is disabled.
+        RestTemplate restTemplate;
+        if (hook.isVerifyCertificates()) {
+            restTemplate = restTemplateBuilder.build();
+        }
+        else {
+            restTemplate = restTemplateBuilder.requestFactory(this::getNonValidatingRequestFactory)
+                    .build();
+        }
+
+        HttpHeaders requestHeaders = new HttpHeaders();
+        requestHeaders.setContentType(MediaType.APPLICATION_JSON);
+        requestHeaders.set(X_AERO_NOTIFICATION, topic);
+
+        // If a secret is set, then add a digest header that allows the client to verify
+        // the message integrity
+        String json = JSONUtil.toJsonString(message);
+        if (isNotBlank(hook.getSecret())) {
+            String digest = DigestUtils.shaHex(hook.getSecret() + json);
+            requestHeaders.set(X_AERO_SIGNATURE, digest);
+        }
+
+        if (isNotBlank(hook.getAuthHeader()) && isNotBlank(hook.getAuthHeaderValue())) {
+            requestHeaders.set(hook.getAuthHeader(), hook.getAuthHeaderValue());
+        }
+
+        HttpEntity<?> httpEntity = new HttpEntity<Object>(json, requestHeaders);
+        restTemplate.postForEntity(hook.getUrl(), httpEntity, Void.class);
     }
 
     private HttpComponentsClientHttpRequestFactory getNonValidatingRequestFactory()
