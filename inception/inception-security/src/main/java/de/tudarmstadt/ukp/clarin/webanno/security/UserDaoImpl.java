@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.security;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -75,6 +76,11 @@ public class UserDaoImpl
     @EventListener
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
+        installDefaultAdminUser();
+    }
+
+    void installDefaultAdminUser()
+    {
         if (securityProperties == null || securityProperties.getDefaultAdminPassword() == null) {
             return;
         }
@@ -83,10 +89,17 @@ public class UserDaoImpl
             return;
         }
 
+        var defaultAdminUsername = securityProperties.getDefaultAdminUsername();
+        if (defaultAdminUsername != null && !NameUtil.isNameValidUserName(defaultAdminUsername)) {
+            throw new IllegalStateException(
+                    "Illegal default admin username configured in the settings file: ["
+                            + securityProperties.getDefaultAdminUsername() + "]");
+        }
+
         new TransactionTemplate(transactionManager).executeWithoutResult(transactionStatus -> {
             if (list().isEmpty()) {
                 User admin = new User();
-                admin.setUsername(ADMIN_DEFAULT_USERNAME);
+                admin.setUsername(defaultString(defaultAdminUsername, ADMIN_DEFAULT_PASSWORD));
                 admin.setEncodedPassword(securityProperties.getDefaultAdminPassword());
                 admin.setEnabled(true);
                 if (securityProperties.isDefaultAdminRemoteAccess()) {
