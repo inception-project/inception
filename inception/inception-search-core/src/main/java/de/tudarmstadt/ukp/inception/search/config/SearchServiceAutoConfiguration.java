@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -48,11 +49,12 @@ public class SearchServiceAutoConfiguration
 {
     @Bean
     public SearchService searchService(DocumentService aDocumentService,
-            ProjectService aProjectService, PhysicalIndexRegistry aPhysicalIndexRegistry,
-            SchedulingService aSchedulingService, SearchServiceProperties aProperties)
+            AnnotationSchemaService aSchemaService, ProjectService aProjectService,
+            PhysicalIndexRegistry aPhysicalIndexRegistry, SchedulingService aSchedulingService,
+            SearchServiceProperties aProperties)
     {
-        return new SearchServiceImpl(aDocumentService, aProjectService, aPhysicalIndexRegistry,
-                aSchedulingService, aProperties);
+        return new SearchServiceImpl(aDocumentService, aSchemaService, aProjectService,
+                aPhysicalIndexRegistry, aSchedulingService, aProperties);
     }
 
     @Bean

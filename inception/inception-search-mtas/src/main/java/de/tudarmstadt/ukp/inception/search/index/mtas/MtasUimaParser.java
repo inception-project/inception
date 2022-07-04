@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
+import de.tudarmstadt.ukp.inception.search.model.IndexingContext;
 import mtas.analysis.parser.MtasParser;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
@@ -102,8 +103,6 @@ public class MtasUimaParser
     private static final String SPECIAL_ATTR_REL_SOURCE = "source";
     private static final String SPECIAL_ATTR_REL_TARGET = "target";
 
-    private static final String CAS_BEING_INDEXED = "casBeingIndexed";
-
     // Annotation schema and project services with knowledge base service
     private @Autowired ProjectService projectService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
@@ -128,23 +127,41 @@ public class MtasUimaParser
 
             JSONObject jsonParserConfiguration = new JSONObject(
                     config.attributes.get(ARGUMENT_PARSER_ARGS));
-            Project project = projectService
-                    .getProject(jsonParserConfiguration.getLong(PARAM_PROJECT_ID));
 
-            // Initialize and populate the hash maps for the layers and features
-            annotationSchemaService.listAnnotationLayer(project).stream()
-                    .filter(layer -> layer.isEnabled()) //
-                    .forEach(layer -> {
-                        layers.put(layer.getName(), layer);
-                        layerFeatures.put(layer.getName(), new ArrayList<>());
-                    });
+            Optional<IndexingContext> maybeIndexingContext = IndexingContext.get();
+            if (maybeIndexingContext.isPresent()) {
+                var indexingContext = maybeIndexingContext.get();
 
-            annotationSchemaService.listAnnotationFeature(project).stream()
-                    .filter(feature -> feature.isEnabled() && feature.getLayer().isEnabled())
-                    .forEach(feature -> {
-                        layerFeatures.computeIfAbsent(feature.getLayer().getName(),
-                                key -> new ArrayList<>()).add(feature);
-                    });
+                indexingContext.getLayers().stream().forEach(layer -> {
+                    layers.put(layer.getName(), layer);
+                    layerFeatures.put(layer.getName(), new ArrayList<>());
+                });
+
+                indexingContext.getFeatures().stream().forEach(feature -> {
+                    layerFeatures
+                            .computeIfAbsent(feature.getLayer().getName(), key -> new ArrayList<>())
+                            .add(feature);
+                });
+            }
+            else {
+                Project project = projectService
+                        .getProject(jsonParserConfiguration.getLong(PARAM_PROJECT_ID));
+
+                // Initialize and populate the hash maps for the layers and features
+                annotationSchemaService.listAnnotationLayer(project).stream()
+                        .filter(layer -> layer.isEnabled()) //
+                        .forEach(layer -> {
+                            layers.put(layer.getName(), layer);
+                            layerFeatures.put(layer.getName(), new ArrayList<>());
+                        });
+
+                annotationSchemaService.listAnnotationFeature(project).stream()
+                        .filter(feature -> feature.isEnabled() && feature.getLayer().isEnabled())
+                        .forEach(feature -> {
+                            layerFeatures.computeIfAbsent(feature.getLayer().getName(),
+                                    key -> new ArrayList<>()).add(feature);
+                        });
+            }
         }
         catch (Exception e) {
             LOG.error("Unable to initialize MtasUimaParser", e);
@@ -181,7 +198,6 @@ public class MtasUimaParser
         CAS cas;
         try {
             cas = readCas(aReader);
-            // session.add(CAS_BEING_INDEXED, EXCLUSIVE_WRITE_ACCESS, cas);
         }
         catch (Exception e) {
             LOG.error("Unable to decode CAS", e);

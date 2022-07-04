@@ -51,6 +51,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -74,6 +75,7 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.model.Index;
+import de.tudarmstadt.ukp.inception.search.model.IndexingContext;
 import de.tudarmstadt.ukp.inception.search.model.Monitor;
 import de.tudarmstadt.ukp.inception.search.model.Progress;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
@@ -96,6 +98,7 @@ public class SearchServiceImpl
     private @PersistenceContext EntityManager entityManager;
 
     private final DocumentService documentService;
+    private final AnnotationSchemaService schemaService;
     private final ProjectService projectService;
     private final PhysicalIndexRegistry physicalIndexRegistry;
     private final SchedulingService schedulingService;
@@ -108,11 +111,13 @@ public class SearchServiceImpl
     private boolean shutdown = false;
 
     @Autowired
-    public SearchServiceImpl(DocumentService aDocumentService, ProjectService aProjectService,
+    public SearchServiceImpl(DocumentService aDocumentService,
+            AnnotationSchemaService aSchemaService, ProjectService aProjectService,
             PhysicalIndexRegistry aPhysicalIndexRegistry, SchedulingService aSchedulingService,
             SearchServiceProperties aProperties)
     {
         documentService = aDocumentService;
+        schemaService = aSchemaService;
         projectService = aProjectService;
         physicalIndexRegistry = aPhysicalIndexRegistry;
         schedulingService = aSchedulingService;
@@ -634,43 +639,55 @@ public class SearchServiceImpl
 
             monitor.setTodo(annotationDocuments.size() + sourceDocuments.size());
 
-            // Index all the annotation documents
-            for (AnnotationDocument doc : annotationDocuments) {
-                if (isPerformNoMoreActions(pooledIndex)) {
-                    return;
+            try (var indexContext = IndexingContext.init(aProject, schemaService)) {
+                // Index all the annotation documents
+                for (AnnotationDocument doc : annotationDocuments) {
+                    if (isPerformNoMoreActions(pooledIndex)) {
+                        return;
+                    }
+
+                    // Because serialization is a process which modifies internal data structures of
+                    // the CAS, we need exclusive access the CAS for the time being.
+                    // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
+                    // for https://issues.apache.org/jira/browse/UIMA-6162
+                    byte[] casAsByteArray;
+                    try (CasStorageSession session = CasStorageSession.openNested()) {
+                        if (!documentService.existsCas(doc)) {
+                            // There might be an AnnotationDocument (e.g. if a document is locked)
+                            // but unless there also is a CAS, we do not really need to index.
+                            // If we did, reading the CAS for the AnnotationDocument may actually
+                            // cause the CAS to be created from the INITIAL_CAS which is not what
+                            // we want here.
+                            monitor.incDone();
+                            continue;
+                        }
+                        casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
+                    }
+                    indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
+
+                    monitor.incDone();
                 }
 
-                // Because serialization is a process which modifies internal data structures of
-                // the CAS, we need exclusive access the CAS for the time being.
-                // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
-                // for https://issues.apache.org/jira/browse/UIMA-6162
-                byte[] casAsByteArray;
-                try (CasStorageSession session = CasStorageSession.openNested()) {
-                    casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
+                // Index all the source documents
+                for (SourceDocument doc : sourceDocuments) {
+                    if (isPerformNoMoreActions(pooledIndex)) {
+                        return;
+                    }
+
+                    // Because serialization is a process which modifies internal data structures of
+                    // the CAS, we need exclusive access the CAS for the time being.
+                    // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
+                    // for https://issues.apache.org/jira/browse/UIMA-6162
+                    byte[] casAsByteArray;
+                    try (CasStorageSession session = CasStorageSession.openNested()) {
+                        casAsByteArray = casToByteArray(
+                                documentService.createOrReadInitialCas(doc));
+                    }
+
+                    indexDocument(pooledIndex, doc, casAsByteArray);
+
+                    monitor.incDone();
                 }
-                indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
-
-                monitor.incDone();
-            }
-
-            // Index all the source documents
-            for (SourceDocument doc : sourceDocuments) {
-                if (isPerformNoMoreActions(pooledIndex)) {
-                    return;
-                }
-
-                // Because serialization is a process which modifies internal data structures of
-                // the CAS, we need exclusive access the CAS for the time being.
-                // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
-                // for https://issues.apache.org/jira/browse/UIMA-6162
-                byte[] casAsByteArray;
-                try (CasStorageSession session = CasStorageSession.openNested()) {
-                    casAsByteArray = casToByteArray(documentService.createOrReadInitialCas(doc));
-                }
-
-                indexDocument(pooledIndex, doc, casAsByteArray);
-
-                monitor.incDone();
             }
 
             // After re-indexing, reset the invalid flag
