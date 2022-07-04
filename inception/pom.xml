@@ -343,6 +343,32 @@
       <artifactId>spring-boot-starter-validation</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-test-autoconfigure</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <dependencyManagement>
@@ -2186,9 +2212,12 @@
             <dependency>org.awaitility:awaitility</dependency>
             <dependency>org.springframework:spring-test</dependency>
             <dependency>org.springframework.boot:spring-boot-starter-web</dependency>
+            <dependency>org.springframework.boot:spring-boot-test</dependency>
             <dependency>org.springframework.boot:spring-boot-test-autoconfigure</dependency>
-            <dependency>org.springframework.security:spring-security-test</dependency>
             <dependency>org.springframework.boot:spring-boot-starter-validation</dependency>
+            <dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
+            <dependency>org.springframework.security:spring-security-test</dependency>
+            <dependency>org.hsqldb:hsqldb</dependency>
           </ignoredUnusedDeclaredDependencies>
         </configuration>
         <dependencies>
