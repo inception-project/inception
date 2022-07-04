@@ -25,17 +25,23 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.ServletWebServerFactoryAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -59,17 +65,27 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.WebhookServiceTest.TestService;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.AnnotationStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.DocumentStateChangeMessage;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectStateChangeMessage;
-import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 
-@SpringBootApplication(exclude = { //
-        EventLoggingAutoConfiguration.class, //
-        SecurityAutoConfiguration.class, //
-        LiquibaseAutoConfiguration.class })
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, //
+@ImportAutoConfiguration( //
+        exclude = { //
+                SecurityAutoConfiguration.class, //
+                LiquibaseAutoConfiguration.class }, //
+        classes = { //
+                ServletWebServerFactoryAutoConfiguration.class, //
+                RestTemplateAutoConfiguration.class, //
+                DispatcherServletAutoConfiguration.class, //
+                WebMvcAutoConfiguration.class, //
+                RemoteApiAutoConfiguration.class, //
+                TestService.class })
+@SpringBootTest( //
+        webEnvironment = WebEnvironment.RANDOM_PORT, //
         properties = { //
                 "spring.main.banner-mode=off",
                 "repository.path=" + WebhookServiceTest.TEST_OUTPUT_FOLDER })
@@ -79,6 +95,8 @@ import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 public class WebhookServiceTest
 {
     static final String TEST_OUTPUT_FOLDER = "target/test-output/WebhookServiceTest";
+
+    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @LocalServerPort int port;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
@@ -119,6 +137,7 @@ public class WebhookServiceTest
         ann.setId(3l);
         ann.setDocument(doc);
         ann.setState(AnnotationDocumentState.FINISHED);
+        ann.setAnnotatorState(AnnotationDocumentState.IN_PROGRESS);
     }
 
     @Test
@@ -227,6 +246,7 @@ public class WebhookServiceTest
                 @RequestBody ProjectStateChangeMessage aMsg)
             throws Exception
         {
+            LOG.info("Recieved: {}", aMsg);
             projectStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }
@@ -240,6 +260,7 @@ public class WebhookServiceTest
                 @RequestBody DocumentStateChangeMessage aMsg)
             throws Exception
         {
+            LOG.info("Recieved: {}", aMsg);
             docStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }
@@ -253,6 +274,7 @@ public class WebhookServiceTest
                 @RequestBody AnnotationStateChangeMessage aMsg)
             throws Exception
         {
+            LOG.info("Recieved: {}", aMsg);
             annStateChangeMsgs.add(Pair.of(aMsg, aHeaders));
             return ResponseEntity.ok().build();
         }

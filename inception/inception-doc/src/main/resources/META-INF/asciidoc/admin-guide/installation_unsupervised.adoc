@@ -22,10 +22,12 @@ To perform an unsupervised installations of {product-name}, you can:
 * create the `admin` account with the `ROLE_REMOTE`
 * enable/disable telemetry support to avoid the admin being asked on the first login
 
-.Custom default admin password
-To set a custom default admin password, add the following line to the `settings.properties` file:
+.Custom default admin user/password
+To set a custom default admin user name and password, add the following line to the `settings.properties` 
+file. If no custom user name is set, the default `admin` is used.:
 
 ```
+security.default-admin-username=mastermind
 security.default-admin-password={bcrypt}XXXXXX
 ```
 
