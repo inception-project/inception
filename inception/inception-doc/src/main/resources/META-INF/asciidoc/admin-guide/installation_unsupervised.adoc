@@ -1,0 +1,60 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Unsupervised installation
+
+To perform an unsupervised installations of {product-name}, you can:
+
+* set a custom password for the default `admin` account
+* create the `admin` account with the `ROLE_REMOTE`
+* enable/disable telemetry support to avoid the admin being asked on the first login
+
+.Custom default admin user/password
+To set a custom default admin user name and password, add the following line to the `settings.properties` 
+file. If no custom user name is set, the default `admin` is used.:
+
+```
+security.default-admin-username=mastermind
+security.default-admin-password={bcrypt}XXXXXX
+```
+
+To obtain an encrypted password, you can use tools such as the 
+link:https://bcrypt-generator.com[online bcrypt generator]. Replace the XXXXXX in the example
+above with the output from the tool - keep the `{bcrypt}` prefix!
+
+You could also create a user in {product-name}, set the password you desire, and then look at the
+database table `users` (easiest if you are using MariaDB or MySQL).
+
+.Enable remote API access for the admin user
+
+If you want your installation to be remotely manageable directly from the outset using the `admin`
+account, you can add the following line:
+
+```
+security.default-admin-remote-access=true
+```
+
+Mind that the remote API still needs to be enabled separately.
+
+.Enable/disable telemetry
+
+You can use either of the following two lines to enable or disable telemetry submission and avoid
+the `admin` user being asked about telemetry submission on the first login.
+
+```
+telemetry.auto-respond=ACCEPT
+telemetry.auto-respond=REJECT
+```

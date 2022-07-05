@@ -32,6 +32,7 @@ import javax.servlet.ServletContext;
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditor;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.Cas2SaxEvents;
 
+@ConditionalOnWebApplication
 @RestController
 @RequestMapping(XmlDocumentViewController.BASE_URL)
 public class XmlDocumentViewControllerImpl

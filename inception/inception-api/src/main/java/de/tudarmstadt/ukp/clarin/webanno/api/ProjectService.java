@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectUserPermissions;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -106,7 +107,7 @@ public interface ProjectService
     boolean existsProjectPermissionLevel(User aUser, Project aProject, PermissionLevel aLevel);
 
     /**
-     * Get a {@link ProjectPermission }objects where a project is member of. We need to get them,
+     * Get a {@link ProjectPermission} objects where a project is member of. We need to get them,
      * for example if the associated {@link Project} is deleted, the {@link ProjectPermission }
      * objects too.
      *
@@ -114,7 +115,15 @@ public interface ProjectService
      *            The project contained in a projectPermision
      * @return the {@link ProjectPermission } list to be analysed.
      */
+    List<ProjectPermission> listProjectPermissions(Project aProject);
+
+    /**
+     * @deprecated Use {@link #listProjectPermissions(Project)} instead
+     */
+    @Deprecated
     List<ProjectPermission> getProjectPermissions(Project aProject);
+
+    List<ProjectUserPermissions> listProjectUserPermissions(Project aProject);
 
     /**
      * Get list of permissions a user have in a given project
@@ -138,6 +147,9 @@ public interface ProjectService
 
     List<ProjectPermission> listProjectPermissions(User aUser);
 
+    void setProjectPermissionLevels(String aUser, Project aProject,
+            Collection<PermissionLevel> aLevels);
+
     void setProjectPermissionLevels(User aUser, Project aProject,
             Collection<PermissionLevel> aLevels);
 
@@ -158,6 +170,8 @@ public interface ProjectService
     void revokeAllRoles(Project aProject, User aUser);
 
     List<PermissionLevel> listRoles(Project aProject, User aUser);
+
+    List<PermissionLevel> listRoles(Project aProject, String aUser);
 
     /**
      * List Users those with some {@link PermissionLevel}s in the project
@@ -481,6 +495,25 @@ public interface ProjectService
      * @return whether the user has any role in the project.
      */
     boolean hasRole(User aUser, Project aProject, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles);
+
+    /**
+     * Check whether the given user has one or more roles in a project. Note that the split into two
+     * arguments is only for the compiler to be able to check if at least one role has been
+     * specified. The first role is not privileged over the other roles in any way!
+     * 
+     * @param aUser
+     *            a user.
+     * @param aProject
+     *            a project.
+     * @param aRole
+     *            at least one role must be given, but the check is against this role OR any of the
+     *            additional roles.
+     * @param aMoreRoles
+     *            more roles.
+     * @return whether the user has any role in the project.
+     */
+    boolean hasRole(String aUser, Project aProject, PermissionLevel aRole,
             PermissionLevel... aMoreRoles);
 
     // --------------------------------------------------------------------------------------------

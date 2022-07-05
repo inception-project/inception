@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.getApplicationHome;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.coep.CrossOriginEmbedderPolicyConfiguration.CoepMode.ENFORCING;
 import static org.apache.wicket.coop.CrossOriginOpenerPolicyConfiguration.CoopMode.SAME_ORIGIN;
 import static org.apache.wicket.settings.ExceptionSettings.SHOW_INTERNAL_ERROR_PAGE;
 
+import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,9 +45,12 @@ import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
+import org.apache.wicket.resource.FileSystemResourceReference;
 import org.apache.wicket.resource.JQueryResourceReference;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.giffing.wicket.spring.boot.starter.app.WicketBootSecuredWebApplication;
 
@@ -59,8 +64,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.InceptionCssBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.theme.CustomThemeCssResourceBehavior;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
@@ -72,6 +77,8 @@ import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
 public abstract class WicketApplicationBase
     extends WicketBootSecuredWebApplication
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     @Override
     protected void init()
     {
@@ -177,7 +184,7 @@ public abstract class WicketApplicationBase
 
         addWebAnnoJavascriptToAllPages();
 
-        initDefaultPageInceptionResources();
+        addCustomCssToAllPages();
     }
 
     protected void initBootstrap()
@@ -187,7 +194,31 @@ public abstract class WicketApplicationBase
         Bootstrap.install(this);
 
         IBootstrapSettings settings = Bootstrap.getSettings(this);
-        settings.setCssResourceReference(InceptionBootstrapCssReference.get());
+
+        File customBootstrap = new File(getApplicationHome(), "bootstrap.css");
+
+        if (customBootstrap.exists()) {
+            log.info("Using custom boostrap at [{}]", customBootstrap);
+            settings.setCssResourceReference(new FileSystemResourceReference(
+                    "inception-bootstrap.css", customBootstrap.toPath()));
+        }
+        else {
+            settings.setCssResourceReference(InceptionBootstrapCssReference.get());
+        }
+    }
+
+    protected void addCustomCssToAllPages()
+    {
+        File customCss = new File(getApplicationHome(), "theme.css");
+
+        if (customCss.exists()) {
+            log.info("Using custom CSS at [{}]", customCss);
+            getComponentInstantiationListeners().add(component -> {
+                if (component instanceof Page) {
+                    component.add(new CustomThemeCssResourceBehavior());
+                }
+            });
+        }
     }
 
     protected void addKendoResourcesToAllPages()
@@ -318,14 +349,4 @@ public abstract class WicketApplicationBase
 
         return super.getMimeType(aFileName);
     }
-
-    protected void initDefaultPageInceptionResources()
-    {
-        getComponentInstantiationListeners().add(component -> {
-            if (component instanceof Page) {
-                component.add(InceptionCssBehavior.get());
-            }
-        });
-    }
-
 }

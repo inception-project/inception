@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
+import static de.tudarmstadt.ukp.clarin.webanno.security.NameUtil.isNameValidUserName;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.isProfileSelfServiceAllowed;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil.isNameValidUserName;
 
 import java.util.ArrayList;
 import java.util.Arrays;

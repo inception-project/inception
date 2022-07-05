@@ -46,13 +46,13 @@ include::{include-dir}installation_ssl_caddy.adoc[leveloffset=+2]
 
 include::{include-dir}installation_docker.adoc[leveloffset=+1]
 
+include::{include-dir}installation_unsupervised.adoc[leveloffset=+1]
+
 <<<
 
 include::{include-dir}metrics_monitoring.adoc[]
 
 <<<
-
-
 
 include::{include-dir}upgrade.adoc[]
 
@@ -64,15 +64,11 @@ include::{include-dir}upgrade_notes.adoc[leveloffset=+1]
 
 <<<
 
-
-
 include::{include-dir}remote-api.adoc[]
 
 include::{include-dir}remote-api-webhooks.adoc[leveloffset=+1]
 
 <<<
-
-
 
 include::{include-dir}settings.adoc[]
 
@@ -91,6 +87,8 @@ include::{include-dir}settings_cas-storage_cache.adoc[leveloffset=+1]
 include::{include-dir}settings_document-import-export.adoc[leveloffset=+1]
 
 include::{include-dir}settings_custom-header-icons.adoc[leveloffset=+1]
+
+include::{include-dir}settings_theming.adoc[leveloffset=+1]
 
 include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
 

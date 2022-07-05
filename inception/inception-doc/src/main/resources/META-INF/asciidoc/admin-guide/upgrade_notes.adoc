@@ -20,6 +20,32 @@ This section summarizes important upgrade notes from the release history of INCE
 
 NOTE: It is a good idea to back up your installation and data before an upgrade.
 
+== INCEpTION 24.0
+
+This version includes a new version of Apache Lucene which is used for maintaining the full text
+indices used for searching in knowledge bases and also used by the annotation search sidebar.
+
+The indices of the knowledge bases should continue to work normally after the upgrade. If you 
+encounter problems, you can manually trigger an index rebuild by selecting the knowledge base
+in the project settings and using the **Rebuild index** button. Note that rebuilding full text
+indices only works for local knowledge bases.
+
+The indices used by the annotation search sidebar will not function until they are rebuilt. The
+system will automatically trigger the rebuild process when the annotation page is used. However,
+in particular for large projects, rebuilding the indices can take very long.
+
+For installations with many or large projects, it is recommended to perform an **offline index rebuild**. 
+First ensure that {product-name} is not running. Then run INCEpTION from the command line as follows:
+
+----
+$ java -jar inception-app-webapp-24.0-standalone.jar search reindex
+----
+
+This command will rebuild the annotation search indices of **all projects** which depending on the 
+number of projects and their size can add up to **several hours** (although for most people, it 
+should be pretty fast). When the process is complete, you can restart INCEpTION as usual. Do not try
+to start INCEpTION while the process is still running.
+
 == INCEpTION 22.0
 
 This version brings a new project export page which uses WebSocket. If INCEpTION is deployed behind a reverse proxy, this technical changes requires updating the reverse proxy configuration. The admin guide includes an updated section on deploying behind nginx and Apache HTTPD reverse proxies. Additionally, the CSRF settings in the INCEpTION `settings.properties` file need to be updated. The required settings are also described in the admin guide in the section for deploying behind a reverse proxy.

@@ -23,33 +23,24 @@ public class ExecutionException
 {
     private static final long serialVersionUID = 8455453314467783901L;
 
-    public ExecutionException()
-    {
-        // TODO Auto-generated constructor stub
-    }
-
     public ExecutionException(String message)
     {
         super(message);
-        // TODO Auto-generated constructor stub
     }
 
     public ExecutionException(Throwable cause)
     {
         super(cause);
-        // TODO Auto-generated constructor stub
     }
 
     public ExecutionException(String message, Throwable cause)
     {
         super(message, cause);
-        // TODO Auto-generated constructor stub
     }
 
     public ExecutionException(String message, Throwable cause, boolean enableSuppression,
             boolean writableStackTrace)
     {
         super(message, cause, enableSuppression, writableStackTrace);
-        // TODO Auto-generated constructor stub
     }
 }

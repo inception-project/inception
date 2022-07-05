@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.htmleditor.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -30,6 +31,7 @@ import de.tudarmstadt.ukp.inception.io.html.LegacyHtmlFormatSupport;
 /**
  * Provides support for an HTML-oriented annotation editor.
  */
+@ConditionalOnWebApplication
 @Configuration
 @ConditionalOnProperty(prefix = "ui.html", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class HtmlAnnotationEditorSupportAutoConfiguration

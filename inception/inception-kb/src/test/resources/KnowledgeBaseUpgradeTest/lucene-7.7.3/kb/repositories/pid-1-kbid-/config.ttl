@@ -1,0 +1,20 @@
+@prefix ns: <http://www.openrdf.org/config/sail/native#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix rep: <http://www.openrdf.org/config/repository#> .
+@prefix sail: <http://www.openrdf.org/config/sail#> .
+@prefix sl: <http://www.openrdf.org/config/sail/lucene#> .
+@prefix sr: <http://www.openrdf.org/config/repository/sail#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+<#pid-1-kbid-> a rep:Repository;
+  rep:repositoryID "pid-1-kbid-";
+  rep:repositoryImpl [
+      rep:repositoryType "openrdf:SailRepository";
+      sr:sailImpl [
+          sail:delegate [
+              sail:sailType "openrdf:NativeStore"
+            ];
+          sail:sailType "openrdf:LuceneSail";
+          sl:indexDir ".../kb/indexes/pid-1-kbid-"
+        ]
+    ] .

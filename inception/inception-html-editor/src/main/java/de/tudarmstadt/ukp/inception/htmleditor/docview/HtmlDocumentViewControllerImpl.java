@@ -24,6 +24,7 @@ import javax.servlet.ServletContext;
 import org.apache.uima.cas.CAS;
 import org.dkpro.core.api.xml.type.XmlDocument;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
+@ConditionalOnWebApplication
 @RestController
 @RequestMapping(HtmlDocumentViewController.BASE_URL)
 public class HtmlDocumentViewControllerImpl

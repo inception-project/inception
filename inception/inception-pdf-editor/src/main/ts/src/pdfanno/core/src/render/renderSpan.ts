@@ -4,17 +4,16 @@ import SpanAnnotation from '../annotation/span'
 
 /**
  * Create a Span element.
- * 
+ *
  * @param a - span annotation.
  * @return a html element describing a span annotation.
  */
-export function renderSpan(a: SpanAnnotation, svg): HTMLElement {
-
+export function renderSpan (a: SpanAnnotation, svg): HTMLElement {
   const readOnly = a.readOnly
 
   const color = a.color || '#FF0'
 
-  const base = document.createElement('div');
+  const base = document.createElement('div')
   base.classList.add('anno-span')
   base.style.zIndex = `${a.zIndex || 10}`
 
@@ -24,13 +23,13 @@ export function renderSpan(a: SpanAnnotation, svg): HTMLElement {
     }
   }
 
-  let paddingTop = 9
+  const paddingTop = 9
   const pageView = window.PDFViewerApplication.pdfViewer.getPageView(0)
   const viewport = pageView.viewport
   const scale = viewport.scale
-  let marginBetweenPages = 1
-  let pageContainer = document.querySelector(`.page[data-page-number="${a.page}"]`)
-  let pageTopY = pageContainer.offsetTop / scale + paddingTop + marginBetweenPages
+  const marginBetweenPages = 1
+  const pageContainer = document.querySelector(`.page[data-page-number="${a.page}"]`)
+  const pageTopY = pageContainer.offsetTop / scale + paddingTop + marginBetweenPages
 
   const rectangles = a.rectangles.map(r => {
     return {
@@ -58,19 +57,19 @@ export function renderSpan(a: SpanAnnotation, svg): HTMLElement {
   return base
 }
 
-function createRect(a, r, color, readOnly): HTMLElement {
+function createRect (a, r, color, readOnly): HTMLElement {
   const rect = document.createElement('div')
   rect.classList.add(readOnly ? 'anno-span__border' : 'anno-span__area')
   if (a.border === false) {
     rect.classList.add('no-border')
   }
 
-  rect.style.top = r.y + 'px';
-  rect.style.left = r.x + 'px';
-  rect.style.width = r.width + 'px';
-  rect.style.height = r.height + 'px';
-  rect.style.backgroundColor = hex2rgba(color, 0.4);
-  rect.style.borderColor = color;
-  rect.style.pointerEvents = 'none';
-  return rect;
+  rect.style.top = r.y + 'px'
+  rect.style.left = r.x + 'px'
+  rect.style.width = r.width + 'px'
+  rect.style.height = r.height + 'px'
+  rect.style.backgroundColor = hex2rgba(color, 0.4)
+  rect.style.borderColor = color
+  rect.style.pointerEvents = 'none'
+  return rect
 }

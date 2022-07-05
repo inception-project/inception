@@ -100,7 +100,7 @@ public class PdfDocumentIFrameView
 
                 ResourceStreamRequestHandler handler = new ResourceStreamRequestHandler(resource);
                 handler.setFileName(doc.getName());
-                handler.setCacheDuration(Duration.ofSeconds(1));
+                handler.setCacheDuration(Duration.ZERO);
                 handler.setContentDisposition(ContentDisposition.INLINE);
 
                 getRequestCycle().scheduleRequestHandlerAfterCurrent(handler);

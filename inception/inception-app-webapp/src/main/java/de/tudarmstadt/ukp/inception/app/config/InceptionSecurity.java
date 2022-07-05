@@ -193,6 +193,7 @@ public class InceptionSecurity
                     .antMatchers("/assets/**").permitAll()
                     .antMatchers("/images/**").permitAll()
                     .antMatchers("/resources/**").permitAll()
+                    .antMatchers("/whoops").permitAll()
                     .antMatchers("/about/**").permitAll()
                     .antMatchers("/wicket/resource/**").permitAll()
                     .antMatchers("/" + NS_PROJECT + "/*/join-project/**").permitAll()

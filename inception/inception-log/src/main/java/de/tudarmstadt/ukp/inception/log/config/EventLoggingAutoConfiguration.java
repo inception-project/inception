@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,6 +59,10 @@ public class EventLoggingAutoConfiguration
         return new EventLoggingAdapterRegistryImpl(aAdapters);
     }
 
+    // When running in CLI mode, we usually perform bulk actions. We should not log these all.
+    // Also, the CLI may shut down very fast (e.g. when displaying help) and close the DB before all
+    // pending events would have been flushed which would create an exception.
+    @ConditionalOnWebApplication
     @Bean
     @Autowired
     public EventLoggingListener eventLoggingListener(EventRepository aRepo,

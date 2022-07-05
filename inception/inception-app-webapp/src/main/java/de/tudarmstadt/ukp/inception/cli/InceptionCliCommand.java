@@ -15,32 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
+package de.tudarmstadt.ukp.inception.cli;
 
-import org.apache.wicket.request.resource.CssResourceReference;
+import java.util.concurrent.Callable;
 
-public class InceptionCssReference
-    extends CssResourceReference
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
+import org.springframework.stereotype.Component;
+
+import picocli.CommandLine.Command;
+
+@ConditionalOnNotWebApplication
+@Component
+@Command(name = "inception", mixinStandardHelpOptions = true)
+public class InceptionCliCommand
+    implements Callable<Integer>
 {
-    private static final long serialVersionUID = 1L;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final InceptionCssReference INSTANCE = new InceptionCssReference();
-
-    /**
-     * Gets the instance of the resource reference
-     *
-     * @return the single instance of the resource reference
-     */
-    public static InceptionCssReference get()
+    @Override
+    public Integer call() throws Exception
     {
-        return INSTANCE;
-    }
+        log.error(
+                "When you start the application with no parameters, the server should be started. No idea how you got here...");
 
-    /**
-     * Private constructor
-     */
-    private InceptionCssReference()
-    {
-        super(InceptionCssReference.class, "inception.css");
+        return 0;
     }
 }

@@ -9,26 +9,25 @@ import RelationAnnotation from '../annotation/relation'
  * @param a The annotation definition
  * @return A group of a relation to be rendered
  */
-export function renderRelation(a: RelationAnnotation, svg): HTMLDivElement {
-
+export function renderRelation (a: RelationAnnotation, svg): HTMLDivElement {
   a.color = a.color || '#F00'
 
   // Adjust the start/end points.
-  let xDiff = a.x1 - a.x2
-  let yDiff = a.y1 - a.y2
+  const xDiff = a.x1 - a.x2
+  const yDiff = a.y1 - a.y2
 
   // if difference of x and difference of y is both 0 use 0 for atan
-  let theta = Math.atan(xDiff === 0 && yDiff === 0 ? 0 : (yDiff / xDiff))
-  let sign = (a.x1 < a.x2 ? 1 : -1)
+  const theta = Math.atan(xDiff === 0 && yDiff === 0 ? 0 : (yDiff / xDiff))
+  const sign = (a.x1 < a.x2 ? 1 : -1)
   a.x1 += DEFAULT_RADIUS * Math.cos(theta) * sign
   a.x2 -= DEFAULT_RADIUS * Math.cos(theta) * sign
   a.y1 += DEFAULT_RADIUS * Math.sin(theta) * sign
   a.y2 -= DEFAULT_RADIUS * Math.sin(theta) * sign
 
-  let top = Math.min(a.y1, a.y2)
-  let left = Math.min(a.x1, a.x2)
-  let width = Math.abs(a.x1 - a.x2)
-  let height = Math.abs(a.y1 - a.y2)
+  const top = Math.min(a.y1, a.y2)
+  const left = Math.min(a.x1, a.x2)
+  const width = Math.abs(a.x1 - a.x2)
+  const height = Math.abs(a.y1 - a.y2)
 
   const [svgElement, margin] = createSVGElement(top, left, width, height)
 
@@ -45,7 +44,7 @@ export function renderRelation(a: RelationAnnotation, svg): HTMLDivElement {
   //     <path d="M50,50 h100" fill="none" stroke="black" stroke-width="10" marker-start="url(#m_ar)" marker-end="url(#m_ar)"/>
   // </svg>
 
-  let group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  const group = document.createElementNS('http://www.w3.org/2000/svg', 'g')
   setAttributes(group, {
     fill: a.color,
     stroke: a.color
@@ -59,7 +58,7 @@ export function renderRelation(a: RelationAnnotation, svg): HTMLDivElement {
   const markerId = 'relationhead' + a.color.replace('#', '')
 
   if (!document.querySelector('#' + markerId)) {
-    let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
     setAttributes(marker, {
       viewBox: '0 0 10 10',
       fill: a.color,
@@ -73,7 +72,7 @@ export function renderRelation(a: RelationAnnotation, svg): HTMLDivElement {
     marker.setAttribute('refY', '5')
     group.appendChild(marker)
 
-    let polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
+    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon')
     setAttributes(polygon, {
       points: '0,0 0,10 10,5'
     })
@@ -81,10 +80,10 @@ export function renderRelation(a: RelationAnnotation, svg): HTMLDivElement {
   }
 
   // Find Control points.
-  let control = findBezierControlPoint(a.x1, a.y1, a.x2, a.y2)
+  const control = findBezierControlPoint(a.x1, a.y1, a.x2, a.y2)
 
   // Create Outline.
-  let outline = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  const outline = document.createElementNS('http://www.w3.org/2000/svg', 'path')
   setAttributes(outline, {
     d: `M ${a.x1} ${a.y1} Q ${control.x} ${control.y} ${a.x2} ${a.y2}`,
     class: 'anno-relation-outline'
@@ -94,7 +93,7 @@ export function renderRelation(a: RelationAnnotation, svg): HTMLDivElement {
   /*
       <path d="M 25 25 Q 175 25 175 175" stroke="blue" fill="none"/>
   */
-  let relation = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  const relation = document.createElementNS('http://www.w3.org/2000/svg', 'path')
   setAttributes(relation, {
     d: `M ${a.x1} ${a.y1} Q ${control.x} ${control.y} ${a.x2} ${a.y2}`,
     stroke: a.color,
@@ -122,13 +121,12 @@ export function renderRelation(a: RelationAnnotation, svg): HTMLDivElement {
   return base
 }
 
-function createSVGElement(top, left, width, height): [SVGElement, number] {
-
+function createSVGElement (top, left, width, height): [SVGElement, number] {
   // the margin for rendering an arrow curve.
   const margin = 50
 
   // Add an annotation layer.
-  let svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.style.position = 'absolute'
   svg.style.top = `${top - margin}px`
   svg.style.left = `${left - margin}px`

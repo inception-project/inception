@@ -6,22 +6,21 @@ import SpanAnnotation from './span'
  * Relation Annotation (one-way / two-way / link)
  */
 export default class RelationAnnotation extends AbstractAnnotation {
-
-  direction: unknown;
-  text: string;
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-  zIndex: number;
-  _rel1Annotation: SpanAnnotation;
-  _rel2Annotation: SpanAnnotation;
-  selected: boolean;
+  direction: unknown
+  text: string
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  zIndex: number
+  _rel1Annotation: SpanAnnotation
+  _rel2Annotation: SpanAnnotation
+  selected: boolean
 
   /**
    * Constructor.
    */
-  constructor() {
+  constructor () {
     super()
 
     this.type = 'relation'
@@ -52,8 +51,8 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from an annotation data.
    */
-  public static newInstance(annotation) {
-    let a = new RelationAnnotation()
+  public static newInstance (annotation) {
+    const a = new RelationAnnotation()
     a.uuid = annotation.uuid
     a.direction = 'relation'
     a.rel1Annotation = AbstractAnnotation.isAnnotation(annotation.rel1) ? annotation.rel1 : window.annotationContainer.findById(annotation.rel1)
@@ -68,18 +67,18 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from a TOML object.
    */
-  public static newInstanceFromTomlObject(d) {
+  public static newInstanceFromTomlObject (d) {
     // d.direction = d.dir
     d.direction = 'relation'
     d.text = d.label
-    let rel = RelationAnnotation.newInstance(d)
+    const rel = RelationAnnotation.newInstance(d)
     return rel
   }
 
   /**
    * Set a hover event.
    */
-  setHoverEvent() {
+  setHoverEvent () {
     this.element.querySelectorAll('path').forEach(e => {
       e.addEventListener('mouseenter', this.handleHoverInEvent)
       e.addEventListener('mouseleave', this.handleHoverOutEvent)
@@ -89,7 +88,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Setter - rel1Annotation.
    */
-  set rel1Annotation(a) {
+  set rel1Annotation (a) {
     this._rel1Annotation = a
     if (this._rel1Annotation) {
       this._rel1Annotation.on('hoverin', this.handleRelHoverIn)
@@ -102,14 +101,14 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Getter - rel1Annotation.
    */
-  get rel1Annotation() {
+  get rel1Annotation () {
     return this._rel1Annotation
   }
 
   /**
    * Setter - rel2Annotation.
    */
-  set rel2Annotation(a) {
+  set rel2Annotation (a) {
     this._rel2Annotation = a
     if (this._rel2Annotation) {
       this._rel2Annotation.on('hoverin', this.handleRelHoverIn)
@@ -122,14 +121,14 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Getter - rel2Annotation.
    */
-  get rel2Annotation() {
+  get rel2Annotation () {
     return this._rel2Annotation
   }
 
   /**
    * Render the annotation.
    */
-  render(): boolean {
+  render (): boolean {
     this.setStartEndPosition()
     return super.render()
   }
@@ -137,8 +136,8 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Destroy the annotation.
    */
-  destroy() {
-    let promise = super.destroy()
+  destroy () {
+    const promise = super.destroy()
     if (this._rel1Annotation) {
       this._rel1Annotation.removeListener('hoverin', this.handleRelHoverIn)
       this._rel1Annotation.removeListener('hoverout', this.handleRelHoverOut)
@@ -161,7 +160,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Highlight relations.
    */
-  highlightRelAnnotations() {
+  highlightRelAnnotations () {
     if (this._rel1Annotation) {
       this._rel1Annotation.highlight()
     }
@@ -173,7 +172,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Dehighlight relations.
    */
-  dehighlightRelAnnotations() {
+  dehighlightRelAnnotations () {
     if (this._rel1Annotation) {
       this._rel1Annotation.dehighlight()
     }
@@ -185,21 +184,21 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Handle a selected event on a text.
    */
-  handleTextSelected() {
+  handleTextSelected () {
     this.select()
   }
 
   /**
    * Handle a deselected event on a text.
    */
-  handleTextDeselected() {
+  handleTextDeselected () {
     this.deselect()
   }
 
   /**
    * The callback for the relational text hoverred in.
    */
-  handleTextHoverIn() {
+  handleTextHoverIn () {
     this.highlight()
     this.emit('hoverin')
     this.highlightRelAnnotations()
@@ -208,7 +207,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback for the relational text hoverred out.
    */
-  handleTextHoverOut() {
+  handleTextHoverOut () {
     this.dehighlight()
     this.emit('hoverout')
     this.dehighlightRelAnnotations()
@@ -217,7 +216,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback for the relationals hoverred in.
    */
-  handleRelHoverIn() {
+  handleRelHoverIn () {
     this.highlight()
     this.highlightRelAnnotations()
   }
@@ -225,7 +224,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback for the relationals hoverred out.
    */
-  handleRelHoverOut() {
+  handleRelHoverOut () {
     this.dehighlight()
     this.dehighlightRelAnnotations()
   }
@@ -233,14 +232,14 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback that is called relations has benn deleted.
    */
-  handleRelDelete() {
+  handleRelDelete () {
     this.destroy()
   }
 
   /**
    * The callback that is called relations has finished to be moved.
    */
-  handleRelMoveEnd(rectAnnotation) {
+  handleRelMoveEnd (rectAnnotation) {
     if (this._rel1Annotation === rectAnnotation || this._rel2Annotation === rectAnnotation) {
       this.enableViewMode()
     }
@@ -249,7 +248,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback that is called at hoverred in.
    */
-  handleHoverInEvent(e) {
+  handleHoverInEvent (e) {
     super.handleHoverInEvent(e)
     this.highlightRelAnnotations()
   }
@@ -257,7 +256,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * The callback that is called at hoverred out.
    */
-  handleHoverOutEvent(e) {
+  handleHoverOutEvent (e) {
     super.handleHoverOutEvent(e)
     this.dehighlightRelAnnotations()
   }
@@ -265,13 +264,13 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Enable view mode.
    */
-  enableViewMode() {
+  enableViewMode () {
     this.disableViewMode()
 
     super.enableViewMode()
 
     if (!this.readOnly) {
-      this.element.querySelectorAll('path').forEach(e => 
+      this.element.querySelectorAll('path').forEach(e =>
         e.addEventListener('click', this.handleSingleClickEvent))
     }
   }
@@ -279,23 +278,23 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * Disable view mode.
    */
-  disableViewMode() {
+  disableViewMode () {
     super.disableViewMode()
-    this.element.querySelectorAll('path').forEach(e => 
+    this.element.querySelectorAll('path').forEach(e =>
       e.removeEventListener('click', this.handleSingleClickEvent))
   }
 
   /**
    * Set the start / end points of the relation.
    */
-  setStartEndPosition() {
+  setStartEndPosition () {
     if (this._rel1Annotation) {
-      let p = this._rel1Annotation.getBoundingCirclePosition()
+      const p = this._rel1Annotation.getBoundingCirclePosition()
       this.x1 = p.x
       this.y1 = p.y
     }
     if (this._rel2Annotation) {
-      let p = this._rel2Annotation.getBoundingCirclePosition()
+      const p = this._rel2Annotation.getBoundingCirclePosition()
       this.x2 = p.x
       this.y2 = p.y
     }
@@ -304,14 +303,13 @@ export default class RelationAnnotation extends AbstractAnnotation {
   /**
    * @{inheritDoc}
    */
-  equalTo(anno) {
-
+  equalTo (anno) {
     if (!anno || this.type !== anno) {
       return false
     }
 
-    const isSame = anyOf(this.rel1Annotation.uuid, [anno.rel1Annotation.uuid, anno.rel2Annotation.uuid])
-      && anyOf(this.rel2Annotation.uuid, [anno.rel1Annotation.uuid, anno.rel2Annotation.uuid])
+    const isSame = anyOf(this.rel1Annotation.uuid, [anno.rel1Annotation.uuid, anno.rel2Annotation.uuid]) &&
+      anyOf(this.rel2Annotation.uuid, [anno.rel1Annotation.uuid, anno.rel2Annotation.uuid])
 
     return isSame
   }

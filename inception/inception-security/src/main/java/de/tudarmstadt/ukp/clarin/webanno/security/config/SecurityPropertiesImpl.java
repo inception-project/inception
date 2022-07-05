@@ -26,9 +26,22 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SecurityPropertiesImpl
     implements SecurityProperties
 {
+    private String defaultAdminUsername;
+
     private String defaultAdminPassword;
 
     private boolean defaultAdminRemoteAccess = false;
+
+    @Override
+    public String getDefaultAdminUsername()
+    {
+        return defaultAdminUsername;
+    }
+
+    public void setDefaultAdminUsername(String aDefaultAdminUsername)
+    {
+        defaultAdminUsername = aDefaultAdminUsername;
+    }
 
     @Override
     public String getDefaultAdminPassword()

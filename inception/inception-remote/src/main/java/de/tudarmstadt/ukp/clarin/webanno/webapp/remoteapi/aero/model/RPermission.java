@@ -15,26 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
+package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
-import static org.apache.commons.lang3.StringUtils.containsNone;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 
-public class NameUtil
+public class RPermission
 {
-    public static final String WEBANNO_ILLEGAL_CHARACTERS = "^/\\&*?+$![]";
+    public long project;
+    public String user;
+    public String role;
 
-    public static final String BAD_FOR_FILENAMES = "#%&{}\\<>*?/ $!'\":@+`|=";
-
-    /**
-     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
-     * will conflict with file naming system
-     * 
-     * @param aName
-     *            a name.
-     * @return if the name is valid.
-     */
-    public static boolean isNameValidUserName(String aName)
+    public RPermission(ProjectPermission aPermission)
     {
-        return aName != null && containsNone(aName, WEBANNO_ILLEGAL_CHARACTERS);
+        project = aPermission.getProject().getId();
+        user = aPermission.getUser();
+        role = aPermission.getLevel().name();
+    }
+
+    public RPermission(long aProject, String aUser, String aRole)
+    {
+        project = aProject;
+        user = aUser;
+        role = aRole;
     }
 }

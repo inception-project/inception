@@ -18,11 +18,19 @@
 package de.tudarmstadt.ukp.inception.ui.core;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
+import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toPrettyJsonString;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.http.MediaType.parseMediaTypes;
 
+import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -31,7 +39,12 @@ import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.handler.TextRequestHandler;
+import org.apache.wicket.request.http.WebRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -52,11 +65,56 @@ public class ErrorPage
     extends ApplicationPageBase
 {
     private static final long serialVersionUID = 7848496813044538495L;
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    public ErrorPage()
+    {
+        if (isJsonResponseRequested() || StringUtils.startsWith(getRequestUri(), "/api")) {
+            produceJsonResponseIfRequested();
+        }
+    }
+
+    private void produceJsonResponseIfRequested()
+    {
+        String response;
+        try {
+            response = toPrettyJsonString(Map.of( //
+                    "messages", asList( //
+                            Map.of( //
+                                    "level", "ERROR", //
+                                    "message", getStatusReasonPhrase()))));
+        }
+        catch (IOException e) {
+            response = "{\"messages\": [{\"level\": \"ERROR\", \"message\": \"Unable to render error.\"}] }";
+            LOG.error("Unable to render error message", e);
+        }
+
+        getRequestCycle().scheduleRequestHandlerAfterCurrent(
+                new TextRequestHandler(APPLICATION_JSON.toString(), null, response));
+    }
+
+    private boolean isJsonResponseRequested()
+    {
+        if (!(getRequestCycle().getRequest() instanceof WebRequest)) {
+            return false;
+        }
+
+        WebRequest request = (WebRequest) getRequestCycle().getRequest();
+        if (!APPLICATION_JSON.isPresentIn(parseMediaTypes(request.getHeader("Accept")))) {
+            return false;
+        }
+
+        return true;
+    }
 
     @Override
     protected void onInitialize()
     {
         super.onInitialize();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean authenticated = authentication != null
+                && !(authentication instanceof AnonymousAuthenticationToken);
 
         Label statusCode = new Label("statusCode", LoadableDetachableModel.of(this::getStatusCode));
         statusCode.add(visibleWhen(() -> statusCode.getDefaultModelObject() != null));
@@ -96,18 +154,23 @@ public class ErrorPage
         add(appVersion);
 
         Label javaVendor = new Label("javaVendor", System.getProperty("java.vendor"));
+        javaVendor.setVisible(authenticated);
         add(javaVendor);
 
         Label javaVersion = new Label("javaVersion", System.getProperty("java.version"));
+        javaVersion.setVisible(authenticated);
         add(javaVersion);
 
         Label osName = new Label("osName", System.getProperty("os.name"));
+        osName.setVisible(authenticated);
         add(osName);
 
         Label osVersion = new Label("osVersion", System.getProperty("os.version"));
+        osVersion.setVisible(authenticated);
         add(osVersion);
 
         Label osArch = new Label("osArch", System.getProperty("os.arch"));
+        osArch.setVisible(authenticated);
         add(osArch);
     }
 

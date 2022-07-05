@@ -6,16 +6,16 @@ import { loadPageInformation, extractMeta, Page, Meta } from './util/analyzer'
 /**
  * Text layer data.
  */
-let pages: Page[] = [];
+let pages: Page[] = []
 
 /**
  * Setup text layers.
  */
-export function setup(analyzeData: string) {
+export function setup (analyzeData: string) {
   pages = loadPageInformation(analyzeData)
 }
 
-function getPage(num: number): Page {
+function getPage (num: number): Page {
   return pages.find(p => p.page === num)
 }
 
@@ -26,15 +26,14 @@ function getPage(num: number): Page {
  * @param point - { x, y } coords.
  * @return {*} - The nearest text index to the given point.
  */
-export function findIndex(pageNum: number, point: { x: number, y: number }): number {
-
-  const page = getPage(pageNum);
+export function findIndex (pageNum: number, point: { x: number, y: number }): number {
+  const page = getPage(pageNum)
 
   if (!page) {
-    return null;
+    return null
   }
 
-  const infoList = page.glyphs;
+  const infoList = page.glyphs
 
   for (let i = 0, len = infoList.length; i < len; i++) {
     const info = infoList[i]
@@ -60,20 +59,19 @@ export function findIndex(pageNum: number, point: { x: number, y: number }): num
 /**
  * Find the glyph at the given position in the PDF document. This operation uses the glyph
  * position data that is provided by the server.
- * 
+ *
  * @param pageNum - the page number.
  * @param point - { x, y } coords.
  * @returns {*} - The text data if found, whereas null.
  */
-export function findGlyphAtPoint(pageNum: number, point: {x: number, y: number}): Meta {
-
-  const page = getPage(pageNum);
+export function findGlyphAtPoint (pageNum: number, point: {x: number, y: number}): Meta {
+  const page = getPage(pageNum)
 
   if (!page) {
-    return null;
+    return null
   }
 
-  const infoList = page.glyphs;
+  const infoList = page.glyphs
 
   for (let i = 0, len = infoList.length; i < len; i++) {
     const info = infoList[i]
@@ -86,7 +84,7 @@ export function findGlyphAtPoint(pageNum: number, point: {x: number, y: number})
 
     // is Hit?
     if (m.x <= point.x && point.x <= (m.x + m.w) && m.y <= point.y && point.y <= (m.y + m.h)) {
-      return m;
+      return m
     }
   }
 
@@ -101,26 +99,24 @@ export function findGlyphAtPoint(pageNum: number, point: {x: number, y: number})
  * @param allowZeroWidth - whether zero-width spans are allowed or not, required for range usage
  * @returns {Array} - the texts.
  */
-export function getGlyphsInRange(pageNum: number, startPosition: number, endPosition: number, allowZeroWidth?: boolean): Meta[] {
-
+export function getGlyphsInRange (pageNum: number, startPosition: number, endPosition: number, allowZeroWidth?: boolean): Meta[] {
   const items = []
 
   if (startPosition == null || endPosition == null) {
     return items
   }
 
-  const page = getPage(pageNum);
+  const page = getPage(pageNum)
 
   if (!page) {
-    return null;
+    return null
   }
 
-  const glyphs = page.glyphs;
+  const glyphs = page.glyphs
 
   let inRange = false
 
   for (let index = 0, len = glyphs.length; index < len; index++) {
-
     const info = glyphs[index]
 
     if (!info) {
@@ -188,34 +184,33 @@ export function getGlyphsInRange(pageNum: number, startPosition: number, endPosi
 }
 
 export class Rect {
-  top: number;
-  left: number;
-  right: number;
-  bottom: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  top: number
+  left: number
+  right: number
+  bottom: number
+  x: number
+  y: number
+  width: number
+  height: number
 
-  static fromMeta(m: Meta): Rect {
-    const r = new Rect();
+  static fromMeta (m: Meta): Rect {
+    const r = new Rect()
     r.top = m.y
     r.left = m.x
     r.right = m.x + m.w
     r.bottom = m.y + m.h
-    r.x = m.x;
-    r.y = m.y;
-    r.width = m.w;
-    r.height = m.h;
-    return r;
+    r.x = m.x
+    r.y = m.y
+    r.width = m.w
+    r.height = m.h
+    return r
   }
 }
 
 /**
  * Merge user selections.
  */
-export function mergeRects(metas: Meta[]): Rect[] {
-
+export function mergeRects (metas: Meta[]): Rect[] {
   // Remove null.
   metas = metas.filter(m => m)
 
@@ -224,13 +219,13 @@ export function mergeRects(metas: Meta[]): Rect[] {
   }
 
   // Normalize.
-  let rects = metas.map(m => Rect.fromMeta(m))
+  const rects = metas.map(m => Rect.fromMeta(m))
 
   // a vertical margin of error.
   const error = 5 * scale()
 
   let tmp = rects[0]
-  let newRects = [tmp]
+  const newRects = [tmp]
   for (let i = 1; i < rects.length; i++) {
     // Same line -> Merge rects.
     if (withinMargin(rects[i].top, tmp.top, error)) {
@@ -256,7 +251,7 @@ export function mergeRects(metas: Meta[]): Rect[] {
 /**
  * Check the value(x) within the range.
  */
-function withinMargin(x: number, base: number, margin: number) {
+function withinMargin (x: number, base: number, margin: number) {
   return (base - margin) <= x && x <= (base + margin)
 }
 
@@ -264,10 +259,10 @@ function withinMargin(x: number, base: number, margin: number) {
  * Returns the scaling factor of the PDF. If the PDF has not been drawn yet, a factor of 1 is
  * assumed.
  */
-function scale() {
+function scale () {
   if (window.PDFViewerApplication.pdfViewer.getPageView(0) === undefined) {
-    return 1;
+    return 1
   } else {
-    return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale;
+    return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
   }
 }

@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
+import static java.util.stream.Collectors.toList;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.MediaType.ALL_VALUE;
@@ -66,6 +67,7 @@ import org.apache.uima.jcas.cas.Sofa;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -95,6 +97,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
@@ -113,8 +116,10 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.RemoteA
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.UnsupportedFormatException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RPermission;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.export.ImportUtil;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
@@ -124,6 +129,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RemoteApiAutoConfiguration#aeroRemoteApiController}.
+ * </p>
+ */
+@ConditionalOnWebApplication
 @RequestMapping(AeroRemoteApiController.API_BASE)
 public class AeroRemoteApiController
 {
@@ -136,6 +148,7 @@ public class AeroRemoteApiController
     private static final String IMPORT = "import";
     private static final String EXPORT = "export.zip";
     private static final String STATE = "state";
+    private static final String PERMISSIONS = "permissions";
 
     private static final String PARAM_FILE = "file";
     private static final String PARAM_CONTENT = "content";
@@ -148,6 +161,7 @@ public class AeroRemoteApiController
     private static final String PARAM_ANNOTATOR_ID = "userId";
     private static final String PARAM_DOCUMENT_ID = "documentId";
     private static final String PARAM_CREATE_MISSING_USERS = "createMissingUsers";
+    private static final String PARAM_ROLES = "roles";
 
     private static final String VAL_ORIGINAL = "ORIGINAL";
 
@@ -683,10 +697,13 @@ public class AeroRemoteApiController
                 parseAnnotationDocumentState(aState.get()));
         documentService.createAnnotationDocument(anno);
 
-        return ResponseEntity.ok(new RResponse<>(INFO,
+        RResponse<RAnnotation> response = new RResponse<>(new RAnnotation(anno));
+        response.addMessage(INFO,
                 "State of annotations of user [" + aAnnotatorId + "] on document ["
                         + document.getId() + "] set to ["
-                        + annotationDocumentStateToString(anno.getState()) + "]"));
+                        + annotationDocumentStateToString(anno.getState()) + "]");
+
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "Create or update annotations for a document in a project")
@@ -1175,5 +1192,131 @@ public class AeroRemoteApiController
             throw new IllegalArgumentException(
                     "Unknown annotation document state [" + aState + "]");
         }
+    }
+
+    @Operation(summary = "List all permissions in the given project (non-AERO)")
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS, //
+            produces = { APPLICATION_JSON_VALUE })
+    public ResponseEntity<RResponse<List<RPermission>>> permissionRead(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId)
+        throws Exception
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+
+        User user = getCurrentUser();
+
+        // Check for the access
+        assertPermission(
+                "User [" + user.getUsername() + "] is not allowed to list project permissions",
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
+
+        var permissions = projectService.getProjectPermissions(project).stream()
+                .map(RPermission::new) //
+                .collect(toList());
+
+        return ResponseEntity.ok(new RResponse<>(permissions));
+    }
+
+    @Operation(summary = "List permissions for a user in the given project (non-AERO)")
+    @GetMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
+                    + PARAM_ANNOTATOR_ID + "}", //
+            produces = { APPLICATION_JSON_VALUE })
+    public ResponseEntity<RResponse<List<RPermission>>> permissionRead(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_ANNOTATOR_ID) String aSubjectUser)
+        throws Exception
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+
+        User user = getCurrentUser();
+
+        // Check for the access
+        assertPermission(
+                "User [" + user.getUsername() + "] is not allowed to list project permissions",
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
+
+        User subjectUser = getUser(aSubjectUser);
+
+        var permissions = projectService.listProjectPermissionLevel(subjectUser, project).stream()
+                .map(RPermission::new) //
+                .collect(toList());
+
+        return ResponseEntity.ok(new RResponse<>(permissions));
+    }
+
+    @Operation(summary = "Assign roles to a user in the given project (non-AERO)")
+    @PostMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
+                    + PARAM_ANNOTATOR_ID + "}", //
+            produces = { APPLICATION_JSON_VALUE })
+    public ResponseEntity<RResponse<List<RPermission>>> permissionCreate(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_ANNOTATOR_ID) String aSubjectUser,
+            @RequestParam(PARAM_ROLES) List<String> aRoles)
+        throws Exception
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+
+        User user = getCurrentUser();
+
+        // Check for the access
+        assertPermission(
+                "User [" + user.getUsername() + "] is not allowed to manage project permissions",
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
+
+        User subjectUser = getUser(aSubjectUser);
+
+        var roles = aRoles.stream().map(PermissionLevel::valueOf).toArray(PermissionLevel[]::new);
+
+        projectService.assignRole(project, subjectUser, roles);
+
+        var permissions = projectService.listProjectPermissionLevel(subjectUser, project).stream()
+                .map(RPermission::new) //
+                .collect(toList());
+
+        return ResponseEntity.ok(new RResponse<>(permissions));
+    }
+
+    @Operation(summary = "Revoke roles to a user in the given project (non-AERO)")
+    @DeleteMapping( //
+            value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + PERMISSIONS + "/{"
+                    + PARAM_ANNOTATOR_ID + "}", //
+            produces = { APPLICATION_JSON_VALUE })
+    public ResponseEntity<RResponse<List<RPermission>>> permissionDelete(
+            @PathVariable(PARAM_PROJECT_ID) long aProjectId,
+            @PathVariable(PARAM_ANNOTATOR_ID) String aSubjectUser,
+            @RequestParam(PARAM_ROLES) List<String> aRoles)
+        throws Exception
+    {
+        // Get project (this also ensures that it exists and that the current user can access it
+        Project project = getProject(aProjectId);
+
+        User user = getCurrentUser();
+
+        // Check for the access
+        assertPermission(
+                "User [" + user.getUsername() + "] is not allowed to manage project permissions",
+                projectService.hasRole(user, project, MANAGER)
+                        || userRepository.isAdministrator(user));
+
+        User subjectUser = getUser(aSubjectUser);
+
+        var roles = aRoles.stream().map(PermissionLevel::valueOf).toArray(PermissionLevel[]::new);
+
+        projectService.revokeRole(project, subjectUser, roles);
+
+        var permissions = projectService.listProjectPermissionLevel(subjectUser, project).stream()
+                .map(RPermission::new) //
+                .collect(toList());
+
+        return ResponseEntity.ok(new RResponse<>(permissions));
     }
 }

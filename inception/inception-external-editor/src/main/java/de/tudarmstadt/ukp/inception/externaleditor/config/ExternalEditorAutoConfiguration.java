@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 
 import de.tudarmstadt.ukp.inception.externaleditor.xhtml.XHtmlXmlDocumentIFrameViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.xml.XmlDocumentIFrameViewFactory;
 
+@ConditionalOnWebApplication
 public class ExternalEditorAutoConfiguration
 {
     @Bean
