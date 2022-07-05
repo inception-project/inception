@@ -29,6 +29,7 @@ import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getI
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static mtas.codec.MtasCodec.MTAS_CODEC_NAME;
@@ -1133,7 +1134,14 @@ public class MtasDocumentIndex
                 log.error("Unable to process query results", e);
             }
         }
-        return results;
+
+        var sortedResults = new LinkedHashMap<String, List<SearchResult>>();
+        var sortedKeys = results.keySet().stream().sorted().collect(toList());
+        for (var key : sortedKeys) {
+            sortedResults.put(key, results.get(key));
+        }
+
+        return sortedResults;
     }
 
     private void addToResults(Map<String, List<SearchResult>> aResultsMap, String aKey,
