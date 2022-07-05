@@ -23,7 +23,6 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
@@ -43,19 +42,17 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
 public class MtasDocumentIndexFactory
     extends PhysicalIndexFactoryImplBase
 {
-    private final AnnotationSchemaService schemaService;
     private final DocumentService documentService;
     private final RepositoryProperties repositoryProperties;
     private final FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
 
     @Autowired
-    public MtasDocumentIndexFactory(AnnotationSchemaService aSchemaService,
-            DocumentService aDocumentService, RepositoryProperties aRepositoryProperties,
+    public MtasDocumentIndexFactory(DocumentService aDocumentService,
+            RepositoryProperties aRepositoryProperties,
             FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        schemaService = aSchemaService;
         documentService = aDocumentService;
         repositoryProperties = aRepositoryProperties;
         featureIndexingSupportRegistry = aFeatureIndexingSupportRegistry;
@@ -71,7 +68,7 @@ public class MtasDocumentIndexFactory
     @Override
     public PhysicalIndex getPhysicalIndex(Project aProject)
     {
-        return new MtasDocumentIndex(aProject, documentService, schemaService,
+        return new MtasDocumentIndex(aProject, documentService,
                 repositoryProperties.getPath().getAbsolutePath(), featureIndexingSupportRegistry,
                 featureSupportRegistry);
     }

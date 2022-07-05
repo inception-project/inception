@@ -17,11 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
 public class DocumentStateChangeMessage
 {
+    private long timestamp;
+
     private long projectId;
     private String projectName;
 
@@ -38,6 +43,8 @@ public class DocumentStateChangeMessage
 
     public DocumentStateChangeMessage(DocumentStateChangedEvent aEvent)
     {
+        timestamp = aEvent.getTimestamp();
+
         projectId = aEvent.getDocument().getProject().getId();
         projectName = aEvent.getDocument().getProject().getName();
 
@@ -47,6 +54,16 @@ public class DocumentStateChangeMessage
         documentState = AeroRemoteApiController.sourceDocumentStateToString(aEvent.getNewState());
         documentPreviousState = AeroRemoteApiController
                 .sourceDocumentStateToString(aEvent.getPreviousState());
+    }
+
+    public long getTimestamp()
+    {
+        return timestamp;
+    }
+
+    public void setTimestamp(long aTimestamp)
+    {
+        timestamp = aTimestamp;
     }
 
     public long getProjectId()
@@ -107,5 +124,15 @@ public class DocumentStateChangeMessage
     public void setDocumentState(String aDocumentState)
     {
         documentState = aDocumentState;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("timestamp", timestamp)
+                .append("projectId", projectId).append("projectName", projectName)
+                .append("documentId", documentId).append("documentName", documentName)
+                .append("documentPreviousState", documentPreviousState)
+                .append("documentState", documentState).toString();
     }
 }

@@ -67,6 +67,7 @@ import org.apache.uima.jcas.cas.Sofa;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -118,6 +119,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RDocument;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RPermission;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.export.ImportUtil;
 import de.tudarmstadt.ukp.inception.project.export.ProjectExportService;
@@ -127,6 +129,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RemoteApiAutoConfiguration#aeroRemoteApiController}.
+ * </p>
+ */
+@ConditionalOnWebApplication
 @RequestMapping(AeroRemoteApiController.API_BASE)
 public class AeroRemoteApiController
 {

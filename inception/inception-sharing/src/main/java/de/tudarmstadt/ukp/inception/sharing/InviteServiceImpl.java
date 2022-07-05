@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.inception.sharing;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.security.NameUtil.isNameValidUserName;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.EMPTY_PASSWORD;
 import static de.tudarmstadt.ukp.clarin.webanno.security.UserDao.REALM_PROJECT_PREFIX;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil.isNameValidUserName;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.inception.sharing.model.Mandatoriness.NOT_ALLOWED;
 

@@ -24,6 +24,7 @@ import javax.servlet.ServletContext;
 
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 
+@ConditionalOnWebApplication
 @Component
 @Order(200)
 public class CurationPageMenuItem

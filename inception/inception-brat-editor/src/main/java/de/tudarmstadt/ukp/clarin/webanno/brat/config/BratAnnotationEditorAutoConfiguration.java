@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.config;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGeneratorImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
+@ConditionalOnWebApplication
 @Configuration
 @ConditionalOnProperty(prefix = "ui.brat", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(BratAnnotationEditorPropertiesImpl.class)

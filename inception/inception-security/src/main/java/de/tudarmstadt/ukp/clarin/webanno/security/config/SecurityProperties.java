@@ -22,9 +22,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 public interface SecurityProperties
 {
     /**
-     * @return encoded default password for the admin user. If this is set, the system will create
-     *         the admin user with the given encoded password on startup unless the user already
-     *         exists.
+     * @return encoded default password for the default admin user. If this is set, the system will
+     *         create the admin user with the given encoded password on startup unless the user
+     *         already exists.
      */
     String getDefaultAdminPassword();
 
@@ -34,4 +34,9 @@ public interface SecurityProperties
      *         also set.
      */
     boolean isDefaultAdminRemoteAccess();
+
+    /**
+     * @return username for the default admin user.
+     */
+    String getDefaultAdminUsername();
 }

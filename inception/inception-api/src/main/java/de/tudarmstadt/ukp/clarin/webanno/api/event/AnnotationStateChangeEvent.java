@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
 import org.springframework.context.ApplicationEvent;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -28,6 +30,7 @@ public class AnnotationStateChangeEvent
 {
     private static final long serialVersionUID = 2369088588078065027L;
 
+    private String user;
     private AnnotationDocument annotationDocument;
     private AnnotationDocumentState previousState;
     private AnnotationDocumentState newState;
@@ -39,6 +42,14 @@ public class AnnotationStateChangeEvent
         annotationDocument = aAnnotation;
         newState = aAnnotation.getState();
         previousState = aPreviousState;
+
+        SecurityContext context = SecurityContextHolder.getContext();
+        if (context.getAuthentication() != null) {
+            user = context.getAuthentication().getName();
+        }
+        else {
+            user = "<SYSTEM>";
+        }
     }
 
     public SourceDocument getDocument()
@@ -59,5 +70,10 @@ public class AnnotationStateChangeEvent
     public AnnotationDocumentState getNewState()
     {
         return newState;
+    }
+
+    public String getUser()
+    {
+        return user;
     }
 }

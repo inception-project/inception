@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,6 +55,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
@@ -69,9 +74,11 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
+import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
+import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import de.tudarmstadt.ukp.inception.search.model.Index;
 import de.tudarmstadt.ukp.inception.search.model.Monitor;
 import de.tudarmstadt.ukp.inception.search.model.Progress;
@@ -95,6 +102,7 @@ public class SearchServiceImpl
     private @PersistenceContext EntityManager entityManager;
 
     private final DocumentService documentService;
+    private final AnnotationSchemaService schemaService;
     private final ProjectService projectService;
     private final PhysicalIndexRegistry physicalIndexRegistry;
     private final SchedulingService schedulingService;
@@ -107,11 +115,13 @@ public class SearchServiceImpl
     private boolean shutdown = false;
 
     @Autowired
-    public SearchServiceImpl(DocumentService aDocumentService, ProjectService aProjectService,
+    public SearchServiceImpl(DocumentService aDocumentService,
+            AnnotationSchemaService aSchemaService, ProjectService aProjectService,
             PhysicalIndexRegistry aPhysicalIndexRegistry, SchedulingService aSchedulingService,
             SearchServiceProperties aProperties)
     {
         documentService = aDocumentService;
+        schemaService = aSchemaService;
         projectService = aProjectService;
         physicalIndexRegistry = aPhysicalIndexRegistry;
         schedulingService = aSchedulingService;
@@ -433,9 +443,7 @@ public class SearchServiceImpl
             log.trace(
                     "Index in project {} has not yet been initialized. Scheduling an asynchronous re-indexing.",
                     project);
-            index.setInvalid(true);
-            entityManager.merge(index);
-            enqueueReindexTask(project, "indexDocument");
+            invalidateIndexAndForceIndexRebuild(project, index, "indexDocument");
             return;
         }
 
@@ -444,6 +452,9 @@ public class SearchServiceImpl
         // be thread-safe...
         try {
             index.getPhysicalIndex().indexDocument(aSourceDocument, aBinaryCas);
+        }
+        catch (IndexRebuildRequiredException e) {
+            invalidateIndexAndForceIndexRebuild(project, index, "indexDocument[error]");
         }
         catch (IOException e) {
             log.error("Error indexing source document {} in project {}", aSourceDocument, project,
@@ -489,9 +500,7 @@ public class SearchServiceImpl
             log.trace(
                     "Index in project {} has not yet been initialized. Scheduling an asynchronous re-indexing.",
                     project);
-            index.setInvalid(true);
-            entityManager.merge(index);
-            enqueueReindexTask(project, aTrigger);
+            invalidateIndexAndForceIndexRebuild(project, index, "indexDocument");
             return;
         }
 
@@ -504,6 +513,9 @@ public class SearchServiceImpl
             log.trace("Indexing new version of annotation document {} in project {}",
                     aAnnotationDocument, project);
             index.getPhysicalIndex().indexDocument(aAnnotationDocument, aBinaryCas);
+        }
+        catch (IndexRebuildRequiredException e) {
+            invalidateIndexAndForceIndexRebuild(project, index, "indexDocument[error]");
         }
         catch (IOException e) {
             log.error("Error indexing annotation document {} in project {}", aAnnotationDocument,
@@ -544,7 +556,6 @@ public class SearchServiceImpl
 
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
             Index index = pooledIndex.get();
-
             ensureIndexIsCreatedAndValid(aProject, index);
 
             return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser,
@@ -600,7 +611,7 @@ public class SearchServiceImpl
     @Transactional
     public void reindex(Project aProject, Monitor aMonitor) throws IOException
     {
-        log.info("Re-indexing project {}", aProject);
+        log.info("Re-indexing project {}. This may take a while...", aProject);
 
         Monitor monitor = aMonitor != null ? aMonitor : new Monitor();
 
@@ -613,7 +624,12 @@ public class SearchServiceImpl
             index.setInvalid(true);
 
             // Clear the index
-            index.getPhysicalIndex().clear();
+            try {
+                index.getPhysicalIndex().clear();
+            }
+            catch (IndexRebuildRequiredException e) {
+                // We can ignore this since we are rebuilding the index already anyway
+            }
 
             Set<String> usersWithPermissions = projectService
                     .listProjectUsersWithPermissions(aProject).stream() //
@@ -627,49 +643,60 @@ public class SearchServiceImpl
 
             monitor.setTodo(annotationDocuments.size() + sourceDocuments.size());
 
-            // Index all the annotation documents
-            for (AnnotationDocument doc : annotationDocuments) {
-                if (isPerformNoMoreActions(pooledIndex)) {
-                    return;
+            // We do not need write access and do not want to add to the exclusive access CAS cache,
+            // so we would normally use SHARED_READ_ONLY_ACCESS. However, that mode can only be used
+            // with AUTO_CAS_UPGRADE which makes things slow. We want NO_CAS_UPGRADE.
+            // So we use UNMANAGED_NON_INITIALIZING_ACCESS for the annotation CASes to avoid
+            // initializing CASes for users who have not started working on a document but for which
+            // an AnnotationDocument item exists (e.g. locked documents).
+            // For INITIAL_CASes, we use UNMANAGED_ACCESS since the INITIAL_CAS should always
+            // exist.
+            final var accessModeAnnotationCas = UNMANAGED_NON_INITIALIZING_ACCESS;
+            final var accessModeInitialCas = UNMANAGED_ACCESS;
+            final var casUpgradeMode = NO_CAS_UPGRADE;
+
+            try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true)) {
+                // Index all the source documents
+                for (SourceDocument doc : sourceDocuments) {
+                    if (isPerformNoMoreActions(pooledIndex)) {
+                        return;
+                    }
+
+                    try (CasStorageSession session = CasStorageSession.openNested()) {
+                        byte[] casAsByteArray = casToByteArray(documentService
+                                .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
+                        indexDocument(pooledIndex, doc, casAsByteArray);
+                    }
+
+                    monitor.incDone();
                 }
 
-                // Because serialization is a process which modifies internal data structures of
-                // the CAS, we need exclusive access the CAS for the time being.
-                // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
-                // for https://issues.apache.org/jira/browse/UIMA-6162
-                byte[] casAsByteArray;
-                try (CasStorageSession session = CasStorageSession.openNested()) {
-                    casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
+                // Index all the annotation documents
+                for (AnnotationDocument doc : annotationDocuments) {
+                    if (isPerformNoMoreActions(pooledIndex)) {
+                        return;
+                    }
+
+                    try (CasStorageSession session = CasStorageSession.openNested()) {
+                        byte[] casAsByteArray = casToByteArray(
+                                documentService.readAnnotationCas(doc.getDocument(), doc.getUser(),
+                                        casUpgradeMode, accessModeAnnotationCas));
+                        indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
+                    }
+                    catch (FileNotFoundException e) {
+                        // Ignore it if a annotation CAS does not exist yet
+                    }
+
+                    monitor.incDone();
                 }
-                indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
-
-                monitor.incDone();
-            }
-
-            // Index all the source documents
-            for (SourceDocument doc : sourceDocuments) {
-                if (isPerformNoMoreActions(pooledIndex)) {
-                    return;
-                }
-
-                // Because serialization is a process which modifies internal data structures of
-                // the CAS, we need exclusive access the CAS for the time being.
-                // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
-                // for https://issues.apache.org/jira/browse/UIMA-6162
-                byte[] casAsByteArray;
-                try (CasStorageSession session = CasStorageSession.openNested()) {
-                    casAsByteArray = casToByteArray(documentService.createOrReadInitialCas(doc));
-                }
-
-                indexDocument(pooledIndex, doc, casAsByteArray);
-
-                monitor.incDone();
             }
 
             // After re-indexing, reset the invalid flag
             index.setInvalid(false);
             entityManager.merge(index);
         }
+
+        log.info("Re-indexing project {} complete!", aProject);
     }
 
     /**
@@ -744,13 +771,8 @@ public class SearchServiceImpl
     {
         // Does the index exist at all?
         if (!aIndex.getPhysicalIndex().isCreated()) {
-            // Set the invalid flag
-            aIndex.setInvalid(true);
-            entityManager.merge(aIndex);
-
-            // Schedule new re-indexing process
-            enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
-
+            invalidateIndexAndForceIndexRebuild(aProject, aIndex,
+                    "ensureIndexIsCreatedAndValid[doesNotExist]");
             // Throw execution exception so that the user knows the query was not run
             throw (new ExecutionException("Index still building. Try again later."));
         }
@@ -765,6 +787,28 @@ public class SearchServiceImpl
             // Throw execution exception so that the user knows the query was not run
             throw (new ExecutionException("Index still building. Try again later."));
         }
+
+        // Is the index usable - it might be corrupt and needs rebuilding
+        try {
+            aIndex.getPhysicalIndex().open();
+        }
+        catch (IndexRebuildRequiredException e) {
+            invalidateIndexAndForceIndexRebuild(aProject, aIndex,
+                    "ensureIndexIsCreatedAndValid[error]");
+            // Throw execution exception so that the user knows the query was not run
+            throw (new ExecutionException("Index still building. Try again later."));
+        }
+        catch (IOException e) {
+            throw new ExecutionException("Unable to access index", e);
+        }
+    }
+
+    private void invalidateIndexAndForceIndexRebuild(Project aProject, Index aIndex, String aReason)
+    {
+        aIndex.setInvalid(true);
+        entityManager.merge(aIndex);
+
+        enqueueReindexTask(aProject, "ensureIndexIsCreatedAndValid[doesNotExist]");
     }
 
     @Override

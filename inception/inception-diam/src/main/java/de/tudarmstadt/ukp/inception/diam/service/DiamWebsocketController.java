@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -81,6 +82,7 @@ import de.tudarmstadt.ukp.inception.diam.model.websocket.ViewportState;
 /**
  * Differential INCEpTION Annotation Messaging (DIAM) protocol controller.
  */
+@ConditionalOnWebApplication
 @ConditionalOnExpression("${websocket.enabled:true}")
 @Controller
 public class DiamWebsocketController

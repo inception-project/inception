@@ -15,26 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
+package de.tudarmstadt.ukp.inception.cli;
 
-import static org.apache.commons.lang3.StringUtils.containsNone;
+import java.util.concurrent.Callable;
 
-public class NameUtil
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebApplication;
+import org.springframework.stereotype.Component;
+
+import picocli.CommandLine.Command;
+
+@ConditionalOnNotWebApplication
+@Component
+@Command(name = "inception", mixinStandardHelpOptions = true)
+public class InceptionCliCommand
+    implements Callable<Integer>
 {
-    public static final String WEBANNO_ILLEGAL_CHARACTERS = "^/\\&*?+$![]";
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public static final String BAD_FOR_FILENAMES = "#%&{}\\<>*?/ $!'\":@+`|=";
-
-    /**
-     * Check if the name is valid, SPecial characters are not allowed as a project/user name as it
-     * will conflict with file naming system
-     * 
-     * @param aName
-     *            a name.
-     * @return if the name is valid.
-     */
-    public static boolean isNameValidUserName(String aName)
+    @Override
+    public Integer call() throws Exception
     {
-        return aName != null && containsNone(aName, WEBANNO_ILLEGAL_CHARACTERS);
+        log.error(
+                "When you start the application with no parameters, the server should be started. No idea how you got here...");
+
+        return 0;
     }
 }

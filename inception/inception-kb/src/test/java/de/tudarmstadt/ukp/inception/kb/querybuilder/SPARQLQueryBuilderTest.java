@@ -32,10 +32,12 @@ import static de.tudarmstadt.ukp.inception.kb.util.TestFixtures.isReachable;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.eclipse.rdf4j.rio.RDFFormat.RDFXML;
 import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,25 +76,9 @@ public class SPARQLQueryBuilderTest
             "@prefix so: <http://schema.org/> .", //
             "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .");
 
-    static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = String.join("\n", //
-            "<#green-goblin>", //
-            "    rdfs:label 'Green Goblin' ;", //
-            "    rdfs:label 'Green Goblin'@en ;", //
-            "    rdfs:label 'Grüner Goblin'@de ;", //
-            "    rdfs:label 'Goblin vert'@fr ;", //
-            "    rdfs:comment 'Little green monster' ;", //
-            "    rdfs:comment 'Little green monster'@en ;", //
-            "    rdfs:comment 'Kleines grünes Monster'@de .", //
-            "", //
-            "<#lucky-green>", //
-            "    rdfs:label 'Lucky Green' ;", //
-            "    rdfs:label 'Lucky Green'@en ;", //
-            "    rdfs:comment 'Lucky Irish charm' ;", //
-            "    rdfs:comment 'Lucky Irish charm'@en .", //
-            "", //
-            "<#red-goblin>", //
-            "    rdfs:label 'Red Goblin' ;", //
-            "    rdfs:comment 'Little red monster' .");
+    static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = contentOf(
+            new File("src/test/resources/turtle/data_labels_and_descriptions_with_language.ttl"),
+            UTF_8);
 
     static final String DATA_LABELS_WITHOUT_LANGUAGE = String.join("\n", //
             "<#green-goblin>", //
@@ -111,12 +97,8 @@ public class SPARQLQueryBuilderTest
             "    rdfs:label 'instance' ;", //
             "    rdfs:label 'case'  .");
 
-    static final String DATA_ADDITIONAL_SEARCH_PROPERTIES = String.join("\n", //
-            "<#example>", //
-            "    rdfs:prefLabel 'specimen' ;", //
-            "    rdfs:label 'sample' ;", //
-            "    rdfs:label 'instance' ;", //
-            "    rdfs:label 'case'  .");
+    static final String DATA_ADDITIONAL_SEARCH_PROPERTIES = contentOf(
+            new File("src/test/resources/turtle/data_additional_search_properties.ttl"), UTF_8);
 
     static final String LABEL_SUBPROPERTY = String.join("\n", //
             "<#sublabel>", //
@@ -253,6 +235,8 @@ public class SPARQLQueryBuilderTest
                         SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_FTS_2),
                 new Scenario("testWithLabelStartingWith_withLanguage_FTS_3",
                         SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_FTS_3),
+                new Scenario("testWithLabelStartingWith_withLanguage_FTS_4",
+                        SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_FTS_4),
                 new Scenario("testWithLabelStartingWith_withLanguage_noFTS",
                         SPARQLQueryBuilderTest::testWithLabelStartingWith_withLanguage_noFTS),
                 new Scenario("testWithLabelContainingAnyOf_pets_ttl_noFTS",
@@ -1294,6 +1278,29 @@ public class SPARQLQueryBuilderTest
                 .withLabelStartingWith("Green Go "));
 
         assertThat(results).isEmpty();
+    }
+
+    static void testWithLabelStartingWith_withLanguage_FTS_4(Repository aRepository,
+            KnowledgeBase aKB)
+        throws Exception
+    {
+        importDataFromString(aRepository, aKB, TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+
+        // Two words with the second being very short - this is no problem for the LUCENE FTS
+        // and we simply add a wildcard to match "Green Go*"
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder //
+                .forItems(aKB) //
+                .withLabelStartingWith("Green     Go"));
+
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.startsWith("Green Go"));
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results)
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name",
+                        "description", "language")
+                .containsExactlyInAnyOrder(new KBHandle("http://example.org/#green-goblin",
+                        "Green Goblin", null, "en"));
     }
 
     @Tag("slow")

@@ -579,6 +579,14 @@
       <groupId>com.fasterxml.jackson.module</groupId>
       <artifactId>jackson-module-kotlin</artifactId>
     </dependency>
+    <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli-spring-boot-starter</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -912,6 +920,7 @@
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Other -->
+              <usedDependency>info.picocli:picocli-spring-boot-starter</usedDependency>
               <usedDependency>com.fasterxml.jackson.module:jackson-module-kotlin</usedDependency>
             </usedDependencies>
           </configuration>

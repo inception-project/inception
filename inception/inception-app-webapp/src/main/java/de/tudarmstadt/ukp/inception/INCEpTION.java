@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil.setGlobalLo
 import static de.tudarmstadt.ukp.inception.INCEpTION.INCEPTION_BASE_PACKAGE;
 import static de.tudarmstadt.ukp.inception.INCEpTION.WEBANNO_BASE_PACKAGE;
 import static org.apache.uima.cas.impl.CASImpl.ALWAYS_HOLD_ONTO_FSS;
+import static org.springframework.boot.WebApplicationType.NONE;
 import static org.springframework.boot.WebApplicationType.SERVLET;
 
 import java.util.Optional;
@@ -97,18 +98,42 @@ public class INCEpTION
 
     protected static void run(String[] args, Class<?>... aSources)
     {
-        Optional<SplashWindow> splash = LoadingSplashScreen.setupScreen("INCEpTION");
 
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
+
         // Add the main application as the root Spring context
-        builder.sources(aSources).web(SERVLET);
+        builder.sources(aSources);
 
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
+
         init(builder);
+
+        Optional<SplashWindow> splash;
+
+        // If invoking in command-mode via the command line, do not start a web server
+        if (isCliCommandMode(args)) {
+            builder.web(NONE);
+            builder.headless(true);
+            splash = Optional.empty();
+        }
+        else {
+            builder.web(SERVLET);
+            splash = LoadingSplashScreen.setupScreen("INCEpTION");
+        }
+
         setGlobalLogFolder(getApplicationHome().toPath().resolve("log"));
         builder.listeners(event -> splash.ifPresent(_splash -> _splash.handleEvent(event)));
-        builder.run(args);
+        var context = builder.run(args);
+
+        if (isCliCommandMode(args)) {
+            context.close();
+        }
+    }
+
+    private static boolean isCliCommandMode(String[] args)
+    {
+        return args.length > 0;
     }
 
     public static void main(String[] args) throws Exception

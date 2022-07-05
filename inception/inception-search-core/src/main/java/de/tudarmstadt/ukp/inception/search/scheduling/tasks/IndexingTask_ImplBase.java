@@ -108,6 +108,8 @@ public abstract class IndexingTask_ImplBase
         builder.append(sourceDocument == null ? "null" : sourceDocument.getName());
         builder.append(", annotationDocument=");
         builder.append(annotationDocument == null ? "null" : annotationDocument.getName());
+        builder.append(", trigger=");
+        builder.append(getTrigger());
         builder.append("]");
         return builder.toString();
     }

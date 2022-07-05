@@ -606,18 +606,17 @@ public class MtasDocumentIndexTest
 
         annotateDocument(project, user, sourceDocument1);
 
-        Map<String, List<SearchResult>> resultsBefore = searchService.query(user, project, query,
-                null, null, null, 0, 10);
+        var resultsBefore = searchService.query(user, project, query, null, null, null, 0, 10);
 
         annotateDocument(project, user, sourceDocument1);
 
-        Map<String, List<SearchResult>> resultsAfter = searchService.query(user, project, query,
-                null, null, null, 0, 10);
+        var resultsAfter = searchService.query(user, project, query, null, null, null, 0, 10);
 
         // Before the fix, the keys of resultsAfter were ["Annotation document 2", "Annotation
         // document 1"].
         // Document 1 moved to the back of the index because we updated its annotation
-        assertThat(resultsBefore.keySet()).containsExactlyElementsOf(resultsAfter.keySet());
+        assertThat(resultsBefore.keySet()) //
+                .containsExactlyElementsOf(resultsAfter.keySet());
     }
 
     @Disabled("This test is flaky, but I do not know why - maybe some race condition in the indexing")

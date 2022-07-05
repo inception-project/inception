@@ -20,16 +20,34 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 
-@Component
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
+
+/**
+ * <p>
+ * This class is loaded via {@link RemoteApiAutoConfiguration}.
+ * </p>
+ */
+@Validated
 @ConfigurationProperties(prefix = WebhooksConfiguration.PROPERTY_PREFIX)
 public class WebhooksConfiguration
 {
     public static final String PROPERTY_PREFIX = "webhooks";
 
     private List<Webhook> globalHooks = new ArrayList<>();
+
+    @Min(value = 10)
+    @Max(value = 5000)
+    private int retryDelay = 1000;
+
+    @Min(value = 0)
+    @Max(value = 3)
+    private int retryCount = 0;
 
     public List<Webhook> getGlobalHooks()
     {
@@ -39,5 +57,25 @@ public class WebhooksConfiguration
     public void setGlobalHooks(List<Webhook> aWebhooks)
     {
         globalHooks = aWebhooks;
+    }
+
+    public int getRetryCount()
+    {
+        return retryCount;
+    }
+
+    public void setRetryCount(int aRetryCount)
+    {
+        retryCount = aRetryCount;
+    }
+
+    public int getRetryDelay()
+    {
+        return retryDelay;
+    }
+
+    public void setRetryDelay(int aRetryDelay)
+    {
+        retryDelay = aRetryDelay;
     }
 }
