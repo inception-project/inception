@@ -212,59 +212,83 @@ public class MtasDocumentIndex
         // new RuntimeException());
 
         try {
-            // Add the project id to the configuration
-            JSONObject jsonParserConfiguration = new JSONObject();
-            jsonParserConfiguration.put(PARAM_PROJECT_ID, project.getId());
-
-            // Tokenizer parameters
-            Map<String, String> tokenizerArguments = new HashMap<>();
-            tokenizerArguments.put(ARGUMENT_PARSER, MtasUimaParser.class.getName());
-            tokenizerArguments.put(ARGUMENT_PARSER_ARGS, jsonParserConfiguration.toString());
-
-            // Build analyzer
-            Analyzer mtasAnalyzer = CustomAnalyzer.builder()
-                    .withTokenizer(MtasTokenizerFactory.class, tokenizerArguments).build();
-
-            Map<String, Analyzer> analyzerPerField = new HashMap<String, Analyzer>();
-            analyzerPerField.put(FIELD_CONTENT, mtasAnalyzer);
-
-            PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(new StandardAnalyzer(),
-                    analyzerPerField);
-
-            // Build IndexWriter
-            FileUtils.forceMkdir(getIndexDir());
-            IndexWriterConfig config = new IndexWriterConfig(analyzer);
-            config.setCodec(Codec.forName(MTAS_CODEC_NAME));
-
-            @SuppressWarnings("resource")
-            IndexWriter indexWriter = new IndexWriter(FSDirectory.open(getIndexDir().toPath()),
-                    config);
-
-            // Initialize the index
-            try {
-                indexWriter.commit();
-            }
-            catch (IOException e) {
-                try {
-                    indexWriter.close();
-                }
-                catch (IOException e1) {
-                    log.error("Error while trying to close index which could not be initalized"
-                            + " - actual exception follows", e);
-                }
-                throw e;
-            }
-
             // After the index has been initialized, assign the _indexWriter - this is also used
             // by isOpen() to check if the index writer is available.
-            _indexWriter = indexWriter;
-
+            _indexWriter = createIndexWriter();
             return _indexWriter;
         }
         catch (IOException e) {
-            _indexWriter = null;
+            if (log.isDebugEnabled()) {
+                log.warn("Unable to read MTAS index: {}. Deleting index so it can be rebuilt.",
+                        e.getMessage(), e);
+            }
+            else {
+                log.warn("Unable to read MTAS index: {}. Deleting index so it can be rebuilt.",
+                        e.getMessage());
+            }
+
+            // If the index is corrupt, delete it so it can be rebuilt from scratch
+            delete();
+
+            // Re-try once to get the writer
+            try {
+                _indexWriter = createIndexWriter();
+                return _indexWriter;
+            }
+            catch (IOException e1) {
+                log.error("Unable to read MTAS index: {}. Attempt to re-create after deletion failed.",
+                        e.getMessage(), e);
+                _indexWriter = null;
+                throw e1;
+            }
+        }
+    }
+
+    private IndexWriter createIndexWriter() throws IOException
+    {
+        // Add the project id to the configuration
+        JSONObject jsonParserConfiguration = new JSONObject();
+        jsonParserConfiguration.put(PARAM_PROJECT_ID, project.getId());
+
+        // Tokenizer parameters
+        Map<String, String> tokenizerArguments = new HashMap<>();
+        tokenizerArguments.put(ARGUMENT_PARSER, MtasUimaParser.class.getName());
+        tokenizerArguments.put(ARGUMENT_PARSER_ARGS, jsonParserConfiguration.toString());
+
+        // Build analyzer
+        Analyzer mtasAnalyzer = CustomAnalyzer.builder()
+                .withTokenizer(MtasTokenizerFactory.class, tokenizerArguments).build();
+
+        Map<String, Analyzer> analyzerPerField = new HashMap<String, Analyzer>();
+        analyzerPerField.put(FIELD_CONTENT, mtasAnalyzer);
+
+        PerFieldAnalyzerWrapper analyzer = new PerFieldAnalyzerWrapper(new StandardAnalyzer(),
+                analyzerPerField);
+
+        // Build IndexWriter
+        FileUtils.forceMkdir(getIndexDir());
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setCodec(Codec.forName(MTAS_CODEC_NAME));
+
+        @SuppressWarnings("resource")
+        IndexWriter indexWriter = new IndexWriter(FSDirectory.open(getIndexDir().toPath()), config);
+
+        // Initialize the index
+        try {
+            indexWriter.commit();
+        }
+        catch (IOException e) {
+            try {
+                indexWriter.close();
+            }
+            catch (IOException e1) {
+                log.error("Error while trying to close index which could not be initalized"
+                        + " - actual exception follows", e);
+            }
             throw e;
         }
+
+        return indexWriter;
     }
 
     private void ensureAllIsCommitted()
@@ -1389,7 +1413,6 @@ public class MtasDocumentIndex
         searchManager.maybeRefresh();
         IndexSearcher indexSearcher = searchManager.acquire();
         try {
-
             // Prepare query for the annotation document for this annotation document
             Term term = new Term(FIELD_ID, String.format("%d/%d", aSrcDocId, aAnnoDocId));
 
