@@ -67,6 +67,7 @@ import org.apache.uima.jcas.cas.Sofa;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -134,6 +135,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
  * {@link RemoteApiAutoConfiguration#aeroRemoteApiController}.
  * </p>
  */
+@ConditionalOnWebApplication
 @RequestMapping(AeroRemoteApiController.API_BASE)
 public class AeroRemoteApiController
 {

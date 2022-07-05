@@ -29,10 +29,12 @@ import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getI
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
 import static java.util.Comparator.comparingLong;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static mtas.codec.MtasCodec.MTAS_CODEC_NAME;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,7 +95,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.openjson.JSONObject;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -111,7 +112,9 @@ import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.StatisticRequest;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
+import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
+import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -178,7 +181,6 @@ public class MtasDocumentIndex
     private final FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
     private final FeatureSupportRegistry featureSupportRegistry;
     private final DocumentService documentService;
-    private final AnnotationSchemaService schemaService;
     private final Project project;
     private final File repositoryDir;
     private final ScheduledExecutorService schedulerService;
@@ -187,12 +189,10 @@ public class MtasDocumentIndex
     private ReferenceManager<IndexSearcher> _searcherManager;
     private ScheduledFuture<?> _commitFuture;
 
-    public MtasDocumentIndex(Project aProject, DocumentService aDocumentService,
-            AnnotationSchemaService aSchemaService, String aDir,
+    public MtasDocumentIndex(Project aProject, DocumentService aDocumentService, String aDir,
             FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
             FeatureSupportRegistry aFeatureSupportRegistry)
     {
-        schemaService = aSchemaService;
         documentService = aDocumentService;
         project = aProject;
         featureIndexingSupportRegistry = aFeatureIndexingSupportRegistry;
@@ -207,9 +207,6 @@ public class MtasDocumentIndex
         if (_indexWriter != null) {
             return _indexWriter;
         }
-
-        // log.debug("Opening index for project [{}]({})", project.getName(), project.getId(),
-        // new RuntimeException());
 
         try {
             // After the index has been initialized, assign the _indexWriter - this is also used
@@ -230,17 +227,8 @@ public class MtasDocumentIndex
             // If the index is corrupt, delete it so it can be rebuilt from scratch
             delete();
 
-            // Re-try once to get the writer
-            try {
-                _indexWriter = createIndexWriter();
-                return _indexWriter;
-            }
-            catch (IOException e1) {
-                log.error("Unable to read MTAS index: {}. Attempt to re-create after deletion failed.",
-                        e.getMessage(), e);
-                _indexWriter = null;
-                throw e1;
-            }
+            _indexWriter = null;
+            throw new IndexRebuildRequiredException(e);
         }
     }
 
@@ -341,8 +329,7 @@ public class MtasDocumentIndex
                 _indexWriter.close();
             }
             catch (IOException e) {
-                log.error("Error closing index for project [{}]({})", project.getName(),
-                        project.getId(), e);
+                log.error("Error closing index for project {}", project, e);
             }
 
             if (_searcherManager != null) {
@@ -350,15 +337,14 @@ public class MtasDocumentIndex
                     _searcherManager.close();
                 }
                 catch (IOException e) {
-                    log.error("Error closing index for project [{}]({})", project.getName(),
-                            project.getId(), e);
+                    log.error("Error closing index for project {}", project, e);
                 }
             }
         }
         finally {
             _indexWriter = null;
             _searcherManager = null;
-            log.debug("Closed index for project [{}]({})", project.getName(), project.getId());
+            log.debug("Closed index for project {}", project);
         }
     }
 
@@ -383,8 +369,7 @@ public class MtasDocumentIndex
             return;
         }
 
-        log.debug("Enqueuing new future to index for project [{}]({})", project.getName(),
-                project.getId());
+        log.debug("Enqueuing new future to index for project {}", project);
 
         _commitFuture = schedulerService.schedule(this::commit, 3, SECONDS);
     }
@@ -392,12 +377,10 @@ public class MtasDocumentIndex
     private void commit()
     {
         try {
-            log.debug("Executing future to index for project [{}]({})", project.getName(),
-                    project.getId());
+            log.debug("Executing future to index for project {}", project);
             if (_indexWriter != null && _indexWriter.isOpen()) {
                 _indexWriter.commit();
-                log.debug("Committed changes to index for project [{}]({})", project.getName(),
-                        project.getId());
+                log.debug("Committed changes to index for project {}", project);
 
                 if (_searcherManager != null) {
                     _searcherManager.maybeRefresh();
@@ -405,8 +388,7 @@ public class MtasDocumentIndex
             }
         }
         catch (IOException e) {
-            log.error("Unable to commit to index of project [{}]({})", project.getName(),
-                    project.getId());
+            log.error("Unable to commit to index of project {}", project);
         }
     }
 
@@ -419,6 +401,12 @@ public class MtasDocumentIndex
     public boolean isOpen()
     {
         return _indexWriter != null ? _indexWriter.isOpen() : false;
+    }
+
+    @Override
+    public void open() throws IOException
+    {
+        getIndexWriter();
     }
 
     @Override
@@ -553,8 +541,8 @@ public class MtasDocumentIndex
         Map<String, Object> resultsMap = null;
         Map<String, Object> resultsMapSentence = null;
 
-        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
-                aStatisticRequest.getProject(), aStatisticRequest.getUser());
+        // Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
+        // aStatisticRequest.getProject(), aStatisticRequest.getUser());
         Double minToken = aStatisticRequest.getMinTokenPerDoc().isPresent()
                 ? (double) aStatisticRequest.getMinTokenPerDoc().getAsInt()
                 : null;
@@ -776,8 +764,8 @@ public class MtasDocumentIndex
                 aRequest.getUser());
 
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher, false,
-                boost);
+        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
+                COMPLETE_NO_SCORES, boost);
 
         long numResults = 0;
 
@@ -882,7 +870,7 @@ public class MtasDocumentIndex
 
         // Here, the query comes into play
         SpanWeight spanweight = aQuery.rewrite(aSearcher.getIndexReader()).createWeight(aSearcher,
-                false, 0);
+                COMPLETE_NO_SCORES, 0);
 
         // cycle through all the leaves
         for (LeafReaderContext leafReaderContext : aLeaves) {
@@ -938,8 +926,8 @@ public class MtasDocumentIndex
                 .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final float boost = 0;
-        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher, false,
-                boost);
+        SpanWeight spanweight = q.rewrite(searcher.getIndexReader()).createWeight(searcher,
+                COMPLETE_NO_SCORES, boost);
 
         long offset = aRequest.getOffset();
         long count = aRequest.getCount();
@@ -1146,7 +1134,14 @@ public class MtasDocumentIndex
                 log.error("Unable to process query results", e);
             }
         }
-        return results;
+
+        var sortedResults = new LinkedHashMap<String, List<SearchResult>>();
+        var sortedKeys = results.keySet().stream().sorted().collect(toList());
+        for (var key : sortedKeys) {
+            sortedResults.put(key, results.get(key));
+        }
+
+        return sortedResults;
     }
 
     private void addToResults(Map<String, List<SearchResult>> aResultsMap, String aKey,
@@ -1220,7 +1215,7 @@ public class MtasDocumentIndex
         }
     }
 
-    private void indexDocument(String aDocumentTitle, long aSourceDocumentId,
+    private String indexDocument(String aDocumentTitle, long aSourceDocumentId,
             long aAnnotationDocumentId, String aUser, byte[] aBinaryCas)
         throws IOException
     {
@@ -1256,6 +1251,8 @@ public class MtasDocumentIndex
 
         // Add document to the Lucene index
         indexWriter.addDocument(doc);
+
+        return timestamp;
     };
 
     /**
@@ -1310,11 +1307,48 @@ public class MtasDocumentIndex
         IndexWriter indexWriter = getIndexWriter();
 
         // Prepare boolean query with the two obligatory terms (id and timestamp)
-        BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder().add(
-                new TermQuery(new Term(FIELD_ID,
+        BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder() //
+                .add(new TermQuery(new Term(FIELD_ID,
                         String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId))),
-                BooleanClause.Occur.MUST).add(new TermQuery(new Term(FIELD_TIMESTAMP, aTimestamp)),
+                        BooleanClause.Occur.MUST) //
+                .add(new TermQuery(new Term(FIELD_TIMESTAMP, aTimestamp)),
                         BooleanClause.Occur.MUST);
+
+        // Delete document based on the previous query
+        indexWriter.deleteDocuments(booleanQuery.build());
+    }
+
+    /**
+     * Remove a specific document from the index based on its timestamp
+     * 
+     * @param aSourceDocumentId
+     *            The ID of the source document to be removed
+     * @param aAnnotationDocumentId
+     *            The ID of the annotation document to be removed
+     * @param aUser
+     *            The owner of the document to be removed
+     * @param aCurrentVersion
+     *            The timestamp of the document to be kept
+     */
+    private void deindexOldVersionsOfDocument(long aSourceDocumentId, long aAnnotationDocumentId,
+            String aUser, String aCurrentVersion)
+        throws IOException
+    {
+        log.debug(
+                "Removing old versions of document from index in project [{}]({}). sourceId: {}, "
+                        + "annotationId: {}, user: {}, current timestamp: {}",
+                project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId, aUser,
+                aCurrentVersion);
+
+        IndexWriter indexWriter = getIndexWriter();
+
+        // Prepare boolean query with the two obligatory terms (id and timestamp)
+        BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder() //
+                .add(new TermQuery(new Term(FIELD_ID,
+                        String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId))),
+                        BooleanClause.Occur.MUST) //
+                .add(new TermQuery(new Term(FIELD_TIMESTAMP, aCurrentVersion)),
+                        BooleanClause.Occur.MUST_NOT);
 
         // Delete document based on the previous query
         indexWriter.deleteDocuments(booleanQuery.build());
@@ -1361,6 +1395,7 @@ public class MtasDocumentIndex
      * @param aDocument
      *            The document to be removed
      */
+    @Deprecated
     @Override
     public void deindexDocument(AnnotationDocument aDocument, String aTimestamp) throws IOException
     {
@@ -1402,11 +1437,11 @@ public class MtasDocumentIndex
     @Override
     public Optional<String> getTimestamp(long aSrcDocId, long aAnnoDocId) throws IOException
     {
-        Optional<String> result = Optional.empty();
-
         if (aSrcDocId == -1 || aAnnoDocId == -1) {
-            return result;
+            return Optional.empty();
         }
+
+        Optional<String> result = Optional.empty();
 
         // Prepare index searcher for accessing index
         ReferenceManager<IndexSearcher> searchManager = getSearcherManager();
@@ -1474,11 +1509,23 @@ public class MtasDocumentIndex
         // a version of the annotation document index, we obtain the timestamp of this
         // version, then we add the new version, and finally we remove the old version
         // as identified by the timestamp.
-        Optional<String> oldTimestamp = getTimestamp(srcDocId, annoDocId);
-        indexDocument(aDocument.getName(), srcDocId, annoDocId, user, aBinaryCas);
-        if (oldTimestamp.isPresent()) {
-            deindexDocument(srcDocId, annoDocId, user, oldTimestamp.get());
-        }
+        // Optional<String> oldTimestamp = Optional.empty();
+        // if (!BulkIndexingContext.isFullReindexInProgress()) {
+        // // Looking up the timestamp is slow (because it requires refreshing the searcher to
+        // // get the latest info) and when we do a full index rebuild, it is just slowing things
+        // // down unnecessarily.
+        // oldTimestamp = getTimestamp(srcDocId, annoDocId);
+        // }
+
+        var currentTimestamp = indexDocument(aDocument.getName(), srcDocId, annoDocId, user,
+                aBinaryCas);
+
+        deindexOldVersionsOfDocument(srcDocId, annoDocId, user, currentTimestamp);
+
+        // if (oldTimestamp.isPresent()) {
+        // deindexDocument(srcDocId, annoDocId, user, oldTimestamp.get());
+        // }
+
         scheduleCommit();
     }
 
@@ -1488,7 +1535,10 @@ public class MtasDocumentIndex
         // NOTE: deleting all index versions related to the sourcedoc is ok in comparison to
         // re-indexing annotation documents, because we do this before the search
         // is accessed and therefore do not care about indices not being available for a short time
-        deindexDocument(aSourceDocument.getId(), -1, "");
+        if (!BulkIndexingContext.isFullReindexInProgress()) {
+            deindexDocument(aSourceDocument.getId(), -1, "");
+        }
+
         indexDocument(aSourceDocument.getName(), aSourceDocument.getId(), -1, "", aBinaryCas);
         scheduleCommit();
     }

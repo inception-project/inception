@@ -24,6 +24,7 @@ import javax.persistence.PersistenceContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -89,6 +90,7 @@ public class RecommenderServiceAutoConfiguration
         return new LearningRecordServiceImpl(entityManager);
     }
 
+    @ConditionalOnWebApplication
     @ConditionalOnProperty(prefix = "recommender.evaluation-page", //
             name = "enabled", havingValue = "true", matchIfMissing = true)
     @Bean
@@ -135,6 +137,7 @@ public class RecommenderServiceAutoConfiguration
         return new RecommenderProjectSettingsPanelFactory();
     }
 
+    @ConditionalOnWebApplication
     @Bean
     public ProjectRecommendersMenuItem projectRecommendersMenuItem()
     {
@@ -167,6 +170,7 @@ public class RecommenderServiceAutoConfiguration
         return new RecommenderFactoryRegistryImpl(aExtensions);
     }
 
+    @ConditionalOnWebApplication
     @Bean
     @Autowired
     @ConditionalOnProperty(prefix = "monitoring.metrics", name = "enabled", havingValue = "true")
@@ -176,6 +180,7 @@ public class RecommenderServiceAutoConfiguration
 
     }
 
+    @ConditionalOnWebApplication
     @Bean
     @ConditionalOnProperty(prefix = "websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
     public RecommendationEventFooterItem recommendationEventFooterItem()

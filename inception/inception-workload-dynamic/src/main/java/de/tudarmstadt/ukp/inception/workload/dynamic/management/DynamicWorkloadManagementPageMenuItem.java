@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExten
 
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -35,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
+@ConditionalOnWebApplication
 @Order(300)
 @Component
 public class DynamicWorkloadManagementPageMenuItem

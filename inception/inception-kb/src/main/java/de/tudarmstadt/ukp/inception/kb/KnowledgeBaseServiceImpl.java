@@ -86,7 +86,7 @@ import org.eclipse.rdf4j.rio.RDFParseException;
 import org.eclipse.rdf4j.rio.RDFWriter;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
-import org.eclipse.rdf4j.sail.lucene.config.LuceneSailConfig;
+import org.eclipse.rdf4j.sail.lucene.impl.config.LuceneSailConfig;
 import org.eclipse.rdf4j.sail.nativerdf.config.NativeStoreConfig;
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
@@ -1252,7 +1252,7 @@ public class KnowledgeBaseServiceImpl
                 || propertyIdentifier.equals(aKB.getTypeIri());
     }
 
-    private void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
+    void reconfigureLocalKnowledgeBase(KnowledgeBase aKB)
     {
         /*
         // @formatter:off
@@ -1322,7 +1322,7 @@ public class KnowledgeBaseServiceImpl
             String luceneDir = luceneSail.getParameter(LuceneSail.LUCENE_DIR_KEY);
             luceneSail.shutDown();
             FileUtils.deleteQuietly(new File(luceneDir));
-            luceneSail.initialize();
+            luceneSail.init();
 
             // Only try to rebuild once - so no recursion here!
             try (RepositoryConnection conn = getConnection(aKB)) {
