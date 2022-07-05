@@ -41,9 +41,10 @@ First ensure that {product-name} is not running. Then run INCEpTION from the com
 $ java -jar inception-app-webapp-24.0-standalone.jar search reindex
 ----
 
-This command will rebuild the annotation search indices of **all projects** which can take 
-**several hours**. When the process is complete, you can restart INCEpTION as usual. Do not try to
-start INCEpTION while the process is still running.
+This command will rebuild the annotation search indices of **all projects** which depending on the 
+number of projects and their size can add up to **several hours** (although for most people, it 
+should be pretty fast). When the process is complete, you can restart INCEpTION as usual. Do not try
+to start INCEpTION while the process is still running.
 
 == INCEpTION 22.0
 

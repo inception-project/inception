@@ -70,7 +70,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
-import de.tudarmstadt.ukp.inception.search.model.IndexingContext;
+import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import mtas.analysis.parser.MtasParser;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
@@ -128,7 +128,7 @@ public class MtasUimaParser
             JSONObject jsonParserConfiguration = new JSONObject(
                     config.attributes.get(ARGUMENT_PARSER_ARGS));
 
-            Optional<IndexingContext> maybeIndexingContext = IndexingContext.get();
+            Optional<BulkIndexingContext> maybeIndexingContext = BulkIndexingContext.get();
             if (maybeIndexingContext.isPresent()) {
                 var indexingContext = maybeIndexingContext.get();
 

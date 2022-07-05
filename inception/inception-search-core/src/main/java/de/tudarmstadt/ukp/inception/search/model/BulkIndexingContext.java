@@ -25,21 +25,23 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
-public class IndexingContext
+public class BulkIndexingContext
     implements AutoCloseable
 {
-    private final static ThreadLocal<IndexingContext> INSTANCE = new ThreadLocal<>();
+    private final static ThreadLocal<BulkIndexingContext> INSTANCE = new ThreadLocal<>();
 
+    private final boolean fullReindex;
     private final Project project;
     private final List<AnnotationLayer> layers;
     private final List<AnnotationFeature> features;
 
-    public IndexingContext(Project aProject, List<AnnotationLayer> aLayers,
-            List<AnnotationFeature> aFeatures)
+    public BulkIndexingContext(Project aProject, List<AnnotationLayer> aLayers,
+            List<AnnotationFeature> aFeatures, boolean aFullReindex)
     {
         project = aProject;
         layers = aLayers;
         features = aFeatures;
+        fullReindex = aFullReindex;
     }
 
     public Project getProject()
@@ -57,13 +59,19 @@ public class IndexingContext
         return features;
     }
 
+    public boolean isFullReindex()
+    {
+        return fullReindex;
+    }
+
     @Override
     public void close()
     {
         clear();
     }
 
-    public static IndexingContext init(Project aProject, AnnotationSchemaService aSchemaService)
+    public static BulkIndexingContext init(Project aProject, AnnotationSchemaService aSchemaService,
+            boolean aFullReindex)
     {
         var features = aSchemaService.listSupportedFeatures(aProject);
         features.removeIf(f -> !f.isEnabled() || !f.getLayer().isEnabled());
@@ -71,12 +79,12 @@ public class IndexingContext
         var layers = aSchemaService.listSupportedLayers(aProject);
         layers.removeIf(l -> !l.isEnabled());
 
-        var indexingContext = new IndexingContext(aProject, layers, features);
+        var indexingContext = new BulkIndexingContext(aProject, layers, features, aFullReindex);
         INSTANCE.set(indexingContext);
         return indexingContext;
     }
 
-    public static Optional<IndexingContext> get()
+    public static Optional<BulkIndexingContext> get()
     {
         return Optional.ofNullable(INSTANCE.get());
     }
@@ -84,5 +92,10 @@ public class IndexingContext
     public static void clear()
     {
         INSTANCE.set(null);
+    }
+
+    public static boolean isFullReindexInProgress()
+    {
+        return get().map(BulkIndexingContext::isFullReindex).orElse(false);
     }
 }

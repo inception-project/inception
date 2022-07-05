@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage;
 
+import static org.apache.commons.pool2.PooledObjectState.RETURNING;
+
 import org.apache.commons.pool2.BaseKeyedPooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
@@ -39,6 +41,13 @@ public class PooledCasHolderFactory
     @Override
     public boolean validateObject(CasKey aKey, PooledObject<CasHolder> aP)
     {
-        return !aP.getObject().isTypeSystemOutdated() && !aP.getObject().isDeleted();
+        // When the holder is being returned, we do not need to keep the holder if the CAS has not
+        // been loaded - no need to cache an empty holder, we can easily recreate it. Keeping it
+        // just gives us a wrong impression of the fill state of the cache.
+        return (aP.getState() != RETURNING || aP.getObject().isCasSet()) &&
+        // If the type system has changed or the CAS being held has been deleted, we can
+        // also discard the holder. This forces a re-load from disk next time the CAS is
+        // accessed.
+                !aP.getObject().isTypeSystemOutdated() && !aP.getObject().isDeleted();
     }
 }

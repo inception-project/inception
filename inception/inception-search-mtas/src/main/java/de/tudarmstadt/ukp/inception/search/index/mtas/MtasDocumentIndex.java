@@ -113,6 +113,7 @@ import de.tudarmstadt.ukp.inception.search.StatisticRequest;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
+import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -1206,7 +1207,7 @@ public class MtasDocumentIndex
         }
     }
 
-    private void indexDocument(String aDocumentTitle, long aSourceDocumentId,
+    private String indexDocument(String aDocumentTitle, long aSourceDocumentId,
             long aAnnotationDocumentId, String aUser, byte[] aBinaryCas)
         throws IOException
     {
@@ -1242,6 +1243,8 @@ public class MtasDocumentIndex
 
         // Add document to the Lucene index
         indexWriter.addDocument(doc);
+
+        return timestamp;
     };
 
     /**
@@ -1296,11 +1299,48 @@ public class MtasDocumentIndex
         IndexWriter indexWriter = getIndexWriter();
 
         // Prepare boolean query with the two obligatory terms (id and timestamp)
-        BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder().add(
-                new TermQuery(new Term(FIELD_ID,
+        BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder() //
+                .add(new TermQuery(new Term(FIELD_ID,
                         String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId))),
-                BooleanClause.Occur.MUST).add(new TermQuery(new Term(FIELD_TIMESTAMP, aTimestamp)),
+                        BooleanClause.Occur.MUST) //
+                .add(new TermQuery(new Term(FIELD_TIMESTAMP, aTimestamp)),
                         BooleanClause.Occur.MUST);
+
+        // Delete document based on the previous query
+        indexWriter.deleteDocuments(booleanQuery.build());
+    }
+
+    /**
+     * Remove a specific document from the index based on its timestamp
+     * 
+     * @param aSourceDocumentId
+     *            The ID of the source document to be removed
+     * @param aAnnotationDocumentId
+     *            The ID of the annotation document to be removed
+     * @param aUser
+     *            The owner of the document to be removed
+     * @param aCurrentVersion
+     *            The timestamp of the document to be kept
+     */
+    private void deindexOldVersionsOfDocument(long aSourceDocumentId, long aAnnotationDocumentId,
+            String aUser, String aCurrentVersion)
+        throws IOException
+    {
+        log.debug(
+                "Removing old versions of document from index in project [{}]({}). sourceId: {}, "
+                        + "annotationId: {}, user: {}, current timestamp: {}",
+                project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId, aUser,
+                aCurrentVersion);
+
+        IndexWriter indexWriter = getIndexWriter();
+
+        // Prepare boolean query with the two obligatory terms (id and timestamp)
+        BooleanQuery.Builder booleanQuery = new BooleanQuery.Builder() //
+                .add(new TermQuery(new Term(FIELD_ID,
+                        String.format("%d/%d", aSourceDocumentId, aAnnotationDocumentId))),
+                        BooleanClause.Occur.MUST) //
+                .add(new TermQuery(new Term(FIELD_TIMESTAMP, aCurrentVersion)),
+                        BooleanClause.Occur.MUST_NOT);
 
         // Delete document based on the previous query
         indexWriter.deleteDocuments(booleanQuery.build());
@@ -1389,18 +1429,17 @@ public class MtasDocumentIndex
     @Override
     public Optional<String> getTimestamp(long aSrcDocId, long aAnnoDocId) throws IOException
     {
-        Optional<String> result = Optional.empty();
-
         if (aSrcDocId == -1 || aAnnoDocId == -1) {
-            return result;
+            return Optional.empty();
         }
+
+        Optional<String> result = Optional.empty();
 
         // Prepare index searcher for accessing index
         ReferenceManager<IndexSearcher> searchManager = getSearcherManager();
         searchManager.maybeRefresh();
         IndexSearcher indexSearcher = searchManager.acquire();
         try {
-
             // Prepare query for the annotation document for this annotation document
             Term term = new Term(FIELD_ID, String.format("%d/%d", aSrcDocId, aAnnoDocId));
 
@@ -1462,11 +1501,23 @@ public class MtasDocumentIndex
         // a version of the annotation document index, we obtain the timestamp of this
         // version, then we add the new version, and finally we remove the old version
         // as identified by the timestamp.
-        Optional<String> oldTimestamp = getTimestamp(srcDocId, annoDocId);
-        indexDocument(aDocument.getName(), srcDocId, annoDocId, user, aBinaryCas);
-        if (oldTimestamp.isPresent()) {
-            deindexDocument(srcDocId, annoDocId, user, oldTimestamp.get());
-        }
+        // Optional<String> oldTimestamp = Optional.empty();
+        // if (!BulkIndexingContext.isFullReindexInProgress()) {
+        // // Looking up the timestamp is slow (because it requires refreshing the searcher to
+        // // get the latest info) and when we do a full index rebuild, it is just slowing things
+        // // down unnecessarily.
+        // oldTimestamp = getTimestamp(srcDocId, annoDocId);
+        // }
+
+        var currentTimestamp = indexDocument(aDocument.getName(), srcDocId, annoDocId, user,
+                aBinaryCas);
+
+        deindexOldVersionsOfDocument(srcDocId, annoDocId, user, currentTimestamp);
+
+        // if (oldTimestamp.isPresent()) {
+        // deindexDocument(srcDocId, annoDocId, user, oldTimestamp.get());
+        // }
+
         scheduleCommit();
     }
 
@@ -1476,7 +1527,10 @@ public class MtasDocumentIndex
         // NOTE: deleting all index versions related to the sourcedoc is ok in comparison to
         // re-indexing annotation documents, because we do this before the search
         // is accessed and therefore do not care about indices not being available for a short time
-        deindexDocument(aSourceDocument.getId(), -1, "");
+        if (!BulkIndexingContext.isFullReindexInProgress()) {
+            deindexDocument(aSourceDocument.getId(), -1, "");
+        }
+
         indexDocument(aSourceDocument.getName(), aSourceDocument.getId(), -1, "", aBinaryCas);
         scheduleCommit();
     }

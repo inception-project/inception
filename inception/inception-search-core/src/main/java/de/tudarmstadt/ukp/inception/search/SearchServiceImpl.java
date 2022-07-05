@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,8 +78,8 @@ import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexFactory;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
+import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import de.tudarmstadt.ukp.inception.search.model.Index;
-import de.tudarmstadt.ukp.inception.search.model.IndexingContext;
 import de.tudarmstadt.ukp.inception.search.model.Monitor;
 import de.tudarmstadt.ukp.inception.search.model.Progress;
 import de.tudarmstadt.ukp.inception.search.scheduling.tasks.IndexAnnotationDocumentTask;
@@ -639,52 +643,49 @@ public class SearchServiceImpl
 
             monitor.setTodo(annotationDocuments.size() + sourceDocuments.size());
 
-            try (var indexContext = IndexingContext.init(aProject, schemaService)) {
-                // Index all the annotation documents
-                for (AnnotationDocument doc : annotationDocuments) {
-                    if (isPerformNoMoreActions(pooledIndex)) {
-                        return;
-                    }
+            // We do not need write access and do not want to add to the exclusive access CAS cache,
+            // so we would normally use SHARED_READ_ONLY_ACCESS. However, that mode can only be used
+            // with AUTO_CAS_UPGRADE which makes things slow. We want NO_CAS_UPGRADE.
+            // So we use UNMANAGED_NON_INITIALIZING_ACCESS for the annotation CASes to avoid
+            // initializing CASes for users who have not started working on a document but for which
+            // an AnnotationDocument item exists (e.g. locked documents).
+            // For INITIAL_CASes, we use UNMANAGED_ACCESS since the INITIAL_CAS should always
+            // exist.
+            final var accessModeAnnotationCas = UNMANAGED_NON_INITIALIZING_ACCESS;
+            final var accessModeInitialCas = UNMANAGED_ACCESS;
+            final var casUpgradeMode = NO_CAS_UPGRADE;
 
-                    // Because serialization is a process which modifies internal data structures of
-                    // the CAS, we need exclusive access the CAS for the time being.
-                    // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
-                    // for https://issues.apache.org/jira/browse/UIMA-6162
-                    byte[] casAsByteArray;
-                    try (CasStorageSession session = CasStorageSession.openNested()) {
-                        if (!documentService.existsCas(doc)) {
-                            // There might be an AnnotationDocument (e.g. if a document is locked)
-                            // but unless there also is a CAS, we do not really need to index.
-                            // If we did, reading the CAS for the AnnotationDocument may actually
-                            // cause the CAS to be created from the INITIAL_CAS which is not what
-                            // we want here.
-                            monitor.incDone();
-                            continue;
-                        }
-                        casAsByteArray = casToByteArray(documentService.readAnnotationCas(doc));
-                    }
-                    indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
-
-                    monitor.incDone();
-                }
-
+            try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true)) {
                 // Index all the source documents
                 for (SourceDocument doc : sourceDocuments) {
                     if (isPerformNoMoreActions(pooledIndex)) {
                         return;
                     }
 
-                    // Because serialization is a process which modifies internal data structures of
-                    // the CAS, we need exclusive access the CAS for the time being.
-                    // This can be relaxed after upgrading to UIMA 3.2.0 which includes a fix for
-                    // for https://issues.apache.org/jira/browse/UIMA-6162
-                    byte[] casAsByteArray;
                     try (CasStorageSession session = CasStorageSession.openNested()) {
-                        casAsByteArray = casToByteArray(
-                                documentService.createOrReadInitialCas(doc));
+                        byte[] casAsByteArray = casToByteArray(documentService
+                                .createOrReadInitialCas(doc, casUpgradeMode, accessModeInitialCas));
+                        indexDocument(pooledIndex, doc, casAsByteArray);
                     }
 
-                    indexDocument(pooledIndex, doc, casAsByteArray);
+                    monitor.incDone();
+                }
+
+                // Index all the annotation documents
+                for (AnnotationDocument doc : annotationDocuments) {
+                    if (isPerformNoMoreActions(pooledIndex)) {
+                        return;
+                    }
+
+                    try (CasStorageSession session = CasStorageSession.openNested()) {
+                        byte[] casAsByteArray = casToByteArray(
+                                documentService.readAnnotationCas(doc.getDocument(), doc.getUser(),
+                                        casUpgradeMode, accessModeAnnotationCas));
+                        indexDocument(pooledIndex, doc, "reindex", casAsByteArray);
+                    }
+                    catch (FileNotFoundException e) {
+                        // Ignore it if a annotation CAS does not exist yet
+                    }
 
                     monitor.incDone();
                 }

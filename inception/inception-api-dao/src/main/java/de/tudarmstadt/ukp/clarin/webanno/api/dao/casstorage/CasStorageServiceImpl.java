@@ -41,6 +41,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
@@ -93,6 +95,11 @@ public class CasStorageServiceImpl
     private final AnnotationSchemaService schemaService;
     private final CasStorageProperties casStorageProperties;
 
+    private final int snapshotInterval = 1000;
+    private final int warningThreshold = 50;
+    private final AtomicLong lastExclusiveAccessPoolSnapshotUpdate = new AtomicLong();
+    private final AtomicInteger lastExclusiveAccessPoolSnapshotSize = new AtomicInteger();
+
     private final GenericKeyedObjectPool<CasKey, CasHolder> exclusiveAccessPool;
     private final Set<CasHolder> exclusiveAccessHolders = synchronizedSet(
             newSetFromMap(new WeakHashMap<>()));
@@ -134,11 +141,9 @@ public class CasStorageServiceImpl
         // Setting this to 0 because we do not want any CAS to stick around in memory indefinitely
         config.setMinIdlePerKey(0);
         // Run an evictor thread every 5 minutes
-        config.setTimeBetweenEvictionRunsMillis(
-                casStorageProperties.getIdleCasEvictionDelay().toMillis());
+        config.setTimeBetweenEvictionRuns(casStorageProperties.getIdleCasEvictionDelay());
         // Allow the evictor to drop idle CASes from the pool after 5 minutes (i.e. on each run)
-        config.setMinEvictableIdleTimeMillis(
-                casStorageProperties.getIdleCasEvictionDelay().toMillis());
+        config.setMinEvictableIdleTime(casStorageProperties.getIdleCasEvictionDelay());
         // Allow the evictor to drop all idle CASes on every eviction run
         config.setNumTestsPerEvictionRun(-1);
         // Allow viewing the pool in JMX
@@ -150,7 +155,7 @@ public class CasStorageServiceImpl
         // is returned
         config.setTestOnReturn(true);
         config.setTestOnBorrow(true);
-        config.setMaxWaitMillis(casStorageProperties.getCasBorrowWaitTimeout().toMillis());
+        config.setMaxWait(casStorageProperties.getCasBorrowWaitTimeout());
         // We do not have to set maxTotal because the default is already to have no limit (-1)
         exclusiveAccessPool = new GenericKeyedObjectPool<>(new PooledCasHolderFactory(), config);
 
@@ -394,6 +399,11 @@ public class CasStorageServiceImpl
                             (key) -> CasHolder.of(key,
                                     () -> getRealCas(readOrCreateUnmanagedCas(aDocument, aUsername,
                                             aSupplier, aUpgradeMode))));
+                    var size = getSharedAccessCacheSize();
+                    var max = casStorageProperties.getSharedCasCacheSize();
+                    if (size > (max * 0.9)) {
+                        log.warn("Shared access CAS cache is >= 90% full: {} / {}", size, max);
+                    }
                 }
             }
             // else if the special bypass mode is requested, then we fetch directly from disk
@@ -447,6 +457,21 @@ public class CasStorageServiceImpl
             // invalid we do never have to explicitly remove the holder from the set
             exclusiveAccessHolders.add(holder);
             log.trace("Added to exclusiveAccessHolders: {}", holder);
+
+            if (currentTimeMillis()
+                    - lastExclusiveAccessPoolSnapshotUpdate.get() > snapshotInterval) {
+                lastExclusiveAccessPoolSnapshotUpdate.set(System.currentTimeMillis());
+                var currentSize = exclusiveAccessPool.getNumActive()
+                        + exclusiveAccessPool.getNumIdle();
+                var lastSize = lastExclusiveAccessPoolSnapshotSize.getAndSet(currentSize);
+
+                if (currentSize > (lastSize + warningThreshold)) {
+                    log.warn(
+                            "Exclusive CAS access pool sizes increased strongly in the last {}ms: {} -> {}",
+                            snapshotInterval, lastSize, currentSize);
+                }
+            }
+
             logExclusiveAccessHolders();
             return holder;
         }
