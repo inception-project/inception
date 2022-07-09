@@ -284,7 +284,7 @@ public class VisualPDFTextStripper
                 ArrayUtils.reverse(utf16Codepoints);
                 var candidate = new String(utf16Codepoints);
                 if (candidate.equals(actualSubstring)) {
-                    normalizedUnicode = candidate;
+                    normalizedUnicode = actualSubstring;
                 }
             }
 
