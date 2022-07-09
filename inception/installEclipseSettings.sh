@@ -73,6 +73,7 @@ installPrefs inception-log
 installPrefs inception-model
 installPrefs inception-model-export
 installPrefs inception-pdf-editor
+installPrefs inception-pdf-editor2
 installPrefs inception-plugin-parent
 installPrefs inception-plugin-api
 installPrefs inception-plugin-manager

@@ -44,6 +44,7 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -75,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
@@ -99,6 +101,8 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 public class AnnotationPage
     extends AnnotationPageBase
 {
+    private static final String MID_EDITOR = "editor";
+
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationPage.class);
@@ -275,6 +279,14 @@ public class AnnotationPage
     {
         AnnotatorState state = getModelObject();
 
+        if (state.getDocument() == null) {
+            centerArea.addOrReplace(new EmptyPanel(MID_EDITOR).setOutputMarkupId(true));
+            state.setPagingStrategy(new NoPagingStrategy());
+            centerArea.addOrReplace(
+                    state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, getModel()));
+            return;
+        }
+
         AnnotationEditorState editorState = preferencesService
                 .loadDefaultTraitsForProject(KEY_EDITOR_STATE, getProject());
 
@@ -296,7 +308,7 @@ public class AnnotationPage
         }
 
         state.setEditorFactoryId(factory.getBeanName());
-        annotationEditor = factory.create("editor", getModel(), detailEditor, this::getEditorCas);
+        annotationEditor = factory.create(MID_EDITOR, getModel(), detailEditor, this::getEditorCas);
         annotationEditor.setOutputMarkupPlaceholderTag(true);
 
         centerArea.addOrReplace(annotationEditor);
@@ -514,12 +526,14 @@ public class AnnotationPage
             return;
         }
 
-        try {
-            annotationEditor.requestRender(aTarget);
-        }
-        catch (Exception e) {
-            LOG.warn("Unable to refresh annotation editor, forcing page refresh", e);
-            throw new RestartResponseException(getPage());
+        if (annotationEditor != null) {
+            try {
+                annotationEditor.requestRender(aTarget);
+            }
+            catch (Exception e) {
+                LOG.warn("Unable to refresh annotation editor, forcing page refresh", e);
+                throw new RestartResponseException(getPage());
+            }
         }
 
         // Update URL for current document

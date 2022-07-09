@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/spdx/spdx-spec/v2.2.2/schemas/spdx-schema.json",
+  "packages": [
+    {
+      "name": "PDFAnno",
+      "versionInfo": "0.5.1",
+      "originator": "Hiroyuki Shindo, yoheiMune",
+      "homepage": "https://github.com/paperai/pdfanno",
+      "licenseDeclared": "MIT",
+      "description": "This is a heavily stripped down and modified version of PDFAnno",
+      "hasFiles": [
+        "src/main/ts/src/pdfanno/**"
+      ]
+    },
+    {
+      "name": "PDF.js Viewer",
+      "versionInfo": "2.14.305",
+      "originator": "Mozilla Foundation",
+      "homepage": "https://github.com/mozilla/pdf.js/",
+      "licenseDeclared": "Apache-2.0",
+      "description": "Just a stripped down and modified frontend part is embedded, rest is obtained via npm",
+      "hasFiles": [
+        "src/main/ts/pdfjs-web/**/*"
+      ]
+    }
+  ]
+}
