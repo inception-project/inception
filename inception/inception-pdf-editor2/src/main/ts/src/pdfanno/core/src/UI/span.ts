@@ -88,14 +88,14 @@ function setPositions (e: MouseEvent) {
     if (!selectionBegin || !selectionEnd) {
       initPosition = glyph.begin
       selectionBegin = glyph.begin
-      selectionEnd = glyph.begin
+      selectionEnd = glyph.end
     } else {
       if (glyph.begin < initPosition) {
         selectionBegin = glyph.begin
         selectionEnd = initPosition
       } else {
         selectionBegin = initPosition
-        selectionEnd = glyph.begin + 1
+        selectionEnd = glyph.end
       }
     }
   }

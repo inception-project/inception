@@ -48,8 +48,6 @@ class VisualPDFTextStripperTest
     {
         return asList(new File("src/test/resources/pdfbox-testfiles/").listFiles()).stream()
                 .filter(file -> file.getName().endsWith(".pdf")) //
-                // We have trouble with RTL text in PDF atm
-                .filter(file -> !asList("FC60_Times.pdf", "hello3.pdf").contains(file.getName())) //
                 .collect(Collectors.toList());
     }
 
@@ -87,9 +85,15 @@ class VisualPDFTextStripperTest
 
     @ParameterizedTest(name = "{index}: reading PDF file {0}")
     @MethodSource("pdfFiles")
-    void thatVModelEncodedInCasCanBeRecovered(File aFile) throws Exception
+    void thatVModelEncodedInCasCanBeRecoveredSort(File aFile) throws Exception
     {
         assertRecoverableVisualModel(aFile, true);
+    }
+
+    @ParameterizedTest(name = "{index}: reading PDF file {0}")
+    @MethodSource("pdfFiles")
+    void thatVModelEncodedInCasCanBeRecoveredNoSort(File aFile) throws Exception
+    {
         assertRecoverableVisualModel(aFile, false);
     }
 
@@ -119,22 +123,22 @@ class VisualPDFTextStripperTest
             assertThat(actualPage.getChunks()).hasSameSizeAs(expectedPage.getChunks());
 
             for (int l = 0; l < expectedPage.getChunks().size(); l++) {
-                var expectedLine = expectedPage.getChunks().get(l);
-                var actualLine = actualPage.getChunks().get(l);
+                var expectedChunk = expectedPage.getChunks().get(l);
+                var actualChunk = actualPage.getChunks().get(l);
 
-                assertThat(actualLine.getGlyphs()) //
-                        .hasSameSizeAs(expectedLine.getGlyphs());
-                assertThat(actualLine) //
+                assertThat(actualChunk) //
                         .usingRecursiveComparison() //
                         .ignoringFields("glyphs") //
-                        .isEqualTo(expectedLine);
+                        .isEqualTo(expectedChunk);
+                assertThat(actualChunk.getGlyphs()) //
+                        .hasSameSizeAs(expectedChunk.getGlyphs());
 
-                for (int g = 0; g < expectedLine.getGlyphs().size(); g++) {
-                    var expectedGlyph = expectedLine.getGlyphs().get(g);
-                    var actualGlyph = actualLine.getGlyphs().get(g);
+                for (int g = 0; g < expectedChunk.getGlyphs().size(); g++) {
+                    var expectedGlyph = expectedChunk.getGlyphs().get(g);
+                    var actualGlyph = actualChunk.getGlyphs().get(g);
 
                     assertThat(actualGlyph) //
-                            .as("Page %d line %d glyph %d", p, l, g) //
+                            .as("Page %d chunk %d glyph %d", p, l, g) //
                             .usingRecursiveComparison() //
                             .comparingOnlyFields("page", "begin", "unicode", "base") //
                             .isEqualTo(expectedGlyph);

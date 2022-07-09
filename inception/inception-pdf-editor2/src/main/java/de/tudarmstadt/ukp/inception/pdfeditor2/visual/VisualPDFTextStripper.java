@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils.
 import static de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils.makeFlipAT;
 import static de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils.makeRotateAT;
 import static de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils.normalizeWord;
+import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.joining;
 
 import java.awt.Shape;
@@ -34,7 +35,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.translate.UnicodeEscaper;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -42,7 +45,6 @@ import org.apache.pdfbox.text.TextPosition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox.GlyphPositionUtils;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VChunk;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VGlyph;
 import de.tudarmstadt.ukp.inception.pdfeditor2.visual.model.VModel;
@@ -78,7 +80,7 @@ public class VisualPDFTextStripper
     @Override
     public void processPage(PDPage aPage) throws IOException
     {
-        log.debug("Processing page {}", getCurrentPageNo());
+        log.trace("Processing page {}", getCurrentPageNo());
 
         fontPositionCache = new HashMap<>();
 
@@ -99,6 +101,10 @@ public class VisualPDFTextStripper
         String pageText = getBuffer().subSequence(pageBeginOffset, pageEndOffset).toString();
 
         PDRectangle visibleArea = getCurrentPage().getCropBox();
+
+        // When we recover chunks from the CAS, they are sorted by the usual annotation order.
+        // We sort here already to have the same order as when we recover from the CAS.
+        chunks.sort(comparing(VChunk::getBegin));
 
         pages.add(new VPage(pageIndex, visibleArea.getWidth(), visibleArea.getHeight(),
                 pageBeginOffset, pageEndOffset, pageText, chunks));
@@ -151,8 +157,10 @@ public class VisualPDFTextStripper
             }
         }
 
-        log.debug("Removed {} of {} characters because they are outside the visible area ({})",
-                removed, total, visibleArea, visibleArea);
+        if (removed > 0) {
+            log.debug("Removed {} of {} characters because they are outside the visible area ({})",
+                    removed, total, visibleArea, visibleArea);
+        }
     }
 
     @Override
@@ -160,72 +168,176 @@ public class VisualPDFTextStripper
     {
         assertAlignedTextPositions(aText, aTextPositions);
 
-        // assert aTextPositions.stream().mapToDouble(TextPosition::getDir).distinct()
-        // .count() <= 1 : "All glyphs in the string should have the same direction";
-
         int unicodeLength;
-        assert (unicodeLength = aTextPositions.stream().map(TextPosition::getUnicode)
-                .map(GlyphPositionUtils::normalizeWord).mapToInt(String::length).sum()) == aText
-                        .length() : "Line length [" + aText.length()
-                                + "] should match glyph unicode length [" + unicodeLength + "] - ["
-                                + aText + "] <-> ["
-                                + aTextPositions.stream().map(TextPosition::getUnicode)
-                                        .map(GlyphPositionUtils::normalizeWord).collect(joining())
-                                + "]";
+        assert (unicodeLength = aTextPositions.stream() //
+                .map(TextPosition::getUnicode)//
+                .map(g -> normalizeWord(g, null))//
+                .mapToInt(String::length).sum()) == aText.length() : "Line length ["
+                        + aText.length() + "] should match glyph unicode length [" + unicodeLength
+                        + "] - [" + aText + "] <-> [" + aTextPositions.stream() //
+                                .map(TextPosition::getUnicode) //
+                                .map(g -> normalizeWord(g, null)) //
+                                .collect(joining())
+                        + "]";
 
-        var cs = new ProtoVChunk(getBuffer().length(), aText);
+        var originalWord = aTextPositions.stream().map(TextPosition::getUnicode).collect(joining());
+        var glyphOrder = new ArrayList<Integer>();
+        var text = normalizeWord(originalWord, glyphOrder);
 
-        for (var pos : aTextPositions) {
-            // Start a new chunk if the direction changes
-            var dir = ((pos.getRotation() - pos.getDir()) + 360) % 360;
-            if (dir != cs.dir && cs.cursor > 0) {
-                chunks.add(cs.endChunk());
-                cs.dir = dir;
+        assert text.equals(aText) : "Text from PDFbox should match text from TextPositions";
+
+        if (glyphOrder.isEmpty()) {
+            var cs = new ProtoVChunk(getBuffer().length(), aText, 0, false);
+
+            for (var pos : aTextPositions) {
+                // Start a new chunk if the direction changes
+                var dir = ((pos.getRotation() - pos.getDir()) + 360) % 360;
+                if (dir != cs.dir && !cs.isEmpty()) {
+                    chunks.add(cs.endChunk(cs.end, dir));
+                }
+
+                Rectangle2D.Double f = fontPositionCache.get(pos);
+
+                // Account for glyphs that were mapped to more than one character by normalization
+                // e.g. expanded ligatures
+                String normalizedUnicode = normalizeWord(pos.getUnicode(), null);
+
+                normalizedUnicode = reconcileGlyphWithText(aText, false, normalizedUnicode, cs.end);
+
+                var glyph = new VGlyph(cs.offset + cs.end, pageIndex, normalizedUnicode, cs.dir, f);
+                cs.addGlyph(glyph);
             }
 
-            Rectangle2D.Double f = fontPositionCache.get(pos);
-
-            // Account for glyphs that were mapped to more than one character by normalization
-            // e.g. expanded ligatures
-            String normalizedUnicode = normalizeWord(pos.getUnicode());
-            assert aText.startsWith(normalizedUnicode, cs.cursor + cs.offset) : "Line text at "
-                    + cs.cursor + cs.offset + " should start with [" + normalizedUnicode
-                    + "] but was [" + aText.substring(cs.cursor + cs.offset) + "]";
-
-            var glyph = new VGlyph(cs.cursor + cs.begin, pageIndex, normalizedUnicode, cs.dir, f);
-            cs.addGlyph(glyph);
+            if (!cs.isEmpty()) {
+                chunks.add(cs.endFinalChunk());
+            }
         }
+        else {
+            // Bidi
+            var cs = new ProtoVChunk(getBuffer().length(), aText, glyphOrder.get(0),
+                    glyphOrder.get(0) != 0);
+            int i = 0;
+            for (var pos : aTextPositions) {
+                int gPos = glyphOrder.get(i);
 
-        if (cs.cursor > 0) {
-            chunks.add(cs.endChunk());
+                var rtl = cs.isEmpty() ? cs.rtl
+                        : (gPos > glyphOrder.get(i - 1) + 1 ? !cs.rtl : cs.rtl);
+                var dir = cs.isEmpty() ? cs.dir : ((pos.getRotation() - pos.getDir()) + 360) % 360;
+                Rectangle2D.Double f = fontPositionCache.get(pos);
+
+                if ((dir != cs.dir) || (rtl != cs.rtl)) {
+                    // Start a new chunk if the direction changes or flips RTL/LTR
+                    chunks.add(cs.endChunk(gPos, dir, rtl));
+                }
+                else {
+                    // Also start a new chunk if we cannot properly recover the extends from the
+                    // sequence of glyph base positions
+                    if (!cs.glyphs.isEmpty()) {
+                        var protoGlyph = new VGlyph(0, 0, "", 0, f);
+                        var lastGlyph = cs.glyphs.get(cs.glyphs.size() - 1);
+                        // Negative gap is an overlap - we also do not want huge overlaps
+                        var gap = protoGlyph.getBase()
+                                - (lastGlyph.getBase() + lastGlyph.getExtent());
+                        // We calculate the tolerance based on the font size (line height)
+                        var tolerance = protoGlyph.getCoExtent() * 0.025;
+                        if (Math.abs(gap) > tolerance) {
+                            log.debug("Gap/overlap too large [abs({}) > {}] - starting new chunk",
+                                    gap, tolerance);
+                            chunks.add(cs.endChunk(gPos, dir, rtl));
+                        }
+                    }
+                }
+
+                // Account for glyphs that were mapped to more than one character by normalization
+                // e.g. expanded ligatures
+                String normalizedUnicode = normalizeWord(pos.getUnicode(), null);
+                var begin = cs.rtl ? gPos - (normalizedUnicode.length() - 1) : gPos;
+
+                normalizedUnicode = reconcileGlyphWithText(aText, rtl, normalizedUnicode, begin);
+
+                var glyph = new VGlyph(cs.offset + begin, pageIndex, normalizedUnicode, cs.dir, f);
+                cs.addGlyph(glyph);
+
+                i += normalizedUnicode.length();
+            }
+
+            if (!cs.isEmpty()) {
+                chunks.add(cs.endFinalChunk());
+            }
         }
 
         super.writeString(aText, aTextPositions);
     }
 
+    private String reconcileGlyphWithText(String aText, boolean rtl, String normalizedUnicode,
+            int begin)
+    {
+        String actualSubstring = aText.substring(begin, begin + normalizedUnicode.length());
+
+        if (normalizedUnicode.length() == 1) {
+            assert actualSubstring.equals(normalizedUnicode) : "Glyph [" + normalizedUnicode
+                    + "] misaligned with text [" + actualSubstring + "]";
+        }
+        else {
+            if (rtl && normalizedUnicode.length() > 1) {
+                char[] utf16Codepoints = normalizedUnicode.toCharArray();
+                ArrayUtils.reverse(utf16Codepoints);
+                var candidate = new String(utf16Codepoints);
+                if (candidate.equals(actualSubstring)) {
+                    normalizedUnicode = candidate;
+                }
+            }
+
+            if (!actualSubstring.equals(normalizedUnicode)) {
+                var nue = UnicodeEscaper.above(0).translate(normalizedUnicode);
+                var ase = UnicodeEscaper.above(0).translate(actualSubstring);
+
+                log.warn(
+                        "Glyph [{}]({}) misaligned with text [{}]({}) - using actual text for glyph",
+                        normalizedUnicode, nue, actualSubstring, ase);
+
+                normalizedUnicode = actualSubstring;
+            }
+        }
+        return normalizedUnicode;
+    }
+
     private class ProtoVChunk
     {
         final String text;
-        final int begin;
-        int offset = 0;
+        final int offset;
 
         List<VGlyph> glyphs = new ArrayList<>();
-        int cursor = 0;
+
+        int begin = 0;
+        int end = 0;
+
         float dir = 0;
+        boolean rtl = false;
+
         float x0 = Float.MAX_VALUE;
         float y0 = Float.MAX_VALUE;
         float y1 = Float.MIN_VALUE;
         float x1 = Float.MIN_VALUE;
 
-        public ProtoVChunk(int aBegin, String aText)
+        public ProtoVChunk(int aOffset, String aText, int aBegin, boolean aRtl)
         {
-            begin = aBegin;
+            offset = aOffset;
             text = aText;
+            begin = aBegin;
+            end = aBegin;
+            rtl = aRtl;
+
+            if (rtl) {
+                begin++;
+                end++;
+            }
         }
 
         void addGlyph(VGlyph glyph)
         {
-            cursor += glyph.getUnicode().length();
+            begin = Math.min(begin, glyph.getBegin() - offset);
+            end = Math.max(end, glyph.getEnd() - offset);
 
             x1 = Math.max(x1, glyph.getFontX() + glyph.getFontWidth());
             y1 = Math.max(y1, glyph.getFontY() + glyph.getFontHeight());
@@ -235,32 +347,56 @@ public class VisualPDFTextStripper
             glyphs.add(glyph);
         }
 
-        VChunk endChunk()
+        VChunk endFinalChunk()
         {
-            int end = begin + offset + cursor;
+            return endChunk(0, 0, false);
+        }
+
+        VChunk endChunk(int aBegin, float aDir)
+        {
+            return endChunk(aBegin, aDir, false);
+        }
+
+        VChunk endChunk(int aNewStart, float aNewDir, boolean aNewRtl)
+        {
             var w = x1 - x0;
             var h = y1 - y0;
 
-            var chunkText = text.substring(offset, offset + cursor);
-            VChunk chunk = new VChunk(begin, end, chunkText, dir, x0, y0, w, h, glyphs);
+            glyphs.sort(comparing(VGlyph::getBegin));
 
-            offset += cursor;
+            var chunkText = text.substring(begin, end);
+            VChunk chunk = new VChunk(offset + begin, offset + end, chunkText, dir, x0, y0, w, h,
+                    glyphs);
+
+            begin = aNewStart;
+            end = aNewStart;
+
+            dir = aNewDir;
+            rtl = aNewRtl;
             glyphs = new ArrayList<>();
-            cursor = 0;
-            dir = 0;
             x0 = Float.MAX_VALUE;
             y0 = Float.MAX_VALUE;
             y1 = Float.MIN_VALUE;
             x1 = Float.MIN_VALUE;
 
+            if (rtl) {
+                begin++;
+                end++;
+            }
+
             return chunk;
+        }
+
+        boolean isEmpty()
+        {
+            return begin == end;
         }
     }
 
     private void assertAlignedTextPositions(String aText, List<TextPosition> aTextPositions)
     {
         int cumulativePositionLength = aTextPositions.stream()
-                .mapToInt(t -> normalizeWord(t.getUnicode()).length()) //
+                .mapToInt(t -> normalizeWord(t.getUnicode(), null).length()) //
                 .sum();
 
         if (aText.length() != cumulativePositionLength) {

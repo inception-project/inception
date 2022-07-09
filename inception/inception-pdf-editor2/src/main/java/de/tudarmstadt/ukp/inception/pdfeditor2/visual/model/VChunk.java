@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.inception.pdfeditor2.visual.model;
 
 import java.util.List;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
+
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
@@ -95,5 +98,13 @@ public class VChunk
     public float getW()
     {
         return w;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("text", text)
+                .append("begin", begin).append("end", end).append("dir", dir).append("x", x)
+                .append("y", y).append("w", w).append("h", h).toString();
     }
 }

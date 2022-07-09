@@ -19,18 +19,33 @@ package de.tudarmstadt.ukp.inception.pdfeditor2.pdfbox;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.lang.invoke.MethodHandles;
+import java.text.Bidi;
 import java.text.Normalizer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType3Font;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GlyphPositionUtils
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     // Source:
     // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/examples/src/main/java/org/apache/pdfbox/examples/util/DrawPrintTextLocations.java#L220
     public static AffineTransform makeFlipAT(PDPage pdPage)
@@ -150,7 +165,7 @@ public class GlyphPositionUtils
      *            Word to normalize
      * @return Normalized word
      */
-    public static String normalizeWord(String word)
+    public static String normalizeWord(String word, List<Integer> glyphOrder)
     {
         StringBuilder builder = null;
         int p = 0;
@@ -185,13 +200,159 @@ public class GlyphPositionUtils
         }
 
         if (builder == null) {
-            return word;
-            // return handleDirection(word);
+            return handleDirection(word, glyphOrder);
         }
         else {
             builder.append(word, p, q);
-            return builder.toString();
-            // return handleDirection(builder.toString());
+            return handleDirection(builder.toString(), glyphOrder);
         }
+    }
+
+    // source:
+    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1756
+    /**
+     * Handles the LTR and RTL direction of the given words. The whole implementation stands and
+     * falls with the given word. If the word is a full line, the results will be the best. If the
+     * word contains of single words or characters, the order of the characters in a word or words
+     * in a line may wrong, due to RTL and LTR marks and characters!
+     * 
+     * Based on
+     * http://www.nesterovsky-bros.com/weblog/2013/07/28/VisualToLogicalConversionInJava.aspx
+     * 
+     * @param word
+     *            The word that shall be processed
+     * @return new word with the correct direction of the containing characters
+     */
+    static private String handleDirection(String word, List<Integer> glyphOrder)
+    {
+        Bidi bidi = new Bidi(word, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT);
+
+        // if there is pure LTR text no need to process further
+        if (!bidi.isMixed() && bidi.getBaseLevel() == Bidi.DIRECTION_LEFT_TO_RIGHT) {
+            return word;
+        }
+
+        // collect individual bidi information
+        int runCount = bidi.getRunCount();
+        byte[] levels = new byte[runCount];
+        Integer[] runs = new Integer[runCount];
+
+        for (int i = 0; i < runCount; i++) {
+            levels[i] = (byte) bidi.getRunLevel(i);
+            runs[i] = i;
+        }
+
+        // reorder individual parts based on their levels
+        Bidi.reorderVisually(levels, 0, runs, 0, runCount);
+
+        // collect the parts based on the direction within the run
+        StringBuilder result = new StringBuilder();
+
+        for (int i = 0; i < runCount; i++) {
+            int index = runs[i];
+            int start = bidi.getRunStart(index);
+            int end = bidi.getRunLimit(index);
+
+            int level = levels[index];
+
+            if ((level & 1) != 0) {
+                while (--end >= start) {
+                    char character = word.charAt(end);
+                    if (Character.isMirrored(word.codePointAt(end))) {
+                        if (MIRRORING_CHAR_MAP.containsKey(character)) {
+                            result.append(MIRRORING_CHAR_MAP.get(character));
+                            if (glyphOrder != null) {
+                                glyphOrder.add(end);
+                            }
+                        }
+                        else {
+                            result.append(character);
+                            if (glyphOrder != null) {
+                                glyphOrder.add(end);
+                            }
+                        }
+                    }
+                    else {
+                        result.append(character);
+                        if (glyphOrder != null) {
+                            glyphOrder.add(end);
+                        }
+                    }
+                }
+            }
+            else {
+                result.append(word, start, end);
+                if (glyphOrder != null) {
+                    for (int p = start; p < end; p++) {
+                        glyphOrder.add(p);
+                    }
+                }
+            }
+        }
+
+        return result.toString();
+    }
+
+    // source:
+    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1822
+    private static Map<Character, Character> MIRRORING_CHAR_MAP = new HashMap<Character, Character>();
+
+    // source:
+    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1824
+    static {
+        String path = "/org/apache/pdfbox/resources/text/BidiMirroring.txt";
+        try (InputStream input = new BufferedInputStream(
+                PDFTextStripper.class.getResourceAsStream(path))) {
+            parseBidiFile(input);
+        }
+        catch (IOException e) {
+            LOG.warn("Could not parse BidiMirroring.txt, mirroring char map will be empty: "
+                    + e.getMessage());
+        }
+    }
+
+    // source:
+    // https://github.com/apache/pdfbox/blob/10d1e91af4eb9a06af7e95460533bf3ebc1b1280/pdfbox/src/main/java/org/apache/pdfbox/text/PDFTextStripper.java#L1856
+    /**
+     * This method parses the bidi file provided as inputstream.
+     * 
+     * @param inputStream
+     *            - The bidi file as inputstream
+     * @throws IOException
+     *             if any line could not be read by the LineNumberReader
+     */
+    private static void parseBidiFile(InputStream inputStream) throws IOException
+    {
+        LineNumberReader rd = new LineNumberReader(new InputStreamReader(inputStream));
+
+        do {
+            String s = rd.readLine();
+            if (s == null) {
+                break;
+            }
+
+            int comment = s.indexOf('#'); // ignore comments
+            if (comment != -1) {
+                s = s.substring(0, comment);
+            }
+
+            if (s.length() < 2) {
+                continue;
+            }
+
+            StringTokenizer st = new StringTokenizer(s, ";");
+            int nFields = st.countTokens();
+            Character[] fields = new Character[nFields];
+            for (int i = 0; i < nFields; i++) {
+                fields[i] = (char) Integer.parseInt(st.nextToken().trim(), 16);
+            }
+
+            if (fields.length == 2) {
+                // initialize the MIRRORING_CHAR_MAP
+                MIRRORING_CHAR_MAP.put(fields[0], fields[1]);
+            }
+
+        }
+        while (true);
     }
 }

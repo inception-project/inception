@@ -29,7 +29,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonPropertyOrder(value = { "begin", "unicode", "base", "extent" })
+@JsonPropertyOrder(value = { "begin", "end", "unicode", "base", "extent" })
 public class VGlyph
     implements Serializable
 {
@@ -37,6 +37,7 @@ public class VGlyph
 
     private final int page;
     private final int begin;
+    private final int end;
     private final String unicode;
     private final float dir;
     private final float base;
@@ -57,6 +58,7 @@ public class VGlyph
     {
         page = aPage;
         begin = aBegin;
+        end = begin + aUnicode.length();
         unicode = aUnicode;
         dir = aDir;
         fontX = aFontX;
@@ -81,7 +83,7 @@ public class VGlyph
 
     public int getEnd()
     {
-        return begin + unicode.length();
+        return end;
     }
 
     public String getUnicode()
@@ -122,6 +124,16 @@ public class VGlyph
     public float getExtent()
     {
         return extent;
+    }
+
+    public float getCoExtent()
+    {
+        if (dir == 0 || dir == 180) {
+            return fontHeight;
+        }
+        else {
+            return fontWidth;
+        }
     }
 
     @Override

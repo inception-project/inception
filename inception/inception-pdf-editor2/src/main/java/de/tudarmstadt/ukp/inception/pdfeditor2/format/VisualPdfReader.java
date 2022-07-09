@@ -122,6 +122,9 @@ public class VisualPdfReader
                 List<VGlyph> vGlyphs = new ArrayList<>();
                 IntegerArray charWidths = pdfChunk.getC();
                 FloatArray glyphStarts = pdfChunk.getG();
+
+                var rtl = glyphStarts.get(glyphStarts.size() - 1) == pdfChunk.getX();
+
                 float b0, le, ef;
                 switch ((int) d) {
                 case 0:
@@ -148,12 +151,23 @@ public class VisualPdfReader
                     throw new IllegalStateException(
                             "Only directions 0, 90, 180, 270 supported: " + d);
                 }
+
                 int begin = pdfChunk.getBegin();
                 int glyphCount = glyphStarts.size();
                 for (int i = 0; i < glyphCount; i++) {
-                    var b = glyphStarts.get(i);
-                    var isLastGlyphInChunk = i == glyphCount - 1;
-                    var e = ((isLastGlyphInChunk ? b0 + le : glyphStarts.get(i + 1)) - b) * ef;
+
+                    float b, e;
+                    if (rtl) {
+                        var isFirstGlyphInChunk = i == 0;
+                        b = glyphStarts.get(i);
+                        e = ((isFirstGlyphInChunk ? b0 + le : glyphStarts.get(i - 1)) - b) * ef;
+                    }
+                    else {
+                        var isLastGlyphInChunk = i == glyphCount - 1;
+                        b = glyphStarts.get(i);
+                        e = ((isLastGlyphInChunk ? b0 + le : glyphStarts.get(i + 1)) - b) * ef;
+                    }
+
                     // assert e >= 0;
                     float x = (d == 0 || d == 180) ? b : pdfChunk.getX();
                     float y = (d == 0 || d == 180) ? pdfChunk.getY() : b;

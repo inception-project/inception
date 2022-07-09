@@ -19,6 +19,7 @@ import { VPage } from './VPage'
 
 export type JsonVGlyph = [
   begin: number,
+  end: number,
   glyph: string,
   base: number,
   extent: number
