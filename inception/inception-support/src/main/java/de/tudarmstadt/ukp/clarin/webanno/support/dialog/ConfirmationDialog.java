@@ -20,9 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.support.dialog;
 import java.io.Serializable;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
+import org.apache.wicket.extensions.ajax.markup.html.modal.theme.DefaultTheme;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -33,12 +32,13 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
 public class ConfirmationDialog
-    extends ModalWindow
+    extends BootstrapModalDialog
 {
     private static final long serialVersionUID = 5194857538069045172L;
 
@@ -68,33 +68,18 @@ public class ConfirmationDialog
 
         titleModel = aTitle;
         contentModel = aContent;
+        add(new DefaultTheme());
 
         setOutputMarkupId(true);
-        setInitialWidth(620);
-        setInitialHeight(440);
-        setResizable(true);
-        setWidthUnit("px");
-        setHeightUnit("px");
-        setCssClassName("w_blue w_flex");
-        showUnloadConfirmation(false);
+
+        trapFocus();
+        // closeOnEscape();
+        // closeOnClick();
 
         setModel(new CompoundPropertyModel<>(null));
 
-        setContent(contentPanel = new ContentPanel(getContentId(), getModel()));
-
-        setCloseButtonCallback((_target) -> {
-            onCancelInternal(_target);
-            return true;
-        });
-    }
-
-    @Override
-    protected void onComponentTag(final ComponentTag tag)
-    {
-        super.onComponentTag(tag);
-        // CSP doesn't like the style attribute being used, so we use the Bootstrap d-none class
-        tag.remove("style");
-        tag.append("class", "d-none", " ");
+        contentPanel = new ContentPanel(ModalDialog.CONTENT_ID, getModel());
+        setContent(contentPanel);
     }
 
     public IModel<String> getTitleModel()
@@ -138,19 +123,17 @@ public class ConfirmationDialog
         return (State) getDefaultModelObject();
     }
 
-    @Override
-    public void show(IPartialPageRequestHandler aTarget)
+    public void show(AjaxRequestTarget aTarget)
     {
         contentModel.detach();
 
         State state = new State();
-        state.content = contentModel.getObject();
         state.feedback = null;
         setModelObject(state);
 
-        setTitle(titleModel.getObject());
+        open(aTarget);
 
-        super.show(aTarget);
+        aTarget.focusComponent(contentPanel.cancel);
     }
 
     public AjaxCallback getConfirmAction()
@@ -220,7 +203,6 @@ public class ConfirmationDialog
     {
         private static final long serialVersionUID = 4483229579553569947L;
 
-        private String content;
         private String feedback;
     }
 
@@ -230,16 +212,21 @@ public class ConfirmationDialog
         private static final long serialVersionUID = 5202661827792148838L;
 
         private Form<State> form;
+        private LambdaAjaxLink cancel;
 
         public ContentPanel(String aId, IModel<State> aModel)
         {
             super(aId, aModel);
 
             form = new Form<>("form", CompoundPropertyModel.of(aModel));
-            form.add(new Label("content").setEscapeModelStrings(false));
+            form.add(new Label("title", ConfirmationDialog.this.titleModel));
+            form.add(new Label("content", ConfirmationDialog.this.contentModel)
+                    .setEscapeModelStrings(false));
             form.add(new Label("feedback"));
             form.add(new LambdaAjaxButton<>("confirm", ConfirmationDialog.this::onConfirmInternal));
-            form.add(new LambdaAjaxLink("cancel", ConfirmationDialog.this::onCancelInternal));
+            form.add(cancel = new LambdaAjaxLink("cancel",
+                    ConfirmationDialog.this::onCancelInternal));
+            form.add(new LambdaAjaxLink("closeDialog", ConfirmationDialog.this::onCancelInternal));
 
             add(form);
         }

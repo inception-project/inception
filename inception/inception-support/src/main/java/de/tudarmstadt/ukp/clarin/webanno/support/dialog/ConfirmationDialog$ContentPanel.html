@@ -18,8 +18,12 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <form wicket:id="form" class="w_flex_container">
-    <div class="w_flex_content">
+  <form wicket:id="form" class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title" wicket:id="title"/>
+      <button wicket:id="closeDialog" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
       <div class="fluid-container">
         <div class="row">
           <div class="col-sm-12">
@@ -33,16 +37,17 @@
         </div>
       </div>
     </div>
-    <div class="w_flex_footer card-footer text-end">
+    <div class="modal-footer">
       <button wicket:id="confirm" class="btn btn-primary">
         <i class="fas fa-check"></i>&nbsp;
-        <wicket:message key="confirm.label"/>
+        <wicket:message key="confirm.label" />
       </button>
       <button wicket:id="cancel" class="btn btn-secondary">
         <i class="fas fa-times"></i>&nbsp;
-        <wicket:message key="cancel.label"/>
+        <wicket:message key="cancel.label" />
       </button>
     </div>
   </form>
 </wicket:panel>
+
 </html>
