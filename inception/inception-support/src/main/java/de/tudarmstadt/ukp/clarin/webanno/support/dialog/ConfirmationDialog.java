@@ -17,38 +17,26 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.dialog;
 
-import java.io.Serializable;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
-import org.apache.wicket.extensions.ajax.markup.html.modal.theme.DefaultTheme;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
 public class ConfirmationDialog
     extends BootstrapModalDialog
 {
     private static final long serialVersionUID = 5194857538069045172L;
 
+    private ConfirmationDialogContentPanel contentPanel;
     private IModel<String> titleModel;
     private IModel<String> contentModel;
 
     private AjaxCallback confirmAction;
     private AjaxCallback cancelAction;
-
-    private ContentPanel contentPanel;
 
     public ConfirmationDialog(String aId)
     {
@@ -66,20 +54,23 @@ public class ConfirmationDialog
     {
         super(aId);
 
+        trapFocus();
+
         titleModel = aTitle;
         contentModel = aContent;
-        add(new DefaultTheme());
-
-        setOutputMarkupId(true);
-
-        trapFocus();
-        // closeOnEscape();
-        // closeOnClick();
-
-        setModel(new CompoundPropertyModel<>(null));
-
-        contentPanel = new ContentPanel(ModalDialog.CONTENT_ID, getModel());
+        contentPanel = new ConfirmationDialogContentPanel(ModalDialog.CONTENT_ID);
         setContent(contentPanel);
+    }
+
+    public void show(AjaxRequestTarget aTarget)
+    {
+        open(aTarget);
+
+        contentPanel.setConfirmAction(confirmAction);
+        contentPanel.setCancelAction(cancelAction);
+        contentPanel.setTitleModel(titleModel);
+        contentPanel.setContentModel(contentModel);
+        contentPanel.onShow(aTarget);
     }
 
     public IModel<String> getTitleModel()
@@ -102,40 +93,6 @@ public class ConfirmationDialog
         contentModel = aContentModel;
     }
 
-    public void setModel(IModel<State> aModel)
-    {
-        setDefaultModel(aModel);
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<State> getModel()
-    {
-        return (IModel<State>) getDefaultModel();
-    }
-
-    public void setModelObject(State aModel)
-    {
-        setDefaultModelObject(aModel);
-    }
-
-    public State getModelObject()
-    {
-        return (State) getDefaultModelObject();
-    }
-
-    public void show(AjaxRequestTarget aTarget)
-    {
-        contentModel.detach();
-
-        State state = new State();
-        state.feedback = null;
-        setModelObject(state);
-
-        open(aTarget);
-
-        aTarget.focusComponent(contentPanel.cancel);
-    }
-
     public AjaxCallback getConfirmAction()
     {
         return confirmAction;
@@ -154,81 +111,5 @@ public class ConfirmationDialog
     public void setCancelAction(AjaxCallback aCancelAction)
     {
         cancelAction = aCancelAction;
-    }
-
-    protected void onConfirmInternal(AjaxRequestTarget aTarget, Form<State> aForm)
-    {
-        State state = aForm.getModelObject();
-
-        boolean closeOk = true;
-
-        // Invoke callback if one is defined
-        if (confirmAction != null) {
-            try {
-                confirmAction.accept(aTarget);
-            }
-            catch (ReplaceHandlerException e) {
-                // Let Wicket redirects still work
-                throw e;
-            }
-            catch (Exception e) {
-                LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
-                state.feedback = "Error: " + e.getMessage();
-                aTarget.add(aForm);
-                closeOk = false;
-            }
-        }
-
-        if (closeOk) {
-            close(aTarget);
-        }
-    }
-
-    protected void onCancelInternal(AjaxRequestTarget aTarget)
-    {
-        if (cancelAction != null) {
-            try {
-                cancelAction.accept(aTarget);
-            }
-            catch (Exception e) {
-                LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
-                contentPanel.form.getModelObject().feedback = "Error: " + e.getMessage();
-            }
-        }
-        close(aTarget);
-    }
-
-    private class State
-        implements Serializable
-    {
-        private static final long serialVersionUID = 4483229579553569947L;
-
-        private String feedback;
-    }
-
-    private class ContentPanel
-        extends Panel
-    {
-        private static final long serialVersionUID = 5202661827792148838L;
-
-        private Form<State> form;
-        private LambdaAjaxLink cancel;
-
-        public ContentPanel(String aId, IModel<State> aModel)
-        {
-            super(aId, aModel);
-
-            form = new Form<>("form", CompoundPropertyModel.of(aModel));
-            form.add(new Label("title", ConfirmationDialog.this.titleModel));
-            form.add(new Label("content", ConfirmationDialog.this.contentModel)
-                    .setEscapeModelStrings(false));
-            form.add(new Label("feedback"));
-            form.add(new LambdaAjaxButton<>("confirm", ConfirmationDialog.this::onConfirmInternal));
-            form.add(cancel = new LambdaAjaxLink("cancel",
-                    ConfirmationDialog.this::onCancelInternal));
-            form.add(new LambdaAjaxLink("closeDialog", ConfirmationDialog.this::onCancelInternal));
-
-            add(form);
-        }
     }
 }
