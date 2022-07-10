@@ -31,7 +31,9 @@
 
   @include media-breakpoint-down(xl) {
     .btn {
-      font-size: .9vw !important;
+      // Bootstrap forces the font size in btns but we want buttons in the action bar to follow
+      // the action bar scaling
+      font-size: inherit !important;
     }
   }
 

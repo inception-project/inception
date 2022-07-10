@@ -231,8 +231,6 @@ public class ActiveLearningSidebar
         add(alMainContainer);
 
         confirmationDialog = new ConfirmationDialog(CID_CONFIRMATION_DIALOG);
-        confirmationDialog.setInitialWidth(300);
-        confirmationDialog.setInitialHeight(200);
         add(confirmationDialog);
     }
 
