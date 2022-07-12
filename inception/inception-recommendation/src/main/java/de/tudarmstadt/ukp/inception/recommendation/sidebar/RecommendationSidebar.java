@@ -32,7 +32,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -140,7 +139,7 @@ public class RecommendationSidebar
         recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
         add(recommenderInfos);
 
-        logDialog = new LogDialog("logDialog", Model.of("Recommender Log"));
+        logDialog = new LogDialog("logDialog");
         add(logDialog);
 
     }
