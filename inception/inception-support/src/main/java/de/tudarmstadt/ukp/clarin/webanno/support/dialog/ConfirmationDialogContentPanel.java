@@ -55,16 +55,15 @@ public class ConfirmationDialogContentPanel
 
         form = new Form<>("form", CompoundPropertyModel.of(new State()));
         title = new Label("title", titleModel);
-        form.add(title);
         content = new Label("content", contentModel);
         content.setEscapeModelStrings(false);
-        form.add(content);
-        form.add(new Label("feedback"));
-        form.add(new LambdaAjaxButton<>("confirm", this::onConfirmInternal));
-        form.add(cancel = new LambdaAjaxLink("cancel", this::onCancelInternal));
-        form.add(new LambdaAjaxLink("closeDialog", this::onCancelInternal));
+        cancel = new LambdaAjaxLink("cancel", this::onCancelInternal);
+        cancel.setOutputMarkupId(true);
 
-        add(form);
+        queue(new Label("feedback"));
+        queue(new LambdaAjaxButton<>("confirm", this::onConfirmInternal));
+        queue(new LambdaAjaxLink("closeDialog", this::onCancelInternal));
+        queue(title, content, cancel, form);
     }
 
     public void onShow(AjaxRequestTarget aTarget)

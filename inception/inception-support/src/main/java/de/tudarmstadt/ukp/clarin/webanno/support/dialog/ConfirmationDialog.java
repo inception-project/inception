@@ -31,7 +31,6 @@ public class ConfirmationDialog
 {
     private static final long serialVersionUID = 5194857538069045172L;
 
-    private ConfirmationDialogContentPanel contentPanel;
     private IModel<String> titleModel;
     private IModel<String> contentModel;
 
@@ -58,19 +57,17 @@ public class ConfirmationDialog
 
         titleModel = aTitle;
         contentModel = aContent;
-        contentPanel = new ConfirmationDialogContentPanel(ModalDialog.CONTENT_ID);
-        setContent(contentPanel);
     }
 
     public void show(AjaxRequestTarget aTarget)
     {
-        open(aTarget);
-
+        var contentPanel = new ConfirmationDialogContentPanel(ModalDialog.CONTENT_ID);
         contentPanel.setConfirmAction(confirmAction);
         contentPanel.setCancelAction(cancelAction);
         contentPanel.setTitleModel(titleModel);
         contentPanel.setContentModel(contentModel);
         contentPanel.onShow(aTarget);
+        open(contentPanel, aTarget);
     }
 
     public IModel<String> getTitleModel()

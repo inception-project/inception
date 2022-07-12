@@ -85,16 +85,16 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
 
         page = aPage;
 
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
+        queue(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
                 new StringResourceModel("FinishDocumentDialog.title", this, null),
                 new StringResourceModel("FinishDocumentDialog.text", this, null)));
 
-        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
+        queue(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
                 this::actionFinishDocument));
-
         finishDocumentLink.setOutputMarkupId(true);
         finishDocumentLink.add(enabledWhen(page::isEditable));
-        finishDocumentLink.add(new Label("state")
+
+        queue(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
     }
 
