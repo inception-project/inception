@@ -16,17 +16,20 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <span wicket:id="item" class="badge rounded-pill">
-    <span wicket:id="state">
-      <wicket:container wicket:id="stateSymbol"/>
-      <wicket:container wicket:id="annotatorName"/>
-    </span>
-    <a type="button" wicket:id="showComment" class="border-start ms-1 ps-2 text-reset">
-      <i class="fas fa-comment"></i>
-    </a>
-  </span>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title">Annotator comment</h5>
+      <button wicket:id="closeDialog" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+      <div class="fluid-container">
+        <div class="col-sm-12">
+          <div wicket:id="annotatorComment"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </wicket:panel>
 </html>

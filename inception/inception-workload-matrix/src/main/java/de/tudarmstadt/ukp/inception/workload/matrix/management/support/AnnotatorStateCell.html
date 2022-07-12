@@ -16,15 +16,13 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <wicket:panel>
-  <span wicket:id="item" class="badge rounded-pill">
+  <span class="text-nowrap">
     <span wicket:id="state">
-      <wicket:container wicket:id="stateSymbol"/>
-      <wicket:container wicket:id="annotatorName"/>
+      <wicket:container wicket:id="stateSymbol" />
     </span>
-    <a type="button" wicket:id="showComment" class="border-start ms-1 ps-2 text-reset">
+    <a wicket:id="showComment" class="ms-2 text-reset">
       <i class="fas fa-comment"></i>
     </a>
   </span>

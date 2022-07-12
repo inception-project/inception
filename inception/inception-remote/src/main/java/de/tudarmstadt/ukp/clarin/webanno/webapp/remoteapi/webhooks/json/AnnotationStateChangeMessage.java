@@ -35,6 +35,7 @@ public class AnnotationStateChangeMessage
 
     private String user;
     private String annotationUser;
+    private String annotatorComment;
 
     private String annotationPreviousState;
     private String annotationState;
@@ -57,6 +58,7 @@ public class AnnotationStateChangeMessage
 
         user = aEvent.getUser();
         annotationUser = aEvent.getAnnotationDocument().getUser();
+        annotatorComment = aEvent.getAnnotationDocument().getAnnotatorComment();
 
         annotationState = AeroRemoteApiController
                 .annotationDocumentStateToString(aEvent.getNewState());
@@ -146,6 +148,16 @@ public class AnnotationStateChangeMessage
         annotationUser = aAnnotationUser;
     }
 
+    public void setAnnotatorComment(String aAnnotatorComment)
+    {
+        annotatorComment = aAnnotatorComment;
+    }
+
+    public String getAnnotatorComment()
+    {
+        return annotatorComment;
+    }
+
     public String getUser()
     {
         return user;
@@ -169,12 +181,18 @@ public class AnnotationStateChangeMessage
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE).append("timestamp", timestamp)
-                .append("projectId", projectId).append("projectName", projectName)
-                .append("documentId", documentId).append("documentName", documentName)
-                .append("user", user).append("annotationUser", annotationUser)
-                .append("annotationPreviousState", annotationPreviousState)
-                .append("annotationState", annotationState)
-                .append("annotatorAnnotationState", annotatorAnnotationState).toString();
+        return new ToStringBuilder(this, ToStringStyle.JSON_STYLE) //
+                .append("timestamp", timestamp) //
+                .append("projectId", projectId) //
+                .append("projectName", projectName) //
+                .append("documentId", documentId) //
+                .append("documentName", documentName) //
+                .append("user", user) //
+                .append("annotationUser", annotationUser) //
+                .append("annotationPreviousState", annotationPreviousState) //
+                .append("annotationState", annotationState) //
+                .append("annotatorAnnotationState", annotatorAnnotationState) //
+                .append("annotatorComment", annotatorComment) //
+                .toString();
     }
 }

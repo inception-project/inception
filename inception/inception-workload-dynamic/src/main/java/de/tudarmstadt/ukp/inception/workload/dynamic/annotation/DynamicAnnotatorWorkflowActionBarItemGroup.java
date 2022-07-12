@@ -19,6 +19,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
 import java.io.IOException;
@@ -27,17 +28,21 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LambdaModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogContent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -46,7 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
@@ -67,7 +72,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
 
     private AnnotationPageBase page;
 
-    protected ConfirmationDialog finishDocumentDialog;
+    protected ModalDialog finishDocumentDialog;
 
     private final LambdaAjaxLink finishDocumentLink;
 
@@ -85,9 +90,11 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
 
         page = aPage;
 
-        queue(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
+        finishDocumentDialog = new BootstrapModalDialog("finishDocumentDialog");
+        finishDocumentDialog.setContent(new FinishDocumentDialogContent(ModalDialog.CONTENT_ID,
+                Model.of(new FinishDocumentDialogModel()),
+                this::actionFinishDocumentDialogSubmitted));
+        add(finishDocumentDialog);
 
         queue(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
                 this::actionFinishDocument));
@@ -133,30 +140,49 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
         }
 
         if (traits.isConfirmFinishingDocuments()) {
-            finishDocumentDialog
-                    .setConfirmAction(_target -> this.actionFinishDocumentConfirmed(_target));
+            finishDocumentDialog.open(aTarget);
         }
         else {
-            actionFinishDocumentConfirmed(aTarget);
+            actionFinishDocumentConfirmedNoDialog(aTarget);
         }
-
-        finishDocumentDialog.show(aTarget);
     }
 
-    private void actionFinishDocumentConfirmed(AjaxRequestTarget aTarget)
+    private void actionFinishDocumentDialogSubmitted(AjaxRequestTarget aTarget,
+            Form<FinishDocumentDialogModel> aForm)
         throws IOException, AnnotationException
+    {
+        AnnotatorState state = getModelObject();
+
+        var newState = aForm.getModelObject().getState();
+
+        AnnotationDocument annotationDocument = documentService
+                .getAnnotationDocument(state.getDocument(), state.getUser());
+        annotationDocument.setAnnotatorComment(aForm.getModelObject().getComment());
+        documentService.setAnnotationDocumentState(annotationDocument, newState,
+                EXPLICIT_ANNOTATOR_USER_ACTION);
+
+        goToNextDocument(aTarget);
+    }
+
+    private void actionFinishDocumentConfirmedNoDialog(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        AnnotatorState state = getModelObject();
+
+        AnnotationDocument annotationDocument = documentService
+                .getAnnotationDocument(state.getDocument(), state.getUser());
+        annotationDocument.setAnnotatorComment(null);
+        documentService.setAnnotationDocumentState(annotationDocument, FINISHED,
+                EXPLICIT_ANNOTATOR_USER_ACTION);
+
+        goToNextDocument(aTarget);
+    }
+
+    private void goToNextDocument(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
         User user = state.getUser();
         Project project = state.getProject();
-
-        // On finishing, the current AnnotationDocument is put to the new state FINISHED
-        AnnotationDocument annotationDocument = documentService
-                .getAnnotationDocument(state.getDocument(), user);
-        documentService.setAnnotationDocumentState(annotationDocument, FINISHED);
-
-        aTarget.add(page);
-
         Optional<SourceDocument> nextDocument = dynamicWorkloadExtension
                 .nextDocumentToAnnotate(project, user);
 
@@ -171,5 +197,6 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
         page.getModelObject().setDocument(nextDocument.get(),
                 documentService.listSourceDocuments(nextDocument.get().getProject()));
         page.actionLoadDocument(aTarget);
+        aTarget.add(page);
     }
 }
