@@ -18,16 +18,14 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h5 class="modal-title">Annotator comment</h5>
-      <button wicket:id="closeDialog" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-    </div>
-    <div class="modal-body">
-      <div class="fluid-container">
-        <div class="col-sm-12">
-          <div wicket:id="annotatorComment"></div>
-        </div>
+  <div class="modal-header">
+    <h5 class="modal-title">Annotator comment</h5>
+    <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+  </div>
+  <div class="modal-body overflow-auto">
+    <div class="fluid-container">
+      <div class="col-sm-12">
+        <div wicket:id="annotatorComment"></div>
       </div>
     </div>
   </div>
