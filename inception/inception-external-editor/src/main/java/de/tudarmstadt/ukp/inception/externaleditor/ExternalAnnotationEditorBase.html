@@ -19,7 +19,10 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:panel>
-    <div wicket:id="vis" class="flex-content"/>
+    <div class="flex-content flex-v-container position-relative">
+      <div wicket:id="vis" class="flex-content"/>
+      <div wicket:id="contextMenu" style="width: 250px;"></div>
+    </div>
   </wicket:panel>
 </body>
 </html>

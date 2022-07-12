@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.diam.editor;
 
 import java.lang.invoke.MethodHandles;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -27,6 +29,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 
 public class DiamAjaxBehavior
@@ -37,6 +40,13 @@ public class DiamAjaxBehavior
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @SpringBean EditorAjaxRequestHandlerExtensionPoint handlers;
+
+    private List<EditorAjaxRequestHandler> priorityHandlers = new ArrayList<>();
+
+    public void addPriorityHandler(EditorAjaxRequestHandler aHandler)
+    {
+        priorityHandlers.add(aHandler);
+    }
 
     @Override
     protected void onBind()
@@ -50,6 +60,16 @@ public class DiamAjaxBehavior
         LOG.trace("AJAX request recieved");
 
         Request request = RequestCycle.get().getRequest();
+
+        var priorityHandler = priorityHandlers.stream() //
+                .filter(handler -> handler.accepts(request)) //
+                .findFirst();
+
+        if (priorityHandler.isPresent()) {
+            priorityHandler.get().handle(aTarget, request);
+            return;
+        }
+
         handlers.getHandler(request) //
                 .ifPresent(h -> h.handle(aTarget, request));
     }

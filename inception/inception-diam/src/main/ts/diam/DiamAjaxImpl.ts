@@ -17,6 +17,7 @@
  */
 import { DiamAjax, Offsets, VID } from '@inception-project/inception-js-api';
 import { DiamLoadAnnotationsOptions } from '@inception-project/inception-js-api/src/diam/DiamAjax';
+import { client, over } from 'stompjs';
 
 declare const Wicket: any;
 
@@ -114,7 +115,7 @@ export class DiamAjaxImpl implements DiamAjax {
   loadAnnotations(options?: DiamLoadAnnotationsOptions): Promise<any> {
     const token = DiamAjaxImpl.newToken();
 
-    let params : Record<string, any> = {
+    let params: Record<string, any> = {
       "action": 'loadAnnotations',
       "token": token
     };
@@ -159,5 +160,93 @@ export class DiamAjaxImpl implements DiamAjax {
         }]
       });
     });
+  }
+
+  openContextMenu(id: VID, evt: MouseEvent): void {
+    var clientX = evt.clientX
+    var clientY = evt.clientY
+
+    var overlay: HTMLElement
+
+    // If the editor is in an IFrame, we need to adjust the coordinates.
+    // We also need to ensure that clicks outside the context menu are not
+    // directed to the IFrame content
+    if (evt?.target != null && 'ownerDocument' in evt?.target) {
+      var target = evt.target as HTMLElement
+      const eventContextWindow = target.ownerDocument?.defaultView
+      if (window != eventContextWindow) {
+        const frameId = eventContextWindow?.frameElement?.id
+        if (frameId) {
+          const frame = parent.window.document.getElementById(frameId);
+          const rect = frame?.getBoundingClientRect()
+          if (rect && frame) {
+            clientX += rect.left
+            clientY += rect.top
+
+            // The context menu opens outside of the IFrame and if we click anywhere in the IFrame
+            // outside of the context menu, it won't close. The overlay hides the contents of the
+            // IFrame and ensures that the context menu receives mouse events outside itself and
+            // then can close itself
+            overlay = this.createOverlay(frame);
+          }
+        }
+      }
+    }
+
+    clientX = Math.round(clientX)
+    clientY = Math.round(clientY)
+
+    new Promise<void>((resolve, reject) => {
+      Wicket.Ajax.ajax({
+        "m": "POST",
+        "u": this.ajaxEndpoint,
+        "ep": {
+          action: 'contextMenu',
+          id: id,
+          clientX,
+          clientY
+        },
+        "sh": [() => {
+          resolve()
+        }],
+        "eh": [() => {
+          reject("Unable to open context menu")
+        }]
+      });
+    }).then(() => this.closeOverlayWhenContextMenuIsHidden(overlay));
+  }
+
+  private createOverlay(frame: HTMLElement): HTMLElement {
+    const overlay = document.createElement('div') as HTMLElement;
+    overlay.style.position = 'absolute';
+    overlay.style.top = `0px`;
+    overlay.style.left = `0px`;
+    overlay.style.width = `${frame.clientWidth}px`;
+    overlay.style.height = `${frame.clientHeight}px`;
+    overlay.style.zIndex = '100'; // context menu is 999
+    frame.parentElement?.insertBefore(overlay, frame);
+    return overlay;
+  }
+
+  private closeOverlayWhenContextMenuIsHidden(overlay: HTMLElement): void {
+    if (!overlay) {
+      return
+    }
+
+    const contextMenu = overlay.parentElement?.querySelector('.context-menu') as HTMLElement | null
+    if (!contextMenu) {
+      return
+    }
+
+    // Now we keep an eye on the context menu - when it gets hidden, we also remove the overlay
+    const remover = () => {
+      if (contextMenu.style.display == 'none') {
+        overlay.remove()
+      }
+      else {
+        setTimeout(remover, 20);
+      }
+    }
+    setTimeout(remover, 20);
   }
 }
