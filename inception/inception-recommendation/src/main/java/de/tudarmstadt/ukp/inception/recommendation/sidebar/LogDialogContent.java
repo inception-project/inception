@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import java.util.List;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.basic.Label;
@@ -37,6 +38,8 @@ public class LogDialogContent
 {
     private static final long serialVersionUID = -5003560112554715634L;
 
+    private final LambdaAjaxLink cancel;
+
     public LogDialogContent(String aId, IModel<List<LogMessageGroup>> aModel)
     {
         super(aId, aModel);
@@ -46,7 +49,7 @@ public class LogDialogContent
         queue(createMessageSetsView(getModel()));
 
         queue(new LambdaAjaxLink("closeDialog", this::actionCancel));
-        queue(new LambdaAjaxLink("close", this::actionCancel));
+        queue(cancel = new LambdaAjaxLink("close", this::actionCancel));
     }
 
     public IModel<List<LogMessageGroup>> getModel()
@@ -85,6 +88,11 @@ public class LogDialogContent
                 aItem.add(new Label("message", PropertyModel.of(msg, "message")));
             }
         };
+    }
+
+    public Component getFocusComponent()
+    {
+        return cancel;
     }
 
     private void actionCancel(AjaxRequestTarget aTarget)

@@ -46,6 +46,8 @@ public class LogDialog
     {
         super(id);
 
+        trapFocus();
+
         logMessages = aModel;
     }
 
@@ -64,6 +66,8 @@ public class LogDialog
             model = new ListModel<>(asList(group));
         }
 
-        open(new LogDialogContent(ModalDialog.CONTENT_ID, model), aTarget);
+        LogDialogContent content = new LogDialogContent(ModalDialog.CONTENT_ID, model);
+        open(content, aTarget);
+        aTarget.focusComponent(content.getFocusComponent());
     }
 }
