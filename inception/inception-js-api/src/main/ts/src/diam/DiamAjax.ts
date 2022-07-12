@@ -32,6 +32,7 @@ export interface DiamAjax {
 
   triggerExtensionAction(id: VID): void;
 
+  openContextMenu(id: VID, evt: MouseEvent): void;
 }
 
 export type DiamLoadAnnotationsOptions = {

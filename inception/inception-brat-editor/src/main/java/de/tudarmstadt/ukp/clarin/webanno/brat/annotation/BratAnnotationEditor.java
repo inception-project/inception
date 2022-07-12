@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getActionFromRequest;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getVidFromRequest;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
@@ -174,8 +173,7 @@ public class BratAnnotationEditor
                     }
 
                     // FIXME Should we un-arm the active slot when the context menu is opened?
-                    final VID paramId = getVidFromRequest(requestParameters);
-                    if (contextMenuHandler.accepts(getRequest()) && !paramId.isSlotSet()) {
+                    if (contextMenuHandler.accepts(getRequest())) {
                         return contextMenuHandler.handle(aTarget, getRequest());
                     }
 
@@ -378,20 +376,22 @@ public class BratAnnotationEditor
         }
 
         @Override
+        public boolean accepts(Request aRequest)
+        {
+            final VID paramId = getVid(aRequest);
+            return super.accepts(aRequest) && paramId.isSet() && !paramId.isSynthetic()
+                    && !paramId.isSlotSet();
+        }
+
+        @Override
         public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
         {
-            VID vid = VID.parseOptional(
-                    aRequest.getRequestParameters().getParameterValue(PARAM_ID).toOptionalString());
-
-            if (vid.isNotSet() || vid.isSynthetic()) {
-                return new DefaultAjaxResponse(getAction(aRequest));
-            }
-
             try {
                 List<IMenuItem> items = contextMenu.getItemList();
                 items.clear();
 
                 if (getModelObject().getSelection().isSpan()) {
+                    VID vid = getVid(aRequest);
                     items.add(new LambdaMenuItem("Link to ...",
                             _target -> actionArcRightClick(_target, vid)));
                 }
