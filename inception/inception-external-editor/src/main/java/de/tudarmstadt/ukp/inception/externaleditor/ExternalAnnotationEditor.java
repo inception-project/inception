@@ -21,10 +21,10 @@ import static de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorL
 import static de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig.WS_ENDPOINT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.substringAfter;
 
 import javax.servlet.ServletContext;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
@@ -70,7 +70,7 @@ public class ExternalAnnotationEditor
     protected Component makeView()
     {
         if (getDescription().getView().startsWith(PLUGIN_SCHEME)) {
-            String resPath = StringUtils.substringAfter(getDescription().getView(), PLUGIN_SCHEME);
+            String resPath = substringAfter(getDescription().getView(), PLUGIN_SCHEME);
             return new ExternalAnnotationEditorStaticIFrameView(MID_VIS,
                     getUrlForPluginAsset(resPath));
         }
@@ -122,7 +122,7 @@ public class ExternalAnnotationEditor
 
         return props;
     }
-    
+
     private String constructWsEndpointUrl()
     {
         Url endPointUrl = Url.parse(format("%s%s", context.getContextPath(), WS_ENDPOINT));
