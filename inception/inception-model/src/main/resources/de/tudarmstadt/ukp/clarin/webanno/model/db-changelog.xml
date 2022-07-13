@@ -21,8 +21,8 @@
   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="
-    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
-    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    http://www.liquibase.org/xml/ns/dbchangelog-ext https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
+    http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
   
   <changeSet author="WebAnno Team" id="1512223050574-1">
     <preConditions onFail="MARK_RAN">
@@ -1341,5 +1341,16 @@
       <column name="type" type="VARCHAR(255)" value="de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures"/>
       <where>name = 'morph' and type = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma'</where>
     </update>
+  </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20220710-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_document" columnName="annotatorComment" />
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_document">
+      <column name="annotatorComment" type="LONGTEXT"/>
+    </addColumn>
   </changeSet>
 </databaseChangeLog>

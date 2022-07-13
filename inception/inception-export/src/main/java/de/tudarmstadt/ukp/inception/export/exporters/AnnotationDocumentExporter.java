@@ -146,6 +146,7 @@ public class AnnotationDocumentExporter
             exAnnotationDocument.setName(annotationDocument.getName());
             exAnnotationDocument.setState(annotationDocument.getState());
             exAnnotationDocument.setAnnotatorState(annotationDocument.getAnnotatorState());
+            exAnnotationDocument.setAnnotatorComment(annotationDocument.getAnnotatorComment());
             exAnnotationDocument.setUser(annotationDocument.getUser());
             exAnnotationDocument.setTimestamp(annotationDocument.getTimestamp());
             exAnnotationDocument.setSentenceAccessed(annotationDocument.getSentenceAccessed());
@@ -324,6 +325,7 @@ public class AnnotationDocumentExporter
             annotationDocument.setName(exAnnotationDocument.getName());
             annotationDocument.setState(exAnnotationDocument.getState());
             annotationDocument.setAnnotatorState(exAnnotationDocument.getAnnotatorState());
+            annotationDocument.setAnnotatorComment(exAnnotationDocument.getAnnotatorComment());
             annotationDocument.setProject(aProject);
             annotationDocument.setUser(exAnnotationDocument.getUser());
             annotationDocument.setTimestamp(exAnnotationDocument.getTimestamp());

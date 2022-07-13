@@ -28,11 +28,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import java.io.IOException;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -40,14 +43,18 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogContent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
@@ -64,7 +71,7 @@ public class MatrixWorkflowActionBarItemGroup
     private @SpringBean MatrixWorkloadExtension matrixWorkloadExtension;
 
     private final AnnotationPageBase page;
-    private final ConfirmationDialog finishDocumentDialog;
+    protected ModalDialog finishDocumentDialog;
     private final ChallengeResponseDialog resetDocumentDialog;
     private final LambdaAjaxLink resetDocumentLink;
 
@@ -74,9 +81,11 @@ public class MatrixWorkflowActionBarItemGroup
 
         page = aPage;
 
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
+        finishDocumentDialog = new BootstrapModalDialog("finishDocumentDialog");
+        finishDocumentDialog.setContent(new FinishDocumentDialogContent(ModalDialog.CONTENT_ID,
+                Model.of(new FinishDocumentDialogModel()),
+                this::actionFinishDocumentDialogSubmitted));
+        add(finishDocumentDialog);
 
         add(createToggleDocumentStateLink("toggleDocumentState"));
 
@@ -142,8 +151,28 @@ public class MatrixWorkflowActionBarItemGroup
             return;
         }
 
-        finishDocumentDialog.setConfirmAction(this::actionToggleDocumentState);
-        finishDocumentDialog.show(aTarget);
+        finishDocumentDialog.open(aTarget);
+    }
+
+    private void actionFinishDocumentDialogSubmitted(AjaxRequestTarget aTarget,
+            Form<FinishDocumentDialogModel> aForm)
+    {
+        AnnotatorState state = page.getModelObject();
+
+        var newState = aForm.getModelObject().getState();
+
+        AnnotationDocument annotationDocument = documentService
+                .getAnnotationDocument(state.getDocument(), state.getUser());
+        annotationDocument.setAnnotatorComment(aForm.getModelObject().getComment());
+        documentService.setAnnotationDocumentState(annotationDocument, newState,
+                EXPLICIT_ANNOTATOR_USER_ACTION);
+
+        if (newState == AnnotationDocumentState.IGNORE) {
+            state.reset();
+            state.setDocument(null, null);
+        }
+
+        aTarget.add(page);
     }
 
     private void actionToggleDocumentState(AjaxRequestTarget aTarget)

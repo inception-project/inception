@@ -1056,6 +1056,7 @@ public class DocumentServiceImpl
         writeAnnotationCas(cas, aDocument, aUser, false);
 
         adoc.setTimestamp(null);
+        adoc.setAnnotatorComment(null);
         setAnnotationDocumentState(adoc, AnnotationDocumentState.NEW, aFlags);
 
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, cas));

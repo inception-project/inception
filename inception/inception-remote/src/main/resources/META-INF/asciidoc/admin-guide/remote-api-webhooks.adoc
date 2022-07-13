@@ -118,7 +118,8 @@ convenient - the actual messages are not pretty-printed.
   "annotationUser": "annotator1",
   "annotationPreviousState": "COMPLETE",
   "annotationState": "COMPLETE",
-  "annotatorAnnotationState": "IN_PROGRESS"
+  "annotatorAnnotationState": "IN_PROGRESS",
+  "annotatorComment":"Test comment"
 }
 ----
 
@@ -132,3 +133,8 @@ The effective annotation state can be found in the `annotationState` field. Howe
 case that a manager has overridden the state, e.g. because an annotator forgot to mark a document
 as finished. The `annotatorAnnotationState` field contains the state that was  (implicitly) set by the
 annotator.
+
+The `annotatorComment` field contains the comment that annotators can set when closing a document
+and is typically used to report a problem with the document. Thus, it can typically be found only
+when the `annotatorState` is `COMPLETE` (document closed as successful) or `LOCKED` (document closed
+as not successful).

@@ -37,6 +37,7 @@
           <div class="page-header">
             <h1><wicket:container wicket:id="name"/></h1>
           </div>
+          <div wicket:id="modalDialog"/>
           <div wicket:id="resetDocumentDialog"/>
           <div wicket:id="contextMenu" style="width: 250px;"></div>
           
@@ -118,6 +119,7 @@
                     <li class="dropdown-item-text"><i class="far fa-circle"/> Not started yet</li>
                     <li class="dropdown-item-text"><i class="far fa-play-circle"/> In progress</li>
                     <li class="dropdown-item-text"><i class="far fa-check-circle"/> Finished</li>
+                    <li class="dropdown-item-text"><i class="fas fa-exclamation-triangle"/> Problem</li>
                     <li class="dropdown-item-text"><i class="fas fa-lock"/> Locked / cannot be accessed</li>
                   </ul>
                 </span>

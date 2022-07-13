@@ -20,9 +20,13 @@
 <body>
   <wicket:panel>
     <div class="flex-content card">
+      <div wicket:id="modalDialog"></div>
       <div wicket:id="stateChangeConfirmationDialog"></div>
       <div class="card-header">
         <wicket:container wicket:id="username"/>
+        <span class="ms-2" wicket:enclosure=commentSymbol"">
+          <span wicket:id="commentSymbol"></span>
+        </span>
         <a wicket:id="stateToggle" class="btn btn-sm p-0 float-end">
           <i wicket:id="state"></i>
         </a>
