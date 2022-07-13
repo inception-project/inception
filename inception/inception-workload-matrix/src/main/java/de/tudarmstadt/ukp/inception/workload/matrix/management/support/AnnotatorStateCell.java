@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.workload.matrix.management.MatrixWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
-import static liquibase.repackaged.org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 
 import java.util.Set;
