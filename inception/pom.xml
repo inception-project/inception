@@ -92,8 +92,8 @@
     <hibernate.version>5.6.9.Final</hibernate.version>
     <hibernate.validator.version>6.2.3.Final</hibernate.validator.version>
 
-    <wicket.version>9.10.0</wicket.version>
-    <wicketstuff.version>9.10.0</wicketstuff.version>
+    <wicket.version>9.11.0</wicket.version>
+    <wicketstuff.version>9.11.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.8.1</wicket-jquery-ui.version>
     <wicket-bootstrap.version>6.0.0-M7</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
