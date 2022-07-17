@@ -36,7 +36,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     this.handleHoverInEvent = this.handleHoverInEvent.bind(this)
     this.handleHoverOutEvent = this.handleHoverOutEvent.bind(this)
 
-    window.globalEvent.on('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.on('enableViewMode', this.enableViewMode)
   }
 
@@ -80,7 +79,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     const promise = super.destroy()
     this.emit('delete')
 
-    window.globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
     return promise
   }
@@ -99,27 +97,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     }
 
     return p
-  }
-
-  /**
-   * Delete the annotation if selected.
-   */
-  deleteSelectedAnnotation (): boolean {
-    return super.deleteSelectedAnnotation()
-  }
-
-  /**
-   * Handle a selected event on a text.
-   */
-  handleTextSelected () {
-    this.select()
-  }
-
-  /**
-   * Handle a deselected event on a text.
-   */
-  handleTextDeselected () {
-    this.deselect()
   }
 
   /**

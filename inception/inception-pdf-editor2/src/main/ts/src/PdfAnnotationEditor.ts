@@ -50,10 +50,6 @@ export class PdfAnnotationEditor implements AnnotationEditor {
   onAnnotationSelected (ev: Event) {
     if (ev instanceof CustomEvent) {
       const ann = ev.detail as AbstractAnnotation
-      if (!ann.selected) {
-        return
-      }
-
       this.ajax.selectAnnotation(ann.vid)
     }
   }
