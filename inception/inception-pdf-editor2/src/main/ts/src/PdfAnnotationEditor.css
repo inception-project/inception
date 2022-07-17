@@ -15,4 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+ .marker-matchfocus {
+ 	background-color: rgba(255, 165, 0, 0.4);
+  border-color: rgba(255, 165, 0, 1.0);
+ }
+
+.anno-span__area.marker-focus {
+  box-shadow: 0 2px 0px 0px rgba(255,165,0) !important;
+}
+
+.anno-knob.marker-focus {
+  box-shadow: 0 0px 2px 2px rgba(255,165,0) !important;
+}
+

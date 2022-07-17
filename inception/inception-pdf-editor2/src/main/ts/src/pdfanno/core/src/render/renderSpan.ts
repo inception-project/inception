@@ -44,36 +44,27 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[], page: number
  * @return a html element describing a span annotation.
  */
 export function renderSpan (span: SpanAnnotation): HTMLElement | undefined {
-  // REC: This should not be needed
-  // if (!span.page) {
-  //   if (span.rectangles.length > 0) {
-  //     span.page = span.rectangles[0].page
-  //   }
-  // }
-
   const rectangles = mapToDocumentCoordinates(span.rectangles, span.page)
 
   if (!rectangles) {
     return undefined
   }
 
-  const color = span.color || '#FF0'
-
   const base = document.createElement('div')
   base.classList.add('anno-span')
   base.style.zIndex = '10'
 
   rectangles.forEach(r => {
-    base.appendChild(createRect(span, r, color, span.readOnly))
+    base.appendChild(createRect(span, r, span.color, span.readOnly))
   })
 
   if (span.knob) {
     base.appendChild(renderKnob({
+      a: span,
       x: rectangles[0].x,
       y: rectangles[0].y,
       readOnly: span.readOnly,
-      text: span.text,
-      color
+      text: span.text
     }))
   }
 
@@ -88,14 +79,16 @@ export function createRect (a: SpanAnnotation | undefined, r: Rectangle, color?:
     rect.classList.add('no-border')
   }
 
-  const actualColor = color || '#FF0'
+  a?.classList.forEach(c => rect.classList.add(c))
 
   rect.style.top = r.y + 'px'
   rect.style.left = r.x + 'px'
   rect.style.width = r.w + 'px'
   rect.style.height = r.h + 'px'
-  rect.style.backgroundColor = hex2rgba(actualColor, 0.4)
-  rect.style.borderColor = actualColor
+  if (color) {
+    rect.style.backgroundColor = hex2rgba(color, 0.4)
+    rect.style.borderColor = color
+  }
   rect.style.pointerEvents = 'none'
   return rect
 }

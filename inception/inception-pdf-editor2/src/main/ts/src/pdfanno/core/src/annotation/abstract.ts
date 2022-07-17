@@ -12,13 +12,13 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   color: string = null
   deleted = false
   disabled = false
-  selected = false
   readOnly = false
   hoverEventDisable = false
   selectedTime = null
   element: HTMLElement = null
   exportId: any
   type: 'span' | 'relation'
+  classList: string[] = []
 
   /**
    * Constructor.
@@ -58,8 +58,6 @@ export default abstract class AbstractAnnotation extends EventEmitter {
       this.setHoverEvent()
     }
 
-    this.selected && this.element.classList.remove('--selected')
-
     this.disabled && this.disable()
 
     return true
@@ -92,16 +90,9 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    * Handle a click event.
    */
   handleSingleClickEvent (e: Event) {
-    if (!this.selected) {
-      this.toggleSelect()
-    }
-
-    if (this.selected) {
-      // TODO Use common function.
-      const event = document.createEvent('CustomEvent')
-      event.initCustomEvent('annotationSelected', true, true, this)
-      this.element.dispatchEvent(event)
-    }
+    const event = document.createEvent('CustomEvent')
+    event.initCustomEvent('annotationSelected', true, true, this)
+    this.element.dispatchEvent(event)
   }
 
   /**
@@ -136,56 +127,6 @@ export default abstract class AbstractAnnotation extends EventEmitter {
    */
   dehighlight () {
     this.element.classList.remove('--hover')
-  }
-
-  /**
-   * Select the annotation.
-   */
-  select () {
-    this.selected = true
-    this.selectedTime = Date.now()
-    this.element.classList.add('--selected')
-  }
-
-  /**
-   * Deselect the annotation.
-   */
-  deselect () {
-    console.log('deselect')
-    this.selected = false
-    this.selectedTime = null
-    this.element.classList.remove('--selected')
-  }
-
-  /**
-   * Toggle the selected state.
-   */
-  toggleSelect () {
-    if (this.selected) {
-      this.deselect()
-    } else {
-      this.select()
-    }
-  }
-
-  /**
-   * Delete the annotation if selected.
-   */
-  deleteSelectedAnnotation (): boolean {
-    if (this.isSelected()) {
-      this.destroy().then(() => {
-        dispatchWindowEvent('annotationDeleted', { vid: this.vid })
-      })
-      return true
-    }
-    return false
-  }
-
-  /**
-   * Check whether the annotation is selected.
-   */
-  isSelected () {
-    return this.element.classList.contains('--selected')
   }
 
   /**

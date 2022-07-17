@@ -22,6 +22,32 @@ export function getPage (num: number): VPage | undefined {
   return pages.find(p => p.index === num)
 }
 
+export function getPageBefore (num: number): VPage | undefined {
+  let pageBefore : VPage | undefined
+  for (const page of pages) {
+    if (page.index === num) {
+      return pageBefore
+    }
+    pageBefore = page
+  }
+  return pageBefore
+}
+
+export function getPageAfter(num: number): VPage | undefined {
+  let stop = false
+  for (const page of pages) {
+    if (stop) {
+      return page
+    }
+
+    if (page.index === num) {
+      stop = true
+    }
+  }
+
+  return undefined
+}
+
 export function findPageForOffset (offset: number): VPage | undefined {
   const page = pages.find(p => p.range[0] <= offset && offset < p.range[1])
   if (!page) {

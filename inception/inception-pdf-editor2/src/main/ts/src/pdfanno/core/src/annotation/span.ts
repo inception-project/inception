@@ -3,6 +3,10 @@ import { getGlyphsInRange } from '../../../page/textLayer'
 import { Rectangle } from '../../../../vmodel/Rectangle'
 import { mergeRects } from '../UI/span'
 
+let clickCount = 0
+let timer = null
+const CLICK_DELAY = 300
+
 /**
  * Span Annotation.
  */
@@ -11,7 +15,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   readOnly = false
   knob = true
   border = true
-  text = null
+  text: string
   textRange: [number, number]
   page: number = -1
   zIndex = 10
@@ -22,7 +26,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
 
     this.type = 'span'
     this.vid = null
-    this.text = null
     this.color = null
     this.textRange = null
     this.page = null
@@ -33,7 +36,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     this.handleHoverInEvent = this.handleHoverInEvent.bind(this)
     this.handleHoverOutEvent = this.handleHoverOutEvent.bind(this)
 
-    window.globalEvent.on('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.on('enableViewMode', this.enableViewMode)
   }
 
@@ -77,7 +79,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     const promise = super.destroy()
     this.emit('delete')
 
-    window.globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
     return promise
   }
@@ -96,27 +97,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     }
 
     return p
-  }
-
-  /**
-   * Delete the annotation if selected.
-   */
-  deleteSelectedAnnotation (): boolean {
-    return super.deleteSelectedAnnotation()
-  }
-
-  /**
-   * Handle a selected event on a text.
-   */
-  handleTextSelected () {
-    this.select()
-  }
-
-  /**
-   * Handle a deselected event on a text.
-   */
-  handleTextDeselected () {
-    this.deselect()
   }
 
   /**
@@ -186,7 +166,3 @@ export default class SpanAnnotation extends AbstractAnnotation {
       e.removeEventListener('click', this.handleClickEvent))
   }
 }
-
-var clickCount = 0
-var timer = null
-var CLICK_DELAY = 300
