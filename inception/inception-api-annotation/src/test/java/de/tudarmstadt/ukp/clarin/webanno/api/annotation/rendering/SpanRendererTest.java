@@ -93,9 +93,11 @@ public class SpanRendererTest
                 asList(new SpanCrossSentenceBehavior()));
 
         VDocument vdoc = new VDocument();
+        vdoc.setWindowEnd(20);
         sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
-        assertThat(vdoc.comments()).usingFieldByFieldElementComparator()
+        assertThat(vdoc.comments()) //
+                .usingFieldByFieldElementComparator() //
                 .containsExactlyInAnyOrder(new VComment(ne, VCommentType.ERROR,
                         "Crossing sentence boundaries is not permitted."));
     }
@@ -120,9 +122,11 @@ public class SpanRendererTest
         {
             neLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
             VDocument vdoc = new VDocument();
+            vdoc.setWindowEnd(20);
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
-            assertThat(vdoc.comments()).usingFieldByFieldElementComparator()
-                    .containsExactlyInAnyOrder(
+            assertThat(vdoc.comments()) //
+                    .usingFieldByFieldElementComparator() //
+                    .containsExactlyInAnyOrder( //
                             new VComment(ne1, VCommentType.ERROR, "Stacking is not permitted."),
                             new VComment(ne2, VCommentType.ERROR, "Stacking is not permitted."));
         }
@@ -130,6 +134,7 @@ public class SpanRendererTest
         {
             neLayer.setOverlapMode(OverlapMode.OVERLAP_ONLY);
             VDocument vdoc = new VDocument();
+            vdoc.setWindowEnd(20);
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments()).usingFieldByFieldElementComparator()
                     .containsExactlyInAnyOrder(
@@ -140,6 +145,7 @@ public class SpanRendererTest
         {
             neLayer.setOverlapMode(OverlapMode.STACKING_ONLY);
             VDocument vdoc = new VDocument();
+            vdoc.setWindowEnd(20);
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments()).usingFieldByFieldElementComparator().isEmpty();
         }
@@ -147,6 +153,7 @@ public class SpanRendererTest
         {
             neLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
             VDocument vdoc = new VDocument();
+            vdoc.setWindowEnd(20);
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments()).usingFieldByFieldElementComparator().isEmpty();
         }
