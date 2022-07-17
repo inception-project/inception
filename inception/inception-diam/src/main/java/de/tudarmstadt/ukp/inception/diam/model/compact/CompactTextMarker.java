@@ -49,7 +49,8 @@ public class CompactTextMarker
 
     public CompactTextMarker(VTextMarker aTextMarker)
     {
-        offsets = asList(new Offsets(aTextMarker.getBegin(), aTextMarker.getEnd()));
+        var range = aTextMarker.getRange();
+        offsets = asList(new Offsets(range.getBegin(), range.getEnd()));
         type = aTextMarker.getType();
     }
 

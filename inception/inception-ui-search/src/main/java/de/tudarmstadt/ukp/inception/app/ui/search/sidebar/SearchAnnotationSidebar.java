@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker.MATCH_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -87,7 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -533,14 +534,10 @@ public class SearchAnnotationSidebar
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         if (selectedResult != null) {
-            int windowBeginOffset = aEvent.getRequest().getWindowBeginOffset();
-            if (windowBeginOffset <= selectedResult.getOffsetStart()
-                    && selectedResult.getOffsetEnd() <= aEvent.getRequest().getWindowEndOffset()) {
-                aEvent.getVDocument()
-                        .add(new VTextMarker(VMarker.MATCH_FOCUS,
-                                selectedResult.getOffsetStart() - windowBeginOffset,
-                                selectedResult.getOffsetEnd() - windowBeginOffset));
-            }
+            var range = VRange.clippedRange(aEvent.getVDocument(), selectedResult.getOffsetStart(),
+                    selectedResult.getOffsetEnd());
+
+            range.ifPresent(r -> aEvent.getVDocument().add(new VTextMarker(MATCH_FOCUS, r)));
         }
     }
 
