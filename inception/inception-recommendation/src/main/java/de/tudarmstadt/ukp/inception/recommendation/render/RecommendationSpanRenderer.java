@@ -126,8 +126,7 @@ public class RecommendationSpanRenderer
         for (SuggestionGroup<SpanSuggestion> suggestionGroup : groups) {
             // Render annotations for each label
             for (SpanSuggestion ao : suggestionGroup.bestSuggestions(pref)) {
-                Optional<VRange> range = VRange.clippedRange(aRequest.getWindowBeginOffset(),
-                        aRequest.getWindowEndOffset(), ao.getBegin(), ao.getEnd());
+                Optional<VRange> range = VRange.clippedRange(vdoc, ao.getBegin(), ao.getEnd());
 
                 if (!range.isPresent()) {
                     continue;

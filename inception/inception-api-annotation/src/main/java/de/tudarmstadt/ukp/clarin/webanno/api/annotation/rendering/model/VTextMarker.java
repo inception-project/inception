@@ -23,30 +23,23 @@ public class VTextMarker
     private static final long serialVersionUID = -963583831065999692L;
 
     private final String type;
-    private final int begin;
-    private final int end;
+    private final VRange range;
 
-    public VTextMarker(String aType, int aBegin, int aEnd)
+    public VTextMarker(String aType, VRange aRange)
     {
-        this(null, aType, aBegin, aEnd);
+        this(null, aType, aRange);
     }
 
-    public VTextMarker(Object aSource, String aType, int aBegin, int aEnd)
+    public VTextMarker(Object aSource, String aType, VRange aRange)
     {
         super(aSource);
         type = aType;
-        begin = aBegin;
-        end = aEnd;
+        range = aRange;
     }
 
-    public int getBegin()
+    public VRange getRange()
     {
-        return begin;
-    }
-
-    public int getEnd()
-    {
-        return end;
+        return range;
     }
 
     @Override
