@@ -1263,12 +1263,11 @@ public class ActiveLearningSidebar
         }
 
         if (highlightSpan != null) {
-            AnnotatorState state = getModelObject();
-            if (state.getWindowBeginOffset() <= highlightSpan.getBegin()
-                    && highlightSpan.getEnd() <= state.getWindowEndOffset()) {
-                aVDoc.add(new VTextMarker(this, VMarker.FOCUS,
-                        highlightSpan.getBegin() - state.getWindowBeginOffset(),
-                        highlightSpan.getEnd() - state.getWindowBeginOffset()));
+            Optional<VRange> range = VRange.clippedRange(aVDoc, highlightSpan.getBegin(),
+                    highlightSpan.getEnd());
+
+            if (range.isPresent()) {
+                aVDoc.add(new VTextMarker(this, VMarker.FOCUS, range.get()));
             }
             else {
                 LOG.trace("Active learning sidebar span highlight is outside visible area");

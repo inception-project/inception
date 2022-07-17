@@ -141,7 +141,7 @@ public class SpanRenderer
             return null;
         }
 
-        Optional<VRange> range = VRange.clippedRange(aWindowBegin, aWindowEnd, aFS);
+        Optional<VRange> range = VRange.clippedRange(aVDocument, aFS);
 
         if (!range.isPresent()) {
             return null;

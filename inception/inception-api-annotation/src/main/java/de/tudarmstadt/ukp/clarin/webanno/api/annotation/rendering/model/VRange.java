@@ -22,6 +22,8 @@ import java.util.Optional;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
+import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
+
 public class VRange
     implements Serializable
 {
@@ -73,6 +75,30 @@ public class VRange
     {
         return clippedRange(aViewportBegin, aViewPortEnd, aAnnotation.getBegin(),
                 aAnnotation.getEnd());
+    }
+
+    public static Optional<VRange> clippedRange(int aViewportBegin, int aViewPortEnd,
+            OffsetSpan aAnnotation)
+    {
+        return clippedRange(aViewportBegin, aViewPortEnd, aAnnotation.getBegin(),
+                aAnnotation.getEnd());
+    }
+
+    public static Optional<VRange> clippedRange(VDocument aDoc, int aBegin, int aEnd)
+    {
+        return clippedRange(aDoc.getWindowBegin(), aDoc.getWindowEnd(), aBegin, aEnd);
+    }
+
+    public static Optional<VRange> clippedRange(VDocument aDoc, OffsetSpan aFS)
+    {
+        return clippedRange(aDoc.getWindowBegin(), aDoc.getWindowEnd(), aFS.getBegin(),
+                aFS.getEnd());
+    }
+
+    public static Optional<VRange> clippedRange(VDocument aDoc, AnnotationFS aFS)
+    {
+        return clippedRange(aDoc.getWindowBegin(), aDoc.getWindowEnd(), aFS.getBegin(),
+                aFS.getEnd());
     }
 
     public static Optional<VRange> clippedRange(int aViewportBegin, int aViewPortEnd, int aBegin,
