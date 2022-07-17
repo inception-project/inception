@@ -50,7 +50,7 @@ import { Row } from './Row'
 import { RectBox } from './RectBox'
 import { AttributeType, ValType } from './AttributeType'
 import { CollectionLoadedResponse } from './CollectionLoadedResponse'
-import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
+import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID, EDIT_HIGHLIGHT } from '../protocol/Protocol'
 import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
 import * as jsonpatch from 'fast-json-patch'
 import { Operation } from 'fast-json-patch'
@@ -3383,6 +3383,12 @@ export class Visualizer {
       this.drawing = false
       if (this.redraw) {
         this.redraw = false
+      }
+
+      const scrollTarget = this.svgContainer.querySelector(`.${MATCH_FOCUS}`) || this.svgContainer.querySelector(`.shadow_${EDIT_HIGHLIGHT}`)
+      if (scrollTarget) {
+        console.log('Scrolling to ', scrollTarget)
+        scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }
 
       this.dispatcher.post('doneRendering', [this.args])
