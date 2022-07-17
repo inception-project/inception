@@ -1,5 +1,5 @@
 import EventEmitter from 'events'
-import appendChild from '../render/appendChild'
+import { appendChild } from '../render/appendChild'
 import { DEFAULT_RADIUS } from '../render/renderKnob'
 import { dispatchWindowEvent } from '../../../shared/util'
 import { VID } from '@inception-project/inception-js-api'

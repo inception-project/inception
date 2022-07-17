@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.wicket.MetaDataKey;
+import org.apache.wicket.request.cycle.RequestCycle;
 
 public class AnnotationEditorRenderedMetaDataKey
     extends MetaDataKey<Set<String>>
@@ -27,4 +29,15 @@ public class AnnotationEditorRenderedMetaDataKey
     private static final long serialVersionUID = 102615176759478581L;
 
     public final static AnnotationEditorRenderedMetaDataKey INSTANCE = new AnnotationEditorRenderedMetaDataKey();
+
+    public static Set<String> get()
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        Set<String> renderedEditors = requestCycle.getMetaData(INSTANCE);
+        if (renderedEditors == null) {
+            renderedEditors = new HashSet<>();
+            requestCycle.setMetaData(INSTANCE, renderedEditors);
+        }
+        return renderedEditors;
+    }
 }

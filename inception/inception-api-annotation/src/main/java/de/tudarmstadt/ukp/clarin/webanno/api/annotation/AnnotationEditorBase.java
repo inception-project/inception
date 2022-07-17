@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -125,7 +124,7 @@ public abstract class AnnotationEditorBase
      * multiple times, even for the same annotation editor, but only resulting in a single rendering
      * call.
      */
-    public final void requestRender(AjaxRequestTarget aTarget)
+    public void requestRender(AjaxRequestTarget aTarget)
     {
         try {
             aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
@@ -147,14 +146,7 @@ public abstract class AnnotationEditorBase
 
                 // Check if this editor has already been rendered in the current request cycle and
                 // if this is the case, skip rendering.
-                RequestCycle requestCycle = RequestCycle.get();
-                Set<String> renderedEditors = requestCycle
-                        .getMetaData(AnnotationEditorRenderedMetaDataKey.INSTANCE);
-                if (renderedEditors == null) {
-                    renderedEditors = new HashSet<>();
-                    requestCycle.setMetaData(AnnotationEditorRenderedMetaDataKey.INSTANCE,
-                            renderedEditors);
-                }
+                Set<String> renderedEditors = AnnotationEditorRenderedMetaDataKey.get();
 
                 if (renderedEditors.contains(getMarkupId())) {
                     LOG.trace("[{}] render (AJAX) - was already rendered in this cycle - skipping",
