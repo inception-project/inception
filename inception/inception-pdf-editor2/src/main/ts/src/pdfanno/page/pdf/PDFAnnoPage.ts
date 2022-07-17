@@ -33,7 +33,7 @@ export default class PDFAnnoPage {
     adjustViewerSize()
   }
 
-  displayViewer (name: string, pdfUrl: string) {
+  async displayViewer (name: string, pdfUrl: string): Promise<void> {
     // Reset settings.
     this.resetPDFViewerSettings()
 

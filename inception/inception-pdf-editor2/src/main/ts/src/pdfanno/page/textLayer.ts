@@ -23,7 +23,11 @@ export function getPage (num: number): VPage | undefined {
 }
 
 export function findPageForOffset (offset: number): VPage | undefined {
-  return pages.find(p => p.range[0] <= offset && offset < p.range[1])
+  const page = pages.find(p => p.range[0] <= offset && offset < p.range[1])
+  if (!page) {
+    console.error(`No page found for offset [${offset}]. Last offset is [${pages[pages.length - 1].range[1]}]`)
+  }
+  return page
 }
 
 /**

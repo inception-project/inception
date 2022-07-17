@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableExc
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -254,12 +255,11 @@ public abstract class AnnotationPageBase
 
         AnnotatorState state = getModelObject();
 
-        // If the document was not switched and the requested offset is already visible on screen,
-        // then there is no need to change the screen contents
-        if (switched || !(state.getWindowBeginOffset() <= aBegin
-                && aEnd <= state.getWindowEndOffset())) {
-            CAS cas = getEditorCas();
-            state.getPagingStrategy().moveToOffset(state, cas, aBegin, CENTERED);
+        CAS cas = getEditorCas();
+        state.getPagingStrategy().moveToOffset(state, cas, aBegin, CENTERED);
+
+        if (!switched && state.getPagingStrategy() instanceof NoPagingStrategy) {
+            return;
         }
 
         actionRefreshDocument(aTarget);

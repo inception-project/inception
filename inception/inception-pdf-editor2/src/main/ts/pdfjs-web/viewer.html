@@ -38,6 +38,10 @@ See https://github.com/adobe-type-tools/cmap-resources
         PDFViewerApplicationOptions.set("workerSrc", "pdf.worker.min.js");
         PDFViewerApplicationOptions.set("enableScripting", false);
         PDFViewerApplicationOptions.set("viewOnLoad", 1);
+        // Because when when we jump to a location in a different document it sucks when the
+        // sidebar automatically opens and causes a re-scaling which leads to a wrong scroll
+        // position!
+        PDFViewerApplicationOptions.set("sidebarViewOnLoad", 0);
       });
     </script>
   </head>

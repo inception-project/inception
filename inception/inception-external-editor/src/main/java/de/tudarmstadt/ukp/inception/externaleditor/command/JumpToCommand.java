@@ -15,10 +15,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export interface AnnotationEditor {
-  loadAnnotations(): void
+package de.tudarmstadt.ukp.inception.externaleditor.command;
 
-  jumpTo(args: { offset: number, position: string }): void
+import static java.lang.String.format;
 
-  destroy(): void
+import org.springframework.core.annotation.Order;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition;
+
+@Order(1000)
+public class JumpToCommand
+    implements EditorCommand
+{
+    private static final long serialVersionUID = 1779280309942407825L;
+
+    private final int offset;
+    private final FocusPosition position;
+
+    public JumpToCommand(int aOffset, FocusPosition aPosition)
+    {
+        offset = aOffset;
+        position = aPosition;
+    }
+
+    @Override
+    public String command(String aEditorVariable)
+    {
+        return format("e.jumpTo({ offset: %d, position: '%s'})", offset, position);
+    }
 }

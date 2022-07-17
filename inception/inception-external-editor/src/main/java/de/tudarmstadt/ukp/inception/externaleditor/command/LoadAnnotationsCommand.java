@@ -15,10 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export interface AnnotationEditor {
-  loadAnnotations(): void
+package de.tudarmstadt.ukp.inception.externaleditor.command;
 
-  jumpTo(args: { offset: number, position: string }): void
+import org.springframework.core.annotation.Order;
 
-  destroy(): void
+@Order(0)
+public class LoadAnnotationsCommand
+    implements EditorCommand
+{
+    private static final long serialVersionUID = 1779280309942407825L;
+
+    @Override
+    public String command(String aEditorVariable)
+    {
+        return String.format("%s.loadAnnotations()", aEditorVariable);
+    }
 }

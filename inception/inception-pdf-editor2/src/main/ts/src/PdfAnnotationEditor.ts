@@ -17,7 +17,7 @@
  */
 import type { AnnotationEditor, DiamAjax } from '@inception-project/inception-js-api'
 import './PdfAnnotationEditor.css'
-import { initPdfAnno, getAnnotations as doLoadAnnotations } from './pdfanno/pdfanno'
+import { initPdfAnno, getAnnotations as doLoadAnnotations, scrollTo } from './pdfanno/pdfanno'
 import AbstractAnnotation from './pdfanno/core/src/annotation/abstract'
 
 export class PdfAnnotationEditor implements AnnotationEditor {
@@ -28,27 +28,34 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     this.ajax = ajax
     this.root = element
 
-    console.info('PdfAnnotationEditor reporting for duty!')
-
-    initPdfAnno(this.ajax)
-
     element.addEventListener('annotationSelected', ev => this.onAnnotationSelected(ev))
     element.addEventListener('createSpanAnnotation', ev => this.onCreateSpanAnnotation(ev))
     element.addEventListener('createRelationAnnotation', ev => this.onCreateRelationAnnotation(ev))
     element.addEventListener('doubleClickAnnotation', ev => this.onDoubleClickAnnotation(ev))
   }
 
+  async init (): Promise<void> {
+    return initPdfAnno(this.ajax).then(() => console.info('PdfAnnotationEditor reporting for duty!'))
+  }
+
   loadAnnotations (): void {
     doLoadAnnotations()
   }
 
-  onAnnotationSelected (ev: Event) {
-    const ann = ev.detail as AbstractAnnotation
-    if (!ann.selected) {
-      return
-    }
+  jumpTo (args: { offset: number; position: string }): void {
+    console.log(`JUMPING! ${args.offset} ${args.position}`)
+    scrollTo(args.offset, args.position)
+  }
 
-    this.ajax.selectAnnotation(ann.vid)
+  onAnnotationSelected (ev: Event) {
+    if (ev instanceof CustomEvent) {
+      const ann = ev.detail as AbstractAnnotation
+      if (!ann.selected) {
+        return
+      }
+
+      this.ajax.selectAnnotation(ann.vid)
+    }
   }
 
   onCreateSpanAnnotation (ev: Event) {
