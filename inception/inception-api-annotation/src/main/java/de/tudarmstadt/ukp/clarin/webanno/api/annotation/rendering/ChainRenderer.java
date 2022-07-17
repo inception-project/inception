@@ -157,7 +157,7 @@ public class ChainRenderer
 
                 // Render span
                 {
-                    Optional<VRange> range = VRange.clippedRange(aWindowBegin, aWindowEnd, linkFs);
+                    Optional<VRange> range = VRange.clippedRange(aResponse, linkFs);
 
                     if (!range.isPresent()) {
                         continue;

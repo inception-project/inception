@@ -22,7 +22,7 @@
     class="search-sidebar flex-content flex-v-container flex-gutter flex-only-internal-gutter">
     <div wicket:id="mainContainer" class="card flex-content">
       <div class="card-header">
-        Search
+        <wicket:message key="search"/>
         <div class="actions">
           <span class="dropdown" aria-haspopup="true" aria-expanded="false">
             <button class="btn btn-action btn-secondary dropdown-toggle flex-content" type="button" data-bs-toggle="dropdown">
@@ -105,24 +105,40 @@
                 rows="5"></textarea>
             </div>
             <div class="d-flex mb-2">
-              <div class="btn-group flex-content flex-h-container"
-                role="group">
+              <div class="btn-group w-100" role="group">
                 <button wicket:id="search" type="submit"
-                  class="btn btn-primary flex-content"
+                  class="btn btn-primary"
                   wicket:message="title:search">
                   <i class="fas fa-search" aria-hidden="true"></i> <span
                     class="d-none d-xl-inline">&nbsp;<wicket:message
                       key="search" /></span>
+                </button>
+                <button wicket:id="clearButton"
+                  class="btn btn-outline-secondary flex-grow-0"
+                  wicket:message="title:clear">
+                  <i class="fas fa-times"></i>
                 </button>
               </div>
             </div>
           </div>
         </form>
 
-        <div>
-          <span wicket:id="numberOfResults" class="float-end" /> <span
-            wicket:id="pagingNavigator" />
+        <div class="d-flex flex-wrap justify-content-between mb-1">
+          <ul wicket:id="pagingNavigator" class="mb-1"/>
+          
+          <div class="input-group input-group-sm w-auto d-none d-xl-inline mb-1">
+            <span wicket:id="numberOfResults" class="input-group-text"/> 
+          </div>
+          
+          <div class="btn-group mb-1" role="group">
+            <button wicket:id="export"
+              class="btn btn-sm btn-outline-primary">
+              <i class="fas fa-download" aria-hidden="true"></i>
+              <span class="d-none d-xxl-inline ms-1"><wicket:message key="export" /></span>
+            </button>
+          </div>
         </div>
+        
         <div class="scrolling flex-content">
           <table wicket:id="resultsGroupContainer"
             class="table table-striped table-sm">
@@ -160,6 +176,7 @@
               </button>
             </div>
           </div>
+          
           <form wicket:id="createOptions" class="card mb-2">
             <div class="card-header small">
               <wicket:message key="options" />
@@ -196,6 +213,7 @@
               </button>
             </div>
           </div>
+          
           <form wicket:id="deleteOptions" class="card mb-2">
             <div class="card-header small">
               <wicket:message key="options" />
@@ -214,29 +232,12 @@
               </div>
             </div>
           </form>
-
-          <div class="mb-2 d-flex">
-            <button wicket:id="clearButton"
-              class="btn btn-secondary flex-content"
-              wicket:message="title:clear">
-              <i class="fas fa-times"></i> <span
-                class="d-none d-xl-inline">&nbsp;<wicket:message
-                  key="clear" /></span>
-            </button>
-          </div>
-
-          <div class="d-flex">
-            <button wicket:id="export"
-              class="btn btn-primary flex-content">
-              <i class="fas fa-download" aria-hidden="true"></i>
-              <wicket:message key="export" />
-            </button>
-          </div>
         </form>
       </div>
     </div>
   </div>
 </wicket:panel>
+
 <wicket:fragment wicket:id="resultGroup">
   <tr wicket:id="results" style="display: table-row;">
     <td class="ssb-result-control"><label wicket:for="selected">
@@ -246,4 +247,5 @@
         wicket:id="sentence"></span></a></td>
   </tr>
 </wicket:fragment>
+
 </html>

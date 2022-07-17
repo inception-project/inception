@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -235,23 +236,23 @@ public class ExternalSearchAnnotationSidebar
             for (ExternalSearchHighlight highlight : searchState.getSelectedResult()
                     .getHighlights()) {
 
-                Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
+                Optional<ExternalSearchHighlight> maybeExHighlight = HighlightUtils
                         .parseHighlight(highlight.getHighlight(), documentText);
-                if (exHighlight.isPresent()) {
-                    // Highlight the keywords in the annotator indicated by the offsets
-                    // if they are within the current window.
-                    for (OffsetSpan offset : exHighlight.get().getOffsets()) {
-                        int windowBeginOffset = aRequest.getWindowBeginOffset();
-                        if (windowBeginOffset <= offset.getBegin()) {
-                            if (offset.getEnd() <= aRequest.getWindowEndOffset()) {
-                                aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS,
-                                        offset.getBegin() - windowBeginOffset,
-                                        offset.getEnd() - windowBeginOffset));
-                            }
-                            else {
-                                break;
-                            }
-                        }
+                if (!maybeExHighlight.isPresent()) {
+                    continue;
+                }
+
+                var exHighlight = maybeExHighlight.get();
+
+                // Highlight the keywords in the annotator indicated by the offsets
+                // if they are within the current window.
+                for (OffsetSpan offset : exHighlight.getOffsets()) {
+                    Optional<VRange> range = VRange.clippedRange(aVDocument, offset);
+
+                    range.ifPresent(r -> aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS, r)));
+
+                    if (offset.getBegin() > aRequest.getWindowEndOffset()) {
+                        break;
                     }
                 }
             }
