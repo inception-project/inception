@@ -24,7 +24,7 @@ export const annoLayer2Id = 'annoLayer2'
 let annoPage: PDFAnnoPage
 let annotationContainer: AnnotationContainer
 let diamAjax: DiamAjax
-let pageRender: number
+let currentFocusPage: number
 let pagechangeEventCounter: number
 
 export async function initPdfAnno (ajax: DiamAjax): Promise<void> {
@@ -238,8 +238,20 @@ export function scrollTo (offset: number, position: string): void {
 }
 
 export function getAnnotations () {
+  const focusPage = textLayer.getPage(currentFocusPage)
+
+  if (!focusPage) {
+    console.error(`Cannot find page ${currentFocusPage}`)
+    return
+  }
+
+  const pageBefore = textLayer.getPageBefore(currentFocusPage)
+  const extendedBegin = (pageBefore || focusPage)?.range[0]
+  const pageAfter = textLayer.getPageAfter(currentFocusPage)
+  const extendedEnd = (pageAfter || focusPage)?.range[1]
+
   const options : DiamLoadAnnotationsOptions = {
-    range: textLayer.getPage(pageRender).range,
+    range: [extendedBegin, extendedEnd],
     includeText: false
   }
 
@@ -309,7 +321,7 @@ async function displayViewer (): Promise<void> {
         textLayer.setup(vModel)
 
         pagechangeEventCounter = 0
-        pageRender = 1
+        currentFocusPage = 1
         const initAnnotations = function (e) {
           try {
             getAnnotations()
@@ -320,12 +332,12 @@ async function displayViewer (): Promise<void> {
         window.PDFViewerApplication.eventBus.on('pagerendered', initAnnotations)
         window.PDFViewerApplication.eventBus.on('pagechanging', function (e) {
           pagechangeEventCounter++
-          if (e.pageNumber !== pageRender) {
+          if (e.pageNumber !== currentFocusPage) {
             const snapshot = pagechangeEventCounter
             const renderTimeout = 500
             setTimeout(() => {
-              if (snapshot === pagechangeEventCounter && e.pageNumber !== pageRender) {
-                pageRender = e.pageNumber
+              if (snapshot === pagechangeEventCounter && e.pageNumber !== currentFocusPage) {
+                currentFocusPage = e.pageNumber
                 pagechangeEventCounter = 0
                 getAnnotations()
               }
