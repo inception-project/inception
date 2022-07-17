@@ -19,6 +19,7 @@ export default abstract class AbstractAnnotation extends EventEmitter {
   element: HTMLElement = null
   exportId: any
   type: 'span' | 'relation'
+  classList: string[] = []
 
   /**
    * Constructor.

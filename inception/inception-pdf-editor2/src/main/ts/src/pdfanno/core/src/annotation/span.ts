@@ -3,6 +3,10 @@ import { getGlyphsInRange } from '../../../page/textLayer'
 import { Rectangle } from '../../../../vmodel/Rectangle'
 import { mergeRects } from '../UI/span'
 
+let clickCount = 0
+let timer = null
+const CLICK_DELAY = 300
+
 /**
  * Span Annotation.
  */
@@ -11,7 +15,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   readOnly = false
   knob = true
   border = true
-  text = null
+  text: string
   textRange: [number, number]
   page: number = -1
   zIndex = 10
@@ -22,7 +26,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
 
     this.type = 'span'
     this.vid = null
-    this.text = null
     this.color = null
     this.textRange = null
     this.page = null
@@ -186,7 +189,3 @@ export default class SpanAnnotation extends AbstractAnnotation {
       e.removeEventListener('click', this.handleClickEvent))
   }
 }
-
-var clickCount = 0
-var timer = null
-var CLICK_DELAY = 300

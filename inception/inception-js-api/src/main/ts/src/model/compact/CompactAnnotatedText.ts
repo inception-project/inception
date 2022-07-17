@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 import { Offsets } from "../Offsets";
+import { VID } from "../VID";
 import { CompactAnnotationMarker } from "./CompactAnnotationMarker";
 import { CompactRelation } from "./CompactRelation";
 import { CompactSpan } from "./CompactSpan";
@@ -28,4 +29,28 @@ export interface CompactAnnotatedText {
   spans?: Array<CompactSpan>;
   annotationMarkers?: Array<CompactAnnotationMarker>;
   textMarkers?: Array<CompactTextMarker>;
+}
+
+/**
+ * Converts a list of {@link CompactAnnotationMarker}s to an easily accessible map using the {@link VID} 
+ * as key and the set of markers on that annotation as values.
+ * 
+ * @param markerList a list of {@link CompactAnnotationMarker}s
+ * @returns the map
+ */
+export function makeMarkerMap<T>(markerList: T[] | undefined): Map<VID, Array<T>> {
+  const markerMap = new Map<VID, Array<T>>();
+  if (markerList) {
+    markerList.forEach(marker => {
+      marker[1].forEach(vid => {
+        let ms = markerMap.get(vid);
+        if (!ms) {
+          ms = [];
+          markerMap.set(vid, ms);
+        }
+        ms.push(marker);
+      })
+    });
+  }
+  return markerMap;
 }

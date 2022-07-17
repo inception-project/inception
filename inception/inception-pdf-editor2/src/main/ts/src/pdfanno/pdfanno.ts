@@ -16,6 +16,7 @@ import { getGlyphsInRange } from './page/textLayer'
 import RelationAnnotation from './core/src/annotation/relation'
 import { createRect, mapToDocumentCoordinates } from './core/src/render/renderSpan'
 import { transform } from './core/src/render/appendChild'
+import { makeMarkerMap } from '@inception-project/inception-js-api/src/model/compact/CompactAnnotatedText'
 
 // TODO make it a global const.
 // const svgLayerId = 'annoLayer'
@@ -258,6 +259,8 @@ export function getAnnotations () {
   diamAjax.loadAnnotations(options).then((doc: CompactAnnotatedText) => {
     annotationContainer.clear()
 
+    const annotationMarkers = makeMarkerMap(doc.annotationMarkers)
+
     if (doc.spans) {
       console.log(`Loaded ${doc.spans.length} span annotations`)
       for (const s of doc.spans) {
@@ -265,9 +268,10 @@ export function getAnnotations () {
         span.vid = `${s[0]}`
         span.textRange = [s[1][0][0] + doc.window[0], s[1][0][1] + doc.window[0]]
         span.page = textLayer.findPageForOffset(span.textRange[0]).index
-        span.color = s[2].c
-        span.text = s[2].l
+        span.color = s[2]?.c || '#FFF'
+        span.text = s[2]?.l || ''
         span.rectangles = mergeRects(getGlyphsInRange(span.textRange).map(g => g.bbox))
+        annotationMarkers.get(s[0])?.forEach(m => span.classList.push(`marker-${m[0]}`))
         span.save()
       }
     }
@@ -281,6 +285,7 @@ export function getAnnotations () {
         rel.rel2Annotation = annotationContainer.findById(r[1][1][0])
         rel.color = r[2].c
         rel.text = r[2].l
+        annotationMarkers.get(r[0])?.forEach(m => rel.classList.push(`marker-${m[0]}`))
         rel.save()
       }
     }
@@ -290,10 +295,10 @@ export function getAnnotations () {
         const span = new SpanAnnotation()
         span.textRange = [m[1][0][0] + doc.window[0], m[1][0][1] + doc.window[0]]
         span.page = textLayer.findPageForOffset(span.textRange[0]).index
-        span.color = 'blue'
         span.knob = false
         span.border = false
         span.rectangles = mergeRects(getGlyphsInRange(span.textRange).map(g => g.bbox))
+        span.classList = [`marker-${m[0]}`]
         span.save()
       }
     }

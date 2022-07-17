@@ -91,15 +91,18 @@ export function renderRelation (a: RelationAnnotation): HTMLDivElement {
   group.appendChild(outline)
 
   /*
-      <path d="M 25 25 Q 175 25 175 175" stroke="blue" fill="none"/>
-  */
+   * <path d="M 25 25 Q 175 25 175 175" stroke="blue" fill="none"/>
+   */
+  const classlist = ['anno-relation']
+  a?.classList.forEach(c => classlist.push(c))
+
   const relation = document.createElementNS('http://www.w3.org/2000/svg', 'path')
   setAttributes(relation, {
     d: `M ${a.x1} ${a.y1} Q ${control.x} ${control.y} ${a.x2} ${a.y2}`,
     stroke: a.color,
     strokeWidth: 1,
     fill: 'none',
-    class: 'anno-relation'
+    class: classlist.join(' ')
   })
 
   // Triangle for the end point.
