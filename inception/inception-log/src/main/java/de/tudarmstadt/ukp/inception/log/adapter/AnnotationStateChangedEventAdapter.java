@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+
 import java.io.IOException;
 import java.util.Objects;
 
@@ -25,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.StateChangeDetails;
 
@@ -70,6 +74,13 @@ public class AnnotationStateChangedEventAdapter
         StateChangeDetails details = new StateChangeDetails();
         details.setState(Objects.toString(aEvent.getNewState(), null));
         details.setPreviousState(Objects.toString(aEvent.getPreviousState(), null));
+
+        AnnotationDocumentState annotatorState = aEvent.getAnnotationDocument().getAnnotatorState();
+        details.setAnnotatorState(Objects.toString(annotatorState, null));
+        if (annotatorState == FINISHED || annotatorState == IGNORE) {
+            details.setAnnotatorComment(aEvent.getAnnotationDocument().getAnnotatorComment());
+        }
+
         return JSONUtil.toJsonString(details);
     }
 }

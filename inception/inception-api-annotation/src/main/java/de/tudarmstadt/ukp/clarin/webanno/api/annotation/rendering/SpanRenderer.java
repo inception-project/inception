@@ -138,13 +138,13 @@ public class SpanRenderer
             List<AnnotationFeature> aFeatures, int aWindowBegin, int aWindowEnd)
     {
         if (!checkTypeSystem(aFS.getCAS())) {
-            return null;
+            return emptyList();
         }
 
-        Optional<VRange> range = VRange.clippedRange(aWindowBegin, aWindowEnd, aFS);
+        Optional<VRange> range = VRange.clippedRange(aVDocument, aFS);
 
         if (!range.isPresent()) {
-            return null;
+            return emptyList();
         }
 
         List<VObject> spansAndSlots = new ArrayList<>();

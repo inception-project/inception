@@ -66,4 +66,13 @@
 	width: 100% !important;
 }
 
+// Avoid Kendo split panel assumptions messing with Bootstrap layout assumptions
+.k-splitter .k-pane {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box !important;
+  }
+}
+
 

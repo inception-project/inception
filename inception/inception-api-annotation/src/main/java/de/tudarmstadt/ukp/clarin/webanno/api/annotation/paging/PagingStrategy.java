@@ -46,36 +46,7 @@ public interface PagingStrategy
 
     DefaultPagingNavigator createPageNavigator(String aId, AnnotationPageBase aPage);
 
-    default void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, FocusPosition aPos)
-    {
-        switch (aPos) {
-        case TOP: {
-            aState.setPageBegin(aCas, aOffset);
-            break;
-        }
-        case CENTERED: {
-            List<Unit> units = units(aCas);
-
-            // Find the unit containing the given offset
-            Unit unit = units.stream() //
-                    .filter(u -> u.getBegin() <= aOffset && aOffset <= u.getEnd()) //
-                    .findFirst() //
-                    .orElseThrow(() -> new IllegalArgumentException(
-                            "No unit contains character offset [" + aOffset + "]"));
-
-            // How many rows to display before the unit such that the unit is centered?
-            int rowsInPageBeforeUnit = aState.getPreferences().getWindowSize() / 2;
-            // The -1 below is because unit.getIndex() is 1-based
-            Unit firstUnit = units.get(Math.max(0, unit.getIndex() - rowsInPageBeforeUnit - 1));
-
-            aState.setPageBegin(aCas, firstUnit.getBegin());
-            aState.setFocusUnitIndex(unit.getIndex());
-            break;
-        }
-        default:
-            throw new IllegalArgumentException("Unknown focus positon: [" + aPos + "]");
-        }
-    }
+    void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, FocusPosition aPos);
 
     default void recalculatePage(AnnotatorViewState aState, CAS aCas)
     {

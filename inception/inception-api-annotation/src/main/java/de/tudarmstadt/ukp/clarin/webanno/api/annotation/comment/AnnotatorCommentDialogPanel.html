@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
   Licensed to the Technische Universität Darmstadt under one
   or more contributor license agreements.  See the NOTICE file
@@ -15,11 +16,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<body>
-  <wicket:panel>
-    <div wicket:id="vis" class="flex-content flex-h-container"></div>
-  </wicket:panel>
-</body>
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:panel>
+  <div class="modal-header">
+    <h5 class="modal-title">Annotator comment</h5>
+    <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+  </div>
+  <div class="modal-body overflow-auto">
+    <div class="fluid-container">
+      <div class="col-sm-12">
+        <div wicket:id="annotatorComment"></div>
+      </div>
+    </div>
+  </div>
+</wicket:panel>
 </html>

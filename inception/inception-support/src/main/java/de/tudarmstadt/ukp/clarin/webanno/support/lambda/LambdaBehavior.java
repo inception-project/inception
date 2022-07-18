@@ -22,12 +22,27 @@ import org.apache.wicket.behavior.Behavior;
 import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.model.IModel;
+import org.danekja.java.misc.serializable.SerializableRunnable;
 import org.danekja.java.util.function.serializable.SerializableBiConsumer;
 import org.danekja.java.util.function.serializable.SerializableBooleanSupplier;
 import org.danekja.java.util.function.serializable.SerializableConsumer;
 
 public class LambdaBehavior
 {
+    public static Behavior onConfigure(SerializableRunnable aAction)
+    {
+        return new Behavior()
+        {
+            private static final long serialVersionUID = -6144591383577622961L;
+
+            @Override
+            public void onConfigure(Component aComponent)
+            {
+                aAction.run();
+            }
+        };
+    }
+
     public static Behavior onConfigure(SerializableConsumer<Component> aAction)
     {
         return new Behavior()

@@ -25,6 +25,8 @@ public class StateChangeDetails
 {
     private String state;
     private String previousState;
+    private String annotatorState;
+    private String annotatorComment;
 
     public StateChangeDetails()
     {
@@ -55,5 +57,25 @@ public class StateChangeDetails
     public void setPreviousState(String aPreviousState)
     {
         previousState = aPreviousState;
+    }
+
+    public void setAnnotatorComment(String aAnnotatorComment)
+    {
+        annotatorComment = aAnnotatorComment;
+    }
+
+    public String getAnnotatorComment()
+    {
+        return annotatorComment;
+    }
+
+    public void setAnnotatorState(String aAnnotatorState)
+    {
+        annotatorState = aAnnotatorState;
+    }
+
+    public String getAnnotatorState()
+    {
+        return annotatorState;
     }
 }

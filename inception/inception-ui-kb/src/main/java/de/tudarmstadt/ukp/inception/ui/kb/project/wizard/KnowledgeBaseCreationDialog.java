@@ -17,15 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.project.wizard;
 
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.StringResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 
 public class KnowledgeBaseCreationDialog
-    extends ModalWindow
+    extends BootstrapModalDialog
 {
 
     private static final long serialVersionUID = 7446798125344480445L;
@@ -34,26 +33,17 @@ public class KnowledgeBaseCreationDialog
 
     public KnowledgeBaseCreationDialog(String aId, IModel<Project> aProjectModel)
     {
-        super(aId, aProjectModel);
+        super(aId);
 
         setOutputMarkupPlaceholderTag(true);
 
+        trapFocus();
+
         projectModel = aProjectModel;
-
-        setInitialWidth(675);
-        setInitialHeight(450);
-        setResizable(false);
-        setWidthUnit("px");
-        setHeightUnit("px");
-        setTitle(new StringResourceModel("kb.wizard.title", this));
-        setCssClassName("w_blue w_flex");
     }
 
-    @Override
-    public void show(IPartialPageRequestHandler target)
+    public void show(AjaxRequestTarget target)
     {
-        setContent(new KnowledgeBaseCreationWizard(getContentId(), projectModel));
-        super.show(target);
+        open(new KnowledgeBaseCreationWizard(CONTENT_ID, projectModel), target);
     }
-
 }

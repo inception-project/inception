@@ -14,7 +14,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
   zIndex: number
   _rel1Annotation: SpanAnnotation
   _rel2Annotation: SpanAnnotation
-  selected: boolean
 
   /**
    * Constructor.
@@ -41,9 +40,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
     this.handleHoverInEvent = this.handleHoverInEvent.bind(this)
     this.handleHoverOutEvent = this.handleHoverOutEvent.bind(this)
 
-    window.globalEvent.on('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.on('enableViewMode', this.enableViewMode)
-    // window.globalEvent.on('rectmoveend', this.handleRelMoveEnd)
   }
 
   /**
@@ -64,7 +61,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
     if (this._rel1Annotation) {
       this._rel1Annotation.on('hoverin', this.handleRelHoverIn)
       this._rel1Annotation.on('hoverout', this.handleRelHoverOut)
-      // this._rel1Annotation.on('rectmove', this.handleRelMove)
       this._rel1Annotation.on('delete', this.handleRelDelete)
     }
   }
@@ -109,12 +105,14 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   destroy () {
     const promise = super.destroy()
+
     if (this._rel1Annotation) {
       this._rel1Annotation.removeListener('hoverin', this.handleRelHoverIn)
       this._rel1Annotation.removeListener('hoverout', this.handleRelHoverOut)
       this._rel1Annotation.removeListener('delete', this.handleRelDelete)
       delete this._rel1Annotation
     }
+
     if (this._rel2Annotation) {
       this._rel2Annotation.removeListener('hoverin', this.handleRelHoverIn)
       this._rel2Annotation.removeListener('hoverout', this.handleRelHoverOut)
@@ -122,7 +120,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
       delete this._rel2Annotation
     }
 
-    window.globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
 
     return promise
@@ -150,20 +147,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
     if (this.rel2Annotation) {
       this.rel2Annotation.dehighlight()
     }
-  }
-
-  /**
-   * Handle a selected event on a text.
-   */
-  handleTextSelected () {
-    this.select()
-  }
-
-  /**
-   * Handle a deselected event on a text.
-   */
-  handleTextDeselected () {
-    this.deselect()
   }
 
   /**
@@ -271,9 +254,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
     }
   }
 
-  /**
-   * @{inheritDoc}
-   */
   equalTo (anno: RelationAnnotation) {
     if (!anno || this.type !== anno.type) {
       return false

@@ -22,14 +22,18 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHA
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
+import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
@@ -49,9 +53,12 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -62,10 +69,12 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCurationResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -91,6 +100,7 @@ public abstract class BratSuggestionVisualizer
     private @SpringBean BratSerializer bratSerializer;
 
     private final WebMarkupContainer vis;
+    private final ModalDialog modalDialog;
     private final ConfirmationDialog stateChangeConfirmationDialog;
     private final AbstractDefaultAjaxBehavior controller;
     private final AbstractAjaxBehavior collProvider;
@@ -133,6 +143,9 @@ public abstract class BratSuggestionVisualizer
             }
         };
 
+        modalDialog = new BootstrapModalDialog("modalDialog");
+        queue(modalDialog);
+
         add(vis);
         add(collProvider, docProvider);
 
@@ -143,13 +156,21 @@ public abstract class BratSuggestionVisualizer
                 new StringResourceModel("StateChangeConfirmationDialog.text", this, null)));
         stateChangeConfirmationDialog.setConfirmAction(this::actionToggleAnnotationDocumentState);
 
-        LambdaAjaxLink stateToggle = new LambdaAjaxLink("stateToggle",
-                stateChangeConfirmationDialog::show);
+        var annDoc = LoadableDetachableModel.of(this::getAnnotationDocument);
+
+        var stateToggle = new LambdaAjaxLink("stateToggle", stateChangeConfirmationDialog::show);
         stateToggle.setOutputMarkupId(true);
         stateToggle.add(new Label("state",
-                LoadableDetachableModel.of(() -> getAnnotationDocumentState().symbol()))
+                annDoc.map(AnnotationDocument::getState).map(AnnotationDocumentState::symbol))
                         .setEscapeModelStrings(false));
         add(stateToggle);
+
+        Icon commentSymbol = new Icon("commentSymbol", FontAwesome5IconType.comment_s);
+        commentSymbol.add(visibleWhen(
+                annDoc.map(AnnotationDocument::getAnnotatorComment).map(StringUtils::isNotBlank)));
+        commentSymbol.add(
+                AjaxEventBehavior.onEvent("click", _t -> actionShowAnnotatorComment(_t, annDoc)));
+        queue(commentSymbol);
 
         controller = new AbstractDefaultAjaxBehavior()
         {
@@ -195,6 +216,12 @@ public abstract class BratSuggestionVisualizer
         add(controller);
     }
 
+    private void actionShowAnnotatorComment(AjaxRequestTarget aTarget,
+            LoadableDetachableModel<AnnotationDocument> aAnnDoc)
+    {
+        modalDialog.open(new AnnotatorCommentDialogPanel(ModalDialog.CONTENT_ID, aAnnDoc), aTarget);
+    }
+
     private void actionToggleAnnotationDocumentState(AjaxRequestTarget aTarget)
     {
         var username = getModelObject().getUser().getUsername();
@@ -219,11 +246,11 @@ public abstract class BratSuggestionVisualizer
         ((CurationPage) getPage()).actionLoadDocument(aTarget);
     }
 
-    private AnnotationDocumentState getAnnotationDocumentState()
+    private AnnotationDocument getAnnotationDocument()
     {
         var username = getModelObject().getUser().getUsername();
         var doc = getModelObject().getAnnotatorState().getDocument();
-        return documentService.getAnnotationDocument(doc, username).getState();
+        return documentService.getAnnotationDocument(doc, username);
     }
 
     private String maybeAnonymizeUsername(AnnotatorSegmentState aSegment)

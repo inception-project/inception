@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <!--
   Licensed to the Technische Universität Darmstadt under one
   or more contributor license agreements.  See the NOTICE file
@@ -15,11 +16,15 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<html xmlns="http://www.w3.org/1999/xhtml"
-  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-<body>
-  <wicket:panel>
-    <div wicket:id="vis" class="flex-content flex-h-container"></div>
-  </wicket:panel>
-</body>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+  <span class="text-nowrap">
+    <span wicket:id="state">
+      <wicket:container wicket:id="stateSymbol" />
+    </span>
+    <a wicket:id="showComment" class="ms-2 text-reset">
+      <i class="fas fa-comment"></i>
+    </a>
+  </span>
+</wicket:panel>
 </html>

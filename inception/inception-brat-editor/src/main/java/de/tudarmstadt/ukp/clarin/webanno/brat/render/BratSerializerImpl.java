@@ -245,9 +245,10 @@ public class BratSerializerImpl
                 aResponse.addMarker(new SentenceMarker(vmarker.getType(), marker.getIndex()));
             }
             else if (vmarker instanceof VTextMarker) {
-                VTextMarker marker = (VTextMarker) vmarker;
+                var marker = (VTextMarker) vmarker;
+                var range = marker.getRange();
                 aResponse.addMarker(
-                        new TextMarker(marker.getType(), marker.getBegin(), marker.getEnd()));
+                        new TextMarker(marker.getType(), range.getBegin(), range.getEnd()));
             }
             else {
                 LOG.warn("Unknown how to render marker: [" + vmarker + "]");

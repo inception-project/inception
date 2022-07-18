@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAn
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -231,8 +232,6 @@ public class ActiveLearningSidebar
         add(alMainContainer);
 
         confirmationDialog = new ConfirmationDialog(CID_CONFIRMATION_DIALOG);
-        confirmationDialog.setInitialWidth(300);
-        confirmationDialog.setInitialHeight(200);
         add(confirmationDialog);
     }
 
@@ -1265,12 +1264,11 @@ public class ActiveLearningSidebar
         }
 
         if (highlightSpan != null) {
-            AnnotatorState state = getModelObject();
-            if (state.getWindowBeginOffset() <= highlightSpan.getBegin()
-                    && highlightSpan.getEnd() <= state.getWindowEndOffset()) {
-                aVDoc.add(new VTextMarker(this, VMarker.FOCUS,
-                        highlightSpan.getBegin() - state.getWindowBeginOffset(),
-                        highlightSpan.getEnd() - state.getWindowBeginOffset()));
+            Optional<VRange> range = VRange.clippedRange(aVDoc, highlightSpan.getBegin(),
+                    highlightSpan.getEnd());
+
+            if (range.isPresent()) {
+                aVDoc.add(new VTextMarker(this, VMarker.FOCUS, range.get()));
             }
             else {
                 LOG.trace("Active learning sidebar span highlight is outside visible area");

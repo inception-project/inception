@@ -21,57 +21,44 @@ import static java.util.Arrays.asList;
 
 import java.util.List;
 
-import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.util.ListModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessageGroup;
 
 public class LogDialog
-    extends ModalWindow
+    extends BootstrapModalDialog
 {
     private static final long serialVersionUID = -6911254813496835955L;
 
-    public LogDialog(String id, IModel<String> aTitle)
+    private IModel<List<LogMessageGroup>> logMessages;
+
+    public LogDialog(String id)
     {
-        this(id, aTitle, null);
+        this(id, null);
     }
 
-    public LogDialog(String id, IModel<String> aTitle, IModel<List<LogMessageGroup>> aModel)
+    public LogDialog(String id, IModel<List<LogMessageGroup>> aModel)
     {
-        super(id, aModel);
+        super(id);
 
-        // dialog window to select annotation layer preferences
-        setInitialWidth(600);
-        setInitialHeight(450);
-        setResizable(true);
-        setWidthUnit("px");
-        setHeightUnit("px");
-        setTitle(aTitle);
-        setCssClassName("w_blue w_flex");
-        setCloseButtonCallback(_target -> {
-            close(_target);
-            return true;
-        });
+        trapFocus();
+
+        logMessages = aModel;
     }
 
-    public IModel<List<LogMessageGroup>> getModel()
+    public void setModel(IModel<List<LogMessageGroup>> aModel)
     {
-        return (IModel<List<LogMessageGroup>>) getDefaultModel();
+        logMessages = aModel;
     }
 
-    public MarkupContainer setModel(IModel<List<LogMessageGroup>> aModel)
+    public void show(AjaxRequestTarget aTarget)
     {
-        return super.setDefaultModel(aModel);
-    }
-
-    @Override
-    public void show(IPartialPageRequestHandler aTarget)
-    {
-        IModel<List<LogMessageGroup>> model = getModel();
+        IModel<List<LogMessageGroup>> model = logMessages;
 
         if (model == null || model.getObject() == null) {
             LogMessageGroup group = new LogMessageGroup("No recommendations");
@@ -79,8 +66,8 @@ public class LogDialog
             model = new ListModel<>(asList(group));
         }
 
-        setContent(new LogDialogContent(getContentId(), this, model));
-
-        super.show(aTarget);
+        LogDialogContent content = new LogDialogContent(ModalDialog.CONTENT_ID, model);
+        open(content, aTarget);
+        aTarget.focusComponent(content.getFocusComponent());
     }
 }

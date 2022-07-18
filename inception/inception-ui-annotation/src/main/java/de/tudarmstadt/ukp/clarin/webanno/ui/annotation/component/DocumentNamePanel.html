@@ -15,21 +15,33 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<!DOCTYPE 
-    html
-    PUBLIC
-    "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
-<html 
-    lang="en-US"
-    xml:lang="en-US"
-    xmlns="http://www.w3.org/1999/xhtml"
-    xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
-    
-  <body>
-    <wicket:panel>
- <span wicket:id="doumentName"></span>
-</wicket:panel>
+<html lang="en-US" xml:lang="en-US" xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+
+<body>
+  <wicket:panel>
+    <span wicket:enclosure="user" class="badge border border-secondary text-secondary">
+      <i class="fas fa-user"></i>
+      <wicket:container wicket:id="user"/>
+    </span>
+    <span wicket:enclosure="project" class="badge border border-secondary text-secondary">
+      <i class="fas fa-archive"></i>
+      <wicket:container wicket:id="project"/>
+      <wicket:enclosure child="projectId">
+        (<wicket:container wicket:id="projectId"/>)
+      </wicket:enclosure>
+    </span>
+    <span wicket:enclosure="document" class="badge border border-secondary text-secondary">
+      <i class="fas fa-file"></i>
+      <wicket:container wicket:id="document"/>
+      <wicket:enclosure child="documentId">
+        (<wicket:container wicket:id="documentId"/>)
+      </wicket:enclosure>
+    </span>
+  </wicket:panel>
 </body>
+
 </html>

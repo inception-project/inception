@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 export interface AnnotationEditor {
-  loadAnnotations() : void;
-  destroy(): void;
+  loadAnnotations(): void
+
+  jumpTo(args: { offset: number, position: string }): void
+
+  destroy(): void
 }

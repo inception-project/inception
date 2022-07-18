@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
@@ -79,7 +78,7 @@ public abstract class AbstractInfoPanel<T extends KBObject>
     protected IModel<KnowledgeBase> kbModel;
 
     private ConfirmationDialog confirmationDialog;
-    private ModalWindow modal;
+    private SubclassCreationDialog createSubclassDialog;
 
     public AbstractInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
             IModel<? extends KBObject> aHandleModel, IModel<T> aKbObjectModel)
@@ -94,8 +93,8 @@ public abstract class AbstractInfoPanel<T extends KBObject>
         // when creating a new KBObject, activate the form and obtain the AjaxRequestTarget to set
         // the focus to the name field
         Component content;
-        modal = new SubclassCreationDialog("createSubclass", kbModel, handleModel);
-        add(modal);
+        createSubclassDialog = new SubclassCreationDialog("createSubclass", kbModel, handleModel);
+        add(createSubclassDialog);
 
         boolean isNew = kbObjectModel.getObject() != null
                 && isEmpty(kbObjectModel.getObject().getIdentifier());
@@ -296,7 +295,7 @@ public abstract class AbstractInfoPanel<T extends KBObject>
 
     private void actionCreateSubclass(AjaxRequestTarget aTarget)
     {
-        modal.show(aTarget);
+        createSubclassDialog.show(aTarget);
     }
 
     protected abstract void actionDelete(AjaxRequestTarget aTarget);

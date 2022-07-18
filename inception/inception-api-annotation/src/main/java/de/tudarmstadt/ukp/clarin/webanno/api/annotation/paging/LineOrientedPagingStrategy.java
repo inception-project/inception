@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
 public class LineOrientedPagingStrategy
-    implements PagingStrategy
+    extends PagingStrategy_ImplBase
 {
     private static final long serialVersionUID = -991967885210129525L;
 

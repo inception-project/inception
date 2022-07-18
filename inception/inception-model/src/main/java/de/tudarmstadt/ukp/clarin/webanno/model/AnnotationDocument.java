@@ -27,6 +27,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
@@ -86,6 +87,14 @@ public class AnnotationDocument
     @Column(nullable = true)
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateType")
     private AnnotationDocumentState annotatorState;
+
+    /**
+     * Comment the anntoator can leave when marking a document as finished. Typically used to report
+     * problems to the curator.
+     */
+    @Lob
+    @Column(length = 64000)
+    private String annotatorComment;
 
     /**
      * Last change made to the annotations or the last state transition triggered by the annotator
@@ -188,6 +197,16 @@ public class AnnotationDocument
     public void setAnnotatorState(AnnotationDocumentState aAnnotatorState)
     {
         annotatorState = aAnnotatorState;
+    }
+
+    public String getAnnotatorComment()
+    {
+        return annotatorComment;
+    }
+
+    public void setAnnotatorComment(String aAnnotatorComment)
+    {
+        annotatorComment = aAnnotatorComment;
     }
 
     public Date getTimestamp()

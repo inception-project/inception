@@ -17,54 +17,59 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel>
-    <form wicket:id="form" class="w_flex_container">
-      <div class="w_flex_content">
-        <div class="fluid-container">
-          <div class="row form-row">
-            <div class="col-sm-12">
-              <p>
-                <wicket:container wicket:id="challenge" />
-              </p>
-              <div>
-                <input wicket:id="response" class="form-control"/>
-              </div>
+<wicket:panel>
+  <form wicket:id="form" class="d-flex flex-column overflow-auto">
+    <div class="modal-header">
+      <h5 class="modal-title" wicket:id="title" />
+      <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+    </div>
+    <div class="modal-body overflow-auto">
+      <div class="container-fluid">
+        <div class="row form-row">
+          <div class="col-sm-12">
+            <p>
+              <wicket:container wicket:id="challenge" />
+            </p>
+            <div>
+              <input wicket:id="response" class="form-control" />
             </div>
           </div>
-          <div class="row form-row">
-            <div class="col-sm-12">
-              <div wicket:id="mergeStrategySettings"/>
+        </div>
+        <div class="row form-row">
+          <div class="col-sm-12">
+            <div wicket:id="mergeStrategySettings" />
+          </div>
+        </div>
+        <div class="row form-row" wicket:enclosure="saveSettingsAsDefault">
+          <div class="col-sm-12">
+            <div class="form-check">
+              <input wicket:id="saveSettingsAsDefault" class="form-check-input" type="checkbox" />
+              <label wicket:for="saveSettingsAsDefault" class="form-check-label">
+                Update project merge strategy settings
+              </label>
             </div>
           </div>
-          <div class="row form-row" wicket:enclosure="saveSettingsAsDefault">
-            <div class="col-sm-12">
-              <div class="form-check">
-                <input wicket:id="saveSettingsAsDefault" class="form-check-input" type="checkbox"/>
-                <label wicket:for="saveSettingsAsDefault" class="form-check-label">
-                  Update project merge strategy settings
-                </label>
-              </div>
-            </div>
+        </div>
+        <div class="row form-row">
+          <div class="col-sm-12">
+            <p>
+              <span wicket:id="feedback"></span>
+            </p>
           </div>
-          <p>
-            <span wicket:id="feedback"></span>
-          </p>
         </div>
       </div>
-      <div class="w_flex_footer card-footer text-end">
-        <div class="text-end">
-          <button wicket:id="confirm" class="btn btn-primary">
-            <i class="fas fa-check"></i>&nbsp;
-            <wicket:message key="confirm.label"/>
-          </button>
-          <button wicket:id="cancel" class="btn btn-secondary">
-            <i class="fas fa-times"></i>&nbsp;
-            <wicket:message key="cancel.label"/>
-          </button>
-        </div>
-      </div>
-    </form>
-  </wicket:panel>
-</body>
+    </div>
+    <div class="modal-footer">
+      <button wicket:id="confirm" class="btn btn-primary">
+        <i class="fas fa-check"></i>&nbsp;
+        <wicket:message key="confirm.label" />
+      </button>
+      <button wicket:id="cancel" class="btn btn-secondary">
+        <i class="fas fa-times"></i>&nbsp;
+        <wicket:message key="cancel.label" />
+      </button>
+    </div>
+  </form>
+</wicket:panel>
+
 </html>

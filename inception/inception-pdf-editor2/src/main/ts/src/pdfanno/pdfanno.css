@@ -1,47 +1,10 @@
 @charset "utf-8";
 
-/* Loading */
-.loader-container {
-    position: absolute;
-    top: 100px;
-    left: 50%;
-    width: 200px;
-    height: 200px;
-    margin-left: -150px;
-    /*margin-top: -150px;*/
-    background-color: #333;
-    padding: 16px;
-    box-shadow: 0 0 10px rgba(0,0,0,.5);
-    transition: opacity .3s ease-in-out;
-}
-.loader-container.close {
-    opacity: 0;
-}
-.loader {
-    border: 16px solid #f3f3f3; /* Light grey */
-    border-top: 16px solid #3498db; /* Blue */
-    border-radius: 50%;
-    width: 120px;
-    height: 120px;
-    animation: spin 1.5s ease-in-out infinite;
-    margin-left: auto;
-    margin-right: auto;
-}
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-.loader-container p {
-    margin-top: 16px;
-    font-size: 16px;
-    text-align: center;
-    color: white;
-}
-
 /*
   viewer.css
  */
-.dropdown, .dropup {
+.dropdown,
+.dropup {
   z-index: 10000;
 }
 
@@ -63,40 +26,42 @@
  * Text Layer.
  */
 .pdfanno-text-layer {
-    position: absolute;
-    text-align: center;
+  position: absolute;
+  text-align: center;
 }
 
 /**
  * Annotation Layer.
  */
-.annoLayer > * {
-  opacity: 0.5;
-}
-.annoLayer > *.--hover,
-.annoLayer > *.--selected {
+.annoLayer>*.--hover,
+.annoLayer>*.--selected {
   opacity: 1;
 }
 
 /**
-    Annotation Knob for control.
-*/
+ * Annotation Knob for control.
+ */
 .anno-knob {
-    position: absolute;
-    background-color: blue;
-    border-radius: 50%;
-    transition: 0.2s;
-    transform-origin: center center;
+  opacity: 0.5;
+  position: absolute;
+  background-color: blue;
+  border-radius: 50%;
+  transition: 0.2s;
+  transform-origin: center center;
+  cursor: pointer;
 }
+
 .--hover .anno-knob,
 .--selected .anno-knob {
-  box-shadow: rgba(113,135,164,.2) 1px 1px 1px;
+  box-shadow: rgba(113, 135, 164, .2) 1px 1px 1px;
   transform: scale(2);
 }
+
 .anno-knob.is-readonly {
-    border-radius: 0;
-    transform: rotate(45deg) scale(0.7);
+  border-radius: 0;
+  transform: rotate(45deg) scale(0.7);
 }
+
 .--hover .anno-knob.is-readonly,
 .--selected .anno-knob.is-readonly {
   transform: rotate(45deg) scale(1.4);
@@ -106,30 +71,38 @@
  * Span Annotation.
  */
 .anno-span {
-    position: absolute;
-    top: 0;
-    left: 0;
-    visibility: visible;
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: visible;
 }
+
 .anno-span__area {
-    position: absolute;
-    border: 1px solid black;
+  position: absolute;
+  border-bottom: 2px solid black;
 }
+
 .--hover .anno-span__area,
 .--selected .anno-span__area {
   border: 1px dashed black !important;
   box-sizing: border-box;
 }
+
 .anno-span__area.no-border,
 .--hover .anno-span__area.no-border,
 .--selected .anno-span__area.no-border {
   border-width: 0 !important;
 }
+
 .anno-span__border {
   position: absolute;
   border: 1px solid black;
 }
 
+.anno-span rect {
+  /* Enable the hover event on circles and text even if they are overwraped other spans. */
+  pointer-events: none;
+}
 /**
   Relation Annotation.
 */
@@ -137,22 +110,16 @@
 .--selected .anno-relation {
   stroke-width: 2px;
 }
+
 .anno-relation-outline {
   fill: none;
   visibility: hidden;
 }
+
 .--selected .anno-relation-outline {
   visibility: visible;
   stroke: black;
   stroke-width: 3px;
   pointer-events: stroke;
   stroke-dasharray: 5;
-}
-
-/**
- * Span Annotation.
- */
-.anno-span rect {
-    /* Enable the hover event on circles and text even if they are overwraped other spans. */
-    pointer-events: none;
 }

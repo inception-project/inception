@@ -55,11 +55,10 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.behavior.AttributeAppender;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.extensions.markup.html.form.DateTextField;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.HeaderlessColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.HeadersToolbar;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.LambdaColumn;
@@ -75,7 +74,6 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -101,6 +99,7 @@ import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -108,6 +107,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -123,12 +123,12 @@ import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.AnnotatorColumn;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellClickEvent;
+import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorColumnCellShowAnnotatorCommentEvent;
 import de.tudarmstadt.ukp.inception.workload.dynamic.management.support.event.AnnotatorStateOpenContextMenuEvent;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueItem;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueOverviewDataProvider;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.AnnotationQueueSortKeys;
 import de.tudarmstadt.ukp.inception.workload.dynamic.support.DateSelection;
-import de.tudarmstadt.ukp.inception.workload.dynamic.support.WorkloadMetadataDialog;
 import de.tudarmstadt.ukp.inception.workload.dynamic.trait.DynamicWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.workflow.WorkflowExtensionPoint;
@@ -185,7 +185,7 @@ public class DynamicWorkloadManagementPage
     private DataTable<AnnotationQueueItem, AnnotationQueueSortKeys> table;
 
     // Modal dialog
-    private ModalWindow infoDialog;
+    private ModalDialog modalDialog;
     private ChallengeResponseDialog resetDocumentDialog;
     private ContextMenu contextMenu;
 
@@ -226,9 +226,6 @@ public class DynamicWorkloadManagementPage
         // Data Provider for the table
         dataProvider = makeAnnotationQueueOverviewDataProvider();
 
-        infoDialog = new ModalWindow("infoDialog");
-        add(infoDialog);
-
         // Columns of the table
         // Each column creates TableMetaData
         List<IColumn<AnnotationQueueItem, AnnotationQueueSortKeys>> columns = new ArrayList<>();
@@ -254,22 +251,6 @@ public class DynamicWorkloadManagementPage
         columns.add(new AnnotatorColumn(new ResourceModel("Annotators")));
         columns.add(new LambdaColumn<>(new ResourceModel("Updated"),
                 AnnotationQueueItem::getLastUpdated));
-
-        columns.add(new HeaderlessColumn<AnnotationQueueItem, AnnotationQueueSortKeys>()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void populateItem(Item<ICellPopulator<AnnotationQueueItem>> aItem,
-                    String componentId, IModel<AnnotationQueueItem> rowModel)
-            {
-                Fragment fragment = new Fragment(componentId, "infoColumn",
-                        DynamicWorkloadManagementPage.this);
-                fragment.add(new LambdaAjaxLink("showInfoDialog",
-                        _target -> actionShowInfoDialog(_target, rowModel)));
-                aItem.add(fragment);
-            }
-        });
 
         table = new DataTable<>("dataTable", columns, dataProvider, 20);
         table.setOutputMarkupId(true);
@@ -310,6 +291,9 @@ public class DynamicWorkloadManagementPage
         add(createUserForm());
         add(createSettingsForm());
         add(new LambdaAjaxLink("refresh", this::actionRefresh));
+
+        modalDialog = new BootstrapModalDialog("modalDialog");
+        add(modalDialog);
 
         add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog"));
         add(contextMenu = new ContextMenu("contextMenu"));
@@ -792,30 +776,6 @@ public class DynamicWorkloadManagementPage
         updateTable(aAjaxRequestTarget);
     }
 
-    private void actionShowInfoDialog(AjaxRequestTarget aTarget, IModel<AnnotationQueueItem> aDoc)
-    {
-        // Get the current selected Row
-        AnnotationQueueItem doc = aDoc.getObject();
-
-        // Create the modalWindow
-        infoDialog.setTitle("Metadata of document: " + doc.getSourceDocument().getName());
-
-        // Set contents of the modalWindow
-        List<String> finishedUsersForDocument = workloadManagementService
-                .listAnnotationDocumentsForSourceDocumentInState(doc.getSourceDocument(),
-                        AnnotationDocumentState.FINISHED)
-                .stream().map(AnnotationDocument::getUser).collect(Collectors.toList());
-        List<String> inProgressUsersForDocument = workloadManagementService
-                .listAnnotationDocumentsForSourceDocumentInState(doc.getSourceDocument(),
-                        AnnotationDocumentState.IN_PROGRESS)
-                .stream().map(AnnotationDocument::getUser).collect(Collectors.toList());
-        infoDialog.setContent(new WorkloadMetadataDialog(infoDialog.getContentId(),
-                doc.getSourceDocument(), finishedUsersForDocument, inProgressUsersForDocument));
-
-        // Open the dialog
-        infoDialog.show(aTarget);
-    }
-
     /**
      *
      * @param aTarget
@@ -882,6 +842,15 @@ public class DynamicWorkloadManagementPage
         aEvent.getTarget().addChildren(getPage(), IFeedback.class);
 
         updateTable(aEvent.getTarget());
+    }
+
+    @OnEvent
+    public void onAnnotatorColumnCellClickEvent(AnnotatorColumnCellShowAnnotatorCommentEvent aEvent)
+    {
+        AnnotationDocument annDoc = documentService
+                .getAnnotationDocument(aEvent.getSourceDocument(), aEvent.getUser());
+        modalDialog.open(new AnnotatorCommentDialogPanel(ModalDialog.CONTENT_ID, Model.of(annDoc)),
+                aEvent.getTarget());
     }
 
     @OnEvent

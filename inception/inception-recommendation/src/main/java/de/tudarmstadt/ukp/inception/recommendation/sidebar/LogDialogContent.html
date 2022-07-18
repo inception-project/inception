@@ -17,34 +17,36 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
 <wicket:panel>
-  <div class="w_flex_container">
-    <div class="w_flex_content scrolling">
-      <table class="col-sm-12 table table-sm small">
-        <tbody>
-          <wicket:container wicket:id="messageSets">
-            <tr class="info" style="vertical-align: top;">
-              <th style="text-align: left;" colspan="3">
-                <span wicket:id="name"></span>
-              </th>
-            </tr>
-            <tr style="vertical-align: top;" wicket:id="messages">
-              <td><span wicket:id="level"></span></td>
-              <td><span wicket:id="source"></span></td>
-              <td><span wicket:id="message"></span></td>
-            </tr>
-          </wicket:container>
-        </tbody>
-      </table>
-    </div>
-    <div class="w_flex_footer card-footer text-end">
-      <button wicket:id="close" class="btn btn-secondary">
-        <i class="fas fa-times"></i>&nbsp;
-        <wicket:message key="close"/>
-      </button>
-    </div>
+  <div class="modal-header">
+    <h5 class="modal-title">
+      <wicket:message key="title"/>
+    </h5>
+    <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+  </div>
+  <div class="modal-body overflow-auto">
+    <table class="col-sm-12 table table-sm small">
+      <tbody>
+        <wicket:container wicket:id="messageSets">
+          <tr class="info" style="vertical-align: top;">
+            <th style="text-align: left;" colspan="3">
+              <span wicket:id="name"></span>
+            </th>
+          </tr>
+          <tr style="vertical-align: top;" wicket:id="messages">
+            <td><span wicket:id="level"></span></td>
+            <td><span wicket:id="source"></span></td>
+            <td><span wicket:id="message"></span></td>
+          </tr>
+        </wicket:container>
+      </tbody>
+    </table>
+  </div>
+  <div class="modal-footer">
+    <button wicket:id="close" class="btn btn-secondary">
+      <i class="fas fa-times"></i>&nbsp;
+      <wicket:message key="close"/>
+    </button>
   </div>
 </wicket:panel>
-</body>
 </html>
