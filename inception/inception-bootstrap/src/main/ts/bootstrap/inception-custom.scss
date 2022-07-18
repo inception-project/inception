@@ -31,7 +31,7 @@ html, body {
   padding: 0px;
   flex: none;
   position: relative;
-  z-index: 30000; // Display above modal dialogs
+  z-index: 2000; // Display above modal dialogs (1000)
 }
 
 .page-content {
@@ -55,7 +55,7 @@ html, body {
   background-color: $card-bg;
   border-color: $card-border-color;
   border-top: 1px solid;
-  z-index: 30000; // Display above modal dialogs
+  z-index: 2000; // Display above modal dialogs (1000)
 
   a, a:hover, a:focus {
     color: black;
