@@ -7,17 +7,16 @@ import RelationAnnotation from '../annotation/relation'
 /**
  * Transform the rotation and scale of a node using SVG's native transform attribute.
  *
- * @param {Node} node The node to be transformed
- * @param {Object} viewport The page's viewport data
+ * @param node The node to be transformed
+ * @param viewport The page's viewport data
  * @return {Node}
  */
-function transform (base: HTMLElement, node: HTMLElement, viewport): HTMLElement {
+export function transform (base: HTMLElement, node: HTMLElement, viewport: any): HTMLElement {
   node.style.transform = `scale(${viewport.scale})`
   return node
 }
 
-export default function appendChild (base: HTMLElement, annotation: AbstractAnnotation): HTMLElement | undefined {
-  const viewport = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
+export function appendChild (base: HTMLElement, annotation: AbstractAnnotation): HTMLElement | undefined {
   let child: HTMLElement | undefined
   switch (annotation.type) {
     case 'span':
@@ -31,6 +30,7 @@ export default function appendChild (base: HTMLElement, annotation: AbstractAnno
   // If no type was provided for an annotation it will result in node being null.
   // Skip appending/transforming if node doesn't exist.
   if (child) {
+    const viewport = window.PDFViewerApplication.pdfViewer.getPageView(0).viewport
     const elm = transform(base, child, viewport)
     base.append(elm)
   }

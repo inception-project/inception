@@ -7,21 +7,24 @@ export const DEFAULT_RADIUS = 7
  * Create a bounding circle.
  * @param {Object} the data for rendering.
  */
-export function renderKnob ({ x, y, readOnly, text, color }): HTMLElement {
+export function renderKnob ({ a, x, y, readOnly, text }): HTMLElement {
   // Adjust the position.
   [x, y] = adjustPoint(x, (y - (DEFAULT_RADIUS + 2)), DEFAULT_RADIUS)
 
   const knob = document.createElement('div')
   knob.setAttribute('title', text)
   knob.classList.add('anno-knob')
+  a.classList.forEach(c => knob.classList.add(c))
   if (readOnly) {
     knob.classList.add('is-readonly')
   }
   knob.style.top = `${y}px`
-  knob.style.left = `${x}px`,
-  knob.style.width = DEFAULT_RADIUS + 'px',
-  knob.style.height = DEFAULT_RADIUS + 'px',
-  knob.style.backgroundColor = color
+  knob.style.left = `${x}px`
+  knob.style.width = DEFAULT_RADIUS + 'px'
+  knob.style.height = DEFAULT_RADIUS + 'px'
+  if (a.color) {
+    knob.style.backgroundColor = a.color
+  }
   return knob
 }
 

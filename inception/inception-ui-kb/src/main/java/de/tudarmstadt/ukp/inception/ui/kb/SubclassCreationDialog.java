@@ -21,9 +21,8 @@ import java.util.List;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.event.Broadcast;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
@@ -40,7 +39,9 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -52,7 +53,7 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 
 public class SubclassCreationDialog
-    extends ModalWindow
+    extends BootstrapModalDialog
 {
     private static final long serialVersionUID = -1304315052590065776L;
 
@@ -69,28 +70,23 @@ public class SubclassCreationDialog
     {
         super(id);
 
+        trapFocus();
+        closeOnEscape();
+        closeOnClick();
+
         kbModel = aKbModel;
         parentConceptHandleModel = aParentConceptHandleModel;
         newSubclassConceptModel = Model.of(new KBConcept());
         newSubclassConceptModel.getObject().setLanguage(kbModel.getObject().getDefaultLanguage());
 
         setOutputMarkupPlaceholderTag(true);
-
-        setInitialWidth(300);
-        setInitialHeight(36);
-        setResizable(false);
-        setWidthUnit("px");
-        setHeightUnit("px");
-        setTitle(new Model<String>("Create Subclass"));
-        setCssClassName("w_blue w_flex");
-        showUnloadConfirmation(false);
     }
 
-    @Override
-    public void show(IPartialPageRequestHandler aTarget)
+    public void show(AjaxRequestTarget aTarget)
     {
-        setContent(new ContentPanel(getContentId(), newSubclassConceptModel));
-        super.show(aTarget);
+        var content = new ContentPanel(ModalDialog.CONTENT_ID, newSubclassConceptModel);
+        aTarget.focusComponent(content.nameField);
+        open(content, aTarget);
     }
 
     protected void actionCreateSubclass(AjaxRequestTarget aTarget, Form<KBConcept> aForm)
@@ -157,26 +153,38 @@ public class SubclassCreationDialog
     {
         private static final long serialVersionUID = 5202661827792148838L;
 
+        private final RequiredTextField<String> nameField;
+
         public ContentPanel(String aId, IModel<KBConcept> newSubclassConceptModel)
         {
             super(aId);
 
             // add components for input form
-            RequiredTextField<String> name = new RequiredTextField<>("name");
-            name.add(AttributeModifier.append("placeholder",
+            nameField = new RequiredTextField<>("name");
+            nameField.add(AttributeModifier.append("placeholder",
                     new ResourceModel("subclassNamePlaceholder")));
+            nameField.setOutputMarkupId(true);
+            queue(nameField);
 
             LambdaAjaxButton<KBConcept> createButton = new LambdaAjaxButton<KBConcept>(
                     "createSubclass", SubclassCreationDialog.this::actionCreateSubclass);
-            createButton.add(new Label("createLabel", new ResourceModel("create")));
+            queue(createButton);
+            queue(new Label("createLabel", new ResourceModel("create")));
+
+            queue(new LambdaAjaxLink("cancel", this::actionCloseDialog));
+            queue(new LambdaAjaxLink("closeDialog", this::actionCloseDialog));
 
             // initialize input form and add it to the content panel
             Form<KBConcept> form = new Form<KBConcept>("form",
                     CompoundPropertyModel.of(newSubclassConceptModel));
-            form.add(name);
-            form.add(createButton);
             form.setDefaultButton(createButton);
-            add(form);
+
+            queue(form);
+        }
+
+        protected void actionCloseDialog(AjaxRequestTarget aTarget)
+        {
+            findParent(ModalDialog.class).close(aTarget);
         }
     }
 }

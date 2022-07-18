@@ -18,15 +18,14 @@
 package de.tudarmstadt.ukp.inception.ui.kb.project;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -44,7 +43,7 @@ public class KnowledgeBaseListPanel
     private IModel<KnowledgeBase> kbModel;
     private OverviewListChoice<KnowledgeBase> overviewList;
 
-    private ModalWindow modal;
+    private KnowledgeBaseCreationDialog modal;
 
     public KnowledgeBaseListPanel(String id, IModel<Project> aProjectModel,
             IModel<KnowledgeBase> aKbModel)
@@ -58,8 +57,8 @@ public class KnowledgeBaseListPanel
         projectModel = aProjectModel;
         overviewList = new OverviewListChoice<>("knowledgebases");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
-        overviewList.setChoices(
-                LambdaModel.of(() -> kbService.getKnowledgeBases(projectModel.getObject())));
+        overviewList.setChoices(LoadableDetachableModel
+                .of(() -> kbService.getKnowledgeBases(projectModel.getObject())));
         overviewList.setModel(kbModel);
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);

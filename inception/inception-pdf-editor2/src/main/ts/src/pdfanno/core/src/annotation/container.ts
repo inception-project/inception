@@ -42,13 +42,6 @@ export default class AnnotationContainer {
   }
 
   /**
-   * Get annotations which user select.
-   */
-  getSelectedAnnotations () : AbstractAnnotation[] {
-    return this.getAllAnnotations().filter(a => a.selected)
-  }
-
-  /**
    * Find an annotation by the id which an annotation has.
    */
   findById (vid: VID) : AbstractAnnotation {

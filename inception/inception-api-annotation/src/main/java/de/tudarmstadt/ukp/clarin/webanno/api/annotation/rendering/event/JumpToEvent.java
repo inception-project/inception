@@ -15,10 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export interface AnnotationEditor {
-  loadAnnotations(): void
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event;
 
-  jumpTo(args: { offset: number, position: string }): void
+import org.apache.wicket.ajax.AjaxRequestTarget;
 
-  destroy(): void
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition;
+
+public class JumpToEvent
+{
+    private final AjaxRequestTarget requestHandler;
+    private final int offset;
+    private final FocusPosition position;
+
+    public JumpToEvent(AjaxRequestTarget aRequestHandler, int aOffset, FocusPosition aPos)
+    {
+        requestHandler = aRequestHandler;
+        offset = aOffset;
+        position = aPos;
+    }
+
+    public AjaxRequestTarget getRequestHandler()
+    {
+        return requestHandler;
+    }
+
+    public int getOffset()
+    {
+        return offset;
+    }
+
+    public FocusPosition getPosition()
+    {
+        return position;
+    }
 }

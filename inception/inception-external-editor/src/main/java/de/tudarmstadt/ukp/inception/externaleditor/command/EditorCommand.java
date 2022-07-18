@@ -15,10 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export interface AnnotationEditor {
-  loadAnnotations(): void
+package de.tudarmstadt.ukp.inception.externaleditor.command;
 
-  jumpTo(args: { offset: number, position: string }): void
+import java.io.Serializable;
 
-  destroy(): void
+public abstract interface EditorCommand
+    extends Serializable
+{
+    String command(String aEditorVariable);
 }

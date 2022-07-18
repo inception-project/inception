@@ -15,10 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export interface AnnotationEditor {
-  loadAnnotations(): void
+package de.tudarmstadt.ukp.inception.externaleditor.command;
 
-  jumpTo(args: { offset: number, position: string }): void
+import org.apache.wicket.MetaDataKey;
+import org.apache.wicket.request.cycle.RequestCycle;
 
-  destroy(): void
+public class QueuedEditorCommandsMetaDataKey
+    extends MetaDataKey<CommandQueue>
+{
+    private static final long serialVersionUID = 102615176759478581L;
+
+    public final static QueuedEditorCommandsMetaDataKey INSTANCE = new QueuedEditorCommandsMetaDataKey();
+
+    public static CommandQueue get()
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        CommandQueue commandQueue = requestCycle.getMetaData(INSTANCE);
+        if (commandQueue == null) {
+            commandQueue = new CommandQueue();
+            requestCycle.setMetaData(INSTANCE, commandQueue);
+        }
+        return commandQueue;
+    }
 }

@@ -153,9 +153,7 @@ function handleMouseUp (e: MouseEvent) {
 
   if (mouseDown) {
     makeSelections(e)
-    if (currentSelectionHighlight) {
-      currentSelectionHighlight.deselect()
-    }
+
     if (selectionBegin !== null && selectionEnd !== null) {
       const event = new CustomEvent('createSpanAnnotation', {
         bubbles: true,
@@ -170,6 +168,7 @@ function handleMouseUp (e: MouseEvent) {
       }, 1000)
     }
   }
+
   mouseDown = false
 }
 
@@ -219,12 +218,11 @@ function selectionHighlight (textRange: [number, number], page: number): SpanAnn
   hl.border = false
   hl.rectangles = mergeRects(getGlyphsInRange(textRange).map(g => g.bbox))
 
-  if (hl.rectangles.length == 0) {
+  if (hl.rectangles.length === 0) {
     return null
   }
 
   hl.render()
-  hl.select()
   hl.disable()
   return hl
 }

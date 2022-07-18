@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.Serializable;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -57,31 +59,34 @@ public class ExportDocumentDialogContent
     private IModel<AnnotatorState> state;
     private IModel<Preferences> preferences;
 
-    public ExportDocumentDialogContent(String aId, final ModalWindow modalWindow,
-            IModel<AnnotatorState> aModel)
+    private final LambdaAjaxLink cancelButton;
+
+    public ExportDocumentDialogContent(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId);
         state = aModel;
 
         List<String> writeableFormats = importExportService.getWritableFormats().stream()
-                .map(FormatSupport::getName).sorted().collect(Collectors.toList());
+                .map(FormatSupport::getName) //
+                .sorted() //
+                .collect(toList());
 
         Preferences prefs = new Preferences();
         prefs.format = writeableFormats.get(0);
 
         preferences = Model.of(prefs);
 
-        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
-        add(form);
+        queue(new Form<>("form", CompoundPropertyModel.of(preferences)));
 
         DropDownChoice<String> format = new DropDownChoice<>("format", writeableFormats);
         format.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-        form.add(format);
+        queue(format);
 
-        AjaxDownloadLink export = new AjaxDownloadLink("export",
-                LoadableDetachableModel.of(this::export));
-        form.add(export);
-        form.add(new LambdaAjaxLink("cancel", (target) -> modalWindow.close(target)));
+        queue(new AjaxDownloadLink("confirm", LoadableDetachableModel.of(this::export)));
+        cancelButton = new LambdaAjaxLink("cancel", this::actionCloseDialog);
+        cancelButton.setOutputMarkupId(true);
+        queue(cancelButton);
+        queue(new LambdaAjaxLink("closeDialog", this::actionCloseDialog));
     }
 
     private FileResourceStream export()
@@ -99,12 +104,21 @@ public class ExportDocumentDialogContent
         }
     }
 
+    protected void actionCloseDialog(AjaxRequestTarget aTarget)
+    {
+        findParent(ModalDialog.class).close(aTarget);
+    }
+
+    public void onShow(AjaxRequestTarget aTarget)
+    {
+        aTarget.focusComponent(cancelButton);
+    }
+
     private static class Preferences
         implements Serializable
     {
         private static final long serialVersionUID = -4905538356691404575L;
 
         public String format;
-
     }
 }

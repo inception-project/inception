@@ -21,17 +21,18 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import org.apache.wicket.Component;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.extensions.wizard.IWizardModel;
 import org.apache.wicket.extensions.wizard.IWizardStep;
 import org.apache.wicket.extensions.wizard.Wizard;
 import org.apache.wicket.extensions.wizard.WizardStep;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
 public class BootstrapWizard
     extends Wizard
 {
-
     private static final long serialVersionUID = 4855036643803029655L;
 
     public BootstrapWizard(String id)
@@ -42,6 +43,14 @@ public class BootstrapWizard
     public BootstrapWizard(String id, IWizardModel wizardModel)
     {
         super(id, wizardModel);
+    }
+
+    @Override
+    protected void onInitialize()
+    {
+        super.onInitialize();
+
+        queue(new LambdaAjaxLink("closeDialog", t -> findParent(ModalDialog.class).close(t)));
     }
 
     @Override

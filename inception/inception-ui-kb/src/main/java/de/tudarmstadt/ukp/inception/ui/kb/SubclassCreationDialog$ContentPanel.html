@@ -1,9 +1,5 @@
 <!DOCTYPE html>
 <!--
-  Copyright 2017
-  Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
-  Technische Universität Darmstadt
-
   Licensed to the Technische Universität Darmstadt under one
   or more contributor license agreements.  See the NOTICE file
   distributed with this work for additional information
@@ -21,16 +17,31 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel>
-    <form wicket:id="form">
-      <div class="input-group input-group-lg">
-        <input wicket:id="name" type="text" class="flex-content form-control" />
-        <div class="input-group-btn">
-          <button wicket:id="createSubclass" type="button" class="btn btn-success pull-left"><wicket:container wicket:id="createLabel"></wicket:container></button>
+<wicket:panel>
+  <form wicket:id="form" class="d-flex flex-column overflow-auto">
+    <div class="modal-header">
+      <h5 class="modal-title">
+        Create sub-class
+      </h5>
+      <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+    </div>
+    <div class="modal-body overflow-auto">
+      <div class="container-fluid">
+        <div class="row form-row">
+          <input wicket:id="name" type="text" class="flex-content form-control" />
         </div>
       </div>
-    </form>
-  </wicket:panel>
-</body>
+    </div>
+    <div class="modal-footer">
+      <button wicket:id="createSubclass" type="button" class="btn btn-success">
+        <wicket:container wicket:id="createLabel"></wicket:container>
+      </button>
+      <button wicket:id="cancel" class="btn btn-secondary">
+        <i class="fas fa-times"></i>&nbsp;
+        <wicket:message key="cancel" />
+      </button>
+    </div>
+  </form>
+</wicket:panel>
+
 </html>

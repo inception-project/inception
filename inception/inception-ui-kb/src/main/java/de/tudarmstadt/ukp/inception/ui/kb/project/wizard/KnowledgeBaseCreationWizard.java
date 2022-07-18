@@ -137,7 +137,7 @@ public class KnowledgeBaseCreationWizard
         public TypeStep(IDynamicWizardStep previousStep,
                 CompoundPropertyModel<KnowledgeBaseWrapper> aKbModel)
         {
-            super(previousStep, "", "", aKbModel);
+            super(previousStep, "Create Knowledgebase", "", aKbModel);
             kbModel = aKbModel;
 
             Component generalSettings = new GeneralSettingsPanel("generalSettings", projectModel,
@@ -186,7 +186,6 @@ public class KnowledgeBaseCreationWizard
     private final class AccessSpecificSettingsStep
         extends DynamicWizardStep
     {
-
         private static final long serialVersionUID = 8212277960059805657L;
 
         private final AccessSpecificSettingsPanel panel;
@@ -195,7 +194,7 @@ public class KnowledgeBaseCreationWizard
         public AccessSpecificSettingsStep(IDynamicWizardStep previousStep,
                 CompoundPropertyModel<KnowledgeBaseWrapper> aKbModel)
         {
-            super(previousStep, "", "", aKbModel);
+            super(previousStep, "Create Knowledgebase", "", aKbModel);
             kbModel = aKbModel;
             kbModel.getObject().clearFiles();
 
@@ -259,7 +258,7 @@ public class KnowledgeBaseCreationWizard
         public SchemaConfigurationStep(IDynamicWizardStep previousStep,
                 CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
         {
-            super(previousStep, "", "", aModel);
+            super(previousStep, "Create Knowledgebase", "", aModel);
             model = aModel;
 
             add(new KnowledgeBaseIriPanel("iriPanel", model));

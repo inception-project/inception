@@ -35,7 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 public class SentenceOrientedPagingStrategy
-    implements PagingStrategy
+    extends PagingStrategy_ImplBase
 {
     private static final long serialVersionUID = -3983123604003839467L;
 

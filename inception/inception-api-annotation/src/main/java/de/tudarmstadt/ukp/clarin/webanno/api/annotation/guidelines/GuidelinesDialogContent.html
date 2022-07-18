@@ -18,9 +18,15 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <div class="w_flex_container">
-    <div class="w_flex_content">
-      <div class="scrolling fluid-container">
+  <div class="d-flex flex-column overflow-auto">
+    <div class="modal-header">
+      <h5 class="modal-title">
+        <wicket:message key="export" />
+      </h5>
+      <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+    </div>
+    <div class="modal-body overflow-auto">
+      <div class="container-fluid">
         <ul class="list-group">
           <li wicket:id="guidelineRepeater" class="list-group-item">
             <i class="fas fa-book"></i>
@@ -33,12 +39,13 @@
         </ul>
       </div>
     </div>
-    <div class="w_flex_footer card-footer text-end">
+    <div class="modal-footer">
       <button wicket:id="cancel" class="btn btn-secondary">
         <i class="fas fa-times"></i>&nbsp;
-        <wicket:message key="close"/>
+        <wicket:message key="cancel" />
       </button>
     </div>
   </div>
 </wicket:panel>
+
 </html>

@@ -29,8 +29,10 @@ export class PdfAnnotationEditorFactory implements AnnotationEditorFactory {
     const ajax = diam.createAjaxClient(props.diamAjaxCallbackUrl)
 
     const targetElement = element as Element
-    element[PROP_EDITOR] = new PdfAnnotationEditor(targetElement, ajax)
-    return element[PROP_EDITOR]
+    const editor = new PdfAnnotationEditor(targetElement, ajax)
+    await editor.init()
+    element[PROP_EDITOR] = editor
+    return editor
   }
 
   public destroy (element: Node) {
