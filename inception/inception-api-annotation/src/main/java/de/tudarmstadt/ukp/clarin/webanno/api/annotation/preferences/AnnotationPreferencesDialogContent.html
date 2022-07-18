@@ -19,10 +19,14 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
 <wicket:panel>
-  <form wicket:id="form" class="w_flex_container">
-    <div class="w_flex_content">
+  <form wicket:id="form" class="d-flex flex-column overflow-auto">
+    <div class="modal-header">
+      <h5 class="modal-title"><wicket:message key="preferences"/></h5>
+      <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+    </div>
+    <div class="modal-body d-flex overflow-auto">
       <div class="container">
-        <div class="card">
+        <div class="card mb-3">
           <div class="card-header">
             <wicket:message key="generalPreferences"/>
           </div>
@@ -30,7 +34,7 @@
             <div class="row form-row" wicket:enclosure="editor">
               <label wicket:for="editor" class="col-sm-4 col-form-label"><wicket:label key="editor"/></label>
               <div class="col-sm-8">
-                <select wicket:id="editor" class="form-select" data-size="10" data-container=".w_content_container"/>
+                <select wicket:id="editor" class="form-select"/>
               </div>
             </div>
             <div class="row form-row" wicket:enclosure="sidebarSizeLeft">
@@ -136,7 +140,8 @@
         </div>
       </div>
     </div>
-    <div class="w_flex_footer card-footer text-end">
+    
+    <div class="modal-footer">
       <button wicket:id="save" class="btn btn-primary">
         <i class="fas fa-save"></i>&nbsp;
         <wicket:message key="save"/>

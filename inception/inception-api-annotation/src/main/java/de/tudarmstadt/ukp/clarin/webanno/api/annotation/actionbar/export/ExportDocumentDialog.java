@@ -17,44 +17,36 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.StringResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 
 /**
  * Dialog providing allowing the annotator to download the current document.
  */
 public class ExportDocumentDialog
-    extends ModalWindow
+    extends BootstrapModalDialog
 {
     private static final long serialVersionUID = 671214149298791793L;
 
-    private IModel<AnnotatorState> state;
+    private final ExportDocumentDialogContent content;
 
     public ExportDocumentDialog(String id, final IModel<AnnotatorState> aModel)
     {
         super(id);
 
-        state = aModel;
+        closeOnEscape();
+        closeOnClick();
 
-        setCookieName("modal-1");
-        setInitialWidth(550);
-        setInitialHeight(450);
-        setResizable(true);
-        setWidthUnit("px");
-        setHeightUnit("px");
-        setCssClassName("w_blue w_flex");
-        showUnloadConfirmation(false);
-        setTitle(new StringResourceModel("export"));
+        setContent(content = new ExportDocumentDialogContent(ModalDialog.CONTENT_ID, aModel));
     }
 
-    @Override
-    public void show(IPartialPageRequestHandler aTarget)
+    public void show(AjaxRequestTarget aTarget)
     {
-        setContent(new ExportDocumentDialogContent(getContentId(), this, state));
-        super.show(aTarget);
+        content.onShow(aTarget);
+        open(aTarget);
     }
 }

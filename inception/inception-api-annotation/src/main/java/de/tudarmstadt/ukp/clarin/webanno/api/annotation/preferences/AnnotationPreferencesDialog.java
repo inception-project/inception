@@ -18,22 +18,19 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 
 /**
  * Dialog providing access to the per-user annotation preferences.
  */
 public class AnnotationPreferencesDialog
-    extends ModalWindow
+    extends BootstrapModalDialog
 {
     private static final long serialVersionUID = -6911254813496835955L;
-
-    private boolean closeButtonClicked;
 
     private IModel<AnnotatorState> state;
 
@@ -45,43 +42,14 @@ public class AnnotationPreferencesDialog
 
         state = aModel;
 
-        // dialog window to select annotation layer preferences
-        setInitialWidth(600);
-        setInitialHeight(450);
-        setResizable(true);
-        setWidthUnit("px");
-        setHeightUnit("px");
-        setTitle("Preferences");
-        setCssClassName("w_blue w_flex");
-        setCloseButtonCallback((target) -> {
-            closeButtonClicked = true;
-            return true;
-        });
+        trapFocus();
     }
 
-    @Override
-    public void show(IPartialPageRequestHandler aTarget)
+    public void show(AjaxRequestTarget aTarget)
     {
-        closeButtonClicked = false;
+        var content = new AnnotationPreferencesDialogContent(CONTENT_ID, state, onChangeAction);
 
-        setWindowClosedCallback((target) -> {
-            if (!closeButtonClicked) {
-                onConfirmInternal(target);
-            }
-        });
-
-        setContent(new AnnotationPreferencesDialogContent(getContentId(), this, state)
-        {
-            private static final long serialVersionUID = -3434069761864809703L;
-
-            @Override
-            protected void onCancel(AjaxRequestTarget aTarget)
-            {
-                closeButtonClicked = true;
-            }
-        });
-
-        super.show(aTarget);
+        open(content, aTarget);
     }
 
     public AjaxCallback getOnChangeAction()
@@ -92,28 +60,5 @@ public class AnnotationPreferencesDialog
     public void setOnChangeAction(AjaxCallback aOnChangeAction)
     {
         onChangeAction = aOnChangeAction;
-    }
-
-    protected void onConfirmInternal(AjaxRequestTarget aTarget)
-    {
-        boolean closeOk = true;
-
-        // Invoke callback if one is defined
-        if (onChangeAction != null) {
-            try {
-                onChangeAction.accept(aTarget);
-            }
-            catch (Exception e) {
-                // LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(),
-                // e);
-                // state.feedback = "Error: " + e.getMessage();
-                // aTarget.add(getContent());
-                closeOk = false;
-            }
-        }
-
-        if (closeOk) {
-            close(aTarget);
-        }
     }
 }

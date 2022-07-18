@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -66,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorSta
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -89,19 +90,20 @@ public class AnnotationPreferencesDialogContent
     private @SpringBean AnnotationEditorProperties annotationEditorProperties;
     private @SpringBean PreferencesService preferencesService;
 
-    private final ModalWindow modalWindow;
     private final Form<Preferences> form;
     private final IModel<AnnotatorState> stateModel;
     private final List<Pair<String, String>> editorChoices;
 
-    public AnnotationPreferencesDialogContent(String aId, final ModalWindow aModalWindow,
-            IModel<AnnotatorState> aModel)
+    private final AjaxCallback onChangeAction;
+
+    public AnnotationPreferencesDialogContent(String aId, IModel<AnnotatorState> aModel,
+            AjaxCallback aOnChangeAction)
     {
         super(aId);
 
         stateModel = aModel;
-        modalWindow = aModalWindow;
         editorChoices = getEditorChoices();
+        onChangeAction = aOnChangeAction;
 
         form = new Form<>("form", new CompoundPropertyModel<>(loadModel(stateModel.getObject())));
 
@@ -164,8 +166,9 @@ public class AnnotationPreferencesDialogContent
         readOnlyColor.setChoiceRenderer(new ChoiceRenderer<>("descriptiveName"));
         form.add(readOnlyColor);
 
-        form.add(new LambdaAjaxButton<>("save", this::actionSave));
-        form.add(new LambdaAjaxLink("cancel", this::actionCancel));
+        queue(new LambdaAjaxButton<>("save", this::actionSave));
+        queue(new LambdaAjaxLink("cancel", this::actionCancel));
+        queue(new LambdaAjaxLink("closeDialog", this::actionCancel));
 
         add(form);
     }
@@ -211,14 +214,15 @@ public class AnnotationPreferencesDialogContent
         catch (IOException e) {
             error("Preference file not found");
         }
-        modalWindow.close(aTarget);
+
+        onConfirmInternal(aTarget);
     }
 
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         form.detach();
         onCancel(aTarget);
-        modalWindow.close(aTarget);
+        findParent(ModalDialog.class).close(aTarget);
     }
 
     private Preferences loadModel(AnnotatorState state)
@@ -304,6 +308,29 @@ public class AnnotationPreferencesDialogContent
 
     protected void onCancel(AjaxRequestTarget aTarget)
     {
+    }
+
+    protected void onConfirmInternal(AjaxRequestTarget aTarget)
+    {
+        boolean closeOk = true;
+
+        // Invoke callback if one is defined
+        if (onChangeAction != null) {
+            try {
+                onChangeAction.accept(aTarget);
+            }
+            catch (Exception e) {
+                // LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(),
+                // e);
+                // state.feedback = "Error: " + e.getMessage();
+                // aTarget.add(getContent());
+                closeOk = false;
+            }
+        }
+
+        if (closeOk) {
+            findParent(ModalDialog.class).close(aTarget);
+        }
     }
 
     private static class Preferences
