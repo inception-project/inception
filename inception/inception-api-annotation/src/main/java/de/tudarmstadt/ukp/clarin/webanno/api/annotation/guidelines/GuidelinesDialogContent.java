@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines;
 import static org.apache.wicket.markup.html.link.PopupSettings.RESIZABLE;
 import static org.apache.wicket.markup.html.link.PopupSettings.SCROLLBARS;
 
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.link.PopupSettings;
 import org.apache.wicket.markup.html.link.ResourceLink;
@@ -47,8 +48,9 @@ public class GuidelinesDialogContent
 
     private @SpringBean GuidelinesService guidelinesService;
 
-    public GuidelinesDialogContent(String aId, final ModalWindow modalWindow,
-            final IModel<AnnotatorState> aModel)
+    private final LambdaAjaxLink cancelButton;
+
+    public GuidelinesDialogContent(String aId, final IModel<AnnotatorState> aModel)
     {
         super(aId);
 
@@ -75,6 +77,19 @@ public class GuidelinesDialogContent
             item.add(rlink);
         }
 
-        add(new LambdaAjaxLink("cancel", (target) -> modalWindow.close(target)));
+        cancelButton = new LambdaAjaxLink("cancel", this::actionCloseDialog);
+        cancelButton.setOutputMarkupId(true);
+        queue(cancelButton);
+        queue(new LambdaAjaxLink("closeDialog", this::actionCloseDialog));
+    }
+
+    protected void actionCloseDialog(AjaxRequestTarget aTarget)
+    {
+        findParent(ModalDialog.class).close(aTarget);
+    }
+
+    public void onShow(AjaxRequestTarget aTarget)
+    {
+        aTarget.focusComponent(cancelButton);
     }
 }

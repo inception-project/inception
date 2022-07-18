@@ -17,32 +17,37 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel>
-    <form wicket:id="form" class="w_flex_container">
-      <div class="w_flex_content">
-        <div class="fluid-container">
-          <div class="row form-row" wicket:enclosure="format">
-            <label wicket:for="format" class="col-sm-4 col-form-label"><wicket:label key="format"/></label>
-            <div class="col-sm-8">
-              <select wicket:id="format" class="form-select" data-size="10" data-container="body"/>
-            </div>
+<wicket:panel>
+  <form wicket:id="form" class="d-flex flex-column overflow-auto">
+    <div class="modal-header">
+      <h5 class="modal-title">
+        <wicket:message key="export" />
+      </h5>
+      <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+    </div>
+    <div class="modal-body overflow-auto">
+      <div class="container-fluid">
+        <div class="row form-row" wicket:enclosure="format">
+          <label wicket:for="format" class="col-sm-4 col-form-label">
+            <wicket:label key="format" />
+          </label>
+          <div class="col-sm-8">
+            <select wicket:id="format" class="form-select" />
           </div>
         </div>
       </div>
-      <div class="w_flex_footer card-footer">
-        <div class=" text-end">
-          <button wicket:id="export" type="button" class="btn btn-primary">
-            <i class="fas fa-download" aria-hidden="true"></i>&nbsp;
-            <wicket:message key="export"/>
-          </button>
-          <button wicket:id="cancel" class="btn btn-secondary">
-            <i class="fas fa-times"></i>&nbsp;
-            <wicket:message key="cancel"/>
-          </button>
-        </div>
-      </div>
-    </form>
-  </wicket:panel>
-</body>
+    </div>
+    <div class="modal-footer">
+      <button wicket:id="confirm" class="btn btn-primary">
+        <i class="fas fa-file-download"></i>&nbsp;
+        <wicket:message key="export" />
+      </button>
+      <button wicket:id="cancel" class="btn btn-secondary">
+        <i class="fas fa-times"></i>&nbsp;
+        <wicket:message key="cancel" />
+      </button>
+    </div>
+  </form>
+</wicket:panel>
+
 </html>

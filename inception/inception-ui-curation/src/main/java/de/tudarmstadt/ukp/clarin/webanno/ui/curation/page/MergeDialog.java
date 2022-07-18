@@ -18,11 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import java.io.Serializable;
+import java.util.Objects;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
@@ -30,8 +28,10 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxFormCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -40,7 +40,7 @@ import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.settings.MergeStrategyPanel;
 
 public class MergeDialog
-    extends ModalWindow
+    extends BootstrapModalDialog
 {
     private static final long serialVersionUID = 5194857538069045172L;
 
@@ -51,8 +51,7 @@ public class MergeDialog
 
     private AjaxFormCallback<State> confirmAction;
     private AjaxCallback cancelAction;
-
-    private ContentPanel contentPanel;
+    private ContentPanel conentPanel;
 
     public MergeDialog(String aId, IModel<String> aTitle, IModel<String> aChallenge,
             IModel<String> aExpectedResponse, IModel<CurationWorkflow> aCurationWorkflow)
@@ -65,22 +64,10 @@ public class MergeDialog
         curationWorkflowModel = aCurationWorkflow;
 
         setOutputMarkupId(true);
-        setInitialWidth(620);
-        setInitialHeight(440);
-        setResizable(true);
-        setWidthUnit("px");
-        setHeightUnit("px");
-        setCssClassName("w_blue w_flex");
-        showUnloadConfirmation(false);
 
         setModel(new CompoundPropertyModel<>(null));
 
-        setContent(contentPanel = new ContentPanel(getContentId(), getModel()));
-
-        setCloseButtonCallback((_target) -> {
-            onCancelInternal(_target);
-            return true;
-        });
+        setContent(conentPanel = new ContentPanel(CONTENT_ID, getModel()));
     }
 
     public void setModel(IModel<State> aModel)
@@ -104,22 +91,15 @@ public class MergeDialog
         return (State) getDefaultModelObject();
     }
 
-    @Override
-    public void show(IPartialPageRequestHandler aTarget)
+    public void show(AjaxRequestTarget aTarget)
     {
         challengeModel.detach();
         expectedResponseModel.detach();
 
-        State state = new State();
-        state.challenge = challengeModel.getObject();
-        state.expectedResponse = expectedResponseModel.getObject();
-        state.response = null;
-        state.feedback = null;
-        setModelObject(state);
+        setModelObject(new State());
+        aTarget.focusComponent(conentPanel.cancelButton);
 
-        setTitle(titleModel.getObject());
-
-        super.show(aTarget);
+        open(aTarget);
     }
 
     public AjaxFormCallback<State> getConfirmAction()
@@ -147,7 +127,7 @@ public class MergeDialog
         State state = aForm.getModelObject();
 
         // Check if the challenge was met
-        if (!ObjectUtils.equals(state.expectedResponse, state.response)) {
+        if (!Objects.equals(expectedResponseModel.getObject(), state.response)) {
             state.feedback = "Your response did not meet the challenge.";
             aTarget.add(aForm);
             return;
@@ -159,6 +139,10 @@ public class MergeDialog
         if (confirmAction != null) {
             try {
                 confirmAction.accept(aTarget, aForm);
+            }
+            catch (ReplaceHandlerException e) {
+                // Let Wicket redirects still work
+                throw e;
             }
             catch (Exception e) {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
@@ -181,9 +165,10 @@ public class MergeDialog
             }
             catch (Exception e) {
                 LoggerFactory.getLogger(getPage().getClass()).error("Error: " + e.getMessage(), e);
-                contentPanel.form.getModelObject().feedback = "Error: " + e.getMessage();
+                getModelObject().feedback = "Error: " + e.getMessage();
             }
         }
+
         close(aTarget);
     }
 
@@ -192,8 +177,6 @@ public class MergeDialog
     {
         private static final long serialVersionUID = 4483229579553569947L;
 
-        String challenge;
-        String expectedResponse;
         String response;
         String feedback;
         boolean saveSettingsAsDefault;
@@ -209,23 +192,25 @@ public class MergeDialog
     {
         private static final long serialVersionUID = 5202661827792148838L;
 
-        private Form<State> form;
+        private final LambdaAjaxLink cancelButton;
 
         public ContentPanel(String aId, IModel<State> aModel)
         {
             super(aId, aModel);
 
-            form = new Form<>("form", aModel);
-            form.add(new Label("challenge").setEscapeModelStrings(false));
-            form.add(new Label("feedback"));
-            form.add(new TextField<>("response"));
-            form.add(new MergeStrategyPanel("mergeStrategySettings", curationWorkflowModel));
-            form.add(new CheckBox("saveSettingsAsDefault").setOutputMarkupId(true));
-            form.add(new LambdaAjaxButton<>("confirm", MergeDialog.this::onConfirmInternal)
+            queue(new Form<>("form", aModel));
+            queue(new Label("title", titleModel));
+            queue(new Label("challenge", challengeModel).setEscapeModelStrings(false));
+            queue(new Label("feedback"));
+            queue(new TextField<>("response"));
+            queue(new MergeStrategyPanel("mergeStrategySettings", curationWorkflowModel));
+            queue(new CheckBox("saveSettingsAsDefault").setOutputMarkupId(true));
+            queue(new LambdaAjaxButton<>("confirm", MergeDialog.this::onConfirmInternal)
                     .triggerAfterSubmit());
-            form.add(new LambdaAjaxLink("cancel", MergeDialog.this::onCancelInternal));
-
-            add(form);
+            queue(new LambdaAjaxLink("closeDialog", MergeDialog.this::onCancelInternal));
+            cancelButton = new LambdaAjaxLink("cancel", MergeDialog.this::onCancelInternal);
+            cancelButton.setOutputMarkupId(true);
+            queue(cancelButton);
         }
     }
 }

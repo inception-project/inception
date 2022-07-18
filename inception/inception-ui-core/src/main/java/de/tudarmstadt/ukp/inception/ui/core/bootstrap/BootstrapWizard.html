@@ -18,25 +18,20 @@
 -->
 
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel xmlns:wicket="http://wicket.apache.org">
-    <form wicket:id="form" class="w_flex_container">
-      <div class="w_flex_content">
-        <wicket:enclosure child="header">
-          <div class="card-header" style="margin-top: -15px;">
-            <div wicket:id="header"></div>
-          </div>
-        </wicket:enclosure>
-        <div class="card-body">
-          <div wicket:id="overview"></div>
-          <wicket:container wicket:id="view"></wicket:container>
-        </div>
-      </div>
-      <div class="w_flex_footer card-footer">
-        <div wicket:id="feedback"></div>
-        <div wicket:id="buttons"></div>
-      </div>
-    </form>
-  </wicket:panel>
-</body>
+<wicket:panel xmlns:wicket="http://wicket.apache.org">
+  <form wicket:id="form" class="d-flex flex-column overflow-auto">
+    <div class="modal-header" wicket:enclosure="header">
+      <h5 wicket:id="header"></h5>
+      <button wicket:id="closeDialog" type="button" class="btn-close" aria-label="Close"></button>
+    </div>
+    <div class="modal-body overflow-auto">
+      <div wicket:id="overview"></div>
+      <wicket:container wicket:id="view"></wicket:container>
+      <div wicket:id="feedback"></div>
+    </div>
+    <div class="modal-footer">
+      <div wicket:id="buttons"></div>
+    </div>
+  </form>
+</wicket:panel>
 </html>

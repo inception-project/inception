@@ -17,17 +17,18 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines;
 
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 
 /**
  * Dialog providing access to the annotation guidelines.
  */
 public class GuidelinesDialog
-    extends ModalWindow
+    extends BootstrapModalDialog
 {
     private static final long serialVersionUID = 671214149298791793L;
 
@@ -40,22 +41,12 @@ public class GuidelinesDialog
         state = aModel;
 
         setOutputMarkupId(true);
-        setInitialWidth(620);
-        setInitialHeight(440);
-        setResizable(true);
-        setWidthUnit("px");
-        setHeightUnit("px");
-        setCssClassName("w_blue w_flex");
-        showUnloadConfirmation(false);
-
-        setTitle("Guidelines");
     }
 
-    @Override
-    public void show(IPartialPageRequestHandler aTarget)
+    public void show(AjaxRequestTarget aTarget)
     {
-        setContent(new GuidelinesDialogContent(getContentId(), this, state));
+        setContent(new GuidelinesDialogContent(ModalDialog.CONTENT_ID, state));
 
-        super.show(aTarget);
+        open(aTarget);
     }
 }
