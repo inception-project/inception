@@ -278,13 +278,12 @@ public class ProjectConstraintsPanel
         {
             confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
                     .setParameters(DetailForm.this.getModelObject().getName()));
-            confirmationDialog.show(aTarget);
-
             confirmationDialog.setConfirmAction((_target) -> {
                 constraintsService.removeConstraintSet(DetailForm.this.getModelObject());
                 DetailForm.this.setModelObject(null);
                 _target.add(findParent(ProjectSettingsPanelBase.class));
             });
+            confirmationDialog.show(aTarget);
         }
 
         @Override

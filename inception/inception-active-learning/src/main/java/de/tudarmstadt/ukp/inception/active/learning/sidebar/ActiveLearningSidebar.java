@@ -999,7 +999,6 @@ public class ActiveLearningSidebar
                         "alSidebar.history.delete.confirmation.title", this));
                 confirmationDialog.setContentModel(new StringResourceModel(
                         "alSidebar.history.delete.confirmation.content", this, null));
-                confirmationDialog.show(aTarget);
                 confirmationDialog.setConfirmAction(_t -> {
                     if (alStateModel.getObject().getSuggestion().isPresent()) {
                         setActiveLearningHighlight(alStateModel.getObject().getSuggestion().get());
@@ -1018,6 +1017,7 @@ public class ActiveLearningSidebar
                     }
                     annotationPage.actionRefreshDocument(_t);
                 });
+                confirmationDialog.show(aTarget);
             }
         }
 
