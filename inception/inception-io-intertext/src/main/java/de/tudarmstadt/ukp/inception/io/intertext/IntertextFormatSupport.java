@@ -40,7 +40,7 @@ public class IntertextFormatSupport
     implements FormatSupport
 {
     public static final String ID = "intertext";
-    public static final String NAME = "Intertext XML";
+    public static final String NAME = "Intertext XML (experimental)";
 
     @Override
     public String getId()

@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.io.intertext.config;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.io.intertext.IntertextFormatSupport;
 
 @Configuration
+@ConditionalOnProperty(prefix = "ui.intertext", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class IntertextAutoConfiguration
 {
     @Bean
