@@ -183,12 +183,14 @@ public class MtasUimaParser
     // This constructor is used for testing
     public MtasUimaParser(List<AnnotationFeature> aFeaturesToIndex,
             AnnotationSchemaService aAnnotationSchemaService,
-            FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry)
+            FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
+            AnnotationSearchState aPrefs)
     {
         super(null);
 
         annotationSchemaService = aAnnotationSchemaService;
         featureIndexingSupportRegistry = aFeatureIndexingSupportRegistry;
+        prefs = aPrefs;
 
         // Initialize and populate the hash maps for the layers and features
         for (AnnotationFeature feature : aFeaturesToIndex) {
