@@ -746,6 +746,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-io-intertext</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-io-perseus</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
@@ -2046,6 +2051,7 @@
     <module>inception-io-lif</module>
     <module>inception-io-perseus</module>
     <module>inception-io-imscwb</module>
+    <module>inception-io-intertext</module>
     <module>inception-io-tcf</module>
     <module>inception-io-tei</module>
     <module>inception-io-text</module>
