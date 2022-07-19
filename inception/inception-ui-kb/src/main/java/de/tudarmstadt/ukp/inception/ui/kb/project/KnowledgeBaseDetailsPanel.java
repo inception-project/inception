@@ -225,7 +225,6 @@ public class KnowledgeBaseDetailsPanel
                 new StringResourceModel("kb.details.delete.confirmation.title", this));
         confirmationDialog.setContentModel(new StringResourceModel(
                 "kb.details.delete.confirmation.content", this, kbwModel.bind("kb")));
-        confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction(_target -> {
             KnowledgeBase kb = kbwModel.getObject().getKb();
             try {
@@ -242,6 +241,7 @@ public class KnowledgeBaseDetailsPanel
             _target.add(this);
             _target.add(findParentWithAssociatedMarkup());
         });
+        confirmationDialog.show(aTarget);
     }
 
     private class KBSettingsTitle

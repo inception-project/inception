@@ -403,7 +403,7 @@ public class BratAnnotationEditor
                 }
             }
             catch (Exception e) {
-                handleError("Unable to load data", e);
+                handleError("Unable to populate context menu", e);
             }
 
             return new DefaultAjaxResponse(getAction(aRequest));

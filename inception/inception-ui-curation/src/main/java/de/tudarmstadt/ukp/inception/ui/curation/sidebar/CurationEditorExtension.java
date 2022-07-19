@@ -39,11 +39,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
@@ -68,17 +70,22 @@ public class CurationEditorExtension
     private final DocumentService documentService;
     private final AnnotationEditorProperties annotationEditorProperties;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final UserDao userRepository;
+    private final CurationSidebarService curationSidebarService;
 
     @Autowired
     public CurationEditorExtension(AnnotationSchemaService aAnnotationService,
             DocumentService aDocumentService,
             AnnotationEditorProperties aAnnotationEditorProperties,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
+            CurationSidebarService aCurationSidebarService)
     {
         annotationService = aAnnotationService;
         documentService = aDocumentService;
         annotationEditorProperties = aAnnotationEditorProperties;
         applicationEventPublisher = aApplicationEventPublisher;
+        userRepository = aUserRepository;
+        curationSidebarService = aCurationSidebarService;
     }
 
     @Override
@@ -99,6 +106,12 @@ public class CurationEditorExtension
 
         if (!SelectAnnotationHandler.COMMAND.equals(aAction)) {
             return;
+        }
+
+        if (curationSidebarService.isCurationFinished(aState,
+                userRepository.getCurrentUsername())) {
+            throw new NotEditableException("Curation is already finished. You can put it back "
+                    + "into progress via the monitoring page.");
         }
 
         // Annotation has been selected for gold

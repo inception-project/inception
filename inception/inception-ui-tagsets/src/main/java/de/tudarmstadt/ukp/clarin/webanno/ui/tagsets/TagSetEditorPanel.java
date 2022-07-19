@@ -153,8 +153,6 @@ public class TagSetEditorPanel
     {
         confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
                 .setParameters(selectedTagSet.getObject().getName()));
-        confirmationDialog.show(aTarget);
-
         confirmationDialog.setConfirmAction((_target) -> {
             // If the tagset is used in any features, clear the tagset on these features when
             // the tagset is deleted!
@@ -171,6 +169,7 @@ public class TagSetEditorPanel
             _target.add(getPage());
             actionCancel(_target);
         });
+        confirmationDialog.show(aTarget);
     }
 
     private void actionCancel(AjaxRequestTarget aTarget)

@@ -61,10 +61,12 @@ public class CurationSidebarAutoConfiguration
     public CurationEditorExtension curationEditorExtension(
             AnnotationSchemaService aAnnotationService, DocumentService aDocumentService,
             AnnotationEditorProperties aAnnotationEditorProperties,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            ApplicationEventPublisher aApplicationEventPublisher, UserDao aUserRepository,
+            CurationSidebarService aCurationSidebarService)
     {
         return new CurationEditorExtension(aAnnotationService, aDocumentService,
-                aAnnotationEditorProperties, aApplicationEventPublisher);
+                aAnnotationEditorProperties, aApplicationEventPublisher, aUserRepository,
+                aCurationSidebarService);
     }
 
     @Bean("curationSidebar")

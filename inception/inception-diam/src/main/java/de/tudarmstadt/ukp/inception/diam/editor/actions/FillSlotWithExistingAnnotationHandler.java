@@ -59,7 +59,7 @@ public class FillSlotWithExistingAnnotationHandler
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to fill slot with existing annotation", e);
         }
     }
 

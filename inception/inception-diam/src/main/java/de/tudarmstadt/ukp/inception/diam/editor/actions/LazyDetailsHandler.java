@@ -70,7 +70,7 @@ public class LazyDetailsHandler
                     state.getWindowBeginOffset(), state.getWindowEndOffset());
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to load lazy details", e);
         }
     }
 }
