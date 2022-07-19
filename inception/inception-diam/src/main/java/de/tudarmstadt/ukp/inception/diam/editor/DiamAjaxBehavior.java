@@ -29,6 +29,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.ServerTimingWatch;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 
@@ -66,11 +67,20 @@ public class DiamAjaxBehavior
                 .findFirst();
 
         if (priorityHandler.isPresent()) {
-            priorityHandler.get().handle(aTarget, request);
+            call(aTarget, priorityHandler.get());
             return;
         }
 
         handlers.getHandler(request) //
-                .ifPresent(h -> h.handle(aTarget, request));
+                .ifPresent(h -> call(aTarget, h));
+    }
+
+    private void call(AjaxRequestTarget aTarget, EditorAjaxRequestHandler aHandler)
+    {
+        Request request = RequestCycle.get().getRequest();
+        try (var watch = new ServerTimingWatch("diam", "diam (" + aHandler.getCommand() + ")")) {
+            aHandler.handle(aTarget, request);
+            return;
+        }
     }
 }

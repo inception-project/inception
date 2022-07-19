@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils.getActionFromRequest;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
@@ -29,22 +28,19 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptReferenceHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -64,9 +60,9 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratCssReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.clarin.webanno.support.ServerTimingWatch;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
@@ -97,12 +93,10 @@ public class BratAnnotationEditor
     private @SpringBean BratSerializer bratSerializer;
     private @SpringBean BratSchemaGenerator bratSchemaGenerator;
 
+    private DiamAjaxBehavior diamBehavior;
     private WebMarkupContainer vis;
-    private AbstractAjaxBehavior requestHandler;
 
     private GetCollectionInformationHandler collectionInformationHandler;
-    private ShowContextMenuHandler contextMenuHandler;
-    private LoadConfHandler loadConfHandler;
 
     private DifferentialRenderingSupport diffRenderSupport;
 
@@ -123,68 +117,6 @@ public class BratAnnotationEditor
         add(contextMenu);
 
         diffRenderSupport = new DifferentialRenderingSupport(metrics);
-
-        requestHandler = new AbstractDefaultAjaxBehavior()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void respond(AjaxRequestTarget aTarget)
-            {
-                if (getModelObject().getDocument() == null) {
-                    return;
-                }
-
-                Object result = null;
-                try {
-                    result = handleRequest(aTarget);
-                }
-                catch (Exception e) {
-                    handleError("Error", e);
-                }
-
-                // Serialize updated document to JSON
-                if (result != null) {
-                    try {
-                        BratRequestUtils.attachResponse(aTarget, vis, result);
-                    }
-                    catch (IOException e) {
-                        handleError("Unable to produce JSON response", e);
-                    }
-                }
-            }
-
-            private Object handleRequest(AjaxRequestTarget aTarget) throws IOException
-            {
-                IRequestParameters requestParameters = getRequest().getPostParameters();
-                String action = getActionFromRequest(requestParameters);
-
-                try (var watch = new ServerTimingWatch("brat", "brat (" + action + ")")) {
-                    if (loadConfHandler.accepts(getRequest())) {
-                        return loadConfHandler.handle(aTarget, getRequest());
-                    }
-
-                    if (collectionInformationHandler.accepts(getRequest())) {
-                        return collectionInformationHandler.handle(aTarget, getRequest());
-                    }
-
-                    if (GetDocumentResponse.is(action)) {
-                        return actionGetDocument();
-                    }
-
-                    // FIXME Should we un-arm the active slot when the context menu is opened?
-                    if (contextMenuHandler.accepts(getRequest())) {
-                        return contextMenuHandler.handle(aTarget, getRequest());
-                    }
-
-                    return handlers.getHandler(getRequest()) //
-                            .map(handler -> handler.handle(aTarget, getRequest())) //
-                            .orElse(null);
-                }
-            }
-        };
-
-        add(requestHandler);
     }
 
     @Override
@@ -192,51 +124,15 @@ public class BratAnnotationEditor
     {
         super.onInitialize();
 
-        collectionInformationHandler = new GetCollectionInformationHandler(bratSchemaGenerator);
-        contextMenuHandler = new ShowContextMenuHandler();
-        loadConfHandler = new LoadConfHandler(bratProperties);
-    }
+        collectionInformationHandler = new GetCollectionInformationHandler(vis,
+                bratSchemaGenerator);
 
-    private void actionArcRightClick(AjaxRequestTarget aTarget, VID paramId)
-        throws IOException, AnnotationException
-    {
-        if (!getModelObject().getSelection().isSpan()) {
-            return;
-        }
-
-        CAS cas;
-        try {
-            cas = getCasProvider().get();
-        }
-        catch (Exception e) {
-            handleError("Unable to load data", e);
-            return;
-        }
-
-        // Currently selected span
-        AnnotationFS originFs = selectAnnotationByAddr(cas,
-                getModelObject().getSelection().getAnnotation().getId());
-
-        // Target span of the relation
-        AnnotationFS targetFs = selectAnnotationByAddr(cas, paramId.getId());
-
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
-        selection.selectArc(VID.NONE_ID, originFs, targetFs);
-
-        // Create new annotation
-        getActionHandler().actionCreateOrUpdate(aTarget, cas);
-    }
-
-    private String actionGetDocument() throws IOException
-    {
-        if (getModelObject().getProject() == null) {
-            return toJson(new GetDocumentResponse());
-        }
-
-        var cas = getCasProvider().get();
-        var bratDocModel = render(cas);
-        return diffRenderSupport.fullRendering(bratDocModel).getJsonStr();
+        diamBehavior = new DiamAjaxBehavior();
+        diamBehavior.addPriorityHandler(new LoadConfHandler(vis, bratProperties));
+        diamBehavior.addPriorityHandler(collectionInformationHandler);
+        diamBehavior.addPriorityHandler(new GetDocumentHandler(vis, diffRenderSupport));
+        diamBehavior.addPriorityHandler(new ShowContextMenuHandler());
+        add(diamBehavior);
     }
 
     @Override
@@ -287,7 +183,7 @@ public class BratAnnotationEditor
 
         StringBuilder js = new StringBuilder();
         js.append("(function() {");
-        js.append("  Brat('" + vis.getMarkupId() + "', '" + requestHandler.getCallbackUrl() + "')");
+        js.append("  Brat('" + vis.getMarkupId() + "', '" + diamBehavior.getCallbackUrl() + "')");
         js.append("})();");
         return js.toString();
     }
@@ -350,17 +246,81 @@ public class BratAnnotationEditor
     {
         String json = "[]";
         try {
-            if (result instanceof JsonNode) {
-                json = JSONUtil.toInterpretableJsonString((JsonNode) result);
-            }
-            else {
-                json = JSONUtil.toInterpretableJsonString(result);
-            }
+            json = JSONUtil.toInterpretableJsonString(result);
         }
         catch (IOException e) {
             handleError("Unable to produce JSON response", e);
         }
         return json;
+    }
+
+    private void actionArcRightClick(AjaxRequestTarget aTarget, VID paramId)
+        throws IOException, AnnotationException
+    {
+        if (!getModelObject().getSelection().isSpan()) {
+            return;
+        }
+
+        CAS cas;
+        try {
+            cas = getCasProvider().get();
+        }
+        catch (Exception e) {
+            handleError("Unable to load data", e);
+            return;
+        }
+
+        // Currently selected span
+        AnnotationFS originFs = selectAnnotationByAddr(cas,
+                getModelObject().getSelection().getAnnotation().getId());
+
+        // Target span of the relation
+        AnnotationFS targetFs = selectAnnotationByAddr(cas, paramId.getId());
+
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+        selection.selectArc(VID.NONE_ID, originFs, targetFs);
+
+        // Create new annotation
+        getActionHandler().actionCreateOrUpdate(aTarget, cas);
+    }
+
+    private class GetDocumentHandler
+        extends EditorAjaxRequestHandlerBase
+        implements Serializable
+    {
+
+        private static final long serialVersionUID = 1601968431851817445L;
+
+        private final Component vis;
+        private final DifferentialRenderingSupport diffRenderSupport;
+
+        public GetDocumentHandler(Component aVis, DifferentialRenderingSupport aDiffRenderSupport)
+        {
+            vis = aVis;
+            diffRenderSupport = aDiffRenderSupport;
+        }
+
+        @Override
+        public String getCommand()
+        {
+            return GetDocumentResponse.COMMAND;
+        }
+
+        @Override
+        public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
+        {
+            try {
+                var cas = getCasProvider().get();
+                var response = render(cas);
+                var result = diffRenderSupport.fullRendering(response).getJsonStr();
+                BratRequestUtils.attachResponse(aTarget, vis, result);
+                return new DefaultAjaxResponse(getAction(aRequest));
+            }
+            catch (Exception e) {
+                return handleError("Unable to load annotations", e);
+            }
+        }
     }
 
     private class ShowContextMenuHandler
