@@ -145,12 +145,6 @@ public class RecommendationEditorExtension
         }
 
         ((AnnotationPageBase) aTarget.getPage()).ensureIsEditable();
-        // if (!) {
-        // aTarget.getPage()
-        // .info("Document cannot be edited. It has already been marked as finished.");
-        // aTarget.addChildren(aTarget.getPage(), IFeedback.class);
-        // return;
-        // }
 
         // Create annotation
         if (SelectAnnotationHandler.COMMAND.equals(aAction) || AcceptActionResponse.is(aAction)) {
