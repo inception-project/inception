@@ -53,6 +53,10 @@ html, body, .annotator-wrapper {
  .p {
   margin-bottom: 0.5em;
  }
+ 
+ .s {
+  display: inline;
+}
 
  .ref::before {
   content: "•";
