@@ -21,10 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRAD
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
+import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
+import static org.apache.commons.lang3.StringUtils.toRootLowerCase;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -71,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
@@ -108,6 +111,7 @@ public class SearchServiceImpl
     private final SchedulingService schedulingService;
     private final SearchServiceProperties properties;
     private final ScheduledExecutorService indexClosingScheduler;
+    private final PreferencesService preferencesService;
 
     // In fact - the only factory we have at the moment...
     private final String DEFAULT_PHSYICAL_INDEX_FACTORY = "mtasDocumentIndexFactory";
@@ -118,13 +122,14 @@ public class SearchServiceImpl
     public SearchServiceImpl(DocumentService aDocumentService,
             AnnotationSchemaService aSchemaService, ProjectService aProjectService,
             PhysicalIndexRegistry aPhysicalIndexRegistry, SchedulingService aSchedulingService,
-            SearchServiceProperties aProperties)
+            SearchServiceProperties aProperties, PreferencesService aPreferencesService)
     {
         documentService = aDocumentService;
         schemaService = aSchemaService;
         projectService = aProjectService;
         physicalIndexRegistry = aPhysicalIndexRegistry;
         schedulingService = aSchedulingService;
+        preferencesService = aPreferencesService;
 
         properties = aProperties;
         log.info("Index keep-open time: {}", properties.getIndexKeepOpenTime());
@@ -558,8 +563,11 @@ public class SearchServiceImpl
             Index index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
 
+            var query = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject)
+                    .isCaseSensitive() ? aQuery : toRootLowerCase(aQuery);
+
             return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser,
-                    aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
+                    query, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
         }
     }
 
@@ -655,7 +663,9 @@ public class SearchServiceImpl
             final var accessModeInitialCas = UNMANAGED_ACCESS;
             final var casUpgradeMode = NO_CAS_UPGRADE;
 
-            try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true)) {
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
+            try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true,
+                    prefs)) {
                 // Index all the source documents
                 for (SourceDocument doc : sourceDocuments) {
                     if (isPerformNoMoreActions(pooledIndex)) {
@@ -756,9 +766,12 @@ public class SearchServiceImpl
 
             ensureIndexIsCreatedAndValid(aProject, index);
 
+            var query = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject)
+                    .isCaseSensitive() ? aQuery : toRootLowerCase(aQuery);
+
             // Index is valid, try to execute the query
             return index.getPhysicalIndex().numberOfQueryResults(new SearchQueryRequest(aProject,
-                    aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
+                    aUser, query, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
         }
     }
 

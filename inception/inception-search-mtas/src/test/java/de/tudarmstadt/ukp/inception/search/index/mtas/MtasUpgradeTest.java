@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
@@ -66,6 +67,7 @@ import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 @EnableAutoConfiguration
 @ImportAutoConfiguration( //
         classes = { //
+                PreferencesServiceAutoConfig.class, //
                 ProjectServiceAutoConfiguration.class, //
                 AnnotationSchemaServiceAutoConfiguration.class, //
                 DocumentServiceAutoConfiguration.class, //
@@ -76,6 +78,8 @@ import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
                 SearchServiceAutoConfiguration.class }, //
         exclude = LiquibaseAutoConfiguration.class)
 @EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.security.model", //
+        "de.tudarmstadt.ukp.inception.preferences.model", //
         "de.tudarmstadt.ukp.inception.kb.model", //
         "de.tudarmstadt.ukp.clarin.webanno.model" })
 public class MtasUpgradeTest

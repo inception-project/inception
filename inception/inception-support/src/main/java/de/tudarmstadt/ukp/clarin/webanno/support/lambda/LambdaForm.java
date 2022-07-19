@@ -42,9 +42,10 @@ public class LambdaForm<T>
         super(aId);
     }
 
-    public void onSubmit(AjaxFormCallback<T> aCallback)
+    public LambdaForm<T> onSubmit(AjaxFormCallback<T> aCallback)
     {
         submitAction = aCallback;
+        return this;
     }
 
     @Override
