@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser;
 import de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils;
+import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptLabelCache;
 import mtas.analysis.token.MtasToken;
@@ -133,10 +134,11 @@ public class ConceptFeatureIndexingSupportTest
         when(kbService.getParentConceptList(any(KnowledgeBase.class), any(String.class),
                 any(Boolean.class))).thenReturn(dummyValue);
 
+        AnnotationSearchState prefs = new AnnotationSearchState();
         MtasUimaParser sut = new MtasUimaParser(
                 asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
                         new AnnotationFeature(2l, layer, "identifier", "kb:<ANY>")),
-                annotationSchemaService, featureIndexingSupportRegistry);
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         MtasUtils.print(tc);
 

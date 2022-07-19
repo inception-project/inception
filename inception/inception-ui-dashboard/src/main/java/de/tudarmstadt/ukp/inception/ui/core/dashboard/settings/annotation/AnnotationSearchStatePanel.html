@@ -21,15 +21,27 @@
   <wicket:panel>
     <form wicket:id="form" class="card">
       <div class="card-header">
-        <wicket:message key="defaultAnnotationEditorState"/>
+        <wicket:message key="annotationSearchState"/>
       </div>
       <div class="card-body">
-        <div class="row form-row">
-          <label wicket:for="defaultEditor" class="col-sm-4 col-form-label">
-            <wicket:label key="defaultEditor" />
-          </label>
-          <div class="col-sm-8">
-            <select wicket:id="defaultEditor" class="form-select"/>
+        <div class="row form-row" wicket:enclosure="caseSensitive">
+          <div class="offset-md-4 col-sm-8">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" wicket:id="caseSensitive">
+              <label class="form-check-label" wicket:for="caseSensitive">
+                <wicket:label key="caseSensitive"/>
+              </label>
+            </div>
+            <span class="ms-3 small text-muted">Only takes effect after index has been re-built.</span>
+          </div>
+        </div>
+        <div class="row form-row" wicket:enclosure="reindexProject">
+          <div class="offset-md-4 col-sm-8r">
+            <button wicket:id="reindexProject" type="button" class="btn btn-outline-secondary">
+              <i class="fas fa-sync" aria-hidden="true"></i>
+              <wicket:message key="reindexProject" />
+            </button>
+            <span class="ms-3 text-muted">Make sure settings are saved before re-building the index.</span>
           </div>
         </div>
       </div>
