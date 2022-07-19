@@ -80,7 +80,7 @@ public class LoadAnnotationsHandler
             return new DefaultAjaxResponse();
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to load annotations", e);
         }
     }
 

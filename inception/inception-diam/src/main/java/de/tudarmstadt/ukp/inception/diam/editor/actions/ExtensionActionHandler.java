@@ -73,7 +73,7 @@ public class ExtensionActionHandler
             return new DefaultAjaxResponse(action);
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to perform action", e);
         }
     }
 }
