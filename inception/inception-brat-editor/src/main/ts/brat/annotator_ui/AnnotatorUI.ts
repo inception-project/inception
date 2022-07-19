@@ -851,8 +851,9 @@ export class AnnotatorUI {
         }
 
         // normal span select in standard annotation mode or reselect: show selector
-        const spanText = this.data.text.substring(selectedFrom, selectedTo);
-        this.ajax.createSpanAnnotation(this.spanOptions.offsets, spanText);
+        this.spanDragJustStarted = false
+        const spanText = this.data.text.substring(selectedFrom, selectedTo)
+        this.ajax.createSpanAnnotation(this.spanOptions.offsets, spanText)
       }
     }
   }
