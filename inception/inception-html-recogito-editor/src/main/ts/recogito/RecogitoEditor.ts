@@ -17,7 +17,7 @@
  */
 import '@recogito/recogito-js/dist/recogito.min.css'
 import { Recogito } from '@recogito/recogito-js/src';
-import type { AnnotationEditor, CompactAnnotatedText, CompactSpan, DiamAjax } from "@inception-project/inception-js-api";
+import type { AnnotationEditor, CompactAnnotatedText, CompactSpan, DiamAjax, VID } from "@inception-project/inception-js-api";
 import { CompactRelation } from '@inception-project/inception-js-api/src/model/compact/CompactRelation';
 import "./RecogitoEditor.css"
 
@@ -63,22 +63,29 @@ export class RecogitoEditor implements AnnotationEditor {
     this.recogito.on('createAnnotation', annotation => this.createAnnotation(annotation));
     this.recogito.on('selectAnnotation', annotation => this.selectAnnotation(annotation));
 
-    /* 
-    this.connections = Connections(this.recogito);
-    this.connections.on('createConnection', function(c) {
-      console.log('created', c);
-    });
-    
-    this.connections.on('updateConnection', function(updated, previous) {
-      console.log('updated', updated, previous);
-    });
-  
-    this.connections.on('deleteConnection', function(c) {
-      console.log('deleted', c);
-    });
-    */
+    element.addEventListener('contextmenu', e => this.openContextMenu(e));
 
     this.loadAnnotations();
+  }
+
+  private openContextMenu(e): void {
+    if (!(e instanceof MouseEvent) || !(e.target instanceof Element)) {
+      return
+    }
+
+    const target = e.target as Element;
+    const annotationSpan = target.closest('.r6o-annotation');
+
+    if (!annotationSpan || !annotationSpan.getAttribute('data-id')) {
+      return
+    }
+
+    // The RecogitoJS annotation IDs start with a hash `#` which we need to remove
+    const annotationId = annotationSpan.getAttribute('data-id')?.substring(1) as VID
+
+    this.ajax.openContextMenu(annotationId, e)
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   public loadAnnotations(): void {
@@ -140,13 +147,13 @@ export class RecogitoEditor implements AnnotationEditor {
   }
 
   public destroy(): void {
-    // this.connections.destroy();
     this.recogito.destroy();
   }
 
   private createAnnotation(annotation): void {
     let target = annotation.target;
     let text: string, begin: number, end: number;
+
     for (let i = 0; i < target.selector.length; i++) {
       if (target.selector[i].type === "TextQuoteSelector") {
         text = target.selector[i].exact;
