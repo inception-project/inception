@@ -46,7 +46,7 @@ public class PdfAnnotationEditorFactory
     @Override
     public String getDisplayName()
     {
-        return "PDF (experimental)";
+        return "PDF";
     }
 
     @Override
