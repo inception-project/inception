@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor2.view.PdfDocumentIFrameViewFactory
  * Provides support for an PDF-oriented annotation editor.
  */
 @Configuration
-@ConditionalOnProperty(prefix = "ui.pdf2", name = "enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "ui.pdf", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class PdfAnnotationEditor2SupportAutoConfiguration
 {
     @Bean
