@@ -90,7 +90,7 @@ public class DeleteAnnotationHandler
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to delete annotation", e);
         }
     }
 }

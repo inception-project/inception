@@ -95,7 +95,7 @@ public class SelectAnnotationHandler
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to select annotation", e);
         }
     }
 }
