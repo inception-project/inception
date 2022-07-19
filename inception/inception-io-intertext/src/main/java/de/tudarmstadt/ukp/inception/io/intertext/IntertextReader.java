@@ -46,6 +46,9 @@ public class IntertextReader
     {
         var sentence = new Sentence(aElement.getJCas(), aElement.getBegin(), aElement.getEnd());
         sentence.trim();
+        
+        getAttributeValue(aElement, "data-it-id").ifPresent(sentence::setId);
+        
         sentence.addToIndexes();
     }
 
