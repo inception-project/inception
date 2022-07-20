@@ -121,7 +121,6 @@ import de.tudarmstadt.ukp.inception.search.model.Progress;
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
 {
-    private static final String MID_REINDEX_PROJECT = "reindexProject";
     private static final String MID_EXPORT = "export";
     private static final String MID_CLEAR_BUTTON = "clearButton";
     private static final String MID_TOGGLE_DELETE_OPTIONS_VISIBILITY = "toggleDeleteOptionsVisibility";
@@ -362,14 +361,8 @@ public class SearchAnnotationSidebar
         searchOptionsForm.add(createResultsPerPageSelection("itemsPerPage"));
         searchOptionsForm.add(lowLevelPagingCheckBox = createLowLevelPagingCheckBox());
         searchOptionsForm.setOutputMarkupPlaceholderTag(true);
-        searchOptionsForm.add(new LambdaAjaxLink(MID_REINDEX_PROJECT, this::actionRebuildIndex));
 
         return searchOptionsForm;
-    }
-
-    private void actionRebuildIndex(AjaxRequestTarget aTarget)
-    {
-        searchService.enqueueReindexTask(getAnnotationPage().getModelObject().getProject(), "user");
     }
 
     @Override
