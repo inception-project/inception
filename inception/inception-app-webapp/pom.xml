@@ -270,6 +270,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-io-intertext</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-io-perseus</artifactId>
     </dependency>
     <dependency>
@@ -878,6 +882,7 @@
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-nif</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-lif</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-intertext</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-imscwb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-perseus</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-io-json</usedDependency>

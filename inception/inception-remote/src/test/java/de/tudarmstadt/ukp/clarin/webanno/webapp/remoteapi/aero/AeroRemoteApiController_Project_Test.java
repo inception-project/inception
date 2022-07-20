@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAu
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK, //
         properties = { //
                 "spring.main.banner-mode=off", //
+                "search.enabled=false", //
                 "remote-api.enabled=true", //
                 "repository.path=" + AeroRemoteApiController_Project_Test.TEST_OUTPUT_FOLDER })
 @EnableWebSecurity

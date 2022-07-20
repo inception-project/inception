@@ -61,16 +61,20 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
+import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
 
 public class MtasUimaParserTest
 {
-    private Project project;
     private @Mock AnnotationSchemaService annotationSchemaService;
+
     private LayerSupportRegistryImpl layerSupportRegistry;
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private FeatureIndexingSupportRegistryImpl featureIndexingSupportRegistry;
+
+    private AnnotationSearchState prefs;
+    private Project project;
     private JCas jcas;
 
     @BeforeEach
@@ -81,6 +85,8 @@ public class MtasUimaParserTest
         project = new Project();
         project.setId(1l);
         project.setName("test project");
+
+        prefs = new AnnotationSearchState();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(emptyList());
 
@@ -111,7 +117,7 @@ public class MtasUimaParserTest
         when(annotationSchemaService.listAnnotationLayer(project)).thenReturn(asList());
 
         var sut = new MtasUimaParser(asList(), annotationSchemaService,
-                featureIndexingSupportRegistry);
+                featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
         MtasUtils.print(tc);
@@ -157,7 +163,7 @@ public class MtasUimaParserTest
         MtasUimaParser sut = new MtasUimaParser(
                 asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
                         new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)),
-                annotationSchemaService, featureIndexingSupportRegistry);
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
         MtasUtils.print(tc);
@@ -194,7 +200,7 @@ public class MtasUimaParserTest
         MtasUimaParser sut = new MtasUimaParser(
                 asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
                         new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)),
-                annotationSchemaService, featureIndexingSupportRegistry);
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
         MtasUtils.print(tc);
@@ -271,7 +277,7 @@ public class MtasUimaParserTest
         MtasUimaParser sut = new MtasUimaParser(
                 asList(tokenLayerPos, posLayerValue, dependencyLayerGovernor,
                         dependencyLayerDependent),
-                annotationSchemaService, featureIndexingSupportRegistry);
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
         MtasUtils.print(tc);
