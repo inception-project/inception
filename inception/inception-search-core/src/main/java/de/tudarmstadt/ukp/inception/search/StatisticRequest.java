@@ -23,11 +23,13 @@ import java.util.Set;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 
 public class StatisticRequest
 {
     private final Project project;
     private final User user;
+    private final AnnotationSearchState prefs;
 
     private final OptionalInt minTokenPerDoc;
     private final OptionalInt maxTokenPerDoc;
@@ -36,7 +38,8 @@ public class StatisticRequest
     private final String query;
 
     public StatisticRequest(Project aProject, User aUser, OptionalInt aMinTokenPerDoc,
-            OptionalInt aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures, String aQuery)
+            OptionalInt aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures, String aQuery,
+            AnnotationSearchState aPrefs)
     {
         project = aProject;
         user = aUser;
@@ -45,6 +48,7 @@ public class StatisticRequest
         maxTokenPerDoc = aMaxTokenPerDoc;
         query = aQuery;
         features = aFeatures;
+        prefs = aPrefs;
     }
 
     public Project getProject()
@@ -82,4 +86,8 @@ public class StatisticRequest
         return query;
     }
 
+    public AnnotationSearchState getSearchSettings()
+    {
+        return prefs;
+    }
 }
