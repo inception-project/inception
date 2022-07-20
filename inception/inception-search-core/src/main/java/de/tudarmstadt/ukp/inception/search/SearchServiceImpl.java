@@ -26,7 +26,6 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
-import static org.apache.commons.lang3.StringUtils.toRootLowerCase;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -563,11 +562,9 @@ public class SearchServiceImpl
             Index index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
 
-            var query = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject)
-                    .isCaseSensitive() ? aQuery : toRootLowerCase(aQuery);
-
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
             return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser,
-                    query, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
+                    aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count, prefs));
         }
     }
 
@@ -581,8 +578,9 @@ public class SearchServiceImpl
             Index index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
 
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
             return index.getPhysicalIndex().getAnnotationStatistics(new StatisticRequest(aProject,
-                    aUser, aMinTokenPerDoc, aMaxTokenPerDoc, aFeatures, null));
+                    aUser, aMinTokenPerDoc, aMaxTokenPerDoc, aFeatures, null, prefs));
         }
     }
 
@@ -597,8 +595,9 @@ public class SearchServiceImpl
             ensureIndexIsCreatedAndValid(aProject, index);
             PhysicalIndex physicalIndex = index.getPhysicalIndex();
 
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
             StatisticRequest statRequest = new StatisticRequest(aProject, aUser, aMinTokenPerDoc,
-                    aMaxTokenPerDoc, aFeatures, aQuery);
+                    aMaxTokenPerDoc, aFeatures, aQuery, prefs);
             LayerStatistics statistics = physicalIndex.getLayerStatistics(statRequest,
                     statRequest.getQuery(), physicalIndex.getUniqueDocuments(statRequest));
 
@@ -766,12 +765,10 @@ public class SearchServiceImpl
 
             ensureIndexIsCreatedAndValid(aProject, index);
 
-            var query = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject)
-                    .isCaseSensitive() ? aQuery : toRootLowerCase(aQuery);
-
             // Index is valid, try to execute the query
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
             return index.getPhysicalIndex().numberOfQueryResults(new SearchQueryRequest(aProject,
-                    aUser, query, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
+                    aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L, prefs));
         }
     }
 
