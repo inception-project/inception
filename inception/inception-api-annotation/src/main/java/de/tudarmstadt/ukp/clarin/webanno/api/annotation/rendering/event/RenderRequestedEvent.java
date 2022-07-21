@@ -17,36 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event;
 
-import org.apache.uima.cas.CAS;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-
-public class RenderAnnotationsEvent
+public class RenderRequestedEvent
 {
-    private final CAS cas;
-    private final RenderRequest request;
-    private final VDocument vdoc;
+    private final IPartialPageRequestHandler requestHandler;
 
-    public RenderAnnotationsEvent(CAS aCas, RenderRequest aRequest, VDocument aVDoc)
+    public RenderRequestedEvent(IPartialPageRequestHandler aRequestHandler)
     {
-        cas = aCas;
-        request = aRequest;
-        vdoc = aVDoc;
+        requestHandler = aRequestHandler;
     }
 
-    public CAS getCas()
+    public IPartialPageRequestHandler getRequestHandler()
     {
-        return cas;
-    }
-
-    public RenderRequest getRequest()
-    {
-        return request;
-    }
-
-    public VDocument getVDocument()
-    {
-        return vdoc;
+        return requestHandler;
     }
 }

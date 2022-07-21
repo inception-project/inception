@@ -30,6 +30,7 @@ import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -48,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderRequestedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
@@ -160,7 +162,9 @@ public abstract class AnnotationEditorBase
             }));
 
             if (getModelObject().getDocument() != null) {
+                // Fire render event into UI
                 extensionRegistry.fireRenderRequested(getModelObject());
+                send(getPage(), Broadcast.BREADTH, new RenderRequestedEvent(aTarget));
             }
         }
         catch (IllegalStateException e) {
@@ -219,8 +223,13 @@ public abstract class AnnotationEditorBase
     protected void handleError(String aMessage, Exception e)
     {
         RequestCycle requestCycle = RequestCycle.get();
-        requestCycle.find(AjaxRequestTarget.class)
-                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+        try {
+            requestCycle.find(AjaxRequestTarget.class)
+                    .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+        }
+        catch (Exception ex) {
+            LOG.error("Cannot refresh feedback panel", ex);
+        }
 
         if (e instanceof AnnotationException) {
             // These are common exceptions happening as part of the user interaction. We do
