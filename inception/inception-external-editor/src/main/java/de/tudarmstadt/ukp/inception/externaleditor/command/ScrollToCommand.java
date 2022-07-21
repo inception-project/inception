@@ -24,7 +24,7 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition;
 
 @Order(1000)
-public class JumpToCommand
+public class ScrollToCommand
     implements EditorCommand
 {
     private static final long serialVersionUID = 1779280309942407825L;
@@ -32,7 +32,7 @@ public class JumpToCommand
     private final int offset;
     private final FocusPosition position;
 
-    public JumpToCommand(int aOffset, FocusPosition aPosition)
+    public ScrollToCommand(int aOffset, FocusPosition aPosition)
     {
         offset = aOffset;
         position = aPosition;

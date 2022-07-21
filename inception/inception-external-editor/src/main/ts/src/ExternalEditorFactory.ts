@@ -89,10 +89,13 @@ export class ExternalEditorFactory implements AnnotationEditorFactory {
 
       let target = this.isDocumentJavascriptCapable(win.document) ? win.document : document;
       let allPromises: Promise<void>[] = [];
-      if (this.isDocumentStylesheetCapable(win.document)) {
+      if (this.isDocumentStylesheetCapable(win.document) && props.stylesheetSources) {
         allPromises.push(...props.stylesheetSources.map(src => this.loadStylesheet(target, src)));
       }
-      allPromises.push(...props.scriptSources.map(src => this.loadScript(target, src)));
+
+      if (props.scriptSources) {
+        allPromises.push(...props.scriptSources.map(src => this.loadScript(target, src)));
+      }
 
       Promise.all(allPromises).then(() => {
         console.info(`${allPromises.length} editor resources loaded`);

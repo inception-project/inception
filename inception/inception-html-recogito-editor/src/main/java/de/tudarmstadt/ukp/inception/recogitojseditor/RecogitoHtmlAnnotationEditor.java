@@ -63,7 +63,7 @@ public class RecogitoHtmlAnnotationEditor
         AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
                 state.getUser());
 
-        return viewFactory.createView(MID_VIS, Model.of(annDoc), editorFactory.getBeanName());
+        return viewFactory.createView(CID_VIS, Model.of(annDoc), editorFactory.getBeanName());
     }
 
     @Override

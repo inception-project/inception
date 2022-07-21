@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.externaleditor.command;
 
 import org.springframework.core.annotation.Order;
 
-@Order(0)
+@Order(100)
 public class LoadAnnotationsCommand
     implements EditorCommand
 {
