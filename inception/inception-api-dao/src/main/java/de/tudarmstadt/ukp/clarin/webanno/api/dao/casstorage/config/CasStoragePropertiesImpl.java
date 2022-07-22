@@ -17,84 +17,58 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config;
 
-import java.time.Duration;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.jmx.export.annotation.ManagedAttribute;
+import org.springframework.jmx.export.annotation.ManagedResource;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via {@link CasStorageServiceAutoConfiguration}.
  * </p>
  */
-@ConfigurationProperties("cas-storage.cache")
+@ConfigurationProperties("cas-storage")
+@ManagedResource
 public class CasStoragePropertiesImpl
     implements CasStorageProperties
 {
-    private Duration idleCasEvictionDelay = Duration.ofMinutes(5);
+    private boolean compressedCasSerialization = false;
+    private boolean paranoidCasSerialization = false;
+    private boolean traceAccess = false;
 
-    private Duration casBorrowWaitTimeout = Duration.ofMinutes(3);
-
-    private long sharedCasCacheSize = getDefaultCasCacheSize();
-
-    @Override
-    public Duration getIdleCasEvictionDelay()
+    @ManagedAttribute
+    public void setTraceAccess(boolean aTraceAccess)
     {
-        return idleCasEvictionDelay;
-    }
-
-    public void setIdleCasEvictionDelay(Duration aIdleCasEvictionDelay)
-    {
-        idleCasEvictionDelay = aIdleCasEvictionDelay;
+        traceAccess = aTraceAccess;
     }
 
     @Override
-    public Duration getCasBorrowWaitTimeout()
+    public boolean isTraceAccess()
     {
-        return casBorrowWaitTimeout;
+        return traceAccess;
     }
 
-    public void setCasBorrowWaitTimeout(Duration aCasBorrowWaitTimeout)
+    public void setParanoidCasSerialization(boolean aParanoidCasSerialization)
     {
-        casBorrowWaitTimeout = aCasBorrowWaitTimeout;
+        paranoidCasSerialization = aParanoidCasSerialization;
     }
 
     @Override
-    public long getSharedCasCacheSize()
+    @ManagedAttribute
+    public boolean isParanoidCasSerialization()
     {
-        return sharedCasCacheSize;
+        return paranoidCasSerialization;
     }
 
-    public void setSharedCasCacheSize(long aSharedCasCacheSize)
+    @ManagedAttribute
+    public void setCompressedCasSerialization(boolean aCompressedCasSerialization)
     {
-        sharedCasCacheSize = aSharedCasCacheSize;
+        compressedCasSerialization = aCompressedCasSerialization;
     }
 
-    private static final long MB = 1024 * 1024;
-
-    public static long getDefaultCasCacheSize()
+    @Override
+    @ManagedAttribute
+    public boolean isCompressedCasSerialization()
     {
-        long maxMemory = Runtime.getRuntime().maxMemory();
-
-        if (maxMemory < 256 * MB) {
-            return 10;
-        }
-
-        if (maxMemory < 512 * MB) {
-            return 50;
-        }
-
-        if (maxMemory < 1024 * MB) {
-            return 250;
-        }
-
-        if (maxMemory < 2048 * MB) {
-            return 750;
-        }
-
-        if (maxMemory < 4096 * MB) {
-            return 1500;
-        }
-
-        return 5000;
+        return compressedCasSerialization;
     }
 }

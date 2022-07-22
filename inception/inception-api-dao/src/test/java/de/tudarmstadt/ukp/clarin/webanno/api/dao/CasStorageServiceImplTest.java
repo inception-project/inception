@@ -70,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImp
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
@@ -114,9 +115,10 @@ public class CasStorageServiceImplTest
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        driver = new FileSystemCasStorageDriver(repositoryProperties, new BackupProperties());
+        driver = new FileSystemCasStorageDriver(repositoryProperties, new BackupProperties(),
+                new CasStoragePropertiesImpl());
 
-        sut = new CasStorageServiceImpl(driver, null, null, new CasStoragePropertiesImpl());
+        sut = new CasStorageServiceImpl(driver, null, null, new CasStorageCachePropertiesImpl());
     }
 
     @Test

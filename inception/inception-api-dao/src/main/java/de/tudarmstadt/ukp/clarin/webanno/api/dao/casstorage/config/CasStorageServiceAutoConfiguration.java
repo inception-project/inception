@@ -31,14 +31,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorage
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 
 @Configuration
-@EnableConfigurationProperties({ CasStoragePropertiesImpl.class, BackupProperties.class })
+@EnableConfigurationProperties({ CasStorageCachePropertiesImpl.class, BackupProperties.class,
+        CasStoragePropertiesImpl.class })
 public class CasStorageServiceAutoConfiguration
 {
     @Bean(CasStorageService.SERVICE_NAME)
     public CasStorageService casStorageService(CasStorageDriver aDriver,
             @Autowired(required = false) CasDoctor aCasDoctor,
             @Autowired(required = false) AnnotationSchemaService aSchemaService,
-            CasStorageProperties aCasStorageProperties)
+            CasStorageCacheProperties aCasStorageProperties)
     {
         return new CasStorageServiceImpl(aDriver, aCasDoctor, aSchemaService,
                 aCasStorageProperties);
@@ -46,8 +47,9 @@ public class CasStorageServiceAutoConfiguration
 
     @Bean
     CasStorageDriver fileSystemCasStorageDriver(RepositoryProperties aRepositoryProperties,
-            BackupProperties aBackupProperties)
+            BackupProperties aBackupProperties, CasStorageProperties aCasStorageProperties)
     {
-        return new FileSystemCasStorageDriver(aRepositoryProperties, aBackupProperties);
+        return new FileSystemCasStorageDriver(aRepositoryProperties, aBackupProperties,
+                aCasStorageProperties);
     }
 }

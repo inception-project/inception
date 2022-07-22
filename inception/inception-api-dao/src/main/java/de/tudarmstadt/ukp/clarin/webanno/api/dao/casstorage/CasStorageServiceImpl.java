@@ -72,7 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasSessionException;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceAction;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageServiceLoader;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageCacheProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
@@ -93,7 +93,7 @@ public class CasStorageServiceImpl
 
     private final CasDoctor casDoctor;
     private final AnnotationSchemaService schemaService;
-    private final CasStorageProperties casStorageProperties;
+    private final CasStorageCacheProperties casStorageProperties;
 
     private final int snapshotInterval = 1000;
     private final int warningThreshold = 50;
@@ -126,7 +126,7 @@ public class CasStorageServiceImpl
     public CasStorageServiceImpl(CasStorageDriver aDriver,
             @Autowired(required = false) CasDoctor aCasDoctor,
             @Autowired(required = false) AnnotationSchemaService aSchemaService,
-            CasStorageProperties aCasStorageProperties)
+            CasStorageCacheProperties aCasStorageProperties)
     {
         driver = aDriver;
         casDoctor = aCasDoctor;

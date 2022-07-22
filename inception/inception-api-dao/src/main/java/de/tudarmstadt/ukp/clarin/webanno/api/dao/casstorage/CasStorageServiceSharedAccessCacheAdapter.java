@@ -22,18 +22,18 @@ import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageCacheProperties;
 
 @ManagedResource("de.tudarmstadt.ukp.clarin.webanno.api.dao:type=CasStorageServiceImpl,name=sharedReadOnlyCasCache")
 @Component
 public class CasStorageServiceSharedAccessCacheAdapter
 {
     private final CasStorageServiceImpl casStorageService;
-    private final CasStorageProperties casStorageProperties;
+    private final CasStorageCacheProperties casStorageProperties;
 
     @Autowired
     public CasStorageServiceSharedAccessCacheAdapter(CasStorageServiceImpl aCasStorageService,
-            CasStorageProperties aCasStorageProperties)
+            CasStorageCacheProperties aCasStorageProperties)
     {
         casStorageService = aCasStorageService;
         casStorageProperties = aCasStorageProperties;
