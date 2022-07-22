@@ -27,9 +27,6 @@ import java.nio.file.Paths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
-
 public class PdfExtractFileTest
 {
     private PdfExtractFile pdfExtractFile;

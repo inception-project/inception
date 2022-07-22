@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -114,7 +114,7 @@ public class LearningCurveChartPanel
     }
 
     @OnEvent
-    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    public void onRenderRequested(RenderRequestedEvent aEvent)
     {
         LOG.trace("rendered annotation event");
 

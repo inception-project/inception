@@ -21,10 +21,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.RenderType.DIFFE
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.RenderType.SKIP;
 import static java.lang.Math.abs;
+import static java.lang.invoke.MethodHandles.lookup;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Optional;
+
+import org.slf4j.Logger;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +44,8 @@ class DifferentialRenderingSupport
     implements Serializable
 {
     private static final long serialVersionUID = -7029198496087580165L;
+
+    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private final BratMetrics metrics;
 
@@ -100,8 +106,7 @@ class DifferentialRenderingSupport
                     }
                 }
                 catch (IOException e) {
-                    BratAnnotationEditor.LOG
-                            .error("Unable to generate diff, falling back to full render.", e);
+                    LOG.error("Unable to generate diff, falling back to full render.", e);
                     // Fall-through
                 }
 

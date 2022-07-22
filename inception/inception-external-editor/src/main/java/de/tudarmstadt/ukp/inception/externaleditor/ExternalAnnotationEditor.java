@@ -71,7 +71,7 @@ public class ExternalAnnotationEditor
     {
         if (getDescription().getView().startsWith(PLUGIN_SCHEME)) {
             String resPath = substringAfter(getDescription().getView(), PLUGIN_SCHEME);
-            return new ExternalAnnotationEditorStaticIFrameView(MID_VIS,
+            return new ExternalAnnotationEditorStaticIFrameView(CID_VIS,
                     getUrlForPluginAsset(resPath));
         }
 
@@ -81,8 +81,8 @@ public class ExternalAnnotationEditor
                 state.getUser());
 
         return documentViewExtensionPoint.getExtension(getDescription().getView()) //
-                .map(ext -> ext.createView(MID_VIS, Model.of(annDoc), editorFactoryId)) //
-                .orElseGet(() -> new Label(MID_VIS,
+                .map(ext -> ext.createView(CID_VIS, Model.of(annDoc), editorFactoryId)) //
+                .orElseGet(() -> new Label(CID_VIS,
                         "Unsupported view: [" + getDescription().getView() + "]"));
     }
 

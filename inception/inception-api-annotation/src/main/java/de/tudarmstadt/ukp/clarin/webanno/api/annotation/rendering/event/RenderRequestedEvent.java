@@ -15,19 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externaleditor.command;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event;
 
-import org.springframework.core.annotation.Order;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 
-@Order(100)
-public class LoadAnnotationsCommand
-    implements EditorCommand
+public class RenderRequestedEvent
 {
-    private static final long serialVersionUID = 1779280309942407825L;
+    private final IPartialPageRequestHandler requestHandler;
 
-    @Override
-    public String command(String aEditorVariable)
+    public RenderRequestedEvent(IPartialPageRequestHandler aRequestHandler)
     {
-        return String.format("%s.loadAnnotations()", aEditorVariable);
+        requestHandler = aRequestHandler;
+    }
+
+    public IPartialPageRequestHandler getRequestHandler()
+    {
+        return requestHandler;
     }
 }
