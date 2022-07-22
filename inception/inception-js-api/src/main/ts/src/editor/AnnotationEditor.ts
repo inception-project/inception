@@ -18,7 +18,7 @@
 export interface AnnotationEditor {
   loadAnnotations(): void
 
-  jumpTo(args: { offset: number, position: string }): void
+  scrollTo(args: { offset: number, position: string }): void
 
   destroy(): void
 }
