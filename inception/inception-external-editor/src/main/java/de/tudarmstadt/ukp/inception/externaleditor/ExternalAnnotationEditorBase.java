@@ -68,9 +68,9 @@ import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.externaleditor.command.CommandQueue;
 import de.tudarmstadt.ukp.inception.externaleditor.command.EditorCommand;
-import de.tudarmstadt.ukp.inception.externaleditor.command.ScrollToCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.command.LoadAnnotationsCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.command.QueuedEditorCommandsMetaDataKey;
+import de.tudarmstadt.ukp.inception.externaleditor.command.ScrollToCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavascriptResourceReference;
 

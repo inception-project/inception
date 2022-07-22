@@ -31,7 +31,6 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
-import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveDanglingRelationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
