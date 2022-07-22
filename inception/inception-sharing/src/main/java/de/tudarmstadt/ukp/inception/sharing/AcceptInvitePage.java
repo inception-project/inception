@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -107,6 +108,13 @@ public class AcceptInvitePage
         if (user != null && invitationIsValid.getObject()) {
             if (projectService.hasRole(user, getProject(), ANNOTATOR)) {
                 backToProjectPage();
+            }
+            else if (user.getRealm() != null) {
+                // It the current user is a project-bound user and does not already exist in the
+                // project, then the user belongs to a different project. In this case, the user
+                // must not join another project to which they are not bound
+                ApplicationSession.get().signOut();
+                throw new RestartResponseException(getClass(), aPageParameters);
             }
         }
 
