@@ -78,8 +78,6 @@ include::{include-dir}settings_database.adoc[leveloffset=+1]
 
 include::{include-dir}settings_server.adoc[leveloffset=+1]
 
-include::{include-dir}settings_repository.adoc[leveloffset=+1]
-
 include::{include-dir}settings_internal-backup.adoc[leveloffset=+1]
 
 include::{include-dir}settings_cas-storage_cache.adoc[leveloffset=+1]

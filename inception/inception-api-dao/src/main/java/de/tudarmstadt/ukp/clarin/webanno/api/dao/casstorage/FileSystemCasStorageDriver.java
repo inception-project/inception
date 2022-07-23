@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -76,16 +77,18 @@ public class FileSystemCasStorageDriver
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final RepositoryProperties repositoryProperties;
+    private final CasStorageProperties casStorageProperties;
     private final BackupProperties backupProperties;
     private final LoadingCache<File, InternalMetadata> metadataCache;
 
     public FileSystemCasStorageDriver(RepositoryProperties aRepositoryProperties,
-            BackupProperties aBackupProperties)
+            BackupProperties aBackupProperties, CasStorageProperties aCasStorageProperties)
     {
         repositoryProperties = aRepositoryProperties;
         backupProperties = aBackupProperties;
+        casStorageProperties = aCasStorageProperties;
 
-        if (repositoryProperties.isTraceAccess()) {
+        if (casStorageProperties.isTraceAccess()) {
             metadataCache = Caffeine.newBuilder() //
                     .expireAfterWrite(Duration.ofHours(1)) //
                     .build(k -> new InternalMetadata());
@@ -188,10 +191,10 @@ public class FileSystemCasStorageDriver
 
             // Now write the new version to "<username>.ser" or CURATION_USER.ser
             setDocumentId(aCas, aUserName);
-            if (repositoryProperties.isParanoidCasSerialization()) {
+            if (casStorageProperties.isParanoidCasSerialization()) {
                 CasPersistenceUtils.writeSerializedCasParanoid(aCas, currentVersion);
             }
-            else if (repositoryProperties.isCompressedCasSerialization()) {
+            else if (casStorageProperties.isCompressedCasSerialization()) {
                 CasPersistenceUtils.writeSerializedCasCompressed(aCas, currentVersion);
             }
             else {
@@ -224,7 +227,7 @@ public class FileSystemCasStorageDriver
         }
 
         if (oldVersion.exists() && (currentVersion.length() < (oldVersion.length()
-                * (repositoryProperties.isCompressedCasSerialization() ? 0.95d : 1.0d)))) {
+                * (casStorageProperties.isCompressedCasSerialization() ? 0.95d : 1.0d)))) {
             // If compression is enabled, then it is not so uncommon that the file size may also
             // become smaller at times, so we allow a bit of slip
             log.debug(
@@ -258,7 +261,7 @@ public class FileSystemCasStorageDriver
                     + "{} bytes in {}ms (file timestamp: {}, compression: {})", aUserName,
                     aDocument, aDocument.getProject(), currentVersion.length(), duration,
                     TIMESTAMP_FORMATTER.format(lastModified),
-                    repositoryProperties.isCompressedCasSerialization());
+                    casStorageProperties.isCompressedCasSerialization());
         }
 
         WicketUtil.serverTiming("realWriteCas", duration);

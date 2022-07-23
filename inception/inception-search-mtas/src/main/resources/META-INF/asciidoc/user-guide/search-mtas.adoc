@@ -168,7 +168,7 @@ The capital of Galicia
 (<Named_entity.value="OTH"/> | <Named_entity.value="LOC"/>) intersecting <SemArg/>
 ----
 
-=== Relation queries
+=== Relation layer queries
 
 When relations are index, they are indexed by their target span.
 
@@ -207,7 +207,12 @@ Both layers have a string feature called `value`.
 ----
 
 
-=== Concept Annotation queries
+=== Boolean feature queries
+
+The values of boolean features are indexed as `true` and `false`.
+
+
+=== Concept feature queries
 
 .Generic Search over annotated KB entities : all occurrences for KB entity *Bordeaux*
 ----
