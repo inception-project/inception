@@ -21,13 +21,13 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition;
 
-public class JumpToEvent
+public class ScrollToEvent
 {
     private final AjaxRequestTarget requestHandler;
     private final int offset;
     private final FocusPosition position;
 
-    public JumpToEvent(AjaxRequestTarget aRequestHandler, int aOffset, FocusPosition aPos)
+    public ScrollToEvent(AjaxRequestTarget aRequestHandler, int aOffset, FocusPosition aPos)
     {
         requestHandler = aRequestHandler;
         offset = aOffset;

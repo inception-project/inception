@@ -41,6 +41,6 @@ public class ScrollToCommand
     @Override
     public String command(String aEditorVariable)
     {
-        return format("e.jumpTo({ offset: %d, position: '%s'})", offset, position);
+        return format("e.scrollTo({ offset: %d, position: '%s'})", offset, position);
     }
 }

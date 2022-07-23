@@ -42,8 +42,8 @@ export class PdfAnnotationEditor implements AnnotationEditor {
     doLoadAnnotations()
   }
 
-  jumpTo (args: { offset: number; position: string }): void {
-    console.log(`JUMPING! ${args.offset} ${args.position}`)
+  scrollTo (args: { offset: number; position: string }): void {
+    console.log(`SCROLLING! ${args.offset} ${args.position}`)
     scrollTo(args.offset, args.position)
   }
 

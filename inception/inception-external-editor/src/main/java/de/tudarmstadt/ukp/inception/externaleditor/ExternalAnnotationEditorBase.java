@@ -57,7 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPoint;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.JumpToEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.ScrollToEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
@@ -163,7 +163,7 @@ public abstract class ExternalAnnotationEditorBase
     }
 
     @OnEvent
-    public void onJumpTo(JumpToEvent aEvent)
+    public void onJumpTo(ScrollToEvent aEvent)
     {
         QueuedEditorCommandsMetaDataKey.get()
                 .add(new ScrollToCommand(aEvent.getOffset(), aEvent.getPosition()));

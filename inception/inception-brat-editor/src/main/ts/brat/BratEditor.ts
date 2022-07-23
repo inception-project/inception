@@ -49,7 +49,7 @@ export class BratEditor implements AnnotationEditor {
     this.dispatcher.post('loadAnnotations', [])
   }
 
-  jumpTo (args: { offset: number; position: string }): void {
+  scrollTo (args: { offset: number; position: string }): void {
     this.visualizer.scrollTo(args)
   }
 
