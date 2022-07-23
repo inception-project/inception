@@ -35,6 +35,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.apache.uima.jcas.cas.TOP;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
@@ -145,6 +146,29 @@ public class AnnotationLayer
         setType(aType);
         setAnchoringMode(aAnchoringMode);
         setOverlapMode(aOverlapMode);
+    }
+
+    private AnnotationLayer(Builder builder)
+    {
+        this.id = builder.id;
+        this.uiName = builder.uiName;
+        this.type = builder.type;
+        this.description = builder.description;
+        this.enabled = builder.enabled;
+        this.builtIn = builder.builtIn;
+        this.readonly = builder.readonly;
+        this.onClickJavascriptAction = builder.onClickJavascriptAction;
+        this.name = builder.name;
+        this.attachType = builder.attachType;
+        this.attachFeature = builder.attachFeature;
+        this.project = builder.project;
+        this.crossSentence = builder.crossSentence;
+        this.showTextInHover = builder.showTextInHover;
+        this.linkedListBehavior = builder.linkedListBehavior;
+        this.anchoringMode = builder.anchoringMode;
+        this.overlapMode = builder.overlapMode;
+        this.validationMode = builder.validationMode;
+        this.traits = builder.traits;
     }
 
     /**
@@ -542,5 +566,165 @@ public class AnnotationLayer
     public String toString()
     {
         return "[" + name + "](" + id + ")";
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private Long id;
+        private String uiName;
+        private String type;
+        private String description;
+        private boolean enabled = true;
+        private boolean builtIn = false;
+        private boolean readonly = false;
+        private String onClickJavascriptAction;
+        private String name;
+        private AnnotationLayer attachType;
+        private AnnotationFeature attachFeature;
+        private Project project;
+        private boolean crossSentence;
+        private boolean showTextInHover = true;
+        private boolean linkedListBehavior;
+        private AnchoringMode anchoringMode = AnchoringMode.TOKENS;
+        private OverlapMode overlapMode = OverlapMode.NO_OVERLAP;
+        private ValidationMode validationMode = ValidationMode.ALWAYS;
+        private String traits;
+
+        private Builder()
+        {
+            // Nothing to do
+        }
+
+        public Builder forJCasClass(Class<? extends TOP> aClazz)
+        {
+            withName(aClazz.getName());
+            withUiName(aClazz.getSimpleName());
+            return this;
+        }
+
+        public Builder withId(Long id)
+        {
+            this.id = id;
+            return this;
+        }
+
+        public Builder withUiName(String uiName)
+        {
+            this.uiName = uiName;
+            return this;
+        }
+
+        public Builder withType(String type)
+        {
+            this.type = type;
+            return this;
+        }
+
+        public Builder withDescription(String description)
+        {
+            this.description = description;
+            return this;
+        }
+
+        public Builder withEnabled(boolean enabled)
+        {
+            this.enabled = enabled;
+            return this;
+        }
+
+        public Builder withBuiltIn(boolean builtIn)
+        {
+            this.builtIn = builtIn;
+            return this;
+        }
+
+        public Builder withReadonly(boolean readonly)
+        {
+            this.readonly = readonly;
+            return this;
+        }
+
+        public Builder withOnClickJavascriptAction(String onClickJavascriptAction)
+        {
+            this.onClickJavascriptAction = onClickJavascriptAction;
+            return this;
+        }
+
+        public Builder withName(String name)
+        {
+            this.name = name;
+            return this;
+        }
+
+        public Builder withAttachType(AnnotationLayer attachType)
+        {
+            this.attachType = attachType;
+            return this;
+        }
+
+        public Builder withAttachFeature(AnnotationFeature attachFeature)
+        {
+            this.attachType = attachFeature.getLayer();
+            this.attachFeature = attachFeature;
+            return this;
+        }
+
+        public Builder withProject(Project project)
+        {
+            this.project = project;
+            return this;
+        }
+
+        public Builder withCrossSentence(boolean crossSentence)
+        {
+            this.crossSentence = crossSentence;
+            return this;
+        }
+
+        public Builder withShowTextInHover(boolean showTextInHover)
+        {
+            this.showTextInHover = showTextInHover;
+            return this;
+        }
+
+        public Builder withLinkedListBehavior(boolean linkedListBehavior)
+        {
+            this.linkedListBehavior = linkedListBehavior;
+            return this;
+        }
+
+        public Builder withAnchoringMode(AnchoringMode anchoringMode)
+        {
+            this.anchoringMode = anchoringMode;
+            return this;
+        }
+
+        public Builder withOverlapMode(OverlapMode overlapMode)
+        {
+            this.overlapMode = overlapMode;
+            return this;
+        }
+
+        public Builder withValidationMode(ValidationMode validationMode)
+        {
+            this.validationMode = validationMode;
+            return this;
+        }
+
+        public Builder withTraits(String traits)
+        {
+            this.traits = traits;
+            return this;
+        }
+
+        public AnnotationLayer build()
+        {
+            return new AnnotationLayer(this);
+        }
     }
 }
