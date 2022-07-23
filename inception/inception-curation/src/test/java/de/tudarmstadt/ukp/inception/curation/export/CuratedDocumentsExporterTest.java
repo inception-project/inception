@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageDriver;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
@@ -93,10 +94,10 @@ public class CuratedDocumentsExporterTest
         repositoryProperties.setPath(workFolder);
 
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
-                new BackupProperties());
+                new BackupProperties(), new CasStoragePropertiesImpl());
 
         casStorageService = spy(new CasStorageServiceImpl(driver, null, schemaService,
-                new CasStoragePropertiesImpl()));
+                new CasStorageCachePropertiesImpl()));
 
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
                 asList(new XmiFormatSupport()), casStorageService, schemaService, properties);

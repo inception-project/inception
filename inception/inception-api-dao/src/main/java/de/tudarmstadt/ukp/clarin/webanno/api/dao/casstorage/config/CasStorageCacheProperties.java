@@ -17,11 +17,24 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config;
 
-public interface CasStorageProperties
+import java.time.Duration;
+
+public interface CasStorageCacheProperties
 {
-    boolean isTraceAccess();
+    /**
+     * @return maximum time to wait when trying to perform an exclusive action on a CAS for another
+     *         exclusive action to finish.
+     */
+    Duration getCasBorrowWaitTimeout();
 
-    boolean isParanoidCasSerialization();
+    /**
+     * @return time that exclusive-access CAS instances as well as shared CAS instances are kept in
+     *         memory after the last access to them.
+     */
+    Duration getIdleCasEvictionDelay();
 
-    boolean isCompressedCasSerialization();
+    /**
+     * @return number of CAS instances that should be kept in memory for shared-read-only access.
+     */
+    long getSharedCasCacheSize();
 }

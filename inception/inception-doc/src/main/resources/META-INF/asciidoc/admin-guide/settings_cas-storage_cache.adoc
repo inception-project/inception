@@ -14,12 +14,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-= CAS cache
+= CAS storage
 
-To speed up interactions, {product-name} keeps a cache annotation data in memory. This cache can
-be tuned using the following properties:
+This section describes settings related to the storage of CAS data objects (i.e. annotations).
 
-.Database settings in the `settings.properties` file
+.CAS cache settings in the `settings.properties` file
 [cols="4*", options="header"]
 |===
 | Setting
@@ -27,17 +26,36 @@ be tuned using the following properties:
 | Default
 | Example
 
-| cas-storage.shared-cas-cache-size
+| cas-storage.compressed-cas-serialization
+| Whether to compress annotation files
+| false
+| true
+|===
+
+= CAS cache
+
+To speed up interactions, {product-name} keeps a cache annotation data in memory. 
+This cache can be tuned using the following properties:
+
+.CAS cache settings in the `settings.properties` file
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| cas-storage.cache.shared-cas-cache-size
 | Number of shared read-only CASes to keep in memory
 | 10-5000 _(depending on heap size)_
 | 20000
 
-| cas-storage.idle-cas-eviction-delay
+| cas-storage.cache.idle-cas-eviction-delay
 | Time a CAS is retained in the caches after the last access
 | 5m
 | 1h
 
-| cas-storage.cas-borrow-wait-timeout
+| cas-storage.cache.cas-borrow-wait-timeout
 | Time for an exclusive action to wait for another exclusive action to finish
 | 3m
 | 5m

@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImp
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -116,10 +117,10 @@ public class DocumentServiceImplConcurrencyTest
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
-                new BackupProperties());
+                new BackupProperties(), new CasStoragePropertiesImpl());
 
         storageService = new CasStorageServiceImpl(driver, null, null,
-                new CasStoragePropertiesImpl());
+                new CasStorageCachePropertiesImpl());
 
         sut = spy(new DocumentServiceImpl(repositoryProperties, storageService, importExportService,
                 projectService, applicationEventPublisher, entityManager));
