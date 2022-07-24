@@ -119,6 +119,7 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
 import de.tudarmstadt.ukp.inception.search.model.Progress;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -156,6 +157,7 @@ public class SearchAnnotationSidebar
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean SearchProperties searchProperties;
+    private @SpringBean WorkloadManagementService workloadService;
 
     private User currentUser;
 
@@ -214,6 +216,9 @@ public class SearchAnnotationSidebar
                 .setUncheckedIcon(FontAwesome5IconType.copy_s)
                 .setUncheckedTitle(Model.of("Search in all documents"))
                 .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT))
+                .add(visibleWhen(() -> workloadService
+                        .getWorkloadManagerExtension(aModel.getObject().getProject())
+                        .isDocumentRandomAccessAllowed(aModel.getObject().getProject())))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior()));
 
         resultsProvider.emptyQuery();
@@ -574,9 +579,12 @@ public class SearchAnnotationSidebar
         }
 
         try {
-            SourceDocument limitToDocument = searchOptions.getObject().isLimitedToCurrentDocument()
-                    ? state.getDocument()
-                    : null;
+            SourceDocument limitToDocument = state.getDocument();
+            if (workloadService.getWorkloadManagerExtension(project).isDocumentRandomAccessAllowed(
+                    project) && !searchOptions.getObject().isLimitedToCurrentDocument()) {
+                limitToDocument = null;
+            }
+
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
                     state.getUser().getUsername(), targetQuery.getObject(), limitToDocument));
             SearchOptions opt = searchOptions.getObject();
