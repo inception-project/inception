@@ -79,6 +79,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.BootstrapPagingNavigator.Size;
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -100,6 +101,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.IconToggleBox;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -121,6 +123,7 @@ import de.tudarmstadt.ukp.inception.search.model.Progress;
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
 {
+    private static final String MID_LIMITED_TO_CURRENT_DOCUMENT = "limitedToCurrentDocument";
     private static final String MID_EXPORT = "export";
     private static final String MID_CLEAR_BUTTON = "clearButton";
     private static final String MID_TOGGLE_DELETE_OPTIONS_VISIBILITY = "toggleDeleteOptionsVisibility";
@@ -205,6 +208,14 @@ public class SearchAnnotationSidebar
         queue(createSearchForm(MID_SEARCH_FORM));
         queue(mainContainer);
 
+        queue(new IconToggleBox(MID_LIMITED_TO_CURRENT_DOCUMENT) //
+                .setCheckedIcon(FontAwesome5IconType.file_s)
+                .setCheckedTitle(Model.of("Search in current document"))
+                .setUncheckedIcon(FontAwesome5IconType.copy_s)
+                .setUncheckedTitle(Model.of("Search in all documents"))
+                .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT))
+                .add(new LambdaAjaxFormComponentUpdatingBehavior()));
+
         resultsProvider.emptyQuery();
 
         resultsTable = new WebMarkupContainer(MID_RESULTS_TABLE);
@@ -266,7 +277,7 @@ public class SearchAnnotationSidebar
 
         // create delete-button and options form
         deleteButton = new LambdaAjaxButton<>(MID_DELETE_BUTTON,
-                (target, from) -> actionApplyToSelectedResults(target,
+                (target, form) -> actionApplyToSelectedResults(target,
                         this::deleteAnnotationAtSearchResult));
         queue(deleteButton);
 
@@ -347,8 +358,6 @@ public class SearchAnnotationSidebar
     private Form<SearchOptions> createSearchOptionsForm(String aId)
     {
         Form<SearchOptions> searchOptionsForm = new Form<>(aId, searchOptions);
-        searchOptionsForm.add(new CheckBox("limitedToCurrentDocument").setOutputMarkupId(true) //
-                .add(new LambdaAjaxFormComponentUpdatingBehavior()));
         searchOptionsForm.add(createLayerDropDownChoice("groupingLayer",
                 annotationService.listAnnotationLayer(getModelObject().getProject())));
 
