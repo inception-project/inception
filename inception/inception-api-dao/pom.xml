@@ -29,10 +29,6 @@
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-diag</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-annotation-storage</artifactId>
     </dependency>
     <dependency>
@@ -50,10 +46,6 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-pool2</artifactId>
     </dependency>
     <dependency>
       <groupId>com.github.ben-manes.caffeine</groupId>
@@ -137,10 +129,6 @@
 
     <dependency>
       <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-metadata-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-segmentation-asl</artifactId>
     </dependency>
 
@@ -150,17 +138,6 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.xerial.snappy</groupId>
-      <artifactId>snappy-java</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    
     <!-- TEST DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -196,11 +173,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-project</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-document-annotation</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
