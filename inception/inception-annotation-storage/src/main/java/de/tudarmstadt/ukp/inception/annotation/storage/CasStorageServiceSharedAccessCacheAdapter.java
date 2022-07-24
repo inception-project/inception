@@ -20,12 +20,10 @@ package de.tudarmstadt.ukp.inception.annotation.storage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCacheProperties;
 
 @ManagedResource("de.tudarmstadt.ukp.inception.annotation.storage:type=CasStorageServiceImpl,name=sharedReadOnlyCasCache")
-@Component
 public class CasStorageServiceSharedAccessCacheAdapter
 {
     private final CasStorageServiceImpl casStorageService;
