@@ -36,7 +36,6 @@ import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -49,11 +48,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDet
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.image.config.ImageSupportAutoConfiguration;
 
 /**
  * Extension providing image-related features for annotations.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ImageSupportAutoConfiguration#imageSidebarFactory}.
+ * </p>
  */
-@Component
 public class ImageFeatureSupport
     implements FeatureSupport<ImageFeatureTraits>
 {

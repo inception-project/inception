@@ -27,12 +27,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceSharedAccessCacheAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 
 @Configuration
-@EnableConfigurationProperties({ CasStorageCachePropertiesImpl.class, CasStorageBackupProperties.class,
-        CasStoragePropertiesImpl.class })
+@EnableConfigurationProperties({ CasStorageCachePropertiesImpl.class,
+        CasStorageBackupProperties.class, CasStoragePropertiesImpl.class })
 public class CasStorageServiceAutoConfiguration
 {
     @Bean(CasStorageService.SERVICE_NAME)
@@ -46,10 +47,19 @@ public class CasStorageServiceAutoConfiguration
     }
 
     @Bean
-    CasStorageDriver fileSystemCasStorageDriver(RepositoryProperties aRepositoryProperties,
-            CasStorageBackupProperties aBackupProperties, CasStorageProperties aCasStorageProperties)
+    public CasStorageDriver fileSystemCasStorageDriver(RepositoryProperties aRepositoryProperties,
+            CasStorageBackupProperties aBackupProperties,
+            CasStorageProperties aCasStorageProperties)
     {
         return new FileSystemCasStorageDriver(aRepositoryProperties, aBackupProperties,
                 aCasStorageProperties);
+    }
+
+    @Bean
+    public CasStorageServiceSharedAccessCacheAdapter CasStorageServiceSharedAccessCacheAdapter(
+            CasStorageServiceImpl aCasStorageService,
+            CasStorageCacheProperties aCasStorageProperties)
+    {
+        return new CasStorageServiceSharedAccessCacheAdapter(aCasStorageService, aCasStorageProperties);
     }
 }
