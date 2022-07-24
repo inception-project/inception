@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentAccess;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentAccessImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
@@ -51,6 +52,6 @@ public class DocumentServiceAutoConfiguration
     public DocumentAccess documentAccess(ProjectService aProjectService, UserDao aUserService,
             DocumentService aDocumentService)
     {
-        return new DocumentAccess(aProjectService, aUserService, aDocumentService);
+        return new DocumentAccessImpl(aProjectService, aUserService, aDocumentService);
     }
 }

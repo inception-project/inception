@@ -112,23 +112,6 @@ public interface AnnotatorState
 
     void setProject(Project aProject);
 
-    /**
-     * Set whether the user should be allowed to switch projects in the annotation editor "open
-     * documents" dialog.
-     * 
-     * @deprecated Project selection will be removed from the open document dialog. This option here
-     *             will also go away.
-     */
-    @Deprecated
-    void setProjectLocked(boolean aFlag);
-
-    /**
-     * @deprecated Project selection will be removed from the open document dialog. This option here
-     *             will also go away.
-     */
-    @Deprecated
-    boolean isProjectLocked();
-
     // ---------------------------------------------------------------------------------------------
     // Constraints
     // REC: we cache the constraints when a document is opened because parsing them takes some time

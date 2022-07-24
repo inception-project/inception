@@ -183,7 +183,7 @@ public class CurationPage
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
 
-        handleParameters(document, focus, null, true);
+        handleParameters(document, focus, null);
 
         commonInit();
 
@@ -624,7 +624,7 @@ public class CurationPage
 
     @Override
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
-            StringValue aUser, boolean aLockIfPreset)
+            StringValue aUser)
     {
         Project project = getProject();
 
@@ -653,9 +653,6 @@ public class CurationPage
         // Mind that this is relevant if the project was specified as a query parameter
         // i.e. not only in the case that it was a URL fragment parameter.
         state.setProject(project);
-        if (aLockIfPreset) {
-            state.setProjectLocked(true);
-        }
 
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)

@@ -68,7 +68,6 @@ public class AnnotatorStateImpl
      * The Project the annotator working on
      */
     private Project project;
-    private boolean projectLocked = false;
 
     /**
      * The source document the to be annotated
@@ -228,18 +227,6 @@ public class AnnotatorStateImpl
         }
 
         project = aProject;
-    }
-
-    @Override
-    public void setProjectLocked(boolean aFlag)
-    {
-        projectLocked = aFlag;
-    }
-
-    @Override
-    public boolean isProjectLocked()
-    {
-        return projectLocked;
     }
 
     @Override
