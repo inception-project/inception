@@ -170,7 +170,9 @@ public abstract class ExternalAnnotationEditorBase
 
         // Do not call our requestRender because we do not want to unnecessarily add the
         // LoadAnnotationsCommand
-        super.requestRender(aEvent.getRequestHandler());
+        if (aEvent.getRequestHandler() != null) {
+            super.requestRender(aEvent.getRequestHandler());
+        }
     }
 
     @Override

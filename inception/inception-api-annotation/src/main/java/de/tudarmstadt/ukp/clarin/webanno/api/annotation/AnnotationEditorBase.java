@@ -128,6 +128,11 @@ public abstract class AnnotationEditorBase
      */
     public void requestRender(AjaxRequestTarget aTarget)
     {
+        if (aTarget == null) {
+            LOG.warn("Cannot request render when not in the scope of an AJAX request");
+            return;
+        }
+
         try {
             aTarget.registerRespondListener(new AjaxComponentRespondListener(this, _target -> {
                 // Is a document loaded?
