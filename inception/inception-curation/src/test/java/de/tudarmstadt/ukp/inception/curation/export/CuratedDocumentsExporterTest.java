@@ -45,17 +45,17 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageDriver;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageCachePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiFormatSupport;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
+import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
@@ -94,7 +94,7 @@ public class CuratedDocumentsExporterTest
         repositoryProperties.setPath(workFolder);
 
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
-                new BackupProperties(), new CasStoragePropertiesImpl());
+                new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
         casStorageService = spy(new CasStorageServiceImpl(driver, null, schemaService,
                 new CasStorageCachePropertiesImpl()));

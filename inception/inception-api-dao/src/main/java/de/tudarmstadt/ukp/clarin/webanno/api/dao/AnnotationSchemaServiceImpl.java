@@ -95,8 +95,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.TagUpdatedEvent;
@@ -113,6 +111,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 
 /**
  * <p>
