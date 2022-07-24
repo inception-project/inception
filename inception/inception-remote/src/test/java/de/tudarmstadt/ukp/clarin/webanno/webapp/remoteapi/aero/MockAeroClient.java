@@ -36,8 +36,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.OpenCasStorageSessionForRequestFilter;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LoggingFilter;
+import de.tudarmstadt.ukp.inception.annotation.storage.OpenCasStorageSessionForRequestFilter;
 
 class MockAeroClient
 {

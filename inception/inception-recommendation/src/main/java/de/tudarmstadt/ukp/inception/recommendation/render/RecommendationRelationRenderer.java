@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils.getSourceDocumentName;
+import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getSourceDocumentName;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.uima.fit.util.CasUtil.selectAt;

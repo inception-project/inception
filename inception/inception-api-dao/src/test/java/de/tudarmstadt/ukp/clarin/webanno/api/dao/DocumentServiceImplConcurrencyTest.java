@@ -21,8 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGR
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasMetadataUtils.getInternalTypeSystem;
-import static de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession.openNested;
+import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
+import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession.openNested;
 import static java.lang.Thread.sleep;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.repeat;
@@ -63,18 +63,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageDriver;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.FileSystemCasStorageDriver;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.BackupProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageCachePropertiesImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStoragePropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
+import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
+import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 
 @ExtendWith(MockitoExtension.class)
 public class DocumentServiceImplConcurrencyTest
@@ -117,7 +117,7 @@ public class DocumentServiceImplConcurrencyTest
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
-                new BackupProperties(), new CasStoragePropertiesImpl());
+                new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
         storageService = new CasStorageServiceImpl(driver, null, null,
                 new CasStorageCachePropertiesImpl());
