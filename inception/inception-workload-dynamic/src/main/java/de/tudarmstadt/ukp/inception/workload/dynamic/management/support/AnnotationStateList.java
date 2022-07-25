@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management.support;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.management.DynamicWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
 import static java.time.Duration.between;
@@ -72,8 +73,8 @@ public class AnnotationStateList
                 Duration idleTime = row.getTimestamp() != null
                         ? between(row.getTimestamp().toInstant(), now())
                         : null;
-                if (idleTime != null && !aAbandonationTimeout.isZero()
-                        && !aAbandonationTimeout.isNegative()
+                if (row.getAnnotatorState() == IN_PROGRESS && idleTime != null
+                        && !aAbandonationTimeout.isZero() && !aAbandonationTimeout.isNegative()
                         && idleTime.compareTo(aAbandonationTimeout) > 0) {
                     labelModel = labelModel
                             .map(_label -> "<i class=\"fas fa-user-clock\"></i> " + _label);
