@@ -19,6 +19,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
 import java.io.IOException;
@@ -153,7 +154,8 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
         // On finishing, the current AnnotationDocument is put to the new state FINISHED
         AnnotationDocument annotationDocument = documentService
                 .getAnnotationDocument(state.getDocument(), user);
-        documentService.setAnnotationDocumentState(annotationDocument, FINISHED);
+        documentService.setAnnotationDocumentState(annotationDocument, FINISHED,
+                EXPLICIT_ANNOTATOR_USER_ACTION);
 
         aTarget.add(page);
 
