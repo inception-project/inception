@@ -174,11 +174,6 @@
     
     <!-- JUNIT DEPENDENCY FOR TESTING -->
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-dao</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
       <scope>test</scope>
