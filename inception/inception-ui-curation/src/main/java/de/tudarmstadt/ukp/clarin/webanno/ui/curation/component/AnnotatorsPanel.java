@@ -70,7 +70,6 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
@@ -89,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationS
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.AnnotationStateColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
+import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.curation.merge.AlreadyMergedException;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;

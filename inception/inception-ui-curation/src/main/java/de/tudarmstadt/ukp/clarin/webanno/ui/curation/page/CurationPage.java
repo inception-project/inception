@@ -81,7 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
@@ -111,6 +110,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEv
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverview;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitState;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;

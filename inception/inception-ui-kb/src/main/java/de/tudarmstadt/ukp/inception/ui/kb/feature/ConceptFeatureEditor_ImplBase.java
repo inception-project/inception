@@ -47,10 +47,10 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits_ImplBase;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;

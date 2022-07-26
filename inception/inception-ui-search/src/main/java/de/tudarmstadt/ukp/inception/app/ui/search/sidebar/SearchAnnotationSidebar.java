@@ -82,7 +82,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.Bootstra
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -100,11 +99,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublishe
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;

@@ -53,11 +53,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -68,10 +63,15 @@ import de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.feature.bool.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.inception.feature.link.LinkFeatureSupport;
-import de.tudarmstadt.ukp.inception.feature.number.NumberFeatureSupport;
-import de.tudarmstadt.ukp.inception.feature.string.StringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegistryImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)

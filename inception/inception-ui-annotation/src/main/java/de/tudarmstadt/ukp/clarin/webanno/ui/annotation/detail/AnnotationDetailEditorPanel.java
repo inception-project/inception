@@ -85,9 +85,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
@@ -106,10 +104,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
+import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.layer.chain.ChainAdapter;
-import de.tudarmstadt.ukp.inception.layer.relation.RelationAdapter;
-import de.tudarmstadt.ukp.inception.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;

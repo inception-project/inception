@@ -37,11 +37,11 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.log.exporter.ExportedLoggedEvent;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 

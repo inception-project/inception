@@ -68,8 +68,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -98,6 +96,8 @@ import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionC
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionStartedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSuggestionOfferedEvent;
 import de.tudarmstadt.ukp.inception.active.learning.strategy.UncertaintySamplingStrategy;
+import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanDeletedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;

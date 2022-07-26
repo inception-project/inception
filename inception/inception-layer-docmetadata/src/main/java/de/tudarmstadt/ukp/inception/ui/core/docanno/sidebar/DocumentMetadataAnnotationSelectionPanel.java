@@ -57,7 +57,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -67,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;

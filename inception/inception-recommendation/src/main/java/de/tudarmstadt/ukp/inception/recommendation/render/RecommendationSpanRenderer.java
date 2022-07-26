@@ -30,8 +30,8 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
-import de.tudarmstadt.ukp.inception.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;

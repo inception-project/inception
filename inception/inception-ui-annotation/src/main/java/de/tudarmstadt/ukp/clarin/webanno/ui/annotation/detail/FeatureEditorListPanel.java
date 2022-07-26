@@ -53,7 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.util.CachingReuseStrategy;
-import de.tudarmstadt.ukp.inception.feature.link.LinkFeatureEditor;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;

@@ -32,7 +32,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.inception.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**

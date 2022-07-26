@@ -32,11 +32,11 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;

@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -57,8 +56,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.feature.link.LinkFeatureEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
