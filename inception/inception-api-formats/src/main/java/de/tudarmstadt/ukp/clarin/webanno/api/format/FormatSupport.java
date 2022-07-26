@@ -135,8 +135,7 @@ public interface FormatSupport
             boolean aStripExtension)
         throws ResourceInitializationException, AnalysisEngineProcessException, IOException
     {
-        AnalysisEngineDescription writer = getWriterDescription(aDocument.getProject(), null,
-                aCas);
+        AnalysisEngineDescription writer = getWriterDescription(aDocument.getProject(), null, aCas);
         addConfigurationParameters(writer, //
                 JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
                 JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,

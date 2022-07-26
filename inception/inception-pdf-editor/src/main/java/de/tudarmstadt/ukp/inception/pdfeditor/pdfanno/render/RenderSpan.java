@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 
 /**
  * Intermediate representation / wrapper for VSpan, Span and Offset. Used for converting

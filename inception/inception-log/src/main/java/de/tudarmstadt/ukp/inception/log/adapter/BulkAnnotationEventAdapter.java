@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
+import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 
 @Component
 public class BulkAnnotationEventAdapter

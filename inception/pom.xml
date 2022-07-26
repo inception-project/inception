@@ -558,6 +558,16 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-guidelines</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-schema</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-active-learning</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
@@ -685,7 +695,22 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-api-dao</artifactId>
+        <artifactId>inception-documents</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-api-editor</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-api-render</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-api-schema</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -2035,7 +2060,10 @@
     <module>inception-annotation-storage</module>
     <module>inception-api-annotation</module>
     <module>inception-api-formats</module>
-    <module>inception-api-dao</module>
+    <module>inception-documents</module>
+    <module>inception-api-editor</module>
+    <module>inception-api-render</module>
+    <module>inception-api-schema</module>
     <module>inception-export</module>
     <module>inception-diag</module>
     <module>inception-testing</module>
@@ -2049,6 +2077,8 @@
     <module>inception-ui-tagsets</module>
     <module>inception-sharing</module>
     <module>inception-preferences</module>
+    <module>inception-guidelines</module>
+    <module>inception-schema</module>
     <!-- IO -->
     <module>inception-io-conll</module>
     <module>inception-io-json</module>

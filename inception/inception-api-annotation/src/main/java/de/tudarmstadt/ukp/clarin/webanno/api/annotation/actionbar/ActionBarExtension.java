@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
@@ -56,7 +56,7 @@ public interface ActionBarExtension
         return 0;
     }
 
-    Panel createActionBarItem(String aId, AnnotationPageBase aPage);
+    Component createActionBarItem(String aId, AnnotationPageBase aPage);
 
     /**
      * Called when the {@link ActionBar} is added to the page. This allows the action bar extensions

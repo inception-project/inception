@@ -21,8 +21,8 @@ import java.io.IOException;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainSpanEvent;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 
 @Component

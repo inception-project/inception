@@ -27,6 +27,7 @@ import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
 public class TokenWrappingPagingStrategyTest
 {

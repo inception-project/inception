@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.project.export;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.util.Arrays.asList;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
@@ -54,7 +53,8 @@ import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSys
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
-import de.tudarmstadt.ukp.inception.export.exporters.AnnotationDocumentExporter;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
 
 public class AnnotationDocumentsExporterTest
 {
@@ -90,8 +90,8 @@ public class AnnotationDocumentsExporterTest
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(workFolder);
 
-        driver = new FileSystemCasStorageDriver(repositoryProperties, new CasStorageBackupProperties(),
-                new CasStoragePropertiesImpl());
+        driver = new FileSystemCasStorageDriver(repositoryProperties,
+                new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
         casStorageService = new CasStorageServiceImpl(driver, null, schemaService,
                 new CasStorageCachePropertiesImpl());

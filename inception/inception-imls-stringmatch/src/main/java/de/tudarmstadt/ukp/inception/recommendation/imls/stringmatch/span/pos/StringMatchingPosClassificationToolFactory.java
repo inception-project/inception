@@ -21,8 +21,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.pos;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 
 import org.apache.uima.cas.CAS;
 

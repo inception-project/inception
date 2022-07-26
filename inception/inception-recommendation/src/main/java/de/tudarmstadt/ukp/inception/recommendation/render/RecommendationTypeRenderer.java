@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 
 /**
  * Type Adapters for span, arc, and chain annotations

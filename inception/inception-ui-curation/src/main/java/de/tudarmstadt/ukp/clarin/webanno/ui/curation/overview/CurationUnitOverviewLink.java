@@ -28,8 +28,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class CurationUnitOverviewLink
     extends AjaxLink<CurationUnit>

@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.inception.recommendation.model;
 
 import java.util.Objects;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class DirtySpot
 {

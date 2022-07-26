@@ -17,9 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 
 import java.io.IOException;
 
@@ -31,24 +30,25 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationVID;
 
@@ -141,7 +141,7 @@ public class CurationEditorExtension
         VID vid = VID.parse(aCurationVid.getExtensionPayload());
 
         CAS srcCas = documentService.readAnnotationCas(doc, srcUser);
-        AnnotationFS sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
+        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
         AnnotationLayer layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
 
         if (vid.isSlotSet()) {
@@ -174,7 +174,7 @@ public class CurationEditorExtension
                 aTargetCas, sourceAnnotation, feature.getName(), aVid.getSlot());
 
         // open created/updates FS in annotation detail editorpanel
-        AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
@@ -190,7 +190,7 @@ public class CurationEditorExtension
                 aTargetCas, sourceAnnotation, layer.isAllowStacking());
 
         // open created/updates FS in annotation detail editorpanel
-        AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectArc(mergedAnno);
     }
@@ -206,7 +206,7 @@ public class CurationEditorExtension
                 aTargetCas, sourceAnnotation, layer.isAllowStacking());
 
         // open created/updates FS in annotation detail editor panel
-        AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }

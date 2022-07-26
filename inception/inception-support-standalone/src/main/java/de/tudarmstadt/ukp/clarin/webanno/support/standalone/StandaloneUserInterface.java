@@ -105,7 +105,8 @@ public class StandaloneUserInterface
 
             if (getDesktop().isSupported(Desktop.Action.BROWSE_FILE_DIR)) {
                 getDesktop().browseFileDirectory(file);
-            } else {
+            }
+            else {
                 JLabel label = new JLabel("Path to the settings properties file:");
 
                 JTextField textField = new JTextField(file.getAbsolutePath());
@@ -113,9 +114,9 @@ public class StandaloneUserInterface
 
                 JButton copyButton = new JButton("Copy");
                 copyButton.addActionListener(le -> {
-                    StringSelection stringSelection = new StringSelection (textField.getText());
-                    Clipboard clipboard = Toolkit.getDefaultToolkit ().getSystemClipboard ();
-                    clipboard.setContents (stringSelection, null);
+                    StringSelection stringSelection = new StringSelection(textField.getText());
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    clipboard.setContents(stringSelection, null);
                 });
 
                 JPanel panel = new JPanel();
