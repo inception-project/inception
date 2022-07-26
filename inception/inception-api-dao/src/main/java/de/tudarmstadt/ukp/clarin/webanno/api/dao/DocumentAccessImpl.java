@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static liquibase.repackaged.org.apache.commons.collections4.CollectionUtils.containsAny;
+import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
 import java.util.List;
 
