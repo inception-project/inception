@@ -42,15 +42,15 @@ import org.apache.wicket.model.PropertyModel;
 
 import com.googlecode.wicket.kendo.ui.form.Radio;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditorValueChangedEvent;
 
 public class RadioGroupStringFeatureEditor
     extends TextFeatureEditorBase

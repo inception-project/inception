@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistryImpl;
@@ -33,7 +32,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPointImpl;
@@ -51,6 +49,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipel
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializerExtensionPoint;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializerExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
 @Configuration
 public class AnnotationAutoConfiguration

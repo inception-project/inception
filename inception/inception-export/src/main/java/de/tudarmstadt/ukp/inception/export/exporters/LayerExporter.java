@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.export.exporters;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.util.Arrays.asList;
 
 import java.io.File;
@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -58,6 +57,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatur
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * <p>

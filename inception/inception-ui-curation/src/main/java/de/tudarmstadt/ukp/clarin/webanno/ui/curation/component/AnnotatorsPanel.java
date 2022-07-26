@@ -18,11 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
@@ -30,11 +25,16 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffS
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ACCEPTED_BY_CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_AGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_DISAGREE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_INCOMPLETE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.REJECTED_BY_CURATOR;
+import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -69,15 +69,8 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
@@ -101,6 +94,13 @@ import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeConflictException;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
 
 /**
  * Panel with the annotator's annotations.

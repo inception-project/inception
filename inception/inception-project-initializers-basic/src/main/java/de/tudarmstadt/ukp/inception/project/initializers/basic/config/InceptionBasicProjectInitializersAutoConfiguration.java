@@ -23,7 +23,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationLayerInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicRelationRecommenderInitializer;
@@ -36,6 +35,7 @@ import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAuto
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @AutoConfigureAfter({ //
         RecommenderServiceAutoConfiguration.class, //

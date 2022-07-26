@@ -28,8 +28,8 @@ import org.apache.wicket.request.IRequestParameters;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public class BratRequestUtils
 {

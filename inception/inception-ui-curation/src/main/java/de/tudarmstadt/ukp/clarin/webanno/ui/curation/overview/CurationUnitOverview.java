@@ -24,7 +24,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class CurationUnitOverview
     extends WebMarkupContainer

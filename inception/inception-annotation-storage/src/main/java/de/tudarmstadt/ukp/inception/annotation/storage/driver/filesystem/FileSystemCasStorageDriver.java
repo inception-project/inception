@@ -85,7 +85,8 @@ public class FileSystemCasStorageDriver
     private final LoadingCache<File, InternalMetadata> metadataCache;
 
     public FileSystemCasStorageDriver(RepositoryProperties aRepositoryProperties,
-            CasStorageBackupProperties aBackupProperties, CasStorageProperties aCasStorageProperties)
+            CasStorageBackupProperties aBackupProperties,
+            CasStorageProperties aCasStorageProperties)
     {
         repositoryProperties = aRepositoryProperties;
         backupProperties = aBackupProperties;

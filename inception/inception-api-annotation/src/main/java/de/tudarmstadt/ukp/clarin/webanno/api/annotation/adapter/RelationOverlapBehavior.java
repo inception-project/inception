@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
+import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -38,17 +38,18 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 
 /**
  * Handles the {@link OverlapMode} setting for {@link WebAnnoConst#RELATION_TYPE relation layers}.

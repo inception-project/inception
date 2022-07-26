@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
@@ -61,7 +61,6 @@ import org.xml.sax.SAXException;
 
 import com.github.openjson.JSONObject;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -71,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;

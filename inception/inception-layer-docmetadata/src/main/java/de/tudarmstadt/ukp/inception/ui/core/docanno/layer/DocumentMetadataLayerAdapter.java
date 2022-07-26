@@ -33,15 +33,15 @@ import org.apache.uima.fit.util.CasUtil;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataCreatedEvent;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataDeletedEvent;
 

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.hf;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 
 import org.apache.wicket.model.IModel;

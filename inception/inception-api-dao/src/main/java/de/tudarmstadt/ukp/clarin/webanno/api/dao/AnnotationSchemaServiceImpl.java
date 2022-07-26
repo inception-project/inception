@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.INCOMING;
-import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.LOOP;
-import static de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation.Direction.OUTGOING;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.INCOMING;
+import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.LOOP;
+import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.OUTGOING;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Objects.isNull;
@@ -80,18 +80,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
@@ -113,6 +105,14 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
 /**
  * <p>

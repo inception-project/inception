@@ -42,7 +42,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
@@ -57,6 +56,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceA
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;

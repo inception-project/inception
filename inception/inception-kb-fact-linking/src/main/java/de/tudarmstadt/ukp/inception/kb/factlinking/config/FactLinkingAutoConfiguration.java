@@ -24,7 +24,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingService;
@@ -32,6 +31,7 @@ import de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingServiceImp
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.PropertyFeatureSupport;
 import de.tudarmstadt.ukp.inception.kb.factlinking.feature.SubjectObjectFeatureSupport;
 import de.tudarmstadt.ukp.inception.kb.factlinking.initializers.FactLayerInitializer;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Deprecated
 @Configuration

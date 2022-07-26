@@ -24,8 +24,8 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.inception.diam.model.Offsets;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
 @JsonSerialize(using = BeanAsArraySerializer.class)

@@ -26,7 +26,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -34,6 +33,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.key.KeyType;
 

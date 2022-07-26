@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedResource;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 
 /**
  * <p>

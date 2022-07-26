@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 

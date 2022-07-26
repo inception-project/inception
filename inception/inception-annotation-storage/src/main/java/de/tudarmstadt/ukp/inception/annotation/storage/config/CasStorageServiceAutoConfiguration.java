@@ -22,7 +22,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
@@ -30,6 +29,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageServiceSharedAccessCacheAdapter;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
 @EnableConfigurationProperties({ CasStorageCachePropertiesImpl.class,
@@ -60,6 +60,7 @@ public class CasStorageServiceAutoConfiguration
             CasStorageServiceImpl aCasStorageService,
             CasStorageCacheProperties aCasStorageProperties)
     {
-        return new CasStorageServiceSharedAccessCacheAdapter(aCasStorageService, aCasStorageProperties);
+        return new CasStorageServiceSharedAccessCacheAdapter(aCasStorageService,
+                aCasStorageProperties);
     }
 }

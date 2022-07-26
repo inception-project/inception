@@ -27,11 +27,11 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 
 public class GetCollectionInformationResponseTest
 {
@@ -84,11 +84,11 @@ public class GetCollectionInformationResponseTest
         // collectionInformation.setSearchConfig(new ArrayList<>());
 
         List<String> tagSetNames = new ArrayList<>();
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.POS);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.DEPENDENCY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.NAMEDENTITY);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE);
-        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFRELTYPE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.POS);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.DEPENDENCY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.NAMEDENTITY);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE);
+        tagSetNames.add(de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFRELTYPE);
 
         JSONUtil.generatePrettyJson(collectionInformation, new File(jsonFilePath));
 

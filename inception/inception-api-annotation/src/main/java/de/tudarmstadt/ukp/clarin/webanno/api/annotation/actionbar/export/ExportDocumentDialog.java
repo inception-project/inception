@@ -21,8 +21,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * Dialog providing allowing the annotator to download the current document.

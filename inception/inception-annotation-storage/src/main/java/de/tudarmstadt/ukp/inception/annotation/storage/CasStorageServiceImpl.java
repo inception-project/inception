@@ -63,7 +63,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.stats.CacheStats;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
@@ -81,6 +80,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePro
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.CasPersistenceUtils;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * <p>

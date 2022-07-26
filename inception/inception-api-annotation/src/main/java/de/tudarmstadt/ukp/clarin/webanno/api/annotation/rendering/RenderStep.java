@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 
 public interface RenderStep
     extends Extension<RenderRequest>

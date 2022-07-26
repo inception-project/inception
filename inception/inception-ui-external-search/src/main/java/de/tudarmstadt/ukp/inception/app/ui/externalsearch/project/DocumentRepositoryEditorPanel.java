@@ -37,7 +37,6 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
@@ -48,6 +47,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderRegistry;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class DocumentRepositoryEditorPanel
     extends Panel

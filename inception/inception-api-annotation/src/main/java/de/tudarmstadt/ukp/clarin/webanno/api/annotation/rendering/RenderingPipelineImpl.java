@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.server
 import static java.lang.System.currentTimeMillis;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 
 /**
  * <p>

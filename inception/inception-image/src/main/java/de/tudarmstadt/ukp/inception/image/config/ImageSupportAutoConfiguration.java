@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.inception.image.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.image.feature.ImageFeatureSupport;
 import de.tudarmstadt.ukp.inception.image.sidebar.ImageSidebarFactory;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
 public class ImageSupportAutoConfiguration

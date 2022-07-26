@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -44,6 +43,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.SelectionTaskEvent;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * This task activates all non-trainable recommenders.

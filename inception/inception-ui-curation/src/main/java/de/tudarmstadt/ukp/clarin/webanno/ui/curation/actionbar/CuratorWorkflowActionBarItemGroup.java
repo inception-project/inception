@@ -38,9 +38,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -52,6 +50,8 @@ import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public class CuratorWorkflowActionBarItemGroup
     extends Panel

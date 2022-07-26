@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model.compact;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public interface CompactAnnotation
 {

@@ -24,8 +24,8 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.CodingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Component
 public class CohenKappaAgreementMeasureSupport

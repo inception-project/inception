@@ -28,8 +28,6 @@ import java.util.zip.ZipFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -40,7 +38,9 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * <p>

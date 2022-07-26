@@ -20,11 +20,11 @@ package de.tudarmstadt.ukp.inception.annotation.storage;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession.openNested;
 import static java.lang.Thread.sleep;
@@ -112,8 +112,8 @@ public class CasStorageServiceImplTest
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        driver = new FileSystemCasStorageDriver(repositoryProperties, new CasStorageBackupProperties(),
-                new CasStoragePropertiesImpl());
+        driver = new FileSystemCasStorageDriver(repositoryProperties,
+                new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
         sut = new CasStorageServiceImpl(driver, null, null, new CasStorageCachePropertiesImpl());
     }

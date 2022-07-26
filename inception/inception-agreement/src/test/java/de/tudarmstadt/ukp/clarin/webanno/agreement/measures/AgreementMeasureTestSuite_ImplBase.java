@@ -24,13 +24,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTest
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.createMultiValueStringTestTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementTestUtils.makeLinkHostFS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder.buildAnnotation;
 import static java.util.Arrays.asList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -53,7 +53,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.LinkFeatureSupport;
@@ -73,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)
 public class AgreementMeasureTestSuite_ImplBase
