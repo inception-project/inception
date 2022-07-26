@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.editor;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.Ordered;
 
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-
 public abstract class AnnotationEditorFactoryImplBase
     implements BeanNameAware, Ordered, AnnotationEditorFactory
 {
