@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.exceptions.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public class IllegalFeatureValueException
     extends AnnotationException

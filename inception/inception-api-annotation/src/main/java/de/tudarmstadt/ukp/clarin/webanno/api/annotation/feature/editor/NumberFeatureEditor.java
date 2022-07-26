@@ -26,9 +26,9 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
 public class NumberFeatureEditor<T extends Number>
     extends FeatureEditor

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.LayerBehavior;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 
 public interface LayerBehaviorRegistry
 {

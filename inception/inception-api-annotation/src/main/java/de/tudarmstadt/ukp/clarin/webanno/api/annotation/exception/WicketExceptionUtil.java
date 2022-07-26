@@ -25,7 +25,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.Logger;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.exceptions.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public final class WicketExceptionUtil
 {

@@ -35,8 +35,8 @@ import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * Modal window to display annotation guidelines

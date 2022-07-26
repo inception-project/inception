@@ -33,6 +33,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.LayerBehavior;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 
 /**
  * <p>

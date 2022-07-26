@@ -21,7 +21,7 @@ import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.Ordered;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public abstract class AnnotationEditorFactoryImplBase
     implements BeanNameAware, Ordered, AnnotationEditorFactory

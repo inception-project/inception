@@ -25,11 +25,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
 @ConditionalOnProperty(prefix = "knowledge-base", name = "enabled", havingValue = "true", matchIfMissing = true)

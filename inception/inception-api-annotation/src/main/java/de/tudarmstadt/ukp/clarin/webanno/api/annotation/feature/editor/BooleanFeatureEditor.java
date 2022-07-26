@@ -26,8 +26,8 @@ import org.apache.wicket.model.IModel;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkbox.bootstrapcheckbox.BootstrapCheckBoxPicker;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkbox.bootstrapcheckbox.BootstrapCheckBoxPickerConfig;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 
 public class BooleanFeatureEditor
     extends FeatureEditor

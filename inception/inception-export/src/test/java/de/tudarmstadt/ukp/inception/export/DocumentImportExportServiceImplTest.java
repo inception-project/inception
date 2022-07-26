@@ -65,7 +65,6 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.slf4j.MDC;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
@@ -85,6 +84,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class DocumentImportExportServiceImplTest
 {

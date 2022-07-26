@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.exceptions.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
  * Indicates that an attempt edit a read-only document or value failed.

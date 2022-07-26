@@ -36,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
@@ -55,6 +54,7 @@ import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSys
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class AnnotationDocumentsExporterTest
 {

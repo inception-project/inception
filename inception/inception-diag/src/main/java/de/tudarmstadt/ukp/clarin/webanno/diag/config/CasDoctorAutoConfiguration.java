@@ -25,7 +25,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.ChecksRegistryImpl;
@@ -56,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.RemoveZeroSizeTokensAndSen
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.SwitchBeginAndEndOnNegativeSizedAnnotationsRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.UpgradeCasRepair;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
 @EnableConfigurationProperties(CasDoctorPropertiesImpl.class)

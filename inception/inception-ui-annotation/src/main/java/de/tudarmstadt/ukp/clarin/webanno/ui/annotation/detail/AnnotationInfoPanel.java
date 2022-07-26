@@ -32,7 +32,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class AnnotationInfoPanel
     extends Panel

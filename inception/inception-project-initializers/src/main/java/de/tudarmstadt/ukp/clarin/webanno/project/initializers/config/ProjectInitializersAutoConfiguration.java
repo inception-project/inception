@@ -23,7 +23,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.ChunkLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.CoreferenceLayerInitializer;
@@ -45,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SofaChangeOperatio
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.StandardProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.SurfaceFormLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.TokenLayerInitializer;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
 @AutoConfigureAfter(name = {

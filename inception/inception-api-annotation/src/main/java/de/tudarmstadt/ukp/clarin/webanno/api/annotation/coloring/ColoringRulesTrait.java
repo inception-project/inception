@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringRules;
+
 public interface ColoringRulesTrait
 {
     ColoringRules getColoringRules();

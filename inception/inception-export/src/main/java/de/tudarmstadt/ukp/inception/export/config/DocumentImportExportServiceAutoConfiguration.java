@@ -24,7 +24,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
@@ -40,6 +39,7 @@ import de.tudarmstadt.ukp.inception.export.exporters.ProjectMetaInfExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectPermissionsExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectSettingsExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.TagSetExporter;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
 // @EnableConfigurationProperties({ DocumentImportExportServicePropertiesImpl.class })

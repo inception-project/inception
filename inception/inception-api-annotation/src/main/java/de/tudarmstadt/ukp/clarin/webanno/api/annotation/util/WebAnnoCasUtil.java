@@ -53,15 +53,15 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.AnnotationComparisonUtils;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.FeatureFilter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.validation.ValidationUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
+import de.tudarmstadt.ukp.inception.schema.adapter.FeatureFilter;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureUtil;
+import de.tudarmstadt.ukp.inception.schema.validation.ValidationUtils;
 
 /**
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
