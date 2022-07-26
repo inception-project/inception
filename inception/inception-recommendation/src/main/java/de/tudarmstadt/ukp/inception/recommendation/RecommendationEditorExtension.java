@@ -52,10 +52,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.AcceptActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.RejectActionResponse;
@@ -64,7 +61,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtension;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -225,7 +225,7 @@ public class RecommendationEditorExtension
         int address = recommendationService.upsertRelationFeature(annotationService, document,
                 aState.getUser().getUsername(), aCas, layer, feature, suggestion);
 
-        AnnotationFS relation = WebAnnoCasUtil.selectAnnotationByAddr(aCas, address);
+        AnnotationFS relation = ICasUtil.selectAnnotationByAddr(aCas, address);
 
         Type type = CasUtil.getType(aCas, layer.getName());
 
@@ -262,8 +262,7 @@ public class RecommendationEditorExtension
         aSuggestion.hide(FLAG_TRANSIENT_ACCEPTED);
 
         // Send an application event that the suggestion has been accepted
-        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class,
-                aNewAnnotationAddress);
+        AnnotationFS fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aNewAnnotationAddress);
         applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this, document,
                 aState.getUser().getUsername(), fs, feature, aSuggestion.getLabel()));
 

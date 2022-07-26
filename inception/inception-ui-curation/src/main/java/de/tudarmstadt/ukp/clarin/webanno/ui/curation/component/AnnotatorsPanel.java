@@ -18,8 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiffSingle;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getDiffAdapters;
@@ -70,7 +68,6 @@ import org.slf4j.LoggerFactory;
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
@@ -83,12 +80,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.AnnotationStateColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
+import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.curation.merge.AlreadyMergedException;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
@@ -236,7 +235,8 @@ public class AnnotatorsPanel
 
             writeEditorCas(sourceState, targetCas);
 
-            AnnotationFS sourceAnnotation = selectAnnotationByAddr(sourceCas, sourceVid.getId());
+            AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(sourceCas,
+                    sourceVid.getId());
 
             if (sourceState.getPreferences().isScrollPage()) {
                 sourceState.getPagingStrategy().moveToOffset(sourceState, targetCas,
@@ -337,7 +337,8 @@ public class AnnotatorsPanel
             AnnotationLayer aLayer)
         throws AnnotationException, UIMAException, IOException
     {
-        AnnotationFS sourceAnnotation = selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
+        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas,
+                aSourceVid.getId());
 
         return aCasMerge.mergeSpanAnnotation(aSourceDocument, aSourceUser, aLayer, aTargetCas,
                 sourceAnnotation, aLayer.isAllowStacking());
@@ -347,7 +348,8 @@ public class AnnotatorsPanel
             SourceDocument aSourceDocument, String aSourceUser, AnnotationLayer aLayer)
         throws AnnotationException, IOException
     {
-        AnnotationFS sourceAnnotation = selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
+        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas,
+                aSourceVid.getId());
 
         TypeAdapter adapter = schemaService.getAdapter(aLayer);
         AnnotationFeature feature = adapter.listFeatures().stream().sequential()
@@ -362,7 +364,8 @@ public class AnnotatorsPanel
             AnnotationLayer aLayer)
         throws AnnotationException, IOException
     {
-        AnnotationFS sourceAnnotation = selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
+        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas,
+                aSourceVid.getId());
 
         return aCasMerge.mergeRelationAnnotation(aSourceDocument, aSourceUser, aLayer, aCas,
                 sourceAnnotation, aLayer.isAllowStacking());
@@ -579,10 +582,10 @@ public class AnnotatorsPanel
                             fi++;
                         }
 
-                        vid = new VID(getAddr(fs), fi, configuration.getAID(user).index);
+                        vid = new VID(ICasUtil.getAddr(fs), fi, configuration.getAID(user).index);
                     }
                     else {
-                        vid = new VID(getAddr(fs));
+                        vid = new VID(ICasUtil.getAddr(fs));
                     }
 
                     // The curator has accepted this configuration

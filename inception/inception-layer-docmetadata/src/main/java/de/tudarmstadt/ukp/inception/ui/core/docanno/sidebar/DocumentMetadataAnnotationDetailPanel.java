@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 
@@ -48,8 +46,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.LinkFeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -57,7 +53,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
+import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
@@ -213,7 +212,7 @@ public class DocumentMetadataAnnotationDetailPanel
 
         FeatureStructure fs;
         try {
-            fs = selectFsByAddr(cas, vid.getId());
+            fs = ICasUtil.selectFsByAddr(cas, vid.getId());
         }
         catch (Exception e) {
             LOG.error("Unable to locate annotation with ID {}", vid);
@@ -254,7 +253,7 @@ public class DocumentMetadataAnnotationDetailPanel
 
             // Load the boiler-plate
             CAS cas = jcasProvider.get();
-            FeatureStructure fs = selectFsByAddr(cas, getModelObject().getId());
+            FeatureStructure fs = ICasUtil.selectFsByAddr(cas, getModelObject().getId());
             AnnotationLayer layer = annotationService.findLayer(project.getObject(), fs);
             TypeAdapter adapter = annotationService.getAdapter(layer);
 
@@ -347,7 +346,8 @@ public class DocumentMetadataAnnotationDetailPanel
         AjaxRequestTarget target = aEvent.getTarget();
         try {
             CAS cas = jcasProvider.get();
-            AnnotationFS fs = selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
+            AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas,
+                    aEvent.getLinkWithRoleModel().targetAddr);
             state.getSelection().selectSpan(fs);
             if (state.getSelection().getAnnotation().isSet()) {
                 actionHandler.actionDelete(target);

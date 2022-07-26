@@ -31,11 +31,11 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-dao</artifactId>
+      <artifactId>inception-recommendation-api</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-recommendation-api</artifactId>
+      <artifactId>inception-schema</artifactId>
     </dependency>
 
     <dependency>

@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.revieweditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -83,9 +81,9 @@ public class SpanAnnotationPanel
 
         VID vid = aModel.getObject();
 
-        FeatureStructure fs = selectFsByAddr(aCas, vid.getId());
+        FeatureStructure fs = ICasUtil.selectFsByAddr(aCas, vid.getId());
         AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
-        AnnotationFS aFS = selectAnnotationByAddr(aCas, vid.getId());
+        AnnotationFS aFS = ICasUtil.selectAnnotationByAddr(aCas, vid.getId());
         int begin = aFS.getBegin();
         int end = aFS.getEnd();
 

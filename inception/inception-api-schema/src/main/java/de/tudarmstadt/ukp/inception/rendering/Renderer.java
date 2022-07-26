@@ -18,8 +18,8 @@
 package de.tudarmstadt.ukp.inception.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.inception.schema.validation.ValidationUtils.isRequiredFeatureMissing;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 

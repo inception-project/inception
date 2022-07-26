@@ -273,7 +273,7 @@
     </dependency>
     <dependency>
     	<groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    	<artifactId>inception-api-dao</artifactId>
+    	<artifactId>inception-documents</artifactId>
     	<scope>test</scope>
     </dependency>
   </dependencies>

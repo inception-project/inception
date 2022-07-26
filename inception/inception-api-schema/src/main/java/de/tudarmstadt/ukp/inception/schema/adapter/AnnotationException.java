@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.schema.adapter;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.CommonException;
+
 public class AnnotationException
-    extends Exception
+    extends CommonException
 {
     private static final long serialVersionUID = 1280015349963924638L;
 

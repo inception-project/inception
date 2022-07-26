@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.schema.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.schema.feature.FeatureUtil.setFeature;
 
 import java.io.Serializable;

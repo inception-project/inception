@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializer;
 
 public interface BratSerializer
     extends VDocumentSerializer<GetDocumentResponse>

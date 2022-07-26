@@ -13,14 +13,13 @@ function installPrefs {
 }
 
 installPrefs inception-active-learning
-installPrefs inception-app
 installPrefs inception-docker
 installPrefs inception-active-learning
 installPrefs inception-agreement
 installPrefs inception-annotation-storage
 installPrefs inception-api
 installPrefs inception-api-annotation
-installPrefs inception-api-dao
+installPrefs inception-documents
 installPrefs inception-api-formats
 installPrefs inception-api-render
 installPrefs inception-api-schema
@@ -44,6 +43,7 @@ installPrefs inception-external-search-core
 installPrefs inception-external-search-elastic
 installPrefs inception-external-search-pubannotation
 installPrefs inception-external-search-solr
+installPrefs inception-guidelines
 installPrefs inception-html-editor
 installPrefs inception-html-recogito-editor
 installPrefs inception-image
@@ -93,6 +93,7 @@ installPrefs inception-recommendation-api
 installPrefs inception-remote
 installPrefs inception-review-editor
 installPrefs inception-scheduling
+installPrefs inception-schema
 installPrefs inception-search-core
 installPrefs inception-search-mtas
 installPrefs inception-security

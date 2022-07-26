@@ -65,8 +65,6 @@ import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
@@ -77,9 +75,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategy;
+import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureUtil;
 
 public class CasMergeTest
     extends CasMergeTestBase
@@ -476,7 +476,7 @@ public class CasMergeTest
 
         List<FeatureStructure> linkFs = new ArrayList<>();
         linkFs.add(copyFS);
-        WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
+        FeatureUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
         JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A", makeLinkFS(jcasA, "slot1", 0, 0));
@@ -505,7 +505,7 @@ public class CasMergeTest
 
         List<FeatureStructure> linkFs = new ArrayList<>();
         linkFs.add(copyFS);
-        WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
+        FeatureUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
         JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A", makeLinkFS(jcasA, "slot1", 0, 0));

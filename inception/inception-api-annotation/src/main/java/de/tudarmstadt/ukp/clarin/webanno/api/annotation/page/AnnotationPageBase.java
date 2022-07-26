@@ -61,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableExc
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -70,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -79,6 +79,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.validation.ValidationUtils;
 
 public abstract class AnnotationPageBase
     extends ProjectPageBase
@@ -325,7 +326,7 @@ public abstract class AnnotationPageBase
         try (SelectFSs<TOP> fses = editorCas.select(layerType)) {
             for (FeatureStructure fs : fses) {
                 for (AnnotationFeature f : features) {
-                    if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
+                    if (ValidationUtils.isRequiredFeatureMissing(f, fs)) {
                         // If it is an annotation, then we jump to it if it has required empty
                         // features
                         if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
@@ -333,8 +334,8 @@ public abstract class AnnotationPageBase
                         }
 
                         // Inform the user
-                        throw new ValidationException("Annotation with ID ["
-                                + WebAnnoCasUtil.getAddr(fs) + "] on layer [" + layer.getUiName()
+                        throw new ValidationException("Annotation with ID [" + ICasUtil.getAddr(fs)
+                                + "] on layer [" + layer.getUiName()
                                 + "] is missing value for feature [" + f.getUiName() + "].");
                     }
                 }
@@ -371,7 +372,7 @@ public abstract class AnnotationPageBase
 
                 // Inform the user
                 throw new ValidationException(
-                        "Annotation with ID [" + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
+                        "Annotation with ID [" + ICasUtil.getAddr(fs) + "] on layer ["
                                 + layer.getUiName() + "] is invalid: " + message.getMessage());
             }
         }

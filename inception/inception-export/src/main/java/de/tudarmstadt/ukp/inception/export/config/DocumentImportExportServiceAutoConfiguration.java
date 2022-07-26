@@ -26,12 +26,10 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
-import de.tudarmstadt.ukp.inception.export.exporters.GuidelinesExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectLogExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectMetaInfExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectSettingsExporter;
@@ -68,12 +66,6 @@ public class DocumentImportExportServiceAutoConfiguration
     public ProjectLogExporter projectLogExporter(ProjectService aProjectService)
     {
         return new ProjectLogExporter(aProjectService);
-    }
-
-    @Bean
-    public GuidelinesExporter guidelinesExporter(GuidelinesService aGuidelinesService)
-    {
-        return new GuidelinesExporter(aGuidelinesService);
     }
 
     @Bean

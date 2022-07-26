@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -26,6 +24,7 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -79,7 +78,7 @@ public class DeleteAnnotationHandler
             CAS cas = page.getEditorCas();
             AnnotatorState state = page.getModelObject();
 
-            AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
+            AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
 
             TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
             state.getSelection().set(adapter.select(vid, fs));
