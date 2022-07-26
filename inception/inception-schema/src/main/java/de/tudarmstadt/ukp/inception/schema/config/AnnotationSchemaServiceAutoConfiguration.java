@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config;
+package de.tudarmstadt.ukp.inception.schema.config;
 
 import java.util.List;
 
@@ -32,12 +32,6 @@ import org.springframework.context.annotation.Lazy;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.AnnotationSchemaServiceEventAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.AnnotationSchemaServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.exporters.AnnotationDocumentExporter;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.exporters.LayerExporter;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.exporters.TagSetExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureSupport;
@@ -62,10 +56,16 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanOverlapBehavior;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
+import de.tudarmstadt.ukp.inception.schema.exporters.LayerExporter;
+import de.tudarmstadt.ukp.inception.schema.exporters.TagSetExporter;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceEventAdapter;
+import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 
 @Configuration
 @EnableConfigurationProperties({ //
