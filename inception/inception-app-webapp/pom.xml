@@ -40,7 +40,7 @@
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-dao</artifactId>
+      <artifactId>inception-documents</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -840,7 +840,7 @@
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-guidelines</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-api-dao</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-documents</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-plugin-manager</usedDependency>

@@ -19,7 +19,7 @@ installPrefs inception-agreement
 installPrefs inception-annotation-storage
 installPrefs inception-api
 installPrefs inception-api-annotation
-installPrefs inception-api-dao
+installPrefs inception-documents
 installPrefs inception-api-formats
 installPrefs inception-api-render
 installPrefs inception-api-schema
@@ -93,6 +93,7 @@ installPrefs inception-recommendation-api
 installPrefs inception-remote
 installPrefs inception-review-editor
 installPrefs inception-scheduling
+installPrefs inception-schema
 installPrefs inception-search-core
 installPrefs inception-search-mtas
 installPrefs inception-security
