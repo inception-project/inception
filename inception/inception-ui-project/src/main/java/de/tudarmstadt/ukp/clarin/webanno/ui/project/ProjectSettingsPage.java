@@ -50,8 +50,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
@@ -65,16 +63,9 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.detail.ProjectDetailPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.guidelines.ProjectGuidelinesPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.project.users.ProjectUsersPanel;
 
 /**
- * This is the main page for Project Settings. The Page has Four Panels. The
- * {@link ProjectGuidelinesPanel} is used to update documents to a project. The
- * {@code ProjectDetailsPanel} used for updating Project details such as descriptions of a project
- * and name of the Project The {@code ProjectTagSetsPanel} is used to add {@link TagSet} and
- * {@link Tag} details to a Project as well as updating them The {@link ProjectUsersPanel} is used
- * to update {@link User} to a Project
+ * This is the main page for Project Settings.
  */
 @MountPath(value = NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/settings", alt = "/admin/projects")
 public class ProjectSettingsPage

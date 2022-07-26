@@ -28,11 +28,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
-import de.tudarmstadt.ukp.clarin.webanno.project.GuidelinesServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectPermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExporter;
@@ -58,12 +56,6 @@ public class ProjectServiceAutoConfiguration
             ProjectService aProjectService)
     {
         return new ProjectPermissionExtension(aUserService, aProjectService);
-    }
-
-    @Bean
-    public GuidelinesService guidelinesService(RepositoryProperties aRepositoryProperties)
-    {
-        return new GuidelinesServiceImpl(aRepositoryProperties);
     }
 
     @Bean

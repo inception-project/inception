@@ -43,6 +43,10 @@
       <artifactId>inception-api-dao</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-guidelines</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-resources-asl</artifactId>
     </dependency>
@@ -835,6 +839,7 @@
             </ignoredUsedUndeclaredDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-guidelines</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-api-dao</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-project</usedDependency>

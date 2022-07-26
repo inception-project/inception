@@ -71,7 +71,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -115,6 +114,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejec
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;

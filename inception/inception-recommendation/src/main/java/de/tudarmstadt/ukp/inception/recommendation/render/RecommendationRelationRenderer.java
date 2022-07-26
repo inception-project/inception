@@ -33,7 +33,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -43,6 +42,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationPosition;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;

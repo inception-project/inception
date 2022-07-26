@@ -39,8 +39,6 @@ import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.AnnotatorViewportChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -59,6 +57,8 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorStateMetaData
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.paging.PagingStrategy;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderSlotsEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 
 /**

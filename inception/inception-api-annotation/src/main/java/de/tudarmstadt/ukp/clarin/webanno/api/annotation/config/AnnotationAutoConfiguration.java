@@ -41,14 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderNotificationRenderStep;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStep;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStepExtensionPoint;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStepExtensionPointImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipelineImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializerExtensionPoint;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializerExtensionPointImpl;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
@@ -67,12 +59,6 @@ public class AnnotationAutoConfiguration
             @Lazy @Autowired(required = false) List<AnnotationEditorFactory> aExtensions)
     {
         return new AnnotationEditorRegistryImpl(aExtensions);
-    }
-
-    @Bean
-    public RenderingPipeline renderingPipeline(RenderStepExtensionPoint aRenderStepExtensionPoint)
-    {
-        return new RenderingPipelineImpl(aRenderStepExtensionPoint);
     }
 
     @Bean
@@ -102,13 +88,6 @@ public class AnnotationAutoConfiguration
     }
 
     @Bean
-    public RenderStepExtensionPoint renderStepExtensionPoint(
-            @Lazy @Autowired(required = false) List<RenderStep> aExtensions)
-    {
-        return new RenderStepExtensionPointImpl(aExtensions);
-    }
-
-    @Bean
     public RenderNotificationRenderStep renderNotificationRenderStep()
     {
         return new RenderNotificationRenderStep();
@@ -118,13 +97,6 @@ public class AnnotationAutoConfiguration
     public FocusMarkerRenderer focusMarkerRenderer()
     {
         return new FocusMarkerRenderer();
-    }
-
-    @Bean
-    public VDocumentSerializerExtensionPoint vDocumentSerializerExtensionPoint(
-            @Lazy @Autowired(required = false) List<VDocumentSerializer<?>> aExtensions)
-    {
-        return new VDocumentSerializerExtensionPointImpl(aExtensions);
     }
 
     @Bean

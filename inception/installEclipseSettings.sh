@@ -13,7 +13,6 @@ function installPrefs {
 }
 
 installPrefs inception-active-learning
-installPrefs inception-app
 installPrefs inception-docker
 installPrefs inception-active-learning
 installPrefs inception-agreement
@@ -44,6 +43,7 @@ installPrefs inception-external-search-core
 installPrefs inception-external-search-elastic
 installPrefs inception-external-search-pubannotation
 installPrefs inception-external-search-solr
+installPrefs inception-guidelines
 installPrefs inception-html-editor
 installPrefs inception-html-recogito-editor
 installPrefs inception-image

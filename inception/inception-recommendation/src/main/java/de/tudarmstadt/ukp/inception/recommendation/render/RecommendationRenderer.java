@@ -27,8 +27,6 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -37,6 +35,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;

@@ -29,6 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoCon
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringRules;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;

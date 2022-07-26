@@ -25,10 +25,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.Offsets;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;

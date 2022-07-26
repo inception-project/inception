@@ -38,7 +38,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorProperties;
@@ -58,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;

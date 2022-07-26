@@ -41,8 +41,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderStep;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
@@ -56,6 +54,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
