@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
+import de.tudarmstadt.ukp.inception.feature.misc.TagRanker;
 
 public class TagRankerTest
 {

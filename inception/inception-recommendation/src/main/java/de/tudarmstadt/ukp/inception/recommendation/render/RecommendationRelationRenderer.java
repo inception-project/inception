@@ -32,9 +32,9 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;

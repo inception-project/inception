@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.inception.feature.multistring.MultiValueStringFeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class MultiValueStringFeatureSupportTest

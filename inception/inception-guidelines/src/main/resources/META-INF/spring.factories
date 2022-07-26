@@ -1,3 +1,2 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.config.GuidelinesServiceAutoConfiguration
-
+de.tudarmstadt.ukp.inception.guidelines.config.GuidelinesServiceAutoConfiguration

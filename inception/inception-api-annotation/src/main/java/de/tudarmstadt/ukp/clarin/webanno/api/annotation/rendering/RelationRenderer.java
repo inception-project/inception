@@ -50,10 +50,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationLayerBehavior;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;

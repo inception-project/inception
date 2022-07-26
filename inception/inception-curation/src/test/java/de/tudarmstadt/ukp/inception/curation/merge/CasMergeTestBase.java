@@ -43,16 +43,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.LinkFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationEditorPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
@@ -68,6 +64,10 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.feature.bool.BooleanFeatureSupport;
+import de.tudarmstadt.ukp.inception.feature.link.LinkFeatureSupport;
+import de.tudarmstadt.ukp.inception.feature.number.NumberFeatureSupport;
+import de.tudarmstadt.ukp.inception.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @ExtendWith(MockitoExtension.class)

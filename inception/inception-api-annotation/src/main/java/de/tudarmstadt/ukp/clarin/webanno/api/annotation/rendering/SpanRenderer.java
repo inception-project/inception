@@ -37,9 +37,9 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationPredicates;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.layer.span.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;

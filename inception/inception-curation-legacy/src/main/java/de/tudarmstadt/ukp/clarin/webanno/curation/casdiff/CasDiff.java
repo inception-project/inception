@@ -62,7 +62,6 @@ import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
@@ -73,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationAdapter;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class CasDiff

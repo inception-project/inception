@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.StringFea
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.inception.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class StringFeatureSupportTest

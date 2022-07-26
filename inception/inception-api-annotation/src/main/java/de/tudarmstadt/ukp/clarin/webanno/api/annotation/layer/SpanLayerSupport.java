@@ -33,11 +33,11 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.SpanRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.layer.span.SpanAdapter;
+import de.tudarmstadt.ukp.inception.layer.span.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport_ImplBase;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerType;

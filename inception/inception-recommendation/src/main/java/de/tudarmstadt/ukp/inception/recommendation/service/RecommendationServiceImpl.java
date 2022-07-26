@@ -98,8 +98,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
@@ -125,6 +123,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;

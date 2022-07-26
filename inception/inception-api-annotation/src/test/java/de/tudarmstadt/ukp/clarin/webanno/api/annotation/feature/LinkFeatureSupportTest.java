@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.inception.feature.link.LinkFeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 

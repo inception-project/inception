@@ -25,12 +25,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderProperties;

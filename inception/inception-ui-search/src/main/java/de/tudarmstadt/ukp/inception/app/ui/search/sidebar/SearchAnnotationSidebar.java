@@ -82,7 +82,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.Bootstra
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -105,6 +104,7 @@ import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotati
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;

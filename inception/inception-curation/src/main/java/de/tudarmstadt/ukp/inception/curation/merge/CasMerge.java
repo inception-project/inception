@@ -65,8 +65,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -89,6 +87,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.layer.span.SpanAdapter;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;

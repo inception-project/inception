@@ -31,6 +31,7 @@ import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.YIELD;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,13 +42,9 @@ import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAttachmentBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationCrossSentenceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationOverlapBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
@@ -61,13 +58,20 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationAttachmentBehavior;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationCrossSentenceBehavior;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationLayerBehavior;
+import de.tudarmstadt.ukp.inception.layer.relation.RelationOverlapBehavior;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
+@ExtendWith(MockitoExtension.class)
 public class RelationRendererTest
 {
-    private FeatureSupportRegistryImpl featureSupportRegistry;
+    private FeatureSupportRegistry featureSupportRegistry;
     private LayerSupportRegistryImpl layerSupportRegistry;
     private Project project;
     private AnnotationLayer depLayer;
@@ -121,8 +125,7 @@ public class RelationRendererTest
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
-        featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
-        featureSupportRegistry.init();
+        featureSupportRegistry = mock(FeatureSupportRegistry.class);
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
                 new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
