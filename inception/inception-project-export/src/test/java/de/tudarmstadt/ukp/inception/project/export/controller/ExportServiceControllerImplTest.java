@@ -49,7 +49,7 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -122,7 +122,6 @@ public class ExportServiceControllerImplTest
     private StompSession session;
 
     private @Autowired SimpMessagingTemplate msgTemplate;
-    private @Autowired ExportServiceController exportServiceController;
     private @Autowired ProjectService projectService;
     private @Autowired RepositoryProperties repositoryProperties;
     private @Autowired EntityManager entityManager;
