@@ -206,6 +206,11 @@
       <artifactId>inception-annotation-storage</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-export</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
