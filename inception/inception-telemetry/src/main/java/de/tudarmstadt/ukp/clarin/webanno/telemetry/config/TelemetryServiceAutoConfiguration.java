@@ -31,11 +31,11 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetryServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.TelemetrySupport;
+import de.tudarmstadt.ukp.clarin.webanno.telemetry.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo.MatomoTelemetrySupport;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo.MatomoTelemetrySupportImpl;
 import de.tudarmstadt.ukp.clarin.webanno.telemetry.ui.TelemetryFooterItem;

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.identity;
+package de.tudarmstadt.ukp.clarin.webanno.telemetry.identity;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.InstanceIdentity;
 
