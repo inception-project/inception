@@ -17,10 +17,13 @@ installPrefs inception-app
 installPrefs inception-docker
 installPrefs inception-active-learning
 installPrefs inception-agreement
+installPrefs inception-annotation-storage
 installPrefs inception-api
 installPrefs inception-api-annotation
 installPrefs inception-api-dao
 installPrefs inception-api-formats
+installPrefs inception-api-render
+installPrefs inception-api-schema
 installPrefs inception-app-webapp
 installPrefs inception-boot-loader
 installPrefs inception-bootstrap
@@ -83,6 +86,7 @@ installPrefs inception-project-export
 installPrefs inception-project-initializers
 installPrefs inception-project-initializers-basic
 installPrefs inception-project-initializers-doclabeling
+installPrefs inception-project-initializers-sentencelabeling
 installPrefs inception-project-initializers-wikidatalinking
 installPrefs inception-recommendation
 installPrefs inception-recommendation-api

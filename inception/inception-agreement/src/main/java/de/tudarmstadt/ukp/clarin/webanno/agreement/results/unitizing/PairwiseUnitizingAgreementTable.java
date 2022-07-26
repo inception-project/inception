@@ -44,13 +44,13 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAnnotationResult;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.PopoverBehavior;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class PairwiseUnitizingAgreementTable
     extends Panel

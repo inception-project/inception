@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 
 public class RenderAnnotationsEvent
 {

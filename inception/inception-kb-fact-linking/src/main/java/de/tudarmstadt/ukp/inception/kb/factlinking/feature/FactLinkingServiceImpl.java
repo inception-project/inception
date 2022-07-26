@@ -31,9 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -46,6 +43,9 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
 /**
  * <p>

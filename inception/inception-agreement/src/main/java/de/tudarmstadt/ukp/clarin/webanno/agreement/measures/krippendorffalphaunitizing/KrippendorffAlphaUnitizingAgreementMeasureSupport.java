@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 
 import java.util.List;
 import java.util.Map;
@@ -34,9 +34,9 @@ import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.PairwiseUnitizingAgreementTable;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing.UnitizingAgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Component
 public class KrippendorffAlphaUnitizingAgreementMeasureSupport

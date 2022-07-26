@@ -26,10 +26,10 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.config.ProjectInitializersAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * <p>

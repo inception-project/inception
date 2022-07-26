@@ -25,8 +25,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 
 public interface LayerBehavior
 {

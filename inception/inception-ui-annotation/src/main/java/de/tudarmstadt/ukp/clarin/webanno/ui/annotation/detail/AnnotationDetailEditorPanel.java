@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
@@ -85,25 +85,13 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.AttachedAnnotation;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.SelectionChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
@@ -121,6 +109,18 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 import wicket.contrib.input.events.key.KeyType;
 
 /**

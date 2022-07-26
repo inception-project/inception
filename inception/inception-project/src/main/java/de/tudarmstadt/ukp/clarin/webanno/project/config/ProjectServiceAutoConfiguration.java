@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.project.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.GuidelinesServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectPermissionExtension;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.project.exporters.ProjectPermissionsExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 @Configuration
@@ -64,4 +65,12 @@ public class ProjectServiceAutoConfiguration
     {
         return new GuidelinesServiceImpl(aRepositoryProperties);
     }
+
+    @Bean
+    public ProjectPermissionsExporter projectPermissionsExporter(ProjectService aProjectService,
+            UserDao aUserService)
+    {
+        return new ProjectPermissionsExporter(aProjectService, aUserService);
+    }
+
 }

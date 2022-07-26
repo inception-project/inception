@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toPrettyJsonString;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;

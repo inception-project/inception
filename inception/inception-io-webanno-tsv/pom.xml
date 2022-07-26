@@ -27,7 +27,7 @@
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api</artifactId>
+      <artifactId>inception-support</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -35,7 +35,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-annotation</artifactId>
+      <artifactId>inception-api-schema</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

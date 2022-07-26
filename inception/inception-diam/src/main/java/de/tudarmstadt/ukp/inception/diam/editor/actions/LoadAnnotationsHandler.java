@@ -25,16 +25,16 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderingPipeline;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializerExtensionPoint;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactSerializerImpl;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 
 /**
  * <p>

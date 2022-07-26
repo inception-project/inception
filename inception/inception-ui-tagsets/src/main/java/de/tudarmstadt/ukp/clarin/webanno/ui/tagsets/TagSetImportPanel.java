@@ -47,7 +47,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -55,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.project.initializers.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.export.ImportUtil;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class TagSetImportPanel
     extends Panel

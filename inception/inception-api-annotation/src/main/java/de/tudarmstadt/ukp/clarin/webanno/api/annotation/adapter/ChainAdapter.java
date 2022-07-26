@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
@@ -40,22 +40,22 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainLinkCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainLinkDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
 /**
  * Manage interactions with annotations on a chain layer.

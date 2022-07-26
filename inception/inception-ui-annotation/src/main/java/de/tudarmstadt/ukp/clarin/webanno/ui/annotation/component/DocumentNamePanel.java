@@ -24,12 +24,12 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedSourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * A {@link Panel} which contains a {@link Label} to display document name as concatenations of

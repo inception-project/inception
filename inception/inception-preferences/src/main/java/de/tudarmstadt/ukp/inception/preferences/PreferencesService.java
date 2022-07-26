@@ -22,6 +22,7 @@ import java.util.List;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.preferences.model.DefaultProjectPreference;
+import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
 
 public interface PreferencesService
 {
@@ -32,6 +33,10 @@ public interface PreferencesService
     <T> T loadTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject);
 
     <T> void saveTraitsForUserAndProject(Key<T> aKey, User aUser, Project aProject, T aTraits);
+
+    List<UserProjectPreference> listUserPreferencesForProject(Project aProject);
+
+    void saveUserProjectPreference(UserProjectPreference aPreference);
 
     <T> T loadDefaultTraitsForProject(Key<T> aKey, Project aProject);
 

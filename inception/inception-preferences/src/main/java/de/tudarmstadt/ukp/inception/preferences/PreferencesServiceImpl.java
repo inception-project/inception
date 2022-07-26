@@ -171,7 +171,7 @@ public class PreferencesServiceImpl
     {
         String query = String.join("\n", //
                 "FROM UserProjectPreference ", //
-                "WHERE user = :user ", //
+                "WHERE user = :user", //
                 "AND project = :project", //
                 "AND name = :name");
 
@@ -188,6 +188,27 @@ public class PreferencesServiceImpl
         catch (NoResultException e) {
             return Optional.empty();
         }
+    }
+
+    @Override
+    @Transactional
+    public List<UserProjectPreference> listUserPreferencesForProject(Project aProject)
+    {
+        String query = String.join("\n", //
+                "FROM UserProjectPreference ", //
+                "WHERE project = :project");
+
+        return entityManager //
+                .createQuery(query, UserProjectPreference.class) //
+                .setParameter("project", aProject) //
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
+    public void saveUserProjectPreference(UserProjectPreference aPreference)
+    {
+        entityManager.persist(aPreference);
     }
 
     @Override

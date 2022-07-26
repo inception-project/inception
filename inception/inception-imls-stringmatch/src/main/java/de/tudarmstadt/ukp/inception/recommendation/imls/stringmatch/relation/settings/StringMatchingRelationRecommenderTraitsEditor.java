@@ -27,13 +27,13 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.StringMatchingRelationRecommenderTraits;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class StringMatchingRelationRecommenderTraitsEditor
     extends DefaultTrainableRecommenderTraitsEditor

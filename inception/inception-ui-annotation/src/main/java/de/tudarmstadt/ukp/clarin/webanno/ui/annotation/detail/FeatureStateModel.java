@@ -21,9 +21,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.IObjectClassAwareModel;
 import org.apache.wicket.util.lang.Objects;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 
 public class FeatureStateModel
     implements IModel<FeatureState>, IObjectClassAwareModel<FeatureState>

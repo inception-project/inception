@@ -25,6 +25,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.beans.factory.InitializingBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 
 public abstract class UimaPrimitiveFeatureSupport_ImplBase<T>
     implements FeatureSupport<T>, InitializingBean

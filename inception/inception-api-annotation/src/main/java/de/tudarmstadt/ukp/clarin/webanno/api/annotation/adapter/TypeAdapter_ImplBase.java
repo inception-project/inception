@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil.selectFsByAddr;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,14 +35,15 @@ import org.apache.uima.fit.util.FSUtil;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter

@@ -28,13 +28,13 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public class AnnotationTextPanel
     extends Panel

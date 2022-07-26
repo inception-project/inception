@@ -27,13 +27,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptLabelCache;

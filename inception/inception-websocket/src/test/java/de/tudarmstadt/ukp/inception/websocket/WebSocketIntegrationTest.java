@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
@@ -47,7 +48,6 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
@@ -87,13 +88,14 @@ import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
         exclude = { //
                 LiquibaseAutoConfiguration.class, //
                 SecurityAutoConfiguration.class })
-@Import({ //
+@ImportAutoConfiguration({ //
         WebsocketAutoConfiguration.class, //
         ProjectServiceAutoConfiguration.class, //
         DocumentServiceAutoConfiguration.class, //
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
-        AnnotationSchemaServiceAutoConfiguration.class })
+        AnnotationSchemaServiceAutoConfiguration.class, //
+        DocumentImportExportServiceAutoConfiguration.class })
 @EntityScan({ //
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.clarin.webanno.security.model", //

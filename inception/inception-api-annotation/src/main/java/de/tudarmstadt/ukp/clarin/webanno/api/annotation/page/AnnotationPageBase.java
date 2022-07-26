@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
@@ -56,15 +56,9 @@ import org.springframework.beans.BeansException;
 import org.wicketstuff.urlfragment.UrlFragment;
 import org.wicketstuff.urlfragment.UrlParametersReceivingBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -78,7 +72,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.preferences.Key;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 
 public abstract class AnnotationPageBase
     extends ProjectPageBase

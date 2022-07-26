@@ -39,16 +39,16 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
 /**
  * Render spans.

@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.Palette.PALETTE_NORMAL_FILTERED;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringRules;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 
 public class StaticColoringStrategy
     implements ColoringStrategy

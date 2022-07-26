@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
 
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+
 /**
  * Indicates that an attempt to place an annotation at a given position failed because the
  * annotation cannot be placed there. E.g. an attempt to create a relation between virtual

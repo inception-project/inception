@@ -24,12 +24,12 @@ import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 import org.danekja.java.util.function.serializable.SerializableBiFunction;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class OpenDocumentDialog
     extends BootstrapModalDialog

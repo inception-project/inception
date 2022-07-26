@@ -37,11 +37,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.UimaPrimitiveFeatureSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
 public class NumberFeatureTraitsEditor
     extends Panel

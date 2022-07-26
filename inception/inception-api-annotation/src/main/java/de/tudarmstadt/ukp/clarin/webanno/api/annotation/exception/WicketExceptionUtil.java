@@ -25,6 +25,8 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.Logger;
 
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+
 public final class WicketExceptionUtil
 {
     public static void handleException(Logger aLog, Component aComponent, AjaxRequestTarget aTarget,

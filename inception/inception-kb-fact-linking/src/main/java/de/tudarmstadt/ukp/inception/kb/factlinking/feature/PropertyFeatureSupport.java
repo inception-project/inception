@@ -37,17 +37,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.factlinking.config.FactLinkingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureType;
 
 /**
  * <p>

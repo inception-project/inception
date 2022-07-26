@@ -29,9 +29,6 @@ import org.ahocorasick.trie.Trie;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RenderRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
@@ -40,6 +37,9 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractLine;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Relation;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 
 public class PdfAnnoSerializer
     implements VDocumentSerializer<PdfAnnoModel>

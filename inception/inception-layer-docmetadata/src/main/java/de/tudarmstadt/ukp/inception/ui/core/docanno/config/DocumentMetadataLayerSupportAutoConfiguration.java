@@ -23,11 +23,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerType;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerType;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSingletonCreatingWatcher;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;

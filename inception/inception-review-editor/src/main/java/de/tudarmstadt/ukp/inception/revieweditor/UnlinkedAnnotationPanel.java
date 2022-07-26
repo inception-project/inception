@@ -29,8 +29,8 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.revieweditor.event.RefreshEvent;
 
 public class UnlinkedAnnotationPanel

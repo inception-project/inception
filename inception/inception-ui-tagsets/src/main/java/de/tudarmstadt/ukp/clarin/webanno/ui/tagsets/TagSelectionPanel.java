@@ -28,13 +28,13 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class TagSelectionPanel
     extends ListPanel_ImplBase

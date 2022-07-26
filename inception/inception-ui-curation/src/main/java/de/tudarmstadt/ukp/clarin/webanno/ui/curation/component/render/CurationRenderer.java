@@ -21,9 +21,9 @@ import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 
 public interface CurationRenderer
 {

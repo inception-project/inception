@@ -20,8 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 import java.util.Map;
 import java.util.Queue;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 
 public interface ColoringService
 {

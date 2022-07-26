@@ -18,10 +18,10 @@
 package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum.Accuracy;
 import static java.util.Collections.emptyList;

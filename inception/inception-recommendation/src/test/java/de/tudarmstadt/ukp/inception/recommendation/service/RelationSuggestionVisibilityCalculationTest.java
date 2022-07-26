@@ -38,7 +38,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -48,6 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.RelationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class RelationSuggestionVisibilityCalculationTest
 {

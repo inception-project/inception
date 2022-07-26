@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -34,12 +34,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class NoMultipleIncomingRelationsCheck
     implements Check

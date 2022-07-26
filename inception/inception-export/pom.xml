@@ -43,6 +43,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-schema</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-model</artifactId>
     </dependency>
     <dependency>
@@ -109,24 +113,7 @@
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-segmentation-asl</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-ner-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-syntax-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-lexmorph-asl</artifactId>
-    </dependency>
     
-    <dependency>
-      <groupId>com.github.ben-manes.caffeine</groupId>
-      <artifactId>caffeine</artifactId>
-    </dependency>
-
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
@@ -151,6 +138,11 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-dao</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

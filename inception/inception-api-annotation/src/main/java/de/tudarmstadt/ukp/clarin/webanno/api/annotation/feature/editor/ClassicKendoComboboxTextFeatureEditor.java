@@ -31,11 +31,11 @@ import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 
 public class ClassicKendoComboboxTextFeatureEditor
     extends TextFeatureEditorBase

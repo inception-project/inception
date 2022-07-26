@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.exporters.LayerExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -39,10 +39,10 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * <p>

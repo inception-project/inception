@@ -34,8 +34,6 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -47,6 +45,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * <p>

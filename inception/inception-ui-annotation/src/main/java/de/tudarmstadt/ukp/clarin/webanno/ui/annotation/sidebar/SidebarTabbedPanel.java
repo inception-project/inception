@@ -36,13 +36,13 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.preferences.Key;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class SidebarTabbedPanel<T extends SidebarTab>
     extends AjaxTabbedPanel<T>

@@ -27,13 +27,14 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 
 /**
  * <p>

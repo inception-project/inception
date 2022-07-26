@@ -31,6 +31,18 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-dao</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-render</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-api-schema</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-model</artifactId>
     </dependency>
     <dependency>
@@ -72,10 +84,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-ui-dashboard</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-export</artifactId>
     </dependency>
 
     <dependency>
@@ -251,7 +259,7 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-dao</artifactId>
+      <artifactId>inception-export</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

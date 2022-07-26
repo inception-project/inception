@@ -21,9 +21,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 
 import org.apache.uima.cas.CAS;

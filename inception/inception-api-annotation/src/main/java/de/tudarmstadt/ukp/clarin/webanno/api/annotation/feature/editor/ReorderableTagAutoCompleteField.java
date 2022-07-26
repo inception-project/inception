@@ -29,9 +29,9 @@ import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 
 public class ReorderableTagAutoCompleteField
     extends AutoCompleteTextField<ReorderableTag>

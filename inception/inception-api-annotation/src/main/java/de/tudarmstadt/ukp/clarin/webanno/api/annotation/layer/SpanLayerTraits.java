@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
 import java.io.Serializable;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRules;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringRulesTrait;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringRules;
 
 public class SpanLayerTraits
     implements Serializable, ColoringRulesTrait

@@ -28,10 +28,10 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public interface CurationSidebarService
 {

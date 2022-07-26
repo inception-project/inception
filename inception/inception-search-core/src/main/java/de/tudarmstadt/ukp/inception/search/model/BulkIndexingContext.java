@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.inception.search.model;
 import java.util.List;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class BulkIndexingContext
     implements AutoCloseable

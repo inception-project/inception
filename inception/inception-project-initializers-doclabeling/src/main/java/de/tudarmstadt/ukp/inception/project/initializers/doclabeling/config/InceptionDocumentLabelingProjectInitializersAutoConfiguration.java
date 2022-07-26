@@ -22,11 +22,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.BasicDocumentLabelLayerInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.BasicDocumentLabelTagSetInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.BasicDocumentLabelingProjectInitializer;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.config.DocumentMetadataLayerSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar.DocumentMetadataSidebarFactory;

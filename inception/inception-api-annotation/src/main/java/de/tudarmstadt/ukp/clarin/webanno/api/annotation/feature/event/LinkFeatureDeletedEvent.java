@@ -23,8 +23,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
+import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 
 public class LinkFeatureDeletedEvent
     extends LinkFeatureEvent

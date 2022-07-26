@@ -32,12 +32,12 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 
 public class TypeSystemAnalysisTest
 {

@@ -24,13 +24,13 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class JsonImportUtil
 {

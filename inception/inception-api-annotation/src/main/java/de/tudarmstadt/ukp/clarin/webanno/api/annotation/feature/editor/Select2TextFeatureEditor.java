@@ -33,8 +33,8 @@ import org.wicketstuff.select2.StringTextChoiceProvider;
 import com.github.openjson.JSONException;
 import com.github.openjson.JSONStringer;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 
 /**
  * String feature editor using Select2.

@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
@@ -40,11 +40,13 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.RelationRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.rendering.Renderer;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport_ImplBase;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerType;
 
 /**
  * <p>

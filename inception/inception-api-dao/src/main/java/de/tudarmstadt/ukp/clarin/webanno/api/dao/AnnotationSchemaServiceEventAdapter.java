@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
  * <p>

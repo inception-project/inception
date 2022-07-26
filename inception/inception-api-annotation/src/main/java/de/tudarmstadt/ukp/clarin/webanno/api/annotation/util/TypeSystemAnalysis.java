@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.removeEnd;
@@ -52,13 +52,13 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
+import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
 
 public class TypeSystemAnalysis
 {
