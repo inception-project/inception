@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.events;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 /**
  * Indicates that many annotations have been affected at once. This is used on bulk operations

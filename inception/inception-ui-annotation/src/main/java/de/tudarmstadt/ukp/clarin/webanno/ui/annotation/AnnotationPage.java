@@ -64,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
@@ -89,6 +88,7 @@ import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;

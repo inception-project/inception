@@ -15,31 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.schema.adapter;
+package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.CommonException;
-
-public class AnnotationException
-    extends CommonException
+public class CommonException
+    extends Exception
 {
-    private static final long serialVersionUID = 1280015349963924638L;
+    private static final long serialVersionUID = 4711612138126836360L;
 
-    public AnnotationException()
+    public CommonException()
     {
         super();
     }
 
-    public AnnotationException(String message)
+    public CommonException(String message)
     {
         super(message);
     }
 
-    public AnnotationException(String aMessage, Throwable aCause)
+    public CommonException(String aMessage, Throwable aCause)
     {
         super(aMessage, aCause);
     }
 
-    public AnnotationException(Throwable aCause)
+    public CommonException(Throwable aCause)
     {
         super(aCause);
     }

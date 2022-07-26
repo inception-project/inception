@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
+package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -24,8 +24,6 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.Logger;
-
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public final class WicketExceptionUtil
 {
@@ -44,7 +42,7 @@ public final class WicketExceptionUtil
         try {
             throw aException;
         }
-        catch (AnnotationException e) {
+        catch (CommonException e) {
             aComponent.error("Error: " + e.getMessage());
         }
         catch (UIMAException e) {

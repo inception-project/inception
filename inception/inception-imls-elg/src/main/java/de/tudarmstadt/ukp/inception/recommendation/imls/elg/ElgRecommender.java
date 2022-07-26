@@ -32,7 +32,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
@@ -44,6 +43,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgServiceResp
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgSession;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.model.ElgTextsResponse;
 import de.tudarmstadt.ukp.inception.recommendation.imls.elg.service.ElgService;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class ElgRecommender
     extends NonTrainableRecommenderEngineImplBase

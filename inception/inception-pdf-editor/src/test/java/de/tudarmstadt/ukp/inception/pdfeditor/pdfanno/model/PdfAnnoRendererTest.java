@@ -45,7 +45,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
@@ -69,6 +68,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegis
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerSupport;
+import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoSerializer;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
