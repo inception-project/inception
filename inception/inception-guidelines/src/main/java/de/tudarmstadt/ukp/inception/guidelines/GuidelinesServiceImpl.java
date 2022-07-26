@@ -38,12 +38,12 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.guidelines.config.GuidelinesServiceAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ProjectServiceAutoConfiguration#guidelinesService}.
+ * {@link GuidelinesServiceAutoConfiguration#guidelinesService}.
  * </p>
  */
 public class GuidelinesServiceImpl
