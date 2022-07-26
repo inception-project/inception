@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.dao;
+package de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice;
 
 import static java.util.Comparator.comparing;
 

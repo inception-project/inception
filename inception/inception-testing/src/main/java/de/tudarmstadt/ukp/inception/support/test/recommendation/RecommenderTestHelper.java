@@ -40,7 +40,7 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class RecommenderTestHelper

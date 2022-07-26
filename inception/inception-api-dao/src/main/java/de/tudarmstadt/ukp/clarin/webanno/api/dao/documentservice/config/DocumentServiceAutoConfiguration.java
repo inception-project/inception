@@ -29,8 +29,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentAccess;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.DocumentAccess;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.exporters.SourceDocumentExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
