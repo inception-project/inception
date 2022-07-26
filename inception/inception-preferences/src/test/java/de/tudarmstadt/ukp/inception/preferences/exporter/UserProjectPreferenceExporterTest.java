@@ -107,8 +107,7 @@ public class UserProjectPreferenceExporterTest
         doNothing().when(preferencesService).saveUserProjectPreference(captor.capture());
 
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        ZipFile zipFile = mock(ZipFile.class);
-        sut.importData(importRequest, project, exportedProject, zipFile);
+        sut.importData(importRequest, project, exportedProject, mock(ZipFile.class));
 
         return captor;
     }
@@ -125,6 +124,7 @@ public class UserProjectPreferenceExporterTest
         throws IOException
     {
         UserProjectPreference userPreference = new UserProjectPreference();
+        userPreference.setProject(project);
         userPreference.setUser(aUser);
         userPreference.setName(aKey);
         userPreference.setTraits(JSONUtil.toJsonString(aTraits));
