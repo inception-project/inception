@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.export.exporters;
+package de.tudarmstadt.ukp.clarin.webanno.project.exporters;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
@@ -48,14 +48,14 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedUser;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link DocumentImportExportServiceAutoConfiguration#projectPermissionsExporter}.
+ * {@link ProjectServiceAutoConfiguration#projectPermissionsExporter}.
  * </p>
  */
 public class ProjectPermissionsExporter

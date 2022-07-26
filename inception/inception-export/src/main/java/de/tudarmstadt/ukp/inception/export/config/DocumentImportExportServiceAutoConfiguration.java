@@ -30,15 +30,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.GuidelinesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImpl;
 import de.tudarmstadt.ukp.inception.export.exporters.GuidelinesExporter;
-import de.tudarmstadt.ukp.inception.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectLogExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectMetaInfExporter;
-import de.tudarmstadt.ukp.inception.export.exporters.ProjectPermissionsExporter;
 import de.tudarmstadt.ukp.inception.export.exporters.ProjectSettingsExporter;
-import de.tudarmstadt.ukp.inception.export.exporters.TagSetExporter;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
@@ -63,12 +59,6 @@ public class DocumentImportExportServiceAutoConfiguration
     }
 
     @Bean
-    public LayerExporter layerExporter(AnnotationSchemaService aAnnotationService)
-    {
-        return new LayerExporter(aAnnotationService);
-    }
-
-    @Bean
     public ProjectSettingsExporter projectSettingsExporter(ProjectService aProjectService)
     {
         return new ProjectSettingsExporter(aProjectService);
@@ -78,19 +68,6 @@ public class DocumentImportExportServiceAutoConfiguration
     public ProjectLogExporter projectLogExporter(ProjectService aProjectService)
     {
         return new ProjectLogExporter(aProjectService);
-    }
-
-    @Bean
-    public TagSetExporter tagSetExporter(AnnotationSchemaService aAnnotationService)
-    {
-        return new TagSetExporter(aAnnotationService);
-    }
-
-    @Bean
-    public ProjectPermissionsExporter projectPermissionsExporter(ProjectService aProjectService,
-            UserDao aUserService)
-    {
-        return new ProjectPermissionsExporter(aProjectService, aUserService);
     }
 
     @Bean

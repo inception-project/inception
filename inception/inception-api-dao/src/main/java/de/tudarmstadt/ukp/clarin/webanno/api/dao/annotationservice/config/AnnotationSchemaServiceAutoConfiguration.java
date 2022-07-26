@@ -57,6 +57,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceEventAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.exporters.AnnotationDocumentExporter;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.exporters.LayerExporter;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.exporters.TagSetExporter;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
@@ -215,5 +217,17 @@ public class AnnotationSchemaServiceAutoConfiguration
     {
         return new AnnotationDocumentExporter(aDocumentService, aUserRepository,
                 aImportExportService, aRepositoryProperties);
+    }
+
+    @Bean
+    public LayerExporter layerExporter(AnnotationSchemaService aAnnotationService)
+    {
+        return new LayerExporter(aAnnotationService);
+    }
+
+    @Bean
+    public TagSetExporter tagSetExporter(AnnotationSchemaService aAnnotationService)
+    {
+        return new TagSetExporter(aAnnotationService);
     }
 }
