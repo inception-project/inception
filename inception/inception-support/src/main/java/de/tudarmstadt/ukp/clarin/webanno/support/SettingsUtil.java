@@ -101,7 +101,7 @@ public class SettingsUtil
         return getGlobalLogFolder().map(dir -> dir.resolve("application.log"));
     }
 
-    public static Properties getVersionProperties()
+    public static synchronized Properties getVersionProperties()
     {
         if (versionInfo == null) {
             try {

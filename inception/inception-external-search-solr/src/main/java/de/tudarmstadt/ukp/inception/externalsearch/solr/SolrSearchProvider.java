@@ -71,6 +71,7 @@ public class SolrSearchProvider
      * @throws IOException
      *             Connection timeout, wrong URL and query exception
      */
+    @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
             SolrSearchProviderTraits aTraits, String aQuery)
         throws IOException
@@ -85,8 +86,9 @@ public class SolrSearchProvider
                 query.setParam("qt", aTraits.getSearchPath());
                 // solrClient.query(aTraits.getIndexName(), query);
 
-                if (aQuery.isEmpty() | aQuery.equals("*:*"))
+                if (aQuery.isEmpty() || aQuery.equals("*:*")) {
                     aQuery = "*:*";
+                }
                 else {
                     aQuery = aTraits.getDefaultField() + ":" + aQuery;
                 }
