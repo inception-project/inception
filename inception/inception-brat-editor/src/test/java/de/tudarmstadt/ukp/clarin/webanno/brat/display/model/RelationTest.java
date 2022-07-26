@@ -24,7 +24,7 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;

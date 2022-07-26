@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.revieweditor.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VID;
 
 public class SelectAnnotationEvent
 {

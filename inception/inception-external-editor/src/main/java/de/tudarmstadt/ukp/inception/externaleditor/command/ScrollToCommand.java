@@ -21,7 +21,7 @@ import static java.lang.String.format;
 
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.selection.FocusPosition;
 
 @Order(1000)
 public class ScrollToCommand

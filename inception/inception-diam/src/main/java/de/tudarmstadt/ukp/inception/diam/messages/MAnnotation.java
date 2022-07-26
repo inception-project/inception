@@ -20,9 +20,9 @@ package de.tudarmstadt.ukp.inception.diam.messages;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 
 public abstract class MAnnotation
 {

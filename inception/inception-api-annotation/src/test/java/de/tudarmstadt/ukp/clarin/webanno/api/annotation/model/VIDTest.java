@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VID;
+
 public class VIDTest
 {
     @Test

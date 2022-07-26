@@ -29,7 +29,7 @@ import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 public class TextAreaFeatureEditor

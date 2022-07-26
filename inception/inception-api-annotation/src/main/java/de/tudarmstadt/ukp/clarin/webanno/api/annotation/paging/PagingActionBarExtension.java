@@ -17,20 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.Component;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 
 @Order(500)
-@Component
+@org.springframework.stereotype.Component
 public class PagingActionBarExtension
     implements ActionBarExtension
 {
     @Override
-    public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
+    public Component createActionBarItem(String aId, AnnotationPageBase aPage)
     {
         return aPage.getModelObject().getPagingStrategy().createPageNavigator(aId, aPage);
     }

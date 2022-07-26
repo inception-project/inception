@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.selection.FocusPosition;
 
 public class ScrollToEvent
 {

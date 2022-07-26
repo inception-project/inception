@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference.SIDEBAR_SIZE_MAX;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference.SIDEBAR_SIZE_MIN;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotationPreference.SIDEBAR_SIZE_MAX;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotationPreference.SIDEBAR_SIZE_MIN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -59,11 +59,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ReadonlyColoringBehaviour;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;

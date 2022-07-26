@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

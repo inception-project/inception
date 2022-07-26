@@ -26,6 +26,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.paging.Unit;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class TokenWrappingPagingStrategyTest

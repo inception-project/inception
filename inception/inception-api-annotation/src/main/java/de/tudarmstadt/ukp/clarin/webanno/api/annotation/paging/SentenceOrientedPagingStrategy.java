@@ -27,11 +27,13 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
+import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.paging.Unit;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 public class SentenceOrientedPagingStrategy
@@ -94,8 +96,8 @@ public class SentenceOrientedPagingStrategy
     }
 
     @Override
-    public DefaultPagingNavigator createPageNavigator(String aId, AnnotationPageBase aPage)
+    public DefaultPagingNavigator createPageNavigator(String aId, Page aPage)
     {
-        return new DefaultPagingNavigator(aId, aPage);
+        return new DefaultPagingNavigator(aId, (AnnotationPageBase) aPage);
     }
 }

@@ -28,8 +28,11 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorViewState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.ScrollToEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotatorViewState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.paging.PagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.paging.Unit;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.selection.FocusPosition;
 
 public abstract class PagingStrategy_ImplBase
     implements PagingStrategy

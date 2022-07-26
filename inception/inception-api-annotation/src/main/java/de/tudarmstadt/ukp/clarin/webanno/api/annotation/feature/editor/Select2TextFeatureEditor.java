@@ -33,7 +33,7 @@ import org.wicketstuff.select2.StringTextChoiceProvider;
 import com.github.openjson.JSONException;
 import com.github.openjson.JSONStringer;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 
 /**

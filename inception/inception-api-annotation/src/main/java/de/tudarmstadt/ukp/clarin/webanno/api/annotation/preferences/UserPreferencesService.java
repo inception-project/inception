@@ -21,8 +21,8 @@ import java.io.IOException;
 
 import org.springframework.beans.BeansException;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 

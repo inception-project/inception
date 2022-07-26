@@ -690,6 +690,16 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-api-render</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-api-schema</artifactId>
+        <version>24.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-bootstrap</artifactId>
         <version>24.0-SNAPSHOT</version>
       </dependency>
@@ -2036,6 +2046,8 @@
     <module>inception-api-annotation</module>
     <module>inception-api-formats</module>
     <module>inception-api-dao</module>
+    <module>inception-api-render</module>
+    <module>inception-api-schema</module>
     <module>inception-export</module>
     <module>inception-diag</module>
     <module>inception-testing</module>

@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
 import java.util.Map;
 import java.util.Queue;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface ColoringService

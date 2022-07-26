@@ -32,8 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.FeatureState;
 
 public class ImageFeatureEditor
     extends FeatureEditor

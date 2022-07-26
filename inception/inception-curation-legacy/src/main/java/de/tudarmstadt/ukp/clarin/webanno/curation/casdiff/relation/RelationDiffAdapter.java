@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 

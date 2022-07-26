@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;

@@ -30,6 +30,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.LayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAttachmentBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationCrossSentenceBehavior;
@@ -37,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationOverlapB
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAnchoringModeBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanOverlapBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -57,8 +58,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegist
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.config.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceEventAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.exporters.AnnotationDocumentExporter;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 @Configuration
 @EnableConfigurationProperties({ //
@@ -201,5 +206,14 @@ public class AnnotationSchemaServiceAutoConfiguration
             AnnotationSchemaService aService)
     {
         return new AnnotationSchemaServiceEventAdapter(aService);
+    }
+
+    @Bean
+    public AnnotationDocumentExporter annotationDocumentExporter(DocumentService aDocumentService,
+            UserDao aUserRepository, DocumentImportExportService aImportExportService,
+            RepositoryProperties aRepositoryProperties)
+    {
+        return new AnnotationDocumentExporter(aDocumentService, aUserRepository,
+                aImportExportService, aRepositoryProperties);
     }
 }

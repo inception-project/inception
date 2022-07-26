@@ -34,8 +34,9 @@ import org.apache.wicket.model.PropertyModel;
 
 import com.googlecode.wicket.kendo.ui.form.Radio;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureEditorValueChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.FeatureState;
 
 public class RatingFeatureEditor
     extends FeatureEditor
