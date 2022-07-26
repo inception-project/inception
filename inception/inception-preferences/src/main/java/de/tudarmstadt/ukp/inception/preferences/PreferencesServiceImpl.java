@@ -196,11 +196,10 @@ public class PreferencesServiceImpl
     {
         String query = String.join("\n", //
                 "FROM UserProjectPreference ", //
-                "AND project = :project");
+                "WHERE project = :project");
 
         return entityManager //
                 .createQuery(query, UserProjectPreference.class) //
-                .setParameter("user", aProject) //
                 .setParameter("project", aProject) //
                 .getResultList();
     }
