@@ -162,26 +162,6 @@
                         </div>
                       </form>
                     </div>
-                    <div class="flex-content flex-v-container">
-                      <form wicket:id="userResetDocumentForm" class="form flex-content flex-v-container">
-                        <div class="card-header">
-                          <wicket:message key="resetDocument" />
-                        </div>
-                        <div class="card-body flex-content">
-                          <div class="">
-                            <select wicket:id="resetDocument" class="form-select"/>
-                          </div>
-                          <div class="">
-                            <select wicket:id="documentState" class="form-select"/>
-                          </div>
-                        </div>
-                        <div class="card-footer">
-                          <button class="btn btn-primary" wicket:id="set">
-                            <wicket:message key="set" />
-                          </button>
-                        </div>
-                      </form>
-                    </div>
                   </div>
                 </div>
               </form>
@@ -340,11 +320,6 @@
         <div wicket:id="contextMenu" style="width: 250px;"></div>
       </div>
     </div>
-    <wicket:fragment wicket:id="infoColumn">
-      <button wicket:id="showInfoDialog" class="btn btn-sm btn-link" wicket:message="title:showInfo">
-        <i class="fas fa-info-circle" /> <span class="d-none d-xl-inline" />
-      </button>
-    </wicket:fragment>
   </wicket:extend>
 </body>
 </html>
