@@ -15,16 +15,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
-
-import org.apache.wicket.Component;
-import org.apache.wicket.model.IModel;
+package de.tudarmstadt.ukp.inception.editor.view;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.Extension;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
 
-public interface DocumentViewFactory
-    extends Extension<AnnotationDocument>
+public interface DocumentViewExtensionPoint
+    extends ExtensionPoint<AnnotationDocument, DocumentViewFactory>
 {
-    Component createView(String aId, IModel<AnnotationDocument> aDocument, String aEditorFactoryId);
+
 }

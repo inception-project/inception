@@ -15,13 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
+package de.tudarmstadt.ukp.inception.editor.view;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint;
+import de.tudarmstadt.ukp.clarin.webanno.support.extensionpoint.ExtensionPoint_ImplBase;
 
-public interface DocumentViewExtensionPoint
-    extends ExtensionPoint<AnnotationDocument, DocumentViewFactory>
+public class DocumentViewExtensionPointImpl
+    extends ExtensionPoint_ImplBase<AnnotationDocument, DocumentViewFactory>
+    implements DocumentViewExtensionPoint
 {
 
+    public DocumentViewExtensionPointImpl(
+            @Lazy @Autowired(required = false) List<DocumentViewFactory> aExtensions)
+    {
+        super(aExtensions);
+    }
 }

@@ -26,9 +26,6 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ColorRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPoint;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPointImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.FocusMarkerRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.LabelRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
@@ -97,12 +94,5 @@ public class AnnotationAutoConfiguration
     public FocusMarkerRenderer focusMarkerRenderer()
     {
         return new FocusMarkerRenderer();
-    }
-
-    @Bean
-    public DocumentViewExtensionPoint documentViewExtensionPoint(
-            @Lazy @Autowired(required = false) List<DocumentViewFactory> aExtensions)
-    {
-        return new DocumentViewExtensionPointImpl(aExtensions);
     }
 }

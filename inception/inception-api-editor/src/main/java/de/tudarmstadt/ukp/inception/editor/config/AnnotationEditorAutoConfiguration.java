@@ -30,6 +30,9 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistryImpl
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistryImpl;
+import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
+import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPointImpl;
+import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 
 @Configuration
 public class AnnotationEditorAutoConfiguration
@@ -46,5 +49,12 @@ public class AnnotationEditorAutoConfiguration
             @Lazy @Autowired(required = false) List<AnnotationEditorFactory> aExtensions)
     {
         return new AnnotationEditorRegistryImpl(aExtensions);
+    }
+    
+    @Bean
+    public DocumentViewExtensionPoint documentViewExtensionPoint(
+            @Lazy @Autowired(required = false) List<DocumentViewFactory> aExtensions)
+    {
+        return new DocumentViewExtensionPointImpl(aExtensions);
     }
 }
