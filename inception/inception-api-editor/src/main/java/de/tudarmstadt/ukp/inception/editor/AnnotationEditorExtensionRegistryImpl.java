@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
+package de.tudarmstadt.ukp.inception.editor;
 
 import static java.util.Collections.unmodifiableList;
 
@@ -36,8 +36,8 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.editor.config.AnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationAutoConfiguration#annotationEditorExtensionRegistry}.
+ * {@link AnnotationEditorAutoConfiguration#annotationEditorExtensionRegistry}.
  * </p>
  */
 public class AnnotationEditorExtensionRegistryImpl

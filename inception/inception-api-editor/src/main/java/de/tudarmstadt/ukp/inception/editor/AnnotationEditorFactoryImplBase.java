@@ -15,12 +15,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
+package de.tudarmstadt.ukp.inception.editor;
 
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.Ordered;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public abstract class AnnotationEditorFactoryImplBase
@@ -44,11 +43,5 @@ public abstract class AnnotationEditorFactoryImplBase
     public int getOrder()
     {
         return Ordered.LOWEST_PRECEDENCE;
-    }
-
-    @Override
-    public void initState(AnnotatorState aModelObject)
-    {
-        aModelObject.setPagingStrategy(new SentenceOrientedPagingStrategy());
     }
 }

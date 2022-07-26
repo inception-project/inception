@@ -15,21 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring;
+package de.tudarmstadt.ukp.inception.editor;
 
-import java.util.Map;
-import java.util.Queue;
+import org.springframework.beans.factory.BeanNameAware;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
-
-public interface ColoringService
+public abstract class AnnotationEditorExtensionImplBase
+    implements BeanNameAware, AnnotationEditorExtension
 {
-    ColoringStrategy getStrategy(AnnotationLayer aLayer, AnnotationPreference aPreferences,
-            Map<String[], Queue<String>> aColorQueues);
+    private String beanName;
 
-    ColoringStrategyType getBestInitialStrategy(AnnotationLayer aLayer,
-            AnnotationPreference aPreferences);
+    @Override
+    public void setBeanName(String aName)
+    {
+        beanName = aName;
+    }
+
+    @Override
+    public String getBeanName()
+    {
+        return beanName;
+    }
 }

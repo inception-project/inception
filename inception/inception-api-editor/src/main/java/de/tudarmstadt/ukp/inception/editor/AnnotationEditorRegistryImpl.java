@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
+package de.tudarmstadt.ukp.inception.editor;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
@@ -32,13 +32,13 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.editor.config.AnnotationEditorAutoConfiguration;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link AnnotationAutoConfiguration#annotationEditorRegistry}.
+ * {@link AnnotationEditorAutoConfiguration#annotationEditorRegistry}.
  * </p>
  */
 public class AnnotationEditorRegistryImpl

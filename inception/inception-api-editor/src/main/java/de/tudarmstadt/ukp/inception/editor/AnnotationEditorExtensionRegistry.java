@@ -15,10 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
+package de.tudarmstadt.ukp.inception.editor;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -26,45 +25,22 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailResult;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
-public interface AnnotationEditorExtension
+public interface AnnotationEditorExtensionRegistry
 {
-    /**
-     * @return get the bean name.
-     */
-    String getBeanName();
+    List<AnnotationEditorExtension> getExtensions();
 
-    /**
-     * Handle an action.
-     */
-    default void handleAction(AnnotationActionHandler panel, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID paramId, String aAction)
-        throws AnnotationException, IOException
-    {
-        // Do nothing by default
-    }
+    AnnotationEditorExtension getExtension(String aName);
 
-    default void renderRequested(AnnotatorState aState)
-    {
-        // Do nothing by default
-    }
+    void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
+            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
+        throws IOException, AnnotationException;
 
-    default void generateContextMenuItems(List<IMenuItem> aItems)
-    {
-        // Do nothing by default
-    }
+    void fireRenderRequested(AnnotatorState aState);
 
-    default List<VLazyDetailResult> renderLazyDetails(SourceDocument aDocument, User aUser,
-            VID aVid, AnnotationFeature aFeature, String aQuery)
-    {
-        return Collections.emptyList();
-    }
+    void generateContextMenuItems(List<IMenuItem> aItems);
 }
