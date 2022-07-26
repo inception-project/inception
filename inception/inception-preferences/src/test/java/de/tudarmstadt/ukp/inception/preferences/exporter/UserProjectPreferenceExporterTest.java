@@ -41,18 +41,23 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
-import de.tudarmstadt.ukp.inception.preferences.model.DefaultProjectPreference;
+import de.tudarmstadt.ukp.inception.preferences.model.UserProjectPreference;
 
 @ExtendWith(MockitoExtension.class)
-public class DefaultPreferenceExporterTest
+public class UserProjectPreferenceExporterTest
 {
     private @Mock PreferencesService preferencesService;
+    private @Mock UserDao userRepository;
 
     private Project project;
+    private User userA;
+    private User userB;
 
-    private DefaultProjectPreferencesExporter sut;
+    private UserProjectPreferencesExporter sut;
 
     @BeforeEach
     public void setUp()
@@ -61,25 +66,31 @@ public class DefaultPreferenceExporterTest
         project.setId(1l);
         project.setName("Test Project");
 
-        sut = new DefaultProjectPreferencesExporter(preferencesService);
+        userA = new User("a");
+        userB = new User("b");
+
+        sut = new UserProjectPreferencesExporter(preferencesService, userRepository);
     }
 
     @Test
     public void thatExportingWorks() throws Exception
     {
-        when(preferencesService.listDefaultTraitsForProject(project))
-                .thenReturn(defaultPreferences());
+        when(preferencesService.listUserPreferencesForProject(project))
+                .thenReturn(userPreferences());
+
+        when(userRepository.get("a")).thenReturn(userA);
+        when(userRepository.get("b")).thenReturn(userB);
 
         // Export the project and import it again
-        ArgumentCaptor<DefaultProjectPreference> captor = runExportImportAndFetchRecommenders();
+        ArgumentCaptor<UserProjectPreference> captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
                 .usingRecursiveFieldByFieldElementComparator() //
-                .containsExactlyInAnyOrderElementsOf(defaultPreferences());
+                .containsExactlyInAnyOrderElementsOf(userPreferences());
     }
 
-    private ArgumentCaptor<DefaultProjectPreference> runExportImportAndFetchRecommenders()
+    private ArgumentCaptor<UserProjectPreference> runExportImportAndFetchRecommenders()
         throws Exception
     {
         // Export the project
@@ -91,9 +102,9 @@ public class DefaultPreferenceExporterTest
         sut.exportData(exportRequest, monitor, exportedProject, file);
 
         // Import the project again
-        ArgumentCaptor<DefaultProjectPreference> captor = ArgumentCaptor
-                .forClass(DefaultProjectPreference.class);
-        doNothing().when(preferencesService).saveDefaultProjectPreference(captor.capture());
+        ArgumentCaptor<UserProjectPreference> captor = ArgumentCaptor
+                .forClass(UserProjectPreference.class);
+        doNothing().when(preferencesService).saveUserProjectPreference(captor.capture());
 
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         ZipFile zipFile = mock(ZipFile.class);
@@ -102,20 +113,21 @@ public class DefaultPreferenceExporterTest
         return captor;
     }
 
-    private List<DefaultProjectPreference> defaultPreferences() throws IOException
+    private List<UserProjectPreference> userPreferences() throws IOException
     {
         return asList( //
-                buildDefaultPreference("key_1", Map.of("a", 1, "b", 2)), //
-                buildDefaultPreference("key_2", Map.of("x", "X", "y", "Y")), //
-                buildDefaultPreference("key_3", Map.of("la", true, "lo", false)));
+                buildUserPreference(userA, "key_1", Map.of("a", 1, "b", 2)), //
+                buildUserPreference(userA, "key_2", Map.of("x", "X", "y", "Y")), //
+                buildUserPreference(userB, "key_1", Map.of("la", true, "lo", false)));
     }
 
-    private DefaultProjectPreference buildDefaultPreference(String aKey, Object aTraits)
+    private UserProjectPreference buildUserPreference(User aUser, String aKey, Object aTraits)
         throws IOException
     {
-        DefaultProjectPreference defaultPreference = new DefaultProjectPreference();
-        defaultPreference.setName(aKey);
-        defaultPreference.setTraits(JSONUtil.toJsonString(aTraits));
-        return defaultPreference;
+        UserProjectPreference userPreference = new UserProjectPreference();
+        userPreference.setUser(aUser);
+        userPreference.setName(aKey);
+        userPreference.setTraits(JSONUtil.toJsonString(aTraits));
+        return userPreference;
     }
 }

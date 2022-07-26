@@ -23,9 +23,11 @@ import javax.persistence.PersistenceContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesServiceImpl;
 import de.tudarmstadt.ukp.inception.preferences.exporter.DefaultProjectPreferencesExporter;
+import de.tudarmstadt.ukp.inception.preferences.exporter.UserProjectPreferencesExporter;
 
 @Configuration
 public class PreferencesServiceAutoConfig
@@ -43,5 +45,12 @@ public class PreferencesServiceAutoConfig
             PreferencesService aPreferencesService)
     {
         return new DefaultProjectPreferencesExporter(aPreferencesService);
+    }
+
+    @Bean
+    public UserProjectPreferencesExporter userPreferencesExporter(
+            PreferencesService aPreferencesService, UserDao aUserRepository)
+    {
+        return new UserProjectPreferencesExporter(aPreferencesService, aUserRepository);
     }
 }
