@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -60,11 +59,11 @@ import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -80,6 +79,7 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 
 @Deprecated
@@ -352,9 +352,9 @@ public class QualifierFeatureEditor
         if (aItem.getModelObject().targetAddr != -1) {
             try {
                 CAS cas = actionHandler.getEditorCas();
-                FeatureStructure selectedFS = selectFsByAddr(cas,
+                FeatureStructure selectedFS = ICasUtil.selectFsByAddr(cas,
                         aItem.getModelObject().targetAddr);
-                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
+                FeatureUtil.setFeature(selectedFS, linkedAnnotationFeature,
                         value != null ? value.getIdentifier() : value);
                 LOG.info("change the value");
                 qualifierModel.detach();

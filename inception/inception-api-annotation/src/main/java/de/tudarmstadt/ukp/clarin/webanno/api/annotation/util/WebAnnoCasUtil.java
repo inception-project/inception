@@ -53,15 +53,10 @@ import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
-import de.tudarmstadt.ukp.inception.schema.adapter.FeatureFilter;
-import de.tudarmstadt.ukp.inception.schema.feature.FeatureUtil;
-import de.tudarmstadt.ukp.inception.schema.validation.ValidationUtils;
 
 /**
  * Contain Methods for updating CAS Objects directed from brat UI, different utility methods to
@@ -139,16 +134,6 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Return true if these two annotations agree on every non slot features
-     */
-    @Deprecated
-    public static boolean isEquivalentSpanAnnotation(AnnotationFS aFs1, AnnotationFS aFs2,
-            FeatureFilter aFilter)
-    {
-        return AnnotationComparisonUtils.isEquivalentSpanAnnotation(aFs1, aFs2, aFilter);
-    }
-
-    /**
      * Do not check on agreement on Position and SOfa feature - already checked
      */
     public static boolean isBasicFeature(Feature aFeature)
@@ -157,24 +142,6 @@ public class WebAnnoCasUtil
         // of the check should be changes such that equals is called on the constant.
         return aFeature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
                 || aFeature.toString().equals("uima.cas.AnnotationBase:sofa");
-    }
-
-    /**
-     * Get the feature value of this {@code Feature} on this annotation
-     */
-    @Deprecated
-    public static Object getFeatureValue(FeatureStructure aFS, Feature aFeature)
-    {
-        return JCasClassUtil.getFeatureValue(aFS, aFeature);
-    }
-
-    /**
-     * Get the feature value of this {@code Feature} on this annotation
-     */
-    @Deprecated
-    public static Object getDefaultFeatureValue(Feature aFeature)
-    {
-        return JCasClassUtil.getDefaultFeatureValue(aFeature);
     }
 
     /**
@@ -196,7 +163,7 @@ public class WebAnnoCasUtil
             return false;
         }
 
-        return getAddr(a) == getAddr(b);
+        return ICasUtil.getAddr(a) == ICasUtil.getAddr(b);
     }
 
     /**
@@ -248,31 +215,6 @@ public class WebAnnoCasUtil
                 .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd()) //
                 .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd()) //
                 .findFirst().isPresent();
-    }
-
-    @Deprecated
-    public static int getAddr(FeatureStructure aFS)
-    {
-        return JCasClassUtil.getAddr(aFS);
-    }
-
-    @Deprecated
-    public static AnnotationFS selectAnnotationByAddr(CAS aCas, int aAddress)
-    {
-        return JCasClassUtil.selectAnnotationByAddr(aCas, aAddress);
-    }
-
-    @Deprecated
-    public static FeatureStructure selectFsByAddr(CAS aCas, int aAddress)
-    {
-        return JCasClassUtil.selectFsByAddr(aCas, aAddress);
-    }
-
-    @Deprecated
-    public static <T extends AnnotationFS> AnnotationFS selectByAddr(CAS aCas, Class<T> aType,
-            int aAddress)
-    {
-        return JCasClassUtil.selectByAddr(aCas, aType, aAddress);
     }
 
     /**
@@ -668,51 +610,6 @@ public class WebAnnoCasUtil
             throw new IllegalArgumentException("Cannot get value of feature [" + feature.getName()
                     + "] with type [" + feature.getRange().getName() + "]");
         }
-    }
-
-    /**
-     * Set a feature value.
-     *
-     * @param aFS
-     *            the feature structure.
-     * @param aFeature
-     *            the feature within the annotation whose value to set. If this parameter is
-     *            {@code null} then nothing happens.
-     * @param aValue
-     *            the feature value.
-     */
-    @Deprecated
-    public static void setFeature(FeatureStructure aFS, AnnotationFeature aFeature, Object aValue)
-    {
-        FeatureUtil.setFeature(aFS, aFeature, aValue);
-    }
-
-    @Deprecated
-    public static void setLinkFeatureValue(FeatureStructure aFS, Feature aFeature,
-            List<FeatureStructure> linkFSes)
-    {
-        FeatureUtil.setLinkFeatureValue(aFS, aFeature, linkFSes);
-    }
-
-    /**
-     * Get a feature value.
-     *
-     * @param aFS
-     *            the feature structure.
-     * @param aFeatureName
-     *            the feature within the annotation whose value to set.
-     * @return the feature value.
-     */
-    @Deprecated
-    public static FeatureStructure getFeatureFS(FeatureStructure aFS, String aFeatureName)
-    {
-        return JCasClassUtil.getFeatureFS(aFS, aFeatureName);
-    }
-
-    @Deprecated
-    public static boolean isRequiredFeatureMissing(AnnotationFeature aFeature, FeatureStructure aFS)
-    {
-        return ValidationUtils.isRequiredFeatureMissing(aFeature, aFS);
     }
 
     public static FeatureStructure createDocumentMetadata(CAS aCas)

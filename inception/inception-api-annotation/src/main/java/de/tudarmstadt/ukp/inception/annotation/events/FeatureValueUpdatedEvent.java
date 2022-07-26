@@ -17,14 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.events;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
@@ -94,7 +93,7 @@ public class FeatureValueUpdatedEvent
             builder.append(", ");
         }
         builder.append("addr=");
-        builder.append(getAddr(fs));
+        builder.append(ICasUtil.getAddr(fs));
         builder.append(", feature=");
         builder.append(feature.getName());
         builder.append(", old=");

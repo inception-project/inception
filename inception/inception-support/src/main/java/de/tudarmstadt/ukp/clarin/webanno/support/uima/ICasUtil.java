@@ -25,7 +25,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.cas.TOP;
 
-public class JCasClassUtil
+public class ICasUtil
 {
     public static final String UIMA_BUILTIN_JCAS_PREFIX = "org.apache.uima.jcas.";
 

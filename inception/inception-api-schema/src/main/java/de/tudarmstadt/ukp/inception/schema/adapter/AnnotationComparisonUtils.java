@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.schema.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil.getDefaultFeatureValue;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil.getFeatureValue;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getDefaultFeatureValue;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getFeatureValue;
 
 import java.util.Objects;
 

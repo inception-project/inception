@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 
@@ -37,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.SelectAnnotationHandler;
@@ -141,7 +141,7 @@ public class CurationEditorExtension
         VID vid = VID.parse(aCurationVid.getExtensionPayload());
 
         CAS srcCas = documentService.readAnnotationCas(doc, srcUser);
-        AnnotationFS sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
+        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(srcCas, vid.getId());
         AnnotationLayer layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
 
         if (vid.isSlotSet()) {
@@ -174,7 +174,7 @@ public class CurationEditorExtension
                 aTargetCas, sourceAnnotation, feature.getName(), aVid.getSlot());
 
         // open created/updates FS in annotation detail editorpanel
-        AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }
@@ -190,7 +190,7 @@ public class CurationEditorExtension
                 aTargetCas, sourceAnnotation, layer.isAllowStacking());
 
         // open created/updates FS in annotation detail editorpanel
-        AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectArc(mergedAnno);
     }
@@ -206,7 +206,7 @@ public class CurationEditorExtension
                 aTargetCas, sourceAnnotation, layer.isAllowStacking());
 
         // open created/updates FS in annotation detail editor panel
-        AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+        AnnotationFS mergedAnno = ICasUtil.selectAnnotationByAddr(aTargetCas,
                 mergeResult.getResultFSAddress());
         aState.getSelection().selectSpan(mergedAnno);
     }

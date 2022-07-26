@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginEndInSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginInSameSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType.ERROR;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -42,6 +41,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
@@ -89,8 +89,10 @@ public class RelationCrossSentenceBehavior
             CAS cas = e.getKey().getCAS();
 
             if (!isBeginInSameSentence(cas,
-                    selectAnnotationByAddr(cas, e.getValue().getSource().getId()).getBegin(),
-                    selectAnnotationByAddr(cas, e.getValue().getTarget().getId()).getBegin())) {
+                    ICasUtil.selectAnnotationByAddr(cas, e.getValue().getSource().getId())
+                            .getBegin(),
+                    ICasUtil.selectAnnotationByAddr(cas, e.getValue().getTarget().getId())
+                            .getBegin())) {
                 aResponse.add(new VComment(new VID(e.getKey()), ERROR,
                         "Crossing sentence boundaries is not permitted."));
             }

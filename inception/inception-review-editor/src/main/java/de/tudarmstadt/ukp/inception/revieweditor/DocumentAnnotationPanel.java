@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.revieweditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 
@@ -47,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -140,7 +140,7 @@ public class DocumentAnnotationPanel
 
         FeatureStructure fs;
         try {
-            fs = selectFsByAddr(getCas(), vid.getId());
+            fs = ICasUtil.selectFsByAddr(getCas(), vid.getId());
         }
         catch (Exception e) {
             LOG.error("Unable to locate annotation with ID {}", vid);

@@ -22,15 +22,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBasicFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isEquivalentSpanAnnotation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isPrimitiveType;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
@@ -81,6 +80,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -92,7 +92,9 @@ import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparisonUtils;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.FeatureFilter;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 
@@ -695,7 +697,7 @@ public class CasMerge
                 links);
 
         return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
-                getAddr(mergeFs));
+                ICasUtil.getAddr(mergeFs));
     }
 
     private static List<AnnotationFS> checkAndGetTargets(CAS aCas, AnnotationFS aOldTarget)
@@ -705,8 +707,9 @@ public class CasMerge
         List<AnnotationFS> targets = selectCovered(aCas, casType, aOldTarget.getBegin(),
                 aOldTarget.getEnd())
                         .stream()
-                        .filter(fs -> isEquivalentSpanAnnotation(fs, aOldTarget,
-                                (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f)))
+                        .filter(fs -> AnnotationComparisonUtils.isEquivalentSpanAnnotation(fs,
+                                aOldTarget,
+                                (FeatureFilter) (_fs, _f) -> !shouldIgnoreFeatureOnMerge(_f)))
                         .collect(Collectors.toList());
 
         if (targets.size() == 0) {

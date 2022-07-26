@@ -50,7 +50,7 @@ public class AnnotationEditorAutoConfiguration
     {
         return new AnnotationEditorRegistryImpl(aExtensions);
     }
-    
+
     @Bean
     public DocumentViewExtensionPoint documentViewExtensionPoint(
             @Lazy @Autowired(required = false) List<DocumentViewFactory> aExtensions)

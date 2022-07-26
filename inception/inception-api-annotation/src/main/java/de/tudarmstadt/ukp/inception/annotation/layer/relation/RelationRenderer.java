@@ -17,9 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.relation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
@@ -52,6 +49,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VComment;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
@@ -173,14 +171,15 @@ public class RelationRenderer
     {
         FeatureStructure dependentFs = getDependentFs(fs);
 
-        if (relationLinks.keySet().contains(getAddr(dependentFs))
-                && !yieldDeps.contains(getAddr(dependentFs))) {
-            yieldDeps.add(getAddr(dependentFs));
+        if (relationLinks.keySet().contains(ICasUtil.getAddr(dependentFs))
+                && !yieldDeps.contains(ICasUtil.getAddr(dependentFs))) {
+            yieldDeps.add(ICasUtil.getAddr(dependentFs));
 
             // sort the annotations (begin, end)
-            List<Integer> sortedDepFs = new ArrayList<>(relationLinks.get(getAddr(dependentFs)));
-            sortedDepFs.sort(
-                    comparingInt(arg0 -> selectAnnotationByAddr(fs.getCAS(), arg0).getBegin()));
+            List<Integer> sortedDepFs = new ArrayList<>(
+                    relationLinks.get(ICasUtil.getAddr(dependentFs)));
+            sortedDepFs.sort(comparingInt(
+                    arg0 -> ICasUtil.selectAnnotationByAddr(fs.getCAS(), arg0).getBegin()));
 
             String cm = getYieldMessage(fs.getCAS(), sortedDepFs);
 
@@ -206,7 +205,7 @@ public class RelationRenderer
             StringBuilder message = new StringBuilder();
 
             message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                    + getAddr(aFS) + "] has loose ends - cannot render.");
+                    + ICasUtil.getAddr(aFS) + "] has loose ends - cannot render.");
             if (typeAdapter.getAttachFeatureName() != null) {
                 message.append("\nRelation [" + typeAdapter.getLayer().getName()
                         + "] attached to feature [" + typeAdapter.getAttachFeatureName() + "].");
@@ -283,7 +282,7 @@ public class RelationRenderer
         // if this is a governor for more than one dependent, avoid duplicate yield
         List<Integer> yieldDeps = new ArrayList<>();
 
-        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        AnnotationFS fs = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aVid.getId());
 
         Optional<String> yield = renderYield(fs, relationLinks, yieldDeps);
 
@@ -306,21 +305,23 @@ public class RelationRenderer
         int end = -1;
         for (Integer depFs : sortedDepFs) {
             if (end == -1) {
-                cm.append(selectAnnotationByAddr(aCas, depFs).getCoveredText());
-                end = selectAnnotationByAddr(aCas, depFs).getEnd();
+                cm.append(ICasUtil.selectAnnotationByAddr(aCas, depFs).getCoveredText());
+                end = ICasUtil.selectAnnotationByAddr(aCas, depFs).getEnd();
             }
             // if no space between token and punct
-            else if (end == selectAnnotationByAddr(aCas, depFs).getBegin()) {
-                cm.append(selectAnnotationByAddr(aCas, depFs).getCoveredText());
-                end = selectAnnotationByAddr(aCas, depFs).getEnd();
+            else if (end == ICasUtil.selectAnnotationByAddr(aCas, depFs).getBegin()) {
+                cm.append(ICasUtil.selectAnnotationByAddr(aCas, depFs).getCoveredText());
+                end = ICasUtil.selectAnnotationByAddr(aCas, depFs).getEnd();
             }
-            else if (end + 1 != selectAnnotationByAddr(aCas, depFs).getBegin()) {
-                cm.append(" ... ").append(selectAnnotationByAddr(aCas, depFs).getCoveredText());
-                end = selectAnnotationByAddr(aCas, depFs).getEnd();
+            else if (end + 1 != ICasUtil.selectAnnotationByAddr(aCas, depFs).getBegin()) {
+                cm.append(" ... ")
+                        .append(ICasUtil.selectAnnotationByAddr(aCas, depFs).getCoveredText());
+                end = ICasUtil.selectAnnotationByAddr(aCas, depFs).getEnd();
             }
             else {
-                cm.append(" ").append(selectAnnotationByAddr(aCas, depFs).getCoveredText());
-                end = selectAnnotationByAddr(aCas, depFs).getEnd();
+                cm.append(" ")
+                        .append(ICasUtil.selectAnnotationByAddr(aCas, depFs).getCoveredText());
+                end = ICasUtil.selectAnnotationByAddr(aCas, depFs).getEnd();
             }
 
         }
@@ -341,17 +342,17 @@ public class RelationRenderer
 
             if (dependentFs == null || governorFs == null) {
                 log.warn("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
-                        + getAddr(fs) + "] has loose ends - cannot render.");
+                        + ICasUtil.getAddr(fs) + "] has loose ends - cannot render.");
                 continue;
             }
 
-            Set<Integer> links = relations.get(getAddr(governorFs));
+            Set<Integer> links = relations.get(ICasUtil.getAddr(governorFs));
             if (links == null) {
                 links = new ConcurrentSkipListSet<>();
             }
 
-            links.add(getAddr(dependentFs));
-            relations.put(getAddr(governorFs), links);
+            links.add(ICasUtil.getAddr(dependentFs));
+            relations.put(ICasUtil.getAddr(governorFs), links);
         }
 
         // Update other subsequent links

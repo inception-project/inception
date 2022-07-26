@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -116,7 +115,7 @@ public class DocumentMetadataLayerAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        AnnotationBaseFS fs = (AnnotationBaseFS) selectFsByAddr(aCas, aVid.getId());
+        AnnotationBaseFS fs = (AnnotationBaseFS) ICasUtil.selectFsByAddr(aCas, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
         publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, getLayer(), fs));

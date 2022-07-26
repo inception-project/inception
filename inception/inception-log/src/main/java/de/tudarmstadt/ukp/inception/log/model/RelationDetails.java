@@ -22,7 +22,7 @@ import org.apache.uima.cas.FeatureStructure;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 
 @JsonInclude(Include.NON_NULL)
 public class RelationDetails
@@ -40,7 +40,7 @@ public class RelationDetails
     public RelationDetails(FeatureStructure aFS, AnnotationDetails aSource,
             AnnotationDetails aTarget)
     {
-        addr = WebAnnoCasUtil.getAddr(aFS);
+        addr = ICasUtil.getAddr(aFS);
         type = aFS.getType().getName();
         source = aSource;
         target = aTarget;

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.multistring;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCasFromPath;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -41,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
@@ -85,8 +85,8 @@ public class MultiValueStringFeatureSupportTest
         when(schemaService.existsTag(values.get(0), valueTagset)).thenReturn(false);
 
         assertThatExceptionOfType(IllegalFeatureValueException.class) //
-                .isThrownBy(() -> sut.setFeatureValue(jcas.getCas(), valueFeature, getAddr(spanFS),
-                        values))
+                .isThrownBy(() -> sut.setFeatureValue(jcas.getCas(), valueFeature,
+                        ICasUtil.getAddr(spanFS), values))
                 .withMessageContaining("is not in the tag list");
     }
 
@@ -100,7 +100,7 @@ public class MultiValueStringFeatureSupportTest
 
         when(schemaService.existsTag(values.get(0), valueTagset)).thenReturn(false);
 
-        sut.setFeatureValue(jcas.getCas(), valueFeature, getAddr(spanFS), values);
+        sut.setFeatureValue(jcas.getCas(), valueFeature, ICasUtil.getAddr(spanFS), values);
 
         verify(schemaService).createTag(new Tag(valueTagset, values.get(0)));
     }

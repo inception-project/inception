@@ -37,7 +37,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -45,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -267,7 +267,7 @@ public class LinkFeatureSupport
             for (FeatureStructure link : array.toArray()) {
                 LinkWithRoleModel m = new LinkWithRoleModel();
                 m.role = link.getStringValue(roleFeat);
-                m.targetAddr = WebAnnoCasUtil.getAddr(link.getFeatureValue(targetFeat));
+                m.targetAddr = ICasUtil.getAddr(link.getFeatureValue(targetFeat));
                 m.label = ((AnnotationFS) link.getFeatureValue(targetFeat)).getCoveredText();
                 links.add(m);
             }

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -77,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.misc.ReorderableTagAutoCompleteField;
@@ -192,7 +192,7 @@ public class LinkFeatureEditor
                     return "";
                 }
 
-                FeatureStructure fs = selectFsByAddr(cas, aModel.targetAddr);
+                FeatureStructure fs = ICasUtil.selectFsByAddr(cas, aModel.targetAddr);
                 AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
 
                 if (!traits.isEnableRoleLabels()) {

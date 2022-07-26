@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb.factlinking.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.kb.factlinking.feature.FactLinkingConstants.LINKED_LAYER_FEATURE;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
@@ -62,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.annotation.feature.string.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 
 @Deprecated
@@ -306,8 +307,8 @@ public class SubjectObjectFeatureEditor
         if (roleLabelIsFilled()) {
             try {
                 CAS cas = actionHandler.getEditorCas();
-                FeatureStructure selectedFS = selectFsByAddr(cas, roleModel.targetAddr);
-                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
+                FeatureStructure selectedFS = ICasUtil.selectFsByAddr(cas, roleModel.targetAddr);
+                FeatureUtil.setFeature(selectedFS, linkedAnnotationFeature,
                         value != null ? value.getIdentifier() : value);
             }
             catch (Exception e) {
@@ -325,7 +326,7 @@ public class SubjectObjectFeatureEditor
 
             try {
                 CAS cas = actionHandler.getEditorCas();
-                FeatureStructure selectedFS = selectFsByAddr(cas, roleModel.targetAddr);
+                FeatureStructure selectedFS = ICasUtil.selectFsByAddr(cas, roleModel.targetAddr);
                 selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
                         linkedAnnotationFeature.getName());
             }

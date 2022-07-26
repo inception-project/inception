@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.schema.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,7 +32,7 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 
 public class FeatureUtil
 {
@@ -147,7 +147,7 @@ public class FeatureUtil
             List<FeatureStructure> linkFSes)
     {
         // Create a new array if size differs otherwise re-use existing one
-        ArrayFS array = (ArrayFS) JCasClassUtil.getFeatureFS(aFS, aFeature.getShortName());
+        ArrayFS array = (ArrayFS) ICasUtil.getFeatureFS(aFS, aFeature.getShortName());
         if (array == null || (array.size() != linkFSes.size())) {
             array = aFS.getCAS().createArrayFS(linkFSes.size());
         }

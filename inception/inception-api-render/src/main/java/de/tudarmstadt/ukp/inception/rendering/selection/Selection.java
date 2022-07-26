@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.rendering.selection;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;

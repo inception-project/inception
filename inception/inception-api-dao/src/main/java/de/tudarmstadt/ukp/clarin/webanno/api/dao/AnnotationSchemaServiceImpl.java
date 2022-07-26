@@ -18,12 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.withProjectLogger;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.INCOMING;
 import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.LOOP;
 import static de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction.OUTGOING;
@@ -92,12 +93,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.ImmutableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ReorderableTag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.ChainAdapter;
@@ -1457,7 +1458,7 @@ public class AnnotationSchemaServiceImpl
                     StringBuilder message = new StringBuilder();
 
                     message.append("Relation [" + relationAdapter.getLayer().getName()
-                            + "] with id [" + getAddr(relationFS)
+                            + "] with id [" + ICasUtil.getAddr(relationFS)
                             + "] has loose ends - cannot identify attached annotations.");
                     if (relationAdapter.getAttachFeatureName() != null) {
                         message.append("\nRelation [" + relationAdapter.getLayer().getName()
@@ -1499,12 +1500,12 @@ public class AnnotationSchemaServiceImpl
         TypeAdapter adapter = getAdapter(aLayer);
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFeature linkFeature : listAttachedLinkFeatures(aLayer)) {
-                if (MultiValueMode.ARRAY.equals(linkFeature.getMultiValueMode())
-                        && LinkMode.WITH_ROLE.equals(linkFeature.getLinkMode())) {
+                if (linkFeature.getMultiValueMode() == ARRAY
+                        && linkFeature.getLinkMode() == WITH_ROLE) {
                     // Fetch slot hosts that could link to the current FS and check if any of
                     // them actually links to the current FS
                     Type linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
-                    for (FeatureStructure linkFS : CasUtil.selectFS(cas, linkHost)) {
+                    for (FeatureStructure linkFS : cas.select(linkHost)) {
                         if (!(linkFS instanceof AnnotationFS)) {
                             continue;
                         }

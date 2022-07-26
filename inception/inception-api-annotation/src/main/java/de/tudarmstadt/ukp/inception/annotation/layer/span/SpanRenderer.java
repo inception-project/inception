@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
 import static java.util.Collections.emptyList;
@@ -39,6 +38,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -175,7 +175,8 @@ public class SpanRenderer
                 List<LinkWithRoleModel> links = typeAdapter.getFeatureValue(feat, aFS);
                 for (int li = 0; li < links.size(); li++) {
                     LinkWithRoleModel link = links.get(li);
-                    FeatureStructure targetFS = selectFsByAddr(aFS.getCAS(), link.targetAddr);
+                    FeatureStructure targetFS = ICasUtil.selectFsByAddr(aFS.getCAS(),
+                            link.targetAddr);
                     aSpansAndSlots.add(new VArc(typeAdapter.getLayer(), new VID(aFS, fi, li),
                             uiTypeName, aFS, targetFS, link.role));
                 }

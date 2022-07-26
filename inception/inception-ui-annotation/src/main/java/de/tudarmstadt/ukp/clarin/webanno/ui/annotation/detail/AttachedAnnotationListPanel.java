@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.rendering.vmodel.VID.NONE;
@@ -54,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -139,7 +139,8 @@ public class AttachedAnnotationListPanel
             return Collections.emptyList();
         }
 
-        AnnotationFS annoFs = selectAnnotationByAddr(cas, selection.getAnnotation().getId());
+        AnnotationFS annoFs = ICasUtil.selectAnnotationByAddr(cas,
+                selection.getAnnotation().getId());
         VID localVid = new VID(annoFs);
 
         List<AttachedAnnotation> attachedAnnotations = new ArrayList<>();

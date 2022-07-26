@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
 import static java.lang.String.format;
 import static java.lang.invoke.MethodHandles.lookup;

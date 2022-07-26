@@ -39,9 +39,9 @@ import org.apache.wicket.model.IModel;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.kb.factlinking.config.FactLinkingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -204,7 +204,7 @@ public class SubjectObjectFeatureSupport
             for (FeatureStructure link : array.toArray()) {
                 LinkWithRoleModel m = new LinkWithRoleModel();
                 m.role = link.getStringValue(roleFeat);
-                m.targetAddr = WebAnnoCasUtil.getAddr(link.getFeatureValue(targetFeat));
+                m.targetAddr = ICasUtil.getAddr(link.getFeatureValue(targetFeat));
                 m.label = ((AnnotationFS) link.getFeatureValue(targetFeat)).getCoveredText();
                 links.add(m);
             }

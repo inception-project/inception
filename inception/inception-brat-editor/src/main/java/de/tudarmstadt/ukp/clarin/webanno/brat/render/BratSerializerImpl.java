@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection.RTL;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -54,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.SentenceMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.TextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.TrimUtils;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
@@ -209,9 +209,9 @@ public class BratSerializerImpl
             }
 
             AnnotationFS fs;
-            if (!vcomment.getVid().isSynthetic()
-                    && ((fs = selectAnnotationByAddr(cas, vcomment.getVid().getId())) != null
-                            && fs.getType().getName().equals(Sentence.class.getName()))) {
+            if (!vcomment.getVid().isSynthetic() && ((fs = ICasUtil.selectAnnotationByAddr(cas,
+                    vcomment.getVid().getId())) != null
+                    && fs.getType().getName().equals(Sentence.class.getName()))) {
                 // Lazily fetching the sentences because we only need them for the comments
                 if (sentenceIndexes == null) {
                     sentenceIndexes = new HashMap<>();

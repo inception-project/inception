@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCasFromPath;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 
@@ -141,8 +141,9 @@ public class LinkFeatureSupportTest
         when(schemaService.existsTag(role, slotFeatureTagset)).thenReturn(false);
 
         assertThatExceptionOfType(IllegalArgumentException.class)
-                .isThrownBy(() -> sut.setFeatureValue(jcas.getCas(), slotFeature, getAddr(hostFS),
-                        asList(new LinkWithRoleModel(role, "dummy", getAddr(targetFS)))))
+                .isThrownBy(() -> sut.setFeatureValue(jcas.getCas(), slotFeature,
+                        ICasUtil.getAddr(hostFS),
+                        asList(new LinkWithRoleModel(role, "dummy", ICasUtil.getAddr(targetFS)))))
                 .withMessageContaining("is not in the tag list");
     }
 
@@ -163,8 +164,8 @@ public class LinkFeatureSupportTest
 
         when(schemaService.existsTag(role, slotFeatureTagset)).thenReturn(false);
 
-        sut.setFeatureValue(jcas.getCas(), slotFeature, getAddr(hostFS),
-                asList(new LinkWithRoleModel(role, "dummy", getAddr(targetFS))));
+        sut.setFeatureValue(jcas.getCas(), slotFeature, ICasUtil.getAddr(hostFS),
+                asList(new LinkWithRoleModel(role, "dummy", ICasUtil.getAddr(targetFS))));
 
         verify(schemaService).createTag(new Tag(slotFeatureTagset, role));
     }

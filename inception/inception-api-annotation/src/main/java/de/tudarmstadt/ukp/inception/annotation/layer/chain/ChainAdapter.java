@@ -40,18 +40,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.annotation.layer.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.CreateSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationComparator;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
@@ -221,7 +222,7 @@ public class ChainAdapter
                 nextLink));
 
         // We do not actually create a new FS for the arc. Features are set on the originFS.
-        return WebAnnoCasUtil.getAddr(aOriginFs);
+        return ICasUtil.getAddr(aOriginFs);
     }
 
     @Override
@@ -237,7 +238,7 @@ public class ChainAdapter
 
     private void deleteLink(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress)
     {
-        AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, aAddress);
+        AnnotationFS linkToDelete = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aAddress);
 
         // Create the tail chain
         // We know that there must be a next link, otherwise no arc would have been rendered!
@@ -255,7 +256,7 @@ public class ChainAdapter
     {
         Type chainType = CasUtil.getType(aCas, getChainTypeName());
 
-        AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, aAddress);
+        AnnotationFS linkToDelete = ICasUtil.selectByAddr(aCas, AnnotationFS.class, aAddress);
 
         // case 1 "removing first link": we keep the existing chain head and just remove the
         // first element

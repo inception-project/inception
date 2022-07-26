@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter.decodeTypeName;
 
 import java.io.IOException;
@@ -39,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -107,7 +107,7 @@ public class CustomActionHandler
         CAS cas = ((AnnotationPageBase) aTarget.getPage()).getEditorCas();
         // parse the action
         List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
-        AnnotationFS anno = selectAnnotationByAddr(cas, paramId.getId());
+        AnnotationFS anno = ICasUtil.selectAnnotationByAddr(cas, paramId.getId());
         Map<String, Object> functionParams = parse(layer, features, state.getDocument(), anno);
         // define anonymous function, fill the body and immediately execute
         String js = String.format("(function ($PARAM){ %s })(%s)",

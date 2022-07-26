@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.layer;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.uima.JCasClassUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 
 import java.util.Collection;
 import java.util.HashMap;
