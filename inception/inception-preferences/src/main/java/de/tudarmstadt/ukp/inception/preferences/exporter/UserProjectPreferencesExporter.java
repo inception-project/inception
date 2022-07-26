@@ -108,6 +108,7 @@ public class UserProjectPreferencesExporter
             }
 
             UserProjectPreference userPreference = new UserProjectPreference();
+            userPreference.setProject(aProject);
             userPreference.setUser(user);
             userPreference.setName(exportedDefaultPreference.getName());
             userPreference.setTraits(exportedDefaultPreference.getTraits());
