@@ -42,6 +42,6 @@ public class SchedulingProperties
 
     public void setQueueSize(int aQueueSize)
     {
-        queueSize = queueSize;
+        queueSize = aQueueSize;
     }
 }

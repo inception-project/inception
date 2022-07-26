@@ -37,7 +37,7 @@ public class ProjectImportRequest
 
     private final boolean createMissingUsers;
     private final boolean importPermissions;
-    private final Optional<User> manager;
+    private final User manager;
 
     /**
      * Request the import of a project, optionally creating any users referenced in the project but
@@ -47,18 +47,18 @@ public class ProjectImportRequest
     {
         createMissingUsers = aCreateMissingUsers;
         importPermissions = true;
-        manager = Optional.empty();
+        manager = null;
     }
 
     public ProjectImportRequest(boolean aCreateMissingUsers, boolean aImportPermissions)
     {
         createMissingUsers = aCreateMissingUsers;
         importPermissions = aImportPermissions;
-        manager = Optional.empty();
+        manager = null;
     }
 
     public ProjectImportRequest(boolean aCreateMissingUsers, boolean aImportPermissions,
-            Optional<User> aManager)
+            User aManager)
     {
         createMissingUsers = aCreateMissingUsers;
         importPermissions = aImportPermissions;
@@ -90,6 +90,6 @@ public class ProjectImportRequest
 
     public Optional<User> getManager()
     {
-        return manager;
+        return Optional.ofNullable(manager);
     }
 }

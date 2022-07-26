@@ -56,7 +56,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.uima.AnnotationBuilder;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -285,9 +284,6 @@ public class AgreementMeasureTestSuite_ImplBase
         throws Exception
     {
         TagSet tagset = new TagSet(project, "tagset");
-        Tag tag1 = new Tag(tagset, "+");
-        Tag tag2 = new Tag(tagset, "-");
-        // when(annotationService.listTags(tagset)).thenReturn(asList(tag1, tag2));
 
         AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
                 SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
@@ -321,9 +317,6 @@ public class AgreementMeasureTestSuite_ImplBase
     R twoDocumentsNoOverlap(AgreementMeasureSupport<T, R, S> aSupport, T aTraits) throws Exception
     {
         TagSet tagset = new TagSet(project, "tagset");
-        Tag tag1 = new Tag(tagset, "+");
-        Tag tag2 = new Tag(tagset, "-");
-        // when(annotationService.listTags(tagset)).thenReturn(asList(tag1, tag2));
 
         AnnotationLayer layer = new AnnotationLayer(POS.class.getName(), POS.class.getSimpleName(),
                 SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);

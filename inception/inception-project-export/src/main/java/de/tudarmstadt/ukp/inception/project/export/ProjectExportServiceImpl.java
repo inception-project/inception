@@ -355,6 +355,10 @@ public class ProjectExportServiceImpl
             }
         }
 
+        if (projectSettingsEntry == null) {
+            throw new IOException("Unable to locate JSON file describing the project");
+        }
+
         // Load the project model from the JSON file
         String text;
         try (InputStream is = aZip.getInputStream(projectSettingsEntry)) {

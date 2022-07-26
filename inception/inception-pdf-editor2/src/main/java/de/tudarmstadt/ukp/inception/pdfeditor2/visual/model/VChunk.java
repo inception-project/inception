@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor2.visual.model;
 
+import java.io.Serializable;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -30,7 +31,10 @@ import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 @JsonSerialize(using = BeanAsArraySerializer.class)
 @JsonPropertyOrder(value = { "dir", "x", "y", "w", "h", "glyphs" })
 public class VChunk
+    implements Serializable
 {
+    private static final long serialVersionUID = 4919070694537670645L;
+
     private final List<VGlyph> glyphs;
     private final float dir;
     private final float x;

@@ -37,6 +37,8 @@ import org.junit.jupiter.api.Test;
 
 public class SpanOverlapBehaviorTest
 {
+    Random rnd = new Random();
+
     @Test
     public void thatOverlappingOrStackingSpansWorks() throws Exception
     {
@@ -122,7 +124,6 @@ public class SpanOverlapBehaviorTest
     {
         CAS cas = CasFactory.createCas();
 
-        Random rnd = new Random();
         for (int i = 0; i < 1000; i++) {
             int begin = rnd.nextInt(10000);
             int end = begin + rnd.nextInt(100);

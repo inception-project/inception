@@ -21,7 +21,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -32,8 +31,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 public class StatisticsResult
     implements Serializable
 {
-    private final OptionalInt minTokenPerDoc;
-    private final OptionalInt maxTokenPerDoc;
+    private static final long serialVersionUID = 8500724321700472414L;
+
+    private final int minTokenPerDoc;
+    private final int maxTokenPerDoc;
     private final User user;
     private final Project project;
     private final String query;
@@ -127,12 +128,12 @@ public class StatisticsResult
         return user;
     }
 
-    public OptionalInt getMaxTokenPerDoc()
+    public int getMaxTokenPerDoc()
     {
         return maxTokenPerDoc;
     }
 
-    public OptionalInt getMinTokenPerDoc()
+    public int getMinTokenPerDoc()
     {
         return minTokenPerDoc;
     }

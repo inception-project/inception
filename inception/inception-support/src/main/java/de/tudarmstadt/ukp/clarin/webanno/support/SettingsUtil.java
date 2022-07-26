@@ -200,10 +200,10 @@ public class SettingsUtil
      *             de.tudarmstadt.ukp.clarin.webanno.ui.core.users.RemoteApiProperties).
      */
     @Deprecated
-    public static Properties getSettings()
+    public static synchronized Properties getSettings()
     {
         if (settings == null) {
-            settings = new Properties();
+            var props = new Properties();
             File settingsFile = getSettingsFile();
             if (settingsFile != null) {
                 try (InputStream in = new FileInputStream(settingsFile)) {
@@ -214,6 +214,7 @@ public class SettingsUtil
                             .error("Unable to load settings file [" + settings + "]", e);
                 }
             }
+            settings = props;
         }
         return settings;
     }

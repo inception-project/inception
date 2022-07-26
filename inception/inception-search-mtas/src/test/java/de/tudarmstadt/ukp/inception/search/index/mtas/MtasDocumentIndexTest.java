@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -644,8 +643,8 @@ public class MtasDocumentIndexTest
         uploadDocument(Pair.of(otherDocument, otherContent));
 
         // Define input for the statistics methods
-        OptionalInt minTokenPerDoc = OptionalInt.empty();
-        OptionalInt maxTokenPerDoc = OptionalInt.empty();
+        int minTokenPerDoc = Integer.MIN_VALUE;
+        int maxTokenPerDoc = Integer.MAX_VALUE;
 
         AnnotationLayer ne = new AnnotationLayer();
         ne.setUiName("Named entity");
