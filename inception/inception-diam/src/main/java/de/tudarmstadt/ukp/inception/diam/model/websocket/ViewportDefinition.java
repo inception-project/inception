@@ -107,8 +107,8 @@ public class ViewportDefinition
         properties.setProperty(WebSocketConstants.PARAM_USER, user);
         properties.setProperty(DiamWebsocketController.PARAM_FROM, String.valueOf(begin));
         properties.setProperty(DiamWebsocketController.PARAM_TO, String.valueOf(end));
-        return DiamWebsocketController.PLACEHOLDER_RESOLVER
-                .replacePlaceholders(DiamWebsocketController.DOCUMENT_VIEWPORT_TOPIC_TEMPLATE, properties);
+        return DiamWebsocketController.PLACEHOLDER_RESOLVER.replacePlaceholders(
+                DiamWebsocketController.DOCUMENT_VIEWPORT_TOPIC_TEMPLATE, properties);
     }
 
     @Override

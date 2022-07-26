@@ -35,20 +35,20 @@ public class IntertextReader
     public void getNext(JCas aJCas) throws IOException, CollectionException
     {
         super.getNext(aJCas);
-        
+
         aJCas.select(XmlElement.class) //
-            .filter(e -> "div".equals(e.getQName()))
-            .filter(e -> hasAttributeWithValue(e, "class", "s"))
-            .forEach(e -> createSentence(e));
+                .filter(e -> "div".equals(e.getQName()))
+                .filter(e -> hasAttributeWithValue(e, "class", "s"))
+                .forEach(e -> createSentence(e));
     }
 
     private void createSentence(XmlElement aElement)
     {
         var sentence = new Sentence(aElement.getJCas(), aElement.getBegin(), aElement.getEnd());
         sentence.trim();
-        
+
         getAttributeValue(aElement, "data-it-id").ifPresent(sentence::setId);
-        
+
         sentence.addToIndexes();
     }
 
@@ -60,11 +60,11 @@ public class IntertextReader
     private Optional<String> getAttributeValue(XmlElement aElement, String aString)
     {
         var attributes = aElement.getAttributes();
-        
+
         if (attributes == null) {
             return Optional.empty();
         }
-        
+
         return attributes.select(XmlAttribute.class) //
                 .filter(a -> aString.equals(a.getQName())) //
                 .findFirst() //

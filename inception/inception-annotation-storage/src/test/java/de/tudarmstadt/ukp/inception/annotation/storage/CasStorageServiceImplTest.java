@@ -112,8 +112,8 @@ public class CasStorageServiceImplTest
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        driver = new FileSystemCasStorageDriver(repositoryProperties, new CasStorageBackupProperties(),
-                new CasStoragePropertiesImpl());
+        driver = new FileSystemCasStorageDriver(repositoryProperties,
+                new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
         sut = new CasStorageServiceImpl(driver, null, null, new CasStorageCachePropertiesImpl());
     }

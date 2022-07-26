@@ -112,7 +112,7 @@ public class FeatureUtil
                     + aFeature.getMultiValueMode() + "] on feature [" + aFeature.getName() + "]");
         }
     }
-    
+
     private static void setLinkFeature(FeatureStructure aFS, AnnotationFeature aFeature,
             List<LinkWithRoleModel> aValue, Feature feature)
     {
@@ -142,12 +142,12 @@ public class FeatureUtil
         setLinkFeatureValue(aFS, feature, linkFSes);
 
     }
-    
+
     public static void setLinkFeatureValue(FeatureStructure aFS, Feature aFeature,
             List<FeatureStructure> linkFSes)
     {
         // Create a new array if size differs otherwise re-use existing one
-        ArrayFS array =  (ArrayFS) JCasClassUtil.getFeatureFS(aFS, aFeature.getShortName());
+        ArrayFS array = (ArrayFS) JCasClassUtil.getFeatureFS(aFS, aFeature.getShortName());
         if (array == null || (array.size() != linkFSes.size())) {
             array = aFS.getCAS().createArrayFS(linkFSes.size());
         }

@@ -60,6 +60,7 @@ public class CasStorageServiceAutoConfiguration
             CasStorageServiceImpl aCasStorageService,
             CasStorageCacheProperties aCasStorageProperties)
     {
-        return new CasStorageServiceSharedAccessCacheAdapter(aCasStorageService, aCasStorageProperties);
+        return new CasStorageServiceSharedAccessCacheAdapter(aCasStorageService,
+                aCasStorageProperties);
     }
 }

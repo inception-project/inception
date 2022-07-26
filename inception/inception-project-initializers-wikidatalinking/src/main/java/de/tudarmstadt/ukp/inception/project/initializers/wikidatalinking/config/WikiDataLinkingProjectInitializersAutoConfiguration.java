@@ -36,9 +36,9 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringM
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @AutoConfigureAfter({ //
-    KnowledgeBaseServiceAutoConfiguration.class, //
-    RecommenderServiceAutoConfiguration.class, //
-    StringMatchingRecommenderAutoConfiguration.class })
+        KnowledgeBaseServiceAutoConfiguration.class, //
+        RecommenderServiceAutoConfiguration.class, //
+        StringMatchingRecommenderAutoConfiguration.class })
 @Configuration
 public class WikiDataLinkingProjectInitializersAutoConfiguration
 {

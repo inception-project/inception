@@ -90,8 +90,8 @@ public class AnnotationDocumentsExporterTest
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(workFolder);
 
-        driver = new FileSystemCasStorageDriver(repositoryProperties, new CasStorageBackupProperties(),
-                new CasStoragePropertiesImpl());
+        driver = new FileSystemCasStorageDriver(repositoryProperties,
+                new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
         casStorageService = new CasStorageServiceImpl(driver, null, schemaService,
                 new CasStorageCachePropertiesImpl());

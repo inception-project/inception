@@ -115,15 +115,15 @@ public interface TypeAdapter
      */
     void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid);
 
-//    /**
-//     * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
-//     *             {@link #delete(SourceDocument, String, CAS, VID)} instead.
-//     */
-//    @Deprecated
-//    default void delete(AnnotatorState aState, CAS aCas, VID aVid)
-//    {
-//        delete(aState.getDocument(), aState.getUser().getUsername(), aCas, aVid);
-//    }
+    // /**
+    // * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
+    // * {@link #delete(SourceDocument, String, CAS, VID)} instead.
+    // */
+    // @Deprecated
+    // default void delete(AnnotatorState aState, CAS aCas, VID aVid)
+    // {
+    // delete(aState.getDocument(), aState.getUser().getUsername(), aCas, aVid);
+    // }
 
     /**
      * @return the layer for which this adapter has been created.
@@ -157,18 +157,18 @@ public interface TypeAdapter
             AnnotationFeature aFeature, Object aValue)
         throws AnnotationException;
 
-//    /**
-//     * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
-//     *             {@link #setFeatureValue(SourceDocument, String, CAS, int, AnnotationFeature, Object)}.
-//     */
-//    @Deprecated
-//    default void setFeatureValue(AnnotatorState aState, CAS aCas, int aAddress,
-//            AnnotationFeature aFeature, Object aValue)
-//        throws AnnotationException
-//    {
-//        setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aCas, aAddress,
-//                aFeature, aValue);
-//    }
+    // /**
+    // * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
+    // * {@link #setFeatureValue(SourceDocument, String, CAS, int, AnnotationFeature, Object)}.
+    // */
+    // @Deprecated
+    // default void setFeatureValue(AnnotatorState aState, CAS aCas, int aAddress,
+    // AnnotationFeature aFeature, Object aValue)
+    // throws AnnotationException
+    // {
+    // setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aCas, aAddress,
+    // aFeature, aValue);
+    // }
 
     /**
      * Get the value of the given feature.
