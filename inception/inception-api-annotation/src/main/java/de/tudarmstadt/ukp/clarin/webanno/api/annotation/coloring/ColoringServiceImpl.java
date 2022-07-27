@@ -55,7 +55,7 @@ import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 
 /**
  * <p>
