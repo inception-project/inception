@@ -33,7 +33,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 @Configuration
 @AutoConfigureAfter(name = {
         "de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration",
-        "de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration",
+        "de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration",
         "de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration" })
 @ConditionalOnBean({ CasStorageService.class, AnnotationSchemaService.class, ProjectService.class })
 public class CurationDocumentServiceAutoConfiguration
