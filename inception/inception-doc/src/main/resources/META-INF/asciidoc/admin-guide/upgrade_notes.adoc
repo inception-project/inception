@@ -22,6 +22,36 @@ NOTE: It is a good idea to back up your installation and data before an upgrade.
 
 == INCEpTION 24.0
 
+=== PDF editor
+
+This version includes a new PDF editor and a new PDF format. The old PDF editor and PDF format 
+still exist, but have been renamed to *PDF (legacy)*. When starting new projects, these old formats
+should no longer be used as they have known and unfixable bugs. The new PDF format that is simply
+called *PDF* is much more robust.
+
+=== Compression
+
+This version has the ability to compress CAS files on disk. This feature is turned on by default.
+If you experience problems and have the feeling that they might be caused by the compression feature,
+you can turn it off by adding `cas-storage.compressed-cas-serialization=false` to the `settings.properties`.
+The compression typically reduces the size of the CAS file down to around 60% of its actual size.
+
+The compression algorithm being used is link:https://github.com/xerial/snappy-java[Snappy].
+On many platforms, a native implementation is used automatically. If no native implementation is
+available, a pure-java implementation is used. Due to the reduced size, saving a CAS will take
+consume less I/O bandwidth which typically the overall time required to persist a CAS to storage
+despite the additional overhead of compression.
+
+The compression setting takes effect whenever a CAS is written to disk. Changing it does not 
+immediately (de)compress existing CAS files. Instead, they will be slowly converted to being
+(de)compressed over time as they are updated by the system as part of normal operations.
+
+Decompressing CAS files is supported starting with INCEpTION 23.9. If you have compressed
+CAS files, you cannot downgrade to an older version than 23.9. Also, you cannot import projects
+containing compressed CAS files into versions older than 23.9.
+
+=== Full-text indices 
+
 This version includes a new version of Apache Lucene which is used for maintaining the full text
 indices used for searching in knowledge bases and also used by the annotation search sidebar.
 
