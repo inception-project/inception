@@ -31,7 +31,7 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 public class CasStoragePropertiesImpl
     implements CasStorageProperties
 {
-    private boolean compressedCasSerialization = false;
+    private boolean compressedCasSerialization = true;
     private boolean paranoidCasSerialization = false;
     private boolean traceAccess = false;
 

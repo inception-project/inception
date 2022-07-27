@@ -28,11 +28,15 @@ This section describes settings related to the storage of CAS data objects (i.e.
 
 | cas-storage.compressed-cas-serialization
 | Whether to compress annotation files
-| false
 | true
+| false
 |===
 
-= CAS cache
+The compression setting takes effect whenever a CAS is written to disk. Changing it does not 
+immediately (de)compress existing CAS files. Instead, they will be slowly converted to being
+(de)compressed over time as they are updated by the system as part of normal operations.
+
+== CAS cache
 
 To speed up interactions, {product-name} keeps a cache annotation data in memory. 
 This cache can be tuned using the following properties:
