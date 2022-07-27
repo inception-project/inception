@@ -85,9 +85,9 @@ import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfigur
 import de.tudarmstadt.ukp.inception.project.export.config.ProjectExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.project.export.model.MProjectExportStateUpdate;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
