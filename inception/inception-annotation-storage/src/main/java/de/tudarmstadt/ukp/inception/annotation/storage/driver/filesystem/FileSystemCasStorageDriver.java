@@ -74,9 +74,6 @@ public class FileSystemCasStorageDriver
     public static final String SER_CAS_EXTENSION = ".ser";
     public static final String OLD_EXTENSION = ".old";
 
-    private static final SimpleDateFormat TIMESTAMP_FORMATTER = new SimpleDateFormat(
-            "yyyy-MM-dd HH:mm:ss.SSS");
-
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final RepositoryProperties repositoryProperties;
@@ -264,7 +261,7 @@ public class FileSystemCasStorageDriver
             log.debug("Updated annotations for user [{}] on document {} in project {} " //
                     + "{} bytes in {}ms (file timestamp: {}, compression: {})", aUserName,
                     aDocument, aDocument.getProject(), currentVersion.length(), duration,
-                    TIMESTAMP_FORMATTER.format(lastModified),
+                    formatTimestamp(lastModified),
                     casStorageProperties.isCompressedCasSerialization());
         }
 
@@ -470,7 +467,7 @@ public class FileSystemCasStorageDriver
                 if (meta.lastWriteSuccessTrace != null) {
                     lastWriteMsg.append("\n");
                     lastWriteMsg.append("Last known successful write was at ");
-                    lastWriteMsg.append(TIMESTAMP_FORMATTER.format(meta.lastWriteSuccessTimestamp));
+                    lastWriteMsg.append(formatTimestamp(meta.lastWriteSuccessTimestamp));
                     lastWriteMsg.append("by:\n");
                     for (StackTraceElement e : meta.lastWriteSuccessTrace) {
                         lastWriteMsg.append("    ");
@@ -482,9 +479,9 @@ public class FileSystemCasStorageDriver
             throw new ConcurentCasModificationException("While " + aContextAction
                     + ", the file system CAS storage detected a concurrent modification to the annotation CAS for user ["
                     + aUser + "] in document " + aDocument + " or project " + aDocument.getProject()
-                    + " (expected: " + TIMESTAMP_FORMATTER.format(aExpectedTimeStamp)
-                    + " actual on storage: " + TIMESTAMP_FORMATTER.format(diskLastModified)
-                    + ", delta: " + formatDurationHMS(diskLastModified - aExpectedTimeStamp) + ")"
+                    + " (expected: " + formatTimestamp(aExpectedTimeStamp) + " actual on storage: "
+                    + formatTimestamp(diskLastModified) + ", delta: "
+                    + formatDurationHMS(diskLastModified - aExpectedTimeStamp) + ")"
                     + lastWriteMsg);
 
         }
@@ -522,6 +519,11 @@ public class FileSystemCasStorageDriver
         TOP cmd = cmds.get(0);
         long lastKnownUpdate = FSUtil.getFeature(cmd, "lastChangedOnDisk", Long.class);
         verifyCasTimestamp(aDocument, aUsername, lastKnownUpdate, aContextAction);
+    }
+
+    private static String formatTimestamp(long aTime)
+    {
+        return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(aTime);
     }
 
     private static class InternalMetadata

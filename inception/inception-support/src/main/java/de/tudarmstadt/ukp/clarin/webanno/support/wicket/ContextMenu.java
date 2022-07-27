@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.support.wicket;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
-import static java.lang.Math.round;
 import static java.lang.String.format;
 import static java.util.Locale.ROOT;
 
@@ -56,7 +55,7 @@ public class ContextMenu
         target.add(this);
         target.appendJavaScript(wrapInTryCatch(format(ROOT,
                 "jQuery('%s').show().css({position:'fixed', left:'%dpx', top:'%dpx'});",
-                JQueryWidget.getSelector(this), round(clientX), round(clientY))));
+                JQueryWidget.getSelector(this), clientX, clientY)));
     }
 
     /**

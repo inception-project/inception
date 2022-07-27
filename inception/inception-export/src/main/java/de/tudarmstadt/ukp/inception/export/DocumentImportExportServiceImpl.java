@@ -234,7 +234,7 @@ public class DocumentImportExportServiceImpl
             try (CasStorageSession session = CasStorageSession.openNested()) {
                 CAS cas = casStorageService.readCas(aDocument, username);
                 exportFile = exportCasToFile(cas, aDocument, aFileName, aFormat, aStripExtension,
-                        aBulkOperationContext);
+                        bulkOperationContext);
             }
 
             log.info("Exported annotations {} for user [{}] from project {} " + "using format [{}]",

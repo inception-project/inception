@@ -247,7 +247,7 @@ public class MultiValueConceptFeatureSupport
 
             for (Object item : (List<?>) aValue) {
                 if (item instanceof KBHandle) {
-                    wrapped.add((KBHandle) aValue);
+                    wrapped.add((KBHandle) item);
                     continue;
                 }
 

@@ -92,7 +92,7 @@ public class BooleanFeatureSupport
     public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
         if (aLabel == null) {
-            return renderFeatureValue(aFeature, aLabel);
+            return super.renderFeatureValue(aFeature, aLabel);
         }
 
         if ("true".equals(aLabel)) {

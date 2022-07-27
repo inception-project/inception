@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -247,12 +246,12 @@ public class StatisticsAnnotationSidebar
         }
 
         try {
-            withoutProblematicStats = hideNull
-                    ? searchService.getProjectStatistics(currentUser, projectModel.getObject(),
-                            OptionalInt.empty(), OptionalInt.empty(),
-                            new HashSet<AnnotationFeature>(features)).getNonZeroResults()
+            withoutProblematicStats = hideNull ? searchService
+                    .getProjectStatistics(currentUser, projectModel.getObject(), Integer.MIN_VALUE,
+                            Integer.MAX_VALUE, new HashSet<AnnotationFeature>(features))
+                    .getNonZeroResults()
                     : searchService.getProjectStatistics(currentUser, projectModel.getObject(),
-                            OptionalInt.empty(), OptionalInt.empty(),
+                            Integer.MIN_VALUE, Integer.MAX_VALUE,
                             new HashSet<AnnotationFeature>(features)).getResults();
 
         }

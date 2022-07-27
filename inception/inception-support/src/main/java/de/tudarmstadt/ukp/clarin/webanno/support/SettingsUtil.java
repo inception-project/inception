@@ -101,7 +101,7 @@ public class SettingsUtil
         return getGlobalLogFolder().map(dir -> dir.resolve("application.log"));
     }
 
-    public static Properties getVersionProperties()
+    public static synchronized Properties getVersionProperties()
     {
         if (versionInfo == null) {
             try {
@@ -200,20 +200,21 @@ public class SettingsUtil
      *             de.tudarmstadt.ukp.clarin.webanno.ui.core.users.RemoteApiProperties).
      */
     @Deprecated
-    public static Properties getSettings()
+    public static synchronized Properties getSettings()
     {
         if (settings == null) {
-            settings = new Properties();
+            var props = new Properties();
             File settingsFile = getSettingsFile();
             if (settingsFile != null) {
                 try (InputStream in = new FileInputStream(settingsFile)) {
-                    settings.load(in);
+                    props.load(in);
                 }
                 catch (IOException e) {
                     LoggerFactory.getLogger(SettingsUtil.class)
                             .error("Unable to load settings file [" + settings + "]", e);
                 }
             }
+            settings = props;
         }
         return settings;
     }

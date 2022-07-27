@@ -31,6 +31,8 @@ import org.junit.jupiter.api.Test;
 
 public class SourceDocumentStateStatsTest
 {
+    Random rnd = new Random();
+
     @Test
     public void testGetProjectState()
     {
@@ -89,8 +91,6 @@ public class SourceDocumentStateStatsTest
     public void testGetProjectStateIsDefinedRandom()
     {
         int limit = 100;
-
-        Random rnd = new Random();
 
         for (int i = 0; i < 10000; i++) {
             long an = rnd.nextInt(limit);

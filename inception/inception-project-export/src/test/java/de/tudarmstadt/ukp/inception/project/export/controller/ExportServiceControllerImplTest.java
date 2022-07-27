@@ -87,6 +87,7 @@ import de.tudarmstadt.ukp.inception.project.export.model.MProjectExportStateUpda
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketConfig;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
@@ -157,6 +158,7 @@ public class ExportServiceControllerImplTest
         entityManager.clear();
     }
 
+    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
     public void thatSubscriptionWithoutProjectPermissionIsRejected()
         throws InterruptedException, ExecutionException, TimeoutException

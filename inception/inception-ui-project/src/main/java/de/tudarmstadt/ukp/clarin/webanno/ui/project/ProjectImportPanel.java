@@ -31,7 +31,6 @@ import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
@@ -144,16 +143,16 @@ public class ProjectImportPanel
         // the admin wants to restore a project (maybe one exported from another instance) and in
         // that case we want to maintain the permissions the project originally had without adding
         // the admin as a manager.
-        Optional<User> manager = Optional.empty();
+        User manager = null;
         if (currentUserIsAdministrator) {
             if (!importPermissions) {
-                manager = Optional.of(currentUser);
+                manager = currentUser;
             }
         }
         // If the current user is NOT an admin but a project creator then we assume that the user is
         // importing the project for own use, so we add the user as a project manager.
         else if (currentUserIsProjectCreator) {
-            manager = Optional.of(currentUser);
+            manager = currentUser;
         }
 
         List<Project> importedProjects = new ArrayList<>();

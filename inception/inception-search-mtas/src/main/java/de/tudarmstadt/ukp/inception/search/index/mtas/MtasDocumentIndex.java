@@ -544,11 +544,11 @@ public class MtasDocumentIndex
 
         // Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
         // aStatisticRequest.getProject(), aStatisticRequest.getUser());
-        Double minToken = aStatisticRequest.getMinTokenPerDoc().isPresent()
-                ? (double) aStatisticRequest.getMinTokenPerDoc().getAsInt()
+        Double minToken = aStatisticRequest.getMinTokenPerDoc() != Integer.MIN_VALUE
+                ? (double) aStatisticRequest.getMinTokenPerDoc()
                 : null;
-        Double maxToken = aStatisticRequest.getMaxTokenPerDoc().isPresent()
-                ? (double) aStatisticRequest.getMaxTokenPerDoc().getAsInt()
+        Double maxToken = aStatisticRequest.getMaxTokenPerDoc() != Integer.MAX_VALUE
+                ? (double) aStatisticRequest.getMaxTokenPerDoc()
                 : null;
         try {
             searcher = getSearcherManager().acquire();
