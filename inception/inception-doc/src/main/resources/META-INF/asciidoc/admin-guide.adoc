@@ -80,7 +80,7 @@ include::{include-dir}settings_server.adoc[leveloffset=+1]
 
 include::{include-dir}settings_internal-backup.adoc[leveloffset=+1]
 
-include::{include-dir}settings_cas-storage_cache.adoc[leveloffset=+1]
+include::{include-dir}settings_cas-storage.adoc[leveloffset=+1]
 
 include::{include-dir}settings_document-import-export.adoc[leveloffset=+1]
 
