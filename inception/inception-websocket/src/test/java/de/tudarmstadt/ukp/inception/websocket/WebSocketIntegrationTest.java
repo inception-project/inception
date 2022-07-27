@@ -76,6 +76,7 @@ import de.tudarmstadt.ukp.inception.log.adapter.DocumentStateChangedEventAdapter
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.model.LoggedEventMessage;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
@@ -146,6 +147,7 @@ public class WebSocketIntegrationTest
         docService.createSourceDocument(testDoc);
     }
 
+    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
     public void thatRecentMessageIsReceived()
         throws InterruptedException, ExecutionException, TimeoutException

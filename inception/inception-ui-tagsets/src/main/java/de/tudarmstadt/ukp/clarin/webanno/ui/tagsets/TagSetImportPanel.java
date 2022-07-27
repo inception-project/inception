@@ -114,7 +114,7 @@ public class TagSetImportPanel
             error("Project not yet created, please save project details!");
             return;
         }
-        if (aForm.getModelObject().format.equals(JSON_FORMAT)) {
+        if (JSON_FORMAT.equals(aForm.getModelObject().format)) {
             for (FileUpload tagFile : uploadedFiles) {
                 InputStream tagInputStream;
                 try {
@@ -133,7 +133,7 @@ public class TagSetImportPanel
                 }
             }
         }
-        else if (aForm.getModelObject().format.equals(TAB_FORMAT)) {
+        else if (TAB_FORMAT.equals(aForm.getModelObject().format)) {
             for (FileUpload tagFile : uploadedFiles) {
                 InputStream tagInputStream;
                 try {

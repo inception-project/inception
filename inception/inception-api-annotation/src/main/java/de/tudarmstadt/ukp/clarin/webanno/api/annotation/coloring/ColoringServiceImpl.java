@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategyType;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ReadonlyColoringBehaviour;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * <p>
@@ -196,6 +197,7 @@ public class ColoringServiceImpl
         return false;
     }
 
+    @SuppressFBWarnings("ES_COMPARING_STRINGS_WITH_EQ")
     private String nextPaletteEntry(String[] aPalette, Map<String[], Queue<String>> aPaletteCursors,
             int aThreshold)
     {

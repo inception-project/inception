@@ -110,6 +110,7 @@ import de.tudarmstadt.ukp.inception.websocket.config.WebsocketAutoConfiguration;
 import de.tudarmstadt.ukp.inception.websocket.config.WebsocketSecurityConfig;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LambdaStompFrameHandler;
 import de.tudarmstadt.ukp.inception.websocket.config.stomp.LoggingStompSessionHandlerAdapter;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 @SpringBootTest( //
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, //
@@ -203,6 +204,7 @@ public class DiamWebsocketController_ViewportRoutingTest
         entityManager.clear();
     }
 
+    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED")
     @Test
     public void thatViewportBasedMessageRoutingWorks()
         throws InterruptedException, ExecutionException, TimeoutException

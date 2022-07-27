@@ -19,6 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.export.model;
 
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -357,48 +360,19 @@ public class ExportedAnnotationLayer
     }
 
     @Override
-    public int hashCode()
+    public boolean equals(final Object other)
     {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((projectName == null) ? 0 : projectName.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
-        return result;
+        if (!(other instanceof ExportedAnnotationLayer)) {
+            return false;
+        }
+        ExportedAnnotationLayer castOther = (ExportedAnnotationLayer) other;
+        return new EqualsBuilder().append(name, castOther.name).append(type, castOther.type)
+                .append(projectName, castOther.projectName).isEquals();
     }
 
     @Override
-    public boolean equals(Object obj)
+    public int hashCode()
     {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        ExportedAnnotationLayer other = (ExportedAnnotationLayer) obj;
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        }
-        else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (projectName != other.projectName) {
-            return false;
-        }
-        if (type == null) {
-            if (other.type != null) {
-                return false;
-            }
-        }
-        else if (!type.equals(other.type)) {
-            return false;
-        }
-        return true;
+        return new HashCodeBuilder().append(name).append(type).append(projectName).toHashCode();
     }
 }

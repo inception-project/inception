@@ -98,13 +98,13 @@ public class Monitor
             sb.append(perc);
             sb.append("%  ETA ");
             final long timeSoFar = getTotalDuration();
-            final long estTotal = round((timeSoFar / done) * todo);
-            final long timeLeft = round(estTotal - timeSoFar);
+            final long estTotal = (timeSoFar / done) * todo;
+            final long timeLeft = estTotal - timeSoFar;
             sb.append(milliToStringShort(timeLeft));
             sb.append("  RUN ");
             sb.append(milliToStringShort(timeSoFar));
             sb.append("  AVG ");
-            sb.append(round(timeSoFar / done));
+            sb.append(timeSoFar / done);
             sb.append("  LAST ");
             sb.append(lastDuration);
             sb.append(")");

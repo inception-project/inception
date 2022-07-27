@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
@@ -70,7 +71,7 @@ public class SpanAnchoringModeBehavior
         int[] adjustedRange = adjust(aRequest.getCas(), aAdapter.getLayer().getAnchoringMode(),
                 originalRange);
 
-        if (adjustedRange.equals(originalRange)) {
+        if (Arrays.equals(adjustedRange, originalRange)) {
             return aRequest;
         }
         else {

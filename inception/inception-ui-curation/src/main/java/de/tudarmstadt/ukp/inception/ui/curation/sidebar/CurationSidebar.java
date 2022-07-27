@@ -208,7 +208,7 @@ public class CurationSidebar
             // Optional<AjaxRequestTarget> target =
             // RequestCycle.get().find(AjaxRequestTarget.class);
             // getAnnotationPage().actionLoadDocument(target.orElseGet(null));
-            new RestartResponseException(getPage());
+            throw new RestartResponseException(getPage());
         }
     }
 

@@ -205,7 +205,7 @@ public class QualifierFeatureEditor
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
                 setVisible(!(state.isSlotArmed()
                         && QualifierFeatureEditor.this.getModelObject().feature
-                                .equals(state.getArmedFeature())));
+                                .equals(state.getArmedFeature().getFeature())));
                 // setEnabled(!(model.isSlotArmed()
                 // && aModel.feature.equals(model.getArmedFeature())));
             }
@@ -231,7 +231,7 @@ public class QualifierFeatureEditor
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
                 setVisible(
                         state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject().feature
-                                .equals(state.getArmedFeature()));
+                                .equals(state.getArmedFeature().getFeature()));
                 // setEnabled(model.isSlotArmed()
                 // && aModel.feature.equals(model.getArmedFeature()));
             }
@@ -256,7 +256,7 @@ public class QualifierFeatureEditor
                 AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
                 setVisible(
                         state.isSlotArmed() && QualifierFeatureEditor.this.getModelObject().feature
-                                .equals(state.getArmedFeature()));
+                                .equals(state.getArmedFeature().getFeature()));
             }
 
             @Override

@@ -109,7 +109,7 @@ public class User
         // No-args constructor required for ORM.
     }
 
-    public User(String aName, String uiName)
+    public User(String aName, String aUiName)
     {
         username = aName;
         uiName = aName;
