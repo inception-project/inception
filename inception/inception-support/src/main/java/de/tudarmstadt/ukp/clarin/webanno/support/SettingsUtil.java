@@ -207,7 +207,7 @@ public class SettingsUtil
             File settingsFile = getSettingsFile();
             if (settingsFile != null) {
                 try (InputStream in = new FileInputStream(settingsFile)) {
-                    settings.load(in);
+                    props.load(in);
                 }
                 catch (IOException e) {
                     LoggerFactory.getLogger(SettingsUtil.class)
