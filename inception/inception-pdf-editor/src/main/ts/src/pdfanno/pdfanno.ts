@@ -66,6 +66,7 @@ function onPageRendered (ev) {
   }
 
   adjustPageGaps()
+  removeAnnoLayer()
   renderAnno()
 }
 
