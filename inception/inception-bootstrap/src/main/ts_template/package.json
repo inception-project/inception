@@ -10,7 +10,8 @@
   },
   "scripts": {
     "build": "sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.css",
-    "build:minified": "sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.min.css --style compressed"
+    "build:minified": "sass bootstrap/bootstrap.scss ../../../target/js/de/tudarmstadt/ukp/inception/bootstrap/inception-bootstrap.min.css --style compressed",
+    "build-js": "node build.js"
   },
   "devDependencies": {
     "bootstrap": "${bootstrap.version}",

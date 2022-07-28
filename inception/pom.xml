@@ -85,7 +85,7 @@
 
     <groovy.version>3.0.12</groovy.version>
 
-    <tomcat.version>9.0.64</tomcat.version>
+    <tomcat.version>9.0.65</tomcat.version>
     <servlet-api.version>4.0.1</servlet-api.version>
 
     <mariadb.driver.version>2.7.5</mariadb.driver.version>
@@ -95,18 +95,18 @@
     <wicket.version>9.11.0</wicket.version>
     <wicketstuff.version>9.11.0</wicketstuff.version>
     <wicket-jquery-ui.version>9.8.1</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>6.0.0-M7</wicket-bootstrap.version>
+    <wicket-bootstrap.version>6.0.0-M8</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>3.0.4</wicket-jquery-selectors.version>
     <wicket-webjars.version>3.0.6</wicket-webjars.version>
     <wicket-spring-boot.version>3.1.6</wicket-spring-boot.version>
-    <bootstrap.version>5.1.3</bootstrap.version>
+    <bootstrap.version>5.2.0</bootstrap.version>
     <hover.version>2.0.2</hover.version>
 
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
       -->
-    <lucene.version>8.11.1</lucene.version>
-    <solr.version>8.11.1</solr.version>
+    <lucene.version>8.11.2</lucene.version>
+    <solr.version>8.11.2</solr.version>
     <mtas.version>8.11.1.0</mtas.version> 
     <!-- * 8.11.1.0 depends on Lucene 8.11.1 -->
 
@@ -1090,6 +1090,12 @@
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-core</artifactId>
         <version>${wicket-bootstrap.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.webjars</groupId>
+            <artifactId>bootstrap</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
@@ -1177,17 +1183,6 @@
           <!-- Avoid having jquery twice, once via org.webjars and once via org.webjars.bower -->
           <exclusion>
             <groupId>org.webjars.bower</groupId>
-            <artifactId>jquery</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>org.webjars</groupId>
-        <artifactId>bootstrap</artifactId>
-        <version>${bootstrap.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.webjars</groupId>
             <artifactId>jquery</artifactId>
           </exclusion>
         </exclusions>
@@ -2766,8 +2761,10 @@
                       }
                       
                       def versionParts = version.tokenize("\\.");
-                      while (versionParts.size() < 3) { versionParts.add("0"); }; suffix = suffix.replace("-", "."); version = versionParts.join("."); if (suffix) { version = version + "-" + suffix;
-                      };
+                      while (versionParts.size() < 3) { versionParts.add("0"); }; 
+                      suffix = suffix.replace("-", "."); 
+                      version = versionParts.join("."); 
+                      if (suffix) { version = version + "-" + suffix; };
                           
                       log.info("Semver representation of project version: " + version);
                       project.properties.semver = version;

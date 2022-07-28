@@ -241,7 +241,7 @@ public class PdfAnnotationEditor
 
     private void getAnnotations(AjaxRequestTarget aTarget, IRequestParameters aParams)
     {
-        page = aParams.getParameterValue("page").toInt();
+        page = aParams.getParameterValue("page").toInt(1);
         renderPdfAnnoModel(aTarget);
     }
 

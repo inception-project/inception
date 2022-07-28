@@ -57,6 +57,16 @@
               <arguments>run build:minified</arguments>
             </configuration>
           </execution>
+          <execution>
+            <id>npm build-js</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build-js</arguments>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
     </plugins>
