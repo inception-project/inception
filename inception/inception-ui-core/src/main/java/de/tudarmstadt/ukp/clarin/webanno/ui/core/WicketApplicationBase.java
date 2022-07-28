@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.kendo.WicketJQueryFocusPatchBeh
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.theme.CustomThemeCssResourceBehavior;
 import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapCssReference;
+import de.tudarmstadt.ukp.inception.bootstrap.InceptionBootstrapResourceReference;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorTestPage;
 
@@ -205,6 +206,8 @@ public abstract class WicketApplicationBase
         else {
             settings.setCssResourceReference(InceptionBootstrapCssReference.get());
         }
+
+        settings.setJsResourceReference(InceptionBootstrapResourceReference.get());
     }
 
     protected void addCustomCssToAllPages()
