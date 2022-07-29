@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.LinkedHashSet;
 import java.util.Set;
 
