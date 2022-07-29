@@ -70,6 +70,7 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
+import org.apache.uima.util.AutoCloseableNoException;
 import org.apache.uima.util.CasCreationUtils;
 import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
@@ -1237,7 +1238,13 @@ public class AnnotationSchemaServiceImpl
         throws UIMAException, IOException
     {
         CasStorageSession.get().assertWritingPermitted(aTargetCas);
+        
+        _upgradeCas(aSourceCas, aTargetCas, aTargetTypeSystem);
+    }
 
+    static void _upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
+        throws IOException, ResourceInitializationException
+    {
         // Save source CAS type system (do this early since we might do an in-place upgrade)
         TypeSystem sourceTypeSystem = aSourceCas.getTypeSystem();
 
@@ -1246,7 +1253,10 @@ public class AnnotationSchemaServiceImpl
         CAS realSourceCas = getRealCas(aSourceCas);
         // UIMA-6162 Workaround: synchronize CAS during de/serialization
         synchronized (((CASImpl) realSourceCas).getBaseCAS()) {
-            serializeWithCompression(realSourceCas, serializedCasContents, sourceTypeSystem);
+            // Workaround for https://github.com/apache/uima-uimaj/issues/238
+            try (AutoCloseableNoException a = ((CASImpl) realSourceCas).ll_enableV2IdRefs(false)) {
+                serializeWithCompression(realSourceCas, serializedCasContents, sourceTypeSystem);
+            }
         }
 
         // Re-initialize the target CAS with new type system
