@@ -19,12 +19,14 @@
 import { Point } from './Point'
 
 export class Rectangle {
+  p: number
   x: number
   y: number
   w: number
   h: number
 
-  constructor (aRectangle: {x: number, y: number, w: number, h: number}) {
+  constructor (aRectangle: {p: number, x: number, y: number, w: number, h: number}) {
+    this.p = aRectangle.p
     this.x = aRectangle.x
     this.y = aRectangle.y
     this.w = aRectangle.w
