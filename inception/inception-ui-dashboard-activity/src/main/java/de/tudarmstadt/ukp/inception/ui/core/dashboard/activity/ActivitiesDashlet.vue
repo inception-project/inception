@@ -17,7 +17,7 @@
 -->
 
 <template>
-  <div class="flex-v-container">
+  <div class="card border-0 flex-v-container">
     <div class="card-header">
       Recent activity
     </div>

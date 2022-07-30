@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.cas.CAS;
@@ -58,15 +59,17 @@ public final class CasPersistenceUtils
     public static void writeSerializedCas(CAS aCas, File aFile) throws IOException
     {
         FileUtils.forceMkdir(aFile.getParentFile());
-        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
-        write(aFile, serializer);
+        try (var os = new FileOutputStream(aFile)) {
+            write(os, aCas);
+        }
     }
 
     public static void writeSerializedCasCompressed(CAS aCas, File aFile) throws IOException
     {
         FileUtils.forceMkdir(aFile.getParentFile());
-        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
-        writeSnappyCompressed(aFile, serializer);
+        try (var os = new FileOutputStream(aFile)) {
+            writeSnappyCompressed(os, aCas);
+        }
     }
 
     public static void writeSerializedCasParanoid(CAS aCas, File aFile) throws IOException
@@ -96,23 +99,31 @@ public final class CasPersistenceUtils
                 throw new IOException(e);
             }
 
-            write(aFile, serializer);
+            try (var os = new FileOutputStream(aFile)) {
+                write(os, serializer);
+            }
         }
     }
 
-    private static void write(File aFile, CASCompleteSerializer serializer)
-        throws IOException, FileNotFoundException
+    private static void write(OutputStream aOut, CAS aCas) throws IOException, FileNotFoundException
     {
-        try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+        write(aOut, serializer);
+    }
+
+    private static void write(OutputStream aOut, CASCompleteSerializer serializer)
+        throws IOException
+    {
+        try (ObjectOutputStream os = new ObjectOutputStream(aOut)) {
             os.writeObject(serializer);
         }
     }
 
-    private static void writeSnappyCompressed(File aFile, CASCompleteSerializer serializer)
+    static void writeSnappyCompressed(OutputStream aOut, CAS aCas)
         throws IOException, FileNotFoundException
     {
-        try (ObjectOutputStream os = new ObjectOutputStream(
-                new SnappyFramedOutputStream(new FileOutputStream(aFile)))) {
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) getRealCas(aCas));
+        try (ObjectOutputStream os = new ObjectOutputStream(new SnappyFramedOutputStream(aOut))) {
             os.writeObject(serializer);
         }
     }

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>24.0-SNAPSHOT</version>
+    <version>25.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-api-annotation</artifactId>
   <name>INCEpTION - Core - Annotation API</name>
@@ -214,11 +214,6 @@
       <artifactId>javax.persistence-api</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>annotations</artifactId>
-    </dependency>
-    
 
     <!-- TEST DEPENDENCIES -->
     <dependency>

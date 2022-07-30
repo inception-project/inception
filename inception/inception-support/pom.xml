@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>24.0-SNAPSHOT</version>
+    <version>25.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-support</artifactId>
   <name>INCEpTION - Support library</name>
@@ -49,10 +49,6 @@
     <dependency>
       <groupId>com.github.rjeschke</groupId>
       <artifactId>txtmark</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>annotations</artifactId>
     </dependency>
 
     <!-- Spring dependencies -->

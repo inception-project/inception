@@ -22,7 +22,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import de.tudarmstadt.ukp.inception.support.findbugs.SuppressFBWarnings;
 
 /**
  * Permits access to the Spring context anywhere in the application. If any other means of accessing

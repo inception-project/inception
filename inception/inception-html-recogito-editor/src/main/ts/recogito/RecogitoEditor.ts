@@ -49,7 +49,6 @@ interface WebAnnotationTextPositionSelector {
 export class RecogitoEditor implements AnnotationEditor {
   private ajax: DiamAjax;
   private recogito: Recogito;
-  private connections: any;
 
   public constructor(element: Element, ajax: DiamAjax) {
     this.ajax = ajax;
@@ -65,7 +64,21 @@ export class RecogitoEditor implements AnnotationEditor {
 
     element.addEventListener('contextmenu', e => this.openContextMenu(e));
 
+    // Prevent right-click from triggering a selection event in RecogitoJS
+    element.addEventListener('mousedown', e => this.cancelRightClick(e), {capture: true});
+    element.addEventListener('mouseup', e => this.cancelRightClick(e), {capture: true});
+    element.addEventListener('mouseclick', e => this.cancelRightClick(e), {capture: true});
+
     this.loadAnnotations();
+  }
+
+  private cancelRightClick(e: Event): void {
+    if (e instanceof MouseEvent) {
+      if (e.button === 2) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
   }
 
   private openContextMenu(e): void {

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>24.0-SNAPSHOT</version>
+    <version>25.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-recommendation-api</artifactId>
   <name>INCEpTION - Recommendation - API</name>
@@ -96,11 +96,6 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
     
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>annotations</artifactId>
-    </dependency>
-
     <dependency>
     	<groupId>it.unimi.dsi</groupId>
     	<artifactId>fastutil</artifactId>
