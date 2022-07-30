@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
-import static org.apache.commons.lang3.Validate.notNull;
-
 import java.util.Objects;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -39,38 +37,28 @@ public abstract class IndexingTask_ImplBase
     private final SourceDocument sourceDocument;
     private final AnnotationDocument annotationDocument;
 
-    private byte[] binaryCas;
-
     public IndexingTask_ImplBase(Project aProject, String aUser, String aTrigger)
     {
         super(new User(aUser), aProject, aTrigger);
 
         sourceDocument = null;
         annotationDocument = null;
-        binaryCas = null;
     }
 
-    public IndexingTask_ImplBase(SourceDocument aSourceDocument, String aTrigger, byte[] aBinaryCas)
+    public IndexingTask_ImplBase(SourceDocument aSourceDocument, String aTrigger)
     {
         super(aSourceDocument.getProject(), aTrigger);
 
-        notNull(aBinaryCas);
-
         sourceDocument = aSourceDocument;
         annotationDocument = null;
-        binaryCas = aBinaryCas;
     }
 
-    public IndexingTask_ImplBase(AnnotationDocument aAnnotationDocument, String aTrigger,
-            byte[] aBinaryCas)
+    public IndexingTask_ImplBase(AnnotationDocument aAnnotationDocument, String aTrigger)
     {
         super(new User(aAnnotationDocument.getUser()), aAnnotationDocument.getProject(), aTrigger);
 
-        notNull(aBinaryCas);
-
         sourceDocument = null;
         annotationDocument = aAnnotationDocument;
-        binaryCas = aBinaryCas;
     }
 
     public SourceDocument getSourceDocument()
@@ -81,16 +69,6 @@ public abstract class IndexingTask_ImplBase
     public AnnotationDocument getAnnotationDocument()
     {
         return annotationDocument;
-    }
-
-    public byte[] getBinaryCas()
-    {
-        return binaryCas;
-    }
-
-    public void setBinaryCas(byte[] aBinaryCas)
-    {
-        binaryCas = aBinaryCas;
     }
 
     public abstract Progress getProgress();
