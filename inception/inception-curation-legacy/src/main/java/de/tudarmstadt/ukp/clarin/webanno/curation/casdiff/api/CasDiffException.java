@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
  * Thrown if there is a problem during CAS diff computation.

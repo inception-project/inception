@@ -101,7 +101,6 @@ public class DocumentListPanel
             confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
                     .setParameters(selectedDocuments.getObject().size()));
         }
-        confirmationDialog.show(aTarget);
 
         confirmationDialog.setConfirmAction((_target) -> {
             for (SourceDocument sourceDocument : selectedDocuments.getObject()) {
@@ -117,5 +116,7 @@ public class DocumentListPanel
             selectedDocuments.getObject().clear();
             _target.add(getPage());
         });
+
+        confirmationDialog.show(aTarget);
     }
 }

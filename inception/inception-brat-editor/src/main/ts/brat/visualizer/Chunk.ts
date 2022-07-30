@@ -41,6 +41,14 @@ import { SVGTypeMapping, Svg } from '@svgdotjs/svg.js'
 import { Fragment } from './Fragment'
 import { Row } from './Row'
 
+export type Marker = [
+  textNo: number,
+  start: boolean,
+  offset: number,
+  width: number,
+  type: string
+]
+
 /**
  * Chunk of text generated from the token offsets and representing one or more tokens.
  */
@@ -56,10 +64,8 @@ export class Chunk {
   sentence: number
   group: SVGTypeMapping<SVGGElement>
   highlightGroup: SVGTypeMapping<SVGGElement>
-  // chunk.markedTextStart.push([textNo, true, from - chunk.from, null, markedType]);
-  markedTextStart: Array<[string, boolean, number, number, string]> = []
-  // chunk.markedTextEnd.push([textNo, false, to - chunk.from]);
-  markedTextEnd: Array<[string, boolean, number, number]> = []
+  markedTextStart: MarkerStart[] = []
+  markedTextEnd: MarkerEnd[] = []
   right: number
   row: Row
   textX: number

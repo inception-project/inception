@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.workload.dynamic.management.support;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.management.DynamicWorkloadManagementPage.CSS_CLASS_STATE_TOGGLE;
@@ -133,6 +134,10 @@ public class AnnotationStateList
 
     private boolean isAbandoned(AnnotationDocument aAnnDoc)
     {
+        if (aAnnDoc.getAnnotatorState() != IN_PROGRESS) {
+            return false;
+        }
+
         Duration idleTime = aAnnDoc.getTimestamp() != null
                 ? between(aAnnDoc.getTimestamp().toInstant(), now())
                 : null;

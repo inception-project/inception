@@ -20,10 +20,10 @@ package de.tudarmstadt.ukp.inception.search.model;
 import java.util.List;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class BulkIndexingContext
     implements AutoCloseable
@@ -31,17 +31,19 @@ public class BulkIndexingContext
     private final static ThreadLocal<BulkIndexingContext> INSTANCE = new ThreadLocal<>();
 
     private final boolean fullReindex;
+    private final AnnotationSearchState prefs;
     private final Project project;
     private final List<AnnotationLayer> layers;
     private final List<AnnotationFeature> features;
 
     public BulkIndexingContext(Project aProject, List<AnnotationLayer> aLayers,
-            List<AnnotationFeature> aFeatures, boolean aFullReindex)
+            List<AnnotationFeature> aFeatures, boolean aFullReindex, AnnotationSearchState aPrefs)
     {
         project = aProject;
         layers = aLayers;
         features = aFeatures;
         fullReindex = aFullReindex;
+        prefs = aPrefs;
     }
 
     public Project getProject()
@@ -64,6 +66,11 @@ public class BulkIndexingContext
         return fullReindex;
     }
 
+    public AnnotationSearchState getIndexingSettings()
+    {
+        return prefs;
+    }
+
     @Override
     public void close()
     {
@@ -71,7 +78,7 @@ public class BulkIndexingContext
     }
 
     public static BulkIndexingContext init(Project aProject, AnnotationSchemaService aSchemaService,
-            boolean aFullReindex)
+            boolean aFullReindex, AnnotationSearchState aPrefs)
     {
         var features = aSchemaService.listSupportedFeatures(aProject);
         features.removeIf(f -> !f.isEnabled() || !f.getLayer().isEnabled());
@@ -79,7 +86,8 @@ public class BulkIndexingContext
         var layers = aSchemaService.listSupportedLayers(aProject);
         layers.removeIf(l -> !l.isEnabled());
 
-        var indexingContext = new BulkIndexingContext(aProject, layers, features, aFullReindex);
+        var indexingContext = new BulkIndexingContext(aProject, layers, features, aFullReindex,
+                aPrefs);
         INSTANCE.set(indexingContext);
         return indexingContext;
     }

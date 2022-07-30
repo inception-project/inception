@@ -26,12 +26,14 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Component;
+import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
 public class TokenWrappingPagingStrategy
     extends PagingStrategy_ImplBase
@@ -112,8 +114,8 @@ public class TokenWrappingPagingStrategy
     }
 
     @Override
-    public DefaultPagingNavigator createPageNavigator(String aId, AnnotationPageBase aPage)
+    public DefaultPagingNavigator createPageNavigator(String aId, Page aPage)
     {
-        return new DefaultPagingNavigator(aId, aPage);
+        return new DefaultPagingNavigator(aId, (AnnotationPageBase) aPage);
     }
 }

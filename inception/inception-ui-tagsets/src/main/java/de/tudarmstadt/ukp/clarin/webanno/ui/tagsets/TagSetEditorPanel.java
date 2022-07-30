@@ -54,7 +54,6 @@ import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.form.BootstrapRadioChoice;
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -67,6 +66,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaPanel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class TagSetEditorPanel
     extends LambdaPanel
@@ -153,8 +153,6 @@ public class TagSetEditorPanel
     {
         confirmationDialog.setContentModel(new StringResourceModel("DeleteDialog.text", this)
                 .setParameters(selectedTagSet.getObject().getName()));
-        confirmationDialog.show(aTarget);
-
         confirmationDialog.setConfirmAction((_target) -> {
             // If the tagset is used in any features, clear the tagset on these features when
             // the tagset is deleted!
@@ -171,6 +169,7 @@ public class TagSetEditorPanel
             _target.add(getPage());
             actionCancel(_target);
         });
+        confirmationDialog.show(aTarget);
     }
 
     private void actionCancel(AjaxRequestTarget aTarget)

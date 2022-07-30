@@ -29,12 +29,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.inception.log.EventLoggingListener;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.EventRepositoryImpl;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistry;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapterRegistryImpl;
+import de.tudarmstadt.ukp.inception.log.exporter.LoggedEventExporter;
 
 /**
  * Provides support event logging.
@@ -69,5 +71,12 @@ public class EventLoggingAutoConfiguration
             EventLoggingAdapterRegistry aAdapterRegistry, EventLoggingProperties aProperties)
     {
         return new EventLoggingListener(aRepo, aProperties, aAdapterRegistry);
+    }
+
+    @Bean
+    public LoggedEventExporter loggedEventExporter(EventRepository aEventRepository,
+            DocumentService aDocumentService)
+    {
+        return new LoggedEventExporter(aEventRepository, aDocumentService);
     }
 }

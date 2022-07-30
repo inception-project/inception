@@ -19,15 +19,17 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import java.io.Serializable;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.VisualOptions;
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 class GetCollectionInformationHandler
     extends EditorAjaxRequestHandlerBase
@@ -35,10 +37,12 @@ class GetCollectionInformationHandler
 {
     private static final long serialVersionUID = 6922527877385787431L;
 
+    private final Component vis;
     private final BratSchemaGenerator bratSchemaGenerator;
 
-    public GetCollectionInformationHandler(BratSchemaGenerator aBratSchemaGenerator)
+    public GetCollectionInformationHandler(Component aVis, BratSchemaGenerator aBratSchemaGenerator)
     {
+        vis = aVis;
         bratSchemaGenerator = aBratSchemaGenerator;
     }
 
@@ -51,7 +55,14 @@ class GetCollectionInformationHandler
     @Override
     public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
-        return getCollectionInformation(getAnnotatorState());
+        try {
+            var result = getCollectionInformation(getAnnotatorState());
+            BratRequestUtils.attachResponse(aTarget, vis, result);
+            return new DefaultAjaxResponse(getAction(aRequest));
+        }
+        catch (Exception e) {
+            return handleError("Unable to load annotations", e);
+        }
     }
 
     public GetCollectionInformationResponse getCollectionInformation(AnnotatorState aState)

@@ -29,13 +29,13 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfInferenceClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfEntityGroup;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class HfRecommender
     extends NonTrainableRecommenderEngineImplBase

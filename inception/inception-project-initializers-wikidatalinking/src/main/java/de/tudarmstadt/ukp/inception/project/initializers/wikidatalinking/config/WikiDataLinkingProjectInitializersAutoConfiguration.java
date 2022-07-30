@@ -23,7 +23,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
@@ -34,11 +33,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.config.StringMatchingRecommenderAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.StringMatchingRecommenderFactory;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @AutoConfigureAfter({ //
-    KnowledgeBaseServiceAutoConfiguration.class, //
-    RecommenderServiceAutoConfiguration.class, //
-    StringMatchingRecommenderAutoConfiguration.class })
+        KnowledgeBaseServiceAutoConfiguration.class, //
+        RecommenderServiceAutoConfiguration.class, //
+        StringMatchingRecommenderAutoConfiguration.class })
 @Configuration
 public class WikiDataLinkingProjectInitializersAutoConfiguration
 {

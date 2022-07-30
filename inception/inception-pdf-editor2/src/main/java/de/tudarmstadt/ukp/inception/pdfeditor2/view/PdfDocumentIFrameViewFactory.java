@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.pdfeditor2.view;
 import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfAnnotationEditor2SupportAutoConfiguration;
 
 /**

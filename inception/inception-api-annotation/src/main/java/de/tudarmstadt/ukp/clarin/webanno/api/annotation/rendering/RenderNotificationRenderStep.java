@@ -19,14 +19,15 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.AnnotationAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
+import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 
 /**
  * <p>
@@ -53,9 +54,7 @@ public class RenderNotificationRenderStep
         RequestCycle.get().find(IPageRequestHandler.class).ifPresent(handler -> {
             Page page = (Page) handler.getPage();
             page.send(page, Broadcast.BREADTH,
-                    new RenderAnnotationsEvent(
-                            RequestCycle.get().find(IPartialPageRequestHandler.class).get(),
-                            aRequest.getCas(), aRequest, aVDoc));
+                    new RenderAnnotationsEvent(aRequest.getCas(), aRequest, aVDoc));
         });
     }
 }

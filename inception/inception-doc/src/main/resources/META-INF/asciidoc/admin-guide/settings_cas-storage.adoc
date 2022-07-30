@@ -1,0 +1,67 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt 
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//  
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= CAS storage
+
+This section describes settings related to the storage of CAS data objects (i.e. annotations).
+
+.CAS cache settings in the `settings.properties` file
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| cas-storage.compressed-cas-serialization
+| Whether to compress annotation files
+| true
+| false
+|===
+
+The compression setting takes effect whenever a CAS is written to disk. Changing it does not 
+immediately (de)compress existing CAS files. Instead, they will be slowly converted to being
+(de)compressed over time as they are updated by the system as part of normal operations.
+
+== CAS cache
+
+To speed up interactions, {product-name} keeps a cache annotation data in memory. 
+This cache can be tuned using the following properties:
+
+.CAS cache settings in the `settings.properties` file
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| cas-storage.cache.shared-cas-cache-size
+| Number of shared read-only CASes to keep in memory
+| 10-5000 _(depending on heap size)_
+| 20000
+
+| cas-storage.cache.idle-cas-eviction-delay
+| Time a CAS is retained in the caches after the last access
+| 5m
+| 1h
+
+| cas-storage.cache.cas-borrow-wait-timeout
+| Time for an exclusive action to wait for another exclusive action to finish
+| 3m
+| 5m
+|===
+

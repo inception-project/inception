@@ -25,11 +25,13 @@ import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUE
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.scheduling.MatchResult;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.search.SearchService;
@@ -79,15 +81,15 @@ public class IndexSourceDocumentTask
         // If a re-indexing task for the project is scheduled, we do not need to schedule a new
         // source indexing task
         if (aTask instanceof ReindexTask) {
-            if (((ReindexTask) aTask).getProject().getId() == getSourceDocument().getProject()
-                    .getId()) {
+            if (Objects.equals(((ReindexTask) aTask).getProject().getId(),
+                    getSourceDocument().getProject().getId())) {
                 return DISCARD_OR_QUEUE_THIS;
             }
         }
 
         if (aTask instanceof IndexSourceDocumentTask) {
-            if (getSourceDocument().getId() == ((IndexSourceDocumentTask) aTask).getSourceDocument()
-                    .getId()) {
+            if (Objects.equals(getSourceDocument().getId(),
+                    ((IndexSourceDocumentTask) aTask).getSourceDocument().getId())) {
                 return UNQUEUE_EXISTING_AND_QUEUE_THIS;
             }
         }

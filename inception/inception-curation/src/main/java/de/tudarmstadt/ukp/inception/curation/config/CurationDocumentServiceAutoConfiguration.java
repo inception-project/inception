@@ -24,16 +24,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentServiceImpl;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @Configuration
 @AutoConfigureAfter(name = {
         "de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration",
-        "de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration",
+        "de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration",
         "de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration" })
 @ConditionalOnBean({ CasStorageService.class, AnnotationSchemaService.class, ProjectService.class })
 public class CurationDocumentServiceAutoConfiguration

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model.compact;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.VDocumentSerializer;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializer;
 
 public interface CompactSerializer
     extends VDocumentSerializer<CompactAnnotatedText>

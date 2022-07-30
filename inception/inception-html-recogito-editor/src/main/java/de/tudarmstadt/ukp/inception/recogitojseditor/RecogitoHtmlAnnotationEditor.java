@@ -29,15 +29,15 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.editor.view.DocumentViewFactory;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssResourceReference;
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class RecogitoHtmlAnnotationEditor
     extends ExternalAnnotationEditorBase
@@ -63,7 +63,7 @@ public class RecogitoHtmlAnnotationEditor
         AnnotationDocument annDoc = documentService.getAnnotationDocument(state.getDocument(),
                 state.getUser());
 
-        return viewFactory.createView(MID_VIS, Model.of(annDoc), editorFactory.getBeanName());
+        return viewFactory.createView(CID_VIS, Model.of(annDoc), editorFactory.getBeanName());
     }
 
     @Override

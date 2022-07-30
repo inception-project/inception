@@ -42,11 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -54,8 +50,13 @@ import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfig
 import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
@@ -66,6 +67,7 @@ import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 @EnableAutoConfiguration
 @ImportAutoConfiguration( //
         classes = { //
+                PreferencesServiceAutoConfig.class, //
                 ProjectServiceAutoConfiguration.class, //
                 AnnotationSchemaServiceAutoConfiguration.class, //
                 DocumentServiceAutoConfiguration.class, //
@@ -76,6 +78,8 @@ import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
                 SearchServiceAutoConfiguration.class }, //
         exclude = LiquibaseAutoConfiguration.class)
 @EntityScan({ //
+        "de.tudarmstadt.ukp.clarin.webanno.security.model", //
+        "de.tudarmstadt.ukp.inception.preferences.model", //
         "de.tudarmstadt.ukp.inception.kb.model", //
         "de.tudarmstadt.ukp.clarin.webanno.model" })
 public class MtasUpgradeTest

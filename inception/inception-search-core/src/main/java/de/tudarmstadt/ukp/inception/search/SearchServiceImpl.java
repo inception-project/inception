@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRAD
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.inception.search.SearchCasUtils.casToByteArray;
+import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -33,7 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -55,10 +55,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectRemovedEvent;
@@ -71,7 +69,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceProperties;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
@@ -108,6 +109,7 @@ public class SearchServiceImpl
     private final SchedulingService schedulingService;
     private final SearchServiceProperties properties;
     private final ScheduledExecutorService indexClosingScheduler;
+    private final PreferencesService preferencesService;
 
     // In fact - the only factory we have at the moment...
     private final String DEFAULT_PHSYICAL_INDEX_FACTORY = "mtasDocumentIndexFactory";
@@ -118,13 +120,14 @@ public class SearchServiceImpl
     public SearchServiceImpl(DocumentService aDocumentService,
             AnnotationSchemaService aSchemaService, ProjectService aProjectService,
             PhysicalIndexRegistry aPhysicalIndexRegistry, SchedulingService aSchedulingService,
-            SearchServiceProperties aProperties)
+            SearchServiceProperties aProperties, PreferencesService aPreferencesService)
     {
         documentService = aDocumentService;
         schemaService = aSchemaService;
         projectService = aProjectService;
         physicalIndexRegistry = aPhysicalIndexRegistry;
         schedulingService = aSchedulingService;
+        preferencesService = aPreferencesService;
 
         properties = aProperties;
         log.info("Index keep-open time: {}", properties.getIndexKeepOpenTime());
@@ -330,7 +333,8 @@ public class SearchServiceImpl
                     while (!pooledIndex.isIdle() && !pooledIndex.isDead()) {
                         try {
                             log.trace("Index recycle is forced but index is not idle - waiting...");
-                            Thread.sleep(1000);
+                            // Thread.sleep(1000);
+                            indexes.wait(1000);
                         }
                         catch (InterruptedException e) {
                             // Ignore
@@ -558,30 +562,30 @@ public class SearchServiceImpl
             Index index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
 
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
             return index.getPhysicalIndex().executeQuery(new SearchQueryRequest(aProject, aUser,
-                    aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count));
+                    aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, offset, count, prefs));
         }
     }
 
     @Override
-    public StatisticsResult getProjectStatistics(User aUser, Project aProject,
-            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc,
-            Set<AnnotationFeature> aFeatures)
+    public StatisticsResult getProjectStatistics(User aUser, Project aProject, int aMinTokenPerDoc,
+            int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws IOException, ExecutionException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
             Index index = pooledIndex.get();
             ensureIndexIsCreatedAndValid(aProject, index);
 
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
             return index.getPhysicalIndex().getAnnotationStatistics(new StatisticRequest(aProject,
-                    aUser, aMinTokenPerDoc, aMaxTokenPerDoc, aFeatures, null));
+                    aUser, aMinTokenPerDoc, aMaxTokenPerDoc, aFeatures, null, prefs));
         }
     }
 
     @Override
     public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aQuery,
-            OptionalInt aMinTokenPerDoc, OptionalInt aMaxTokenPerDoc,
-            Set<AnnotationFeature> aFeatures)
+            int aMinTokenPerDoc, int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
         throws ExecutionException, IOException
     {
         try (PooledIndex pooledIndex = acquireIndex(aProject.getId())) {
@@ -589,8 +593,9 @@ public class SearchServiceImpl
             ensureIndexIsCreatedAndValid(aProject, index);
             PhysicalIndex physicalIndex = index.getPhysicalIndex();
 
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
             StatisticRequest statRequest = new StatisticRequest(aProject, aUser, aMinTokenPerDoc,
-                    aMaxTokenPerDoc, aFeatures, aQuery);
+                    aMaxTokenPerDoc, aFeatures, aQuery, prefs);
             LayerStatistics statistics = physicalIndex.getLayerStatistics(statRequest,
                     statRequest.getQuery(), physicalIndex.getUniqueDocuments(statRequest));
 
@@ -655,7 +660,9 @@ public class SearchServiceImpl
             final var accessModeInitialCas = UNMANAGED_ACCESS;
             final var casUpgradeMode = NO_CAS_UPGRADE;
 
-            try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true)) {
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
+            try (var indexContext = BulkIndexingContext.init(aProject, schemaService, true,
+                    prefs)) {
                 // Index all the source documents
                 for (SourceDocument doc : sourceDocuments) {
                     if (isPerformNoMoreActions(pooledIndex)) {
@@ -757,8 +764,9 @@ public class SearchServiceImpl
             ensureIndexIsCreatedAndValid(aProject, index);
 
             // Index is valid, try to execute the query
+            var prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, aProject);
             return index.getPhysicalIndex().numberOfQueryResults(new SearchQueryRequest(aProject,
-                    aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
+                    aUser, aQuery, aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L, prefs));
         }
     }
 

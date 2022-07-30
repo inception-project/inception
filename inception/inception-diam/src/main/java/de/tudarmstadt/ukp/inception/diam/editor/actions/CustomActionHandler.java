@@ -17,8 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter.decodeTypeName;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter.decodeTypeName;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -33,19 +32,20 @@ import org.apache.wicket.request.Request;
 import org.apache.wicket.util.string.StringValue;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
  * <p>
@@ -79,7 +79,7 @@ public class CustomActionHandler
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to perform custom action", e);
         }
     }
 
@@ -107,7 +107,7 @@ public class CustomActionHandler
         CAS cas = ((AnnotationPageBase) aTarget.getPage()).getEditorCas();
         // parse the action
         List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
-        AnnotationFS anno = selectAnnotationByAddr(cas, paramId.getId());
+        AnnotationFS anno = ICasUtil.selectAnnotationByAddr(cas, paramId.getId());
         Map<String, Object> functionParams = parse(layer, features, state.getDocument(), anno);
         // define anonymous function, fill the body and immediately execute
         String js = String.format("(function ($PARAM){ %s })(%s)",

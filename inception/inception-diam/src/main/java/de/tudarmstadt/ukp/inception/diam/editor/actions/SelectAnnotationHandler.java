@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-
 import java.lang.invoke.MethodHandles;
 
 import org.apache.uima.cas.CAS;
@@ -29,13 +27,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 
 /**
  * <p>
@@ -85,7 +84,7 @@ public class SelectAnnotationHandler
             CAS cas = page.getEditorCas();
             AnnotatorState state = page.getModelObject();
 
-            AnnotationFS fs = selectAnnotationByAddr(cas, vid.getId());
+            AnnotationFS fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
 
             TypeAdapter adapter = schemaService.findAdapter(state.getProject(), fs);
             state.getSelection().set(adapter.select(vid, fs));
@@ -95,7 +94,7 @@ public class SelectAnnotationHandler
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to select annotation", e);
         }
     }
 }

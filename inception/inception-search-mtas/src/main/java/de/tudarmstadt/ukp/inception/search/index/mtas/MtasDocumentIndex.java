@@ -34,6 +34,7 @@ import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static mtas.codec.MtasCodec.MTAS_CODEC_NAME;
 import static org.apache.commons.io.FileUtils.deleteDirectory;
+import static org.apache.commons.lang3.StringUtils.toRootLowerCase;
 import static org.apache.lucene.search.ScoreMode.COMPLETE_NO_SCORES;
 
 import java.io.File;
@@ -96,13 +97,13 @@ import org.slf4j.LoggerFactory;
 import com.github.openjson.JSONObject;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
@@ -114,6 +115,7 @@ import de.tudarmstadt.ukp.inception.search.StatisticRequest;
 import de.tudarmstadt.ukp.inception.search.StatisticsResult;
 import de.tudarmstadt.ukp.inception.search.index.IndexRebuildRequiredException;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
+import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -512,17 +514,16 @@ public class MtasDocumentIndex
         return fullDocSet;
     }
 
-    public MtasSpanQuery parseQuery(String aQuery) throws ExecutionException, IOException
+    private MtasSpanQuery parseQuery(String aQuery, AnnotationSearchState aPrefs)
+        throws ExecutionException, IOException
     {
         final MtasSpanQuery mtasSpanQuery;
         try {
-            String modifiedQuery = preprocessQuery(aQuery);
-            MtasSpanQuery mtasSpanQuery1;
+            String modifiedQuery = preprocessQuery(aQuery, aPrefs);
             try (Reader queryReader = new StringReader(modifiedQuery)) {
                 MtasCQLParser parser = new MtasCQLParser(queryReader);
-                mtasSpanQuery1 = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+                mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
             }
-            mtasSpanQuery = mtasSpanQuery1;
         }
         catch (ParseException | Error e) {
             // The exceptions thrown by the MTAS CQL Parser are inheriting from
@@ -543,11 +544,11 @@ public class MtasDocumentIndex
 
         // Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(
         // aStatisticRequest.getProject(), aStatisticRequest.getUser());
-        Double minToken = aStatisticRequest.getMinTokenPerDoc().isPresent()
-                ? (double) aStatisticRequest.getMinTokenPerDoc().getAsInt()
+        Double minToken = aStatisticRequest.getMinTokenPerDoc() != Integer.MIN_VALUE
+                ? (double) aStatisticRequest.getMinTokenPerDoc()
                 : null;
-        Double maxToken = aStatisticRequest.getMaxTokenPerDoc().isPresent()
-                ? (double) aStatisticRequest.getMaxTokenPerDoc().getAsInt()
+        Double maxToken = aStatisticRequest.getMaxTokenPerDoc() != Integer.MAX_VALUE
+                ? (double) aStatisticRequest.getMaxTokenPerDoc()
                 : null;
         try {
             searcher = getSearcherManager().acquire();
@@ -582,7 +583,8 @@ public class MtasDocumentIndex
             String[] functionTypes = new String[2];
 
             // Add the preprocessed query to the spanQueryList
-            MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery);
+            MtasSpanQuery parsedQuery = parseQuery(aFeatureQuery,
+                    aStatisticRequest.getSearchSettings());
             fieldStats.spanQueryList.add(parsedQuery);
 
             // maybe using a function for this simple case is too slow...
@@ -595,7 +597,8 @@ public class MtasDocumentIndex
             functionTypes[0] = LayerStatistics.STATS;
 
             // A query which counts sentences
-            MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>");
+            MtasSpanQuery parsedSentQuery = parseQuery("<s=\"\"/>",
+                    aStatisticRequest.getSearchSettings());
             fieldStats.spanQueryList.add(parsedSentQuery);
 
             spanQuerys[1] = parsedSentQuery;
@@ -680,13 +683,12 @@ public class MtasDocumentIndex
 
         final MtasSpanQuery mtasSpanQuery;
         try {
-            String modifiedQuery = preprocessQuery(aRequest.getQuery());
-            MtasSpanQuery mtasSpanQuery1;
+            String modifiedQuery = preprocessQuery(aRequest.getQuery(),
+                    aRequest.getSearchSettings());
             try (Reader reader = new StringReader(modifiedQuery)) {
                 MtasCQLParser parser = new MtasCQLParser(reader);
-                mtasSpanQuery1 = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+                mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
             }
-            mtasSpanQuery = mtasSpanQuery1;
         }
         catch (ParseException | Error e) {
             // The exceptions thrown by the MTAS CQL Parser are inheriting from java.lang.Error...
@@ -715,7 +717,7 @@ public class MtasDocumentIndex
         }
     }
 
-    private String preprocessQuery(String aQuery)
+    private String preprocessQuery(String aQuery, AnnotationSearchState aPrefs)
     {
         if (aQuery.contains("\"") || aQuery.contains("[") || aQuery.contains("]")
                 || aQuery.contains("<") || aQuery.contains(">")) {
@@ -731,6 +733,11 @@ public class MtasDocumentIndex
         int end = words.next();
         while (end != BreakIterator.DONE) {
             String word = aQuery.substring(start, end);
+
+            if (!aPrefs.isCaseSensitive()) {
+                word = toRootLowerCase(word);
+            }
+
             if (!word.trim().isEmpty()) {
                 word = word.replace("&", "\\&");
                 word = word.replace("(", "\\(");

@@ -17,17 +17,23 @@
  */
 package de.tudarmstadt.ukp.inception.search;
 
-import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
+import static org.apache.uima.cas.CAS.TYPE_NAME_FLOAT;
+import static org.apache.uima.cas.CAS.TYPE_NAME_INTEGER;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING_ARRAY;
 
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupport;
+import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
 /**
@@ -65,15 +71,21 @@ public class PrimitiveUimaIndexingSupport
         switch (aFeature.getMultiValueMode()) {
         case NONE:
             switch (aFeature.getType()) {
-            case CAS.TYPE_NAME_INTEGER: // fallthrough
-            case CAS.TYPE_NAME_FLOAT: // fallthrough
-            case CAS.TYPE_NAME_BOOLEAN: // fallthrough
-            case CAS.TYPE_NAME_STRING:
+            case TYPE_NAME_INTEGER: // fall-through
+            case TYPE_NAME_FLOAT: // fall-through
+            case TYPE_NAME_BOOLEAN: // fall-through
+            case TYPE_NAME_STRING:
                 return true;
             default:
                 return false;
             }
-        case ARRAY: // fallthrough
+        case ARRAY: // fall-through
+            switch (aFeature.getType()) {
+            case TYPE_NAME_STRING_ARRAY:
+                return true;
+            default:
+                return false;
+            }
         default:
             return false;
         }
@@ -84,13 +96,35 @@ public class PrimitiveUimaIndexingSupport
             AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature)
     {
         FeatureSupport<?> featSup = featureSupportRegistry.findExtension(aFeature).orElseThrow();
-        String featureValue = featSup.renderFeatureValue(aFeature, aAnnotation);
-        MultiValuedMap<String, String> values = new HashSetValuedHashMap<String, String>();
-        if (isEmpty(featureValue)) {
-            return values;
+
+        String featureIndexName = featureIndexName(aFieldPrefix, aFeaturePrefix, aFeature);
+        if (aFeature.getMultiValueMode() == ARRAY) {
+            var valuesMap = new HashSetValuedHashMap<String, String>();
+            var values = FSUtil.getFeature(aAnnotation, aFeature.getName(), String[].class);
+            if (values != null) {
+                for (String value : values) {
+                    String featureValue = featSup.renderFeatureValue(aFeature, value);
+                    if (isNotBlank(featureValue)) {
+                        valuesMap.put(featureIndexName, featureValue);
+                    }
+                }
+            }
+            return valuesMap;
         }
-        values.put(featureIndexName(aFieldPrefix, aFeaturePrefix, aFeature), featureValue);
-        return values;
+        if (TYPE_NAME_BOOLEAN.equals(aFeature.getType())) {
+            var value = FSUtil.getFeature(aAnnotation, aFeature.getName(), Boolean.class);
+            var valuesMap = new HashSetValuedHashMap<String, String>();
+            valuesMap.put(featureIndexName, value ? "true" : "false");
+            return valuesMap;
+        }
+        else {
+            var valuesMap = new HashSetValuedHashMap<String, String>();
+            String featureValue = featSup.renderFeatureValue(aFeature, aAnnotation);
+            if (isNotBlank(featureValue)) {
+                valuesMap.put(featureIndexName, featureValue);
+            }
+            return valuesMap;
+        }
     }
 
     @Override

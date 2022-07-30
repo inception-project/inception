@@ -24,12 +24,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 
 public class SearchQueryRequest
 {
     private final Project project;
     private final User user;
     private final String query;
+    private final AnnotationSearchState prefs;
 
     private final SourceDocument limitedToDocument;
 
@@ -39,20 +41,22 @@ public class SearchQueryRequest
     private final long offset;
     private final long count;
 
-    public SearchQueryRequest(Project aProject, User aUser, String aQuery)
+    public SearchQueryRequest(Project aProject, User aUser, String aQuery,
+            AnnotationSearchState aPrefs)
     {
-        this(aProject, aUser, aQuery, null);
+        this(aProject, aUser, aQuery, null, aPrefs);
     }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
-            SourceDocument aLimitedToDocument)
+            SourceDocument aLimitedToDocument, AnnotationSearchState aPrefs)
     {
-        this(aProject, aUser, aQuery, aLimitedToDocument, null, null, 0, Integer.MAX_VALUE);
+        this(aProject, aUser, aQuery, aLimitedToDocument, null, null, 0, Integer.MAX_VALUE, aPrefs);
     }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
             SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
-            AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
+            AnnotationFeature aAnnotationFeature, long aOffset, long aCount,
+            AnnotationSearchState aPrefs)
     {
         super();
         project = aProject;
@@ -63,6 +67,7 @@ public class SearchQueryRequest
         annotationFeature = aAnnotationFeature;
         offset = aOffset;
         count = aCount;
+        prefs = aPrefs;
     }
 
     public Project getProject()
@@ -103,5 +108,10 @@ public class SearchQueryRequest
     public long getCount()
     {
         return count;
+    }
+
+    public AnnotationSearchState getSearchSettings()
+    {
+        return prefs;
     }
 }

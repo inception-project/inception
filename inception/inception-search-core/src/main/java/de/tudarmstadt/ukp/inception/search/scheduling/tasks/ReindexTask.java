@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +80,7 @@ public class ReindexTask
         // for re-indexing and for indexing individual source/annotation documents in the project.
         if (aTask instanceof ReindexTask || aTask instanceof IndexSourceDocumentTask
                 || aTask instanceof IndexAnnotationDocumentTask) {
-            if (getProject().getId() == aTask.getProject().getId()) {
+            if (Objects.equals(getProject().getId(), aTask.getProject().getId())) {
                 return UNQUEUE_EXISTING_AND_QUEUE_THIS;
             }
         }

@@ -25,8 +25,8 @@ import javax.annotation.Nullable;
 
 import org.apache.uima.cas.text.AnnotationPredicates;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public abstract class AnnotationSuggestion
     implements Serializable

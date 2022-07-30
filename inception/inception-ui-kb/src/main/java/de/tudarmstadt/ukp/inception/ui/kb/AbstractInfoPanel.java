@@ -289,8 +289,8 @@ public abstract class AbstractInfoPanel<T extends KBObject>
                             handleModel).setParameters(statementsWithReference.size()));
 
         }
-        confirmationDialog.show(aTarget);
         confirmationDialog.setConfirmAction(this::actionDelete);
+        confirmationDialog.show(aTarget);
     }
 
     private void actionCreateSubclass(AjaxRequestTarget aTarget)

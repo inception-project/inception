@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -49,11 +48,8 @@ import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -67,6 +63,9 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.search.Formats;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.StatisticsOptions;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.Granularities;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
@@ -247,12 +246,12 @@ public class StatisticsAnnotationSidebar
         }
 
         try {
-            withoutProblematicStats = hideNull
-                    ? searchService.getProjectStatistics(currentUser, projectModel.getObject(),
-                            OptionalInt.empty(), OptionalInt.empty(),
-                            new HashSet<AnnotationFeature>(features)).getNonZeroResults()
+            withoutProblematicStats = hideNull ? searchService
+                    .getProjectStatistics(currentUser, projectModel.getObject(), Integer.MIN_VALUE,
+                            Integer.MAX_VALUE, new HashSet<AnnotationFeature>(features))
+                    .getNonZeroResults()
                     : searchService.getProjectStatistics(currentUser, projectModel.getObject(),
-                            OptionalInt.empty(), OptionalInt.empty(),
+                            Integer.MIN_VALUE, Integer.MAX_VALUE,
                             new HashSet<AnnotationFeature>(features)).getResults();
 
         }

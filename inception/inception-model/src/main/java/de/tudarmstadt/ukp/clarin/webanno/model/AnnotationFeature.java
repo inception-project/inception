@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getUimaTypeName;
+
 import java.io.Serializable;
 
 import javax.persistence.Cacheable;
@@ -33,6 +36,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.apache.uima.cas.Feature;
+import org.apache.uima.jcas.cas.CommonPrimitiveArray;
+import org.apache.uima.jcas.cas.TOP;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NotFound;
@@ -171,6 +177,31 @@ public class AnnotationFeature
         type = aType;
         description = aDescription;
         tagset = aTagSet;
+    }
+
+    private AnnotationFeature(Builder builder)
+    {
+        this.id = builder.id;
+        this.type = builder.type;
+        this.layer = builder.layer;
+        this.project = builder.project;
+        this.tagset = builder.tagset;
+        this.uiName = builder.uiName;
+        this.description = builder.description;
+        this.enabled = builder.enabled;
+        this.name = builder.name;
+        this.visible = builder.visible;
+        this.includeInHover = builder.includeInHover;
+        this.remember = builder.remember;
+        this.hideUnconstraintFeature = builder.hideUnconstraintFeature;
+        this.required = builder.required;
+        this.multiValueMode = builder.multiValueMode;
+        this.linkMode = builder.linkMode;
+        this.linkTypeName = builder.linkTypeName;
+        this.linkTypeRoleFeatureName = builder.linkTypeRoleFeatureName;
+        this.linkTypeTargetFeatureName = builder.linkTypeTargetFeatureName;
+        this.traits = builder.traits;
+        this.curatable = builder.curatable;
     }
 
     public Long getId()
@@ -583,5 +614,192 @@ public class AnnotationFeature
             return false;
         }
         return true;
+    }
+
+    public static Builder builder()
+    {
+        return new Builder();
+    }
+
+    public static final class Builder
+    {
+        private Long id;
+        private String type;
+        private AnnotationLayer layer;
+        private Project project;
+        private TagSet tagset;
+        private String uiName;
+        private String description;
+        private boolean enabled = true;
+        private String name;
+        private boolean visible = true;
+        private boolean includeInHover = false;
+        private boolean remember;
+        private boolean hideUnconstraintFeature;
+        private boolean required;
+        private MultiValueMode multiValueMode = MultiValueMode.NONE;
+        private LinkMode linkMode = LinkMode.NONE;
+        private String linkTypeName;
+        private String linkTypeRoleFeatureName;
+        private String linkTypeTargetFeatureName;
+        private String traits;
+        private boolean curatable = true;
+
+        private Builder()
+        {
+        }
+
+        public Builder forFeature(Feature aFeature)
+        {
+            withType(aFeature.getRange().getName());
+            withName(aFeature.getShortName());
+            withUiName(aFeature.getShortName());
+            return this;
+        }
+
+        public Builder withId(Long id)
+        {
+            this.id = id;
+            return this;
+        }
+
+        public Builder withType(String type)
+        {
+            this.type = type;
+            return this;
+        }
+
+        public Builder withRange(String type)
+        {
+            return withType(type);
+        }
+
+        public Builder withRange(Class<? extends TOP> aClazz)
+        {
+            if (CommonPrimitiveArray.class.isAssignableFrom(aClazz)) {
+                withMultiValueMode(ARRAY);
+            }
+            return withType(getUimaTypeName(aClazz));
+        }
+
+        public Builder withLayer(AnnotationLayer layer)
+        {
+            this.layer = layer;
+            this.project = layer.getProject();
+            return this;
+        }
+
+        public Builder withProject(Project project)
+        {
+            this.project = project;
+            return this;
+        }
+
+        public Builder withTagset(TagSet tagset)
+        {
+            this.tagset = tagset;
+            return this;
+        }
+
+        public Builder withUiName(String uiName)
+        {
+            this.uiName = uiName;
+            return this;
+        }
+
+        public Builder withDescription(String description)
+        {
+            this.description = description;
+            return this;
+        }
+
+        public Builder withEnabled(boolean enabled)
+        {
+            this.enabled = enabled;
+            return this;
+        }
+
+        public Builder withName(String name)
+        {
+            this.name = name;
+            return this;
+        }
+
+        public Builder withVisible(boolean visible)
+        {
+            this.visible = visible;
+            return this;
+        }
+
+        public Builder withIncludeInHover(boolean includeInHover)
+        {
+            this.includeInHover = includeInHover;
+            return this;
+        }
+
+        public Builder withRemember(boolean remember)
+        {
+            this.remember = remember;
+            return this;
+        }
+
+        public Builder withHideUnconstraintFeature(boolean hideUnconstraintFeature)
+        {
+            this.hideUnconstraintFeature = hideUnconstraintFeature;
+            return this;
+        }
+
+        public Builder withRequired(boolean required)
+        {
+            this.required = required;
+            return this;
+        }
+
+        public Builder withMultiValueMode(MultiValueMode multiValueMode)
+        {
+            this.multiValueMode = multiValueMode;
+            return this;
+        }
+
+        public Builder withLinkMode(LinkMode linkMode)
+        {
+            this.linkMode = linkMode;
+            return this;
+        }
+
+        public Builder withLinkTypeName(String linkTypeName)
+        {
+            this.linkTypeName = linkTypeName;
+            return this;
+        }
+
+        public Builder withLinkTypeRoleFeatureName(String linkTypeRoleFeatureName)
+        {
+            this.linkTypeRoleFeatureName = linkTypeRoleFeatureName;
+            return this;
+        }
+
+        public Builder withLinkTypeTargetFeatureName(String linkTypeTargetFeatureName)
+        {
+            this.linkTypeTargetFeatureName = linkTypeTargetFeatureName;
+            return this;
+        }
+
+        public Builder withTraits(String traits)
+        {
+            this.traits = traits;
+            return this;
+        }
+
+        public Builder withCuratable(boolean curatable)
+        {
+            this.curatable = curatable;
+            return this;
+        }
+
+        public AnnotationFeature build()
+        {
+            return new AnnotationFeature(this);
+        }
     }
 }

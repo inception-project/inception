@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
 import org.apache.uima.cas.AnnotationBaseFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationCreatedEvent;
 
 public class DocumentMetadataCreatedEvent
     extends DocumentMetadataEvent

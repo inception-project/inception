@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.externaleditor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil.wrapInTryCatch;
 import static java.lang.String.format;
+import static java.lang.invoke.MethodHandles.lookup;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 import static org.apache.wicket.markup.head.OnDomReadyHeaderItem.forScript;
+import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -38,22 +41,13 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.DocumentViewExtensionPoint;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.JumpToEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
@@ -62,19 +56,32 @@ import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
 import de.tudarmstadt.ukp.inception.externaleditor.command.CommandQueue;
-import de.tudarmstadt.ukp.inception.externaleditor.command.JumpToCommand;
+import de.tudarmstadt.ukp.inception.externaleditor.command.EditorCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.command.LoadAnnotationsCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.command.QueuedEditorCommandsMetaDataKey;
+import de.tudarmstadt.ukp.inception.externaleditor.command.ScrollToCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavascriptResourceReference;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 public abstract class ExternalAnnotationEditorBase
     extends AnnotationEditorBase
 {
     private static final long serialVersionUID = -196999336741495239L;
 
-    protected static final String MID_VIS = "vis";
+    private static final Logger LOG = getLogger(lookup().lookupClass());
+
+    protected static final String CID_VIS = "vis";
 
     private @SpringBean DocumentViewExtensionPoint documentViewExtensionPoint;
     private @SpringBean DocumentService documentService;
@@ -90,6 +97,9 @@ public abstract class ExternalAnnotationEditorBase
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
+
+        setOutputMarkupPlaceholderTag(true);
+        add(visibleWhen(getModel().map(AnnotatorState::getProject).isPresent()));
     }
 
     @Override
@@ -97,18 +107,24 @@ public abstract class ExternalAnnotationEditorBase
     {
         super.onInitialize();
 
-        setOutputMarkupPlaceholderTag(true);
-
-        diamBehavior = new DiamAjaxBehavior();
-        diamBehavior.addPriorityHandler(new ShowContextMenuHandler());
-        add(diamBehavior);
+        vis = makeView();
+        vis.setOutputMarkupPlaceholderTag(true);
+        queue(vis);
 
         contextMenu = new ContextMenu("contextMenu");
         queue(contextMenu);
 
-        vis = makeView();
-        vis.setOutputMarkupPlaceholderTag(true);
-        queue(vis);
+        diamBehavior = createDiamBehavior();
+        add(diamBehavior);
+
+        LOG.trace("[{}][{}] {}", getMarkupId(), vis.getMarkupId(), getClass().getSimpleName());
+    }
+
+    protected DiamAjaxBehavior createDiamBehavior()
+    {
+        var diam = new DiamAjaxBehavior();
+        diam.addPriorityHandler(new ShowContextMenuHandler());
+        return diam;
     }
 
     protected Component getViewComponent()
@@ -147,22 +163,29 @@ public abstract class ExternalAnnotationEditorBase
     }
 
     @OnEvent
-    public void onJumpTo(JumpToEvent aEvent)
+    public void onJumpTo(ScrollToEvent aEvent)
     {
         QueuedEditorCommandsMetaDataKey.get()
-                .add(new JumpToCommand(aEvent.getOffset(), aEvent.getPosition()));
+                .add(new ScrollToCommand(aEvent.getOffset(), aEvent.getPosition()));
 
         // Do not call our requestRender because we do not want to unnecessarily add the
         // LoadAnnotationsCommand
-        super.requestRender(aEvent.getRequestHandler());
+        if (aEvent.getRequestHandler() != null) {
+            super.requestRender(aEvent.getRequestHandler());
+        }
     }
 
     @Override
     public void requestRender(AjaxRequestTarget aTarget)
     {
-        QueuedEditorCommandsMetaDataKey.get().add(new LoadAnnotationsCommand());
+        QueuedEditorCommandsMetaDataKey.get().add(renderCommand());
 
         super.requestRender(aTarget);
+    }
+
+    protected EditorCommand renderCommand()
+    {
+        return new LoadAnnotationsCommand();
     }
 
     protected abstract AnnotationEditorProperties getProperties();
@@ -186,8 +209,8 @@ public abstract class ExternalAnnotationEditorBase
     private String initScript()
     {
         var commandQueue = QueuedEditorCommandsMetaDataKey.get();
-        // If we initialize the editor, it should auto-load the annotations - we do nothing
-        commandQueue.removeIf(cmd -> cmd instanceof LoadAnnotationsCommand);
+        // // If we initialize the editor, it should auto-load the annotations - we do nothing
+        // commandQueue.removeIf(cmd -> cmd instanceof LoadAnnotationsCommand);
         return assembleScript(commandQueue);
     }
 

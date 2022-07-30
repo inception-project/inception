@@ -33,25 +33,26 @@ public class AnnotationPreferencesProjectSettingsPanel
 {
     private static final long serialVersionUID = 4618192360418016955L;
 
+    private static final String CID_FORM = "form";
+    private static final String CID_SAVE = "save";
     private static final String CID_ANNOTATION_SIDEBAR = "annotationSidebar";
     private static final String CID_ANNOTATION_EDITOR = "annotationEditor";
     private static final String CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS = "bratAnnotationEditorManagerPrefs";
+    private static final String CID_ANNOTATION_SEARCH = "annotationSearch";
 
     public AnnotationPreferencesProjectSettingsPanel(String aId, IModel<Project> aProjectModel)
     {
         super(aId, aProjectModel);
         setOutputMarkupPlaceholderTag(true);
 
-        LambdaForm<Void> form = new LambdaForm<>("form");
+        queue(new LambdaForm<>(CID_FORM));
+        queue(new LambdaAjaxButton<>(CID_SAVE, this::actionSave));
 
-        form.add(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProjectModel));
-        form.add(new DefaultAnnotationEditorStatePanel(CID_ANNOTATION_EDITOR, aProjectModel));
-        form.add(new BratAnnotationEditorManagerPrefPanel(CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS,
+        queue(new DefaultAnnotationSidebarStatePanel(CID_ANNOTATION_SIDEBAR, aProjectModel));
+        queue(new DefaultAnnotationEditorStatePanel(CID_ANNOTATION_EDITOR, aProjectModel));
+        queue(new BratAnnotationEditorManagerPrefPanel(CID_BRAT_ANNOTATION_EDITOR_MANAGER_PREFS,
                 aProjectModel));
-
-        form.add(new LambdaAjaxButton<>("save", this::actionSave));
-
-        add(form);
+        queue(new AnnotationSearchStatePanel(CID_ANNOTATION_SEARCH, aProjectModel));
     }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Void> aDummy)

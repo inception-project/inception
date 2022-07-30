@@ -20,7 +20,7 @@
   <parent>
     <artifactId>inception-app</artifactId>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    <version>24.0-SNAPSHOT</version>
+    <version>25.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <artifactId>inception-bootstrap</artifactId>
@@ -55,6 +55,16 @@
             <phase>${ts-build-phase}</phase>
             <configuration>
               <arguments>run build:minified</arguments>
+            </configuration>
+          </execution>
+          <execution>
+            <id>npm build-js</id>
+            <goals>
+              <goal>npm</goal>
+            </goals>
+            <phase>${ts-build-phase}</phase>
+            <configuration>
+              <arguments>run build-js</arguments>
             </configuration>
           </execution>
         </executions>

@@ -17,19 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,18 +36,13 @@ import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.cas.StringArray;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.BooleanFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.NumberFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.StringFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -59,37 +51,168 @@ import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.multistring.MultiValueStringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.number.NumberFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupportPropertiesImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
+import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
+import inception.test.MultiValueHost;
+import inception.test.PrimitiveHost;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
+import mtas.analysis.util.MtasParserException;
 
+@ExtendWith(MockitoExtension.class)
 public class MtasUimaParserTest
 {
-    private Project project;
     private @Mock AnnotationSchemaService annotationSchemaService;
+
     private LayerSupportRegistryImpl layerSupportRegistry;
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private FeatureIndexingSupportRegistryImpl featureIndexingSupportRegistry;
+
+    private AnnotationSearchState prefs;
+    private Project project;
     private JCas jcas;
+
+    private AnnotationLayer namedEntityLayer;
+    private AnnotationFeature namedEntityValueFeature;
+    private AnnotationFeature namedEntityIdentifierFeature;
+
+    private AnnotationLayer tokenLayer;
+    private AnnotationFeature tokenLayerPos;
+
+    private AnnotationLayer posLayer;
+    private AnnotationFeature posLayerValue;
+
+    private AnnotationLayer depLayer;
+    private AnnotationFeature dependencyLayerGovernor;
+    private AnnotationFeature dependencyLayerDependent;
+
+    private AnnotationLayer multiValueHostLayer;
+    private AnnotationFeature multiValueHostStringArrayFeature;
+
+    private AnnotationLayer primitiveHostLayer;
+    private AnnotationFeature primitiveHostBooleanFeature;
 
     @BeforeEach
     public void setup() throws Exception
     {
-        initMocks(this);
-
         project = new Project();
         project.setId(1l);
         project.setName("test project");
 
+        namedEntityLayer = AnnotationLayer.builder() //
+                .forJCasClass(NamedEntity.class) //
+                .withProject(project) //
+                .build();
+
+        namedEntityValueFeature = AnnotationFeature.builder() //
+                .withLayer(namedEntityLayer) //
+                .withName(NamedEntity._FeatName_value) //
+                .withUiName(NamedEntity._FeatName_value) //
+                .withType(CAS.TYPE_NAME_STRING) //
+                .build();
+
+        namedEntityIdentifierFeature = AnnotationFeature.builder() //
+                .withLayer(namedEntityLayer) //
+                .withName(NamedEntity._FeatName_identifier) //
+                .withUiName(NamedEntity._FeatName_identifier) //
+                .withRange(CAS.TYPE_NAME_STRING) //
+                .build();
+
+        tokenLayer = AnnotationLayer.builder() //
+                .forJCasClass(Token.class) //
+                .withProject(project) //
+                .withAnchoringMode(SINGLE_TOKEN) //
+                .build();
+
+        tokenLayerPos = AnnotationFeature.builder() //
+                .withLayer(tokenLayer) //
+                .withName(Token._FeatName_pos) //
+                .withRange(POS.class) //
+                .build();
+
+        posLayer = AnnotationLayer.builder() //
+                .forJCasClass(POS.class) //
+                .withProject(project) //
+                .withAnchoringMode(SINGLE_TOKEN) //
+                .build();
+
+        posLayerValue = AnnotationFeature.builder() //
+                .withLayer(posLayer) //
+                .withName(POS._FeatName_PosValue) //
+                .withUiName(POS._FeatName_PosValue) //
+                .withRange(CAS.TYPE_NAME_STRING) //
+                .build();
+
+        depLayer = AnnotationLayer.builder() //
+                .forJCasClass(Dependency.class) //
+                .withType(RELATION_TYPE) //
+                .withProject(project) //
+                .withAnchoringMode(SINGLE_TOKEN) //
+                .withAttachFeature(tokenLayerPos) //
+                .build();
+
+        dependencyLayerGovernor = AnnotationFeature.builder() //
+                .withLayer(depLayer) //
+                .withName(FEAT_REL_SOURCE) //
+                .withUiName(FEAT_REL_SOURCE) //
+                .withRange(Token.class) //
+                .build();
+
+        dependencyLayerDependent = AnnotationFeature.builder() //
+                .withLayer(depLayer) //
+                .withName(FEAT_REL_TARGET) //
+                .withUiName(FEAT_REL_TARGET) //
+                .withRange(Token.class) //
+                .build();
+
+        multiValueHostLayer = AnnotationLayer.builder() //
+                .forJCasClass(MultiValueHost.class) //
+                .withProject(project) //
+                .build();
+
+        multiValueHostStringArrayFeature = AnnotationFeature.builder() //
+                .withLayer(multiValueHostLayer) //
+                .withName(MultiValueHost._FeatName_stringArray) //
+                .withUiName(MultiValueHost._FeatName_stringArray) //
+                .withRange(StringArray.class) //
+                .build();
+
+        primitiveHostLayer = AnnotationLayer.builder() //
+                .forJCasClass(PrimitiveHost.class) //
+                .withProject(project) //
+                .build();
+
+        primitiveHostBooleanFeature = AnnotationFeature.builder() //
+                .withLayer(primitiveHostLayer) //
+                .withName(PrimitiveHost._FeatName_booleanFeature) //
+                .withUiName(PrimitiveHost._FeatName_booleanFeature) //
+                .withRange(TYPE_NAME_BOOLEAN) //
+                .build();
+
+        prefs = new AnnotationSearchState();
+
         layerSupportRegistry = new LayerSupportRegistryImpl(emptyList());
 
-        featureSupportRegistry = new FeatureSupportRegistryImpl(asList(new StringFeatureSupport(),
-                new BooleanFeatureSupport(), new NumberFeatureSupport()));
+        featureSupportRegistry = new FeatureSupportRegistryImpl(asList( //
+                new StringFeatureSupport(), //
+                new BooleanFeatureSupport(), //
+                new NumberFeatureSupport(), //
+                new MultiValueStringFeatureSupport(new StringFeatureSupportPropertiesImpl(),
+                        null)));
         featureSupportRegistry.init();
 
-        featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(
-                asList(new PrimitiveUimaIndexingSupport(featureSupportRegistry)));
+        featureIndexingSupportRegistry = new FeatureIndexingSupportRegistryImpl(asList( //
+                new PrimitiveUimaIndexingSupport(featureSupportRegistry)));
         featureIndexingSupportRegistry.init();
 
         // Resetting the JCas is faster than re-creating it
@@ -107,17 +230,13 @@ public class MtasUimaParserTest
         TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test . \n This is sentence two .");
 
-        // Only tokens and sentences here, no extra layers
-        when(annotationSchemaService.listAnnotationLayer(project)).thenReturn(asList());
-
         var sut = new MtasUimaParser(asList(), annotationSchemaService,
-                featureIndexingSupportRegistry);
+                featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
         MtasUtils.print(tc);
 
-        List<MtasToken> tokens = new ArrayList<>();
-        tc.iterator().forEachRemaining(tokens::add);
+        List<MtasToken> tokens = toList(tc);
 
         assertThat(tokens) //
                 .filteredOn(t -> "Token".equals(t.getPrefix())) //
@@ -149,31 +268,81 @@ public class MtasUimaParserTest
         builder.add(" ");
         builder.add(".", Token.class);
 
-        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
-                SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
-        when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
-                .thenReturn(asList(layer));
-
         MtasUimaParser sut = new MtasUimaParser(
-                asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
-                        new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)),
-                annotationSchemaService, featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
+                asList(namedEntityValueFeature, namedEntityIdentifierFeature),
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
 
+        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         MtasUtils.print(tc);
 
         List<MtasToken> tokens = new ArrayList<>();
         tc.iterator().forEachRemaining(tokens::add);
 
         assertThat(tokens) //
-                .filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
-                .extracting(MtasToken::getPrefix) //
-                .containsExactly("Named_Entity", "Named_Entity.value");
+                .filteredOn(t -> t.getPrefix().startsWith(namedEntityLayer.getUiName()))
+                .extracting(MtasToken::getPrefix, MtasToken::getPostfix) //
+                .containsExactly( //
+                        tuple("NamedEntity", ""), //
+                        tuple("NamedEntity.value", "PER"));
+    }
+
+    @Test
+    void testMultiValueStringFeature() throws Exception
+    {
+        TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "test");
+
+        var mvh = new MultiValueHost(jcas, 0, 4);
+        mvh.setStringArray(StringArray.create(jcas, new String[] { "a", "b" }));
+        mvh.addToIndexes();
+
+        MtasUimaParser sut = new MtasUimaParser(asList(multiValueHostStringArrayFeature),
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
+        MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
+
+        MtasUtils.print(result);
+
+        List<MtasToken> tokens = toList(result);
 
         assertThat(tokens) //
-                .filteredOn(t -> t.getPrefix().startsWith("Named_Entity")) //
-                .extracting(MtasToken::getPostfix) //
-                .containsExactly("", "PER");
+                .filteredOn(t -> t.getPrefix().startsWith(multiValueHostLayer.getUiName())) //
+                .extracting(MtasToken::getPrefix, MtasToken::getPostfix) //
+                .containsExactly( //
+                        tuple("MultiValueHost", "test"), //
+                        tuple("MultiValueHost.stringArray", "a"), //
+                        tuple("MultiValueHost.stringArray", "b"));
+    }
+
+    @Test
+    void testBooleanFeature() throws Exception
+    {
+        TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "test");
+
+        var ph1 = new PrimitiveHost(jcas, 0, 4);
+        ph1.setBooleanFeature(true);
+        ph1.addToIndexes();
+
+        var ph2 = new PrimitiveHost(jcas, 0, 4);
+        ph2.setBooleanFeature(false);
+        ph2.addToIndexes();
+
+        MtasUimaParser sut = new MtasUimaParser(asList(primitiveHostBooleanFeature),
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
+        MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
+
+        MtasUtils.print(result);
+
+        List<MtasToken> tokens = toList(result);
+
+        assertThat(tokens) //
+                .filteredOn(t -> t.getPrefix().startsWith(primitiveHostLayer.getUiName())) //
+                .extracting(MtasToken::getPrefix, MtasToken::getPostfix) //
+                .containsExactly( //
+                        tuple("PrimitiveHost", "test"), //
+                        tuple("PrimitiveHost", "test"), //
+                        tuple("PrimitiveHost.booleanFeature", "false"), //
+                        tuple("PrimitiveHost.booleanFeature", "true"));
     }
 
     @Test
@@ -186,24 +355,18 @@ public class MtasUimaParserTest
         zeroWidthNe.setValue("OTH");
         zeroWidthNe.addToIndexes();
 
-        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
-                SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
-        when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
-                .thenReturn(asList(layer));
-
         MtasUimaParser sut = new MtasUimaParser(
-                asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
-                        new AnnotationFeature(2l, layer, "identifier", CAS.TYPE_NAME_STRING)),
-                annotationSchemaService, featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
+                asList(namedEntityValueFeature, namedEntityIdentifierFeature),
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
+        MtasTokenCollection result = sut.createTokenCollection(jcas.getCas());
 
-        MtasUtils.print(tc);
+        MtasUtils.print(result);
 
         List<MtasToken> tokens = new ArrayList<>();
-        tc.iterator().forEachRemaining(tokens::add);
+        result.iterator().forEachRemaining(tokens::add);
 
         assertThat(tokens) //
-                .filteredOn(t -> t.getPrefix().startsWith("Named_Entity")) //
+                .filteredOn(t -> t.getPrefix().startsWith(namedEntityLayer.getUiName())) //
                 .isEmpty();
     }
 
@@ -233,45 +396,16 @@ public class MtasUimaParserTest
         d1.setGovernor(t1);
         d1.addToIndexes();
 
-        // Set up annotation schema with POS and Dependency
-        AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                project, true, SINGLE_TOKEN, NO_OVERLAP);
-        tokenLayer.setId(1l);
-        AnnotationFeature tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos",
-                POS.class.getName());
-
-        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
-                project, true, SINGLE_TOKEN, NO_OVERLAP);
-        posLayer.setId(2l);
-        AnnotationFeature posLayerValue = new AnnotationFeature(1l, posLayer, "PosValue",
-                CAS.TYPE_NAME_STRING);
-
-        AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
-                RELATION_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
-        depLayer.setId(3l);
-        depLayer.setAttachType(tokenLayer);
-        depLayer.setAttachFeature(tokenLayerPos);
-        AnnotationFeature dependencyLayerGovernor = new AnnotationFeature(2l, depLayer,
-                FEAT_REL_SOURCE, Token.class.getName());
-        AnnotationFeature dependencyLayerDependent = new AnnotationFeature(3l, depLayer,
-                FEAT_REL_TARGET, Token.class.getName());
-
-        when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
-                .thenReturn(asList(tokenLayer, posLayer, depLayer));
-
-        when(annotationSchemaService.getAdapter(posLayer))
-                .thenReturn(new SpanAdapter(layerSupportRegistry, featureSupportRegistry, null,
-                        posLayer, () -> asList(posLayerValue), null));
-
-        when(annotationSchemaService.getAdapter(depLayer)).thenReturn(new RelationAdapter(
-                layerSupportRegistry, featureSupportRegistry, null, depLayer, FEAT_REL_TARGET,
-                FEAT_REL_SOURCE, () -> asList(dependencyLayerGovernor, dependencyLayerDependent),
-                emptyList()));
+        when(annotationSchemaService.getAdapter(depLayer)) //
+                .thenReturn(new RelationAdapter(layerSupportRegistry, featureSupportRegistry, null,
+                        depLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+                        () -> asList(dependencyLayerGovernor, dependencyLayerDependent),
+                        emptyList()));
 
         MtasUimaParser sut = new MtasUimaParser(
                 asList(tokenLayerPos, posLayerValue, dependencyLayerGovernor,
                         dependencyLayerDependent),
-                annotationSchemaService, featureIndexingSupportRegistry);
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
         MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
 
         MtasUtils.print(tc);
@@ -288,5 +422,12 @@ public class MtasUimaParserTest
                         "Dependency-source.PosValue=A", //
                         "Dependency-target=b", //
                         "Dependency-target.PosValue=B");
+    }
+
+    private List<MtasToken> toList(MtasTokenCollection result) throws MtasParserException
+    {
+        List<MtasToken> tokens = new ArrayList<>();
+        result.iterator().forEachRemaining(tokens::add);
+        return tokens;
     }
 }

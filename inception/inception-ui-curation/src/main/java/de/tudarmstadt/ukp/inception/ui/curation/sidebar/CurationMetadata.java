@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateMetaDataKey;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorStateMetaDataKey;
 
 public final class CurationMetadata
 {

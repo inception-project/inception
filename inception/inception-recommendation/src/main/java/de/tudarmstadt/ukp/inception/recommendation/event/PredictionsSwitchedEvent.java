@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class PredictionsSwitchedEvent
 {

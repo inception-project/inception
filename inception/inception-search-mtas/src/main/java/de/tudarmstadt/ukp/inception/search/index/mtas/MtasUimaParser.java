@@ -17,16 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getRealCas;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
+import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static java.lang.invoke.MethodHandles.lookup;
 import static mtas.analysis.util.MtasTokenizerFactory.ARGUMENT_PARSER_ARGS;
 import static org.apache.commons.io.IOUtils.toCharArray;
+import static org.apache.commons.lang3.StringUtils.toRootLowerCase;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectAll;
@@ -59,17 +60,20 @@ import org.xml.sax.SAXException;
 
 import com.github.openjson.JSONObject;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
+import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 import de.tudarmstadt.ukp.inception.search.model.BulkIndexingContext;
 import mtas.analysis.parser.MtasParser;
 import mtas.analysis.token.MtasToken;
@@ -105,6 +109,7 @@ public class MtasUimaParser
 
     // Annotation schema and project services with knowledge base service
     private @Autowired ProjectService projectService;
+    private @Autowired PreferencesService preferencesService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
     private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
 
@@ -113,6 +118,8 @@ public class MtasUimaParser
 
     private NavigableMap<Integer, Pair<AnnotationFS, Integer>> tokenBeginIndex;
     private NavigableMap<Integer, Pair<AnnotationFS, Integer>> tokenEndIndex;
+
+    private AnnotationSearchState prefs;
 
     public MtasUimaParser(MtasConfiguration config)
     {
@@ -142,6 +149,8 @@ public class MtasUimaParser
                             .computeIfAbsent(feature.getLayer().getName(), key -> new ArrayList<>())
                             .add(feature);
                 });
+
+                prefs = indexingContext.getIndexingSettings();
             }
             else {
                 Project project = projectService
@@ -161,6 +170,8 @@ public class MtasUimaParser
                             layerFeatures.computeIfAbsent(feature.getLayer().getName(),
                                     key -> new ArrayList<>()).add(feature);
                         });
+
+                prefs = preferencesService.loadDefaultTraitsForProject(KEY_SEARCH_STATE, project);
             }
         }
         catch (Exception e) {
@@ -172,12 +183,14 @@ public class MtasUimaParser
     // This constructor is used for testing
     public MtasUimaParser(List<AnnotationFeature> aFeaturesToIndex,
             AnnotationSchemaService aAnnotationSchemaService,
-            FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry)
+            FeatureIndexingSupportRegistry aFeatureIndexingSupportRegistry,
+            AnnotationSearchState aPrefs)
     {
         super(null);
 
         annotationSchemaService = aAnnotationSchemaService;
         featureIndexingSupportRegistry = aFeatureIndexingSupportRegistry;
+        prefs = aPrefs;
 
         // Initialize and populate the hash maps for the layers and features
         for (AnnotationFeature feature : aFeaturesToIndex) {
@@ -287,7 +300,7 @@ public class MtasUimaParser
             int aMtasId)
     {
         int mtasId = aMtasId;
-        int fsAddress = getAddr(aAnnotation);
+        int fsAddress = ICasUtil.getAddr(aAnnotation);
         if (aAnnotation.getEnd() - aAnnotation.getBegin() > OVERSIZED_ANNOTATION_LIMIT) {
             LOG.trace("Skipping indexing of very long annotation: {} {} characters at [{}-{}]",
                     aAnnotation.getType().getName(), aAnnotation.getEnd() - aAnnotation.getBegin(),
@@ -430,6 +443,7 @@ public class MtasUimaParser
     {
         String field = MTAS_TOKEN_LABEL;
         String value = aAnnotation.getCoveredText();
+        value = prefs.isCaseSensitive() ? value : toRootLowerCase(value);
         MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
@@ -442,6 +456,7 @@ public class MtasUimaParser
     {
         String field = MTAS_SENTENCE_LABEL;
         String value = aAnnotation.getCoveredText();
+        value = prefs.isCaseSensitive() ? value : toRootLowerCase(value);
         MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
@@ -454,7 +469,8 @@ public class MtasUimaParser
             int aFSAddress)
     {
         String field = getIndexedName(aField);
-        MtasToken mt = new MtasTokenString(aMtasId, field, aValue, aRange.getBegin());
+        var value = prefs.isCaseSensitive() ? aValue : toRootLowerCase(aValue);
+        MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
         // Store the FS address as payload so we can identify which MtasTokens were generated from
@@ -470,7 +486,8 @@ public class MtasUimaParser
             int aEndOffset, Range aRange, int aFSAddress)
     {
         String field = getIndexedName(aField);
-        MtasToken mt = new MtasTokenString(aMtasId, field, aValue, aRange.getBegin());
+        var value = prefs.isCaseSensitive() ? aValue : toRootLowerCase(aValue);
+        MtasToken mt = new MtasTokenString(aMtasId, field, value, aRange.getBegin());
         mt.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mt.addPositionRange(aRange.getBegin(), aRange.getEnd());
         // Store the FS address as payload so we can identify which MtasTokens were generated from

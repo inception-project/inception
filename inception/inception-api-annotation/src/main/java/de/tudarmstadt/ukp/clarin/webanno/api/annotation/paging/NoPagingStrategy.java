@@ -23,11 +23,13 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
+import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
 public class NoPagingStrategy
     extends PagingStrategy_ImplBase
@@ -50,9 +52,9 @@ public class NoPagingStrategy
     }
 
     @Override
-    public DefaultPagingNavigator createPageNavigator(String aId, AnnotationPageBase aPage)
+    public DefaultPagingNavigator createPageNavigator(String aId, Page aPage)
     {
-        DefaultPagingNavigator navi = new DefaultPagingNavigator(aId, aPage);
+        DefaultPagingNavigator navi = new DefaultPagingNavigator(aId, (AnnotationPageBase) aPage);
         navi.setOutputMarkupPlaceholderTag(true);
         navi.setVisible(false);
         return navi;

@@ -26,10 +26,6 @@ import java.util.Arrays;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Relation;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
-
 public class PdfAnnoModelTest
 {
 

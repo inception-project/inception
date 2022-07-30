@@ -38,7 +38,7 @@ public class PdfFormatSupport
     implements FormatSupport
 {
     public static final String ID = "pdf";
-    public static final String NAME = "PDF";
+    public static final String NAME = "PDF (legacy)";
 
     @Override
     public String getId()

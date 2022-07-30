@@ -43,14 +43,14 @@ import { Measurements } from './Measurements'
 import { DocumentData } from './DocumentData'
 import { ENTITY, Entity, TRIGGER } from './Entity'
 import { EQUIV, EventDesc, RELATION } from './EventDesc'
-import { Chunk } from './Chunk'
+import { Chunk, Marker, MarkerStart } from './Chunk'
 import { Fragment } from './Fragment'
 import { Arc } from './Arc'
 import { Row } from './Row'
 import { RectBox } from './RectBox'
 import { AttributeType, ValType } from './AttributeType'
 import { CollectionLoadedResponse } from './CollectionLoadedResponse'
-import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID } from '../protocol/Protocol'
+import { RelationTypeDto, EntityTypeDto, EntityDto, CommentDto, NormalizationDto, SourceData, TriggerDto, AttributeDto, EquivDto, ColorCode, MarkerType, MarkerDto, RelationDto, EDITED, FOCUS, MATCH_FOCUS, MATCH, RoleDto, VID, EDIT_HIGHLIGHT } from '../protocol/Protocol'
 import type { Dispatcher, Message } from '../dispatcher/Dispatcher'
 import * as jsonpatch from 'fast-json-patch'
 import { Operation } from 'fast-json-patch'
@@ -277,6 +277,21 @@ export class Visualizer {
       .on('mouseout', this, this.onMouseOut)
 
     // Object.seal(this);
+  }
+
+  scrollTo (args: { offset: number; position: string }): void {
+    const chunk = this.data?.chunks?.find(
+      chunk => chunk.from <= args.offset && args.offset < chunk.to)
+
+    if (!chunk) {
+      return
+    }
+
+    const scrollTarget = this.svgContainer.querySelector(`text[data-chunk-id='${chunk.index}']`)
+    if (scrollTarget) {
+      console.log('Scrolling to ', scrollTarget)
+      scrollTarget.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
   }
 
   /**
@@ -785,7 +800,7 @@ export class Visualizer {
       return []
     }
 
-    const sortedFragments = []
+    const sortedFragments : Fragment[] = []
 
     Object.values(spans).map((span: Entity) => span.fragments.map(
       fragment => sortedFragments.push(fragment)))
@@ -1294,10 +1309,34 @@ export class Visualizer {
       this.calculateChunkTextElementMeasure(fragment, text))
   }
 
-  private calculateChunkTextElementMeasure (fragment: Fragment | number[], text: SVGTextElement) {
+
+
+  /**
+   * measure the text position in pixels
+   */
+  private calculateChunkTextElementMeasure (fragment: Fragment | Marker, text: SVGTextElement) {
     if (!(fragment instanceof Fragment)) {
       // it's markedText [id, start?, char#, offset]
       if (fragment[2] < 0) { fragment[2] = 0 }
+
+      // Adjust for the browser collapsing whitespace
+      let lastCharSpace = true
+      let collapsedSpaces = 0
+      for (let i = 0; i < fragment[2]; i++) {
+        const c = text.textContent[i]
+        if (/\s/.test(c)) {
+          if (lastCharSpace) {
+            collapsedSpaces++
+          }
+          lastCharSpace = true
+        }
+        else {
+          lastCharSpace = false
+        }
+      }
+
+      fragment[2] -= collapsedSpaces
+
       if (!fragment[2]) { // start
         fragment[3] = text.getStartPositionOfChar(fragment[2]).x
       } else {
@@ -1306,19 +1345,18 @@ export class Visualizer {
       return
     }
 
-    // measure the fragment text position in pixels
     let firstChar = fragment.from - fragment.chunk.from
     if (firstChar < 0) {
       firstChar = 0
       this.dispatcher.post('messages', [[['<strong>WARNING</strong>' +
-        '<br/> ' +
-        'The fragment [' + fragment.from + ', ' + fragment.to + '] (' + fragment.text + ') is not ' +
-        'contained in its designated chunk [' +
-        fragment.chunk.from + ', ' + fragment.chunk.to + '] most likely ' +
-        'due to the fragment starting or ending with a space, please ' +
-        'verify the sanity of your data since we are unable to ' +
-        'visualise this fragment correctly and will drop leading ' +
-        'space characters',
+          '<br/> ' +
+          'The fragment [' + fragment.from + ', ' + fragment.to + '] (' + fragment.text + ') is not ' +
+          'contained in its designated chunk [' +
+          fragment.chunk.from + ', ' + fragment.chunk.to + '] most likely ' +
+          'due to the fragment starting or ending with a space, please ' +
+          'verify the sanity of your data since we are unable to ' +
+          'visualise this fragment correctly and will drop leading ' +
+          'space characters',
       'warning', 15]]])
     }
     let lastChar = fragment.to - fragment.chunk.from - 1
@@ -3151,7 +3189,7 @@ export class Visualizer {
   renderAdjustLayoutForScriptDirection (oversized, rows: Row[], textGroup: SVGTypeMapping<SVGGElement>, sentNumGroup: SVGTypeMapping<SVGGElement>) {
     if (oversized <= 0) return
 
-    const scrollable = findClosestHorizontalScrollable($(this.svg.node))
+    const scrollable = findClosestHorizontalScrollable(this.svg.node)
 
     if (this.rtlmode) {
       rows.map(row => this.fastTranslate(row, oversized, row.translation.y))
@@ -3297,7 +3335,7 @@ export class Visualizer {
       this.svg.attr('style', `font-size: ${this.fontZoom}%;`)
       this.sentNumMargin = 40 * (this.fontZoom / 100.0)
 
-      const scrollable = findClosestVerticalScrollable($(this.svg.node))
+      const scrollable = findClosestVerticalScrollable(this.svg.node)
       const svgWidth = $(this.svgContainer).width()
       this.baseCanvasWidth = svgWidth
       this.canvasWidth = svgWidth - (!scrollable ? scrollbarWidth() : 0)
@@ -4005,46 +4043,48 @@ function bgToFgColor (hexcolor: ColorCode) {
   return (yiq >= 128) ? '#000000' : '#ffffff'
 }
 
-function findClosestHorizontalScrollable (node: JQuery) {
-  if (node === null || node.is('html')) {
+function findClosestHorizontalScrollable (node: Element | null) {
+  if (node === null || node.tagName === 'HTML') {
     return null
   }
 
   if (
-    (node.css('overflow-x') === 'auto' && node.prop('scrollWidth') > node.prop('clientWidth')) ||
-    (node.css('overflow-x') === 'scroll')
+    (node instanceof HTMLElement) &&
+    ((node.style.overflowX === 'auto' && node.scrollWidth > node.clientWidth) ||
+    (node.style.overflowX === 'scroll'))
   ) {
     return node
   }
 
   // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
   // to avoid that we consider scrollbars too far out
-  if (node.hasClass('scrollable')) {
+  if (node.classList.contains('scrollable')) {
     return null
   }
 
-  return findClosestHorizontalScrollable(node.parent())
+  return findClosestHorizontalScrollable(node.parentElement)
 }
 
-function findClosestVerticalScrollable (node: JQuery) {
-  if (node === null || node.is('html')) {
+function findClosestVerticalScrollable (node: Element | null) {
+  if (node === null || node.tagName === 'HTML') {
     return null
   }
 
   if (
-    (node.css('overflow-y') === 'auto' && node.prop('scrollHeight') > node.prop('clientHeight')) ||
-    (node.css('overflow-y') === 'scroll')
+    (node instanceof HTMLElement) &&
+    ((node.style.overflowY === 'auto' && node.scrollHeight > node.clientHeight) ||
+    (node.style.overflowY === 'scroll'))
   ) {
     return node
   }
 
   // Abort if the node is marked as scrollable but does presently not have a scrollbar. This is
   // to avoid that we consider scrollbars too far out
-  if (node.hasClass('scrollable')) {
+  if (node.classList.contains('scrollable')) {
     return null
   }
 
-  return findClosestVerticalScrollable(node.parent())
+  return findClosestVerticalScrollable(node.parentElement)
 }
 
 /**

@@ -21,7 +21,6 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.project.initializers.sentencelabeling.SentenceLabelLayerInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.sentencelabeling.SentenceLabelRecommenderInitializer;
 import de.tudarmstadt.ukp.inception.project.initializers.sentencelabeling.SentenceLabelTagSetInitializer;
@@ -29,6 +28,7 @@ import de.tudarmstadt.ukp.inception.project.initializers.sentencelabeling.Senten
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat.OpenNlpDoccatRecommenderFactory;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 @AutoConfigureAfter({ //
         RecommenderServiceAutoConfiguration.class })

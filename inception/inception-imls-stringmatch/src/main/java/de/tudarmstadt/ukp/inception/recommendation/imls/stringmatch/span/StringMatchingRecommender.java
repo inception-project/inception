@@ -52,7 +52,6 @@ import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Range;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -68,6 +67,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazetee
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.gazeteer.model.GazeteerEntry;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.Trie;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span.trie.WhitespaceNormalizingSanitizer;
+import de.tudarmstadt.ukp.inception.rendering.model.Range;
 
 public class StringMatchingRecommender
     extends RecommendationEngine

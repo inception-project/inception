@@ -19,9 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
 import org.apache.uima.cas.AnnotationBaseFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.annotation.events.AnnotationDeletedEvent;
 
 public class DocumentMetadataDeletedEvent
     extends DocumentMetadataEvent

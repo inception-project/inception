@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
+
 public interface PreRenderer
     extends RenderStep
 {

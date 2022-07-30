@@ -30,7 +30,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -61,10 +60,6 @@ import org.springframework.util.FileSystemUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.annotationservice.config.AnnotationSchemaServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.CasStorageSession;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.casstorage.config.CasStorageServiceAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.documentservice.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.conll.config.ConllFormatsAutoConfiguration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -82,9 +77,14 @@ import de.tudarmstadt.ukp.clarin.webanno.text.config.TextFormatsAutoConfiguratio
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
+import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
@@ -97,7 +97,8 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
         "de.tudarmstadt.ukp.clarin.webanno.model", //
         "de.tudarmstadt.ukp.inception.search.model", //
         "de.tudarmstadt.ukp.inception.kb.model", //
-        "de.tudarmstadt.ukp.clarin.webanno.security.model" })
+        "de.tudarmstadt.ukp.clarin.webanno.security.model", //
+        "de.tudarmstadt.ukp.inception.preferences.model" })
 @TestMethodOrder(MethodOrderer.MethodName.class)
 @DataJpaTest( //
         excludeAutoConfiguration = LiquibaseAutoConfiguration.class, //
@@ -119,6 +120,7 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.config.MtasDocumentIndexAu
         CasStorageServiceAutoConfiguration.class, //
         RepositoryAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
+        PreferencesServiceAutoConfig.class, //
         SearchServiceAutoConfiguration.class, //
         SchedulingServiceAutoConfiguration.class, //
         MtasDocumentIndexAutoConfiguration.class, //
@@ -641,8 +643,8 @@ public class MtasDocumentIndexTest
         uploadDocument(Pair.of(otherDocument, otherContent));
 
         // Define input for the statistics methods
-        OptionalInt minTokenPerDoc = OptionalInt.empty();
-        OptionalInt maxTokenPerDoc = OptionalInt.empty();
+        int minTokenPerDoc = Integer.MIN_VALUE;
+        int maxTokenPerDoc = Integer.MAX_VALUE;
 
         AnnotationLayer ne = new AnnotationLayer();
         ne.setUiName("Named entity");

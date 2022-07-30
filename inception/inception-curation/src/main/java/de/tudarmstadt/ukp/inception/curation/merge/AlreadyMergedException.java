@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
  * Indiates that a merge operation could not be performed because the annotation had already been

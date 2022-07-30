@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
@@ -29,13 +27,14 @@ import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
  * <p>
@@ -65,7 +64,7 @@ public class CreateRelationAnnotationHandler
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
-            return handleError("Unable to load data", e);
+            return handleError("Unable to create relation annotation", e);
         }
     }
 
@@ -83,8 +82,8 @@ public class CreateRelationAnnotationHandler
             return;
         }
 
-        AnnotationFS originFs = selectAnnotationByAddr(aCas, origin.getId());
-        AnnotationFS targetFs = selectAnnotationByAddr(aCas, target.getId());
+        AnnotationFS originFs = ICasUtil.selectAnnotationByAddr(aCas, origin.getId());
+        AnnotationFS targetFs = ICasUtil.selectAnnotationByAddr(aCas, target.getId());
 
         AnnotatorState state = page.getModelObject();
         Selection selection = state.getSelection();

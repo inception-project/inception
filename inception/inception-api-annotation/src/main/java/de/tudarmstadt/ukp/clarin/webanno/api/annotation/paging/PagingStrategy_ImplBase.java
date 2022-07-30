@@ -28,8 +28,11 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorViewState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.JumpToEvent;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
+import de.tudarmstadt.ukp.inception.rendering.paging.PagingStrategy;
+import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
+import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
+import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
 
 public abstract class PagingStrategy_ImplBase
     implements PagingStrategy
@@ -42,7 +45,7 @@ public abstract class PagingStrategy_ImplBase
         switch (aPos) {
         case TOP: {
             aState.setPageBegin(aCas, aOffset);
-            fireJumpToEvent(aOffset, aPos);
+            fireScrollToEvent(aOffset, aPos);
             break;
         }
         case CENTERED: {
@@ -62,7 +65,7 @@ public abstract class PagingStrategy_ImplBase
 
             aState.setPageBegin(aCas, firstUnit.getBegin());
             aState.setFocusUnitIndex(unit.getIndex());
-            fireJumpToEvent(aOffset, aPos);
+            fireScrollToEvent(aOffset, aPos);
             break;
         }
         default:
@@ -70,7 +73,7 @@ public abstract class PagingStrategy_ImplBase
         }
     }
 
-    private void fireJumpToEvent(int aOffset, FocusPosition aPos)
+    private void fireScrollToEvent(int aOffset, FocusPosition aPos)
     {
         RequestCycle requestCycle = RequestCycle.get();
 
@@ -82,7 +85,7 @@ public abstract class PagingStrategy_ImplBase
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();
             var target = requestCycle.find(AjaxRequestTarget.class).orElse(null);
-            page.send(page, BREADTH, new JumpToEvent(target, aOffset, aPos));
+            page.send(page, BREADTH, new ScrollToEvent(target, aOffset, aPos));
         }
     }
 }

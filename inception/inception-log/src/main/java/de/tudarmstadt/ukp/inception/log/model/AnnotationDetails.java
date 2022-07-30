@@ -23,7 +23,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 
 @JsonInclude(Include.NON_NULL)
 public class AnnotationDetails
@@ -41,7 +41,7 @@ public class AnnotationDetails
 
     public AnnotationDetails(FeatureStructure aFS)
     {
-        addr = WebAnnoCasUtil.getAddr(aFS);
+        addr = ICasUtil.getAddr(aFS);
         type = aFS.getType().getName();
         if (aFS instanceof AnnotationFS) {
             AnnotationFS annoFS = (AnnotationFS) aFS;

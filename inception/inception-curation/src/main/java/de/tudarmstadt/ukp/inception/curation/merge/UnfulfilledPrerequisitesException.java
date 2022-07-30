@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.merge;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 
 /**
  * Indicates that the prerequisites to perform a merge operation are not fulfilled. E.g. on an

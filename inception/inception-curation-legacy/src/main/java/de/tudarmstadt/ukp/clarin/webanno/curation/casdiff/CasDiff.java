@@ -17,11 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
@@ -62,8 +60,6 @@ import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter_ImplBase;
@@ -74,6 +70,9 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.RelationAdapter;
+import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 public class CasDiff
 {
@@ -621,7 +620,7 @@ public class CasDiff
         }
 
         // Trivial case
-        if (aFS1.getCAS() == aFS2.getCAS() && getAddr(aFS1) == getAddr(aFS2)) {
+        if (aFS1.getCAS() == aFS2.getCAS() && ICasUtil.getAddr(aFS1) == ICasUtil.getAddr(aFS2)) {
             return true;
         }
 
@@ -871,12 +870,12 @@ public class CasDiff
 
         private void add(String aCasGroupId, FeatureStructure aFS)
         {
-            add(aCasGroupId, new AID(getAddr(aFS)));
+            add(aCasGroupId, new AID(ICasUtil.getAddr(aFS)));
         }
 
         private void add(String aCasGroupId, FeatureStructure aFS, String aFeature, int aSlot)
         {
-            add(aCasGroupId, new AID(getAddr(aFS), aFeature, aSlot));
+            add(aCasGroupId, new AID(ICasUtil.getAddr(aFS), aFeature, aSlot));
         }
 
         public AID getRepresentativeAID()
@@ -888,7 +887,7 @@ public class CasDiff
         public FeatureStructure getRepresentative(Map<String, List<CAS>> aCasMap)
         {
             Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
-            return selectFsByAddr(aCasMap.get(e.getKey()).get(position.getCasId()),
+            return ICasUtil.selectFsByAddr(aCasMap.get(e.getKey()).get(position.getCasId()),
                     e.getValue().addr);
         }
 
@@ -904,7 +903,7 @@ public class CasDiff
 
         public boolean contains(String aCasGroupId, FeatureStructure aFS)
         {
-            return new AID(getAddr(aFS)).equals(fsAddresses.get(aCasGroupId));
+            return new AID(ICasUtil.getAddr(aFS)).equals(fsAddresses.get(aCasGroupId));
         }
 
         public boolean contains(String aCasGroupId, AID aAID)
@@ -930,7 +929,7 @@ public class CasDiff
                 return null;
             }
 
-            return selectFsByAddr(cas, aid.addr);
+            return ICasUtil.selectFsByAddr(cas, aid.addr);
         }
 
         // FIXME aCasId parameter should not be required as we can get it from the position

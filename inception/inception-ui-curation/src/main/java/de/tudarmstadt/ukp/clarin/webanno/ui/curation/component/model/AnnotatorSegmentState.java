@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import java.io.Serializable;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 
 /**
  * A Model comprises of document and collection brat responses together with the username that will

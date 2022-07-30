@@ -38,6 +38,7 @@ import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -301,8 +302,7 @@ public class ProjectsOverviewPage
                         .setEscapeModelStrings(false));
 
                 Label createdLabel = new Label(MID_CREATED,
-                        () -> project.getCreated() != null
-                                ? DATE_FORMAT.format(project.getCreated())
+                        () -> project.getCreated() != null ? formatDate(project.getCreated())
                                 : null);
                 addActionsDropdown(aItem);
                 aItem.add(projectLink);
@@ -501,6 +501,11 @@ public class ProjectsOverviewPage
             ProjectPageBase.setProjectPageParameter(pageParameters, project);
             setResponsePage(ProjectDashboardPage.class, pageParameters);
         }
+    }
+
+    private static String formatDate(Date aTime)
+    {
+        return new SimpleDateFormat("yyyy-MM-dd").format(aTime);
     }
 
     private List<ProjectEntry> loadProjects()

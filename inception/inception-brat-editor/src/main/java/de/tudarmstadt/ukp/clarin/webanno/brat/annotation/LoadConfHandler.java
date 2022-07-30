@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import java.io.Serializable;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
@@ -26,6 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorPropert
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
+import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 
 class LoadConfHandler
     extends EditorAjaxRequestHandlerBase
@@ -33,10 +35,12 @@ class LoadConfHandler
 {
     private static final long serialVersionUID = 586794742935679178L;
 
+    private final Component vis;
     private final BratAnnotationEditorProperties bratProperties;
 
-    public LoadConfHandler(BratAnnotationEditorProperties aBratProperties)
+    public LoadConfHandler(Component aVis, BratAnnotationEditorProperties aBratProperties)
     {
+        vis = aVis;
         bratProperties = aBratProperties;
     }
 
@@ -49,6 +53,13 @@ class LoadConfHandler
     @Override
     public AjaxResponse handle(AjaxRequestTarget aTarget, Request aRequest)
     {
-        return new LoadConfResponse(bratProperties);
+        try {
+            var result = new LoadConfResponse(bratProperties);
+            BratRequestUtils.attachResponse(aTarget, vis, result);
+            return new DefaultAjaxResponse(getAction(aRequest));
+        }
+        catch (Exception e) {
+            return handleError("Unable to load annotations", e);
+        }
     }
 }
