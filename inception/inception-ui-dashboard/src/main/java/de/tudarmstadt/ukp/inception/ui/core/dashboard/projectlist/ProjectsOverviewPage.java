@@ -536,6 +536,7 @@ public class ProjectsOverviewPage
             return project.getName();
         }
 
+        @SuppressWarnings("unused")
         public String getSlug()
         {
             return project.getSlug();

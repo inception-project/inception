@@ -80,7 +80,7 @@ public class TelemetrySettingsInterceptor
             return;
         }
 
-        for (TelemetrySupport support : telemetryService.getTelemetrySupports()) {
+        for (TelemetrySupport<?> support : telemetryService.getTelemetrySupports()) {
             if (!support.hasValidSettings()) {
                 throw new RestartResponseException(TelemetrySettingsPage.class);
             }
