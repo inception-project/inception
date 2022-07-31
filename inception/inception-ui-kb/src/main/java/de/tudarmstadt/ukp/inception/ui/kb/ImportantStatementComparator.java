@@ -29,6 +29,9 @@ import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 /**
  * Comparator which sorts specifiable "important" {@link KBHandle}s to the front. As a secondary
  * criterion, {@link KBHandle}s are sorted in lexical order by their UI label.
+ * 
+ * @param <T>
+ *            type of the value to be compared
  */
 public class ImportantStatementComparator<T>
     implements Comparator<StatementGroupBean>

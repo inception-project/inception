@@ -77,7 +77,7 @@ public class GenerateDocumentation
         asciidoctor.requireLibrary("asciidoctor-diagram");
         File f = new File(outputDir.resolve("asciidoc").resolve(type).toString() + ".adoc");
         Files.createDirectories(f.getParentFile().toPath());
-        asciidoctor.convertFile(f, options);
+        asciidoctor.convertFile(f, options.build());
     }
 
     public static void main(String... args) throws Exception

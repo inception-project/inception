@@ -31,6 +31,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -43,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 
@@ -105,7 +105,7 @@ public class LinkFeatureTraitsEditor
                 aBehavior.setOption("autoClose", false);
             }
         };
-        defaultSlots.setChoices(LambdaModel.of(this::listTags));
+        defaultSlots.setChoices(LoadableDetachableModel.of(this::listTags));
         defaultSlots.setChoiceRenderer(new ChoiceRenderer<>("name"));
         defaultSlots.add(visibleWhen(() -> traits.getObject().isEnableRoleLabels()
                 && feature.getObject().getTagset() != null));
@@ -123,7 +123,7 @@ public class LinkFeatureTraitsEditor
         tagset.setChoiceRenderer(new ChoiceRenderer<>("name"));
         tagset.setNullValid(true);
         tagset.setModel(PropertyModel.of(aFeatureModel, "tagset"));
-        tagset.setChoices(LambdaModel
+        tagset.setChoices(LoadableDetachableModel
                 .of(() -> annotationService.listTagSets(aFeatureModel.getObject().getProject())));
         tagset.add(new LambdaAjaxFormComponentUpdatingBehavior("change", target -> {
             traits.getObject().setDefaultSlots(new ArrayList<>());

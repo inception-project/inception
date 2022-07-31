@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -46,6 +44,8 @@ public class ZipUtils
      * @param in
      *            the stream.
      * @return if it is a ZIP file.
+     * @throws IOException
+     *             if there was an error operating on the input stream
      */
     public static boolean isZipStream(InputStream in) throws IOException
     {
@@ -83,17 +83,11 @@ public class ZipUtils
      */
     public static void zipFolder(File srcFolder, File destZipFile) throws IOException
     {
-        ZipOutputStream zip = null;
-        try {
-            zip = new ZipOutputStream(new FileOutputStream(destZipFile));
-
+        try (var zip = new ZipOutputStream(new FileOutputStream(destZipFile));) {
             for (File file : srcFolder.getAbsoluteFile().listFiles()) {
                 addToZip(zip, srcFolder.getAbsoluteFile(), file);
             }
             zip.flush();
-        }
-        finally {
-            closeQuietly(zip);
         }
     }
 
@@ -105,15 +99,10 @@ public class ZipUtils
             }
         }
         else {
-            FileInputStream in = null;
-            try {
-                in = new FileInputStream(aPath);
+            try (FileInputStream in = new FileInputStream(aPath)) {
                 String relativePath = aBasePath.toURI().relativize(aPath.toURI()).getPath();
                 zip.putNextEntry(new ZipEntry(relativePath));
                 IOUtils.copy(in, zip);
-            }
-            finally {
-                closeQuietly(in);
             }
         }
     }

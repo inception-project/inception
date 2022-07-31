@@ -40,7 +40,7 @@ import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -82,7 +82,7 @@ public class NumericLiteralValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(new ValueType(XMLSchema.DOUBLE.stringValue(), "Number", valueTypeSupportId));
+        return asList(new ValueType(XSD.DOUBLE.stringValue(), "Number", valueTypeSupportId));
     }
 
     @Override

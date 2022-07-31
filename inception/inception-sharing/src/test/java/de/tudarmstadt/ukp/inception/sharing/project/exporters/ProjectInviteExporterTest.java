@@ -21,17 +21,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.sharing.InviteService;
 import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 
+@ExtendWith(MockitoExtension.class)
 public class ProjectInviteExporterTest
 {
     public @TempDir File workFolder;
@@ -54,8 +56,6 @@ public class ProjectInviteExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        openMocks(this);
-
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");
@@ -97,7 +97,7 @@ public class ProjectInviteExporterTest
 
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues()) //
-                .usingElementComparatorIgnoringFields("id") //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
                 .containsExactlyInAnyOrder(invite());
     }
 }

@@ -31,7 +31,7 @@ import java.util.Map;
 import org.apache.commons.lang3.ClassUtils;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,7 +121,7 @@ public class ValueTypeSupportRegistryImpl
             // Mapping fails for NaiveIRI class, so check manually
             // if the value is an instance of IRI
             if (type == null && aStatement.getValue() instanceof IRI) {
-                type = XMLSchema.ANYURI;
+                type = XSD.ANYURI;
             }
             datatype = type != null ? type.stringValue() : null;
         }
@@ -131,7 +131,7 @@ public class ValueTypeSupportRegistryImpl
         }
 
         if (datatype == null) {
-            datatype = XMLSchema.STRING.stringValue();
+            datatype = XSD.STRING.stringValue();
         }
 
         return datatype;

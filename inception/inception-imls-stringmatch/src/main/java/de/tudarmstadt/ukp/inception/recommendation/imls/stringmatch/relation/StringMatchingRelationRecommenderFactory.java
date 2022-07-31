@@ -21,8 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TY
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -41,8 +39,6 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.relation.set
 public class StringMatchingRelationRecommenderFactory
     extends RecommendationEngineFactoryImplBase<StringMatchingRelationRecommenderTraits>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "StringMatchingRelationRecommender";

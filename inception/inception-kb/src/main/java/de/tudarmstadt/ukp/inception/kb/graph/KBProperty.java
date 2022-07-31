@@ -158,15 +158,15 @@ public class KBProperty
         return originalStatements;
     }
 
-    public void write(RepositoryConnection aConn, KnowledgeBase kb)
+    public void write(RepositoryConnection aConn, KnowledgeBase aKb)
     {
         ValueFactory vf = aConn.getValueFactory();
         IRI subject = vf.createIRI(identifier);
 
         originalStatements.clear();
 
-        Statement typeStmt = vf.createStatement(subject, vf.createIRI(kb.getTypeIri()),
-                vf.createIRI(kb.getPropertyTypeIri()));
+        Statement typeStmt = vf.createStatement(subject, vf.createIRI(aKb.getTypeIri()),
+                vf.createIRI(aKb.getPropertyTypeIri()));
         originalStatements.add(typeStmt);
         aConn.add(typeStmt);
 
@@ -175,13 +175,13 @@ public class KBProperty
             if (language != null) {
                 nameLiteral = vf.createLiteral(name, language);
             }
-            else if (kb.getDefaultLanguage() != null) {
-                nameLiteral = vf.createLiteral(name, kb.getDefaultLanguage());
+            else if (aKb.getDefaultLanguage() != null) {
+                nameLiteral = vf.createLiteral(name, aKb.getDefaultLanguage());
             }
             else {
                 nameLiteral = vf.createLiteral(name);
             }
-            Statement nameStmt = vf.createStatement(subject, vf.createIRI(kb.getPropertyLabelIri()),
+            Statement nameStmt = vf.createStatement(subject, vf.createIRI(aKb.getPropertyLabelIri()),
                     nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
@@ -196,7 +196,7 @@ public class KBProperty
                 descriptionLiteral = vf.createLiteral(description, language);
             }
             Statement descStmt = vf.createStatement(subject,
-                    vf.createIRI(kb.getPropertyDescriptionIri()), descriptionLiteral);
+                    vf.createIRI(aKb.getPropertyDescriptionIri()), descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);
         }

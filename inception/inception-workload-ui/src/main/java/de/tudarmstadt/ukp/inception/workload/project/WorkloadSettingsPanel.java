@@ -55,9 +55,6 @@ public class WorkloadSettingsPanel
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean WorkloadManagerExtensionPoint workloadManagerExtensionPoint;
 
-    /**
-     * Constructor, creates the whole panel. Consists of a single form.
-     */
     public WorkloadSettingsPanel(String aID, IModel<Project> aProject)
     {
         super(aID, aProject);

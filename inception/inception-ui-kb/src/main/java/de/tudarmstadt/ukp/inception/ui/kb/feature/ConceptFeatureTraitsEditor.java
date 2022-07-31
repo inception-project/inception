@@ -32,6 +32,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBinding;
@@ -40,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
@@ -103,11 +103,12 @@ public class ConceptFeatureTraitsEditor
         form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
                 _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
 
-        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE, LambdaModel.of(this::listKnowledgeBases),
+        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE,
+                LoadableDetachableModel.of(this::listKnowledgeBases),
                 new LambdaChoiceRenderer<>(KnowledgeBase::getName)).setNullValid(true)
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
-        form.add(
-                new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes))
+        form.add(new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE,
+                LoadableDetachableModel.of(this::listAllowedTypes))
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
 
         form.add(new DisabledKBWarning("disabledKBWarning", feature,

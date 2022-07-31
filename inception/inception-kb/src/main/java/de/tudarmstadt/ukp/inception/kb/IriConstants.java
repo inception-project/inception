@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static java.util.Arrays.asList;
 
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -32,7 +30,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -51,9 +49,8 @@ public class IriConstants
     public static final String PREFIX_STARDOG = "tag:stardog:api:search:";
 
     public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
-    public static final Set<String> IMPLICIT_NAMESPACES = Collections
-            .unmodifiableSet(new HashSet<>(asList(RDF.NAMESPACE, RDFS.NAMESPACE,
-                    XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE)));
+    public static final Set<String> IMPLICIT_NAMESPACES = Set.of(RDF.NAMESPACE, RDFS.NAMESPACE,
+            XSD.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE);
 
     /**
      * http://www.wikidata.org/entity/Q35120

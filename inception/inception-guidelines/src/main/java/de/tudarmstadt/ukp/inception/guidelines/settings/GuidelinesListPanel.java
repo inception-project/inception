@@ -25,6 +25,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -33,7 +34,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesService;
 
@@ -64,7 +64,7 @@ public class GuidelinesListPanel
 
         overviewList = new OverviewListChoice<>("guidelines");
         overviewList.setModel(guideline);
-        overviewList.setChoices(LambdaModel.of(this::listGuidelines));
+        overviewList.setChoices(LoadableDetachableModel.of(this::listGuidelines));
         form.add(overviewList);
 
         ConfirmationDialog confirmationDialog = new ConfirmationDialog("confirmationDialog");

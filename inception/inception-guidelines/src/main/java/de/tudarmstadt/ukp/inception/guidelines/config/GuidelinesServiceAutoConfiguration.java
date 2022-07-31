@@ -33,7 +33,7 @@ public class GuidelinesServiceAutoConfiguration
     {
         return new GuidelinesServiceImpl(aRepositoryProperties);
     }
-    
+
     @Bean
     public GuidelinesExporter guidelinesExporter(GuidelinesService aGuidelinesService)
     {

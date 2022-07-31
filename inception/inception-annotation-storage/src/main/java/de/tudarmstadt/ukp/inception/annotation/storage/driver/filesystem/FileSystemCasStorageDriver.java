@@ -269,7 +269,9 @@ public class FileSystemCasStorageDriver
     }
 
     /**
-     * Get the folder where the annotations are stored. Creates the folder if necessary.
+     * @param aDocument
+     *            the document of interest.
+     * @return the folder where the annotations are stored. Creates the folder if necessary.
      *
      * @throws IOException
      *             if the folder cannot be created.
@@ -526,6 +528,7 @@ public class FileSystemCasStorageDriver
         return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS").format(aTime);
     }
 
+    @SuppressWarnings("unused")
     private static class InternalMetadata
     {
         private StackTraceElement[] lastWriteAttemptTrace;

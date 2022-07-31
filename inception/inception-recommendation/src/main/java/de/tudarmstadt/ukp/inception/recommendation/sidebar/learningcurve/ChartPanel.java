@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.sidebar;
+package de.tudarmstadt.ukp.inception.recommendation.sidebar.learningcurve;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +42,11 @@ import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReferenc
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 
+/**
+ * @deprecated The current implementation of the learning curve panel has a memory leak in the
+ *             browser code. It should be re-implemented.
+ */
+@Deprecated
 public class ChartPanel
     extends Panel
 {
@@ -134,11 +139,6 @@ public class ChartPanel
         }
     }
 
-    /**
-     * creates a JSON of learning curves of learning Curves including the xaxis.
-     * 
-     * @throws JsonProcessingException
-     */
     public String addLearningCurve(LearningCurve aLearningCurve) throws JsonProcessingException
     {
         List<List<String>> lines = new ArrayList<>();

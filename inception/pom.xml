@@ -380,6 +380,17 @@
         <groupId>org.apache.uima</groupId>
         <artifactId>uimaj-core</artifactId>
         <version>${uima.version}</version>
+        <exclusions>
+          <!-- These are only needed for the UIMA JCas decompiler which we do not use -->
+          <exclusion>
+            <groupId>org.bitbucket.mstrobel</groupId>
+            <artifactId>procyon-compilertools</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.bitbucket.mstrobel</groupId>
+            <artifactId>procyon-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>org.apache.uima</groupId>

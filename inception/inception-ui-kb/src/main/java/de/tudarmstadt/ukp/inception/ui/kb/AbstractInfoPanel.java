@@ -252,11 +252,10 @@ public abstract class AbstractInfoPanel<T extends KBObject>
     public abstract List<String> getLabelProperties();
 
     /**
-     * Returns the {@link StatementDetailPreference} for the included {@link StatementsPanel}. If
-     * this method returns {@code null}, the {@code StatementDetailPreference} can be defined by the
-     * user via a selector in the UI. The default implementation returns {@code null}.
-     * 
-     * @return
+     * @return the {@link StatementDetailPreference} for the included {@link StatementsPanel}. If
+     *         this method returns {@code null}, the {@code StatementDetailPreference} can be
+     *         defined by the user via a selector in the UI. The default implementation returns
+     *         {@code null}.
      */
     protected StatementDetailPreference getDetailPreference()
     {

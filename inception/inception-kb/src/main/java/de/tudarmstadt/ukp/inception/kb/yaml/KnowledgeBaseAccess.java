@@ -26,6 +26,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class KnowledgeBaseAccess
     implements Serializable
 {
+    private static final long serialVersionUID = 3854241099411320320L;
+
     @JsonProperty("access-url")
     private String accessUrl;
 

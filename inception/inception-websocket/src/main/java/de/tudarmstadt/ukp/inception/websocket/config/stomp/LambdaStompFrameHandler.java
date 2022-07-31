@@ -27,9 +27,9 @@ public class LambdaStompFrameHandler<T>
     implements StompFrameHandler
 {
     private final Class<T> payloadType;
-    private final BiConsumer handler;
+    private final BiConsumer<StompHeaders, T> handler;
 
-    private LambdaStompFrameHandler(Class<T> aPayloadType, BiConsumer aHandler)
+    private LambdaStompFrameHandler(Class<T> aPayloadType, BiConsumer<StompHeaders, T> aHandler)
     {
         payloadType = aPayloadType;
         handler = aHandler;
@@ -41,10 +41,11 @@ public class LambdaStompFrameHandler<T>
         return payloadType;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void handleFrame(StompHeaders aHeaders, Object aPayload)
     {
-        handler.accept(aHeaders, aPayload);
+        handler.accept(aHeaders, (T) aPayload);
     }
 
     public static <T> LambdaStompFrameHandler<T> handleFrame(Class<T> aPayloadType,

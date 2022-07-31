@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.inception.documents.metrics;
 public interface DocumentsMetrics
 {
     /**
-     * Retrieve the total number of documents
+     * @return the total number of documents
      */
     public long getDocumentsTotal();
 
     /**
-     * Retrieve the total number of annotation documents
+     * @return the total number of annotation documents
      */
     public long getAnnotationDocumentsTotal();
 }

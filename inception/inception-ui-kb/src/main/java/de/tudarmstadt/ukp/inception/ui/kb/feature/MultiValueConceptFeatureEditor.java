@@ -43,6 +43,8 @@ import de.tudarmstadt.ukp.inception.schema.feature.FeatureSupportRegistry;
 public class MultiValueConceptFeatureEditor
     extends ConceptFeatureEditor_ImplBase
 {
+    private static final long serialVersionUID = -8326017157405023711L;
+
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
     private MultiSelect<KBHandle> focusComponent;

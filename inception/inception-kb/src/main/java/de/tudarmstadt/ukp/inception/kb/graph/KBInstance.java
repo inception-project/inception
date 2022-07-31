@@ -133,14 +133,14 @@ public class KBInstance
         language = aLanguage;
     }
 
-    public void write(RepositoryConnection aConn, KnowledgeBase kb)
+    public void write(RepositoryConnection aConn, KnowledgeBase aKb)
     {
         ValueFactory vf = aConn.getValueFactory();
         IRI subject = vf.createIRI(identifier);
 
         originalStatements.clear();
 
-        Statement typeStmt = vf.createStatement(subject, vf.createIRI(kb.getTypeIri()),
+        Statement typeStmt = vf.createStatement(subject, vf.createIRI(aKb.getTypeIri()),
                 vf.createIRI(type.toString()));
         originalStatements.add(typeStmt);
         aConn.add(typeStmt);
@@ -150,13 +150,13 @@ public class KBInstance
             if (language != null) {
                 nameLiteral = vf.createLiteral(name, language);
             }
-            else if (kb.getDefaultLanguage() != null) {
-                nameLiteral = vf.createLiteral(name, kb.getDefaultLanguage());
+            else if (aKb.getDefaultLanguage() != null) {
+                nameLiteral = vf.createLiteral(name, aKb.getDefaultLanguage());
             }
             else {
                 nameLiteral = vf.createLiteral(name);
             }
-            Statement nameStmt = vf.createStatement(subject, vf.createIRI(kb.getLabelIri()),
+            Statement nameStmt = vf.createStatement(subject, vf.createIRI(aKb.getLabelIri()),
                     nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
@@ -170,7 +170,7 @@ public class KBInstance
             else {
                 descriptionLiteral = vf.createLiteral(description, language);
             }
-            Statement descStmt = vf.createStatement(subject, vf.createIRI(kb.getDescriptionIri()),
+            Statement descStmt = vf.createStatement(subject, vf.createIRI(aKb.getDescriptionIri()),
                     descriptionLiteral);
             originalStatements.add(descStmt);
             aConn.add(descStmt);

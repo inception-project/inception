@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 public class RecommendationException
     extends Exception
 {
+    private static final long serialVersionUID = 8669363305249535421L;
+
     public RecommendationException(String aMessage)
     {
         super(aMessage);

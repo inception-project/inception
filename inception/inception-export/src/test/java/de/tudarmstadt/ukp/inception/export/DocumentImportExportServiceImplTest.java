@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.export.DocumentImportExportServiceImp
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
+import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -42,7 +43,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,7 +51,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -60,9 +59,11 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
 import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryProperties;
@@ -79,13 +80,13 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
-import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 
+@ExtendWith(MockitoExtension.class)
 public class DocumentImportExportServiceImplTest
 {
     private CasStorageSession casStorageSession;
@@ -102,30 +103,27 @@ public class DocumentImportExportServiceImplTest
     @BeforeEach
     public void setup() throws Exception
     {
-        openMocks(this);
-
         // schemaService = mock(AnnotationSchemaServiceImpl.class);
         schemaService = Mockito.spy(new AnnotationSchemaServiceImpl());
 
         DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
 
-        RepositoryProperties repositoryProperties = new RepositoryProperties();
+        var repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder);
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
+        var driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        CasStorageServiceImpl storageService = new CasStorageServiceImpl(driver, null, null,
-                new CasStorageCachePropertiesImpl());
+        var storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
+                null, null);
 
         sut = new DocumentImportExportServiceImpl(repositoryProperties,
                 List.of(new XmiFormatSupport()), storageService, schemaService, properties);
         sut.onContextRefreshedEvent();
 
         doReturn(emptyList()).when(schemaService).listAnnotationLayer(any());
-        doReturn(emptyList()).when(schemaService).listAnnotationFeature((Project) any());
         doReturn(emptyList()).when(schemaService).listSupportedFeatures((Project) any());
 
         // The prepareCasForExport method internally calls getFullProjectTypeSystem, so we need to
@@ -175,18 +173,13 @@ public class DocumentImportExportServiceImplTest
     @Test
     public void thatExportedCasContainsLayerAndFeatureDefinitions() throws Exception
     {
-        AnnotationLayer l1 = new AnnotationLayer("my.A", "A", SPAN_TYPE, project, false, TOKENS,
-                NO_OVERLAP);
-        AnnotationLayer l2 = new AnnotationLayer("my.B", "B", SPAN_TYPE, project, false, TOKENS,
-                NO_OVERLAP);
-        AnnotationFeature f1 = new AnnotationFeature(project, l1, "f1", "feature1",
-                CAS.TYPE_NAME_STRING);
-        AnnotationFeature f2 = new AnnotationFeature(project, l2, "f2", "feature2",
-                CAS.TYPE_NAME_STRING);
+        var l1 = new AnnotationLayer("my.A", "A", SPAN_TYPE, project, false, TOKENS, NO_OVERLAP);
+        var l2 = new AnnotationLayer("my.B", "B", SPAN_TYPE, project, false, TOKENS, NO_OVERLAP);
+        var f1 = new AnnotationFeature(project, l1, "f1", "feature1", TYPE_NAME_STRING);
+        var f2 = new AnnotationFeature(project, l2, "f2", "feature2", TYPE_NAME_STRING);
 
         List<AnnotationFeature> features = asList(f1, f2);
 
-        doReturn(features).when(schemaService).listAnnotationFeature((Project) any());
         doReturn(features).when(schemaService).listSupportedFeatures((Project) any());
 
         JCas jcas = makeJCas();
@@ -257,5 +250,4 @@ public class DocumentImportExportServiceImplTest
         }
         return jcas;
     }
-
 }

@@ -35,7 +35,6 @@ import static org.apache.wicket.authroles.authorization.strategies.role.metadata
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -116,8 +115,6 @@ public class ProjectsOverviewPage
     private static final long serialVersionUID = -2159246322262294746L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ProjectsOverviewPage.class);
-
-    private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
@@ -536,6 +533,7 @@ public class ProjectsOverviewPage
             return project.getName();
         }
 
+        @SuppressWarnings("unused")
         public String getSlug()
         {
             return project.getSlug();
@@ -562,17 +560,6 @@ public class ProjectsOverviewPage
         public List<PermissionLevel> getLevels()
         {
             return levels;
-        }
-
-        public boolean hasAnyLevel(Set<PermissionLevel> aLevels)
-        {
-            for (PermissionLevel l : levels) {
-                if (aLevels.contains(l)) {
-                    return true;
-                }
-            }
-
-            return false;
         }
 
         public boolean hasAllLevels(Set<PermissionLevel> aLevels)

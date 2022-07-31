@@ -50,7 +50,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -130,10 +129,10 @@ public class StatementEditor
         aTarget.add(this);
     }
 
-    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement)
+    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement aStatement)
     {
-        KBQualifier qualifierPorto = new KBQualifier(statement);
-        statement.addQualifier(qualifierPorto);
+        KBQualifier qualifierPorto = new KBQualifier(aStatement);
+        aStatement.addQualifier(qualifierPorto);
         aTarget.add(this);
     }
 
@@ -272,7 +271,7 @@ public class StatementEditor
                         @Override
                         protected IModel<KBQualifier> model(KBQualifier object)
                         {
-                            return LambdaModel.of(() -> object);
+                            return Model.of(object);
                         }
                     };
                 }

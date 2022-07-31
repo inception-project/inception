@@ -81,6 +81,8 @@ public interface SPARQLQueryPrimaryConditions
      * <b>NOTE:</b> this method may implicitly disable FTS for the query and must be called before
      * {@link #withLabelStartingWith(String)} or any other label-matching methods. Failure to do so
      * may result in queries returning fewer than expected results (in the worst case, no results).
+     * 
+     * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions roots();
 
@@ -92,6 +94,8 @@ public interface SPARQLQueryPrimaryConditions
      * {@link #withLabelStartingWith(String)} or any other label-matching methods. Failure to do so
      * may result in queries returning fewer than expected results (in the worst case, no results).
      * 
+     * @param aItemIri
+     *            IRI of some knowledge base item
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions ancestorsOf(String aItemIri);
@@ -105,6 +109,8 @@ public interface SPARQLQueryPrimaryConditions
      * {@link #withLabelStartingWith(String)} or any other label-matching methods. Failure to do so
      * may result in queries returning fewer than expected results (in the worst case, no results).
      * 
+     * @param aClassIri
+     *            IRI of a class
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions descendantsOf(String aClassIri);
@@ -118,6 +124,8 @@ public interface SPARQLQueryPrimaryConditions
      * {@link #withLabelStartingWith(String)} or any other label-matching methods. Failure to do so
      * may result in queries returning fewer than expected results (in the worst case, no results).
      * 
+     * @param aClassIri
+     *            IRI of a class
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions childrenOf(String aClassIri);
@@ -129,6 +137,8 @@ public interface SPARQLQueryPrimaryConditions
      * {@link #withLabelStartingWith(String)} or any other label-matching methods. Failure to do so
      * may result in queries returning fewer than expected results (in the worst case, no results).
      * 
+     * @param aClassIri
+     *            IRI of a class
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions parentsOf(String aClassIri);
@@ -142,8 +152,10 @@ public interface SPARQLQueryPrimaryConditions
      * {@link #withLabelStartingWith(String)} or any other label-matching methods. Failure to do so
      * may result in queries returning fewer than expected results (in the worst case, no results).
      * 
+     * @param aItemIri
+     *            IRI of some knowledge base item
      * @return the builder (fluent API)
      */
-    SPARQLQueryPrimaryConditions matchingDomain(String aIdentifier);
+    SPARQLQueryPrimaryConditions matchingDomain(String aItemIri);
 
 }

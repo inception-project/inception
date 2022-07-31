@@ -21,15 +21,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -40,6 +41,7 @@ import de.tudarmstadt.ukp.inception.workload.event.exporter.WorkloadManagerExpor
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
+@ExtendWith(MockitoExtension.class)
 public class WorkloadManagerExporterTest
 {
     private @Mock WorkloadManagementService workloadManagementService;
@@ -50,8 +52,6 @@ public class WorkloadManagerExporterTest
     @BeforeEach
     public void setUp()
     {
-        openMocks(this);
-
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");

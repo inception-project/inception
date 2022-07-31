@@ -48,8 +48,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -72,8 +70,6 @@ import eu.clarin.weblicht.wlfxb.xb.WLData;
 public class WeblichtRecommender
     extends RecommendationEngine
 {
-    private static final Logger LOG = LoggerFactory.getLogger(WeblichtRecommender.class);
-
     private static final ContentType TCF = ContentType.create("text/tcf+xml");
     private static final ContentType XML = ContentType.create("application/xml");
     private static final ContentType TEXT = ContentType.create("text/plain");

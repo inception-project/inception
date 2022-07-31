@@ -30,15 +30,12 @@ import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.CasFactory;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.XMLInputSource;
 import org.apache.uima.util.XmlCasDeserializer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -154,9 +151,6 @@ public class StringMatchingRelationRecommenderTest
     private CAS loadSimpleCas() throws Exception
     {
         Path root = Paths.get("src", "test", "resources", "relation", "simple");
-
-        TypeSystemDescription ts = UIMAFramework.getXMLParser().parseTypeSystemDescription(
-                new XMLInputSource(root.resolve("TypeSystem.xml").toFile()));
 
         CAS cas = CasFactory.createCasFromPath(root.resolve("TypeSystem.xml").toString());
 

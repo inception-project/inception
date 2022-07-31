@@ -24,7 +24,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.inception.diam.model.Offsets;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
@@ -32,16 +31,16 @@ import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 @JsonPropertyOrder(value = { "type", "offsets" })
 public class CompactTextMarker
 {
-    private List<Offsets> offsets;
+    private List<CompactRange> offsets;
     private String type;
 
-    public CompactTextMarker(Offsets aVid, String aType)
+    public CompactTextMarker(CompactRange aVid, String aType)
     {
         offsets = asList(aVid);
         type = aType;
     }
 
-    public CompactTextMarker(List<Offsets> aVid, String aType)
+    public CompactTextMarker(List<CompactRange> aVid, String aType)
     {
         offsets = aVid;
         type = aType;
@@ -50,16 +49,16 @@ public class CompactTextMarker
     public CompactTextMarker(VTextMarker aTextMarker)
     {
         var range = aTextMarker.getRange();
-        offsets = asList(new Offsets(range.getBegin(), range.getEnd()));
+        offsets = asList(new CompactRange(range.getBegin(), range.getEnd()));
         type = aTextMarker.getType();
     }
 
-    public void setOffsets(List<Offsets> aVid)
+    public void setOffsets(List<CompactRange> aVid)
     {
         offsets = aVid;
     }
 
-    public List<Offsets> getVid()
+    public List<CompactRange> getVid()
     {
         return offsets;
     }

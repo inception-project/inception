@@ -34,10 +34,8 @@ import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -83,7 +81,6 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -148,8 +145,6 @@ public class DynamicWorkloadManagementPage
     extends ProjectPageBase
 {
     private static final long serialVersionUID = 1180618893870240262L;
-
-    private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String CSS_CLASS_STATE_TOGGLE = "state-toggle";
 

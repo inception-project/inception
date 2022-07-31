@@ -104,6 +104,9 @@ public class DocumentMatrixRow
                     case FINISHED:
                         counts[2]++;
                         break;
+                    case NEW:
+                        // already handled above
+                        break;
                     }
                 });
 

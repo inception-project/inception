@@ -24,7 +24,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 public interface AgreementMeasureSupportRegistry
 {
 
-    List<AgreementMeasureSupport> getAgreementMeasureSupports();
+    List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports();
 
     AgreementMeasureSupport getAgreementMeasureSupport(String aId);
 

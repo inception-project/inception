@@ -221,8 +221,8 @@ public class LayerDetailForm
         // Processing the data in onAfterSubmit so the traits panel can use the
         // override onSubmit in its nested form and store the traits before
         // we clear the currently selected feature.
-        add(new LambdaAjaxButton<>("save", this::actionSave).triggerAfterSubmit());
-        add(new LambdaAjaxButton<>("delete", this::actionDelete).add(enabledWhen(
+        add(new LambdaAjaxButton<AnnotationLayer>("save", this::actionSave).triggerAfterSubmit());
+        add(new LambdaAjaxButton<AnnotationLayer>("delete", this::actionDelete).add(enabledWhen(
                 () -> !isNull(getModelObject().getId()) && isLayerDeletable(getModelObject()))));
         add(new LambdaAjaxLink("cancel", this::actionCancel));
 
@@ -320,7 +320,7 @@ public class LayerDetailForm
                 && annotationService.listAttachedLinkFeatures(aLayer).isEmpty();
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget, Form aForm)
+    private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
         confirmationDialog.setChallengeModel(new StringResourceModel("DeleteLayerDialog.text", this)
                 .setParameters(escapeMarkup(getModelObject().getName())));
@@ -344,12 +344,12 @@ public class LayerDetailForm
         });
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
+    private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
         aTarget.add(getParent());
         aTarget.addChildren(getPage(), IFeedback.class);
 
-        AnnotationLayer layer = LayerDetailForm.this.getModelObject();
+        AnnotationLayer layer = aForm.getModelObject();
 
         final Project project = layer.getProject();
 

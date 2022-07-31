@@ -34,21 +34,32 @@ import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 public interface ActiveLearningService
 {
     /**
-     * Get all suggestions for the given layer and user as a flat list (i.e. not grouped by
-     * documents, but grouped by alternatives).
+     * @param aUser
+     *            annotator user to get suggestions for
+     * @param aLayer
+     *            layer to get suggestions for
+     * @return all suggestions for the given layer and user as a flat list (i.e. not grouped by
+     *         documents, but grouped by alternatives).
      */
     List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer);
 
     /**
-     * Check if the suggestions from which the given record was created (or an equivalent one) is
-     * visible to the user. This is useful to check if the suggestion can be highlighted when
-     * clicking on a history record.
+     * @param aRecord
+     *            record to check
+     * @return if the suggestions from which the given record was created (or an equivalent one) is
+     *         visible to the user. This is useful to check if the suggestion can be highlighted
+     *         when clicking on a history record.
      */
     boolean isSuggestionVisible(LearningRecord aRecord);
 
     /**
-     * Checks if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
-     * the given layer for the given user.
+     * @return if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
+     *         the given layer for the given user.
+     * 
+     * @param aUser
+     *            annotator user to check suggestions for
+     * @param aLayer
+     *            layer to check suggestions for
      */
     boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer);
 

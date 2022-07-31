@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
-import de.tudarmstadt.ukp.inception.diam.model.Offsets;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -59,7 +58,7 @@ public class CompactSerializerImpl
     {
         CompactAnnotatedText aResponse = new CompactAnnotatedText();
 
-        aResponse.setWindow(new Offsets(aVDoc.getWindowBegin(), aVDoc.getWindowEnd()));
+        aResponse.setWindow(new CompactRange(aVDoc.getWindowBegin(), aVDoc.getWindowEnd()));
 
         renderText(aVDoc, aResponse, aRequest);
 
@@ -72,8 +71,8 @@ public class CompactSerializerImpl
     {
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
-                List<Offsets> offsets = vspan.getRanges().stream()
-                        .map(range -> new Offsets(range.getBegin(), range.getEnd()))
+                List<CompactRange> offsets = vspan.getRanges().stream()
+                        .map(range -> new CompactRange(range.getBegin(), range.getEnd()))
                         .collect(toList());
 
                 CompactSpan entity = new CompactSpan(vspan.getVid(), offsets, vspan.getLabelHint(),

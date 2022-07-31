@@ -139,6 +139,7 @@ public class ProjectServiceImplTest
         testEntityManager.clear();
     }
 
+    @Deprecated
     @Test
     public void listProjectsForAgreement_ShouldReturnOneProject()
     {
@@ -147,6 +148,7 @@ public class ProjectServiceImplTest
         assertThat(foundProjects).containsExactly(testProject);
     }
 
+    @Deprecated
     @Test
     public void thatListManageableCuratableProjectsReturnsOnlyProjectsWhereUserIsCuratorOrManager()
     {

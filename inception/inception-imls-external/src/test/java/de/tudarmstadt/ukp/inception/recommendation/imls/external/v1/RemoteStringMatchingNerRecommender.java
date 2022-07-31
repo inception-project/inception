@@ -63,18 +63,12 @@ public class RemoteStringMatchingNerRecommender
     private final RecommenderContext context;
     private final StringMatchingRecommender recommendationEngine;
 
-    private final String layerName;
-    private final String featureName;
-
     public RemoteStringMatchingNerRecommender(Recommender aRecommender)
     {
         recommender = aRecommender;
         context = new RecommenderContext();
         StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
         recommendationEngine = new StringMatchingRecommender(recommender, traits);
-
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
     }
 
     public void train(String aTrainingRequestJson)
