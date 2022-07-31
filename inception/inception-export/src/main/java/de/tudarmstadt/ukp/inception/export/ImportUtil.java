@@ -106,13 +106,14 @@ public class ImportUtil
     {
 
         boolean isZipValidWebanno = false;
-        ZipFile zip = new ZipFile(aZipFile);
-        for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            if (entry.toString().replace("/", "").startsWith(ImportUtil.EXPORTED_PROJECT)
-                    && entry.toString().replace("/", "").endsWith(".json")) {
-                isZipValidWebanno = true;
-                break;
+        try (ZipFile zip = new ZipFile(aZipFile)) {
+            for (Enumeration zipEnumerate = zip.entries(); zipEnumerate.hasMoreElements();) {
+                ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
+                if (entry.toString().replace("/", "").startsWith(ImportUtil.EXPORTED_PROJECT)
+                        && entry.toString().replace("/", "").endsWith(".json")) {
+                    isZipValidWebanno = true;
+                    break;
+                }
             }
         }
         return isZipValidWebanno;

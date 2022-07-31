@@ -18,11 +18,12 @@
 
 package de.tudarmstadt.ukp.inception.conceptlinking.util;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -48,13 +49,10 @@ public class FileUtils
     {
         List<String> lines = new ArrayList<>();
         String l;
-        try {
-            InputStream is = new FileInputStream(r);
-            BufferedReader br = new BufferedReader(new InputStreamReader(is, "utf8"));
+        try (var br = new BufferedReader(new InputStreamReader(new FileInputStream(r), UTF_8))) {
             while ((l = br.readLine()) != null) {
                 lines.add(l);
             }
-            br.close();
         }
         catch (IOException e) {
             log.warn("File [{}] is missing - {}", r.getName(), reason);

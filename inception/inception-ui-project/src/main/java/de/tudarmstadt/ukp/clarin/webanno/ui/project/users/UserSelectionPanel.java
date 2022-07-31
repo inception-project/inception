@@ -95,18 +95,18 @@ class UserSelectionPanel
             private static final long serialVersionUID = -2386864570904752307L;
 
             @Override
-            public String getText(User aUser, String expression)
+            public String getText(User user, String expression)
             {
                 StringBuilder builder = new StringBuilder();
-                builder.append(aUser.getUiName());
-                if (!aUser.getUsername().equals(aUser.getUiName())) {
+                builder.append(user.getUiName());
+                if (!user.getUsername().equals(user.getUiName())) {
                     builder.append(" (");
-                    builder.append(aUser.getUsername());
+                    builder.append(user.getUsername());
                     builder.append(")");
                 }
 
                 String text = builder.toString();
-                recentUsers.put(text, aUser);
+                recentUsers.put(text, user);
                 return text;
             };
         };

@@ -35,32 +35,38 @@ public interface GazeteerService
     /**
      * List gazeteers for the given recommender.
      */
+    @SuppressWarnings("javadoc")
     List<Gazeteer> listGazeteers(Recommender aRecommender);
 
     /**
      * Delete the given gazetter.
      */
+    @SuppressWarnings("javadoc")
     void deleteGazeteers(Gazeteer aGazeteer) throws IOException;
 
     /**
      * Import the gazeteer file for the given gazeteer.
      */
+    @SuppressWarnings("javadoc")
     void importGazeteerFile(Gazeteer aGazeteer, InputStream aStream) throws IOException;
 
     /**
      * Get the gazeteer file for the given gazeteer. If no file has been imported yet for the given
      * gazeteer, the file returned by this method does not exist.
      */
+    @SuppressWarnings("javadoc")
     File getGazeteerFile(Gazeteer aSet) throws IOException;
 
     /**
      * Write the given gazetter to the database.
      */
+    @SuppressWarnings("javadoc")
     void createOrUpdateGazeteer(Gazeteer aGazeteer);
 
     /**
      * Loads the gazeteer.
      */
+    @SuppressWarnings("javadoc")
     List<GazeteerEntry> readGazeteerFile(Gazeteer aGaz) throws IOException;
 
     boolean existsGazeteer(Recommender aRecommender, String aName);

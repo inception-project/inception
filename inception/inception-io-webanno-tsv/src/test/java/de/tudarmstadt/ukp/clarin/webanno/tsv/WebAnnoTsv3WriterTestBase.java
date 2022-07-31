@@ -92,6 +92,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         testInfo = aTestInfo;
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenAttachedAnnotationsWithValues() throws Exception
     {
@@ -122,10 +123,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         s1.addToIndexes();
         t1.setStem(s1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList(MorphologicalFeatures.class, POS.class, Lemma.class, Stem.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testDependencyWithValues() throws Exception
     {
@@ -156,10 +159,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         dep1.setEnd(dep1.getDependent().getEnd());
         dep1.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(POS.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(POS.class), //
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList(Dependency.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testZeroLengthSpansWithoutFeatureValues() throws Exception
     {
@@ -172,9 +177,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         new Span(jcas, jcas.getDocumentText().length(), jcas.getDocumentText().length())
                 .addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testZeroLengthSpansWithFeatureValues() throws Exception
     {
@@ -190,9 +197,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         ne2.setValue("ORG");
         ne2.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testZeroLengthSpansWithoutFeatures() throws Exception
     {
@@ -211,10 +220,11 @@ public abstract class WebAnnoTsv3WriterTestBase
                 jcas.getDocumentText().length());
         cas.addFsToIndexes(fs2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testZeroLengthSpanBetweenAdjacentTokens() throws Exception
     {
@@ -231,10 +241,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         AnnotationFS fs1a = cas.createAnnotation(simpleSpanType, 4, 4);
         cas.addFsToIndexes(fs1a);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testZeroLengthStackedSpansWithoutFeatures() throws Exception
     {
@@ -258,10 +269,11 @@ public abstract class WebAnnoTsv3WriterTestBase
                 jcas.getDocumentText().length());
         cas.addFsToIndexes(fs4);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS,
-                asList("webanno.custom.SimpleSpan"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenBoundedSpanWithFeatureValue() throws Exception
     {
@@ -275,9 +287,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             n++;
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenBoundedStackedSpanWithFeatureValue() throws Exception
     {
@@ -293,9 +307,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne2.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenBoundedSpanWithoutFeatureValue() throws Exception
     {
@@ -306,9 +322,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenBoundedSpanWithNastyFeatureValue() throws Exception
     {
@@ -320,9 +338,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenBoundedSpanWithUnderscoreFeatureValue() throws Exception
     {
@@ -334,9 +354,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenBoundedSpanWithAsteriskFeatureValue() throws Exception
     {
@@ -348,9 +370,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleTokenWithoutFeatureValue() throws Exception
     {
@@ -358,9 +382,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span neToken = new Span(jCas, 0, 4);
         neToken.addToIndexes();
 
-        writeAndAssertEquals(jCas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jCas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenBoundedBioLookAlike() throws Exception
     {
@@ -374,9 +400,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             n++;
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenBoundedStackedLookAlike() throws Exception
     {
@@ -390,9 +418,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             n++;
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testTokenBoundedSpanWithSpecialSymbolsValue() throws Exception
     {
@@ -404,9 +434,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testMultiTokenSpanWithoutFeatureValue() throws Exception
     {
@@ -415,9 +447,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne = new Span(jcas, 0, jcas.getDocumentText().length());
         ne.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSubMultiTokenSpanWithoutFeatureValue() throws Exception
     {
@@ -426,9 +460,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne1 = new Span(jcas, 0, 6);
         ne1.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSubMultiTokenSpanWithoutFeatureValue2() throws Exception
     {
@@ -437,44 +473,48 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne1 = new Span(jcas, 1, 6);
         ne1.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSubMultiTokenSpanWithoutFeatureValue3() throws Exception
     {
         JCas jcas = makeJCasOneSentence();
 
-        Span ne1 = new Span(jcas, 1, 6);
-        ne1.addToIndexes();
-        Span ne2 = new Span(jcas, 6, 12);
-        ne2.addToIndexes();
+        new Span(jcas, 1, 6).addToIndexes();
+        new Span(jcas, 6, 12).addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSubMultiTokenSpanWithFeatureValue() throws Exception
     {
         JCas jcas = makeJCasOneSentence("aaaaaa bbbbbb cccccc");
         assertEquals(asList("aaaaaa", "bbbbbb", "cccccc"), toText(select(jcas, Token.class)));
 
-        // 1111111111
-        // 01234567890123456789
-        // --------------------
-        // aaaaaa bbbbbb cccccc
-        // 1 ------ - single token
-        // 2 ------+------ - multi-token
-        // 3 -- - inside token
-        // 4 ---- - token prefix
-        // 5 ---- - token suffix
-        // 6 ---+------ - multi-token prefix
-        // 7 ------+--- - multi-token suffix
-        // 8 ---+--- - multi-token prefix + suffix
-        // 9 ---+------+--- - multi-token prefix + full + suffix
-        // 10 | - zero-span inside token
-        // 11 | - zero-span beginning of token
-        // 12 | - zero-span end of token
+        // @formatter:off
+        //               1111111111 
+        //     01234567890123456789
+        //     --------------------
+        //     aaaaaa bbbbbb cccccc
+        //  1  ------               - single token
+        //  2  ------+------        - multi-token
+        //  3           --          - inside token
+        //  4         ----          - token prefix
+        //  5           ----        - token suffix
+        //  6     ---+------        - multi-token prefix 
+        //  7  ------+---           - multi-token suffix
+        //  8     ---+---           - multi-token prefix + suffix
+        //  9     ---+------+---    - multi-token prefix + full + suffix
+        // 10            |          - zero-span inside token
+        // 11         |             - zero-span beginning of token
+        // 12               |       - zero-span end of token
+        // @formatter:on
 
         List<Span> annotations = new ArrayList<>();
         annotations.add(new Span(jcas, 0, 6)); // 1
@@ -495,9 +535,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         });
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testStackedSubMultiTokenSpanWithFeatureValue() throws Exception
     {
@@ -554,9 +596,11 @@ public abstract class WebAnnoTsv3WriterTestBase
             ne.addToIndexes();
         });
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testMultiTokenStackedSpanWithoutFeatureValue() throws Exception
     {
@@ -568,9 +612,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne2 = new Span(jcas, 0, jcas.getDocumentText().length());
         ne2.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testMultiTokenSpanWithFeatureValue() throws Exception
     {
@@ -580,9 +626,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         ne.setValue("PERSON");
         ne.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testMultiTokenStackedSpanWithFeatureValue() throws Exception
     {
@@ -596,9 +644,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         ne2.setValue("LOCATION");
         ne2.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testCrossSentenceSpanWithoutFeatureValue() throws Exception
     {
@@ -607,9 +657,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span ne = new Span(jcas, 0, jcas.getDocumentText().length());
         ne.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testCrossSentenceSpanWithFeatureValue() throws Exception
     {
@@ -619,9 +671,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         ne.setValue("PERSON");
         ne.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleTokenRelationWithoutFeatureValue() throws Exception
     {
@@ -646,10 +700,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_RELATION_LAYERS,
-                asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleNonTokenRelationWithoutFeatureValue() throws Exception
     {
@@ -679,10 +734,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class), //
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleStackedNonTokenRelationWithoutFeatureValue() throws Exception
     {
@@ -715,10 +772,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleStackedNonTokenRelationWithoutFeatureValue2() throws Exception
     {
@@ -750,10 +809,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleStackedNonTokenRelationWithoutFeatureValue3() throws Exception
     {
@@ -785,10 +846,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleStackedNonTokenOverlappingRelationWithoutFeatureValue() throws Exception
     {
@@ -821,10 +884,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleNonTokenRelationWithoutFeature() throws Exception
     {
@@ -854,10 +919,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.SimpleRelation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleNonMultiTokenRelationWithoutFeatureValue() throws Exception
     {
@@ -889,10 +956,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleNonMultiTokenRelationWithMultipleFeatureValues() throws Exception
     {
@@ -927,10 +996,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "integerValue", 42);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.ComplexRelation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testStackedNonMultiTokenRelationWithMultipleFeatureValues() throws Exception
     {
@@ -977,10 +1048,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs2, "integerValue", 43);
         cas.addFsToIndexes(fs2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.ComplexRelation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Disabled("Relations between different layers not supported in WebAnno TSV 3 atm")
     @Test
     public void testSingleMixedRelationWithoutFeatureValue() throws Exception
@@ -1009,10 +1082,12 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "Dependent", dep);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class),
                 WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleTokenRelationWithFeatureValue() throws Exception
     {
@@ -1038,10 +1113,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "value", "nsubj");
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_RELATION_LAYERS,
-                asList("webanno.custom.Relation"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.Relation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSingleTokenRelationWithMultipleFeatureValues() throws Exception
     {
@@ -1069,10 +1145,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         FSUtil.setFeature(fs1, "integerValue", 42);
         cas.addFsToIndexes(fs1);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_RELATION_LAYERS,
-                asList("webanno.custom.ComplexRelation"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_RELATION_LAYERS, asList("webanno.custom.ComplexRelation"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSimpleSlotFeature() throws Exception
     {
@@ -1096,13 +1173,15 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testUnsetSlotFeature() throws Exception
     {
@@ -1124,13 +1203,15 @@ public abstract class WebAnnoTsv3WriterTestBase
         makeLinkHostFS(jcas, "webanno.custom.FlexLinkHost", t1.getBegin(), t1.getEnd(),
                 (FeatureStructure[]) null);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.FlexLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.FlexLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.FlexLinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSimpleSlotFeatureWithoutValues() throws Exception
     {
@@ -1154,13 +1235,15 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testStackedSimpleSlotFeatureWithoutValues() throws Exception
     {
@@ -1191,13 +1274,15 @@ public abstract class WebAnnoTsv3WriterTestBase
             makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSimpleSameRoleSlotFeature() throws Exception
     {
@@ -1221,13 +1306,15 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testComplexSlotFeatureWithoutValues() throws Exception
     {
@@ -1252,13 +1339,15 @@ public abstract class WebAnnoTsv3WriterTestBase
         makeLinkHostFS(jcas, "webanno.custom.ComplexLinkHost", t1.getBegin(), t1.getEnd(), link1,
                 link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.ComplexLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.ComplexLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.ComplexLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.ComplexLinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testStackedComplexSlotFeatureWithoutValues() throws Exception
     {
@@ -1291,13 +1380,15 @@ public abstract class WebAnnoTsv3WriterTestBase
                     link1, link2);
         }
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.ComplexLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.ComplexLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.ComplexLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.ComplexLinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testStackedComplexSlotFeatureWithoutSlotFillers() throws Exception
     {
@@ -1324,13 +1415,15 @@ public abstract class WebAnnoTsv3WriterTestBase
                 t1.getEnd());
         setFeature(host2, "value", "val2");
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.ComplexLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.ComplexLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.ComplexLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.ComplexLinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSimpleCrossSenenceSlotFeature() throws Exception
     {
@@ -1354,13 +1447,15 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testMultiTokenSlotFeature() throws Exception
     {
@@ -1386,13 +1481,15 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testMultiTokenStackedSlotFeature() throws Exception
     {
@@ -1416,13 +1513,15 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testZeroLengthSlotFeature1() throws Exception
     {
@@ -1446,13 +1545,15 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getBegin(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testZeroLengthSlotFeature2() throws Exception
     {
@@ -1476,13 +1577,15 @@ public abstract class WebAnnoTsv3WriterTestBase
 
         makeLinkHostFS(jcas, t1.getBegin(), t1.getEnd(), link1, link2);
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SLOT_FEATS,
-                asList("webanno.custom.SimpleLinkHost:links"), WebannoTsv3Writer.PARAM_SPAN_LAYERS,
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SLOT_FEATS, asList("webanno.custom.SimpleLinkHost:links"), //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS,
                 asList("webanno.custom.SimpleSpan", "webanno.custom.SimpleLinkHost"),
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.LinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSimpleChain() throws Exception
     {
@@ -1503,10 +1606,11 @@ public abstract class WebAnnoTsv3WriterTestBase
                         link, cas, t2.getBegin(), t2.getEnd(), null, null,
                         makeChainLink(link, cas, t3.getBegin(), t3.getEnd(), null, null, null))));
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_CHAIN_LAYERS,
-                asList("webanno.custom.Simple"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_CHAIN_LAYERS, asList("webanno.custom.Simple"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testMultiTokenChain() throws Exception
     {
@@ -1526,10 +1630,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         makeChainHead(head, makeChainLink(link, cas, t1.getBegin(), t2.getEnd(), null, null,
                 makeChainLink(link, cas, t3.getBegin(), t4.getEnd(), null, null, null)));
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_CHAIN_LAYERS,
-                asList("webanno.custom.Simple"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_CHAIN_LAYERS, asList("webanno.custom.Simple"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testStackedChain() throws Exception
     {
@@ -1555,10 +1660,11 @@ public abstract class WebAnnoTsv3WriterTestBase
                         link, cas, t2.getBegin(), t2.getEnd(), null, null,
                         makeChainLink(link, cas, t1.getBegin(), t1.getEnd(), null, null, null))));
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_CHAIN_LAYERS,
-                asList("webanno.custom.Simple"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_CHAIN_LAYERS, asList("webanno.custom.Simple"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSubtokenChain() throws Exception
     {
@@ -1580,10 +1686,11 @@ public abstract class WebAnnoTsv3WriterTestBase
                                 makeChainLink(link, cas, t4.getBegin() + 1, t4.getEnd() - 1, null,
                                         null, null))));
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_CHAIN_LAYERS,
-                asList("webanno.custom.Simple"));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_CHAIN_LAYERS, asList("webanno.custom.Simple"));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSentenceWithLineBreak() throws Exception
     {
@@ -1592,9 +1699,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span neToken = new Span(jcas, 0, 4);
         neToken.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSentenceWithTab() throws Exception
     {
@@ -1603,9 +1712,11 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span neToken = new Span(jcas, 0, 4);
         neToken.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSentenceWithEmoji() throws Exception
     {
@@ -1614,7 +1725,8 @@ public abstract class WebAnnoTsv3WriterTestBase
         Span neToken = new Span(jcas, 10, 12);
         neToken.addToIndexes();
 
-        writeAndAssertEquals(jcas, WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
+        writeAndAssertEquals(jcas, //
+                WebannoTsv3Writer.PARAM_SPAN_LAYERS, asList(Span.class));
     }
 
     @Test
@@ -1870,6 +1982,7 @@ public abstract class WebAnnoTsv3WriterTestBase
         writeAndAssertEquals(jcas);
     }
 
+    @SuppressWarnings("deprecation")
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException
     {

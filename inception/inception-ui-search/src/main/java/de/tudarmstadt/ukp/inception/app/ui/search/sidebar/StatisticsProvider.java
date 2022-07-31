@@ -27,24 +27,26 @@ import java.util.List;
 import org.apache.wicket.extensions.markup.html.repeater.data.sort.SortOrder;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 
 public class StatisticsProvider
-    extends SortableDataProvider
+    extends SortableDataProvider<LayerStatistics, String>
 {
+    private static final long serialVersionUID = 7665907275292598984L;
 
     class SortableDataProviderComparator
         implements Comparator<LayerStatistics>, Serializable
     {
+        private static final long serialVersionUID = 6209880863368659008L;
+
         @Override
         public int compare(LayerStatistics aStats1, LayerStatistics aStats2)
         {
-            PropertyModel<Comparable> model1 = new PropertyModel<Comparable>(aStats1,
-                    (String) getSort().getProperty());
-            PropertyModel<Comparable> model2 = new PropertyModel<Comparable>(aStats2,
-                    (String) getSort().getProperty());
+            var model1 = new PropertyModel<String>(aStats1, getSort().getProperty());
+            var model2 = new PropertyModel<String>(aStats2, getSort().getProperty());
 
             int result = model1.getObject().compareTo(model2.getObject());
 
@@ -80,16 +82,9 @@ public class StatisticsProvider
     }
 
     @Override
-    public IModel<LayerStatistics> model(Object aObject)
+    public IModel<LayerStatistics> model(LayerStatistics aObject)
     {
-        return new IModel<LayerStatistics>()
-        {
-            @Override
-            public LayerStatistics getObject()
-            {
-                return (LayerStatistics) aObject;
-            }
-        };
+        return Model.of(aObject);
     }
 
     @Override

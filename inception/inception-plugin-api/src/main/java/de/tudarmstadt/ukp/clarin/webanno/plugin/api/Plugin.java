@@ -83,9 +83,9 @@ public abstract class Plugin
     }
 
     /**
-     * Returns a set of classes which are used to initialize the Spring application context for this
-     * plugin. These classes are not automatically exported to the main application context. In
-     * order to be exported, they must carry the {@link ExportedComponent annotation}.
+     * @return a set of classes which are used to initialize the Spring application context for this
+     *         plugin. These classes are not automatically exported to the main application context.
+     *         In order to be exported, they must carry the {@link ExportedComponent annotation}.
      */
     public abstract Set<Class<?>> getSources();
 }

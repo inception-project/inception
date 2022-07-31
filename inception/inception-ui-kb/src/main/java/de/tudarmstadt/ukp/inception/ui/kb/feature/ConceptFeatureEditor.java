@@ -257,6 +257,8 @@ public class ConceptFeatureEditor
          * When using this input component with an {@link AjaxFormChoiceComponentUpdatingBehavior},
          * it is necessary to request the identifier of the selected item as an additional dynamic
          * attribute, otherwise no distinction can be made between two items with the same label!
+         * 
+         * @return JavaScript snippet
          */
         public String getIdentifierDynamicAttributeScript()
         {

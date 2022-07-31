@@ -102,7 +102,7 @@ public class DocumentRepositoryEditorPanel
             {
                 Component newProperties;
                 if (form.getModelObject() != null && getModelObject() != null) {
-                    ExternalSearchProviderFactory espf = repositoryRegistry
+                    ExternalSearchProviderFactory<?> espf = repositoryRegistry
                             .getExternalSearchProviderFactory(getModelObject().getKey());
                     newProperties = espf.createTraitsEditor(MID_PROPERTIES, form.getModel());
                 }

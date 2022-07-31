@@ -41,7 +41,8 @@ public class ElgCatalogClientImplTest
     @Test
     public void testCatalogQuery() throws Exception
     {
-        ElgCatalogSearchResponse response = sut.search("GATE");
+        // ElgCatalogSearchResponse response =
+        sut.search("GATE");
 
         // System.out.println(JSONUtil.toPrettyJsonString(response));
     }
@@ -50,7 +51,8 @@ public class ElgCatalogClientImplTest
     @Test
     public void testRetrievingDetails() throws Exception
     {
-        ElgCatalogEntityDetails response = sut.details(
+        // ElgCatalogEntityDetails response =
+        sut.details(
                 "https://live.european-language-grid.eu/catalogue_backend/api/registry/metadatarecord/627/");
 
         // System.out.println(JSONUtil.toPrettyJsonString(response));

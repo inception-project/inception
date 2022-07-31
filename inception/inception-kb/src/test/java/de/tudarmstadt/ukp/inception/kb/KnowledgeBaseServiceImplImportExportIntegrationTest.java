@@ -249,9 +249,9 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest
         return testEntityManager.persist(p);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name)
+    private KnowledgeBase buildKnowledgeBase(Project aProject, String aName)
     {
-        return testFixtures.buildKnowledgeBase(project, name, Reification.NONE);
+        return testFixtures.buildKnowledgeBase(aProject, aName, Reification.NONE);
     }
 
     private void importKnowledgeBase(String resourceName) throws Exception

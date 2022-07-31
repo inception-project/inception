@@ -145,11 +145,11 @@ public class GazeteerExporterTest
         sut.importData(importRequest, targetProject, exportedProject, zipFile);
 
         assertThat(gazeteerCaptor.getAllValues())
-                .usingElementComparatorIgnoringFields("id", "project")
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "project")
                 .containsExactlyInAnyOrderElementsOf(gazeteers());
 
         assertThat(gazeteerFileCaptor.getAllValues())
-                .usingElementComparatorIgnoringFields("id", "project")
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id", "project")
                 .containsExactlyInAnyOrderElementsOf(gazeteers());
     }
 

@@ -178,13 +178,12 @@ public class SearchPage
 
             add(new TextField<>("query", String.class));
 
-            LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
-                    this::actionSearch);
+            var searchLink = new LambdaAjaxSubmitLink<Void>("submitSearch", this::actionSearch);
             add(searchLink);
             setDefaultButton(searchLink);
         }
 
-        private void actionSearch(AjaxRequestTarget aTarget, Form<?> aForm)
+        private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm)
         {
             SearchFormModel model = getModelObject();
 

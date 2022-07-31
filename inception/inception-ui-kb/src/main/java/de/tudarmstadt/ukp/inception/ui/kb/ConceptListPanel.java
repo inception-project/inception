@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -40,7 +42,6 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -77,13 +78,13 @@ public class ConceptListPanel
         OverviewListChoice<KBHandle> overviewList = new OverviewListChoice<>("concepts");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
         overviewList.setModel(selectedConceptModel);
-        overviewList.setChoices(LambdaModel.of(this::getConcepts));
+        overviewList.setChoices(LoadableDetachableModel.of(this::getConcepts));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                 this::actionSelectionChanged));
         overviewList.setMaxRows(LIST_MAX_ROWS);
         add(overviewList);
 
-        add(new Label("count", LambdaModel.of(() -> overviewList.getChoices().size())));
+        add(new Label("count", overviewList.getChoicesModel().map(Collection::size)));
 
         LambdaAjaxLink addLink = new LambdaAjaxLink("add",
                 target -> send(getPage(), Broadcast.BREADTH, new AjaxNewConceptEvent(target)));
@@ -108,8 +109,6 @@ public class ConceptListPanel
     /**
      * If the user disabled "show all" but a concept from an implicit namespace was selected, the
      * concept selection is cancelled. In any other case this component is merely updated via AJAX.
-     * 
-     * @param aTarget
      */
     private void actionPreferenceChanged(AjaxRequestTarget aTarget)
     {
@@ -124,20 +123,20 @@ public class ConceptListPanel
 
     private List<KBHandle> getConcepts()
     {
-        if (isVisibleInHierarchy()) {
-            Preferences prefs = preferences.getObject();
-            try {
-                return kbService.listAllConcepts(kbModel.getObject(), prefs.showAllConcepts);
-            }
-            catch (QueryEvaluationException e) {
-                error("Unable to list concepts: " + e.getLocalizedMessage());
-                LOG.error("Unable to list concepts.", e);
-                return Collections.emptyList();
-            }
-        }
-        else {
+        if (!isVisibleInHierarchy()) {
             return Collections.emptyList();
         }
+
+        Preferences prefs = preferences.getObject();
+        try {
+            return kbService.listAllConcepts(kbModel.getObject(), prefs.showAllConcepts);
+        }
+        catch (QueryEvaluationException e) {
+            error("Unable to list concepts: " + e.getLocalizedMessage());
+            LOG.error("Unable to list concepts.", e);
+            return Collections.emptyList();
+        }
+
     }
 
     static class Preferences

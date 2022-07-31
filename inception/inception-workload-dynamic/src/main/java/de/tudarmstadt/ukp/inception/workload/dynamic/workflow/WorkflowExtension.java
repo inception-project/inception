@@ -38,6 +38,8 @@ public interface WorkflowExtension
     String getLabel();
 
     /**
+     * @param aSourceDocuments
+     *            the list of possible documents to work on next
      * @return List of {@link SourceDocument} changed as required by the specific workflow strategy
      */
     List<SourceDocument> rankDocuments(List<SourceDocument> aSourceDocuments);

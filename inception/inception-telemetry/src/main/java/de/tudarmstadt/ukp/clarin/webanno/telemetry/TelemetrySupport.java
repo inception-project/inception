@@ -36,14 +36,15 @@ public interface TelemetrySupport<T>
     String getName();
 
     /**
-     * The support is valid if the user has made all necessary choices. While a support does not
-     * have valid settings, no telemetry must be submitted.
+     * @return if the support is valid. The support is valid if the user has made all necessary
+     *         choices. While a support does not have valid settings, no telemetry must be
+     *         submitted.
      */
     boolean hasValidSettings();
 
     /**
-     * When the version of a telemetry support changes, the user should be presented with the
-     * settings again.
+     * @return the version of the support. When the version of a telemetry support changes, the user
+     *         should be presented with the settings again.
      */
     int getVersion();
 
@@ -94,12 +95,12 @@ public interface TelemetrySupport<T>
     }
 
     /**
-     * Returns a list of details containing the data which the telemetry support sends home.
+     * @return a list of details containing the data which the telemetry support sends home.
      * 
-     * <b>Note:</b> Make sure this map actually contains all the data that is being sent! This is
-     * used to display the details of what is being sent to the user - it is not used to pick up the
-     * actual data which is sent home! So make sure the method which sents the data and this method
-     * are in sync.
+     *         <b>Note:</b> Make sure this map actually contains all the data that is being sent!
+     *         This is used to display the details of what is being sent to the user - it is not
+     *         used to pick up the actual data which is sent home! So make sure the method which
+     *         sents the data and this method are in sync.
      */
     List<TelemetryDetail> getDetails();
 

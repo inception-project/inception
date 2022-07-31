@@ -15,34 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.sidebar;
+package de.tudarmstadt.ukp.inception.diam.model.compact;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
+import java.util.ArrayList;
 
-import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
-
-public class DropDownEvent
+/**
+ * List of {@link CompactRange}. Required so Jackson knows the generic type of the list when
+ * converting an array of offsets from JSON to Java.
+ */
+public class CompactRangeList
+    extends ArrayList<CompactRange>
 {
-    public RecommenderEvaluationScoreMetricEnum selectedValue;
-    public AjaxRequestTarget target;
+    // See
+    // http://stackoverflow.com/questions/6173182/spring-json-convert-a-typed-collection-like-listmypojo
 
-    public RecommenderEvaluationScoreMetricEnum getSelectedValue()
-    {
-        return selectedValue;
-    }
-
-    public void setSelectedValue(RecommenderEvaluationScoreMetricEnum selectedValue)
-    {
-        this.selectedValue = selectedValue;
-    }
-
-    public AjaxRequestTarget getTarget()
-    {
-        return target;
-    }
-
-    public void setTarget(AjaxRequestTarget target)
-    {
-        this.target = target;
-    }
+    private static final long serialVersionUID = 1441338116416225186L;
 }

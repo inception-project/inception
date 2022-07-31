@@ -129,7 +129,9 @@ public class KnowledgeBaseExporterTest
         // Verify that importData is called as many times as there are localKBs
         verify(kbService, times(numOfLocalKBs)).importData(any(), any(), any());
 
-        assertThat(exportedKbs).usingElementComparatorIgnoringFields("repositoryId", "project")
+        assertThat(exportedKbs) //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("repositoryId",
+                        "project")
                 .containsExactlyInAnyOrderElementsOf(knowledgeBases());
     }
 

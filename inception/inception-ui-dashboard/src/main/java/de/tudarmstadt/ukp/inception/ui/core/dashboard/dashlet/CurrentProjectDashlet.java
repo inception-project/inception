@@ -77,6 +77,7 @@ public class CurrentProjectDashlet
         return getModel().orElse(null).getObject();
     }
 
+    @SuppressWarnings("unchecked")
     public IModel<Project> getModel()
     {
         return (IModel<Project>) getDefaultModel();

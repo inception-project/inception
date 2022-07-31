@@ -29,7 +29,8 @@ public class ElgServiceModelDeserializationTest
     {
         var response = "{\"response\":{\"type\":\"texts\",\"texts\":[{\"annotations\":{\"Person\":[{\"start\":5,\"end\":10,\"features\":{\"nif:anchorOf\":\"Smith\",\"itsrdf:taClassRef\":\"http://dbpedia.org/ontology/Person\"}}],\"Location\":[],\"Organisation\":[{\"start\":25,\"end\":35,\"features\":{\"nif:anchorOf\":\"IBM London\",\"itsrdf:taClassRef\":\"http://dbpedia.org/ontology/Organisation\"}}],\"Miscellaneous\":[]},\"content\":\"John Smith is working at IBM London.\"}]}}\n";
 
-        ElgResponseContainer resp = JSONUtil.fromJsonString(ElgResponseContainer.class, response);
+        // ElgResponseContainer resp =
+        JSONUtil.fromJsonString(ElgResponseContainer.class, response);
 
         // System.out.println(JSONUtil.toPrettyJsonString(resp));
     }
@@ -39,7 +40,8 @@ public class ElgServiceModelDeserializationTest
     {
         var response = "{\"response\":{\"type\":\"annotations\",\"annotations\":{\"Person\":[{\"start\":0,\"end\":10,\"features\":{\"firstName\":\"John\",\"gender\":\"male\",\"surname\":\"Smith\",\"kind\":\"fullName\",\"rule\":\"PersonFull\",\"ruleFinal\":\"PersonFinal\"}}],\"Location\":[],\"Organization\":[{\"start\":25,\"end\":35,\"features\":{\"orgType\":\"company\",\"rule\":\"GazOrganization\",\"ruleFinal\":\"OrgCountryFinal\"}}],\"Date\":[]}}}\n";
 
-        ElgResponseContainer resp = JSONUtil.fromJsonString(ElgResponseContainer.class, response);
+        // ElgResponseContainer resp =
+        JSONUtil.fromJsonString(ElgResponseContainer.class, response);
 
         // System.out.println(JSONUtil.toPrettyJsonString(resp));
     }

@@ -81,7 +81,6 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
     private KBConcept concept;
     private KBProperty property;
     private KBHandle conceptHandle;
-    private KBHandle propertyHandle;
     private KBStatement statement;
 
     @BeforeEach
@@ -102,7 +101,6 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
         conceptHandle = concept.toKBHandle();
-        propertyHandle = property.toKBHandle();
         statement = testFixtures.buildStatement(conceptHandle, property, "Test statement");
         sut.upsertStatement(kb, statement);
     }

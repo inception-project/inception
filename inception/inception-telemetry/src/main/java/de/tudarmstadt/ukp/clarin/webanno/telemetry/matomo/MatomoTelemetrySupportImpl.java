@@ -30,7 +30,6 @@ import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +39,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -405,27 +401,6 @@ public class MatomoTelemetrySupportImpl
                                 + "restarted regularly while server-based deployments are expected to be "
                                 + "running for a long time."));
     }
-
-    private static final TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager()
-    {
-        @Override
-        public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType)
-            throws CertificateException
-        {
-        }
-
-        @Override
-        public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType)
-            throws CertificateException
-        {
-        }
-
-        @Override
-        public java.security.cert.X509Certificate[] getAcceptedIssuers()
-        {
-            return new java.security.cert.X509Certificate[] {};
-        }
-    } };
 
     @Override
     public Panel createTraitsEditor(String aId, IModel<TelemetrySettings> aSettings)

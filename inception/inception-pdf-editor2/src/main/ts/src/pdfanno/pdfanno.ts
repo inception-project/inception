@@ -212,7 +212,7 @@ export function scrollTo (offset: number, position: string): void {
     return
   }
 
-  const rectangles = mapToDocumentCoordinates(getGlyphsInRange([offset, offset + 1]).map(g => g.bbox), page)
+  const rectangles = mapToDocumentCoordinates(getGlyphsInRange([offset, offset + 1]).map(g => g.bbox))
   const annoLayer = document.getElementById('annoLayer2')
   if (!annoLayer) {
     console.error('No annoLayer found.')
@@ -270,7 +270,7 @@ export function getAnnotations () {
         span.page = textLayer.findPageForOffset(span.textRange[0]).index
         span.color = s[2]?.c || '#FFF'
         span.text = s[2]?.l || ''
-        span.rectangles = mergeRects(getGlyphsInRange(span.textRange).map(g => g.bbox))
+        span.rectangles = mergeRects(getGlyphsInRange(span.textRange))
         annotationMarkers.get(s[0])?.forEach(m => span.classList.push(`marker-${m[0]}`))
         span.save()
       }
@@ -297,7 +297,7 @@ export function getAnnotations () {
         span.page = textLayer.findPageForOffset(span.textRange[0]).index
         span.knob = false
         span.border = false
-        span.rectangles = mergeRects(getGlyphsInRange(span.textRange).map(g => g.bbox))
+        span.rectangles = mergeRects(getGlyphsInRange(span.textRange))
         span.classList = [`marker-${m[0]}`]
         span.save()
       }

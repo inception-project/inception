@@ -303,9 +303,10 @@ public class RecommenderInfoPanel
                 AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
                 AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
                         layer);
-                int address = recommendationService.upsertSpanFeature(annotationService,
-                        state.getDocument(), state.getUser().getUsername(), cas, layer, feature,
-                        suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
+                // int address =
+                recommendationService.upsertSpanFeature(annotationService, state.getDocument(),
+                        state.getUser().getUsername(), cas, layer, feature, suggestion.getLabel(),
+                        suggestion.getBegin(), suggestion.getEnd());
 
                 // Hide the suggestion. This is faster than having to recalculate the visibility
                 // status for the entire document or even for the part visible on screen.

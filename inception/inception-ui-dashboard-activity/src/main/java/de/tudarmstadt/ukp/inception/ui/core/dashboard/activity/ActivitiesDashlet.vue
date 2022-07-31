@@ -18,7 +18,7 @@
 
 <template>
   <div class="card border-0 flex-v-container">
-    <div class="card-header">
+    <div class="card-header rounded-0">
       Recent activity
     </div>
     <ul class="list-group list-group-flush">

@@ -21,9 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.brat.annotation.RenderType.FULL;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.wicket.ServletContextUtils.referenceToUrl;
 import static java.lang.String.format;
-import static java.lang.invoke.MethodHandles.lookup;
 import static java.util.Arrays.asList;
-import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -38,7 +36,6 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -73,8 +70,6 @@ public class BratAnnotationEditor
 {
     private static final String BRAT_EVENT_RENDER_DATA_PATCH = "renderDataPatch";
     private static final String BRAT_EVENT_RENDER_DATA = "renderData";
-
-    private static final Logger LOG = getLogger(lookup().lookupClass());
 
     private static final long serialVersionUID = -1537506294440056609L;
 

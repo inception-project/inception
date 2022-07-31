@@ -34,8 +34,6 @@ import org.lappsgrid.serialization.Data;
 import org.lappsgrid.serialization.DataContainer;
 import org.lappsgrid.serialization.Serializer;
 import org.lappsgrid.serialization.lif.Container;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -51,8 +49,6 @@ import de.tudarmstadt.ukp.inception.rendering.model.Range;
 public class LappsGridRecommender
     extends RecommendationEngine
 {
-    private static final Logger LOG = LoggerFactory.getLogger(LappsGridRecommender.class);
-
     private final LappsGridRecommenderTraits traits;
     private final ServiceClient client;
 

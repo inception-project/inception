@@ -37,7 +37,6 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
@@ -52,7 +51,6 @@ public class LearningRecordServiceImplIntegrationTest
 {
     private static final String USER_NAME = "testUser";
     private static final String FEATURE_NAME = "testFeature";
-    private static final String PROJECT_NAME = "Test project";
 
     private @Autowired TestEntityManager testEntityManager;
 
@@ -175,12 +173,4 @@ public class LearningRecordServiceImplIntegrationTest
 
         return testEntityManager.persist(feature);
     }
-
-    private User createUser()
-    {
-        User user = new User();
-
-        return user;
-    }
-
 }

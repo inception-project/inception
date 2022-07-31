@@ -38,7 +38,6 @@ import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfigurati
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.util.FileSystemUtils;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
@@ -62,7 +61,6 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.config.WorkloadManagementAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
-import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 
@@ -95,13 +93,11 @@ public class MatrixWorkloadExtensionImplTest
     private @Autowired UserDao userService;
     private @Autowired WorkloadManagementService workloadManagementService;
     private @Autowired MatrixWorkloadExtension matrixWorkloadExtension;
-    private @Autowired SessionRegistry sessionRegistry;
 
     private User annotator;
     private Project project;
     private SourceDocument sourceDocument;
     private AnnotationDocument annotationDocument;
-    private MatrixWorkloadTraits traits;
 
     @BeforeAll
     public static void setupClass()

@@ -2,6 +2,7 @@ import { scaleDown } from './utils'
 import SpanAnnotation from '../annotation/span'
 import { findCharacterOffset, getGlyphsInRange, findGlyphAtPoint, Rect } from '../../../page/textLayer'
 import { Rectangle } from '../../../../vmodel/Rectangle'
+import { VGlyph } from '../../../../vmodel/VGlyph'
 
 function scale () {
   return window.PDFViewerApplication.pdfViewer.getPageView(0).viewport.scale
@@ -10,28 +11,34 @@ function scale () {
 /**
  * Merge user selections.
  */
-export function mergeRects (rects: Rectangle[]) {
-  if (rects.length === 0) {
+export function mergeRects (glyphs: VGlyph[]) {
+  if (glyphs.length === 0) {
     return []
   }
 
   // a virtical margin of error.
   const error = 5 * scale()
 
-  let tmp = new Rectangle(rects[0])
+  let tmp = new Rectangle(glyphs[0].bbox)
   const newRects = [tmp]
-  for (let i = 1; i < rects.length; i++) {
-    // Same line -> Merge rects.
-    if (withinMargin(rects[i].top, tmp.top, error)) {
+  for (let i = 1; i < glyphs.length; i++) {
+    const rect = glyphs[i].bbox
+
+    if (tmp.p !== rect.p) {
+      console.log('Page switch')
+    }
+
+    if (tmp.p === rect.p && withinMargin(rect.top, tmp.top, error)) {
+      // Same line/same page -> Merge rects.
       tmp.setPosition({
-        top: Math.min(tmp.top, rects[i].top),
-        left: Math.min(tmp.left, rects[i].left),
-        right: Math.max(tmp.right, rects[i].right),
-        bottom: Math.max(tmp.bottom, rects[i].bottom)
+        top: Math.min(tmp.top, rect.top),
+        left: Math.min(tmp.left, rect.left),
+        right: Math.max(tmp.right, rect.right),
+        bottom: Math.max(tmp.bottom, rect.bottom)
       })
-      // New line -> Create a new rect.
     } else {
-      tmp = new Rectangle(rects[i])
+      // New line/new page -> Create a new rect.
+      tmp = new Rectangle(rect)
       newRects.push(tmp)
     }
   }
@@ -52,10 +59,9 @@ function withinMargin (x: number, base: number, margin: number) {
 export function getRectangles () {
   if (!currentPage || !selectionBegin || !selectionEnd) {
     return null
-  } else {
-    const targets = getGlyphsInRange([selectionBegin, selectionEnd])
-    return mergeRects(targets.map(g => g.bbox))
   }
+
+  return mergeRects(getGlyphsInRange([selectionBegin, selectionEnd]))
 }
 
 export function installSpanSelection () {
@@ -216,7 +222,7 @@ function selectionHighlight (textRange: [number, number], page: number): SpanAnn
   hl.page = page
   hl.knob = false
   hl.border = false
-  hl.rectangles = mergeRects(getGlyphsInRange(textRange).map(g => g.bbox))
+  hl.rectangles = mergeRects(getGlyphsInRange(textRange))
 
   if (hl.rectangles.length === 0) {
     return null

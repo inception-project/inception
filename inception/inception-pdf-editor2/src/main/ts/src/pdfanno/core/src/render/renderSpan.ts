@@ -3,15 +3,14 @@ import { hex2rgba } from '../utils/color'
 import SpanAnnotation from '../annotation/span'
 import { Rectangle } from '../../../../vmodel/Rectangle'
 
-export function mapToDocumentCoordinates (aRectangles: Rectangle[], page: number): Rectangle[] | undefined {
+export function mapToDocumentCoordinates (aRectangles: Rectangle[]): Rectangle[] | undefined {
   if (!aRectangles) {
     return undefined
   }
 
   const firstPageElement = document.querySelector('.page')
-  const pageContainer = document.querySelector(`.page[data-page-number="${page}"]`)
-
-  if (!firstPageElement || !pageContainer) {
+  if (!firstPageElement) {
+    console.warn('No page elements found')
     return undefined
   }
 
@@ -19,20 +18,36 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[], page: number
   const pageView = window.PDFViewerApplication.pdfViewer.getPageView(0)
   const scale = pageView.viewport.scale
   const marginBetweenPages = 1 // TODO Where does this 1 come from?!
-  const pageTopY = pageContainer.offsetTop / scale + paddingTop + marginBetweenPages
-  let leftOffset = 0
 
-  if (firstPageElement.clientWidth > pageContainer.clientWidth) {
-    const firstContainerStyle = getComputedStyle(firstPageElement)
-    const firstPageLeft = parseInt(firstContainerStyle.marginLeft) + parseInt(firstContainerStyle.borderLeftWidth)
-    const currentPageStyle = getComputedStyle(pageContainer)
-    const currentPageLeft = parseInt(currentPageStyle.marginLeft) + parseInt(currentPageStyle.borderLeftWidth)
-    leftOffset = (currentPageLeft - firstPageLeft) / scale
+  const rectangles : Rectangle[] = []
+  for (let r of aRectangles) {
+    const pageContainer = document.querySelector(`.page[data-page-number="${r.p}"]`)
+    if (!pageContainer) {
+      console.warn(`No page element found for page ${r.p}`)
+      return undefined
+    }
+
+    const pageTopY = pageContainer.offsetTop / scale + paddingTop + marginBetweenPages
+    let leftOffset = 0
+
+    if (firstPageElement.clientWidth > pageContainer.clientWidth) {
+      const firstContainerStyle = getComputedStyle(firstPageElement)
+      const firstPageLeft = parseInt(firstContainerStyle.marginLeft) + parseInt(firstContainerStyle.borderLeftWidth)
+      const currentPageStyle = getComputedStyle(pageContainer)
+      const currentPageLeft = parseInt(currentPageStyle.marginLeft) + parseInt(currentPageStyle.borderLeftWidth)
+      leftOffset = (currentPageLeft - firstPageLeft) / scale
+    }
+
+    r = new Rectangle({ p: r.p, x: r.x + leftOffset, y: r.y + pageTopY, w: r.w, h: r.h })
+    if (r.w > 0 && r.h > 0 /*&& r.x > -1 && r.y > -1*/) {
+      rectangles.push(r)
+    }
   }
 
-  const rectangles = aRectangles
-    .map(r => new Rectangle({ x: r.x + leftOffset, y: r.y + pageTopY, w: r.w, h: r.h }))
-    .filter(r => r.w > 0 && r.h > 0 && r.x > -1 && r.y > -1)
+  if (rectangles.length === 0) {
+    console.warn(`${aRectangles.length} Input rectangles reduced to nothing`, aRectangles)
+    return undefined
+  }
 
   return rectangles
 }
@@ -44,7 +59,7 @@ export function mapToDocumentCoordinates (aRectangles: Rectangle[], page: number
  * @return a html element describing a span annotation.
  */
 export function renderSpan (span: SpanAnnotation): HTMLElement | undefined {
-  const rectangles = mapToDocumentCoordinates(span.rectangles, span.page)
+  const rectangles = mapToDocumentCoordinates(span.rectangles)
 
   if (!rectangles) {
     return undefined

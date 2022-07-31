@@ -494,6 +494,8 @@ public class SPARQLQueryBuilder
      * Retrieve any item from the KB. There is no check if the item looks like a class, instance or
      * property. The IRI and property mapping used in the patters is obtained from the given KB
      * configuration.
+     * 
+     * @return the builder (fluent API)
      */
     public static SPARQLQueryPrimaryConditions forItems(KnowledgeBase aKB)
     {
@@ -504,6 +506,8 @@ public class SPARQLQueryBuilder
      * Retrieve only things that look like classes. Identifiers for classes participate as ID in
      * {@code ID IS-A CLASS-IRI}, {@code X SUBCLASS-OF ID}, {@code ID SUBCLASS-OF X}. The IRI and
      * property mapping used in the patters is obtained from the given KB configuration.
+     * 
+     * @return the builder (fluent API)
      */
     public static SPARQLQueryPrimaryConditions forClasses(KnowledgeBase aKB)
     {
@@ -515,6 +519,8 @@ public class SPARQLQueryBuilder
     /**
      * Retrieve instances. Instances do <b>not</b> look like classes. The IRI and property mapping
      * used in the patters is obtained from the given KB configuration.
+     * 
+     * @return the builder (fluent API)
      */
     public static SPARQLQueryPrimaryConditions forInstances(KnowledgeBase aKB)
     {
@@ -2195,6 +2201,10 @@ public class SPARQLQueryBuilder
     /**
      * Removes leading and trailing space and single quote characters which could cause the query
      * string to escape its quotes in the SPARQL query.
+     * 
+     * @param aQuery
+     *            a query string
+     * @return the stripped query string
      */
     public static String trimQueryString(String aQuery)
     {

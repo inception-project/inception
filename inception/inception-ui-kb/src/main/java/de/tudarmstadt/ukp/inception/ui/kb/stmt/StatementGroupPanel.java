@@ -53,7 +53,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -250,7 +249,7 @@ public class StatementGroupPanel
                         @Override
                         protected IModel<KBStatement> model(KBStatement object)
                         {
-                            return LambdaModel.of(() -> object);
+                            return Model.of(object);
                         }
                     };
                 }
