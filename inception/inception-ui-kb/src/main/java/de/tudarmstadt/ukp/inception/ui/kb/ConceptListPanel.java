@@ -126,7 +126,7 @@ public class ConceptListPanel
         if (!isVisibleInHierarchy()) {
             return Collections.emptyList();
         }
-        
+
         Preferences prefs = preferences.getObject();
         try {
             return kbService.listAllConcepts(kbModel.getObject(), prefs.showAllConcepts);

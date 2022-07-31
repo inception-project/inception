@@ -86,7 +86,8 @@ public class CompactRange
         extends JsonDeserializer<CompactRange>
     {
         @Override
-        public CompactRange deserialize(JsonParser aJp, DeserializationContext aCtxt) throws IOException
+        public CompactRange deserialize(JsonParser aJp, DeserializationContext aCtxt)
+            throws IOException
         {
             CompactRange offsets = new CompactRange();
 

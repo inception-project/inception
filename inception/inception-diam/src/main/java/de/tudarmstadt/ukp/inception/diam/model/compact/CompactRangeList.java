@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.diam.model.compact;
 import java.util.ArrayList;
 
 /**
- * List of {@link CompactRange}. Required so Jackson knows the generic type of the list when converting
- * an array of offsets from JSON to Java.
+ * List of {@link CompactRange}. Required so Jackson knows the generic type of the list when
+ * converting an array of offsets from JSON to Java.
  */
 public class CompactRangeList
     extends ArrayList<CompactRange>

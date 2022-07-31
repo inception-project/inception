@@ -103,11 +103,12 @@ public class ConceptFeatureTraitsEditor
         form.add(new KnowledgeBaseItemAutoCompleteField(MID_SCOPE,
                 _query -> listSearchResults(_query, CONCEPT)).setOutputMarkupPlaceholderTag(true));
 
-        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE, LoadableDetachableModel.of(this::listKnowledgeBases),
+        form.add(new DropDownChoice<>(MID_KNOWLEDGE_BASE,
+                LoadableDetachableModel.of(this::listKnowledgeBases),
                 new LambdaChoiceRenderer<>(KnowledgeBase::getName)).setNullValid(true)
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
-        form.add(
-                new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LoadableDetachableModel.of(this::listAllowedTypes))
+        form.add(new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE,
+                LoadableDetachableModel.of(this::listAllowedTypes))
                         .add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::refresh)));
 
         form.add(new DisabledKBWarning("disabledKBWarning", feature,

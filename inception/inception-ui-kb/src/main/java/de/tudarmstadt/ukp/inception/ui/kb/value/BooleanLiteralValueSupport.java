@@ -63,8 +63,7 @@ public class BooleanLiteralValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(
-                new ValueType(XSD.BOOLEAN.stringValue(), "Boolean", valueTypeSupportId));
+        return asList(new ValueType(XSD.BOOLEAN.stringValue(), "Boolean", valueTypeSupportId));
     }
 
     @Override

@@ -72,7 +72,7 @@ public interface ValueTypeSupport
 
     /**
      * @return a {@link ValueEditor} instance given a datatype IRI (most likely the range of a
-     * property or the datatype of a statement).
+     *         property or the datatype of a statement).
      * 
      * @param aId
      *            Wicket markup id received by the editor instances
@@ -82,7 +82,7 @@ public interface ValueTypeSupport
 
     /**
      * @return a {@link ValuePresenter} instance given a datatype IRI (most likely the range of a
-     * property or the datatype of a statement).
+     *         property or the datatype of a statement).
      * 
      * @param aId
      *            Wicket markup id received by the presenter instances

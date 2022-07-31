@@ -37,6 +37,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;

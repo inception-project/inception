@@ -123,7 +123,8 @@ public class ConceptInstancePanel
      * Acts upon statement changes. If the changed statement renames the selected instance, the name
      * in the respective {@link KBHandle} is updated. Otherwise, no action is taken.
      *
-     * @param event the event
+     * @param event
+     *            the event
      */
     @OnEvent
     public void actionStatementChanged(AjaxStatementChangedEvent event)
@@ -134,7 +135,7 @@ public class ConceptInstancePanel
         if (instanceHandle == null) {
             return;
         }
-        
+
         if (!instanceHandle.getIdentifier().equals(statement.getInstance().getIdentifier())) {
             return;
         }

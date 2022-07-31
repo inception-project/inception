@@ -83,7 +83,7 @@ public class PropertyListPanel
 
         add(overviewList);
 
-        add(new Label("count",overviewList.getChoicesModel().map(Collection::size)));
+        add(new Label("count", overviewList.getChoicesModel().map(Collection::size)));
 
         LambdaAjaxLink addLink = new LambdaAjaxLink("add",
                 target -> send(getPage(), Broadcast.BREADTH, new AjaxNewPropertyEvent(target)));

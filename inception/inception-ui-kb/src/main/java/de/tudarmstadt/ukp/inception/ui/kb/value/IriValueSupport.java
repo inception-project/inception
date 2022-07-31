@@ -62,8 +62,7 @@ public class IriValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(
-                new ValueType(XSD.ANYURI.stringValue(), "Resource", valueTypeSupportId));
+        return asList(new ValueType(XSD.ANYURI.stringValue(), "Resource", valueTypeSupportId));
     }
 
     @Override

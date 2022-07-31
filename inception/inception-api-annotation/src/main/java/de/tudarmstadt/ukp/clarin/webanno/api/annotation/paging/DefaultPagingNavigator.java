@@ -59,16 +59,15 @@ public class DefaultPagingNavigator
         gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
         // Using a LambdaModel here because the model object in the page may change and we want to
         // always get the right one
-        gotoPageTextField.setModel(
-                PropertyModel.of(LoadableDetachableModel.of(() -> aPage.getModel()), "firstVisibleUnitIndex"));
+        gotoPageTextField.setModel(PropertyModel
+                .of(LoadableDetachableModel.of(() -> aPage.getModel()), "firstVisibleUnitIndex"));
         // FIXME minimum and maximum should be obtained from the annotator state
         gotoPageTextField.setMinimum(1);
         // gotoPageTextField.setMaximum(LambdaModel.of(() ->
         // aPage.getModelObject().getUnitCount()));
         gotoPageTextField.setOutputMarkupId(true);
         form.add(gotoPageTextField);
-        var gotoPageLink = new LambdaAjaxSubmitLink<>("gotoPageLink", form,
-                this::actionGotoPage);
+        var gotoPageLink = new LambdaAjaxSubmitLink<>("gotoPageLink", form, this::actionGotoPage);
         form.setDefaultButton(gotoPageLink);
         form.add(gotoPageLink);
         add(form);
