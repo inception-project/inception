@@ -495,6 +495,8 @@ public class SPARQLQueryBuilder
      * property. The IRI and property mapping used in the patters is obtained from the given KB
      * configuration.
      * 
+     * @param aKB
+     *            the knowledge base to query
      * @return the builder (fluent API)
      */
     public static SPARQLQueryPrimaryConditions forItems(KnowledgeBase aKB)
@@ -507,6 +509,8 @@ public class SPARQLQueryBuilder
      * {@code ID IS-A CLASS-IRI}, {@code X SUBCLASS-OF ID}, {@code ID SUBCLASS-OF X}. The IRI and
      * property mapping used in the patters is obtained from the given KB configuration.
      * 
+     * @param aKB
+     *            the knowledge base to query
      * @return the builder (fluent API)
      */
     public static SPARQLQueryPrimaryConditions forClasses(KnowledgeBase aKB)
@@ -520,6 +524,8 @@ public class SPARQLQueryBuilder
      * Retrieve instances. Instances do <b>not</b> look like classes. The IRI and property mapping
      * used in the patters is obtained from the given KB configuration.
      * 
+     * @param aKB
+     *            the knowledge base to query
      * @return the builder (fluent API)
      */
     public static SPARQLQueryPrimaryConditions forInstances(KnowledgeBase aKB)
@@ -532,6 +538,10 @@ public class SPARQLQueryBuilder
     /**
      * Retrieve properties. The IRI and property mapping used in the patters is obtained from the
      * given KB configuration.
+     * 
+     * @param aKB
+     *            the knowledge base to query
+     * @return the builder (fluent API)
      */
     public static SPARQLQueryPrimaryConditions forProperties(KnowledgeBase aKB)
     {
