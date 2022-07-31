@@ -145,7 +145,7 @@ public class AnnotationPage
             focus = StringValue.valueOf(0);
         }
 
-        handleParameters(document, focus, user, true);
+        handleParameters(document, focus, user);
 
         createChildComponents();
 
@@ -209,6 +209,7 @@ public class AnnotationPage
      * Re-render the document when the selection has changed. This is necessary in order to update
      * the selection highlight in the annotation editor.
      */
+    @SuppressWarnings("javadoc")
     @OnEvent
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
@@ -223,6 +224,7 @@ public class AnnotationPage
      * current view. It might be more efficient to have another event that more closely mimicks
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
+    @SuppressWarnings("javadoc")
     @OnEvent
     public void onAnnotationEvent(AnnotationEvent aEvent)
     {
@@ -245,6 +247,7 @@ public class AnnotationPage
      * current view. It might be more efficient to have another event that more closely mimicks
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
+    @SuppressWarnings("javadoc")
     @OnEvent
     public void onFeatureValueUpdatedEvent(FeatureValueUpdatedEvent aEvent)
     {
@@ -262,6 +265,7 @@ public class AnnotationPage
     /**
      * Re-render the document when the view has changed, e.g. due to paging
      */
+    @SuppressWarnings("javadoc")
     @OnEvent
     public void onViewStateChanged(AnnotatorViewportChangedEvent aEvent)
     {
@@ -547,7 +551,7 @@ public class AnnotationPage
 
     @Override
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
-            StringValue aUserParameter, boolean aLockIfPreset)
+            StringValue aUserParameter)
     {
         User user = userRepository.getCurrentUser();
         requireAnyProjectRole(user);
@@ -606,9 +610,6 @@ public class AnnotationPage
         // Mind that this is relevant if the project was specified as a query parameter
         // i.e. not only in the case that it was a URL fragment parameter.
         state.setProject(project);
-        if (aLockIfPreset) {
-            state.setProjectLocked(true);
-        }
 
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)

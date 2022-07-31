@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import static java.lang.Integer.MAX_VALUE;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -27,22 +26,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.docnav.Default
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
-import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 
 @Order(0)
 @Component
 public class CurationDocumentNavigatorActionBarExtension
     extends DefaultDocumentNavigatorActionBarExtension
 {
-    private final CurationDocumentService curationDocumentService;
-
-    @Autowired
-    public CurationDocumentNavigatorActionBarExtension(
-            CurationDocumentService aCurationDocumentService)
-    {
-        curationDocumentService = aCurationDocumentService;
-    }
-
     @Override
     public String getRole()
     {

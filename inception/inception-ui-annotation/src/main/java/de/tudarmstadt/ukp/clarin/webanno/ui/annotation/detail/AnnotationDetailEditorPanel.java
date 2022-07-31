@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil.selectFsByAddr;
 import static java.util.Arrays.asList;
@@ -581,14 +582,13 @@ public abstract class AnnotationDetailEditorPanel
         int slotFillerAddr = aExistingSlotFillerId.getId();
 
         // Inject the slot filler into the respective slot
-        FeatureStructure slotHostFS = ICasUtil.selectFsByAddr(aCas,
-                state.getArmedFeature().vid.getId());
-        AnnotationLayer slotHostLayer = annotationService.findLayer(state.getProject(), slotHostFS);
-        TypeAdapter slotHostAdapter = annotationService.getAdapter(slotHostLayer);
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) state.getArmedFeature().value;
-        LinkWithRoleModel link = links.get(state.getArmedSlot());
+        var slotHostFS = selectFsByAddr(aCas, state.getArmedFeature().vid.getId());
+        var slotHostLayer = annotationService.findLayer(state.getProject(), slotHostFS);
+        var slotHostAdapter = annotationService.getAdapter(slotHostLayer);
+        var links = (List<LinkWithRoleModel>) state.getArmedFeature().value;
+        var link = links.get(state.getArmedSlot());
         link.targetAddr = slotFillerAddr;
-        link.label = ICasUtil.selectAnnotationByAddr(aCas, slotFillerAddr).getCoveredText();
+        link.label = selectAnnotationByAddr(aCas, slotFillerAddr).getCoveredText();
         commitFeatureStatesToFeatureStructure(aTarget, state.getDocument(),
                 state.getUser().getUsername(), aCas, state.getArmedFeature().vid.getId(),
                 slotHostAdapter, asList(state.getArmedFeature()));
@@ -628,6 +628,7 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
+    @Deprecated
     @Override
     public void actionSelect(AjaxRequestTarget aTarget, AnnotationFS annoFs)
         throws IOException, AnnotationException
@@ -650,6 +651,7 @@ public abstract class AnnotationDetailEditorPanel
         actionSelect(aTarget);
     }
 
+    @Deprecated
     @Override
     public void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException
@@ -666,6 +668,7 @@ public abstract class AnnotationDetailEditorPanel
                 ICasUtil.selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
     }
 
+    @Deprecated
     @Override
     public void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS annoFs)
         throws IOException, AnnotationException
@@ -1204,32 +1207,32 @@ public abstract class AnnotationDetailEditorPanel
                 .listAttachedLinkFeatures(adapter.getLayer())) {
             Type linkHostType = CasUtil.getType(aCas, linkFeature.getLayer().getName());
 
-            for (FeatureStructure linkHostFS : CasUtil.selectFS(aCas, linkHostType)) {
+            for (FeatureStructure linkHostFS : aCas.select(linkHostType)) {
                 List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature, linkHostFS);
                 Iterator<LinkWithRoleModel> i = links.iterator();
                 boolean modified = false;
                 while (i.hasNext()) {
                     LinkWithRoleModel link = i.next();
-                    if (link.targetAddr == ICasUtil.getAddr(fs)) {
+                    if (link.targetAddr == getAddr(fs)) {
                         i.remove();
                         info("Cleared slot [" + link.role + "] in feature ["
                                 + linkFeature.getUiName() + "] on ["
                                 + linkFeature.getLayer().getUiName() + "]");
                         LOG.debug("Cleared slot [{}] in feature [{}] on annotation [{}]", link.role,
-                                linkFeature.getName(), ICasUtil.getAddr(linkHostFS));
+                                linkFeature.getName(), getAddr(linkHostFS));
                         modified = true;
                     }
                 }
                 if (modified) {
                     try {
                         adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(),
-                                aCas, ICasUtil.getAddr(linkHostFS), linkFeature, links);
+                                aCas, getAddr(linkHostFS), linkFeature, links);
                     }
                     catch (AnnotationException e) {
                         error("Unable to clean slots in feature [" + linkFeature.getUiName()
                                 + "] on [" + linkFeature.getLayer().getUiName() + "]");
                         LOG.error("Unable to clean slots in feature [{}] on annotation [{}]",
-                                linkFeature.getName(), ICasUtil.getAddr(linkHostFS));
+                                linkFeature.getName(), getAddr(linkHostFS));
                     }
 
                     // If the currently armed slot is part of this link, then we disarm the slot
@@ -1490,6 +1493,7 @@ public abstract class AnnotationDetailEditorPanel
     /**
      * Re-render the sidebar if the selection has changed.
      */
+    @SuppressWarnings("javadoc")
     @OnEvent
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
