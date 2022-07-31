@@ -52,6 +52,7 @@ public class LogDialogContent
         queue(cancel = new LambdaAjaxLink("close", this::actionCancel));
     }
 
+    @SuppressWarnings("unchecked")
     public IModel<List<LogMessageGroup>> getModel()
     {
         return (IModel<List<LogMessageGroup>>) getDefaultModel();

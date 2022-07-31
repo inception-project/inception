@@ -70,6 +70,7 @@ public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
         add(form);
     }
 
+    @SuppressWarnings("unchecked")
     public T getModelObject()
     {
         return (T) getDefaultModelObject();

@@ -15,12 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.sidebar;
+package de.tudarmstadt.ukp.inception.recommendation.sidebar.learningcurve;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
 
+/**
+ * @deprecated The current implementation of the learning curve panel has a memory leak in the
+ *             browser code. It should be re-implemented.
+ */
+@Deprecated
 public class DropDownEvent
 {
     public RecommenderEvaluationScoreMetricEnum selectedValue;

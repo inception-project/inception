@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -161,7 +160,6 @@ public class PairwiseUnitizingAgreementTable
             }
         };
 
-        Set<String> raters = getModelObject().getRaters();
         this.add(visibleWhen(
                 () -> (getModelObject() != null && !getModelObject().getRaters().isEmpty())));
         add(rows);
