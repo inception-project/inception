@@ -96,6 +96,7 @@ import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction;
+import org.eclipse.rdf4j.sparqlbuilder.constraint.propertypath.builder.PropertyPathBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
@@ -329,10 +330,11 @@ public class SPARQLQueryBuilder
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case INSTANCE:
-                return VAR_SUBJECT.has(path(typeOfProperty, zeroOrMore(subClassProperty)),
-                        aContext);
+                return VAR_SUBJECT.has(PropertyPathBuilder.of(typeOfProperty).then(subClassProperty)
+                        .zeroOrMore().build(), aContext);
             case PROPERTY:
-                return VAR_SUBJECT.has(path(oneOrMore(subPropertyProperty)), aContext);
+                return VAR_SUBJECT.has(
+                        PropertyPathBuilder.of(subPropertyProperty).oneOrMore().build(), aContext);
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
             }
@@ -364,7 +366,8 @@ public class SPARQLQueryBuilder
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
-                return aContext.has(path(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
+                return aContext.has(PropertyPathBuilder.of(subPropertyProperty).oneOrMore().build(),
+                        VAR_SUBJECT);
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
             }
@@ -437,7 +440,8 @@ public class SPARQLQueryBuilder
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
-                return aContext.has(path(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
+                return aContext.has(PropertyPathBuilder.of(subPropertyProperty).oneOrMore().build(),
+                        VAR_SUBJECT);
             default:
                 throw new IllegalStateException(
                         "Can only request classes or properties as parents");
@@ -655,7 +659,8 @@ public class SPARQLQueryBuilder
     {
         Iri pLabel = mode.getLabelProperty(kb);
         Iri pSubProperty = iri(kb.getSubPropertyIri());
-        var primaryLabelPattern = aVariable.has(path(zeroOrMore(pSubProperty)), pLabel);
+        var primaryLabelPattern = aVariable
+                .has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(), pLabel);
         return optional(primaryLabelPattern);
     }
 
@@ -667,7 +672,8 @@ public class SPARQLQueryBuilder
     {
         Iri pLabel = mode.getLabelProperty(kb);
         Iri pSubProperty = iri(kb.getSubPropertyIri());
-        var primaryLabelPattern = aVariable.has(path(zeroOrMore(pSubProperty)), pLabel);
+        var primaryLabelPattern = aVariable
+                .has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(), pLabel);
 
         if (mode.getAdditionalMatchingProperties(kb).isEmpty()) {
             // If we only have a single label property, let's make the label optional
@@ -680,7 +686,8 @@ public class SPARQLQueryBuilder
         patterns.add(primaryLabelPattern);
 
         for (Iri pAddSearch : mode.getAdditionalMatchingProperties(kb)) {
-            patterns.add(aVariable.has(path(zeroOrMore(pSubProperty)), pAddSearch));
+            patterns.add(aVariable.has(PropertyPathBuilder.of(pSubProperty).zeroOrMore().build(),
+                    pAddSearch));
         }
 
         // If additional label properties are specified, then having a label candidate
