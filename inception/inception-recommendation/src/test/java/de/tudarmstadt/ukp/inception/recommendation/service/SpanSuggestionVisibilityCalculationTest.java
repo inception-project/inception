@@ -24,7 +24,6 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +35,9 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
+@ExtendWith(MockitoExtension.class)
 public class SpanSuggestionVisibilityCalculationTest
 {
     private @Mock LearningRecordService recordService;
@@ -65,8 +67,6 @@ public class SpanSuggestionVisibilityCalculationTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
-
         user = "Testuser";
 
         layer = new AnnotationLayer();
@@ -79,7 +79,6 @@ public class SpanSuggestionVisibilityCalculationTest
 
         List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
         featureList.add(new AnnotationFeature(NamedEntity._FeatName_value, TYPE_NAME_STRING));
-        when(annoService.listAnnotationFeature(layer)).thenReturn(featureList);
         when(annoService.listSupportedFeatures(layer)).thenReturn(featureList);
 
         sut = new RecommendationServiceImpl(null, null, null, null, null, annoService, null,
