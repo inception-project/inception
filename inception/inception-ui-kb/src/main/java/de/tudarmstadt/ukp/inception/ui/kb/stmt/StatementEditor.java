@@ -49,7 +49,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -261,7 +260,7 @@ public class StatementEditor
                         @Override
                         protected IModel<KBQualifier> model(KBQualifier object)
                         {
-                            return LambdaModel.of(() -> object);
+                            return Model.of(object);
                         }
                     };
                 }

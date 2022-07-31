@@ -32,9 +32,11 @@ import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 public interface WorkloadManagementService
 {
     /**
-     * Returns for a given project a WorkloadManager object. Also applicable for older INCEpTION
-     * version where the workload feature was not present. Also, if no entity can be found, a new
-     * entry will be created and returned.
+     * @return for a given project a WorkloadManager object. Also applicable for older INCEpTION
+     *         version where the workload feature was not present. Also, if no entity can be found,
+     *         a new entry will be created and returned.
+     * @param aProject
+     *            a project
      */
     WorkloadManager loadOrCreateWorkloadManagerConfiguration(Project aProject);
 

@@ -24,7 +24,7 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.eclipse.rdf4j.model.IRI;
-import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+import org.eclipse.rdf4j.model.vocabulary.XSD;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -63,7 +63,7 @@ public class IriValueSupport
     public List<ValueType> getSupportedValueTypes()
     {
         return asList(
-                new ValueType(XMLSchema.ANYURI.stringValue(), "Resource", valueTypeSupportId));
+                new ValueType(XSD.ANYURI.stringValue(), "Resource", valueTypeSupportId));
     }
 
     @Override
