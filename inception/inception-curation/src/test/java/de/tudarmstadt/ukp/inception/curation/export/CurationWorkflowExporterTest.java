@@ -21,15 +21,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -42,6 +43,7 @@ import de.tudarmstadt.ukp.inception.curation.merge.ThresholdBasedMergeStrategyTr
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 
+@ExtendWith(MockitoExtension.class)
 public class CurationWorkflowExporterTest
 {
     private @Mock CurationService curationService;
@@ -54,8 +56,6 @@ public class CurationWorkflowExporterTest
     @BeforeEach
     public void setUp()
     {
-        openMocks(this);
-
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");
