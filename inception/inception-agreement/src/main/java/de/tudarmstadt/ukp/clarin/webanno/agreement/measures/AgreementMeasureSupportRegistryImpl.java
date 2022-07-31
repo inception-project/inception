@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
+import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.ClassUtils;
@@ -42,12 +42,12 @@ public class AgreementMeasureSupportRegistryImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<AgreementMeasureSupport> agreementMeasuresProxy;
+    private final List<AgreementMeasureSupport<?, ?, ?>> agreementMeasuresProxy;
 
     private List<AgreementMeasureSupport<?, ?, ?>> agreementMeasures;
 
     public AgreementMeasureSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<AgreementMeasureSupport> aFeatureSupports)
+            @Lazy @Autowired(required = false) List<AgreementMeasureSupport<?, ?, ?>> aFeatureSupports)
     {
         agreementMeasuresProxy = aFeatureSupports;
     }
@@ -60,7 +60,7 @@ public class AgreementMeasureSupportRegistryImpl
 
     public void init()
     {
-        List<AgreementMeasureSupport> fsp = new ArrayList<>();
+        List<AgreementMeasureSupport<?, ?, ?>> fsp = new ArrayList<>();
 
         if (agreementMeasuresProxy != null) {
             fsp.addAll(agreementMeasuresProxy);
@@ -74,7 +74,7 @@ public class AgreementMeasureSupportRegistryImpl
 
         log.info("Found [{}] agreement measure supports", fsp.size());
 
-        agreementMeasures = Collections.unmodifiableList(fsp);
+        agreementMeasures = unmodifiableList(fsp);
     }
 
     @Override
