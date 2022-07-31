@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x;
 
-import static org.apache.commons.lang3.StringEscapeUtils.unescapeJava;
+import static org.apache.commons.text.StringEscapeUtils.unescapeJava;
 
 import java.util.ArrayList;
 import java.util.List;
