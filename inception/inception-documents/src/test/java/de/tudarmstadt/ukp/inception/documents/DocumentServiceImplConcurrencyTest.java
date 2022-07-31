@@ -119,8 +119,8 @@ public class DocumentServiceImplConcurrencyTest
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        storageService = new CasStorageServiceImpl(driver, null, null,
-                new CasStorageCachePropertiesImpl());
+        storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(), null,
+                null);
 
         sut = spy(new DocumentServiceImpl(repositoryProperties, storageService, importExportService,
                 projectService, applicationEventPublisher, entityManager));

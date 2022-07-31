@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
 
-import java.io.Serializable;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxSubmitLink;
 import org.apache.wicket.feedback.IFeedback;
@@ -27,7 +25,7 @@ import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
 import org.slf4j.LoggerFactory;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
-public class LambdaAjaxSubmitLink<T extends Serializable>
+public class LambdaAjaxSubmitLink<T>
     extends AjaxSubmitLink
 {
     private static final long serialVersionUID = 3946442967075930557L;

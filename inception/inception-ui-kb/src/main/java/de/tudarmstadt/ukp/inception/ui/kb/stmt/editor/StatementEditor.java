@@ -129,10 +129,10 @@ public class StatementEditor
         aTarget.add(this);
     }
 
-    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement statement)
+    private void actionAddQualifier(AjaxRequestTarget aTarget, KBStatement aStatement)
     {
-        KBQualifier qualifierPorto = new KBQualifier(statement);
-        statement.addQualifier(qualifierPorto);
+        KBQualifier qualifierPorto = new KBQualifier(aStatement);
+        aStatement.addQualifier(qualifierPorto);
         aTarget.add(this);
     }
 

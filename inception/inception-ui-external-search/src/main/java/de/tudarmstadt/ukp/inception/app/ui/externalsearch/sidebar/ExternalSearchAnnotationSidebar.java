@@ -340,14 +340,14 @@ public class ExternalSearchAnnotationSidebar
         {
             super(id);
             add(new TextField<>("queryInput", searchStateModel.bind("query"), String.class));
-            LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
+            var searchLink = new LambdaAjaxSubmitLink<Void>("submitSearch",
                     ExternalSearchAnnotationSidebar.this::actionSearch);
             add(searchLink);
             setDefaultButton(searchLink);
         }
     }
 
-    private void actionSearch(AjaxRequestTarget aTarget, Form aForm)
+    private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         ExternalSearchUserState searchState = searchStateModel.getObject();
 

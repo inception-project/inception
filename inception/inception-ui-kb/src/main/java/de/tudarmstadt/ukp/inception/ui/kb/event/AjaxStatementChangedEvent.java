@@ -84,7 +84,7 @@ public class AjaxStatementChangedEvent
     }
 
     /**
-     * Returns the statement editor component of the changed statement.
+     * @return the statement editor component of the changed statement.
      */
     public Component getComponent()
     {
@@ -92,8 +92,8 @@ public class AjaxStatementChangedEvent
     }
 
     /**
-     * {@code True} if the statement being changed was deleted. If {@code false}, there were only
-     * value updates in the statement.
+     * @return {@code true} if the statement being changed has been deleted. If {@code false}, there
+     *         were only value updates in the statement.
      */
     public boolean isDeleted()
     {
@@ -101,7 +101,7 @@ public class AjaxStatementChangedEvent
     }
 
     /**
-     * Returns the old statement (before the change)
+     * @return the old statement (before the change)
      */
     public KBStatement getStatementBeforeChange()
     {

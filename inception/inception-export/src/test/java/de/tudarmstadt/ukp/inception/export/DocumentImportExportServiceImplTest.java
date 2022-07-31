@@ -117,8 +117,8 @@ public class DocumentImportExportServiceImplTest
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        CasStorageServiceImpl storageService = new CasStorageServiceImpl(driver, null, null,
-                new CasStorageCachePropertiesImpl());
+        CasStorageServiceImpl storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(), null,
+                null);
 
         sut = new DocumentImportExportServiceImpl(repositoryProperties,
                 List.of(new XmiFormatSupport()), storageService, schemaService, properties);

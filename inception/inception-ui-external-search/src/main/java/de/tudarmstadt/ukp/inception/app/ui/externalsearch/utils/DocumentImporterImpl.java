@@ -41,8 +41,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 public class DocumentImporterImpl
     implements DocumentImporter
 {
-    private static final String PLAIN_TEXT = "text";
-
     private final DocumentService documentService;
     private final ExternalSearchService externalSearchService;
 

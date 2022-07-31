@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.diam.model.compact;
 
+import static com.fasterxml.jackson.core.JsonToken.END_ARRAY;
+import static com.fasterxml.jackson.core.JsonToken.START_ARRAY;
+import static com.fasterxml.jackson.core.JsonToken.VALUE_NUMBER_INT;
+
 import java.io.IOException;
+import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -78,6 +82,28 @@ public class CompactRange
         return "[" + begin + "-" + end + "]";
     }
 
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(begin, end);
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        CompactRange other = (CompactRange) obj;
+        return begin == other.begin && end == other.end;
+    }
+
     /**
      * Deserialize {@link CompactRange} from JSON to Java.
      *
@@ -91,26 +117,30 @@ public class CompactRange
         {
             CompactRange offsets = new CompactRange();
 
-            if (aJp.getCurrentToken() != JsonToken.START_ARRAY) {
-                aCtxt.mappingException("Expecting array begin");
+            if (aJp.getCurrentToken() != START_ARRAY) {
+                aCtxt.reportWrongTokenException(CompactRange.class, START_ARRAY,
+                        "Expecting array begin");
             }
 
-            if (aJp.nextToken() == JsonToken.VALUE_NUMBER_INT) {
+            if (aJp.nextToken() == VALUE_NUMBER_INT) {
                 offsets.begin = aJp.getIntValue();
             }
             else {
-                aCtxt.mappingException("Expecting begin offset as integer");
+                aCtxt.reportWrongTokenException(CompactRange.class, VALUE_NUMBER_INT,
+                        "Expecting begin offset as integer");
             }
 
-            if (aJp.nextToken() == JsonToken.VALUE_NUMBER_INT) {
+            if (aJp.nextToken() == VALUE_NUMBER_INT) {
                 offsets.end = aJp.getIntValue();
             }
             else {
-                aCtxt.mappingException("Expecting end offset as integer");
+                aCtxt.reportWrongTokenException(CompactRange.class, VALUE_NUMBER_INT,
+                        "Expecting end offset as integer");
             }
 
-            if (aJp.getCurrentToken() != JsonToken.END_ARRAY) {
-                aCtxt.mappingException("Expecting array end");
+            if (aJp.getCurrentToken() != END_ARRAY) {
+                aCtxt.reportWrongTokenException(CompactRange.class, END_ARRAY,
+                        "Expecting array end");
             }
 
             return offsets;

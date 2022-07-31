@@ -115,7 +115,7 @@ public class CasStorageServiceImplTest
         driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        sut = new CasStorageServiceImpl(driver, null, null, new CasStorageCachePropertiesImpl());
+        sut = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(), null, null);
     }
 
     @Test
