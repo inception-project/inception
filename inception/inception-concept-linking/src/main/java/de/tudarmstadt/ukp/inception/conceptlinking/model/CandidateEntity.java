@@ -173,7 +173,7 @@ public class CandidateEntity
     }
 
     /**
-     * Get a description for this entity
+     * @return the description for this entity
      */
     public String getDescription()
     {
@@ -185,6 +185,7 @@ public class CandidateEntity
         return handle.getLanguage();
     }
 
+    @SuppressWarnings("unchecked")
     public <T> Optional<T> get(Key<T> aKey)
     {
         return Optional.ofNullable((T) features.getOrDefault(aKey.name, aKey.getDefaultValue()));
@@ -192,6 +193,15 @@ public class CandidateEntity
 
     /**
      * Same as {@link #put} except that it is fluent.
+     * 
+     * @param aKey
+     *            a key.
+     * @param aValue
+     *            a value.
+     * @param <T>
+     *            the value type.
+     * 
+     * @return object for chaining.
      */
     public <T> CandidateEntity with(Key<T> aKey, T aValue)
     {

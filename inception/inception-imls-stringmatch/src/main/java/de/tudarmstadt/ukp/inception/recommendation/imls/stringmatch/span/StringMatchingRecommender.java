@@ -492,6 +492,7 @@ public class StringMatchingRecommender
                     .findFirst();
         }
 
+        @SuppressWarnings("unused")
         public int getDocNo()
         {
             return docNo;
@@ -556,7 +557,7 @@ public class StringMatchingRecommender
         }
 
         /**
-         * The label (e.g. NN, PER, OTH, etc.)
+         * @return the label (e.g. NN, PER, OTH, etc.)
          */
         public String getLabel()
         {
@@ -564,7 +565,7 @@ public class StringMatchingRecommender
         }
 
         /**
-         * How often the label was observed.
+         * @return how often the label was observed.
          */
         public int getCount()
         {
@@ -572,8 +573,8 @@ public class StringMatchingRecommender
         }
 
         /**
-         * How often the label was observed in relation to the total number of observations of the
-         * mention.
+         * @return how often the label was observed in relation to the total number of observations
+         *         of the mention.
          */
         public double getRelFreq()
         {

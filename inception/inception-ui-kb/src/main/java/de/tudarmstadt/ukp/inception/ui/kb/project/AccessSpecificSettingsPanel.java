@@ -49,6 +49,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -65,7 +66,6 @@ import com.github.rjeschke.txtmark.Processor;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -352,7 +352,7 @@ public class AccessSpecificSettingsPanel
                 Model<String> exportFileNameModel = Model
                         .of(kbModel.getObject().getKb().getName() + "." + fileExtension);
                 AjaxDownloadLink exportLink = new AjaxDownloadLink("link", exportFileNameModel,
-                        LambdaModel.of(() -> actionExport(fileExtension)));
+                        LoadableDetachableModel.of(() -> actionExport(fileExtension)));
                 exportLink.add(new Label("label", new ResourceModel("kb.export." + fileExtension)));
                 item.add(exportLink);
             }

@@ -35,7 +35,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 /**
  * Little helper class to manage the folders used to store the results, models and recommendation
  * settings.
+ * 
+ * @deprecated Class appears not to be used anymore and is to be removed without replacement.
  */
+@Deprecated
 public class RepositoryUtil
 {
     private static final Logger logger = LoggerFactory.getLogger(RepositoryUtil.class);

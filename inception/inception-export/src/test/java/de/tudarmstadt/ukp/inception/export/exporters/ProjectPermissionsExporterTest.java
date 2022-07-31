@@ -28,7 +28,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.List;
@@ -36,9 +35,11 @@ import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -55,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 
+@ExtendWith(MockitoExtension.class)
 public class ProjectPermissionsExporterTest
 {
     public @TempDir File workFolder;
@@ -74,8 +76,6 @@ public class ProjectPermissionsExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        openMocks(this);
-
         new ApplicationContextProvider().setApplicationContext(appContext);
         when(appContext.getBean("passwordEncoder", PasswordEncoder.class))
                 .thenReturn(new BCryptPasswordEncoder());
@@ -129,7 +129,7 @@ public class ProjectPermissionsExporterTest
                 .containsExactlyInAnyOrderElementsOf(asList(manager, annotator));
 
         assertThat(permissionCaptor.getAllValues()) //
-                .usingElementComparatorIgnoringFields("id") //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id") //
                 .containsExactlyInAnyOrderElementsOf(
                         union(managerPermissions, annotatorPermissions));
     }

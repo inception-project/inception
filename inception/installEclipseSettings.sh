@@ -12,18 +12,18 @@ function installPrefs {
   cp -v $JDT_UI_PREFS $1/.settings/
 }
 
-installPrefs inception-active-learning
-installPrefs inception-docker
-installPrefs inception-active-learning
+installPrefsinception-active-learning
 installPrefs inception-agreement
 installPrefs inception-annotation-storage
 installPrefs inception-api
 installPrefs inception-api-annotation
-installPrefs inception-documents
+installPrefs inception-api-dao
+installPrefs inception-api-editor
 installPrefs inception-api-formats
 installPrefs inception-api-render
 installPrefs inception-api-schema
 installPrefs inception-app-webapp
+installPrefs inception-app.iml
 installPrefs inception-boot-loader
 installPrefs inception-bootstrap
 installPrefs inception-brat-editor
@@ -35,12 +35,18 @@ installPrefs inception-curation-legacy
 installPrefs inception-diag
 installPrefs inception-diam
 installPrefs inception-diam-editor
+installPrefs inception-diam-word-alignment-editor
 installPrefs inception-doc
+installPrefs inception-docker
+installPrefs inception-documents
+installPrefs inception-editor-api
 installPrefs inception-example-imls-data-majority
+installPrefs inception-experimental-editor
 installPrefs inception-export
 installPrefs inception-external-editor
 installPrefs inception-external-search-core
 installPrefs inception-external-search-elastic
+installPrefs inception-external-search-mtas-embedded
 installPrefs inception-external-search-pubannotation
 installPrefs inception-external-search-solr
 installPrefs inception-guidelines
@@ -58,6 +64,7 @@ installPrefs inception-imls-weblicht
 installPrefs inception-io-conll
 installPrefs inception-io-html
 installPrefs inception-io-imscwb
+installPrefs inception-io-intertext
 installPrefs inception-io-json
 installPrefs inception-io-lif
 installPrefs inception-io-nif
@@ -77,9 +84,9 @@ installPrefs inception-model
 installPrefs inception-model-export
 installPrefs inception-pdf-editor
 installPrefs inception-pdf-editor2
-installPrefs inception-plugin-parent
 installPrefs inception-plugin-api
 installPrefs inception-plugin-manager
+installPrefs inception-plugin-parent
 installPrefs inception-preferences
 installPrefs inception-project
 installPrefs inception-project-export
@@ -110,6 +117,7 @@ installPrefs inception-ui-dashboard
 installPrefs inception-ui-dashboard-activity
 installPrefs inception-ui-external-search
 installPrefs inception-ui-kb
+installPrefs inception-ui-monitoring
 installPrefs inception-ui-project
 installPrefs inception-ui-search
 installPrefs inception-ui-tagsets

@@ -32,7 +32,6 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
-import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.ConllUReader;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +44,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.DkproTestHelper;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.QueueDispatcher;
@@ -53,9 +51,6 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 public class LappsRecommenderIntegrationTest
 {
-    private static final File cache = DkproTestHelper.getCacheFolder();
-    private static final DatasetFactory loader = new DatasetFactory(cache);
-
     private MockWebServer server;
 
     private LappsGridRecommender sut;
@@ -120,7 +115,7 @@ public class LappsRecommenderIntegrationTest
             {
                 try {
                     String url = request.getPath();
-                    String body = request.getBody().readUtf8();
+                    // String body = request.getBody().readUtf8();
 
                     if (request.getPath().equals("/pos/predict")) {
                         String response = "";

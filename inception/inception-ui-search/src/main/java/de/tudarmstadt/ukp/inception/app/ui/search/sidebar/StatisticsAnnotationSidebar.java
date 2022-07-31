@@ -195,7 +195,7 @@ public class StatisticsAnnotationSidebar
         statsProvider = new StatisticsProvider(new ArrayList<>());
 
         columns = new ArrayList<IColumn>();
-        columns.add(new PropertyColumn(new Model<String>("Features"), "getLayerFeatureName",
+        columns.add(new PropertyColumn<>(new Model<String>("Features"), "getLayerFeatureName",
                 "getLayerFeatureName"));
 
         resultsTable = new DefaultDataTable("datatable", columns, statsProvider, 20);

@@ -28,7 +28,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,7 +42,9 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -62,6 +63,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.schema.service.AnnotationSchemaServiceImpl;
 
+@ExtendWith(MockitoExtension.class)
 @ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest(excludeAutoConfiguration = LiquibaseAutoConfiguration.class)
@@ -83,8 +85,6 @@ public class RecommendationServiceImplIntegrationTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        openMocks(this);
-
         sut = new RecommendationServiceImpl(null, null, null, recommenderFactoryRegistry, null,
                 annoService, null, null, testEntityManager.getEntityManager());
 
@@ -122,10 +122,9 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void getNumOfEnabledRecommenders_WithOneEnabledRecommender()
     {
-        RecommendationEngineFactory recFactory = mock(RecommendationEngineFactory.class);
-        when(recommenderFactoryRegistry.getFactory(any(String.class))).thenReturn(recFactory);
-        when(recFactory.accepts(any(AnnotationLayer.class), any(AnnotationFeature.class)))
-                .thenReturn(true);
+        RecommendationEngineFactory<?> recFactory = mock(RecommendationEngineFactory.class);
+        when(recommenderFactoryRegistry.getFactory(any(String.class))) //
+                .thenReturn(recFactory);
 
         assertThat(recommenderFactoryRegistry.getFactory("nummy")).isNotNull();
 
@@ -186,8 +185,6 @@ public class RecommendationServiceImplIntegrationTest
             when(annoService.getFullProjectTypeSystem(project))
                     .thenReturn(typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
             when(annoService.listAnnotationLayer(project)).thenReturn(asList(layer));
-            doCallRealMethod().when(annoService).upgradeCas(any(CAS.class),
-                    any(TypeSystemDescription.class));
             doCallRealMethod().when(annoService).upgradeCas(any(CAS.class), any(CAS.class),
                     any(TypeSystemDescription.class));
 
@@ -206,22 +203,22 @@ public class RecommendationServiceImplIntegrationTest
 
     private Project createProject(String aName)
     {
-        Project project = new Project();
-        project.setName(aName);
-        return testEntityManager.persist(project);
+        Project l = new Project();
+        l.setName(aName);
+        return testEntityManager.persist(l);
     }
 
     private AnnotationLayer createAnnotationLayer()
     {
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setEnabled(true);
-        layer.setName(NamedEntity.class.getName());
-        layer.setReadonly(false);
-        layer.setType(NamedEntity.class.getName());
-        layer.setUiName("test ui name");
-        layer.setAnchoringMode(false, false);
+        AnnotationLayer l = new AnnotationLayer();
+        l.setEnabled(true);
+        l.setName(NamedEntity.class.getName());
+        l.setReadonly(false);
+        l.setType(NamedEntity.class.getName());
+        l.setUiName("test ui name");
+        l.setAnchoringMode(false, false);
 
-        return testEntityManager.persist(layer);
+        return testEntityManager.persist(l);
     }
 
     private Recommender buildRecommender(Project aProject, AnnotationFeature aFeature)
@@ -240,12 +237,12 @@ public class RecommendationServiceImplIntegrationTest
 
     private AnnotationFeature createAnnotationFeature(AnnotationLayer aLayer, String aName)
     {
-        AnnotationFeature feature = new AnnotationFeature();
-        feature.setLayer(aLayer);
-        feature.setName(aName);
-        feature.setUiName(aName);
-        feature.setType(CAS.TYPE_NAME_STRING);
+        AnnotationFeature f = new AnnotationFeature();
+        f.setLayer(aLayer);
+        f.setName(aName);
+        f.setUiName(aName);
+        f.setType(CAS.TYPE_NAME_STRING);
 
-        return testEntityManager.persist(feature);
+        return testEntityManager.persist(f);
     }
 }

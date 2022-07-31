@@ -46,7 +46,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -393,7 +392,7 @@ public class SearchServiceImpl
         log.trace("Starting afterDocumentCreate");
 
         // Schedule new document index process
-        enqueueIndexDocument(aEvent.getDocument(), "afterDocumentCreate", aEvent.getCas());
+        enqueueIndexDocument(aEvent.getDocument(), "afterDocumentCreate");
     }
 
     @TransactionalEventListener(fallbackExecution = true)
@@ -403,7 +402,7 @@ public class SearchServiceImpl
         log.trace("Starting afterAnnotationUpdate");
 
         // Schedule new document index process
-        enqueueIndexDocument(aEvent.getDocument(), "afterAnnotationUpdate", aEvent.getCas());
+        enqueueIndexDocument(aEvent.getDocument(), "afterAnnotationUpdate");
     }
 
     @TransactionalEventListener(fallbackExecution = true)
@@ -826,26 +825,14 @@ public class SearchServiceImpl
         enqueue(new ReindexTask(aProject, aTrigger));
     }
 
-    private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger, CAS aCas)
+    private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger)
     {
-        try {
-            enqueue(new IndexSourceDocumentTask(aSourceDocument, aTrigger, casToByteArray(aCas)));
-        }
-        catch (IOException e) {
-            log.error("Unable to enqueue document {} for indexing", aSourceDocument, e);
-        }
+        enqueue(new IndexSourceDocumentTask(aSourceDocument, aTrigger));
     }
 
-    private void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, String aTrigger,
-            CAS aCas)
+    private void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, String aTrigger)
     {
-        try {
-            enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, aTrigger,
-                    casToByteArray(aCas)));
-        }
-        catch (IOException e) {
-            log.error("Unable to enqueue document {} for indexing", aAnnotationDocument, e);
-        }
+        enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, aTrigger));
     }
 
     /**

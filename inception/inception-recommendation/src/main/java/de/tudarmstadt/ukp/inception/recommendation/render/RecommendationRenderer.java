@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.CHAIN_TYPE;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.Order;
 
@@ -53,7 +51,6 @@ public class RecommendationRenderer
     implements RenderStep
 {
     public static final String ID = "RecommendationRenderer";
-    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final AnnotationSchemaService annotationService;
     private final RecommendationService recommendationService;
@@ -86,7 +83,7 @@ public class RecommendationRenderer
     public boolean accepts(RenderRequest aRequest)
     {
         // do not show predictions during curation or when viewing others' work
-        if (!aRequest.getState().getMode().equals(ANNOTATION) || !aRequest.getAnnotationUser()
+        if (aRequest.getState().getMode() != ANNOTATION || !aRequest.getAnnotationUser()
                 .getUsername().equals(userRegistry.getCurrentUsername())) {
             return false;
         }

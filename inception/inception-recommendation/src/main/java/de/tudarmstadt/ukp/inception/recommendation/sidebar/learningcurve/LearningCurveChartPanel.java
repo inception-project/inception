@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.sidebar;
+package de.tudarmstadt.ukp.inception.recommendation.sidebar.learningcurve;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import static org.apache.commons.lang3.StringUtils.substring;
@@ -54,6 +54,11 @@ import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationSc
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 
+/**
+ * @deprecated The current implementation of the learning curve panel has a memory leak in the
+ *             browser code. It should be re-implemented.
+ */
+@Deprecated
 public class LearningCurveChartPanel
     extends Panel
 {
@@ -162,10 +167,9 @@ public class LearningCurveChartPanel
     }
 
     /**
-     * Fetches a number of latest evaluation scores from the database and save it in the map
-     * corresponding to each recommender for which the scores have been logged in the database
-     * 
-     * @return
+     * @return a number of latest evaluation scores from the database and save it in the map
+     *         corresponding to each recommender for which the scores have been logged in the
+     *         database
      */
     private MultiValuedMap<String, Double> getLatestScores()
     {

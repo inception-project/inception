@@ -28,6 +28,7 @@ import static java.util.stream.Collectors.toList;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -41,8 +42,6 @@ import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionDestroyedEvent;
@@ -73,8 +72,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 public class CurationSidebarServiceImpl
     implements CurationSidebarService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     // stores info on which users are selected and which doc is the curation-doc
     private ConcurrentMap<CurationStateKey, CurationState> curationStates;
 
@@ -237,9 +234,11 @@ public class CurationSidebarServiceImpl
     }
 
     @Override
-    public Optional<List<User>> listUsersSelectedForCuration(String aCurrentUser, long aProjectId)
+    public List<User> listUsersSelectedForCuration(String aCurrentUser, long aProjectId)
     {
-        return Optional.ofNullable(getCurationState(aCurrentUser, aProjectId).getSelectedUsers());
+        var selectedUsers = getCurationState(aCurrentUser, aProjectId).getSelectedUsers();
+        return selectedUsers == null ? Collections.emptyList()
+                : Collections.unmodifiableList(selectedUsers);
     }
 
     @Override

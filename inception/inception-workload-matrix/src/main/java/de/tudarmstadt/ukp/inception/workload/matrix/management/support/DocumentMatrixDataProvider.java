@@ -85,9 +85,6 @@ public class DocumentMatrixDataProvider
         return getMatrixData().size();
     }
 
-    /**
-     * Filtering performed on the table
-     */
     public List<DocumentMatrixRow> filterTable(List<DocumentMatrixRow> aData)
     {
         Stream<DocumentMatrixRow> rowStream = matrixData.stream();

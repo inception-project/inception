@@ -28,9 +28,9 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
-import de.tudarmstadt.ukp.inception.diam.model.Offsets;
-import de.tudarmstadt.ukp.inception.diam.model.OffsetsList;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
+import de.tudarmstadt.ukp.inception.diam.model.compact.CompactRange;
+import de.tudarmstadt.ukp.inception.diam.model.compact.CompactRangeList;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -76,7 +76,7 @@ public class CreateSpanAnnotationHandler
 
         // This is the span the user has marked in the browser in order to create a new slot-filler
         // annotation OR the span of an existing annotation which the user has selected.
-        Offsets userSelectedSpan = getOffsetsFromRequest(aTarget, aRequestParameters, aCas);
+        CompactRange userSelectedSpan = getOffsetsFromRequest(aTarget, aRequestParameters, aCas);
 
         AnnotatorState state = page.getModelObject();
         Selection selection = state.getSelection();
@@ -100,21 +100,22 @@ public class CreateSpanAnnotationHandler
      * selected annotations or offsets contained in the request for the creation of a new
      * annotation.
      */
-    private Offsets getOffsetsFromRequest(AjaxRequestTarget aTarget, IRequestParameters request,
-            CAS aCas)
+    private CompactRange getOffsetsFromRequest(AjaxRequestTarget aTarget,
+            IRequestParameters request, CAS aCas)
         throws IOException
     {
         // Create new span annotation - in this case we get the offset information from the
         // request
         String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
 
-        OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets, OffsetsList.class);
+        CompactRangeList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
+                CompactRangeList.class);
 
         AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
         int annotationBegin = page.getModelObject().getWindowBeginOffset()
                 + offsetLists.get(0).getBegin();
         int annotationEnd = page.getModelObject().getWindowBeginOffset()
                 + offsetLists.get(offsetLists.size() - 1).getEnd();
-        return new Offsets(annotationBegin, annotationEnd);
+        return new CompactRange(annotationBegin, annotationEnd);
     }
 }

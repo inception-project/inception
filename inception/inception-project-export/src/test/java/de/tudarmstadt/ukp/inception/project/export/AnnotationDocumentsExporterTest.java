@@ -23,7 +23,6 @@ import static org.apache.commons.io.FilenameUtils.removeExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,8 +32,10 @@ import java.util.zip.ZipFile;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -56,6 +57,7 @@ import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePro
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.exporters.AnnotationDocumentExporter;
 
+@ExtendWith(MockitoExtension.class)
 public class AnnotationDocumentsExporterTest
 {
     public @TempDir File tempFolder;
@@ -70,15 +72,12 @@ public class AnnotationDocumentsExporterTest
 
     private Project project;
     private File workFolder;
-    private long nextDocId = 1;
 
     private AnnotationDocumentExporter sut;
 
     @BeforeEach
     public void setUp() throws Exception
     {
-        openMocks(this);
-
         workFolder = tempFolder;
 
         project = new Project();
@@ -93,8 +92,8 @@ public class AnnotationDocumentsExporterTest
         driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        casStorageService = new CasStorageServiceImpl(driver, null, schemaService,
-                new CasStorageCachePropertiesImpl());
+        casStorageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(), null,
+                schemaService);
 
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
                 asList(new XmiFormatSupport()), casStorageService, schemaService, properties);

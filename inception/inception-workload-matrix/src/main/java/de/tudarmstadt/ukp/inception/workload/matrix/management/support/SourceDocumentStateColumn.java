@@ -43,8 +43,8 @@ public class SourceDocumentStateColumn
     public void populateItem(Item<ICellPopulator<DocumentMatrixRow>> aItem, String aComponentId,
             IModel<DocumentMatrixRow> aRowModel)
     {
-        IModel<SourceDocumentState> documentState = (IModel<SourceDocumentState>) getDataModel(
-                aRowModel);
+        @SuppressWarnings("unchecked")
+        var documentState = (IModel<SourceDocumentState>) getDataModel(aRowModel);
         Label state = new Label(aComponentId, stateSymbol(documentState.orElse(NEW).getObject()));
         state.setEscapeModelStrings(false);
         aItem.add(state);

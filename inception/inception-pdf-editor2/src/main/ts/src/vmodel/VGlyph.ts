@@ -33,9 +33,9 @@ export class VGlyph {
     this.end = aGlyph[1]
     this.unicode = aGlyph[2]
     if (aLine[0] === 0 || aLine[0] === 180) {
-      this.bbox = new Rectangle({ x: aGlyph[3], y: aLine[2], w: aGlyph[4], h: aLine[4] })
+      this.bbox = new Rectangle({ p: aPage.index, x: aGlyph[3], y: aLine[2], w: aGlyph[4], h: aLine[4] })
     } else {
-      this.bbox = new Rectangle({ x: aLine[1], y: aGlyph[3], w: aLine[3], h: aGlyph[4] })
+      this.bbox = new Rectangle({ p: aPage.index, x: aLine[1], y: aGlyph[3], w: aLine[3], h: aGlyph[4] })
     }
   }
 }

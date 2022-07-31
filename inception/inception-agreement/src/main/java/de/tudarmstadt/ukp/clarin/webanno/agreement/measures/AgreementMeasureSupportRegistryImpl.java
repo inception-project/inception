@@ -17,11 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures;
 
+import static java.util.Collections.unmodifiableList;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.slf4j.Logger;
@@ -41,12 +42,12 @@ public class AgreementMeasureSupportRegistryImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<AgreementMeasureSupport> agreementMeasuresProxy;
+    private final List<AgreementMeasureSupport<?, ?, ?>> agreementMeasuresProxy;
 
-    private List<AgreementMeasureSupport> agreementMeasures;
+    private List<AgreementMeasureSupport<?, ?, ?>> agreementMeasures;
 
     public AgreementMeasureSupportRegistryImpl(
-            @Lazy @Autowired(required = false) List<AgreementMeasureSupport> aFeatureSupports)
+            @Lazy @Autowired(required = false) List<AgreementMeasureSupport<?, ?, ?>> aFeatureSupports)
     {
         agreementMeasuresProxy = aFeatureSupports;
     }
@@ -59,7 +60,7 @@ public class AgreementMeasureSupportRegistryImpl
 
     public void init()
     {
-        List<AgreementMeasureSupport> fsp = new ArrayList<>();
+        List<AgreementMeasureSupport<?, ?, ?>> fsp = new ArrayList<>();
 
         if (agreementMeasuresProxy != null) {
             fsp.addAll(agreementMeasuresProxy);
@@ -73,11 +74,11 @@ public class AgreementMeasureSupportRegistryImpl
 
         log.info("Found [{}] agreement measure supports", fsp.size());
 
-        agreementMeasures = Collections.unmodifiableList(fsp);
+        agreementMeasures = unmodifiableList(fsp);
     }
 
     @Override
-    public List<AgreementMeasureSupport> getAgreementMeasureSupports()
+    public List<AgreementMeasureSupport<?, ?, ?>> getAgreementMeasureSupports()
     {
         return agreementMeasures;
     }
@@ -85,15 +86,18 @@ public class AgreementMeasureSupportRegistryImpl
     @Override
     public AgreementMeasureSupport getAgreementMeasureSupport(String aId)
     {
-        return getAgreementMeasureSupports().stream().filter(fs -> fs.getId().equals(aId))
-                .findFirst().orElse(null);
+        return getAgreementMeasureSupports().stream() //
+                .filter(fs -> fs.getId().equals(aId)) //
+                .findFirst() //
+                .orElse(null);
     }
 
     @Override
     public List<AgreementMeasureSupport> getAgreementMeasureSupports(AnnotationFeature aFeature)
     {
-        return agreementMeasures.stream().filter(factory -> factory.accepts(aFeature))
-                .sorted(Comparator.comparing(AgreementMeasureSupport::getName))
-                .collect(Collectors.toList());
+        return agreementMeasures.stream() //
+                .filter(factory -> factory.accepts(aFeature)) //
+                .sorted(comparing(AgreementMeasureSupport::getName)) //
+                .collect(toList());
     }
 }

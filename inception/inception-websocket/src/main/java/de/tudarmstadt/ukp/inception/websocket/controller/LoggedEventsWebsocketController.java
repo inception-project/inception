@@ -28,6 +28,9 @@ public interface LoggedEventsWebsocketController
 {
     /***
      * Push messages on received application events to named user
+     * 
+     * @param aEvent
+     *            an event
      */
     public void onApplicationEvent(ApplicationEvent aEvent);
 

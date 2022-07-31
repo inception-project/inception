@@ -56,7 +56,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
         console.error('ERROR: span missing page or textRange. span=', this)
         return false
       }
-      this.rectangles = mergeRects(getGlyphsInRange(this.textRange).map(g => g.bbox))
+      this.rectangles = mergeRects(getGlyphsInRange(this.textRange))
     }
 
     return super.render()

@@ -42,8 +42,8 @@ public class CasStorageServiceAutoConfiguration
             @Autowired(required = false) AnnotationSchemaService aSchemaService,
             CasStorageCacheProperties aCasStorageProperties)
     {
-        return new CasStorageServiceImpl(aDriver, aCasDoctor, aSchemaService,
-                aCasStorageProperties);
+        return new CasStorageServiceImpl(aDriver, aCasStorageProperties, aCasDoctor,
+                aSchemaService);
     }
 
     @Bean

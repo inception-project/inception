@@ -75,33 +75,33 @@ public class SearchResultsExporter
     public static List<ResultsGroup> importCSV(Path aDataPath) throws IOException
     {
         List<ResultsGroup> list = new ArrayList<ResultsGroup>();
-        Reader reader = Files.newBufferedReader(aDataPath);
-        Iterable<CSVRecord> records = EXCEL.parse(reader);
+        try (Reader reader = Files.newBufferedReader(aDataPath)) {
+            Iterable<CSVRecord> records = EXCEL.parse(reader);
 
-        int i = 0;
-        List<SearchResult> inCurrentGroup = new ArrayList<SearchResult>();
-        for (CSVRecord record : records) {
-            // skip header
-            if (i != 0) {
-                // blank line indicates new group
-                if (record.size() < 3) {
-                    list.add(new ResultsGroup(String.valueOf(i), inCurrentGroup));
-                    inCurrentGroup = new ArrayList<SearchResult>();
+            int i = 0;
+            List<SearchResult> inCurrentGroup = new ArrayList<SearchResult>();
+            for (CSVRecord record : records) {
+                // skip header
+                if (i != 0) {
+                    // blank line indicates new group
+                    if (record.size() < 3) {
+                        list.add(new ResultsGroup(String.valueOf(i), inCurrentGroup));
+                        inCurrentGroup = new ArrayList<SearchResult>();
+                    }
+                    else {
+                        SearchResult currentSearchResult = new SearchResult();
+                        currentSearchResult.setDocumentTitle(record.get(0));
+                        currentSearchResult.setOffsetStart(Integer.parseInt(record.get(1)));
+                        currentSearchResult.setOffsetEnd(Integer.parseInt(record.get(2)));
+                        currentSearchResult.setLeftContext(record.get(3));
+                        currentSearchResult.setText(record.get(4));
+                        currentSearchResult.setRightContext(record.get(5));
+                        inCurrentGroup.add(currentSearchResult);
+                    }
                 }
-                else {
-                    SearchResult currentSearchResult = new SearchResult();
-                    currentSearchResult.setDocumentTitle(record.get(0));
-                    currentSearchResult.setOffsetStart(Integer.parseInt(record.get(1)));
-                    currentSearchResult.setOffsetEnd(Integer.parseInt(record.get(2)));
-                    currentSearchResult.setLeftContext(record.get(3));
-                    currentSearchResult.setText(record.get(4));
-                    currentSearchResult.setRightContext(record.get(5));
-                    inCurrentGroup.add(currentSearchResult);
-                }
+                i = i + 1;
             }
-            i = i + 1;
         }
-        reader.close();
         return list;
     }
 }

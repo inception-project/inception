@@ -26,8 +26,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
@@ -38,8 +36,6 @@ public class ExternalResultDataProvider
     extends SortableDataProvider<ExternalSearchResult, String>
 {
     private static final long serialVersionUID = 5594618512472876346L;
-
-    private static final Logger log = LoggerFactory.getLogger(SearchPage.class);
 
     private List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 

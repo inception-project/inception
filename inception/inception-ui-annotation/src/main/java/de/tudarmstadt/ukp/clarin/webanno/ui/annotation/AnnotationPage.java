@@ -52,6 +52,7 @@ import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -65,12 +66,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferen
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -209,6 +208,7 @@ public class AnnotationPage
      * Re-render the document when the selection has changed. This is necessary in order to update
      * the selection highlight in the annotation editor.
      */
+    @SuppressWarnings("javadoc")
     @OnEvent
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
@@ -223,6 +223,7 @@ public class AnnotationPage
      * current view. It might be more efficient to have another event that more closely mimicks
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
+    @SuppressWarnings("javadoc")
     @OnEvent
     public void onAnnotationEvent(AnnotationEvent aEvent)
     {
@@ -245,6 +246,7 @@ public class AnnotationPage
      * current view. It might be more efficient to have another event that more closely mimicks
      * {@code AnnotationDetailEditorPanel.onChange()}.
      */
+    @SuppressWarnings("javadoc")
     @OnEvent
     public void onFeatureValueUpdatedEvent(FeatureValueUpdatedEvent aEvent)
     {
@@ -262,6 +264,7 @@ public class AnnotationPage
     /**
      * Re-render the document when the view has changed, e.g. due to paging
      */
+    @SuppressWarnings("javadoc")
     @OnEvent
     public void onViewStateChanged(AnnotatorViewportChangedEvent aEvent)
     {
@@ -608,6 +611,7 @@ public class AnnotationPage
         // }
 
         state.setProject(project);
+
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)
         if (doc != null && !doc.equals(state.getDocument())) {

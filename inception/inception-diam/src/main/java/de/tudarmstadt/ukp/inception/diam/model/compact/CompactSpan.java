@@ -25,7 +25,6 @@ import java.util.List;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
-import de.tudarmstadt.ukp.inception.diam.model.Offsets;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
 
@@ -35,7 +34,7 @@ public class CompactSpan
     implements CompactAnnotation
 {
     private VID vid;
-    private List<Offsets> offsets = new ArrayList<>();
+    private List<CompactRange> offsets = new ArrayList<>();
     private CompactSpanAttributes attributes = new CompactSpanAttributes();
 
     public CompactSpan()
@@ -43,12 +42,12 @@ public class CompactSpan
         // Nothing to do
     }
 
-    public CompactSpan(VID aVid, Offsets aOffsets, String aLabelText, String aColor)
+    public CompactSpan(VID aVid, CompactRange aOffsets, String aLabelText, String aColor)
     {
         this(aVid, asList(aOffsets), aLabelText, aColor);
     }
 
-    public CompactSpan(VID aVid, List<Offsets> aOffsets, String aLabelText, String aColor)
+    public CompactSpan(VID aVid, List<CompactRange> aOffsets, String aLabelText, String aColor)
     {
         vid = aVid;
         offsets = aOffsets;
@@ -67,12 +66,12 @@ public class CompactSpan
         vid = aVid;
     }
 
-    public List<Offsets> getOffsets()
+    public List<CompactRange> getOffsets()
     {
         return offsets;
     }
 
-    public void setOffsets(List<Offsets> aOffsets)
+    public void setOffsets(List<CompactRange> aOffsets)
     {
         offsets = aOffsets;
     }

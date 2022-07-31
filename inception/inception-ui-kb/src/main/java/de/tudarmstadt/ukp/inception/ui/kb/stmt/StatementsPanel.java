@@ -39,6 +39,7 @@ import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -53,7 +54,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.form.radio.EnumRadioChoi
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -98,7 +98,7 @@ public class StatementsPanel
         instance = aInstance;
 
         // default ordering for statement groups: lexical ordering by UI label
-        statementGroupComparator = LambdaModel
+        statementGroupComparator = LoadableDetachableModel
                 .of(() -> comparing(sgb -> sgb.getProperty().getUiLabel()));
 
         setUpDetailPreference(aDetailPreference);
@@ -106,7 +106,7 @@ public class StatementsPanel
         // We must use a LambdaModel here to delay the fetching of the beans until rendering such
         // that setting the group comparator actually has an effect. If we use a static model here,
         // the default group comparator (above) will always be used.
-        statementGroups = LambdaModel.of(this::getStatementGroupBeans);
+        statementGroups = LoadableDetachableModel.of(this::getStatementGroupBeans);
 
         RefreshingView<StatementGroupBean> groupList = new RefreshingView<StatementGroupBean>(
                 "statementGroupListView")
@@ -121,7 +121,7 @@ public class StatementsPanel
                     @Override
                     protected IModel<StatementGroupBean> model(StatementGroupBean object)
                     {
-                        return LambdaModel.of(() -> object);
+                        return Model.of(object);
                     }
                 };
             }
@@ -129,9 +129,7 @@ public class StatementsPanel
             @Override
             protected void populateItem(Item<StatementGroupBean> aItem)
             {
-                CompoundPropertyModel<StatementGroupBean> groupModel = new CompoundPropertyModel<>(
-                        LambdaModel.of(() -> aItem.getModelObject()));
-
+                var groupModel = new CompoundPropertyModel<>(aItem.getModel());
                 StatementGroupPanel panel = new StatementGroupPanel("statementGroup", groupModel);
                 aItem.add(panel);
             }
