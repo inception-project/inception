@@ -201,9 +201,9 @@ public class KnowledgeBaseServiceImplIntegrationTest
     {
         setUp(reification);
 
-        Project project = createProject("Empty project");
+        Project proj = createProject("Empty project");
 
-        List<KnowledgeBase> knowledgeBases = sut.getKnowledgeBases(project);
+        List<KnowledgeBase> knowledgeBases = sut.getKnowledgeBases(proj);
 
         assertThat(knowledgeBases).as("Check that no knowledge base is found").isEmpty();
     }
@@ -1590,8 +1590,10 @@ public class KnowledgeBaseServiceImplIntegrationTest
 
         List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
 
-        assertThat(rootConcepts).as("Check that all root concepts have been found")
-                .usingElementComparatorOnFields("identifier", "name").containsExactlyInAnyOrder(
+        assertThat(rootConcepts) //
+                .as("Check that all root concepts have been found")
+                .usingRecursiveFieldByFieldElementComparatorOnFields("identifier", "name")
+                .containsExactlyInAnyOrder(
                         new KBHandle("http://purl.org/ontology/wo/Adaptation", "Adaptation"),
                         new KBHandle("http://purl.org/ontology/wo/AnimalIntelligence",
                                 "Animal Intelligence"),
@@ -1992,9 +1994,10 @@ public class KnowledgeBaseServiceImplIntegrationTest
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name, Reification reification)
+    private KnowledgeBase buildKnowledgeBase(Project aProject, String aName,
+            Reification aReification)
     {
-        return testFixtures.buildKnowledgeBase(project, name, reification);
+        return testFixtures.buildKnowledgeBase(aProject, aName, aReification);
     }
 
     private KBConcept buildConcept()

@@ -184,36 +184,36 @@ public class KnowledgeBaseSubPropertyLabelTest
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildRemoteKnowledgeBase(Project project, String name,
-            Reification reification)
+    private KnowledgeBase buildRemoteKnowledgeBase(Project aProject, String aName,
+            Reification aReification)
         throws IOException
     {
         PROFILES = readKnowledgeBaseProfiles();
         KnowledgeBase gnd = new KnowledgeBase();
-        gnd.setProject(project);
-        gnd.setName(name);
+        gnd.setProject(aProject);
+        gnd.setName(aName);
         gnd.setType(RepositoryType.REMOTE);
         gnd.applyMapping(PROFILES.get("zbw-gnd").getMapping());
         gnd.applyRootConcepts(PROFILES.get("zbw-gnd"));
-        gnd.setReification(reification);
+        gnd.setReification(aReification);
         gnd.setDefaultLanguage("en");
         gnd.setMaxResults(1000);
 
         return gnd;
     }
 
-    private KnowledgeBase buildLocalKnowledgeBase(Project project, String name,
-            Reification reification)
+    private KnowledgeBase buildLocalKnowledgeBase(Project aProject, String aName,
+            Reification aReification)
         throws IOException
     {
         PROFILES = readKnowledgeBaseProfiles();
         KnowledgeBase wine = new KnowledgeBase();
-        wine.setProject(project);
-        wine.setName(name);
+        wine.setProject(aProject);
+        wine.setName(aName);
         wine.setType(RepositoryType.LOCAL);
         wine.applyMapping(PROFILES.get("wine_ontology").getMapping());
         wine.applyRootConcepts(PROFILES.get("wine_ontology"));
-        wine.setReification(reification);
+        wine.setReification(aReification);
         wine.setDefaultLanguage("en");
         wine.setMaxResults(1000);
 

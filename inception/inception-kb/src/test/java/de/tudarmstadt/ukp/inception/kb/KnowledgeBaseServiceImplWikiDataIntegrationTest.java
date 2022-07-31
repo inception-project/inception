@@ -73,7 +73,6 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest
     }
 
     private static final String PROJECT_NAME = "Test project";
-    private static final String KB_NAME = "Wikidata (official/direct mapping)";
 
     @TempDir
     public File tempDir;
