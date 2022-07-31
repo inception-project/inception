@@ -32,29 +32,34 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model.WeblichtC
 public interface WeblichtChainService
 {
     /**
-     * Get the chain for the given.
+     * @return the chain for the given.
      */
+    @SuppressWarnings("javadoc")
     Optional<WeblichtChain> getChain(Recommender aRecommender);
 
     /**
      * Delete the chain for the given recommender.
      */
+    @SuppressWarnings("javadoc")
     void deleteChain(WeblichtChain aChain) throws IOException;
 
     /**
      * Import the chain file for the given chain.
      */
+    @SuppressWarnings("javadoc")
     void importChainFile(WeblichtChain aChain, InputStream aStream) throws IOException;
 
     /**
-     * Get the chain file for the given chain. If no file has been imported yet for the given chain,
-     * the file returned by this method does not exist.
+     * @return the chain file for the given chain. If no file has been imported yet for the given
+     *         chain, the file returned by this method does not exist.
      */
+    @SuppressWarnings("javadoc")
     File getChainFile(WeblichtChain aSet) throws IOException;
 
     /**
      * Write the given chain to the database.
      */
+    @SuppressWarnings("javadoc")
     void createOrUpdateChain(WeblichtChain aChain);
 
     boolean existsChain(Recommender aRecommender);
