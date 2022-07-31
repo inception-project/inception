@@ -44,7 +44,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 public class WebsocketSecurityConfig
     extends AbstractSecurityWebSocketMessageBrokerConfigurer
 {
-    private final AbstractSecurityExpressionHandler<Message<Object>> handler = new DefaultMessageSecurityExpressionHandler<>();
+    private final AbstractSecurityExpressionHandler<Message<Object>> handler = //
+            new DefaultMessageSecurityExpressionHandler<>();
 
     @Autowired
     public WebsocketSecurityConfig(ApplicationContext aContext,
