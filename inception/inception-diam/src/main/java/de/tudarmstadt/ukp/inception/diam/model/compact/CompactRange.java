@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model;
+package de.tudarmstadt.ukp.inception.diam.model.compact;
 
 import java.io.IOException;
 
@@ -33,19 +33,19 @@ import de.tudarmstadt.ukp.inception.support.json.BeanAsArraySerializer;
  * The start and End offset positions of a span annotation as required by the Brat protocol
  */
 @JsonSerialize(using = BeanAsArraySerializer.class)
-@JsonDeserialize(using = Offsets.OffsetsDeserializer.class)
+@JsonDeserialize(using = CompactRange.OffsetsDeserializer.class)
 @JsonPropertyOrder(value = { "begin", "end" })
-public class Offsets
+public class CompactRange
 {
     private int begin;
     private int end;
 
-    public Offsets()
+    public CompactRange()
     {
         // Nothing to do
     }
 
-    public Offsets(int aBegin, int aEnd)
+    public CompactRange(int aBegin, int aEnd)
     {
         super();
         begin = aBegin;
@@ -79,16 +79,16 @@ public class Offsets
     }
 
     /**
-     * Deserialize {@link Offsets} from JSON to Java.
+     * Deserialize {@link CompactRange} from JSON to Java.
      *
      */
     public static class OffsetsDeserializer
-        extends JsonDeserializer<Offsets>
+        extends JsonDeserializer<CompactRange>
     {
         @Override
-        public Offsets deserialize(JsonParser aJp, DeserializationContext aCtxt) throws IOException
+        public CompactRange deserialize(JsonParser aJp, DeserializationContext aCtxt) throws IOException
         {
-            Offsets offsets = new Offsets();
+            CompactRange offsets = new CompactRange();
 
             if (aJp.getCurrentToken() != JsonToken.START_ARRAY) {
                 aCtxt.mappingException("Expecting array begin");
