@@ -27,6 +27,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListMultipleChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.CollectionModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -38,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 
 public class DocumentListPanel
     extends Panel
@@ -69,7 +69,7 @@ public class DocumentListPanel
         overviewList = new ListMultipleChoice<>("documents");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         overviewList.setModel(selectedDocuments);
-        overviewList.setChoices(LambdaModel.of(this::listSourceDocuments));
+        overviewList.setChoices(LoadableDetachableModel.of(this::listSourceDocuments));
         form.add(overviewList);
 
         confirmationDialog = new ConfirmationDialog("confirmationDialog");

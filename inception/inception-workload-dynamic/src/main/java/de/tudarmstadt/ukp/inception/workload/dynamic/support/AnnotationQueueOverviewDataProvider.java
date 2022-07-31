@@ -50,10 +50,6 @@ public class AnnotationQueueOverviewDataProvider
     private List<AnnotationQueueItem> annotationQueueItems;
     private Filter filter;
 
-    /**
-     * Default Constructor, initialize values and set the default sorting of the table to ASCENDING
-     * of the first column of the table.
-     */
     public AnnotationQueueOverviewDataProvider(List<AnnotationQueueItem> aAnnotationQueueItemsList)
     {
         annotationQueueItems = aAnnotationQueueItemsList;
@@ -122,9 +118,6 @@ public class AnnotationQueueOverviewDataProvider
         return Model.of(aAnnotationQueueItem);
     }
 
-    /**
-     * Filtering performed on the table
-     */
     public List<AnnotationQueueItem> filterTable(List<AnnotationQueueItem> aData)
     {
         // AnnotationDocuments are created lazily, so we may not have one for every combination of

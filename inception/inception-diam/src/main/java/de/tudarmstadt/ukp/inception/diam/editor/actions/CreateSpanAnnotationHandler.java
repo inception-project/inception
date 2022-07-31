@@ -100,15 +100,16 @@ public class CreateSpanAnnotationHandler
      * selected annotations or offsets contained in the request for the creation of a new
      * annotation.
      */
-    private CompactRange getOffsetsFromRequest(AjaxRequestTarget aTarget, IRequestParameters request,
-            CAS aCas)
+    private CompactRange getOffsetsFromRequest(AjaxRequestTarget aTarget,
+            IRequestParameters request, CAS aCas)
         throws IOException
     {
         // Create new span annotation - in this case we get the offset information from the
         // request
         String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
 
-        CompactRangeList offsetLists = JSONUtil.getObjectMapper().readValue(offsets, CompactRangeList.class);
+        CompactRangeList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
+                CompactRangeList.class);
 
         AnnotationPageBase page = (AnnotationPageBase) aTarget.getPage();
         int annotationBegin = page.getModelObject().getWindowBeginOffset()

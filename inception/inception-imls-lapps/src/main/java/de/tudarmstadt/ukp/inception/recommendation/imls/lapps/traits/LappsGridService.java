@@ -22,6 +22,8 @@ import java.io.Serializable;
 public class LappsGridService
     implements Serializable
 {
+    private static final long serialVersionUID = -306411812279947496L;
+
     private String name;
     private String description;
     private String url;

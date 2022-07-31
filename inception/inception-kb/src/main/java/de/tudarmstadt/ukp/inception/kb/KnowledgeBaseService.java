@@ -101,6 +101,7 @@ public interface KnowledgeBaseService
      * @param kb
      *            the {@link KnowledgeBase} to update
      */
+    @SuppressWarnings("javadoc")
     void updateKnowledgeBase(KnowledgeBase kb)
         throws RepositoryException, RepositoryConfigException;
 
@@ -113,6 +114,7 @@ public interface KnowledgeBaseService
      * @param cfg
      *            the {@link RepositoryImplConfig} variable
      */
+    @SuppressWarnings("javadoc")
     void updateKnowledgeBase(KnowledgeBase kb, RepositoryImplConfig cfg)
         throws RepositoryException, RepositoryConfigException;
 
@@ -164,6 +166,7 @@ public interface KnowledgeBaseService
      *            a concept identifier.
      * @return the concept.
      */
+    @SuppressWarnings("javadoc")
     Optional<KBConcept> readConcept(Project aProject, String aIdentifier)
         throws QueryEvaluationException;
 
@@ -269,6 +272,7 @@ public interface KnowledgeBaseService
      *            an instance identifier.
      * @return the concept.
      */
+    @SuppressWarnings("javadoc")
     Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier)
         throws QueryEvaluationException;
 
@@ -281,6 +285,7 @@ public interface KnowledgeBaseService
      *            an instance identifier.
      * @return the concept.
      */
+    @SuppressWarnings("javadoc")
     Optional<KBInstance> readInstance(Project aProject, String aIdentifier)
         throws QueryEvaluationException;
 
@@ -318,6 +323,7 @@ public interface KnowledgeBaseService
      *            True if entities with implicit namespaces (e.g. defined by RDF)
      * @return All instances of the given concept
      */
+    @SuppressWarnings("javadoc")
     List<KBHandle> listInstances(KnowledgeBase kb, String aConceptIri, boolean aAll)
         throws QueryEvaluationException;
 
@@ -334,6 +340,7 @@ public interface KnowledgeBaseService
      * @param aStatement
      *            The statement itself
      */
+    @SuppressWarnings("javadoc")
     void upsertStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
 
     /**
@@ -345,6 +352,7 @@ public interface KnowledgeBaseService
      * @param aStatement
      *            The statement to delete
      */
+    @SuppressWarnings("javadoc")
     void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException;
 
     /**
@@ -481,18 +489,23 @@ public interface KnowledgeBaseService
      * 
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
+    @SuppressWarnings("javadoc")
     Optional<KBObject> readItem(KnowledgeBase akb, String aIdentifier);
 
     /**
-     * Obtain basic information about the given identifier. This method always returns a KBHandle,
-     * even if there is no statement about the given identifier present in the knowledge base.
+     * @return basic information about the given identifier. This method always returns a KBHandle,
+     *         even if there is no statement about the given identifier present in the knowledge
+     *         base.
      */
+    @SuppressWarnings("javadoc")
     Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier);
 
     /**
-     * Obtain basic information about the given identifier. This method always returns a KBHandle,
-     * even if there is no statement about the given identifier present in the knowledge base.
+     * @return basic information about the given identifier. This method always returns a KBHandle,
+     *         even if there is no statement about the given identifier present in the knowledge
+     *         base.
      */
+    @SuppressWarnings("javadoc")
     Optional<KBHandle> readHandle(Project aProject, String aIdentifier);
 
     /**
@@ -507,6 +520,7 @@ public interface KnowledgeBaseService
      *            True if entities with implicit namespaces (e.g. defined by RDF)
      * @return List of parent concept for an identifier
      */
+    @SuppressWarnings("javadoc")
     List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
 
@@ -521,6 +535,7 @@ public interface KnowledgeBaseService
      *            True if entities with implicit namespaces (e.g. defined by RDF)
      * @return List of concepts for an instance identifier
      */
+    @SuppressWarnings("javadoc")
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
 
@@ -533,22 +548,26 @@ public interface KnowledgeBaseService
      *            indicates whether to include everything
      * @return list of all the properties {@link KBHandle}
      */
+    @SuppressWarnings("javadoc")
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
-     * Retrieve all properties which are used to display labels - includes labels for all kinds of
-     * items: classes, instances and properties.
+     * @return all properties which are used to display labels - includes labels for all kinds of
+     *         items: classes, instances and properties.
      */
+    @SuppressWarnings("javadoc")
     List<String> listLabelProperties(KnowledgeBase aKB);
 
     /**
-     * Retrieve all properties which are used to display labels for classes or instances.
+     * @return all properties which are used to display labels for classes or instances.
      */
+    @SuppressWarnings("javadoc")
     List<String> listConceptOrInstanceLabelProperties(KnowledgeBase aKB);
 
     /**
-     * Retrieve all properties which are used to display labels for properties.
+     * @return all properties which are used to display labels for properties.
      */
+    @SuppressWarnings("javadoc")
     List<String> listPropertyLabelProperties(KnowledgeBase aKB);
 
     /**
@@ -565,6 +584,7 @@ public interface KnowledgeBaseService
     /**
      * Can be used to re-index a local KB in case the full text index is corrupt.
      */
+    @SuppressWarnings("javadoc")
     void rebuildFullTextIndex(KnowledgeBase aKb) throws Exception;
 
     /**
@@ -579,12 +599,15 @@ public interface KnowledgeBaseService
      *            True if entities with implicit namespaces (e.g. defined by RDF)
      * @return the concept.
      */
+    @SuppressWarnings("javadoc")
     Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
 
     /**
      * Checks weather a knowledge base is present and enabled, given a repository id
      * 
+     * @param aProject
+     *            a project
      * @param repositoryID
      *            id of the knowledge base
      * @return whether the knowledge base with the given id is available or not
@@ -602,6 +625,7 @@ public interface KnowledgeBaseService
      *            a SPARQL query built using {@link SPARQLQueryBuilder}
      * @return a list of {@link KBHandle KBHandles}
      */
+    @SuppressWarnings("javadoc")
     List<KBHandle> listHandlesCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);
 
     Optional<KBHandle> fetchHandleCaching(KnowledgeBase aKB, SPARQLQuery aQuery, boolean aAll);

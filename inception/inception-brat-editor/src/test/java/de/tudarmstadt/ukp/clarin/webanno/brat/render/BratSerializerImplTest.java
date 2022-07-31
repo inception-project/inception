@@ -40,8 +40,9 @@ import org.dkpro.core.io.text.TextReader;
 import org.dkpro.core.tokit.BreakIteratorSegmenter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
@@ -78,11 +79,14 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 
+@ExtendWith(MockitoExtension.class)
 public class BratSerializerImplTest
 {
     private @Mock AnnotationSchemaService schemaService;
+    private LayerSupportRegistryImpl layerRegistry;
 
     private Project project;
+
     private SourceDocument sourceDocument;
     private AnnotationLayer tokenLayer;
     private AnnotationFeature tokenPosFeature;
@@ -98,8 +102,6 @@ public class BratSerializerImplTest
     @BeforeEach
     public void setup()
     {
-        MockitoAnnotations.openMocks(this);
-
         project = new Project();
         sourceDocument = new SourceDocument("test.txt", project, null);
 
@@ -141,23 +143,17 @@ public class BratSerializerImplTest
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
-        LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
+        layerRegistry = new LayerSupportRegistryImpl(asList(
                 new SpanLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new RelationLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry),
                 new ChainLayerSupport(featureSupportRegistry, null, layerBehaviorRegistry)));
         layerRegistry.init();
 
-        when(schemaService.listSupportedLayers(any())).thenReturn(asList(posLayer));
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));
         when(schemaService.listSupportedFeatures(any(Project.class)))
                 .thenReturn(asList(posFeature));
         when(schemaService.listAnnotationFeature(any(Project.class)))
                 .thenReturn(asList(posFeature));
-        when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
-            AnnotationLayer layer = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
-                    () -> asList(posFeature));
-        });
 
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
         labelRenderer = new LabelRenderer();
@@ -168,6 +164,12 @@ public class BratSerializerImplTest
     @Test
     public void thatSentenceOrientedStrategyRenderCorrectly() throws Exception
     {
+        when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
+            AnnotationLayer layer = _call.getArgument(0);
+            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
+                    () -> asList(posFeature));
+        });
+
         String jsonFilePath = "target/test-output/output-sentence-oriented.json";
         String file = "src/test/resources/tcf04-karin-wl.xml";
 

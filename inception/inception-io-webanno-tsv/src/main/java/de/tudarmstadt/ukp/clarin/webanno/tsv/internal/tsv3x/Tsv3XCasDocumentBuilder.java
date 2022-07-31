@@ -81,7 +81,7 @@ public class Tsv3XCasDocumentBuilder
 
         // Scan for chains
         for (Type headType : aSchema.getChainHeadTypes()) {
-            for (FeatureStructure chainHead : CasUtil.selectFS(aJCas.getCas(), headType)) {
+            for (FeatureStructure chainHead : aJCas.select(headType)) {
                 List<AnnotationFS> elements = new ArrayList<>();
                 AnnotationFS link = getFeature(chainHead, CHAIN_FIRST_FEAT, AnnotationFS.class);
                 while (link != null) {

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
+import java.util.Optional;
+
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -45,10 +47,10 @@ public class MatomoTelemetryTraitsEditor
 
         TelemetrySettings settings = aSettings.getObject();
 
-        TelemetrySupport<MatomoTelemetryTraits> support = telemetryService
-                .getTelemetrySuppport(settings.getSupport()).get();
+        Optional<TelemetrySupport<MatomoTelemetryTraits>> support = telemetryService
+                .getTelemetrySuppport(settings.getSupport());
 
-        traits = support.readTraits(settings);
+        traits = support.get().readTraits(settings);
 
         Form<MatomoTelemetryTraits> form = new Form<MatomoTelemetryTraits>(MID_FORM,
                 CompoundPropertyModel.of(Model.of(traits)))
@@ -60,9 +62,8 @@ public class MatomoTelemetryTraitsEditor
             {
                 super.onSubmit();
                 // Need to fetch the support again here since it is not serializable!
-                TelemetrySupport<MatomoTelemetryTraits> support = telemetryService
-                        .getTelemetrySuppport(settings.getSupport()).get();
-                support.writeTraits(aSettings.getObject(), traits);
+                var s = telemetryService.getTelemetrySuppport(settings.getSupport()).get();
+                s.writeTraits(aSettings.getObject(), traits);
             }
         };
 

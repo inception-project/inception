@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.Inc
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
-import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -39,9 +38,6 @@ import java.util.Objects;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -287,15 +283,6 @@ public class ExternalRecommenderIntegrationTest
                 return new MockResponse().setResponseCode(404);
             }
         };
-    }
-
-    private void createNamedEntity(CAS aCas, String aValue)
-    {
-        Type neType = getType(aCas, "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
-        Feature valueFeature = neType.getFeatureByBaseName("value");
-        AnnotationFS ne = aCas.createAnnotation(neType, 0, 42);
-        ne.setStringValue(valueFeature, aValue);
-        aCas.addFsToIndexes(ne);
     }
 
     private void addCasMetadata(JCas aJCas, long aDocumentId)

@@ -96,8 +96,8 @@ public class CuratedDocumentsExporterTest
         CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        casStorageService = spy(new CasStorageServiceImpl(driver, null, schemaService,
-                new CasStorageCachePropertiesImpl()));
+        casStorageService = spy(new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(), null,
+                schemaService));
 
         importExportSerivce = new DocumentImportExportServiceImpl(repositoryProperties,
                 asList(new XmiFormatSupport()), casStorageService, schemaService, properties);

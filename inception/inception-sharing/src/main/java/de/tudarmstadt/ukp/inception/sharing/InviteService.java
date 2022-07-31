@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.inception.sharing.model.ProjectInvite;
 public interface InviteService
 {
     /**
-     * Generate random expiring invite id for the project and save to database
+     * @return random expiring invite id for the project and save to database
      * 
      * @param aProject
      *            the given project
@@ -43,7 +43,7 @@ public interface InviteService
     void removeInviteID(Project aProject);
 
     /**
-     * Get invite id for given project if it exists and has expired yet.
+     * @return invite id for given project if it exists and has expired yet.
      * 
      * @param aProject
      *            the given project
@@ -51,7 +51,7 @@ public interface InviteService
     String getValidInviteID(Project aProject);
 
     /**
-     * Check if given invite ID is valid for the given project
+     * @return if given invite ID is valid for the given project
      * 
      * @param aProject
      *            the relevant project
@@ -61,7 +61,7 @@ public interface InviteService
     boolean isValidInviteLink(Project aProject, String aInviteId);
 
     /**
-     * Get the expiration date of the invite link belonging to the given project
+     * @return the expiration date of the invite link belonging to the given project
      * 
      * @param aProject
      *            the corresponding project
@@ -70,6 +70,9 @@ public interface InviteService
 
     /**
      * Extend validity of the invite link associated with the given project for another year.
+     * 
+     * @param aProject
+     *            a project
      */
     void extendInviteLinkDate(Project aProject);
 

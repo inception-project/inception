@@ -22,6 +22,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.wicketstuff.event.annotation.OnEvent;
@@ -30,7 +31,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
@@ -59,16 +59,15 @@ public class DefaultPagingNavigator
         gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
         // Using a LambdaModel here because the model object in the page may change and we want to
         // always get the right one
-        gotoPageTextField.setModel(
-                PropertyModel.of(LambdaModel.of(() -> aPage.getModel()), "firstVisibleUnitIndex"));
+        gotoPageTextField.setModel(PropertyModel
+                .of(LoadableDetachableModel.of(() -> aPage.getModel()), "firstVisibleUnitIndex"));
         // FIXME minimum and maximum should be obtained from the annotator state
         gotoPageTextField.setMinimum(1);
         // gotoPageTextField.setMaximum(LambdaModel.of(() ->
         // aPage.getModelObject().getUnitCount()));
         gotoPageTextField.setOutputMarkupId(true);
         form.add(gotoPageTextField);
-        LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink", form,
-                this::actionGotoPage);
+        var gotoPageLink = new LambdaAjaxSubmitLink<>("gotoPageLink", form, this::actionGotoPage);
         form.setDefaultButton(gotoPageLink);
         form.add(gotoPageLink);
         add(form);

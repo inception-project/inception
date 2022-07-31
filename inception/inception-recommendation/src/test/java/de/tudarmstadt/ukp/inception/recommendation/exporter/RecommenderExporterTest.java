@@ -29,7 +29,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.HashSet;
@@ -39,8 +38,10 @@ import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -54,6 +55,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
+@ExtendWith(MockitoExtension.class)
 public class RecommenderExporterTest
 {
     private @Mock AnnotationSchemaService annotationService;
@@ -66,8 +68,6 @@ public class RecommenderExporterTest
     @BeforeEach
     public void setUp()
     {
-        openMocks(this);
-
         layer = new AnnotationLayer();
         layer.setName("Layer");
 
@@ -78,12 +78,6 @@ public class RecommenderExporterTest
         when(annotationService.findLayer(project, layer.getName())).thenReturn(layer);
         when(annotationService.getFeature(eq("Feature 1"), any(AnnotationLayer.class)))
                 .thenReturn(buildFeature("1"));
-        when(annotationService.getFeature(eq("Feature 2"), any(AnnotationLayer.class)))
-                .thenReturn(buildFeature("2"));
-        when(annotationService.getFeature(eq("Feature 3"), any(AnnotationLayer.class)))
-                .thenReturn(buildFeature("3"));
-        when(annotationService.getFeature(eq("Feature 4"), any(AnnotationLayer.class)))
-                .thenReturn(buildFeature("4"));
 
         sut = new RecommenderExporter(annotationService, recommendationService);
     }
@@ -91,6 +85,12 @@ public class RecommenderExporterTest
     @Test
     public void thatExportingWorks()
     {
+        when(annotationService.getFeature(eq("Feature 2"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("2"));
+        when(annotationService.getFeature(eq("Feature 3"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("3"));
+        when(annotationService.getFeature(eq("Feature 4"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("4"));
         when(recommendationService.listRecommenders(project)).thenReturn(recommenders());
 
         // Export the project and import it again

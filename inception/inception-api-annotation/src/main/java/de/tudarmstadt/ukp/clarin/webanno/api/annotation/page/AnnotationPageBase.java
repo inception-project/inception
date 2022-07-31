@@ -197,7 +197,7 @@ public abstract class AnnotationPageBase
 
                 SourceDocument previousDoc = getModelObject().getDocument();
                 User aPreviousUser = getModelObject().getUser();
-                handleParameters(document, focus, user, false);
+                handleParameters(document, focus, user);
 
                 updateDocumentView(aTarget, previousDoc, aPreviousUser, focus);
             }
@@ -205,7 +205,7 @@ public abstract class AnnotationPageBase
     }
 
     protected abstract void handleParameters(StringValue aDocumentParameter,
-            StringValue aFocusParameter, StringValue aUser, boolean aLockIfPreset);
+            StringValue aFocusParameter, StringValue aUser);
 
     protected abstract void updateDocumentView(AjaxRequestTarget aTarget,
             SourceDocument aPreviousDocument, User aPreviousUser, StringValue aFocusParameter);

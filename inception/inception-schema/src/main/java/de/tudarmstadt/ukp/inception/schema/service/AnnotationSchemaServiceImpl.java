@@ -1238,7 +1238,7 @@ public class AnnotationSchemaServiceImpl
         throws UIMAException, IOException
     {
         CasStorageSession.get().assertWritingPermitted(aTargetCas);
-        
+
         _upgradeCas(aSourceCas, aTargetCas, aTargetTypeSystem);
     }
 

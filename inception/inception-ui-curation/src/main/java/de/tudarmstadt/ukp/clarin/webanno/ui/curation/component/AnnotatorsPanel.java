@@ -404,6 +404,7 @@ public class AnnotatorsPanel
     /**
      * Initializes the user annotation segments later to be filled with content.
      */
+    @SuppressWarnings("javadoc")
     public void init(AjaxRequestTarget aTarget, AnnotatorState aState) throws IOException
     {
         if (aState.getDocument() == null) {
@@ -625,6 +626,7 @@ public class AnnotatorsPanel
      * can be called multiple times, even for the same annotation editor, but only resulting in a
      * single update and rendering call.
      */
+    @SuppressWarnings("javadoc")
     public final void requestRender(AjaxRequestTarget aTarget, AnnotatorState aState)
     {
         LOG.trace("request update");

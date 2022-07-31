@@ -55,10 +55,11 @@ public class InviteServiceImplTest
 
     private ProjectService projectService;
     private WorkloadManagementService workloadManagementService;
-    private WorkloadManagerExtension workloadManagerExtension;
+    private WorkloadManagerExtension<?> workloadManagerExtension;
 
     private Project testProject;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @BeforeEach
     public void setUp() throws Exception
     {
@@ -77,7 +78,7 @@ public class InviteServiceImplTest
 
         workloadManagementService = mock(WorkloadManagementService.class);
         when(workloadManagementService.getWorkloadManagerExtension(any()))
-                .thenReturn(workloadManagerExtension);
+                .thenReturn((WorkloadManagerExtension) workloadManagerExtension);
 
         sut = new InviteServiceImpl(null, projectService, null, workloadManagementService,
                 testEntityManager.getEntityManager());

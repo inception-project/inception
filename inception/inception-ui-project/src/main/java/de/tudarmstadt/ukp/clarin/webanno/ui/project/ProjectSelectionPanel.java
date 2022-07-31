@@ -28,6 +28,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.authroles.authorization.strategies.role.metadata.MetaDataRoleAuthorizationStrategy;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -36,7 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 
@@ -59,7 +59,7 @@ class ProjectSelectionPanel
         overviewList = new OverviewListChoice<>("project");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         overviewList.setModel(aModel);
-        overviewList.setChoices(LambdaModel.of(this::listProjects));
+        overviewList.setChoices(LoadableDetachableModel.of(this::listProjects));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
 

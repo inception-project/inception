@@ -49,6 +49,8 @@ public interface CasStorageService
      * @throws CasSessionException
      *             if no CAS storage session in available for the current thread or if the session
      *             does not permit writing.
+     * @throws IOException
+     *             if there was and error writing the CAS
      */
     void writeCas(SourceDocument aDocument, CAS aCas, String aUserName)
         throws IOException, CasSessionException;

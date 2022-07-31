@@ -72,17 +72,17 @@ public class AnnotatorStateCell
         stateLabel.setEscapeModelStrings(false);
 
         state.add(new LambdaAjaxEventBehavior("click",
-                _t -> actionClickCell(aRowModel, stateLabel, _t)).setPreventDefault(true));
+                _t -> actionClickCell(rowModel, stateLabel, _t)).setPreventDefault(true));
         state.add(new LambdaAjaxEventBehavior("contextmenu",
-                _t -> actionContextMenu(aRowModel, columnModel, _t)).setPreventDefault(true));
+                _t -> actionContextMenu(rowModel, columnModel, _t)).setPreventDefault(true));
         state.add(new AttributeAppender("class", CSS_CLASS_STATE_TOGGLE, " "));
-        state.add(new CssClassNameAppender(aRowModel.map(this::isSelected).orElse(false).getObject()
+        state.add(new CssClassNameAppender(rowModel.map(this::isSelected).orElse(false).getObject()
                 ? MatrixWorkloadManagementPage.CSS_CLASS_SELECTED
                 : ""));
 
         var annDoc = columnModel.getObject();
         var showComment = new LambdaAjaxLink("showComment",
-                _t -> actionShowAnnotatorComment(aRowModel, columnModel, _t));
+                _t -> actionShowAnnotatorComment(rowModel, columnModel, _t));
         showComment
                 .add(visibleWhen(() -> annDoc != null && isNotBlank(annDoc.getAnnotatorComment())));
 

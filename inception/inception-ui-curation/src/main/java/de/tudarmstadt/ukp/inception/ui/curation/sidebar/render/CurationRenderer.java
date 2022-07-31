@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
@@ -183,8 +184,8 @@ public class CurationRenderer
                 // We need to pass in *all* the annotation features here because we also to that in
                 // other places where we create renderers - and the set of features must always be
                 // the same because otherwise the IDs of armed slots would be inconsistent
-                Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
-                        .createRenderer(layer, () -> layerAllFeatures);
+                LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
+                Renderer renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
 
                 List<VObject> objects = renderer.render(aVdoc, (AnnotationFS) fs,
                         layerSupportedFeatures, aRequest.getWindowBeginOffset(),

@@ -44,16 +44,20 @@ public interface AnnotationSidebarFactory
             AnnotationPage aAnnotationPage);
 
     /**
-     * Override for cases when sidebar should not be available by default
+     * @return if the sidebar is available for the given project. Override for cases when sidebar
+     *         should not be available by default
      */
+    @SuppressWarnings("javadoc")
     default boolean available(Project aProject)
     {
         return true;
     }
 
     /**
-     * Override for cases when sidebar should not be added by default
+     * @return if the sidebar applies to the given annotator state. Override for cases when sidebar
+     *         should not be added by default
      */
+    @SuppressWarnings("javadoc")
     default boolean applies(AnnotatorState aState)
     {
         return true;

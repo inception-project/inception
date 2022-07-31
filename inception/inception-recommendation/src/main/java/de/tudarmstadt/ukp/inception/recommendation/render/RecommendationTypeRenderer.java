@@ -33,7 +33,9 @@ public interface RecommendationTypeRenderer
      * rendering representation {@link VDocument}.
      *
      * @param aVdoc
-     *            A VDocument containing annotations for the given layer
+     *            a {@link VDocument} containing annotations for the given layer
+     * @param aRequest
+     *            a render request
      */
     void render(VDocument aVdoc, RenderRequest aRequest);
 }

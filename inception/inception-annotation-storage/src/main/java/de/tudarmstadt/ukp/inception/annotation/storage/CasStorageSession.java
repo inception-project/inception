@@ -234,6 +234,11 @@ public class CasStorageSession
 
     /**
      * Removed managed CAS from session for given document and username
+     * 
+     * @param aDocumentId
+     *            the ID of the document to be removed from the session
+     * @param aUsername
+     *            the annotator username to whom the CAS belongs
      */
     public void remove(Long aDocumentId, String aUsername)
     {
@@ -376,9 +381,10 @@ public class CasStorageSession
     }
 
     /**
-     * Checks if writing the CAS is permitted. This is the case if the CAS is in the session and if
-     * it has the {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}. Any CAS used in the system must have
-     * been obtained through the {@link CasStorageService} and must be in a session.
+     * @return if writing the CAS is permitted. This is the case if the CAS is in the session and if
+     *         it has the {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}. Any CAS used in the system
+     *         must have been obtained through the {@link CasStorageService} and must be in a
+     *         session.
      * 
      * @param aDocument
      *            document.
@@ -392,9 +398,10 @@ public class CasStorageSession
     }
 
     /**
-     * Checks if writing the CAS is permitted. This is the case if the CAS is in the session and if
-     * it has the {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}. Any CAS used in the system must have
-     * been obtained through the {@link CasStorageService} and must be in a session.
+     * @return if writing the CAS is permitted. This is the case if the CAS is in the session and if
+     *         it has the {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}. Any CAS used in the system
+     *         must have been obtained through the {@link CasStorageService} and must be in a
+     *         session.
      * 
      * @param aCas
      *            a CAS.

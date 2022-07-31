@@ -37,9 +37,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
-import static org.slf4j.LoggerFactory.getLogger;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -71,7 +69,6 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.SetModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -126,8 +123,6 @@ public class MatrixWorkloadManagementPage
     extends ProjectPageBase
 {
     private static final long serialVersionUID = -2102136855109258306L;
-
-    private static final Logger LOG = getLogger(MethodHandles.lookup().lookupClass());
 
     public static final String CSS_CLASS_STATE_TOGGLE = "state-toggle";
     public static final String CSS_CLASS_SELECTED = "s";

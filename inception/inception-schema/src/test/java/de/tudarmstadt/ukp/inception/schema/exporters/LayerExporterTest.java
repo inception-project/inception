@@ -30,7 +30,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.util.List;
@@ -38,9 +37,11 @@ import java.util.zip.ZipFile;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.FullProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
@@ -50,8 +51,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.exporters.LayerExporter;
 
+@ExtendWith(MockitoExtension.class)
 public class LayerExporterTest
 {
     public @TempDir File tempFolder;
@@ -66,8 +67,6 @@ public class LayerExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        openMocks(this);
-
         project = new Project();
         project.setId(1l);
         project.setName("Test Project");

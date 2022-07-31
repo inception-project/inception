@@ -125,9 +125,8 @@ public class OverlapIterator
         }
 
         final boolean nexta_starts_before_curb_ends = (nexta != null)
-                && (nexta.getBeginCharacter() <= curb.getEndCharacter());
-        final boolean cura_ends_before_or_with_curb = cura.getEndCharacter() <= curb
-                .getEndCharacter();
+                && (nexta.getBegin() <= curb.getEnd());
+        final boolean cura_ends_before_or_with_curb = cura.getEnd() <= curb.getEnd();
 
         if (log.isTraceEnabled()) {
             log.trace("---");
@@ -204,7 +203,7 @@ public class OverlapIterator
             log.trace("   -> B: " + nb + "/" + maxb + " " + curb);
         }
 
-        if (curb.getBeginCharacter() < cura.getEndCharacter()) {
+        if (curb.getBegin() < cura.getEnd()) {
             // Rewind A to the point where it was when we last stepped
             // up B.
             rewindA();
@@ -216,7 +215,6 @@ public class OverlapIterator
 
     private void rewindA()
     {
-        final String method = "rewindA";
         if (log.isTraceEnabled()) {
             log.trace("   <- rewinding A");
         }
@@ -224,7 +222,7 @@ public class OverlapIterator
         // Seek back to the first segment that does not overlap
         // with curb and at most until the last b step we made.
         boolean steppedBack = false;
-        while ((na > last_b_step_na) && (cura.getEndCharacter() > curb.getBeginCharacter())) {
+        while ((na > last_b_step_na) && (cura.getEnd() > curb.getBegin())) {
             stepBackA();
             steppedBack = true;
         }

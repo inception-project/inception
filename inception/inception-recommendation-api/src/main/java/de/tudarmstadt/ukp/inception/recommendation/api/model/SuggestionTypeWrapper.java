@@ -22,6 +22,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnumUserType;
 public class SuggestionTypeWrapper
     extends PersistentEnumUserType<SuggestionType>
 {
+    private static final long serialVersionUID = 9106353026811614399L;
 
     @Override
     public Class<SuggestionType> returnedClass()

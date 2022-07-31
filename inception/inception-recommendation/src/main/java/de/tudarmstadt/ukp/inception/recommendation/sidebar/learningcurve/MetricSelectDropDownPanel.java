@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.sidebar;
+package de.tudarmstadt.ukp.inception.recommendation.sidebar.learningcurve;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +33,11 @@ import org.apache.wicket.model.util.ListModel;
 
 import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
 
+/**
+ * @deprecated The current implementation of the learning curve panel has a memory leak in the
+ *             browser code. It should be re-implemented.
+ */
+@Deprecated
 public class MetricSelectDropDownPanel
     extends Panel
 {
@@ -119,21 +124,24 @@ public class MetricSelectDropDownPanel
     {
         private static void hide(AjaxRequestTarget target, Component component)
         {
-            component.add(new DisplayNoneBehavior());
-            String js = "$('#" + component.getMarkupId()
-                    + "').animate({'width': '-=100'},  100); $('#"
-                    + ((DropDownChoice) component).getMarkupId() + "').hide();";
-            target.appendJavaScript(js);
+            if (component instanceof DropDownChoice) {
+                component.add(new DisplayNoneBehavior());
+                String js = "$('#" + component.getMarkupId()
+                        + "').animate({'width': '-=100'},  100); $('#"
+                        + ((DropDownChoice<?>) component).getMarkupId() + "').hide();";
+                target.appendJavaScript(js);
+            }
         }
 
         private static void show(AjaxRequestTarget target, Component component)
         {
-            component.add(new DisplayNoneBehavior());
-
-            String js = "$('#" + component.getMarkupId()
-                    + "').animate({'width': '+=100'},  100); $('#"
-                    + ((DropDownChoice) component).getMarkupId() + "').show();";
-            target.appendJavaScript(js);
+            if (component instanceof DropDownChoice) {
+                component.add(new DisplayNoneBehavior());
+                String js = "$('#" + component.getMarkupId()
+                        + "').animate({'width': '+=100'},  100); $('#"
+                        + ((DropDownChoice<?>) component).getMarkupId() + "').show();";
+                target.appendJavaScript(js);
+            }
         }
     }
 

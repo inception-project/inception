@@ -1014,6 +1014,7 @@ public class RecommendationServiceImpl
             return documentId;
         }
 
+        @SuppressWarnings("unused")
         public long getProjectId()
         {
             return projectId;
@@ -1220,7 +1221,9 @@ public class RecommendationServiceImpl
         }
 
         /**
-         * Returns the context for the given recommender if there is one.
+         * @param aRecommender
+         *            a recommender of interest
+         * @return the context for the given recommender if there is one.
          */
         public Optional<RecommenderContext> getContext(Recommender aRecommender)
         {

@@ -25,6 +25,9 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
 /**
  * Extensions for the workload manager. Also has a readTraits and writeTraits property for the DB
  * entry traits
+ * 
+ * @param <T>
+ *            traits type
  */
 public interface WorkloadManagerExtension<T>
     extends Extension<Project>
@@ -47,6 +50,10 @@ public interface WorkloadManagerExtension<T>
      * Ask the workload manager to immediately recalculate the state of all documents in the project
      * and of the project itself. This is necessary when switching from one workload manager to
      * another.
+     * 
+     * @param aProject
+     *            a project
+     * @return the state of the project after the recalculation has been completed
      */
     ProjectState recalculate(Project aProject);
 
@@ -54,18 +61,24 @@ public interface WorkloadManagerExtension<T>
      * Ask the workload manager to immediately refresh the state of the documents and overall
      * project. This can be called immediately before fetching the project status in order to ensure
      * that the project status is reliable.
+     * 
+     * @param aProject
+     *            a project
+     * @return the state of the project after the freshening has been completed
      */
     ProjectState freshenStatus(Project aProject);
 
     /**
-     * Indicates whether the current user can access documents in any order or if the workload
-     * manager assigns the order.
+     * @return whether the current user can access documents in any order or if the workload manager
+     *         assigns the order.
      * 
-     * <b>NOTE:</b> This is currently used to control the visibiltiy of the activities dashlet on on
-     * the project dashboard. A better approach would be to modularize the dashboard and then have
-     * some factory in the workload modules inject the dashlet instead.
+     *         <b>NOTE:</b> This is currently used to control the visibiltiy of the activities
+     *         dashlet on on the project dashboard. A better approach would be to modularize the
+     *         dashboard and then have some factory in the workload modules inject the dashlet
+     *         instead.
      * 
      * @param aProject
+     *            a project
      */
     boolean isDocumentRandomAccessAllowed(Project aProject);
 }

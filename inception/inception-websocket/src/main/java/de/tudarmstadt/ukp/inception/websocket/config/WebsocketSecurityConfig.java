@@ -31,6 +31,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.Message;
+import org.springframework.security.access.expression.AbstractSecurityExpressionHandler;
 import org.springframework.security.config.annotation.web.messaging.MessageSecurityMetadataSourceRegistry;
 import org.springframework.security.config.annotation.web.socket.AbstractSecurityWebSocketMessageBrokerConfigurer;
 import org.springframework.security.messaging.access.expression.DefaultMessageSecurityExpressionHandler;
@@ -42,7 +44,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.ExtensiblePermissionEvaluator;
 public class WebsocketSecurityConfig
     extends AbstractSecurityWebSocketMessageBrokerConfigurer
 {
-    private final DefaultMessageSecurityExpressionHandler handler = new DefaultMessageSecurityExpressionHandler();
+    private final AbstractSecurityExpressionHandler<Message<Object>> handler = //
+            new DefaultMessageSecurityExpressionHandler<>();
 
     @Autowired
     public WebsocketSecurityConfig(ApplicationContext aContext,

@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -226,7 +227,7 @@ public class FeatureDetailForm
         setModelObject(null);
     }
 
-    private void actionDelete(AjaxRequestTarget aTarget, Form aForm)
+    private void actionDelete(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
         confirmationDialog
                 .setChallengeModel(new StringResourceModel("DeleteFeatureDialog.text", this)
@@ -251,7 +252,7 @@ public class FeatureDetailForm
         });
     }
 
-    private void actionSave(AjaxRequestTarget aTarget, Form<?> aForm)
+    private void actionSave(AjaxRequestTarget aTarget, Form<AnnotationLayer> aForm)
     {
         AnnotationFeature feature = getModelObject();
 

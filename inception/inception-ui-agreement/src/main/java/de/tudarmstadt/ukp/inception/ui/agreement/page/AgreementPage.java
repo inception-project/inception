@@ -176,10 +176,11 @@ public class AgreementPage
                     // editor
                     Component newTraits;
                     if (getModelObject() != null) {
-                        AgreementMeasureSupport ams = agreementRegistry
+                        @SuppressWarnings("unchecked")
+                        AgreementMeasureSupport<DefaultAgreementTraits, ?, ?> ams = agreementRegistry
                                 .getAgreementMeasureSupport(getModelObject().getKey());
                         newTraits = ams.createTraitsEditor(MID_TRAITS, featureList.getModel(),
-                                Model.of(ams.createTraits()));
+                                Model.of((DefaultAgreementTraits) ams.createTraits()));
                     }
                     else {
                         newTraits = new EmptyPanel(MID_TRAITS);

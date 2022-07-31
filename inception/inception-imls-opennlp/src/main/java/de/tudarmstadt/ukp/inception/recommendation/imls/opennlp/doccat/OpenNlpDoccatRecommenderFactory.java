@@ -26,8 +26,6 @@ import static java.util.Arrays.asList;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -41,8 +39,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 public class OpenNlpDoccatRecommenderFactory
     extends RecommendationEngineFactoryImplBase<OpenNlpDoccatRecommenderTraits>
 {
-    private Logger log = LoggerFactory.getLogger(getClass());
-
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat.OpenNlpDoccatRecommenderFactory";

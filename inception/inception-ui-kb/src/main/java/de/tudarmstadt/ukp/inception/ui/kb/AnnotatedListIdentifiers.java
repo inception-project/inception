@@ -43,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -115,7 +114,7 @@ public class AnnotatedListIdentifiers
                 .distinct().collect(Collectors.toList()));
 
         add(overviewList);
-        add(new Label("count", LambdaModel.of(() -> searchResults.getObject().size())));
+        add(new Label("count", searchResults.map(List::size)));
     }
 
     public List<String> getSearchResultsFormattedForDocument(

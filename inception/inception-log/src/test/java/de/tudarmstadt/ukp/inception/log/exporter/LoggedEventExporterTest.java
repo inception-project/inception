@@ -22,10 +22,9 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.openMocks;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,9 +37,11 @@ import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.stream.Streams;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -53,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
+@ExtendWith(MockitoExtension.class)
 public class LoggedEventExporterTest
 {
     public @TempDir File tempFolder;
@@ -68,8 +70,6 @@ public class LoggedEventExporterTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        openMocks(this);
-
         project = new Project();
         project.setId(1L);
         project.setName("Test Project");
@@ -77,11 +77,6 @@ public class LoggedEventExporterTest
         workFolder = tempFolder;
 
         when(documentService.listSourceDocuments(any())).thenReturn(documents());
-        doAnswer((Answer<SourceDocument>) invocation -> {
-            String name = invocation.getArgument(1);
-            return documents().stream().filter(d -> name.equals(d.getName())).findFirst()
-                    .orElse(null);
-        }).when(documentService).getSourceDocument(any(), any());
 
         sut = new LoggedEventExporter(eventRepository, documentService);
     }
@@ -122,7 +117,6 @@ public class LoggedEventExporterTest
 
         // Check that import was successful but not events have been imported
         assertThat(captor.getAllValues()).isEmpty();
-        ;
     }
 
     private List<SourceDocument> documents()
@@ -189,7 +183,7 @@ public class LoggedEventExporterTest
 
         // Import the project again
         ArgumentCaptor<LoggedEvent> captor = ArgumentCaptor.forClass(LoggedEvent.class);
-        doNothing().when(eventRepository).create(captor.capture());
+        lenient().doNothing().when(eventRepository).create(captor.capture());
 
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
         sut.importData(importRequest, project, exportedProject, aZipFile);

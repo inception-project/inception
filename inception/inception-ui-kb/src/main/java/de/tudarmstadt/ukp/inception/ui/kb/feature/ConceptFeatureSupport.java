@@ -134,6 +134,7 @@ public class ConceptFeatureSupport
         return labelCache.get(aFeature, traits.getRepositoryId(), aIdentifier).getUiLabel();
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {

@@ -50,6 +50,8 @@ public interface SPARQLQueryOptionalElements
      * This setting is only effective for methods which actually return results (e.g.
      * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
      * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     * 
+     * @return the builder (fluent API)
      */
     SPARQLQueryOptionalElements includeInferred();
 
@@ -59,6 +61,8 @@ public interface SPARQLQueryOptionalElements
      * This setting is only effective for methods which actually return results (e.g.
      * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
      * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     * 
+     * @return the builder (fluent API)
      */
     SPARQLQueryOptionalElements excludeInferred();
 
@@ -68,6 +72,8 @@ public interface SPARQLQueryOptionalElements
      * This setting is only effective for methods which actually return results (e.g.
      * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
      * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     * 
+     * @return the builder (fluent API)
      */
     SPARQLQueryOptionalElements includeInferred(boolean aEnabled);
 }

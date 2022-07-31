@@ -50,7 +50,7 @@ public class TelemetryServiceAutoConfiguration
 {
     @Bean
     public TelemetryService telemetryService(
-            @Lazy @Autowired(required = false) List<TelemetrySupport> aTelemetrySupports,
+            @Lazy @Autowired(required = false) List<TelemetrySupport<?>> aTelemetrySupports,
             ApplicationEventPublisher aEventPublisher, TelemetryServiceProperties aProperties,
             PlatformTransactionManager aTransactionManager)
     {

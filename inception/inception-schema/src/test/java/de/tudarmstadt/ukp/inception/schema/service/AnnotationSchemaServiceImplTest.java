@@ -37,26 +37,26 @@ class AnnotationSchemaServiceImplTest
     {
         CASImpl cas = (CASImpl) CasCreationUtils.createCas();
         try (AutoCloseableNoException a = cas.ll_enableV2IdRefs(true)) {
-          Annotation ann = cas.createAnnotation(cas.getAnnotationType(), 0, 1);
-          ann.addToIndexes();
-          ann.removeFromIndexes();
+            Annotation ann = cas.createAnnotation(cas.getAnnotationType(), 0, 1);
+            ann.addToIndexes();
+            ann.removeFromIndexes();
 
-          Set<FeatureStructure> allFSesBefore = new LinkedHashSet<>();
-          cas.walkReachablePlusFSsSorted(allFSesBefore::add, null, null, null);
+            Set<FeatureStructure> allFSesBefore = new LinkedHashSet<>();
+            cas.walkReachablePlusFSsSorted(allFSesBefore::add, null, null, null);
 
-          assertThat(allFSesBefore) //
-                  .as("The annotation that was added and then removed before serialization should be found") //
-                  .containsExactly(cas.getSofa(), ann);
+            assertThat(allFSesBefore) //
+                    .as("The annotation that was added and then removed before serialization should be found") //
+                    .containsExactly(cas.getSofa(), ann);
 
-          AnnotationSchemaServiceImpl._upgradeCas(cas, cas,
-                  UIMAFramework.getResourceSpecifierFactory().createTypeSystemDescription());        
+            AnnotationSchemaServiceImpl._upgradeCas(cas, cas,
+                    UIMAFramework.getResourceSpecifierFactory().createTypeSystemDescription());
 
-          Set<FeatureStructure> allFSesAfter = new LinkedHashSet<>();
-          cas.walkReachablePlusFSsSorted(allFSesAfter::add, null, null, null);
+            Set<FeatureStructure> allFSesAfter = new LinkedHashSet<>();
+            cas.walkReachablePlusFSsSorted(allFSesAfter::add, null, null, null);
 
-          assertThat(allFSesAfter) //
-                  .as("The annotation that was added and then removed before serialization should not be found") //
-                  .containsExactly(cas.getSofa());
+            assertThat(allFSesAfter) //
+                    .as("The annotation that was added and then removed before serialization should not be found") //
+                    .containsExactly(cas.getSofa());
         }
     }
 }

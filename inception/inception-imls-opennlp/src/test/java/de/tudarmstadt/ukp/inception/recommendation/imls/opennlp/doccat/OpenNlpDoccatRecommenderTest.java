@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
+import static org.apache.commons.io.IOUtils.lineIterator;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,8 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.LineIterator;
 import org.apache.uima.UIMAException;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.CAS;
@@ -215,8 +214,8 @@ public class OpenNlpDoccatRecommenderTest
 
             try (InputStream is = new BufferedInputStream(
                     CompressionUtils.getInputStream(res.getLocation(), res.getInputStream()))) {
-                LineIterator i = IOUtils.lineIterator(is, "UTF-8");
-                try {
+
+                try (var i = lineIterator(is, "UTF-8")) {
                     while (i.hasNext()) {
                         String line = i.next();
 
@@ -239,9 +238,6 @@ public class OpenNlpDoccatRecommenderTest
 
                         new Sentence(aJCas, sentenceBegin, text.length()).addToIndexes();
                     }
-                }
-                finally {
-                    LineIterator.closeQuietly(i);
                 }
 
                 aJCas.setDocumentText(text.toString());

@@ -26,8 +26,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.NonTrainableRecommenderEngineImplBase;
@@ -40,8 +38,6 @@ import de.tudarmstadt.ukp.inception.rendering.model.Range;
 public class HfRecommender
     extends NonTrainableRecommenderEngineImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private final HfRecommenderTraits traits;
 
     private final HfInferenceClient hfInferenceClient;

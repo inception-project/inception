@@ -69,11 +69,11 @@ public class TelemetryServiceImpl
     private @PersistenceContext EntityManager entityManager;
 
     private final TelemetryServiceProperties properties;
-    private final List<TelemetrySupport> telemetrySupportsProxy;
+    private final List<TelemetrySupport<?>> telemetrySupportsProxy;
     private final ApplicationEventPublisher eventPublisher;
     private final TransactionTemplate transactionTemplate;
 
-    private List<TelemetrySupport> telemetrySupports;
+    private List<TelemetrySupport<?>> telemetrySupports;
 
     @Value("${running.from.commandline}")
     private boolean runningFromCommandline;
@@ -81,7 +81,7 @@ public class TelemetryServiceImpl
     private int port = -1;
 
     public TelemetryServiceImpl(
-            @Lazy @Autowired(required = false) List<TelemetrySupport> aTelemetrySupports,
+            @Lazy @Autowired(required = false) List<TelemetrySupport<?>> aTelemetrySupports,
             ApplicationEventPublisher aEventPublisher, TelemetryServiceProperties aProperties,
             PlatformTransactionManager aTransactionManager)
     {
@@ -105,13 +105,13 @@ public class TelemetryServiceImpl
 
     public void init()
     {
-        List<TelemetrySupport> tsp = new ArrayList<>();
+        List<TelemetrySupport<?>> tsp = new ArrayList<>();
 
         if (telemetrySupportsProxy != null) {
             tsp.addAll(telemetrySupportsProxy);
             AnnotationAwareOrderComparator.sort(tsp);
 
-            for (TelemetrySupport ts : tsp) {
+            for (TelemetrySupport<?> ts : tsp) {
                 log.debug("Found telemetry support: {}", ts.getId());
             }
         }
@@ -123,6 +123,7 @@ public class TelemetryServiceImpl
         autoAcceptOrReject();
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void autoAcceptOrReject()
     {
         if (properties.getAutoRespond() == null) {
@@ -154,7 +155,7 @@ public class TelemetryServiceImpl
     }
 
     /**
-     * The embedded server was used (i.e. not running as a WAR).
+     * @return if the embedded server was used (i.e. not running as a WAR).
      */
     public boolean isEmbeddedServerDeployment()
     {
@@ -172,7 +173,7 @@ public class TelemetryServiceImpl
     }
 
     /**
-     * The embedded server was used (i.e. not running as a WAR) and running in Docker.
+     * @return if the embedded server was used (i.e. not running as a WAR) and running in Docker.
      */
     public boolean isDockerized()
     {
@@ -220,15 +221,19 @@ public class TelemetryServiceImpl
     }
 
     @Override
-    public List<TelemetrySupport> getTelemetrySupports()
+    public List<TelemetrySupport<?>> getTelemetrySupports()
     {
         return telemetrySupports;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public Optional<TelemetrySupport> getTelemetrySuppport(String aSupport)
+    public <T> Optional<TelemetrySupport<T>> getTelemetrySuppport(String aSupport)
     {
-        return telemetrySupports.stream().filter(ts -> ts.getId().equals(aSupport)).findFirst();
+        return telemetrySupports.stream() //
+                .filter(ts -> ts.getId().equals(aSupport)) //
+                .map(ts -> (TelemetrySupport<T>) ts) //
+                .findFirst();
     }
 
     @Override

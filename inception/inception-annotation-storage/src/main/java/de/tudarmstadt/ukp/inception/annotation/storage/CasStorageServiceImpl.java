@@ -119,6 +119,10 @@ public class CasStorageServiceImpl
     }
 
     /**
+     * @param aDriver
+     *            a storage driver implementation
+     * @param aCasStorageProperties
+     *            storage configuration properties
      * @param aCasDoctor
      *            (optional) if present, CAS validation can take place
      * @param aSchemaService
@@ -126,9 +130,9 @@ public class CasStorageServiceImpl
      */
     @Autowired
     public CasStorageServiceImpl(CasStorageDriver aDriver,
+            CasStorageCacheProperties aCasStorageProperties,
             @Autowired(required = false) CasDoctor aCasDoctor,
-            @Autowired(required = false) AnnotationSchemaService aSchemaService,
-            CasStorageCacheProperties aCasStorageProperties)
+            @Autowired(required = false) AnnotationSchemaService aSchemaService)
     {
         driver = aDriver;
         casDoctor = aCasDoctor;
