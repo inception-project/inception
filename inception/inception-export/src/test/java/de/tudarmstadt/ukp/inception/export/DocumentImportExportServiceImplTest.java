@@ -80,7 +80,6 @@ import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageSession;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageCachePropertiesImpl;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStoragePropertiesImpl;
-import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.annotation.storage.driver.filesystem.FileSystemCasStorageDriver;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServiceProperties;
 import de.tudarmstadt.ukp.inception.export.config.DocumentImportExportServicePropertiesImpl;
@@ -109,16 +108,16 @@ public class DocumentImportExportServiceImplTest
 
         DocumentImportExportServiceProperties properties = new DocumentImportExportServicePropertiesImpl();
 
-        RepositoryProperties repositoryProperties = new RepositoryProperties();
+        var repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder);
 
         MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
 
-        CasStorageDriver driver = new FileSystemCasStorageDriver(repositoryProperties,
+        var driver = new FileSystemCasStorageDriver(repositoryProperties,
                 new CasStorageBackupProperties(), new CasStoragePropertiesImpl());
 
-        CasStorageServiceImpl storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(), null,
-                null);
+        var storageService = new CasStorageServiceImpl(driver, new CasStorageCachePropertiesImpl(),
+                null, null);
 
         sut = new DocumentImportExportServiceImpl(repositoryProperties,
                 List.of(new XmiFormatSupport()), storageService, schemaService, properties);
@@ -251,5 +250,4 @@ public class DocumentImportExportServiceImplTest
         }
         return jcas;
     }
-
 }
