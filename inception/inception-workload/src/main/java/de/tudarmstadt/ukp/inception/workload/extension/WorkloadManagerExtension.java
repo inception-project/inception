@@ -26,10 +26,10 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManager;
  * Extensions for the workload manager. Also has a readTraits and writeTraits property for the DB
  * entry traits
  * 
- * @param <TRAITS>
+ * @param <T>
  *            traits type
  */
-public interface WorkloadManagerExtension<TRAITS>
+public interface WorkloadManagerExtension<T>
     extends Extension<Project>
 {
     public static final String WORKLOAD_ACTION_BAR_ROLE = "Workload";
@@ -42,9 +42,9 @@ public interface WorkloadManagerExtension<TRAITS>
 
     String getLabel();
 
-    TRAITS readTraits(WorkloadManager aWorkloadManager);
+    T readTraits(WorkloadManager aWorkloadManager);
 
-    void writeTraits(TRAITS aTrait, Project aProject);
+    void writeTraits(T aTrait, Project aProject);
 
     /**
      * Ask the workload manager to immediately recalculate the state of all documents in the project
