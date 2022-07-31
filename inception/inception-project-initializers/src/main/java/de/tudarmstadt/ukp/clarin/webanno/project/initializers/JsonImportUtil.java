@@ -37,6 +37,8 @@ public class JsonImportUtil
     /**
      * Works for scenarios with overwrite enabled Checks if tagset already exists, then overwrites
      * otherwise works normally
+     * 
+     * @return the imported tag set
      */
     public static TagSet importTagSetFromJsonWithOverwrite(Project project,
             InputStream tagInputStream, AnnotationSchemaService aAnnotationService)
@@ -133,6 +135,8 @@ public class JsonImportUtil
 
     /**
      * Provides a new name if TagSet already exists.
+     * 
+     * @return a unique tag set name
      */
     public static String copyTagSetName(AnnotationSchemaService aAnnotationService,
             String importedTagSetName, Project project)
@@ -147,7 +151,6 @@ public class JsonImportUtil
             else {
                 return betterTagSetName;
             }
-
         }
     }
 }

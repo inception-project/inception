@@ -138,7 +138,7 @@ public class CompactRange
                         "Expecting end offset as integer");
             }
 
-            if (aJp.getCurrentToken() != END_ARRAY) {
+            if (aJp.nextToken() != END_ARRAY) {
                 aCtxt.reportWrongTokenException(CompactRange.class, END_ARRAY,
                         "Expecting array end");
             }
