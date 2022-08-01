@@ -31,8 +31,6 @@ import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
@@ -73,8 +71,6 @@ public class KendoComboboxTextFeatureEditor
     extends TextFeatureEditorBase
 {
     private static final long serialVersionUID = 8686646370500180943L;
-
-    private static final Logger LOG = LoggerFactory.getLogger(KendoComboboxTextFeatureEditor.class);
 
     public KendoComboboxTextFeatureEditor(String aId, MarkupContainer aItem,
             IModel<FeatureState> aModel, AnnotationActionHandler aHandler)

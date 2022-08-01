@@ -45,7 +45,7 @@ public class TextAreaFeatureEditor
     }
 
     @Override
-    protected AbstractTextComponent createInputField()
+    protected AbstractTextComponent<String> createInputField()
     {
         TextArea<String> textarea = new TextArea<>("value");
         try {

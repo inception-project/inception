@@ -111,8 +111,8 @@ public class OpenDocumentDialogPanel
 
     private OverviewListChoice<DecoratedObject<SourceDocument>> createDocListChoice()
     {
-        var docListChoice = new OverviewListChoice<>("documents", Model.of(), listDocuments());
-        docListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<SourceDocument>>()
+        var choice = new OverviewListChoice<>("documents", Model.of(), listDocuments());
+        choice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<SourceDocument>>()
         {
             private static final long serialVersionUID = 1L;
 
@@ -122,8 +122,8 @@ public class OpenDocumentDialogPanel
                 return defaultIfEmpty(aDoc.getLabel(), aDoc.get().getName());
             }
         });
-        docListChoice.setOutputMarkupId(true);
-        docListChoice.add(new OnChangeAjaxBehavior()
+        choice.setOutputMarkupId(true);
+        choice.add(new OnChangeAjaxBehavior()
         {
             private static final long serialVersionUID = -8232688660762056913L;
 
@@ -134,12 +134,12 @@ public class OpenDocumentDialogPanel
             }
         }).add(AjaxEventBehavior.onEvent("dblclick", _target -> actionOpenDocument(_target, null)));
 
-        if (!docListChoice.getChoices().isEmpty()) {
-            docListChoice.setModelObject(docListChoice.getChoices().get(0));
+        if (!choice.getChoices().isEmpty()) {
+            choice.setModelObject(choice.getChoices().get(0));
         }
 
-        docListChoice.setDisplayMessageOnEmptyChoice(true);
-        return docListChoice;
+        choice.setDisplayMessageOnEmptyChoice(true);
+        return choice;
     }
 
     private OverviewListChoice<DecoratedObject<User>> createUserListChoice(
@@ -149,8 +149,8 @@ public class OpenDocumentDialogPanel
         DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
         DecoratedObject<User> viewUser = DecoratedObject.of(state.getUser());
 
-        var userListChoice = new OverviewListChoice<>("user", Model.of(), listUsers());
-        userListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
+        var choice = new OverviewListChoice<>("user", Model.of(), listUsers());
+        choice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
         {
             private static final long serialVersionUID = 1L;
 
@@ -165,10 +165,10 @@ public class OpenDocumentDialogPanel
                 return username + (user.isEnabled() ? "" : " (login disabled)");
             }
         });
-        userListChoice.setOutputMarkupId(true);
-        userListChoice.add(visibleWhen(() -> state.getMode().equals(ANNOTATION) && projectService
+        choice.setOutputMarkupId(true);
+        choice.add(visibleWhen(() -> state.getMode().equals(ANNOTATION) && projectService
                 .hasRole(userRepository.getCurrentUser(), state.getProject(), MANAGER)));
-        userListChoice.add(new OnChangeAjaxBehavior()
+        choice.add(new OnChangeAjaxBehavior()
         {
             private static final long serialVersionUID = 1L;
 
@@ -189,20 +189,20 @@ public class OpenDocumentDialogPanel
             }
         });
 
-        if (userListChoice.getChoices().contains(viewUser)) {
-            userListChoice.setModelObject(viewUser);
+        if (choice.getChoices().contains(viewUser)) {
+            choice.setModelObject(viewUser);
         }
-        else if (userListChoice.getChoices().contains(currentUser)) {
-            userListChoice.setModelObject(currentUser);
+        else if (choice.getChoices().contains(currentUser)) {
+            choice.setModelObject(currentUser);
         }
-        else if (!userListChoice.getChoices().isEmpty()) {
-            userListChoice.setModelObject(userListChoice.getChoices().get(0));
+        else if (!choice.getChoices().isEmpty()) {
+            choice.setModelObject(choice.getChoices().get(0));
         }
         else {
-            userListChoice.setModelObject(null);
+            choice.setModelObject(null);
         }
 
-        return userListChoice;
+        return choice;
     }
 
     private List<DecoratedObject<User>> listUsers()
