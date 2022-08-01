@@ -66,7 +66,7 @@ public class PropertyFeatureEditor
 {
     private static final long serialVersionUID = -4649541419448384970L;
     private static final Logger LOG = LoggerFactory.getLogger(PropertyFeatureEditor.class);
-    private FormComponent focusComponent;
+    private FormComponent<?> focusComponent;
     private IModel<AnnotatorState> stateModel;
     private AnnotationActionHandler actionHandler;
     private Project project;
@@ -163,7 +163,7 @@ public class PropertyFeatureEditor
     }
 
     @Override
-    public FormComponent getFocusComponent()
+    public FormComponent<?> getFocusComponent()
     {
         return focusComponent;
     }
@@ -194,19 +194,20 @@ public class PropertyFeatureEditor
     }
 
     public KBHandle getLinkedSubjectObjectKBHandle(String featureName,
-            AnnotationActionHandler actionHandler, AnnotatorState aState)
+            AnnotationActionHandler aActionHandler, AnnotatorState aState)
     {
         AnnotationLayer factLayer = annotationService.findLayer(aState.getProject(), FACT_LAYER);
         KBHandle kbHandle = null;
         AnnotationFeature annotationFeature = annotationService.getFeature(featureName, factLayer);
-        List<LinkWithRoleModel> featureValue = (List<LinkWithRoleModel>) aState
+        @SuppressWarnings("unchecked")
+        var featureValue = (List<LinkWithRoleModel>) aState
                 .getFeatureState(annotationFeature).value;
         if (!featureValue.isEmpty()) {
             int targetAddress = featureValue.get(0).targetAddr;
             if (targetAddress != -1) {
                 CAS cas;
                 try {
-                    cas = actionHandler.getEditorCas();
+                    cas = aActionHandler.getEditorCas();
                     kbHandle = factService.getKBHandleFromCasByAddr(cas, targetAddress,
                             aState.getProject(), traits);
                 }

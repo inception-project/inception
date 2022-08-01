@@ -90,20 +90,21 @@ public class LoggedEventExporterTest
             return null;
         }).when(eventRepository).forEachLoggedEvent(any(), any());
 
-        ZipFile zipFile = mock(ZipFile.class);
+        var zipFile = mock(ZipFile.class);
         when(zipFile.getEntry(any())).thenReturn(new ZipEntry("event.log"));
         when(zipFile.getInputStream(any()))
                 .thenAnswer(_invocation -> new FileInputStream(new File(workFolder, "event.log")));
 
         // Export the project and import it again
-        ArgumentCaptor<LoggedEvent> captor = runExportImportAndFetchEvents(zipFile);
+        var captor = runExportImportAndFetchEvents(zipFile);
 
         // Check that after re-importing the exported projects, they are identical to the original
-        List<LoggedEvent> expectedEvents = events().stream()
-                // The document with the ID 2 does supposedly not exist, so it is skipped
-                // during export
-                .filter(e -> e.getDocument() != 2l).collect(toList());
-        assertThat(captor.getAllValues()).usingElementComparatorIgnoringFields("id")
+        var expectedEvents = events().stream()
+                // document with the ID 2 does supposedly not exist, so it is skipped during export
+                .filter(e -> e.getDocument() != 2l) //
+                .collect(toList());
+        assertThat(captor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparatorIgnoringFields("id")
                 .containsExactlyInAnyOrderElementsOf(expectedEvents);
     }
 
@@ -113,7 +114,7 @@ public class LoggedEventExporterTest
         ZipFile zipFile = mock(ZipFile.class);
 
         // Export the project and import it again
-        ArgumentCaptor<LoggedEvent> captor = runExportImportAndFetchEvents(zipFile);
+        var captor = runExportImportAndFetchEvents(zipFile);
 
         // Check that import was successful but not events have been imported
         assertThat(captor.getAllValues()).isEmpty();
