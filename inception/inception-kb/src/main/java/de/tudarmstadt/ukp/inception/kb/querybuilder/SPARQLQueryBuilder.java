@@ -309,12 +309,13 @@ public class SPARQLQueryBuilder
             switch (this) {
             case ITEM: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(VAR_SUBJECT.has(path(oneOrMore(subClassProperty)), aContext));
-                classPatterns.add(VAR_SUBJECT
-                        .has(path(typeOfProperty, zeroOrMore(subClassProperty)), aContext));
+                classPatterns.add(VAR_SUBJECT.has(
+                        PropertyPathBuilder.of(subClassProperty).oneOrMore().build(), aContext));
+                classPatterns.add(VAR_SUBJECT.has(PropertyPathBuilder.of(typeOfProperty)
+                        .then(subClassProperty).zeroOrMore().build(), aContext));
                 if (OWL.CLASS.stringValue().equals(aKB.getClassIri())) {
-                    classPatterns.add(VAR_SUBJECT.has(
-                            path(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST), aContext));
+                    classPatterns.add(VAR_SUBJECT.has(PropertyPathBuilder.of(OWL_INTERSECTIONOF)
+                            .then(RDF_REST).zeroOrMore().then(RDF_FIRST).build(), aContext));
                 }
 
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
