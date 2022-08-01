@@ -29,6 +29,7 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.TriplePattern;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 
+@SuppressWarnings("unused")
 public class StardogEntitySearchService
     implements GraphPattern
 {

@@ -75,5 +75,6 @@ public interface SPARQLQueryOptionalElements
      * 
      * @return the builder (fluent API)
      */
+    @SuppressWarnings("javadoc")
     SPARQLQueryOptionalElements includeInferred(boolean aEnabled);
 }

@@ -42,8 +42,15 @@ public interface ReificationStrategy
      * Certain updates may not be permitted, e.g. changing the property of an <i>instance-of</i>
      * statement. This is meant to avoid dangling triples accumulating in the knowledge base. In
      * these cases, a {@link IllegalArgumentException} is thrown.
+     * 
+     * @param aConnection
+     *            a connection to the knowledge base to update
+     * @param aKb
+     *            the knowledge base to update
+     * @param aStatement
+     *            the statement to be upserted
      */
-    void upsertStatement(RepositoryConnection aConnection, KnowledgeBase kb,
+    void upsertStatement(RepositoryConnection aConnection, KnowledgeBase aKb,
             KBStatement aStatement);
 
     /**
@@ -54,8 +61,15 @@ public interface ReificationStrategy
      * deleted unless the deletion of the whole concept/instance is requested. This is meant to
      * avoid dangling triples accumulating in the knowledge base. In these cases, a
      * {@link IllegalArgumentException} is thrown.
+     * 
+     * @param aConnection
+     *            a connection to the knowledge base from which to delete the statement
+     * @param aKb
+     *            the knowledge base to delete the statement from
+     * @param aStatement
+     *            the statement to be deleted
      */
-    void deleteStatement(RepositoryConnection aConnection, KnowledgeBase kb,
+    void deleteStatement(RepositoryConnection aConnection, KnowledgeBase aKb,
             KBStatement aStatement);
 
     List<KBStatement> listStatements(RepositoryConnection aConnection, KnowledgeBase kb,
@@ -65,35 +79,63 @@ public interface ReificationStrategy
      * Writes the given qualifier to the knowledge base. If it does not exist yet in the knowledge
      * base, it is created. If it does exist, its previous version will be replaced with the given
      * one.
+     * 
+     * @param aConnection
+     *            a connection to the knowledge base to update
+     * @param aKb
+     *            the knowledge base to update
+     * @param aQualifier
+     *            the qualifier to be upserted
      */
-    void upsertQualifier(RepositoryConnection aConnection, KnowledgeBase kb,
+    void upsertQualifier(RepositoryConnection aConnection, KnowledgeBase aKb,
             KBQualifier aQualifier);
 
     /**
      * Deletes the given qualifier from the knowledge base.
      * <p>
      * <b>NOTE:</b> the statement owning the qualifier is <b>NOT</b> updated.
+     * 
+     * @param aConnection
+     *            a connection to the knowledge base from which to delete the qualifier
+     * @param aKb
+     *            the knowledge base to delete the qualifier from
+     * @param aQualifier
+     *            the qualifier to be deleted
      */
-    void deleteQualifier(RepositoryConnection aConnection, KnowledgeBase kb,
+    void deleteQualifier(RepositoryConnection aConnection, KnowledgeBase aKb,
             KBQualifier aQualifier);
 
     /**
-     * Retrieves the qualifiers for the given statement.
-     * <p>
-     * <b>NOTE:</b> the statement owning the qualifier is <b>NOT</b> updated. If you wish to update
-     * the given statement with the new qualifiers, call {@link KBStatement#setQualifiers(List)}.
-     * <p>
-     * However, the returned qualifiers <b>DO</b> return the passed statement on
-     * {@link KBQualifier#getStatement()}.
+     * @return the qualifiers for the given statement.
+     *         <p>
+     *         <b>NOTE:</b> the statement owning the qualifier is <b>NOT</b> updated. If you wish to
+     *         update the given statement with the new qualifiers, call
+     *         {@link KBStatement#setQualifiers(List)}.
+     *         <p>
+     *         However, the returned qualifiers <b>DO</b> return the passed statement on
+     *         {@link KBQualifier#getStatement()}.
+     * @param aConnection
+     *            a connection to the knowledge base to query
+     * @param aKb
+     *            the knowledge base to query
+     * @param aStatement
+     *            the statement to retrieve the qualifiers for
      */
-    List<KBQualifier> listQualifiers(RepositoryConnection aConnection, KnowledgeBase kb,
+    List<KBQualifier> listQualifiers(RepositoryConnection aConnection, KnowledgeBase aKb,
             KBStatement aStatement);
 
     /**
      * Delete the specified instance by removing all statements/qualifiers describing it. Also, and
      * statements in other concepts/instances which refer to the given instance will be deleted.
+     * 
+     * @param aConnection
+     *            a connection to the knowledge base from which to delete the instance
+     * @param aKb
+     *            the knowledge base to delete the instance from
+     * @param aInstance
+     *            the instance to be deleted
      */
-    void deleteInstance(RepositoryConnection aConnection, KnowledgeBase kb, KBInstance aInstance);
+    void deleteInstance(RepositoryConnection aConnection, KnowledgeBase aKb, KBInstance aInstance);
 
     /**
      * Deletes the specified property. Any statements/qualifiers using this property will also be
@@ -102,18 +144,38 @@ public interface ReificationStrategy
      * Properties which are part of the knowledge base mapping (e.g. the instance-of property)
      * cannot be deleted and trying to do so will throw an {@link IllegalArgumentException}. A
      * reification strategy may additional reserve additional properties that cannot be deleted.
+     * 
+     * @param aConnection
+     *            a connection to the knowledge base from which to delete the property
+     * @param aKb
+     *            the knowledge base to delete the property from
+     * @param aProperty
+     *            the property to be deleted
      */
-    void deleteProperty(RepositoryConnection aConnection, KnowledgeBase kb, KBProperty aProperty);
+    void deleteProperty(RepositoryConnection aConnection, KnowledgeBase aKb, KBProperty aProperty);
 
     /**
      * Deletes the specified concept. Any statements or qualifiers referencing the concept are
      * deleted as well. This includes all instances of the given concept (except if they are also
      * instances of another concept) and all statements referring to the concept.
+     * 
+     * @param aConnection
+     *            a connection to the knowledge base from which to delete the concept
+     * @param aKb
+     *            the knowledge base to delete the concept from
+     * @param aConcept
+     *            the concept to be deleted
      */
-    void deleteConcept(RepositoryConnection aConnection, KnowledgeBase kb, KBConcept aConcept);
+    void deleteConcept(RepositoryConnection aConnection, KnowledgeBase aKb, KBConcept aConcept);
 
     /**
-     * Checks if the given statement exists. Qualifiers are not considered by this check.
+     * @return if the given statement exists. Qualifiers are not considered by this check.
+     * @param aConnection
+     *            a connection to the knowledge base to check
+     * @param akb
+     *            the knowledge base to check
+     * @param aStatement
+     *            the statement to check for
      */
     boolean exists(RepositoryConnection aConnection, KnowledgeBase akb, KBStatement aStatement);
 

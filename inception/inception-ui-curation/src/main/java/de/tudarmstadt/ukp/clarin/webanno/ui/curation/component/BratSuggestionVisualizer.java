@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
@@ -189,8 +187,7 @@ public abstract class BratSuggestionVisualizer
                         AnnotatorState state = segment.getAnnotatorState();
                         CasProvider casProvider = () -> documentService.readAnnotationCas(
                                 segment.getAnnotatorState().getDocument(),
-                                segment.getUser().getUsername(), AUTO_CAS_UPGRADE,
-                                SHARED_READ_ONLY_ACCESS);
+                                segment.getUser().getUsername());
                         var result = lazyDetailsLookupService.actionLookupNormData(request, paramId,
                                 casProvider, state.getDocument(), segment.getUser(),
                                 state.getWindowBeginOffset(), state.getWindowEndOffset());

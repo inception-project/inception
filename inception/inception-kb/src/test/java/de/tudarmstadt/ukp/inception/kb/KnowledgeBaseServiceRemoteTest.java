@@ -441,6 +441,7 @@ public class KnowledgeBaseServiceRemoteTest
             return rootIdentifier;
         }
 
+        @SuppressWarnings("unused")
         public Map<String, String> getParentChildIdentifier()
         {
             return parentChildIdentifier;

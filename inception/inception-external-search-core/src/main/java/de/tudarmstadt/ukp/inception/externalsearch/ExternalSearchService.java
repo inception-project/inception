@@ -38,13 +38,13 @@ public interface ExternalSearchService
         throws IOException;
 
     /**
-     * Obtains only the text from the document.
+     * @return only the text from the document.
      */
     String getDocumentText(DocumentRepository aRepository, String aCollectionId, String aDocumentId)
         throws IOException;
 
     /**
-     * Obtains the document in its original format suitable for import.
+     * @return the document in its original format suitable for import.
      */
     InputStream getDocumentAsStream(DocumentRepository aRepository, String aCollectionId,
             String aDocumentId)

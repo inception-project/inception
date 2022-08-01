@@ -108,7 +108,7 @@ public class CasXmlHandler
         element.setQName(trimToNull(aQName));
 
         if (aAttributes.getLength() > 0) {
-            FSArray attributes = new FSArray(jcas, aAttributes.getLength());
+            var attributes = new FSArray<XmlAttribute>(jcas, aAttributes.getLength());
             for (int i = 0; i < aAttributes.getLength(); i++) {
                 XmlAttribute attribute = new XmlAttribute(jcas);
                 attribute.setUri(trimToNull(aAttributes.getURI(i)));
@@ -147,7 +147,7 @@ public class CasXmlHandler
 
         // Fill in children
         if (!frame.getChildren().isEmpty()) {
-            FSArray children = new FSArray(jcas, frame.getChildren().size());
+            var children = new FSArray<XmlNode>(jcas, frame.getChildren().size());
             for (int i = 0; i < frame.getChildren().size(); i++) {
                 children.set(i, frame.getChildren().get(i));
             }
