@@ -55,6 +55,8 @@ public interface AgreementMeasureSupport<//
      * 
      * @param aId
      *            a markup ID.
+     * @param aFeature
+     *            the feature which the agreement is configured to operate on.
      * @param aModel
      *            a model holding the measure settings.
      * @return the traits editor component .
