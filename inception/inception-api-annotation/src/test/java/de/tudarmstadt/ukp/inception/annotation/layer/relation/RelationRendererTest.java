@@ -161,8 +161,10 @@ public class RelationRendererTest
         VDocument vdoc = new VDocument();
         sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
-        assertThat(vdoc.comments()).usingFieldByFieldElementComparator().contains(
-                new VComment(dep, ERROR, "Crossing sentence boundaries is not permitted."));
+        assertThat(vdoc.comments()) //
+                .usingRecursiveFieldByFieldElementComparator() //
+                .contains(
+                        new VComment(dep, ERROR, "Crossing sentence boundaries is not permitted."));
     }
 
     @Test
@@ -218,9 +220,10 @@ public class RelationRendererTest
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
-            assertThat(vdoc.comments()).filteredOn(c -> !YIELD.equals(c.getCommentType()))
-                    .usingFieldByFieldElementComparator()
-                    .contains(new VComment(dep1, ERROR, "Stacking is not permitted."),
+            assertThat(vdoc.comments()) //
+                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .usingRecursiveFieldByFieldElementComparator().contains( //
+                            new VComment(dep1, ERROR, "Stacking is not permitted."),
                             new VComment(dep2, ERROR, "Stacking is not permitted."));
         }
 
@@ -229,9 +232,10 @@ public class RelationRendererTest
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
-            assertThat(vdoc.comments()).filteredOn(c -> !YIELD.equals(c.getCommentType()))
-                    .usingFieldByFieldElementComparator()
-                    .contains(new VComment(dep1, ERROR, "Stacking is not permitted."),
+            assertThat(vdoc.comments()) //
+                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .usingRecursiveFieldByFieldElementComparator().contains( //
+                            new VComment(dep1, ERROR, "Stacking is not permitted."),
                             new VComment(dep2, ERROR, "Stacking is not permitted."));
         }
 
@@ -246,9 +250,10 @@ public class RelationRendererTest
             VDocument vdoc = new VDocument();
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
-            assertThat(vdoc.comments()).filteredOn(c -> !YIELD.equals(c.getCommentType()))
-                    .usingFieldByFieldElementComparator()
-                    .contains(new VComment(dep1, ERROR, "Overlap is not permitted."),
+            assertThat(vdoc.comments()) //
+                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .usingRecursiveFieldByFieldElementComparator().contains( //
+                            new VComment(dep1, ERROR, "Overlap is not permitted."),
                             new VComment(dep3, ERROR, "Overlap is not permitted."));
         }
     }
