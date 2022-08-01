@@ -125,6 +125,9 @@ public class OverviewListChoice<T>
     /**
      * If this flag is set, an empty choice-list will display a message given in property key
      * {@code emptyChoiceMsg} with mouse over explanation {@code emptyChoiceExplanation}
+     * 
+     * @param aHasEmpty
+     *            flag value
      */
     public void setDisplayMessageOnEmptyChoice(boolean aHasEmpty)
     {
@@ -138,8 +141,8 @@ public class OverviewListChoice<T>
         super.setOptionAttributes(aBuffer, aChoice, aIndex, aSelected);
         // if the choice was decorated with color, add this option to the html
         if (aChoice instanceof DecoratedObject) {
-            DecoratedObject decorated = (DecoratedObject) aChoice;
-            String color = defaultIfEmpty(decorated.getColor(), "black");
+            var decorated = (DecoratedObject<?>) aChoice;
+            var color = defaultIfEmpty(decorated.getColor(), "black");
             aBuffer.append("style=\"color:" + color + ";\"");
         }
     }

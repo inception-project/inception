@@ -470,7 +470,6 @@ public class QualifierFeatureEditor
         else {
             List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) QualifierFeatureEditor.this
                     .getModelObject().value;
-            AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
             LinkWithRoleModel m = new LinkWithRoleModel();
             m.role = selectedRole.getUiLabel();

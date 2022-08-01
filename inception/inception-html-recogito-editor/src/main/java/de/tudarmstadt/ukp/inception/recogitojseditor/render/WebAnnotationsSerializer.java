@@ -56,7 +56,7 @@ public class WebAnnotationsSerializer
         for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 String labelText = vspan.getLabelHint();
-                String color = vspan.getColorHint();
+                // String color = vspan.getColorHint();
 
                 WebAnnotation anno = new WebAnnotation();
                 anno.setId("#" + vspan.getVid().toString());
@@ -75,7 +75,7 @@ public class WebAnnotationsSerializer
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
                 String labelText = varc.getLabelHint();
-                String color = varc.getColorHint();
+                // String color = varc.getColorHint();
 
                 WebAnnotation anno = new WebAnnotation();
                 anno.setMotivation("linking");

@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 
+@Deprecated
 public class SubjectObjectFeatureSupportTest
 {
     @Test
