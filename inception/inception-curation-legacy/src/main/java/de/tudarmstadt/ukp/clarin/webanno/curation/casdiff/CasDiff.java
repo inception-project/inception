@@ -410,7 +410,7 @@ public class CasDiff
 
             // For each slot at the given position in the FS-to-be-added, we need find a
             // corresponding configuration
-            ArrayFS links = (ArrayFS) aFS.getFeatureValue(feat);
+            var links = FSUtil.getFeature(aFS, feat, ArrayFS.class);
             for (int i = 0; i < links.size(); i++) {
                 FeatureStructure link = links.get(i);
                 DiffAdapter adapter = getAdapter(aFS.getType().getName());
@@ -860,6 +860,7 @@ public class CasDiff
         /**
          * Visible for testing only!
          */
+        @SuppressWarnings("javadoc")
         public void add(String aCasGroupId, AID aAID)
         {
             AID old = fsAddresses.put(aCasGroupId, aAID);

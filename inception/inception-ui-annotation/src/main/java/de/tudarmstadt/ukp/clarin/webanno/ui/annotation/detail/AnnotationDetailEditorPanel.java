@@ -597,6 +597,7 @@ public abstract class AnnotationDetailEditorPanel
         var slotHostFS = selectFsByAddr(aCas, state.getArmedFeature().vid.getId());
         var slotHostLayer = annotationService.findLayer(state.getProject(), slotHostFS);
         var slotHostAdapter = annotationService.getAdapter(slotHostLayer);
+        @SuppressWarnings("unchecked")
         var links = (List<LinkWithRoleModel>) state.getArmedFeature().value;
         var link = links.get(state.getArmedSlot());
         link.targetAddr = slotFillerAddr;
