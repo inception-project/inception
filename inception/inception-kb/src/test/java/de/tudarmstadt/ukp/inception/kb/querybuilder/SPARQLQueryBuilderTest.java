@@ -579,6 +579,7 @@ public class SPARQLQueryBuilderTest
                         "Red Goblin", "Little red monster"));
     }
 
+    @SuppressWarnings("deprecation")
     static void thatAllPropertiesCanBeRetrieved(Repository aRepository, KnowledgeBase aKB)
         throws Exception
     {

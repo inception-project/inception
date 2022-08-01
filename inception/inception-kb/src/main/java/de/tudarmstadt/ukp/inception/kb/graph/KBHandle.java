@@ -227,6 +227,7 @@ public class KBHandle
         return new KBHandle(aObject.getIdentifier(), aObject.getUiLabel());
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends KBObject> T convertTo(Class<T> aClass, KBHandle aHandle)
     {
         if (aClass == KBConcept.class) {

@@ -57,7 +57,8 @@ public class ExternalSearchResult
     }
 
     /**
-     * Get the ID of the collecting containing the matching document. This is typically a system ID.
+     * @return the ID of the collecting containing the matching document. This is typically a system
+     *         ID.
      */
     public String getCollectionId()
     {
@@ -65,7 +66,7 @@ public class ExternalSearchResult
     }
 
     /**
-     * Get the ID of the matching document. This is typically a system ID.
+     * @return the ID of the matching document. This is typically a system ID.
      */
     public String getDocumentId()
     {
@@ -73,7 +74,7 @@ public class ExternalSearchResult
     }
 
     /**
-     * Set the title of the matching document. This is typically a human-readable title.
+     * @return the title of the matching document. This is typically a human-readable title.
      */
     public String getDocumentTitle()
     {
@@ -81,7 +82,7 @@ public class ExternalSearchResult
     }
 
     /**
-     * Get the title of the matching document.
+     * Set the title of the matching document.
      */
     public void setDocumentTitle(String aDocumentTitle)
     {
@@ -89,9 +90,9 @@ public class ExternalSearchResult
     }
 
     /**
-     * Set the source of the matching document. This identifies where the document originally came
-     * from before it was indexed. Mind that a collection may contain documents from different
-     * sources.
+     * @return the source of the matching document. This identifies where the document originally
+     *         came from before it was indexed. Mind that a collection may contain documents from
+     *         different sources.
      */
     public String getOriginalSource()
     {
@@ -107,9 +108,9 @@ public class ExternalSearchResult
     }
 
     /**
-     * Set the source URI of the matching document. This identifies where the document originally
-     * came from before it was indexed. Mind that a collection may contain documents from different
-     * sources.
+     * @return the source URI of the matching document. This identifies where the document
+     *         originally came from before it was indexed. Mind that a collection may contain
+     *         documents from different sources.
      */
     public String getOriginalUri()
     {

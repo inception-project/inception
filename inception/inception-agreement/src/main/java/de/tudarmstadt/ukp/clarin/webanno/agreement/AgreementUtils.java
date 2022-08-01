@@ -306,7 +306,9 @@ public class AgreementUtils
     private static Object extractLinkFeatureValueForAgreement(FeatureStructure aFs, String aFeature,
             int aLinkIndex, LinkCompareBehavior aLCB)
     {
-        ArrayFS links = (ArrayFS) aFs.getFeatureValue(aFs.getType().getFeatureByBaseName(aFeature));
+        @SuppressWarnings("unchecked")
+        var links = (ArrayFS<FeatureStructure>) aFs
+                .getFeatureValue(aFs.getType().getFeatureByBaseName(aFeature));
         FeatureStructure link = links.get(aLinkIndex);
 
         switch (aLCB) {

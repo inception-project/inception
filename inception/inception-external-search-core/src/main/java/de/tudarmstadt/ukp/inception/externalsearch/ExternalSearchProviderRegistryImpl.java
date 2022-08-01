@@ -45,12 +45,12 @@ public class ExternalSearchProviderRegistryImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final List<ExternalSearchProviderFactory> providersProxy;
+    private final List<ExternalSearchProviderFactory<?>> providersProxy;
 
-    private List<ExternalSearchProviderFactory> providers;
+    private List<ExternalSearchProviderFactory<?>> providers;
 
     public ExternalSearchProviderRegistryImpl(
-            @Lazy @Autowired(required = false) List<ExternalSearchProviderFactory> aProviders)
+            @Lazy @Autowired(required = false) List<ExternalSearchProviderFactory<?>> aProviders)
     {
         providersProxy = aProviders;
     }
@@ -81,7 +81,7 @@ public class ExternalSearchProviderRegistryImpl
     }
 
     @Override
-    public List<ExternalSearchProviderFactory> getExternalSearchProviderFactories()
+    public List<ExternalSearchProviderFactory<?>> getExternalSearchProviderFactories()
     {
         return providers;
     }
@@ -93,7 +93,9 @@ public class ExternalSearchProviderRegistryImpl
             return null;
         }
         else {
-            return providers.stream().filter(f -> aId.equals(f.getBeanName())).findFirst()
+            return providers.stream() //
+                    .filter(f -> aId.equals(f.getBeanName())) //
+                    .findFirst() //
                     .orElse(null);
         }
     }
