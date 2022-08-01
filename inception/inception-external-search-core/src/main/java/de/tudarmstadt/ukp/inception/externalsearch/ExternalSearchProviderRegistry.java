@@ -21,7 +21,7 @@ import java.util.List;
 
 public interface ExternalSearchProviderRegistry
 {
-    List<ExternalSearchProviderFactory> getExternalSearchProviderFactories();
+    List<ExternalSearchProviderFactory<?>> getExternalSearchProviderFactories();
 
     ExternalSearchProviderFactory getExternalSearchProviderFactory(String aId);
 

@@ -48,7 +48,7 @@ public class ExternalSearchAutoConfiguration
 
     @Bean
     public ExternalSearchProviderRegistry externalSearchProviderRegistry(
-            @Lazy @Autowired(required = false) List<ExternalSearchProviderFactory> aProviders)
+            @Lazy @Autowired(required = false) List<ExternalSearchProviderFactory<?>> aProviders)
     {
         return new ExternalSearchProviderRegistryImpl(aProviders);
     }
