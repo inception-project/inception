@@ -289,7 +289,7 @@ public class StatisticsAnnotationSidebar
         if (columns.size() > 1) {
             columns.remove(1);
         }
-        columns.add(new PropertyColumn(new Model<String>(selectedStatistic),
+        columns.add(new PropertyColumn<>(new Model<String>(selectedStatistic),
                 propertyExpressionStatistic, propertyExpressionStatistic));
 
         statsProvider.setData(layerStatsList);

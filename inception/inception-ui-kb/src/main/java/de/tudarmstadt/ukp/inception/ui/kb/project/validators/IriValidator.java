@@ -25,6 +25,8 @@ import org.eclipse.rdf4j.model.util.URIUtil;
 public class IriValidator
     implements IValidator<String>
 {
+    private static final long serialVersionUID = -7606198052888498691L;
+
     @Override
     public void validate(IValidatable<String> validatable)
     {
