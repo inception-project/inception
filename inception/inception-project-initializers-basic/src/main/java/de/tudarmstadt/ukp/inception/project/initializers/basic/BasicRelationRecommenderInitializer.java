@@ -97,9 +97,9 @@ public class BasicRelationRecommenderInitializer
         recommender.setThreshold(0.0d);
         recommender.setTool(recommenderFactory.getId());
 
-        RecommendationEngineFactory<StringMatchingRelationRecommenderTraits> factory = //
-                (RecommendationEngineFactory) recommendationService
-                        .getRecommenderFactory(recommender).get();
+        @SuppressWarnings("unchecked")
+        var factory = (RecommendationEngineFactory<StringMatchingRelationRecommenderTraits>) //
+        recommendationService.getRecommenderFactory(recommender).get();
         StringMatchingRelationRecommenderTraits traits = factory.readTraits(recommender);
         traits.setAdjunctFeature(BASIC_SPAN_LABEL_FEATURE_NAME);
         factory.writeTraits(recommender, traits);

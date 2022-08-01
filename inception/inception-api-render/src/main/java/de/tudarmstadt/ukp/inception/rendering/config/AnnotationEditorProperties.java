@@ -30,7 +30,9 @@ public interface AnnotationEditorProperties
 
     /**
      * @return whether the "forward annotation" setting is available to annotators.
+     * @deprecated to be removed without replacement
      */
+    @Deprecated
     boolean isForwardAnnotationEnabled();
 
     /**

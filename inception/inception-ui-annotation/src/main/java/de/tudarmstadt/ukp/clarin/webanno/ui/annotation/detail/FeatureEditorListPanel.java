@@ -169,7 +169,10 @@ public class FeatureEditorListPanel
      * @param aResetSelectedTag
      *            whether to clear {@code selectedTag} if the forward features has a tagset. Has no
      *            effect if the forward feature is a free text feature.
+     * @deprecated to be removed without replacement
      */
+    @SuppressWarnings("javadoc")
+    @Deprecated
     public void focusForwardAnnotationComponent(AjaxRequestTarget aTarget,
             boolean aResetSelectedTag)
     {

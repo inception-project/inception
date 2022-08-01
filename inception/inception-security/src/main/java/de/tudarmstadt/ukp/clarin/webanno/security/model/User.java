@@ -118,6 +118,11 @@ public class User
 
     /**
      * This constructor is mainly intended for testing.
+     * 
+     * @param aName
+     *            used as the username <b>and</b> the UI name!
+     * @param aRoles
+     *            roles of the user
      */
     public User(String aName, Role... aRoles)
     {

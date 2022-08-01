@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider.getApplicationContext;
 import static java.util.Arrays.asList;
 
 import java.util.List;
@@ -26,7 +27,6 @@ import java.util.Set;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 
 /**
@@ -45,7 +45,7 @@ public interface UserDao
     User getCurrentUser();
 
     /**
-     * Return the name of the current user
+     * @return the name of the current user
      */
     String getCurrentUsername();
 
@@ -111,9 +111,7 @@ public interface UserDao
     User getUserByRealmAndUiName(String aRealm, String aUiName);
 
     /**
-     * get all users in the system
-     * 
-     * @return the users.
+     * @return all users in the system
      */
     List<User> list();
 
@@ -122,28 +120,31 @@ public interface UserDao
     List<User> listDisabledUsers();
 
     /**
-     * Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER
+     * @return the roles of a user, globally we will have ROLE_ADMIN and ROLE_USER
      *
      * @param user
      *            the {@link User} object
-     * @return the roles.
      */
     List<Authority> listAuthorities(User user);
 
     /**
-     * Check if the user has global administrator permissions.
+     * @param aUser
+     *            a user
+     * @return if the user has global administrator permissions.
      */
     boolean isAdministrator(User aUser);
 
     /**
-     * Check if the user has the permission to create projects.
+     * @param aUser
+     *            a user
+     * @return if the user has the permission to create projects.
      */
     boolean isProjectCreator(User aUser);
 
     Set<String> getRoles(User aUser);
 
     /**
-     * Retrieve the number of enabled users
+     * @return the number of enabled users
      */
     long countEnabledUsers();
 
@@ -153,8 +154,8 @@ public interface UserDao
     {
         // If users are allowed to access their profile information, the also need to access the
         // admin area. Note: access to the users own profile should be handled differently.
-        List<String> activeProfiles = asList(ApplicationContextProvider.getApplicationContext()
-                .getEnvironment().getActiveProfiles());
+        List<String> activeProfiles = asList(
+                getApplicationContext().getEnvironment().getActiveProfiles());
         Properties settings = SettingsUtil.getSettings();
         return !activeProfiles.contains("auto-mode-preauth")
                 && "true".equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS));
