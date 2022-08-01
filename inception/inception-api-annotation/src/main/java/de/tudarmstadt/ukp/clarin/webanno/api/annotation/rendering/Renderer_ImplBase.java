@@ -90,8 +90,14 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     }
 
     /**
-     * Decodes the traits for the given feature and returns them if they implement the requested
-     * interface. This method internally caches the decoded traits, so it can be called often.
+     * @param aFeature
+     *            the feature
+     * @param aInterface
+     *            the traits interface
+     * @param <T>
+     *            the traits type
+     * @return the traits for the given feature if they implement the requested interface. This
+     *         method internally caches the decoded traits, so it can be called often.
      */
     @SuppressWarnings("unchecked")
     public <T> Optional<T> getTraits(AnnotationFeature aFeature, Class<T> aInterface)
@@ -112,8 +118,14 @@ public abstract class Renderer_ImplBase<T extends TypeAdapter>
     }
 
     /**
-     * Decodes the traits for the given layer and returns them if they implement the requested
-     * interface. This method internally caches the decoded traits, so it can be called often.
+     * @param aLayer
+     *            the layer
+     * @param aInterface
+     *            the traits interface
+     * @param <T>
+     *            the traits type
+     * @return the decoded traits for the given layer if they implement the requested interface.
+     *         This method internally caches the decoded traits, so it can be called often.
      */
     @SuppressWarnings("unchecked")
     public <T> Optional<T> getTraits(AnnotationLayer aLayer, Class<T> aInterface)

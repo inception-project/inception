@@ -338,8 +338,16 @@ public class RelationOverlapBehavior
     }
 
     /**
-     * If two relations share any end point (source or target), they are considered to be
-     * <b>overlapping</b>.
+     * @param aRel1Src
+     *            source of the first relation
+     * @param aRel1Tgt
+     *            target of the first relation
+     * @param aRel2Src
+     *            source of the second relation
+     * @param aRel2Tgt
+     *            target of the second relation
+     * @return if two relations share any end point (source or target), they are considered to be
+     *         <b>overlapping</b>.
      */
     public static boolean overlapping(FeatureStructure aRel1Src, FeatureStructure aRel1Tgt,
             FeatureStructure aRel2Src, FeatureStructure aRel2Tgt)
@@ -349,7 +357,16 @@ public class RelationOverlapBehavior
     }
 
     /**
-     * If two relations have exactly the same end points, they are considered to be <b>stacking</b>.
+     * @param aRequest
+     *            the relation creation request
+     * @param aRelation
+     *            the relation
+     * @param aSourceFeature
+     *            the source feature
+     * @param aTargetFeature
+     *            the target feature
+     * @return if two relations have exactly the same end points, they are considered to be
+     *         <b>stacking</b>.
      */
     public static boolean stacking(CreateRelationAnnotationRequest aRequest, AnnotationFS aRelation,
             Feature aSourceFeature, Feature aTargetFeature)

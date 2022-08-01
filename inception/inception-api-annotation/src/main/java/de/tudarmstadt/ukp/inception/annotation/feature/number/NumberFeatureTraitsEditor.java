@@ -110,11 +110,11 @@ public class NumberFeatureTraitsEditor
         editorType.add(visibleWhen(() -> isEditorTypeSelectionPossible()));
         form.add(editorType);
 
-        NumberTextField minimum = new NumberTextField<>("minimum", clazz, options);
+        var minimum = new NumberTextField<>("minimum", clazz, options);
         minimum.setModel(PropertyModel.of(traits, "minimum"));
         form.add(minimum);
 
-        NumberTextField maximum = new NumberTextField<>("maximum", clazz, options);
+        var maximum = new NumberTextField<>("maximum", clazz, options);
         maximum.setModel(PropertyModel.of(traits, "maximum"));
         form.add(maximum);
 
@@ -156,6 +156,7 @@ public class NumberFeatureTraitsEditor
                 && feature.getObject().getType().equals(CAS.TYPE_NAME_INTEGER);
     }
 
+    @SuppressWarnings("unchecked")
     private UimaPrimitiveFeatureSupport_ImplBase<NumberFeatureTraits> getFeatureSupport()
     {
         return (UimaPrimitiveFeatureSupport_ImplBase<NumberFeatureTraits>) featureSupportRegistry

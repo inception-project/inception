@@ -24,6 +24,7 @@ import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VAnnotationMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 
 /**
@@ -47,9 +48,9 @@ public class FocusMarkerRenderer
     @Override
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
-        if (aRequest.getState().getSelection().getAnnotation().isSet()) {
-            aVDoc.add(new VAnnotationMarker(VMarker.FOCUS,
-                    aRequest.getState().getSelection().getAnnotation()));
+        VID selectedAnnotation = aRequest.getState().getSelection().getAnnotation();
+        if (selectedAnnotation.isSet()) {
+            aVDoc.add(new VAnnotationMarker(VMarker.FOCUS, selectedAnnotation));
         }
     }
 }
