@@ -57,6 +57,7 @@ public interface AnnotationEditorProperties
     /**
      * @deprecated Configurable JavaScript action to be removed soon.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     boolean isConfigurableJavaScriptActionEnabled();
 }

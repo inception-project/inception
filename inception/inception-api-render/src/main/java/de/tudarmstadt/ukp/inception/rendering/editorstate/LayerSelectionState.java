@@ -25,22 +25,24 @@ import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 public interface LayerSelectionState
 {
     /**
-     * Get annotation layer of currently selected annotation.
+     * @return annotation layer of currently selected annotation.
      */
     AnnotationLayer getSelectedAnnotationLayer();
 
     /**
-     * Set annotation layer of currently selected annotation.
+     * @param aLayer
+     *            annotation layer of currently selected annotation.
      */
     void setSelectedAnnotationLayer(AnnotationLayer aLayer);
 
     /**
-     * Get annotation layer used for newly created annotations.
+     * @return annotation layer used for newly created annotations.
      */
     AnnotationLayer getDefaultAnnotationLayer();
 
     /**
-     * Set annotation layer used for newly created annotations.
+     * @param aLayer
+     *            annotation layer used for newly created annotations.
      */
     void setDefaultAnnotationLayer(AnnotationLayer aLayer);
 

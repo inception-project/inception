@@ -36,10 +36,16 @@ public interface PagingStrategy
     extends Serializable
 {
     /**
-     * Returns the units in a given index range (i.e. nth-unit, not character offsets). The index
-     * range is 1-based. The returned list is automatically capped to the maximum number of units
-     * available. Thus it is possible to use {@code units(0, Integer.MAX_VALUE)} to return all
-     * units.
+     * @param aCas
+     *            CAS currently being edited
+     * @param aFirstIndex
+     *            index of the first unit to be returned
+     * @param aLastIndex
+     *            index of the last unit to be returned
+     * @return the units in a given index range (i.e. nth-unit, not character offsets). The index
+     *         range is 1-based. The returned list is automatically capped to the maximum number of
+     *         units available. Thus it is possible to use {@code units(0, Integer.MAX_VALUE)} to
+     *         return all units.
      */
     List<Unit> units(CAS aCas, int aFirstIndex, int aLastIndex);
 
@@ -60,7 +66,9 @@ public interface PagingStrategy
     }
 
     /**
-     * Returns the total number of units.
+     * @param aCas
+     *            CAS currently being edited
+     * @return the total number of units.
      */
     default int unitCount(CAS aCas)
     {
@@ -68,9 +76,13 @@ public interface PagingStrategy
     }
 
     /**
-     * Get the unit with the given index. The index is 1-based. If the index is smaller than 1, the
-     * first unit is returned. If the index is greater than the number of units available, the last
-     * unit is returned.
+     * @param aCas
+     *            CAS currently being edited
+     * @param aIndex
+     *            index of the unit to be returned
+     * @return the unit with the given index. The index is 1-based. If the index is smaller than 1,
+     *         the first unit is returned. If the index is greater than the number of units
+     *         available, the last unit is returned.
      */
     default Unit unitAtIndex(CAS aCas, int aIndex)
     {
@@ -98,8 +110,14 @@ public interface PagingStrategy
     }
 
     /**
+     * @param aState
+     *            annotator state
+     * @param aCas
+     *            CAS currently being edited
      * @param aIndex
      *            index of the unit to move to (1-based)
+     * @param aPos
+     *            focus positioning mode
      */
     default void moveToUnit(AnnotatorViewState aState, CAS aCas, int aIndex, FocusPosition aPos)
     {

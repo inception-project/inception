@@ -111,6 +111,7 @@ public class RenderRequest
      *             so better not use the full annotator state and instead add relevant information
      *             as fields to the render request itself.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public AnnotatorState getState()
     {
@@ -149,6 +150,7 @@ public class RenderRequest
         /**
          * @deprecated See {@link RenderRequest#getState}
          */
+        @SuppressWarnings("javadoc")
         @Deprecated
         public Builder withState(AnnotatorState aState)
         {

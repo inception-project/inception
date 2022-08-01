@@ -28,6 +28,11 @@ public interface AnnotationSelectionState
      * necessarily belong to the feature states for the annotation detail panel (cf.
      * {@link AnnotatorState#getFeatureStates()}) but may belong to some other feature editor
      * elsewhere in the UI.
+     * 
+     * @param aState
+     *            feature to arm
+     * @param aIndex
+     *            slot index to arm
      */
     void setArmedSlot(FeatureState aState, int aIndex);
 
