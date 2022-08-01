@@ -344,6 +344,7 @@ public class VersioningServiceImplTest
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             for (SourceDocument sourceDocument : documentService.listSourceDocuments(testProject)) {
+                documentService.createOrGetAnnotationDocument(sourceDocument, aUser);
                 CAS cas = documentService.createOrReadInitialCas(sourceDocument);
                 documentService.writeAnnotationCas(cas, sourceDocument, aUser, false);
             }
