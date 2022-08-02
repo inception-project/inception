@@ -38,6 +38,8 @@ public class LambdaAjaxFormSubmittingBehavior
      *            form that will be submitted
      * @param aEvent
      *            javascript event this behavior is attached to, like onclick
+     * @param aAction
+     *            the action to perform when the form is submitted
      */
     public LambdaAjaxFormSubmittingBehavior(Form<?> aForm, String aEvent, AjaxCallback aAction)
     {
@@ -49,6 +51,10 @@ public class LambdaAjaxFormSubmittingBehavior
      *            form that will be submitted
      * @param aEvent
      *            javascript event this behavior is attached to, like onclick
+     * @param aAction
+     *            the action to perform when the form is submitted
+     * @param aExceptionHandler
+     *            an exception handler to call if there was a problem submitting the form
      */
     public LambdaAjaxFormSubmittingBehavior(Form<?> aForm, String aEvent, AjaxCallback aAction,
             AjaxExceptionHandler aExceptionHandler)

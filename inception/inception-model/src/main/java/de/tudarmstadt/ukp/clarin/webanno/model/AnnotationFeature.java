@@ -434,8 +434,10 @@ public class AnnotationFeature
     }
 
     /**
-     * If the feature is a link to another feature structure, this indicates what kind of relation
-     * is used, e.g. {@link LinkMode#NONE}, {@link LinkMode#SIMPLE}, {@link LinkMode#WITH_ROLE}.
+     * @param aLinkMode
+     *            indicates what kind of relation if the feature is a link to another feature
+     *            structure, e.g. {@link LinkMode#NONE}, {@link LinkMode#SIMPLE},
+     *            {@link LinkMode#WITH_ROLE}.
      */
     public void setLinkMode(LinkMode aLinkMode)
     {
@@ -448,8 +450,9 @@ public class AnnotationFeature
     }
 
     /**
-     * If a {@link LinkMode#WITH_ROLE} type is used, then the an additional UIMA type must be
-     * created that bears a role feature and points to the target type.
+     * @param aLinkTypeName
+     *            indicates the UIMA type that bears the role feature if a
+     *            {@link LinkMode#WITH_ROLE} type is used.
      */
     public void setLinkTypeName(String aLinkTypeName)
     {
@@ -529,13 +532,9 @@ public class AnnotationFeature
     }
 
     /**
-     * Returns {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
-     * must be mapped to a plain UIMA type (usually to String).
-     * 
-     * @deprecated This method should no longer be used. There is no direct replacement.
+     * @return {@code true} if this is not a plain UIMA feature type but a "virtual" feature that
+     *         must be mapped to a plain UIMA type (usually to String).
      */
-    @SuppressWarnings("javadoc")
-    @Deprecated
     public boolean isVirtualFeature()
     {
         return getType().contains(":");

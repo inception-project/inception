@@ -27,6 +27,9 @@ import org.apache.wicket.model.IModel;
  * Bootstrap-compatible {@code AjaxTabbedPanel}.
  * 
  * Mildly inspired by <a href="https://gist.github.com/raphw/7824600">this Github Gist</a>.
+ * 
+ * @param <T>
+ *            the tab type
  */
 public class BootstrapAjaxTabbedPanel<T extends ITab>
     extends AjaxTabbedPanel<T>

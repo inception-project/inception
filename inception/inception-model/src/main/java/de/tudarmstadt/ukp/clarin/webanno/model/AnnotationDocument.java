@@ -215,8 +215,9 @@ public class AnnotationDocument
     }
 
     /**
-     * Last change to the actual annotations in the CAS. The change to the annotation document
-     * record is tracked in {@link #getUpdated()}
+     * @param aTimestamp
+     *            last change to the actual annotations in the CAS. The change to the annotation
+     *            document record is tracked in {@link #getUpdated()}
      */
     public void setTimestamp(Date aTimestamp)
     {

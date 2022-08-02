@@ -45,7 +45,9 @@ public class JSONUtil
 
     /**
      * Convert Java objects into JSON format and write it to a file
-     *
+     * 
+     * @param aMapper
+     *            the object mapper to be used
      * @param aObject
      *            the object.
      * @param aFile
