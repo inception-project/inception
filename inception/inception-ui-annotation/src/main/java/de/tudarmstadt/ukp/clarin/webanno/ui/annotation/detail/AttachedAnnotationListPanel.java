@@ -279,6 +279,8 @@ public class AttachedAnnotationListPanel
                     _target -> actionHandler.actionSelect(_target, info.relationVid));
             // avoid disabling in read-only mode
             selectRelation.setAlwaysEnabled(info.relationVid != null);
+            selectRelation
+                    .add(visibleWhen(() -> info.relationVid != null && info.relationVid.isSet()));
             aItem.add(selectRelation);
 
             selectRelation.add(new WebMarkupContainer("direction")
