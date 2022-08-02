@@ -95,7 +95,7 @@ public class SubjectObjectFeatureEditor
     private @SpringBean KnowledgeBaseService kbService;
 
     private WebMarkupContainer content;
-    private FormComponent focusComponent;
+    private FormComponent<?> focusComponent;
     private AnnotationActionHandler actionHandler;
     private IModel<AnnotatorState> stateModel;
     private Project project;
@@ -116,7 +116,8 @@ public class SubjectObjectFeatureEditor
         content.setOutputMarkupId(true);
         add(content);
 
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) SubjectObjectFeatureEditor.this
+        @SuppressWarnings("unchecked")
+        var links = (List<LinkWithRoleModel>) SubjectObjectFeatureEditor.this
                 .getModelObject().value;
 
         roleModel = new LinkWithRoleModel();
@@ -180,7 +181,8 @@ public class SubjectObjectFeatureEditor
 
     private void removeSelectedLabel(AjaxRequestTarget aTarget)
     {
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
+        @SuppressWarnings("unchecked")
+        var links = (List<LinkWithRoleModel>) this.getModelObject().value;
         AnnotatorState state = this.stateModel.getObject();
 
         String role = roleModel.role;
@@ -241,7 +243,7 @@ public class SubjectObjectFeatureEditor
     }
 
     @Override
-    public FormComponent getFocusComponent()
+    public FormComponent<?> getFocusComponent()
     {
         return focusComponent;
     }
@@ -251,7 +253,8 @@ public class SubjectObjectFeatureEditor
     {
         super.onConfigure();
 
-        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
+        @SuppressWarnings("unchecked")
+        var links = (List<LinkWithRoleModel>) this.getModelObject().value;
         if (links.size() == 0) {
             String role = roleModel.role;
             roleModel = new LinkWithRoleModel();

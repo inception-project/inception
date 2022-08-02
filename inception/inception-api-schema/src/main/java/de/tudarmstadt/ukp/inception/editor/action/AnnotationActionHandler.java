@@ -34,7 +34,10 @@ public interface AnnotationActionHandler
 
     /**
      * Create annotation on the next token for forward annotation
+     * 
+     * @deprecated to be removed without replacement.
      */
+    @Deprecated
     void actionCreateForward(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException;
 

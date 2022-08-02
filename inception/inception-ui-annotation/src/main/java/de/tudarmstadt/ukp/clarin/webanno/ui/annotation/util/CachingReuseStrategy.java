@@ -60,7 +60,9 @@ public class CachingReuseStrategy
             public Item<T> next()
             {
                 final IModel<T> model = newModels.next();
-                final Item<T> oldItem = (Item) modelToItem.get(model);
+
+                final @SuppressWarnings("unchecked") Item<T> oldItem = (Item<T>) modelToItem
+                        .get(model);
 
                 final Item<T> item;
                 if (oldItem == null) {

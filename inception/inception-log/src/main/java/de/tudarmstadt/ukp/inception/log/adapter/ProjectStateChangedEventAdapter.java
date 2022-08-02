@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 import java.io.IOException;
 import java.util.Objects;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
@@ -32,8 +30,6 @@ import de.tudarmstadt.ukp.inception.log.model.StateChangeDetails;
 public class ProjectStateChangedEventAdapter
     implements EventLoggingAdapter<ProjectStateChangedEvent>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {

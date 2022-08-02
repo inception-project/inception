@@ -1,8 +1,4 @@
 /*
- * Copyright 2020
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
- * Technische Universität Darmstadt
- *
  * Licensed to the Technische Universität Darmstadt under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -24,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.metrics;
 public interface RecommendationMetrics
 {
     /**
-     * Retrieve the total number of currently enabled recommenders
+     * @return the total number of currently enabled recommenders
      */
     public long getEnabledRecommendersTotal();
 }

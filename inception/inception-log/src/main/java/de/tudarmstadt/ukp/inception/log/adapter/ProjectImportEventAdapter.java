@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectImportEvent;
 
+@Deprecated
 @Component
 public class ProjectImportEventAdapter
     implements EventLoggingAdapter<ProjectImportEvent>

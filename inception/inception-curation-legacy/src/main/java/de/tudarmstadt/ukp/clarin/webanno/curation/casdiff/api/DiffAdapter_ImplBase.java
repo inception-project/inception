@@ -27,6 +27,7 @@ import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkFeatureDecl;
@@ -88,10 +89,12 @@ public abstract class DiffAdapter_ImplBase
 
         for (LinkFeatureDecl decl : linkFeatures) {
             Feature linkFeature = aFs.getType().getFeatureByBaseName(decl.getName());
-            ArrayFS array = (ArrayFS) aFs.getFeatureValue(linkFeature);
+            var array = FSUtil.getFeature(aFs, linkFeature, ArrayFS.class);
+
             if (array == null) {
                 continue;
             }
+
             for (FeatureStructure linkFS : array.toArray()) {
                 String role = linkFS.getStringValue(
                         linkFS.getType().getFeatureByBaseName(decl.getRoleFeature()));

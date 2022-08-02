@@ -134,17 +134,6 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Do not check on agreement on Position and SOfa feature - already checked
-     */
-    public static boolean isBasicFeature(Feature aFeature)
-    {
-        // FIXME The two parts of this OR statement seem to be redundant. Also the order
-        // of the check should be changes such that equals is called on the constant.
-        return aFeature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
-                || aFeature.toString().equals("uima.cas.AnnotationBase:sofa");
-    }
-
-    /**
      * Annotation a and annotation b are the same if they have the same address.
      *
      * @param a
@@ -367,6 +356,7 @@ public class WebAnnoCasUtil
         return nextToken;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends AnnotationFS> T getNext(T aRef)
     {
         CAS cas = aRef.getCAS();
@@ -404,6 +394,7 @@ public class WebAnnoCasUtil
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends AnnotationFS> T getPrev(T aRef)
     {
         CAS cas = aRef.getCAS();
@@ -588,6 +579,7 @@ public class WebAnnoCasUtil
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> T getFeature(FeatureStructure aFS, String aFeatureName)
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeatureName);

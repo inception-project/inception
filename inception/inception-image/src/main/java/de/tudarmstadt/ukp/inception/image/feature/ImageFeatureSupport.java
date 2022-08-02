@@ -184,6 +184,7 @@ public class ImageFeatureSupport
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public <V> V unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {

@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation;
 import de.tudarmstadt.ukp.inception.schema.AttachedAnnotation.Direction;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
 public class AttachedAnnotationListPanel
@@ -166,8 +167,8 @@ public class AttachedAnnotationListPanel
                 adapter = schemaService.getAdapter(layer);
                 adapterCache.put(layer, adapter);
 
-                renderer = layerRegistry.getLayerSupport(layer).createRenderer(layer,
-                        () -> featureCache.get(layer));
+                LayerSupport<?, ?> layerSupport = layerRegistry.getLayerSupport(layer);
+                renderer = layerSupport.createRenderer(layer, () -> featureCache.get(layer));
                 rendererCache.put(layer, renderer);
             }
             else {
@@ -185,7 +186,7 @@ public class AttachedAnnotationListPanel
                         features);
             }
 
-            String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+            String labelText = TypeUtil.getUiLabelText(renderedFeatures);
 
             if (isEmpty(labelText)) {
                 labelText = rel.getLayer().getUiName();
@@ -204,6 +205,7 @@ public class AttachedAnnotationListPanel
         return result;
     }
 
+    @SuppressWarnings("unused")
     private class AttachedAnnotationInfo
         implements Serializable
     {
@@ -277,6 +279,8 @@ public class AttachedAnnotationListPanel
                     _target -> actionHandler.actionSelect(_target, info.relationVid));
             // avoid disabling in read-only mode
             selectRelation.setAlwaysEnabled(info.relationVid != null);
+            selectRelation
+                    .add(visibleWhen(() -> info.relationVid != null && info.relationVid.isSet()));
             aItem.add(selectRelation);
 
             selectRelation.add(new WebMarkupContainer("direction")

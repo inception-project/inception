@@ -30,7 +30,9 @@ public interface AnnotationEditorProperties
 
     /**
      * @return whether the "forward annotation" setting is available to annotators.
+     * @deprecated to be removed without replacement
      */
+    @Deprecated
     boolean isForwardAnnotationEnabled();
 
     /**
@@ -55,6 +57,7 @@ public interface AnnotationEditorProperties
     /**
      * @deprecated Configurable JavaScript action to be removed soon.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     boolean isConfigurableJavaScriptActionEnabled();
 }

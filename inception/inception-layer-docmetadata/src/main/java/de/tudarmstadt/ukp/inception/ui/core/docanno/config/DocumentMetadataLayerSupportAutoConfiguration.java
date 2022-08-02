@@ -52,6 +52,7 @@ public class DocumentMetadataLayerSupportAutoConfiguration
      * support. Instead we return {@code true} from {@link LayerType#isInternal()} to prevent the
      * use from creating new layers of this type.
      */
+    @SuppressWarnings("javadoc")
     @Bean
     public DocumentMetadataLayerSupport documentMetadataLayerSupport(
             FeatureSupportRegistry aFeatureSupportRegistry,

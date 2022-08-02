@@ -40,17 +40,19 @@ public interface AnnotatorState
     void reset();
 
     /**
-     * Get the timestamp when the annotation document was last changed on this.
+     * @return the timestamp when the annotation document was last changed on this.
      * 
      * @see #setAnnotationDocumentTimestamp(long)
      */
     Optional<Long> getAnnotationDocumentTimestamp();
 
     /**
-     * Set the timestamp when the annotation document was last changed on this. This value must be
-     * set explicitly whenever the annotation document is loaded by the editor. It can be used to
-     * detect modifications to the file on disk which might make it incompatible with the current
-     * state of the annotation editor (in particular it might invalidate the VIDs).
+     * @param aTimeStamp
+     *            the timestamp when the annotation document was last changed on this. This value
+     *            must be set explicitly whenever the annotation document is loaded by the editor.
+     *            It can be used to detect modifications to the file on disk which might make it
+     *            incompatible with the current state of the annotation editor (in particular it
+     *            might invalidate the VIDs).
      */
     void setAnnotationDocumentTimestamp(long aTimeStamp);
 
@@ -100,7 +102,9 @@ public interface AnnotatorState
     void setUser(User aUser);
 
     /**
-     * User is viewing other people's work (read-only), but not as Curation User
+     * @param aCurrentUserName
+     *            name of the current user
+     * @return if user is viewing other people's work (read-only), but not as Curation User
      */
     boolean isUserViewingOthersWork(String aCurrentUserName);
 

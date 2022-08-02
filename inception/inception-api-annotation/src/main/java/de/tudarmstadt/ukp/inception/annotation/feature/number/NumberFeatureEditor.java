@@ -40,6 +40,7 @@ public class NumberFeatureEditor<T extends Number>
     @SuppressWarnings("rawtypes")
     private final NumberTextField field;
 
+    @SuppressWarnings("unchecked")
     public NumberFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
             NumberFeatureTraits aTraits)
     {

@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recogitojseditor.model;
 
-import static java.nio.file.Files.newInputStream;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.contentOf;
 
-import java.io.InputStream;
-import java.nio.file.Paths;
+import java.io.File;
 
 import org.junit.jupiter.api.Test;
 
@@ -31,14 +32,10 @@ public class WebAnnotationTest
     @Test
     public void thatExampleCanBeLoaded() throws Exception
     {
-        WebAnnotations annotations;
-        try (InputStream is = newInputStream(
-                Paths.get("src/test/resources/annotations.w3c.json"))) {
-            annotations = JSONUtil.fromJsonStream(WebAnnotations.class, is);
-        }
+        var expected = contentOf(new File("src/test/resources/annotations.w3c.json"), UTF_8);
+        var parsed = JSONUtil.fromJsonString(WebAnnotations.class, expected);
+        var actual = JSONUtil.toPrettyJsonString(parsed);
 
-        String json = JSONUtil.toPrettyJsonString(annotations);
-
-        // System.out.println(json);
+        assertThat(actual).isEqualTo(expected);
     }
 }

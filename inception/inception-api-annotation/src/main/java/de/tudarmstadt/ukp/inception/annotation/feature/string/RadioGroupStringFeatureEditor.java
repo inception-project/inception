@@ -181,7 +181,7 @@ public class RadioGroupStringFeatureEditor
     {
         // Need to use a AjaxFormChoiceComponentUpdatingBehavior here since we use a RadioGroup
         // here.
-        FormComponent focusComponent = getFocusComponent();
+        FormComponent<?> focusComponent = getFocusComponent();
         focusComponent.add(new AjaxFormChoiceComponentUpdatingBehavior()
         {
             private static final long serialVersionUID = -5058365578109385064L;

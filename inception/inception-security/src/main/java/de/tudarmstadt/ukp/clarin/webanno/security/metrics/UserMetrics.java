@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.security.metrics;
 public interface UserMetrics
 {
     /**
-     * Retrieve the total number of currently active (i.e. logged in) users
+     * @return the total number of currently active (i.e. logged in) users
      */
     public long getActiveUsersTotal();
 
     /**
-     * Retrieve the total number of enabled users
+     * @return the total number of enabled users
      */
     public long getEnabledUsersTotal();
 }

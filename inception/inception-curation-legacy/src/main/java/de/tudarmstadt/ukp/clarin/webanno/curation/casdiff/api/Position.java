@@ -51,7 +51,7 @@ public interface Position
     int getLinkTargetEnd();
 
     /**
-     * Get the way in which links are compared and labels for links are generated.
+     * @return the way in which links are compared and labels for links are generated.
      */
     LinkCompareBehavior getLinkCompareBehavior();
 

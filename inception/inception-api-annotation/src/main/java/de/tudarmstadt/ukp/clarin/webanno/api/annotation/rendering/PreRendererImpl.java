@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 
 /**
@@ -129,8 +130,8 @@ public class PreRendererImpl
             // We need to pass in *all* the annotation features here because we also to that in
             // other places where we create renderers - and the set of features must always be
             // the same because otherwise the IDs of armed slots would be inconsistent
-            Renderer renderer = layerSupportRegistry.getLayerSupport(layer) //
-                    .createRenderer(layer, () -> layerAllFeatures);
+            LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
+            Renderer renderer = layerSupport.createRenderer(layer, () -> layerAllFeatures);
             renderer.render(cas, layerSupportedFeatures, aResponse, renderBegin, renderEnd);
         }
 

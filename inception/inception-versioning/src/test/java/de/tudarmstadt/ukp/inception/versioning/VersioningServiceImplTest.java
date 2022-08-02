@@ -53,7 +53,6 @@ import org.springframework.util.FileSystemUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.config.RepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.config.ProjectServiceAutoConfiguration;
@@ -345,8 +344,7 @@ public class VersioningServiceImplTest
     {
         try (CasStorageSession session = CasStorageSession.open()) {
             for (SourceDocument sourceDocument : documentService.listSourceDocuments(testProject)) {
-                AnnotationDocument annotationDocument = documentService
-                        .createOrGetAnnotationDocument(sourceDocument, aUser);
+                documentService.createOrGetAnnotationDocument(sourceDocument, aUser);
                 CAS cas = documentService.createOrReadInitialCas(sourceDocument);
                 documentService.writeAnnotationCas(cas, sourceDocument, aUser, false);
             }

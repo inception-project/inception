@@ -83,9 +83,9 @@ public class AnnotationPreference
     private boolean collapseArcs = false;
 
     /**
-     * working with preferred layers is deprecated, use hidden layers instead
+     * @return the preferred annotation layers
      * 
-     * @return
+     * @deprecated working with preferred layers is deprecated, use hidden layers instead
      */
     @Deprecated
     public List<Long> getAnnotationLayers()
@@ -94,9 +94,10 @@ public class AnnotationPreference
     }
 
     /**
-     * working with preferred layers is deprecated, use hidden layers instead
+     * @deprecated working with preferred layers is deprecated, use hidden layers instead
      * 
      * @param aAnnotationLayers
+     *            the preferred annotation layers
      */
     @Deprecated()
     public void setAnnotationLayers(List<Long> aAnnotationLayers)
@@ -115,7 +116,7 @@ public class AnnotationPreference
     }
 
     /**
-     * The number of sentences to be displayed at a time
+     * @return number of sentences to be displayed at a time
      */
     public int getWindowSize()
     {
@@ -123,7 +124,8 @@ public class AnnotationPreference
     }
 
     /**
-     * The number of sentences to be displayed at a time
+     * @param aWindowSize
+     *            number of sentences to be displayed at a time
      */
     public void setWindowSize(int aWindowSize)
     {
@@ -131,7 +133,7 @@ public class AnnotationPreference
     }
 
     /**
-     * Used to enable/disable auto-scrolling while annotation
+     * @return if auto-scrolling is enabled while annotating
      */
     public boolean isScrollPage()
     {
@@ -139,7 +141,8 @@ public class AnnotationPreference
     }
 
     /**
-     * Used to enable/disable auto-scrolling while annotation
+     * @param aScrollPage
+     *            enable/disable auto-scrolling while annotation
      */
     public void setScrollPage(boolean aScrollPage)
     {

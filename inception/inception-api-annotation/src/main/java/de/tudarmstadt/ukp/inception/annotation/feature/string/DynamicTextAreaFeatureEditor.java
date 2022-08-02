@@ -40,7 +40,7 @@ public class DynamicTextAreaFeatureEditor
     }
 
     @Override
-    protected AbstractTextComponent createInputField()
+    protected AbstractTextComponent<String> createInputField()
     {
         textarea = new TextArea<>("value");
         textarea.setOutputMarkupId(true);

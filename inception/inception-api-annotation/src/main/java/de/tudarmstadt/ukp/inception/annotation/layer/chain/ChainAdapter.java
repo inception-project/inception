@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
-import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -271,7 +270,7 @@ public class ChainAdapter
         // be deleted.
         FeatureStructure oldChainFs = null;
         AnnotationFS prevLinkFs = null;
-        chainLoop: for (FeatureStructure chainFs : selectFS(aCas, chainType)) {
+        chainLoop: for (FeatureStructure chainFs : aCas.select(chainType)) {
             AnnotationFS linkFs = getFirstLink(chainFs);
             prevLinkFs = null; // Reset when entering new chain!
 
@@ -350,11 +349,12 @@ public class ChainAdapter
      *            the link to search the chain for.
      * @return the chain.
      */
+    @SuppressWarnings("resource")
     private FeatureStructure getChainForLink(CAS aCas, AnnotationFS aLink)
     {
         Type chainType = CasUtil.getType(aCas, getChainTypeName());
 
-        for (FeatureStructure chainFs : selectFS(aCas, chainType)) {
+        for (FeatureStructure chainFs : aCas.select(chainType)) {
             AnnotationFS linkFs = getFirstLink(chainFs);
 
             // Now we seek the link within the current chain

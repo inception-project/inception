@@ -328,6 +328,8 @@ public class UserPreferencesServiceImpl
     public static class BratAnnotationEditorManagerPrefs
         implements Serializable
     {
+        private static final long serialVersionUID = 8809856241481077303L;
+
         private int defaultPageSize = 10;
 
         public int getDefaultPageSize()

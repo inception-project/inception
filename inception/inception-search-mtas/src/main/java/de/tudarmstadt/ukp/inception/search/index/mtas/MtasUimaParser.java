@@ -503,6 +503,7 @@ public class MtasUimaParser
      * Replaces space with underscore in a {@code String}
      * 
      * @param uiName
+     *            the UI name of the layer
      * @return String replacing the input string spaces with '_'
      */
     public static String getIndexedName(String uiName)

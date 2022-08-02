@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBasicFeature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isPrimitiveType;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
@@ -737,5 +736,16 @@ public class CasMerge
         return !isPrimitiveType(aFeature.getRange()) || isBasicFeature(aFeature)
                 || aFeature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
                 || aFeature.getName().equals(CAS.FEATURE_FULL_NAME_END);
+    }
+
+    /**
+     * Do not check on agreement on Position and SOfa feature - already checked
+     */
+    public static boolean isBasicFeature(Feature aFeature)
+    {
+        // FIXME The two parts of this OR statement seem to be redundant. Also the order
+        // of the check should be changes such that equals is called on the constant.
+        return aFeature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                || aFeature.toString().equals("uima.cas.AnnotationBase:sofa");
     }
 }
