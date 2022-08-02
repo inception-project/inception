@@ -227,8 +227,8 @@ public class LearningRecord
     }
 
     /**
-     * Get annotation label, might be null if the recorded annotation was an annotation without
-     * label.
+     * @return annotation label, might be null if the recorded annotation was an annotation without
+     *         label.
      */
     @Nullable
     public String getAnnotation()

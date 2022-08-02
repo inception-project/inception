@@ -29,9 +29,9 @@ public interface BratAnnotationEditorProperties
     boolean isSingleClickSelection();
 
     /**
-     * Whether the profiling built into the the brat visualization JS should be enabled. If this is
-     * enabled, profiling data is collected and a report is printed to the browser's JS console
-     * after every rendering action
+     * @return whether the profiling built into the the brat visualization JS should be enabled. If
+     *         this is enabled, profiling data is collected and a report is printed to the browser's
+     *         JS console after every rendering action
      */
     boolean isClientSideProfiling();
 

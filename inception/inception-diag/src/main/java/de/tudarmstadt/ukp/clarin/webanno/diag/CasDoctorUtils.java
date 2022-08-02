@@ -75,6 +75,16 @@ public class CasDoctorUtils
     /**
      * Recursively collect referenced FSes and also record for each the last indexed FS that refers
      * the them.
+     * 
+     * @param aFSes
+     *            map collecting the found feature structures
+     * @param aIndexed
+     *            set if feature structures that are in the CAS'es index
+     * @param aFS
+     *            the current feature structure
+     * @param aLastIndexed
+     *            the last feature structure on the traversal path that was still in the CAS'es
+     *            index
      */
     public static void collect(Map<FeatureStructure, FeatureStructure> aFSes,
             Set<FeatureStructure> aIndexed, FeatureStructure aFS, FeatureStructure aLastIndexed)

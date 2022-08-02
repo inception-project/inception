@@ -279,6 +279,8 @@ public interface DocumentService
      *            the source document.
      * @param aUser
      *            The User who perform this operation
+     * @param aFlags
+     *            optional flags controlling the operation
      * @throws UIMAException
      *             if a data error occurs.
      * @throws IOException
@@ -537,6 +539,8 @@ public interface DocumentService
      * document} if the user owning the document does not actually exist in the system! It does not
      * matter whether the user is enabled or not.
      * 
+     * @param aProject
+     *            the project
      * @return {@link AnnotationDocument}
      * @see #createOrGetAnnotationDocument(SourceDocument, User)
      */
@@ -650,6 +654,8 @@ public interface DocumentService
     boolean existsFinishedAnnotation(SourceDocument document);
 
     /**
+     * @param project
+     *            the project
      * @return if at least one {@link AnnotationDocument} is finished in this project.
      */
     boolean existsFinishedAnnotation(Project project);
@@ -713,6 +719,11 @@ public interface DocumentService
      * {@link AnnotationStateChangeEvent} events. This means in particular that webhooks for
      * annotation document changes will not fire and that workload managers will not know that they
      * need to recalculate the document and project states.
+     * 
+     * @param aDocuments
+     *            the documents to update
+     * @param aState
+     *            the state to update the documents to
      */
     void bulkSetAnnotationDocumentState(Iterable<AnnotationDocument> aDocuments,
             AnnotationDocumentState aState);
@@ -727,8 +738,14 @@ public interface DocumentService
     boolean existsCurationDocument(Project aProject);
 
     /**
-     * Fetches the time at which the CAS was last changed on disk. If the CAS does not exist yet, an
-     * empty optional is returned.
+     * @return the time at which the CAS was last changed on disk. If the CAS does not exist yet, an
+     *         empty optional is returned.
+     * @param aDocument
+     *            the document for which to retrieve the timestamp
+     * @param aUsername
+     *            the annotator user owning the annotations for which to retrieve the timestamp
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     Optional<Long> getAnnotationCasTimestamp(SourceDocument aDocument, String aUsername)
         throws IOException;
@@ -740,12 +757,12 @@ public interface DocumentService
     boolean existsInitialCas(SourceDocument aDocument) throws IOException;
 
     /**
-     * Retrieve overall number of source documents
+     * @return overall number of source documents
      */
     long countSourceDocuments();
 
     /**
-     * Retrieve overall number of annotation documents
+     * @return overall number of annotation documents
      */
     long countAnnotationDocuments();
 

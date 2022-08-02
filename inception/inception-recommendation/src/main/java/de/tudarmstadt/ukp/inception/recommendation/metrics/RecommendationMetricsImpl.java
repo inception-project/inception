@@ -47,5 +47,4 @@ public class RecommendationMetricsImpl
     {
         return recService.countEnabledRecommenders();
     }
-
 }

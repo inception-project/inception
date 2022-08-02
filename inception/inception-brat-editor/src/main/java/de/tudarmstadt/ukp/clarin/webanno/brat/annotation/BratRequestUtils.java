@@ -39,7 +39,9 @@ public class BratRequestUtils
     }
 
     /**
-     * Parse annotation ID if present in request
+     * @param request
+     *            the request
+     * @return annotation ID if present in request
      */
     public static VID getVidFromRequest(IRequestParameters request)
     {

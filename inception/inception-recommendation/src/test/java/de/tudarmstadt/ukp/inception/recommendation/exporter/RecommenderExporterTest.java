@@ -97,7 +97,8 @@ public class RecommenderExporterTest
         ArgumentCaptor<Recommender> captor = runExportImportAndFetchRecommenders();
 
         // Check that after re-importing the exported projects, they are identical to the original
-        assertThat(captor.getAllValues()).usingFieldByFieldElementComparator()
+        assertThat(captor.getAllValues()) //
+                .usingRecursiveFieldByFieldElementComparator()
                 .containsExactlyInAnyOrderElementsOf(recommenders());
     }
 

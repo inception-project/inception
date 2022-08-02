@@ -165,7 +165,7 @@ public class RecommenderServiceAutoConfiguration
 
     @Bean
     public RecommenderFactoryRegistry recommenderFactoryRegistry(
-            @Lazy @Autowired(required = false) List<RecommendationEngineFactory> aExtensions)
+            @Lazy @Autowired(required = false) List<RecommendationEngineFactory<?>> aExtensions)
     {
         return new RecommenderFactoryRegistryImpl(aExtensions);
     }

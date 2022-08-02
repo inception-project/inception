@@ -88,7 +88,11 @@ public interface FormatSupport
     }
 
     /**
+     * @param aTSD
+     *            the project's type system
      * @return a UIMA reader description.
+     * @throws ResourceInitializationException
+     *             if the reader could not be initialized
      */
     default CollectionReaderDescription getReaderDescription(TypeSystemDescription aTSD)
         throws ResourceInitializationException
@@ -97,7 +101,15 @@ public interface FormatSupport
     }
 
     /**
+     * @param aProject
+     *            the project
+     * @param aTSD
+     *            the project's type system
+     * @param aCAS
+     *            the CAS to be exported
      * @return a UIMA reader description.
+     * @throws ResourceInitializationException
+     *             if the writer could not be initialized
      */
     default AnalysisEngineDescription getWriterDescription(Project aProject,
             TypeSystemDescription aTSD, CAS aCAS)

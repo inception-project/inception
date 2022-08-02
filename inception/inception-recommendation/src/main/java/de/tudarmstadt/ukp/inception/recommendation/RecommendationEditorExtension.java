@@ -332,7 +332,6 @@ public class RecommendationEditorExtension
             RelationSuggestion relationSuggestion = (RelationSuggestion) suggestion;
             // TODO: Log rejection
             // TODO: Publish rejection event
-
         }
 
         // Trigger a re-rendering of the document

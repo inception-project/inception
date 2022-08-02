@@ -34,12 +34,18 @@ public interface LearningRecordService
     List<LearningRecord> listRecords(String user, AnnotationLayer layer);
 
     /**
-     * Fetches the learning records for the given document, user and layer. An optional limit can be
-     * used, e.g. for loading only a reduced part of the history in the active learning sidebar.
-     * Learning records with the action {@link LearningRecordType#SHOWN} are <b>not</b> returned by
-     * this method.
+     * @return the learning records for the given document, user and layer. An optional limit can be
+     *         used, e.g. for loading only a reduced part of the history in the active learning
+     *         sidebar. Learning records with the action {@link LearningRecordType#SHOWN} are
+     *         <b>not</b> returned by this method.
+     * @param aUser
+     *            the annotator user
+     * @param aLayer
+     *            the layer
+     * @param aLimit
+     *            the maximum number of records to retrieve
      */
-    List<LearningRecord> listRecords(String user, AnnotationLayer layer, int aLimit);
+    List<LearningRecord> listRecords(String aUser, AnnotationLayer aLayer, int aLimit);
 
     void deleteRecords(SourceDocument document, String user);
 
@@ -65,6 +71,23 @@ public interface LearningRecordService
      * Updates the learning log with an entry for the given suggestion. Any entries which are
      * duplicates of the new action are removed as part of this action. Note that the actual action
      * the user performed is not taken into account to determine duplicateness.
+     * 
+     * @param aDocument
+     *            the document
+     * @param aUsername
+     *            the annotator user the annotations belong to
+     * @param aSuggestion
+     *            the suggestion
+     * @param aAlternativeLabel
+     *            the label assigned by the annotator
+     * @param aLayer
+     *            the layer
+     * @param aFeature
+     *            the feature on the given layer
+     * @param aUserAction
+     *            the annotators reaction to the suggestion
+     * @param aLocation
+     *            where the action on the suggestion was triggered
      */
     void logSpanRecord(SourceDocument aDocument, String aUsername, SpanSuggestion aSuggestion,
             String aAlternativeLabel, AnnotationLayer aLayer, AnnotationFeature aFeature,
@@ -74,6 +97,23 @@ public interface LearningRecordService
      * Updates the learning log with an entry for the given suggestion. Any entries which are
      * duplicates of the new action are removed as part of this action. Note that the actual action
      * the user performed is not taken into account to determine duplicateness.
+     * 
+     * @param aDocument
+     *            the document
+     * @param aUsername
+     *            the annotator user the annotations belong to
+     * @param aSuggestion
+     *            the suggestion
+     * @param aAlternativeLabel
+     *            the label assigned by the annotator
+     * @param aLayer
+     *            the layer
+     * @param aFeature
+     *            the feature on the given layer
+     * @param aUserAction
+     *            the annotators reaction to the suggestion
+     * @param aLocation
+     *            where the action on the suggestion was triggered
      */
     void logRelationRecord(SourceDocument aDocument, String aUsername,
             RelationSuggestion aSuggestion, String aAlternativeLabel, AnnotationLayer aLayer,
@@ -81,14 +121,24 @@ public interface LearningRecordService
             LearningRecordChangeLocation aLocation);
 
     /**
-     * Checks if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
-     * the given layer for the given user.
+     * @param aUser
+     *            the annotator user
+     * @param aLayer
+     *            the layer
+     * @return if the are any records of type {@link LearningRecordType#SKIPPED} in the history of
+     *         the given layer for the given user.
+     * 
      */
     boolean hasSkippedSuggestions(User aUser, AnnotationLayer aLayer);
 
     /**
      * Removes all records of type {@link LearningRecordType#SKIPPED} in the history of the given
      * layer for the given user.
+     * 
+     * @param aUser
+     *            the annotator user
+     * @param aLayer
+     *            the layer
      */
     void deleteSkippedSuggestions(User aUser, AnnotationLayer aLayer);
 }

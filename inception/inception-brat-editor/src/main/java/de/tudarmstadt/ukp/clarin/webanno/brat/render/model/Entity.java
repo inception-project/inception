@@ -149,6 +149,7 @@ public class Entity
     /**
      * @deprecated Use {@code getAttributes().setLabelText(...)}.
      */
+    @SuppressWarnings("javadoc")
     @JsonIgnore
     @Deprecated
     public void setLabelText(String aLabelText)
@@ -159,6 +160,7 @@ public class Entity
     /**
      * @deprecated Use {@code getAttributes().getLabelText()}.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public String getLabelText()
     {
@@ -168,6 +170,7 @@ public class Entity
     /**
      * @deprecated Use {@code getAttributes().getColor()}.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public String getColor()
     {
@@ -177,6 +180,7 @@ public class Entity
     /**
      * @deprecated Use {@code getAttributes().setColor(...)}.
      */
+    @SuppressWarnings("javadoc")
     @JsonIgnore
     @Deprecated
     public void setColor(String aColor)

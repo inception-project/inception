@@ -82,9 +82,9 @@ public class Predictions
     }
 
     /**
-     * Get the predictions of a given window for each document, where the outer list is a list of
-     * tokens and the inner list is a list of predictions for a token. The method filters all tokens
-     * which already have an annotation and don't need further recommendation.
+     * @return the predictions of a given window for each document, where the outer list is a list
+     *         of tokens and the inner list is a list of predictions for a token. The method filters
+     *         all tokens which already have an annotation and don't need further recommendation.
      */
     public <T extends AnnotationSuggestion> Map<String, SuggestionDocumentGroup<T>> getPredictionsForWholeProject(
             Class<T> type, AnnotationLayer aLayer, DocumentService aDocumentService)
@@ -106,8 +106,8 @@ public class Predictions
     /**
      * TODO #176 use the document Id once it it available in the CAS
      * 
-     * Get the predictions of a given window, where the outer list is a list of tokens and the inner
-     * list is a list of predictions for a token
+     * @return the predictions of a given window, where the outer list is a list of tokens and the
+     *         inner list is a list of predictions for a token
      */
     public <T extends AnnotationSuggestion> SuggestionDocumentGroup<T> getGroupedPredictions(
             Class<T> type, String aDocumentName, AnnotationLayer aLayer, int aWindowBegin,
@@ -142,8 +142,8 @@ public class Predictions
     }
 
     /**
-     * Returns the first prediction that matches recommendationId and recommenderId in the given
-     * document.
+     * @return the first prediction that matches recommendationId and recommenderId in the given
+     *         document.
      */
     public Optional<AnnotationSuggestion> getPredictionByVID(SourceDocument aDocument, VID aVID)
     {
@@ -155,7 +155,7 @@ public class Predictions
 
     /**
      * @param aPredictions
-     *            - list of sentences containing recommendations
+     *            list of sentences containing recommendations
      */
     public void putPredictions(List<AnnotationSuggestion> aPredictions)
     {

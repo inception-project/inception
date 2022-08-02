@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.tsv;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.lang3.StringEscapeUtils.unescapeJava;
 
 import java.io.IOException;
@@ -654,11 +653,13 @@ public class WebannoTsv3Reader
      * @param aLinkeF
      *            The link slot annotation feature
      */
+    @SuppressWarnings("unchecked")
     private void addSlotAnnotations(Map<AnnotationFS, List<FeatureStructure>> linkFSesPerAnno,
             Feature aLinkeF)
     {
         for (AnnotationFS anno : linkFSesPerAnno.keySet()) {
-            ArrayFS array = anno.getCAS().createArrayFS(linkFSesPerAnno.get(anno).size());
+            ArrayFS<FeatureStructure> array = anno.getCAS()
+                    .createArrayFS(linkFSesPerAnno.get(anno).size());
             array.copyFromArray(
                     linkFSesPerAnno.get(anno)
                             .toArray(new FeatureStructure[linkFSesPerAnno.get(anno).size()]),
@@ -897,14 +898,8 @@ public class WebannoTsv3Reader
     {
         Resource res = nextFile();
         initCas(aJCas, res);
-        InputStream is = null;
-        try {
-            is = res.getInputStream();
+        try (InputStream is = res.getInputStream()) {
             convertToCas(aJCas, is, encoding);
         }
-        finally {
-            closeQuietly(is);
-        }
-
     }
 }
