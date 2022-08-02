@@ -17,15 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class Span
 {
-
     private String id;
-
     private int page;
-
     private String label;
-
     private String color;
 
     /**
@@ -35,9 +35,7 @@ public class Span
      * functionality in PDFAnno is used.
      */
     private String text;
-
     private int startPos;
-
     private int endPos;
 
     public Span(String aId, String aLabel, String aColor)

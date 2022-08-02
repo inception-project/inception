@@ -413,7 +413,10 @@ public class AnnotationFeature
     }
 
     /**
-     * Used to control if a feature can have multiple values and how these are represented.
+     * @param aMode
+     *            used to control if a feature can have multiple values and how these are
+     *            represented.
+     * 
      */
     public void setMode(MultiValueMode aMode)
     {
@@ -459,7 +462,8 @@ public class AnnotationFeature
     }
 
     /**
-     * The name of the feature bearing the role.
+     * @param aLinkTypeRoleFeatureName
+     *            the name of the feature bearing the role.
      */
     public void setLinkTypeRoleFeatureName(String aLinkTypeRoleFeatureName)
     {
@@ -472,7 +476,9 @@ public class AnnotationFeature
     }
 
     /**
-     * The name of the feature pointing to the target.
+     * @param aLinkTypeTargetFeatureName
+     *            the name of the feature pointing to the target.
+     * 
      */
     public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName)
     {
@@ -485,9 +491,11 @@ public class AnnotationFeature
     }
 
     /**
-     * Whether the annotation detail editor should carry values of this feature over when creating a
-     * new annotation of the same type. This can be useful when creating many annotations of the
-     * same type in a row.
+     * @param aRemember
+     *            whether the annotation detail editor should carry values of this feature over when
+     *            creating a new annotation of the same type. This can be useful when creating many
+     *            annotations of the same type in a row.
+     * 
      */
     public void setRemember(boolean aRemember)
     {
@@ -500,8 +508,10 @@ public class AnnotationFeature
     }
 
     /**
-     * Whether the feature should be showed if constraints rules are enabled and based on the
-     * evaluation of constraint rules on a feature.
+     * @param aHideUnconstraintFeature
+     *            whether the feature should be showed if constraints rules are enabled and based on
+     *            the evaluation of constraint rules on a feature.
+     * 
      */
     public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature)
     {
@@ -524,6 +534,7 @@ public class AnnotationFeature
      * 
      * @deprecated This method should no longer be used. There is no direct replacement.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     public boolean isVirtualFeature()
     {
@@ -621,6 +632,7 @@ public class AnnotationFeature
         return new Builder();
     }
 
+    @SuppressWarnings("hiding")
     public static final class Builder
     {
         private Long id;

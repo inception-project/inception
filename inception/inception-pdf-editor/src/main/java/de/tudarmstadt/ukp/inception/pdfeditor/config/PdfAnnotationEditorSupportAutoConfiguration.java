@@ -27,7 +27,10 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfDocumentIFrameViewFacto
 
 /**
  * Provides support for an PDF-oriented annotation editor.
+ * 
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 @Configuration
 @ConditionalOnProperty(prefix = "ui.pdf-legacy", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class PdfAnnotationEditorSupportAutoConfiguration

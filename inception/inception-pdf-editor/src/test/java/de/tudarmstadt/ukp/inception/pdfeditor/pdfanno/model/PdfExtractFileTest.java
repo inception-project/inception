@@ -27,6 +27,10 @@ import java.nio.file.Paths;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class PdfExtractFileTest
 {
     private PdfExtractFile pdfExtractFile;

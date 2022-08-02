@@ -38,7 +38,10 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
  * This class is exposed as a Spring Component via
  * {@link PdfAnnotationEditorSupportAutoConfiguration#pdfAnnotationEditorFactory()}.
  * </p>
+ *
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 public class PdfAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {

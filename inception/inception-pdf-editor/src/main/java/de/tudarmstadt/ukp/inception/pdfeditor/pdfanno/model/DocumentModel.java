@@ -24,7 +24,10 @@ import java.util.Map;
 /**
  * Contains information and mappings for document text provided by INCEpTION. This class is used for
  * annotation alignment between INCEpTION and PDFAnno.
+ * 
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 public class DocumentModel
     implements Serializable
 {

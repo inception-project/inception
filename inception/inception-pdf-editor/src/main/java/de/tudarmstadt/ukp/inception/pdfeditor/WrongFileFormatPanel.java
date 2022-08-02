@@ -20,9 +20,15 @@ package de.tudarmstadt.ukp.inception.pdfeditor;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class WrongFileFormatPanel
     extends Panel
 {
+    private static final long serialVersionUID = 4687094504918705501L;
+
     public WrongFileFormatPanel(String id, String format)
     {
         super(id);

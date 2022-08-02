@@ -261,7 +261,7 @@ public class AnnotationDocument
     }
 
     /**
-     * Last change to the annotation document record.
+     * @return last change to the annotation document record.
      */
     public Date getUpdated()
     {
