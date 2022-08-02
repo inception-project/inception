@@ -19,8 +19,6 @@ package de.tudarmstadt.ukp.inception.externalsearch.log;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -31,9 +29,6 @@ import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 public class ExternalSearchQueryEventAdapter
     implements EventLoggingAdapter<ExternalSearchQueryEvent>
 {
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {
