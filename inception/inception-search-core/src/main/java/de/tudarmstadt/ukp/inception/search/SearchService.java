@@ -38,9 +38,6 @@ public interface SearchService
         throws IOException, ExecutionException;
 
     /**
-     * Receive the search results un-grouped as a list.
-     * See{@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, long, long)}
-     * 
      * @param aUser
      *            the current user
      * @param aProject
@@ -49,8 +46,13 @@ public interface SearchService
      *            the search query
      * @param aDocument
      *            limit search to this document or search in the whole project if null
+     * @return the search results un-grouped as a list.
+     * @see #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, long,
+     *      long)
      * @throws IOException
+     *             if there was an I/O-level problem
      * @throws ExecutionException
+     *             if there was a search-level problem
      */
     List<SearchResult> query(User aUser, Project aProject, String aQuery, SourceDocument aDocument)
         throws IOException, ExecutionException;
@@ -80,7 +82,9 @@ public interface SearchService
      * @return a Map where the keys are the group-keys (e.g. feature-values) and the values are
      *         lists of search results that belong to this group.
      * @throws IOException
+     *             if there was an I/O-level problem
      * @throws ExecutionException
+     *             if there was a search-level problem
      */
     Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,
             SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
@@ -127,8 +131,9 @@ public interface SearchService
      * @return the method cycles through each layer and each feature from the DocumentService and
      *         gets all the statistics from aStatistic
      * @throws IOException
+     *             if there was an I/O-level problem
      * @throws ExecutionException
-     *             covers many exceptions which have to do with parsing aStatistic and the layers
+     *             if there was a search-level problem
      */
     public StatisticsResult getProjectStatistics(User aUser, Project aProject, int aMinTokenPerDoc,
             int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)
@@ -152,9 +157,10 @@ public interface SearchService
      *            for which features the stats shall be calculated
      * @return the statistics from aStatistic for aQuery, e.g. what is the maximal amount of
      *         occurrences per document of aQuery across all documents
-     * @throws ExecutionException
-     *             covers many exceptions which have to do with parsing aStatistic and aQuery
      * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws ExecutionException
+     *             if there was a search-level problem
      */
     public StatisticsResult getQueryStatistics(User aUser, Project aProject, String aQuery,
             int aMinTokenPerDoc, int aMaxTokenPerDoc, Set<AnnotationFeature> aFeatures)

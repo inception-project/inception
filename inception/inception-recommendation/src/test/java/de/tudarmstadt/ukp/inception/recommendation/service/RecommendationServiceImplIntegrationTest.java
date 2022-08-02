@@ -119,10 +119,11 @@ public class RecommendationServiceImplIntegrationTest
                 .hasSize(1).contains(rec);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void getNumOfEnabledRecommenders_WithOneEnabledRecommender()
     {
-        RecommendationEngineFactory<?> recFactory = mock(RecommendationEngineFactory.class);
+        var recFactory = mock(RecommendationEngineFactory.class);
         when(recommenderFactoryRegistry.getFactory(any(String.class))) //
                 .thenReturn(recFactory);
 

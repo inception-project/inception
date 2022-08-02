@@ -25,7 +25,10 @@ import org.xml.sax.helpers.DefaultHandler;
 
 /**
  * Parse substitutionTable.xml and create a map
+ * 
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 public class SubstitutionTableParser
     extends DefaultHandler
 {

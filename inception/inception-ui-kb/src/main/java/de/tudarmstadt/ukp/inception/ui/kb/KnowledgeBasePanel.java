@@ -239,6 +239,9 @@ public class KnowledgeBasePanel
      * page may not seem like the smartest solution. However, given the severe consequences a single
      * statement change can have (transforming a property into a concept?), it is the simplest
      * working solution.
+     * 
+     * @param event
+     *            the event
      */
     @OnEvent
     public void actionStatementChanged(AjaxStatementChangedEvent event)

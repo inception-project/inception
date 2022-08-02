@@ -72,6 +72,7 @@ public interface ProjectService
     /**
      * @deprecated Use {@link #revokeRole(Project, User, PermissionLevel...)} instead.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     void removeProjectPermission(ProjectPermission aPermission);
 
@@ -120,6 +121,7 @@ public interface ProjectService
     /**
      * @deprecated Use {@link #listProjectPermissions(Project)} instead
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     List<ProjectPermission> getProjectPermissions(Project aProject);
 
@@ -142,6 +144,7 @@ public interface ProjectService
     /**
      * @deprecated Use {@link #listRoles(Project, User)} instead.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     List<PermissionLevel> getProjectPermissionLevels(User aUser, Project aProject);
 
@@ -162,6 +165,7 @@ public interface ProjectService
      * @deprecated Should not be used. Better use
      *             {@link #assignRole(Project, User, PermissionLevel...)}
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     void assignRole(Project aProject, String aUser, PermissionLevel... aRoles);
 
@@ -198,11 +202,12 @@ public interface ProjectService
      * 
      * @deprecated use {@link #revokeAllRoles(Project, User)}
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     void leaveProject(User aObject, Project aProject);
 
     /**
-     * list Projects which contain with those annotation documents state is finished
+     * @return list of projects which contain with those annotation documents state is finished
      */
     List<Project> listProjectsWithFinishedAnnos();
 
@@ -224,7 +229,7 @@ public interface ProjectService
             PermissionLevel... aMoreRoles);
 
     /**
-     * List all projects in which the given user has any role at all.
+     * @return list of all projects in which the given user has any role at all.
      * 
      * @param aUser
      *            the user.
@@ -348,22 +353,29 @@ public interface ProjectService
     void removeProject(Project aProject) throws IOException;
 
     /**
-     * List projects accessible by current user
+     * List projects accessible by the given user
      *
+     * @param aUser
+     *            the user
      * @return list of projects accessible by the user.
      */
     List<Project> listAccessibleProjects(User aUser);
 
     /**
-     * List projects accessible by current user
+     * List projects accessible by the given user along with the roles that user has on the
+     * projects.
      *
+     * @param aUser
+     *            the user
      * @return list of projects accessible by the user.
      */
     Map<Project, Set<PermissionLevel>> listAccessibleProjectsWithPermissions(User aUser);
 
     /**
      * List projects manageable by current user
-     *
+     * 
+     * @param aUser
+     *            the user
      * @return list of projects manageable by the user.
      */
     List<Project> listManageableProjects(User aUser);
@@ -376,12 +388,13 @@ public interface ProjectService
      *             {{@link #listProjectsWithUserHavingRole(User, PermissionLevel, PermissionLevel...)}}
      *             instead.
      */
+    @SuppressWarnings("javadoc")
     @Deprecated
     List<Project> listManageableCuratableProjects(User aUser);
 
     /**
-     * List projects that allow calculation of pairwise agreement. That means it lists all projects
-     * where there are at least two annotators.
+     * @return list of projects that allow calculation of pairwise agreement. That means it lists
+     *         all projects where there are at least two annotators.
      * 
      * @deprecated To be removed without replacement
      */
@@ -423,8 +436,10 @@ public interface ProjectService
     // --------------------------------------------------------------------------------------------
 
     /**
-     * Checks if the user manages any project or has the ability to create new projects that the
-     * user would then manage.
+     * @param aUser
+     *            the user
+     * @return if the user manages any project or has the ability to create new projects that the
+     *         user would then manage.
      */
     public boolean managesAnyProject(User aUser);
 

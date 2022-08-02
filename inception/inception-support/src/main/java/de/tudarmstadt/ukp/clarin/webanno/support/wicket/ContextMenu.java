@@ -63,6 +63,8 @@ public class ContextMenu
      *
      * @param target
      *            the {@link AjaxRequestTarget}
+     * @param aComponent
+     *            the component that holds a {@link ContextMenuBehavior}
      */
     public void onOpen(AjaxRequestTarget target, Component aComponent)
     {

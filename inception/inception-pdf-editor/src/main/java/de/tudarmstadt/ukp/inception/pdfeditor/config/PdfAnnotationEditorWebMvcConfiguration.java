@@ -25,6 +25,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 @Configuration
 public class PdfAnnotationEditorWebMvcConfiguration
     implements WebMvcConfigurer

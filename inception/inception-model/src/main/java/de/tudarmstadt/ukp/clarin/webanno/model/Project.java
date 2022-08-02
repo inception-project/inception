@@ -105,6 +105,9 @@ public class Project
     /**
      * Constructor used for testing purposes. Set the {@link #name} to the same value as the
      * {@link #slug}.
+     * 
+     * @param aSlug
+     *            the project's URL slug
      */
     public Project(String aSlug)
     {

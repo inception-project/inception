@@ -17,17 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class Relation
 {
-
     private String id;
-
     private String head;
-
     private String tail;
-
     private String label;
-
     private String color;
 
     public Relation(String aId, String aHead, String aTail, String aLabel, String aColor)

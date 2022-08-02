@@ -27,6 +27,10 @@ import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class PdfAnnotationEditorJavascriptResourceReference
     extends JavaScriptResourceReference
 {

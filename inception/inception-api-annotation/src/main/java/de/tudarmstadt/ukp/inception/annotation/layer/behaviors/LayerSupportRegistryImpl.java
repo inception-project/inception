@@ -55,7 +55,7 @@ public class LayerSupportRegistryImpl
 
     private final List<LayerSupport<?, ?>> layerSupportsProxy;
 
-    private List<LayerSupport> layerSupports;
+    private List<LayerSupport<?, ?>> layerSupports;
 
     private final LoadingCache<AnnotationLayer, LayerSupport<?, ?>> supportCache;
 
@@ -77,7 +77,7 @@ public class LayerSupportRegistryImpl
 
     public void init()
     {
-        List<LayerSupport> lsp = new ArrayList<>();
+        List<LayerSupport<?, ?>> lsp = new ArrayList<>();
 
         if (layerSupportsProxy != null) {
             lsp.addAll(layerSupportsProxy);
@@ -96,7 +96,7 @@ public class LayerSupportRegistryImpl
     }
 
     @Override
-    public List<LayerSupport> getLayerSupports()
+    public List<LayerSupport<?, ?>> getLayerSupports()
     {
         if (layerSupports == null) {
             log.error(
@@ -109,7 +109,7 @@ public class LayerSupportRegistryImpl
         return layerSupports;
     }
 
-    private LayerSupport findLayerSupport(AnnotationLayer aLayer)
+    private LayerSupport<?, ?> findLayerSupport(AnnotationLayer aLayer)
     {
         for (LayerSupport<?, ?> s : getLayerSupports()) {
             if (s.accepts(aLayer)) {
@@ -120,12 +120,12 @@ public class LayerSupportRegistryImpl
     }
 
     @Override
-    public LayerSupport getLayerSupport(AnnotationLayer aLayer)
+    public LayerSupport<?, ?> getLayerSupport(AnnotationLayer aLayer)
     {
         // This method is called often during rendering, so we try to make it fast by caching
         // the supports by layer. Since the set of layers is relatively stable, this should not be a
         // memory leak - even if we don't remove entries if layers would be deleted from the DB.
-        LayerSupport support = null;
+        LayerSupport<?, ?> support = null;
 
         // Look for the layer in cache, but only when it has an ID, i.e. it has actually been saved.
         if (aLayer.getId() != null) {
@@ -143,7 +143,7 @@ public class LayerSupportRegistryImpl
     }
 
     @Override
-    public LayerSupport getLayerSupport(String aId)
+    public LayerSupport<?, ?> getLayerSupport(String aId)
     {
         return getLayerSupports().stream().filter(fs -> fs.getId().equals(aId)).findFirst()
                 .orElse(null);
@@ -159,7 +159,7 @@ public class LayerSupportRegistryImpl
         // Figure out which layer support provides the given type.
         // If we can find a suitable layer support, then use it to resolve the type to a LayerType
         LayerType featureType = null;
-        for (LayerSupport s : getLayerSupports()) {
+        for (LayerSupport<?, ?> s : getLayerSupports()) {
             Optional<LayerType> ft = s.getLayerType(aLayer);
             if (ft.isPresent()) {
                 featureType = ft.get();

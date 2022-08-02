@@ -324,6 +324,10 @@ public class CurationPage
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
+            /**
+             * @deprecated to be removed without replacement
+             */
+            @Deprecated
             @Override
             protected void onAutoForward(AjaxRequestTarget aTarget)
             {

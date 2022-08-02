@@ -45,7 +45,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
-import de.tudarmstadt.ukp.inception.rendering.config.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 
 /**
@@ -60,15 +59,12 @@ public class CurationMergeServiceImpl
     private final static Logger LOG = getLogger(lookup().lookupClass());
 
     private final AnnotationSchemaService annotationService;
-    private final AnnotationEditorProperties annotationEditorProperties;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public CurationMergeServiceImpl(AnnotationSchemaService aAnnotationService,
-            AnnotationEditorProperties aAnnotationEditorProperties,
             ApplicationEventPublisher aApplicationEventPublisher)
     {
         annotationService = aAnnotationService;
-        annotationEditorProperties = aAnnotationEditorProperties;
         applicationEventPublisher = aApplicationEventPublisher;
     }
 
@@ -112,8 +108,7 @@ public class CurationMergeServiceImpl
         }
 
         try (StopWatch watch = new StopWatch(LOG, "CasMerge")) {
-            CasMerge casMerge = new CasMerge(annotationService, annotationEditorProperties,
-                    applicationEventPublisher);
+            CasMerge casMerge = new CasMerge(annotationService, applicationEventPublisher);
             casMerge.setMergeStrategy(aMergeStrategy);
             return casMerge.reMergeCas(diff, aDocument, aTargetCasUserName, aTargetCas,
                     aCassesToMerge);

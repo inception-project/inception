@@ -270,6 +270,8 @@ public class RecommenderEditorPanel
         // ones to ignore, not the ones to consider
         statesForTraining = new IModel<Set<AnnotationDocumentState>>()
         {
+            private static final long serialVersionUID = -6249453365767581031L;
+
             @Override
             public void setObject(Set<AnnotationDocumentState> states)
             {

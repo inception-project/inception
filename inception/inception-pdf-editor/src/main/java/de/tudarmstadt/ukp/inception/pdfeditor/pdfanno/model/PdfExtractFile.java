@@ -45,7 +45,10 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
  * Represents a PDFExtract file. This file contains information about the content of a PDF document.
  * This includes characters and their order and position but also about draw operations and their
  * positions.
+ *
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 public class PdfExtractFile
     implements Serializable
 {
@@ -277,8 +280,9 @@ public class PdfExtractFile
     }
 
     /**
-     * Get the Offset for a given index in the sanitizedContent string
+     * @return the Offset for a given index in the sanitizedContent string
      */
+    @SuppressWarnings("javadoc")
     public Offset getSanitizedIndex(int aSanitizedIndex)
     {
         if (sanitizedToStringSequence.containsKey(aSanitizedIndex)) {
@@ -292,8 +296,9 @@ public class PdfExtractFile
     }
 
     /**
-     * Get the Offset for a given line index in the PDFExtract file
+     * @return the Offset for a given line index in the PDFExtract file
      */
+    @SuppressWarnings("javadoc")
     public Offset getStringIndex(int aExtractIndex)
     {
         int stringIndex = extractToString.get(aExtractIndex);
@@ -306,8 +311,9 @@ public class PdfExtractFile
     }
 
     /**
-     * Get begin of page or end of previous page og page was empty.
+     * @return begin of page or end of previous page og page was empty.
      */
+    @SuppressWarnings("javadoc")
     public int getBeginPageOffset(int aPage)
     {
         if (pageOffsetMap.isEmpty()) {
@@ -327,8 +333,9 @@ public class PdfExtractFile
     }
 
     /**
-     * Get end of page or begin of next page if the page was empty.
+     * @return end of page or begin of next page if the page was empty.
      */
+    @SuppressWarnings("javadoc")
     public int getEndPageOffset(int aPage)
     {
         if (pageOffsetMap.isEmpty()) {

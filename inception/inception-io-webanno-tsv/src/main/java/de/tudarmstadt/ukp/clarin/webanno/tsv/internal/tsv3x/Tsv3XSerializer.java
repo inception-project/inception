@@ -88,6 +88,11 @@ public class Tsv3XSerializer
 
     /**
      * Write the schema header.
+     * 
+     * @param aOut
+     *            the writer
+     * @param aHeaderColumns
+     *            the header columns
      */
     public void write(PrintWriter aOut, List<TsvColumn> aHeaderColumns)
     {

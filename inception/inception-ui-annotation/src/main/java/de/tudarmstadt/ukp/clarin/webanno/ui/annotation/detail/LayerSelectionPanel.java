@@ -161,6 +161,7 @@ public class LayerSelectionPanel
         return selector;
     }
 
+    @SuppressWarnings("deprecation")
     private void actionChangeDefaultLayer(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
@@ -199,6 +200,8 @@ public class LayerSelectionPanel
      * Part of <i>forward annotation</i> mode: creates the checkbox to toggle forward annotation
      * mode.
      */
+    @SuppressWarnings("deprecation")
+    @Deprecated
     private CheckBox createForwardAnnotationCheckBox()
     {
         CheckBox checkbox = new CheckBox("forwardAnnotation");
@@ -219,6 +222,7 @@ public class LayerSelectionPanel
      * Part of <i>forward annotation</i> mode: determines whether the currently selected layer is
      * forwardable or not.
      */
+    @Deprecated
     private boolean isForwardable()
     {
         if (!annotationEditorProperties.isForwardAnnotationEnabled()) {

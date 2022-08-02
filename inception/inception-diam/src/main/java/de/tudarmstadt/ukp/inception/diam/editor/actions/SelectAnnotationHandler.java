@@ -17,14 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
-import java.lang.invoke.MethodHandles;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
@@ -45,8 +41,6 @@ import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 public class SelectAnnotationHandler
     extends EditorAjaxRequestHandlerBase
 {
-    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     public static final String COMMAND = "selectAnnotation";
 
     private final AnnotationSchemaService schemaService;

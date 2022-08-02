@@ -24,7 +24,10 @@ import java.util.List;
  * Contains PDFAnno specific information. Includes information about annotations (spans and
  * relations), the PDFAnno version and the PDFExtract version. It also includes a color map for
  * PDFAnno.
+ *
+ * @deprecated Superseded by the new PDF editor
  */
+@Deprecated
 public class PdfAnnoModel
 {
 
@@ -66,6 +69,7 @@ public class PdfAnnoModel
      * Adds a Span to the PdfAnnoModel. If the start position, end position or page is set to -1 it
      * is added to unmatched spans else to spans
      */
+    @SuppressWarnings("javadoc")
     public void addSpan(Span aSpan)
     {
         if (aSpan != null) {

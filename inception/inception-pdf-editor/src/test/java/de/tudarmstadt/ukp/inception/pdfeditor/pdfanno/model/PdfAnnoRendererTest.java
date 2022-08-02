@@ -73,8 +73,13 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.service.FeatureSupportRegistryImpl;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 @ExtendWith(MockitoExtension.class)
 public class PdfAnnoRendererTest
 {
@@ -143,9 +148,6 @@ public class PdfAnnoRendererTest
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
     }
 
-    /**
-     * Tests if anno file is correctly rendered for a given document
-     */
     @Test
     public void testRender() throws Exception
     {
@@ -156,7 +158,8 @@ public class PdfAnnoRendererTest
                 .thenReturn(asList(posFeature));
         when(schemaService.getAdapter(any(AnnotationLayer.class))).then(_call -> {
             AnnotationLayer layer = _call.getArgument(0);
-            return layerRegistry.getLayerSupport(layer).createAdapter(layer,
+            LayerSupport<?, ?> layerSupport = layerRegistry.getLayerSupport(layer);
+            return layerSupport.createAdapter(layer,
                     () -> schemaService.listAnnotationFeature(layer));
         });
 
@@ -200,9 +203,6 @@ public class PdfAnnoRendererTest
                 contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
     }
 
-    /**
-     * Tests if given offsets for PDFAnno can be converted to offsets for the document in INCEpTION
-     */
     @Test
     public void testConvertToDocumentOffset() throws Exception
     {

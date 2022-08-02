@@ -82,6 +82,12 @@ public class StatementsPanel
     /**
      * {@code StatementsPanel} creator.
      * 
+     * @param aId
+     *            Wicket component ID
+     * @param aKbModel
+     *            the knowledge base
+     * @param aInstance
+     *            the instance to which the statements displayed in the panel belong
      * @param aDetailPreference
      *            if {@code null}, the statement detail preference can be changed in the UI; if
      *            {@code !null} the statement detail preference is fixed to the given value and

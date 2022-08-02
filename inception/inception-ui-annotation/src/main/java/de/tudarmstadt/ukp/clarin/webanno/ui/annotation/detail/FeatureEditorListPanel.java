@@ -245,6 +245,7 @@ public class FeatureEditorListPanel
             setItemReuseStrategy(new CachingReuseStrategy());
         }
 
+        @SuppressWarnings("deprecation")
         @Override
         protected void onAfterRender()
         {
@@ -359,6 +360,7 @@ public class FeatureEditorListPanel
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void actionFeatureUpdate(Component aComponent, AjaxRequestTarget aTarget)
     {
         try {

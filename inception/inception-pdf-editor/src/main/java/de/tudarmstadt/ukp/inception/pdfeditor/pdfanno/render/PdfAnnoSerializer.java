@@ -41,6 +41,10 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.serialization.VDocumentSerializer;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public class PdfAnnoSerializer
     implements VDocumentSerializer<PdfAnnoModel>
 {

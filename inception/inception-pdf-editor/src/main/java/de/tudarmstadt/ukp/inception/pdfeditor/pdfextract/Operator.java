@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfextract;
 
+/**
+ * @deprecated Superseded by the new PDF editor
+ */
+@Deprecated
 public interface Operator
 {
 
