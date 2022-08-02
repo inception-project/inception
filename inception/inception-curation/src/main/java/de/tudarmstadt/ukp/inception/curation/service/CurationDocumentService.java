@@ -86,9 +86,12 @@ public interface CurationDocumentService
     boolean isCurationFinished(SourceDocument aDocument);
 
     /**
-     * Check if there already is a curation CAS for the given document
+     * @param aDocument
+     *            a document
+     * @return if there already is a curation CAS for the given document
      * 
      * @throws IOException
+     *             if there was an I/O-level error
      */
     boolean existsCurationCas(SourceDocument aDocument) throws IOException;
 }

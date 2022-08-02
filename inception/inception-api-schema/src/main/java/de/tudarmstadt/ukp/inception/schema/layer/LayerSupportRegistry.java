@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface LayerSupportRegistry
 {
-    List<LayerSupport> getLayerSupports();
+    List<LayerSupport<?, ?>> getLayerSupports();
 
     /**
      * Retrieves the layer support for the given layer.
@@ -37,15 +37,15 @@ public interface LayerSupportRegistry
      * @throws IllegalArgumentException
      *             if there is no support for the given layer.
      */
-    LayerSupport getLayerSupport(AnnotationLayer aLayer);
+    LayerSupport<?, ?> getLayerSupport(AnnotationLayer aLayer);
 
-    LayerSupport getLayerSupport(String aId);
+    LayerSupport<?, ?> getLayerSupport(String aId);
 
     LayerType getLayerType(AnnotationLayer aLayer);
 
     /**
-     * Get the types of all layers the user should be able to create. There can also be internal
-     * types reserved for built-in features. These are not returned.
+     * @return the types of all layers the user should be able to create. There can also be internal
+     *         types reserved for built-in features. These are not returned.
      */
     default List<LayerType> getAllTypes()
     {

@@ -335,8 +335,10 @@ public interface AnnotationSchemaService
     List<AnnotationFeature> listAttachedLinkFeatures(AnnotationLayer layer);
 
     /**
-     * List all features of the given layer that other span layers attach to. These are primarily
-     * features such as {@code lemma} on the {@link Token} layer.
+     * @param aLayer
+     *            a layer
+     * @return all features of the given layer that other span layers attach to. These are primarily
+     *         features such as {@code lemma} on the {@link Token} layer.
      */
     List<AnnotationFeature> listAttachedSpanFeatures(AnnotationLayer aLayer);
 
@@ -442,6 +444,9 @@ public interface AnnotationSchemaService
 
     /**
      * Removes all tags linked to a tagset
+     * 
+     * @param tagSet
+     *            tagset to remove the tags from
      */
     void removeAllTags(TagSet tagSet);
 
@@ -466,32 +471,46 @@ public interface AnnotationSchemaService
         throws IOException;
 
     /**
-     * Returns the custom types define in the project excluding built-in types.
+     * @param aProject
+     *            a project
+     * @return the custom types define in the project excluding built-in types.
      * 
      * @see #getAllProjectTypes(Project)
      */
     TypeSystemDescription getCustomProjectTypes(Project aProject);
 
     /**
-     * Returns the custom types define in the project including built-in types.
-     * 
-     * @throws ResourceInitializationException
+     * @param aProject
+     *            a project
+     * @return the custom types define in the project including built-in types.
      * 
      * @see #getCustomProjectTypes(Project)
+     * @throws ResourceInitializationException
+     *             if there was an UIMA-level problem
      */
     TypeSystemDescription getAllProjectTypes(Project aProject)
         throws ResourceInitializationException;
 
     /**
-     * Returns the full type system for the project (including any types discovered on the classpath
-     * via uimaFIT) including any internal types such as {@link CASMetadata}.
+     * @param aProject
+     *            a project
+     * @return the full type system for the project (including any types discovered on the classpath
+     *         via uimaFIT) including any internal types such as {@link CASMetadata}.
+     * @throws ResourceInitializationException
+     *             if there was an UIMA-level problem
      */
     TypeSystemDescription getFullProjectTypeSystem(Project aProject)
         throws ResourceInitializationException;
 
     /**
-     * Returns the full type system for the project (including any types discovered on the classpath
-     * via uimaFIT) optionally including any internal types such as {@link CASMetadata}.
+     * @param aProject
+     *            a project
+     * @param aIncludeInternalTypes
+     *            whether to include internal types such as {@link CASMetadata}.
+     * @return the full type system for the project (including any types discovered on the classpath
+     *         via uimaFIT)
+     * @throws ResourceInitializationException
+     *             if there was an UIMA-level problem
      */
     TypeSystemDescription getFullProjectTypeSystem(Project aProject, boolean aIncludeInternalTypes)
         throws ResourceInitializationException;
@@ -502,6 +521,15 @@ public interface AnnotationSchemaService
      * opens an annotation document via the open document dialog. It is a slow call. The upgraded
      * CAS is not automatically persisted - the calling code needs to take care of this. If the CAS
      * will not be persisted, it is usually a better idea to use {@link #upgradeCasIfRequired}.
+     * 
+     * @param aCas
+     *            the CAS to upgrade
+     * @param aAnnotationDocument
+     *            the annotation document to which the CAS belongs
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException;
@@ -509,6 +537,15 @@ public interface AnnotationSchemaService
     /**
      * In-place upgrade of the given CAS to the target type system. It is a slow call. The CAS is
      * not automatically persisted - the calling code needs to take care of this.
+     * 
+     * @param aCas
+     *            the CAS to upgrade
+     * @param aTargetTypeSystem
+     *            the target type system to which the CAS should be upgraded
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException;
@@ -517,7 +554,17 @@ public interface AnnotationSchemaService
         throws UIMAException, IOException;
 
     /**
+     * @param aCas
+     *            the CAS to upgrade
+     * @param aSourceDocument
+     *            the source document to which the CAS belongs
+     * @param aUser
+     *            the annotator user to whom the CAS belongs
      * @see #upgradeCas(CAS, SourceDocument, String)
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException;
@@ -530,33 +577,70 @@ public interface AnnotationSchemaService
      * nicely to the log files. This method here is rather for unconditional bulk use such as by the
      * CAS doctor.
      * 
+     * @param aCas
+     *            the CAS to upgrade
+     * @param aProject
+     *            the project to which the CAS belongs
      * @see #upgradeCas(CAS, SourceDocument, String)
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     void upgradeCas(CAS aCas, Project aProject) throws UIMAException, IOException;
 
     /**
-     * Checks if the given CAS is compatible with the current type system of the project to which it
-     * belongs and upgrades it if necessary. This should be preferred over the mandatory CAS upgrade
-     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. <br>
-     * If multiple CASes need to be upgraded, use {@link #upgradeCasIfRequired(Iterable, Project)}.
+     * @param aCas
+     *            the CAS to upgrade
+     * @param aAnnotationDocument
+     *            the annotation document to which the CAS belongs
+     * @return if the given CAS is compatible with the current type system of the project to which
+     *         it belongs and upgrades it if necessary. This should be preferred over the mandatory
+     *         CAS upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not
+     *         saved later. <br>
+     *         If multiple CASes need to be upgraded, use
+     *         {@link #upgradeCasIfRequired(Iterable, Project)}.
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     boolean upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException;
 
     /**
-     * Checks if the given CAS is compatible with the current type system of the project to which it
-     * belongs and upgrades it if necessary. This should be preferred over the mandatory CAS upgrade
-     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. <br>
-     * If multiple CASes need to be upgraded, use {@link #upgradeCasIfRequired(Iterable, Project)}.
+     * @param aCas
+     *            the CAS to upgrade
+     * @param aSourceDocument
+     *            the source document to which the CAS belongs
+     * @return if the given CAS is compatible with the current type system of the project to which
+     *         it belongs and upgrades it if necessary. This should be preferred over the mandatory
+     *         CAS upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not
+     *         saved later. <br>
+     *         If multiple CASes need to be upgraded, use
+     *         {@link #upgradeCasIfRequired(Iterable, Project)}.
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     boolean upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument)
         throws UIMAException, IOException;
 
     /**
-     * Checks if the given CAS is compatible with the current type system of the project to which it
-     * belongs and upgrades it if necessary. This should be preferred over the mandatory CAS upgrade
-     * if the CAS is loaded in a read-only mode or in scenarios where it is not saved later. <br>
-     * This method can deal with null values in the iterable. It will simply skip them.
+     * @param aCas
+     *            the CAS to upgrade
+     * @param aProject
+     *            the project to which the CAS belongs
+     * @return if the given CAS is compatible with the current type system of the project to which
+     *         it belongs and upgrades it if necessary. This should be preferred over the mandatory
+     *         CAS upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not
+     *         saved later. <br>
+     *         This method can deal with null values in the iterable. It will simply skip them.
+     * @throws UIMAException
+     *             if there was an UIMA-level problem
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
     boolean upgradeCasIfRequired(Iterable<CAS> aCas, Project aProject)
         throws UIMAException, IOException;
