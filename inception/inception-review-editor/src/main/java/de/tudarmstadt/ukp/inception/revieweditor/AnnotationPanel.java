@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.revieweditor;
 
 import static java.util.Collections.emptySet;
-import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -123,10 +122,10 @@ public abstract class AnnotationPanel
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
                     () -> annotationService.listAnnotationFeature(layer));
 
-            for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
+            for (FeatureStructure fs : cas.select(adapter.getAnnotationType(cas))) {
                 Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
                         fs, features);
-                String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+                String labelText = TypeUtil.getUiLabelText(renderedFeatures);
                 if (labelText.isEmpty()) {
                     labelText = "(" + layer.getUiName() + ")";
                 }
@@ -169,7 +168,7 @@ public abstract class AnnotationPanel
             }
 
             linkedAddr.addAll(((List<LinkWithRoleModel>) value).stream()
-                    .map(model -> model.targetAddr).collect(Collectors.toList()));
+                    .map(m -> m.targetAddr).collect(Collectors.toList()));
         }
 
         return linkedAddr;

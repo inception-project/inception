@@ -23,7 +23,9 @@ import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClien
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.buildSparqlRepository;
 import static java.util.Arrays.asList;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,12 +38,13 @@ import org.apache.jena.query.text.TextIndexConfig;
 import org.apache.jena.query.text.TextIndexLucene;
 import org.apache.jena.tdb.TDBFactory;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.store.MMapDirectory;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -52,12 +55,13 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.Scena
 
 public class FusekiRepositoryTest
 {
+    private @TempDir Path temp;
     private FusekiServer fusekiServer;
     private Repository repository;
     private KnowledgeBase kb;
 
     @BeforeEach
-    public void setUp(TestInfo aTestInfo)
+    public void setUp(TestInfo aTestInfo) throws Exception
     {
         String methodName = aTestInfo.getTestMethod().map(Method::getName).orElse("<unknown>");
         System.out.printf("\n=== %s === %s =====================\n", methodName,
@@ -118,11 +122,14 @@ public class FusekiRepositoryTest
 
     /**
      * Creates a dataset description with FTS support for the RDFS label property.
+     * 
+     * @throws IOException
+     *             if there was an I/O-level problem
      */
-    static Dataset createFusekiFTSDataset()
+    Dataset createFusekiFTSDataset() throws IOException
     {
         Dataset ds1 = TDBFactory.createDataset();
-        Directory dir = new RAMDirectory();
+        Directory dir = new MMapDirectory(temp);
         EntityDefinition eDef = new EntityDefinition("iri", "text");
         eDef.setPrimaryPredicate(org.apache.jena.vocabulary.RDFS.label);
         TextIndexConfig tidxCfg = new TextIndexConfig(eDef);
