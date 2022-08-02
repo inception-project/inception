@@ -260,44 +260,44 @@ public class KnowledgeBaseDetailsPanel
     private class KBSettingsContent
         extends Fragment
     {
-
         private static final long serialVersionUID = 7838564354437836375L;
-        protected CompoundPropertyModel<KnowledgeBaseWrapper> kbwModel;
+
+        private CompoundPropertyModel<KnowledgeBaseWrapper> localKbwModel;
 
         public KBSettingsContent(String id, CompoundPropertyModel<KnowledgeBaseWrapper> aKbwModel)
         {
             super(id, "kbSettingsContent", KnowledgeBaseDetailsPanel.this, aKbwModel);
 
-            kbwModel = aKbwModel;
+            localKbwModel = aKbwModel;
 
             Component generalSettings = new GeneralSettingsPanel("generalSettings",
-                    Model.of(kbModel.getObject().getProject()), kbwModel);
+                    Model.of(kbModel.getObject().getProject()), localKbwModel);
             add(generalSettings);
             generalSettings.get("name").setVisible(false);
 
-            Component accessSettings = new AccessSettingsPanel("accessSettings", kbwModel);
+            Component accessSettings = new AccessSettingsPanel("accessSettings", localKbwModel);
             add(accessSettings);
             accessSettings.get("type").setEnabled(false);
             accessSettings.get("writeprotection")
-                    .setEnabled(kbwModel.getObject().getKb().getType() == RepositoryType.LOCAL);
+                    .setEnabled(localKbwModel.getObject().getKb().getType() == RepositoryType.LOCAL);
 
             Component accessSpecificSettings = new AccessSpecificSettingsPanel(
-                    "accessSpecificSettings", kbwModel, Collections.emptyMap());
+                    "accessSpecificSettings", localKbwModel, Collections.emptyMap());
             add(accessSpecificSettings);
             accessSpecificSettings.get("remoteSpecificSettings:suggestions").setVisible(false);
             accessSpecificSettings.get("localSpecificSettings:listViewContainer").setVisible(false);
 
-            Component querySettings = new QuerySettingsPanel("querySettings", kbwModel);
+            Component querySettings = new QuerySettingsPanel("querySettings", localKbwModel);
             add(querySettings);
 
-            Component schemaMapping = new KnowledgeBaseIriPanel("schemaMapping", kbwModel);
+            Component schemaMapping = new KnowledgeBaseIriPanel("schemaMapping", localKbwModel);
             add(schemaMapping);
 
-            Component rootConcepts = new RootConceptsPanel("rootConcepts", kbwModel);
+            Component rootConcepts = new RootConceptsPanel("rootConcepts", localKbwModel);
             add(rootConcepts);
 
             Component additionalMatchingProperties = new AdditionalMatchingPropertiesPanel(
-                    "additionalMatchingProperties", kbwModel);
+                    "additionalMatchingProperties", localKbwModel);
             add(additionalMatchingProperties);
         }
     }

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.wicket.MarkupContainer;
@@ -60,7 +61,7 @@ public class MultiValueConceptFeatureEditor
     }
 
     @Override
-    public FormComponent getFocusComponent()
+    public FormComponent<Collection<KBHandle>> getFocusComponent()
     {
         return focusComponent;
     }

@@ -44,6 +44,8 @@ public interface CurationDocumentService
      *            the CAS.
      * @param document
      *            the source document.
+     * @param aUpdateTimestamp
+     *            whether to update the timestamp on the source document
      * @throws IOException
      *             if an I/O error occurs.
      */

@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.search.log;
 
 import java.io.IOException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
@@ -37,8 +34,6 @@ import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
 public class SearchQueryEventAdapter
     implements EventLoggingAdapter<SearchQueryEvent>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     @Override
     public boolean accepts(Object aEvent)
     {

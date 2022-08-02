@@ -90,7 +90,6 @@ public class DocumentServiceImplDatabaseTest
     private @Autowired DocumentService sut;
 
     private User annotator1;
-    private User annotator2;
     private Project project;
 
     @BeforeAll
@@ -103,7 +102,6 @@ public class DocumentServiceImplDatabaseTest
     public void setup() throws Exception
     {
         annotator1 = userRepository.create(new User("anno1"));
-        annotator2 = userRepository.create(new User("anno2"));
 
         project = projectService.createProject(new Project("project"));
         projectService.assignRole(project, annotator1, ANNOTATOR);
