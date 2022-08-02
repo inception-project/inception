@@ -112,6 +112,8 @@ public class CasDiff
      * @param aAdapters
      *            a set of diff adapters telling how the diff algorithm should handle different
      *            features
+     * @param aLinkCompareBehavior
+     *            the link comparison mode
      * @param aCasMap
      *            a set of CASes, each associated with an ID
      * @param aBegin
@@ -137,6 +139,8 @@ public class CasDiff
      * 
      * @param aAdapters
      *            a set of diff adapters how the diff algorithm should handle different features
+     * @param aLinkCompareBehavior
+     *            the link comparison mode
      * @param aCasMap
      *            a set of CASes, each associated with an ID
      * @return a diff result.
@@ -154,6 +158,8 @@ public class CasDiff
      * @param aAdapters
      *            a set of diff adapters telling how the diff algorithm should handle different
      *            features
+     * @param aLinkCompareBehavior
+     *            the link comparison mode
      * @param aCasMap
      *            a set of CASes, each associated with an ID
      * @param aBegin
@@ -410,7 +416,8 @@ public class CasDiff
 
             // For each slot at the given position in the FS-to-be-added, we need find a
             // corresponding configuration
-            ArrayFS links = (ArrayFS) aFS.getFeatureValue(feat);
+
+            var links = FSUtil.getFeature(aFS, feat, ArrayFS.class);
             for (int i = 0; i < links.size(); i++) {
                 FeatureStructure link = links.get(i);
                 DiffAdapter adapter = getAdapter(aFS.getType().getName());
@@ -432,9 +439,9 @@ public class CasDiff
                     cfgLoop: for (Configuration cfg : aSet.configurations) {
                         FeatureStructure repFS = cfg.getRepresentative(cases);
                         AID repAID = cfg.getRepresentativeAID();
-                        FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
-                                repFS.getType().getFeatureByBaseName(decl.getName())))
-                                        .get(repAID.index);
+                        FeatureStructure repLink = FSUtil.getFeature(repFS,
+                                repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)
+                                .get(repAID.index);
                         AnnotationFS repTarget = (AnnotationFS) repLink.getFeatureValue(
                                 repLink.getType().getFeatureByBaseName(decl.getTargetFeature()));
 
@@ -460,9 +467,9 @@ public class CasDiff
                     cfgLoop: for (Configuration cfg : aSet.configurations) {
                         FeatureStructure repFS = cfg.getRepresentative(cases);
                         AID repAID = cfg.getRepresentativeAID();
-                        FeatureStructure repLink = ((ArrayFS) repFS.getFeatureValue(
-                                repFS.getType().getFeatureByBaseName(decl.getName())))
-                                        .get(repAID.index);
+                        FeatureStructure repLink = FSUtil.getFeature(repFS,
+                                repFS.getType().getFeatureByBaseName(decl.getName()), ArrayFS.class)
+                                .get(repAID.index);
                         String linkRole = repLink.getStringValue(
                                 repLink.getType().getFeatureByBaseName(decl.getRoleFeature()));
 
@@ -510,8 +517,8 @@ public class CasDiff
         }
 
         /**
-         * Gets the total number of configurations recorded in this set. If a configuration has been
-         * seen in multiple CASes, it will be counted multiple times.
+         * @return the total number of configurations recorded in this set. If a configuration has
+         *         been seen in multiple CASes, it will be counted multiple times.
          */
         public int getRecordedConfigurationCount()
         {
@@ -860,6 +867,7 @@ public class CasDiff
         /**
          * Visible for testing only!
          */
+        @SuppressWarnings("javadoc")
         public void add(String aCasGroupId, AID aAID)
         {
             AID old = fsAddresses.put(aCasGroupId, aAID);
@@ -1175,6 +1183,7 @@ public class CasDiff
         }
 
         /**
+         * @return the incomplete configuration sets per position
          * @param aCasGroupIDsToIgnore
          *            the exceptions - these CAS group IDs do not count towards completeness.
          */

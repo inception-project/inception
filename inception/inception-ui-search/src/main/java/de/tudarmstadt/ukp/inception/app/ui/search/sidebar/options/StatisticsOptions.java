@@ -29,6 +29,8 @@ import de.tudarmstadt.ukp.inception.search.Metrics;
 public class StatisticsOptions
     implements Serializable
 {
+    private static final long serialVersionUID = 1103399322884303842L;
+
     private Metrics statistic;
     private Granularities granularity;
     private Formats format;

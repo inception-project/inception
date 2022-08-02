@@ -395,7 +395,7 @@ public class ProjectExportServiceImpl
     }
 
     @Override
-    public ProjectExportTaskHandle startTask(ProjectExportTask aTask)
+    public ProjectExportTaskHandle startTask(ProjectExportTask<?> aTask)
     {
         ProjectExportTaskHandle handle = aTask.getHandle();
 
@@ -434,7 +434,7 @@ public class ProjectExportServiceImpl
     }
 
     @Override
-    public List<ProjectExportTask> listRunningExportTasks(Project aProject)
+    public List<ProjectExportTask<?>> listRunningExportTasks(Project aProject)
     {
         return tasks.values().stream() //
                 .filter(taskInfo -> aProject.equals(taskInfo.task.getRequest().getProject())) //
@@ -511,9 +511,9 @@ public class ProjectExportServiceImpl
     private static class TaskInfo
     {
         private final Future<?> future;
-        private final ProjectExportTask task;
+        private final ProjectExportTask<?> task;
 
-        public TaskInfo(Future<?> aFuture, ProjectExportTask aTask)
+        public TaskInfo(Future<?> aFuture, ProjectExportTask<?> aTask)
         {
             future = aFuture;
             task = aTask;

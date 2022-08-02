@@ -23,12 +23,10 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMess
 
 import java.io.IOException;
 
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
 import org.apache.wicket.ajax.attributes.ThrottlingSettings;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
@@ -46,7 +44,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTrait
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.client.HfHubClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelCard;
-import de.tudarmstadt.ukp.inception.recommendation.imls.hf.model.HfModelDetails;
 
 public class HfRecommenderTraitsEditor
     extends AbstractTraitsEditor
@@ -99,13 +96,12 @@ public class HfRecommenderTraitsEditor
         serviceDescription.add(visibleWhen(() -> traits.getObject().getModelId() != null));
         form.add(serviceDescription);
 
-        ExternalLink catalogLink = new ExternalLink("catalogLink",
+        var catalogLink = new ExternalLink("catalogLink",
                 LoadableDetachableModel.of(this::getCatalogLink));
         catalogLink.add(visibleWhen(() -> traits.getObject().getModelId() != null));
         form.add(catalogLink);
 
-        LambdaAjaxLink changeService = new LambdaAjaxLink("changeService",
-                this::actionChangeService);
+        var changeService = new LambdaAjaxLink("changeService", this::actionChangeService);
         changeService.add(visibleWhen(() -> traits.getObject().getModelId() != null));
         form.add(changeService);
 
@@ -126,23 +122,7 @@ public class HfRecommenderTraitsEditor
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                if (searchResult == null) {
-                    return;
-                }
-
-                HfModelDetails details;
-                try {
-                    details = hfHubClient.details(searchResult.getModelId());
-                }
-                catch (IOException e) {
-                    error(ExceptionUtils.getRootCauseMessage(e));
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                    return;
-                }
-
-                HfRecommenderTraits t = traits.getObject();
-                t.setModelId(searchResult.getModelId());
-                aTarget.add(HfRecommenderTraitsEditor.this);
+                actionSearchUpdated(aTarget);
             }
         });
         form.add(searchField);
@@ -171,6 +151,17 @@ public class HfRecommenderTraitsEditor
         catch (IOException e) {
             return "Unable to obtain the service description: " + getRootCauseMessage(e);
         }
+    }
+
+    private void actionSearchUpdated(AjaxRequestTarget aTarget)
+    {
+        if (searchResult == null) {
+            return;
+        }
+
+        HfRecommenderTraits t = traits.getObject();
+        t.setModelId(searchResult.getModelId());
+        aTarget.add(HfRecommenderTraitsEditor.this);
     }
 
     private void actionChangeService(AjaxRequestTarget aTarget)

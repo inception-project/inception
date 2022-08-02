@@ -171,18 +171,24 @@ public class AnnotatorStateImpl
     private AnnotationLayer selectedAnnotationLayer;
 
     // Text field to capture key-bindings for forward annotations
+    @Deprecated
+    @SuppressWarnings("unused")
     private String forwardAnno;
 
     // the default annotation layer
     private AnnotationLayer defaultAnnotationLayer;
 
     // the name of the default annotation layer
+    @SuppressWarnings("unused")
     private String layerName;
 
     // enable automatic forward annotations
+    @Deprecated
     private boolean forwardAnnotation;
 
     // User action while annotating on document
+    @Deprecated
+    @SuppressWarnings("unused")
     private String userAction;
 
     private Long annotationDocumentTimestamp;
@@ -566,12 +572,14 @@ public class AnnotatorStateImpl
         this.defaultAnnotationLayer = defaultAnnotationLayer;
     }
 
+    @Deprecated
     @Override
     public boolean isForwardAnnotation()
     {
         return forwardAnnotation;
     }
 
+    @Deprecated
     @Override
     public void setForwardAnnotation(boolean forwardAnnotation)
     {

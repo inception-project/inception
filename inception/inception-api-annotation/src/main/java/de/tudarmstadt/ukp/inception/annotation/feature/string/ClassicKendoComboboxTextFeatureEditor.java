@@ -59,7 +59,7 @@ public class ClassicKendoComboboxTextFeatureEditor
     }
 
     @Override
-    protected AbstractTextComponent createInputField()
+    protected AbstractTextComponent<String> createInputField()
     {
         return new StyledComboBox<Tag>("value", PropertyModel.of(getModel(), "tagset"))
         {

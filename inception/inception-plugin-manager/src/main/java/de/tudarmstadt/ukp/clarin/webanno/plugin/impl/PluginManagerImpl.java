@@ -72,7 +72,6 @@ public class PluginManagerImpl
 
         // Add child application contexts for every plugin
         for (PluginWrapper plugin : getStartedPlugins()) {
-            Class pluginClass = plugin.getPlugin().getClass();
             LOG.info("Found plugin: {}", plugin.getDescriptor().getPluginId());
 
             // Attach the plugin application context to the main application context such that it

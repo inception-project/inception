@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -74,6 +73,7 @@ import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.adapter.TypeUtil;
+import de.tudarmstadt.ukp.inception.schema.layer.LayerSupport;
 import de.tudarmstadt.ukp.inception.schema.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
@@ -87,7 +87,6 @@ public class DocumentMetadataAnnotationSelectionPanel
             .getLogger(DocumentMetadataAnnotationSelectionPanel.class);
 
     private static final String CID_LABEL = "label";
-    private static final String CID_ANNOTATION_LINK = "annotationLink";
     private static final String CID_TYPE = "type";
     private static final String CID_ANNOTATIONS = "annotations";
     private static final String CID_LAYER = "layer";
@@ -370,14 +369,15 @@ public class DocumentMetadataAnnotationSelectionPanel
         for (AnnotationLayer layer : listMetadataLayers()) {
             List<AnnotationFeature> features = annotationService.listSupportedFeatures(layer);
             TypeAdapter adapter = annotationService.getAdapter(layer);
-            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).createRenderer(layer,
+            LayerSupport<?, ?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
+            Renderer renderer = layerSupport.createRenderer(layer,
                     () -> annotationService.listAnnotationFeature(layer));
             boolean singleton = getLayerSupport(layer).readTraits(layer).isSingleton();
 
-            for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
+            for (FeatureStructure fs : cas.select(adapter.getAnnotationType(cas))) {
                 Map<String, String> renderedFeatures = renderer.renderLabelFeatureValues(adapter,
                         fs, features);
-                String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+                String labelText = TypeUtil.getUiLabelText(renderedFeatures);
                 items.add(
                         new AnnotationListItem(ICasUtil.getAddr(fs), labelText, layer, singleton));
             }
@@ -425,6 +425,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
     }
 
+    @SuppressWarnings("unused")
     private class AnnotationListItem
     {
         final int addr;

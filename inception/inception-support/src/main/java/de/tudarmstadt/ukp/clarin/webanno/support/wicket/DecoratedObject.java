@@ -91,7 +91,7 @@ public class DecoratedObject<T>
         if (getClass() != obj.getClass()) {
             return false;
         }
-        DecoratedObject other = (DecoratedObject) obj;
+        var other = (DecoratedObject<?>) obj;
         if (delegate == null) {
             if (other.delegate != null) {
                 return false;

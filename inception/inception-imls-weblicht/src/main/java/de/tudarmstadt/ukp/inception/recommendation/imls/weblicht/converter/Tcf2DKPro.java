@@ -413,16 +413,15 @@ public class Tcf2DKPro
                     chain.setFirst(referencesMap.get(address));
                     link = chain.getFirst();
                     chain.addToIndexes();
+                    continue;
                 }
-                else {
-                    link.setNext(referencesMap.get(address));
-                    if (link.getReferenceRelation() == null) {
-                        link.setReferenceRelation(
-                                referencesMap.get(address).getReferenceRelation());
-                    }
-                    link = link.getNext();
-                    link.addToIndexes();
+
+                link.setNext(referencesMap.get(address));
+                if (link.getReferenceRelation() == null) {
+                    link.setReferenceRelation(referencesMap.get(address).getReferenceRelation());
                 }
+                link = link.getNext();
+                link.addToIndexes();
             }
         }
     }

@@ -63,13 +63,13 @@ public class ExternalSearchProviderRegistryImpl
 
     /* package private */ void init()
     {
-        List<ExternalSearchProviderFactory> exts = new ArrayList<>();
+        List<ExternalSearchProviderFactory<?>> exts = new ArrayList<>();
 
         if (providersProxy != null) {
             exts.addAll(providersProxy);
             AnnotationAwareOrderComparator.sort(exts);
 
-            for (ExternalSearchProviderFactory fs : exts) {
+            for (ExternalSearchProviderFactory<?> fs : exts) {
                 log.debug("Found external search provider: {}",
                         ClassUtils.getAbbreviatedName(fs.getClass(), 20));
             }
@@ -87,7 +87,7 @@ public class ExternalSearchProviderRegistryImpl
     }
 
     @Override
-    public ExternalSearchProviderFactory getExternalSearchProviderFactory(String aId)
+    public ExternalSearchProviderFactory<?> getExternalSearchProviderFactory(String aId)
     {
         if (aId == null) {
             return null;
@@ -101,7 +101,7 @@ public class ExternalSearchProviderRegistryImpl
     }
 
     @Override
-    public ExternalSearchProviderFactory getDefaultExternalSearchProviderFactory()
+    public ExternalSearchProviderFactory<?> getDefaultExternalSearchProviderFactory()
     {
         return getExternalSearchProviderFactories().get(0);
     }

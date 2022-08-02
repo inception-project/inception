@@ -41,9 +41,13 @@ public interface LayerBehavior
     boolean accepts(LayerSupport<?, ?> aLayerType);
 
     /**
-     * Check if all annotations of this layer conform with the behavior configuration. This is
-     * usually called when a document is marked as finished to prevent invalid annotations ending up
-     * in the finished document.
+     * @param aAdapter
+     *            the type adapter for the layer to validate
+     * @param aCas
+     *            the CAS to validate
+     * @return if all annotations of this layer conform with the behavior configuration. This is
+     *         usually called when a document is marked as finished to prevent invalid annotations
+     *         ending up in the finished document.
      */
     default List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {

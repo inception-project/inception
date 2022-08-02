@@ -78,6 +78,9 @@ public class Trie<V>
 
     /**
      * Create an empty Trie.
+     * 
+     * @param aSanitizer
+     *            a key sanitizer to apply when adding entries to the trie
      */
     public Trie(KeySanitizerFactory aSanitizer)
     {
@@ -477,8 +480,8 @@ public class Trie<V>
                 }
                 else {
                     // Render the children
-                    final Character c = i.next();
-                    final Frame f = new Frame(c, n.children.get(c));
+                    final Character ch = i.next();
+                    final Frame f = new Frame(ch, n.children.get(ch));
                     stack.add(f);
                     f.step();
                 }

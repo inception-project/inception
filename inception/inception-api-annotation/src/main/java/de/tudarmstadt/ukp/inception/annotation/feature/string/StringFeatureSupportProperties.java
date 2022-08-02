@@ -20,19 +20,20 @@ package de.tudarmstadt.ukp.inception.annotation.feature.string;
 public interface StringFeatureSupportProperties
 {
     /**
-     * If the tagset is larger than the threshold, a combo-box is used instead of a radio choice.
+     * @return if the tagset is larger than the threshold, a combo-box is used instead of a radio
+     *         choice.
      */
     int getComboBoxThreshold();
 
     /**
-     * If the tagset is larger than the threshold, an auto-complete field is used instead of a
-     * standard combobox.
+     * @return if the tagset is larger than the threshold, an auto-complete field is used instead of
+     *         a standard combobox.
      */
     int getAutoCompleteThreshold();
 
     /**
-     * When an auto-complete field is used, this determines the maximum number of items shown in the
-     * dropdown menu.
+     * @return the maximum number of items shown in the dropdown menu if an auto-complete field is
+     *         used.
      */
     int getAutoCompleteMaxResults();
 }

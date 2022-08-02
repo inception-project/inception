@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import static java.util.Calendar.HOUR_OF_DAY;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -218,9 +219,9 @@ public class EventRepositoryImplIntegrationTest
         for (int i = 0; i < 6; i++) {
             le = buildLoggedEvent(project, user.getUsername(),
                     EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1, DETAIL_JSON);
-            Date d = new Date();
-            d.setHours(i);
-            le.setCreated(d);
+            Calendar cal = Calendar.getInstance();
+            cal.set(HOUR_OF_DAY, i);
+            le.setCreated(cal.getTime());
             sut.create(le);
         }
 
@@ -237,11 +238,9 @@ public class EventRepositoryImplIntegrationTest
             le = buildLoggedEvent(project, user.getUsername(),
                     EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1, DETAIL_JSON);
 
-            Calendar cal = Calendar.getInstance();
+            var cal = Calendar.getInstance();
             cal.set(Calendar.HOUR_OF_DAY, i);
-            Date date = cal.getTime();
-
-            le.setCreated(date);
+            le.setCreated(cal.getTime());
             sut.create(le);
         }
 
@@ -253,7 +252,7 @@ public class EventRepositoryImplIntegrationTest
         for (int i = 1; i < 5; i++) {
             assertThat(loggedEvents.get(i - 1).getCreated()).as(
                     "Check that the list of logged events is ordered by created time in descending order")
-                    .isAfterOrEqualsTo(loggedEvents.get(i).getCreated());
+                    .isAfterOrEqualTo(loggedEvents.get(i).getCreated());
         }
     }
 
@@ -291,29 +290,27 @@ public class EventRepositoryImplIntegrationTest
     // Helper
     private Project createProject(String aName)
     {
-        Project project = new Project();
-        project.setName(aName);
-        return testEntityManager.persist(project);
+        Project p = new Project();
+        p.setName(aName);
+        return testEntityManager.persist(p);
     }
 
     private LoggedEvent buildLoggedEvent(Project aProject, String aUsername, String aEventType,
             Date aDate, long aDocId, String aDetails)
     {
-        LoggedEvent le = new LoggedEvent();
-        le.setUser(aUsername);
-        le.setProject(aProject.getId());
-        le.setDetails(aDetails);
-        le.setCreated(aDate);
-        le.setEvent(aEventType);
-        le.setDocument(aDocId);
-        return le;
+        var loggedEvent = new LoggedEvent();
+        loggedEvent.setUser(aUsername);
+        loggedEvent.setProject(aProject.getId());
+        loggedEvent.setDetails(aDetails);
+        loggedEvent.setCreated(aDate);
+        loggedEvent.setEvent(aEventType);
+        loggedEvent.setDocument(aDocId);
+        return loggedEvent;
     }
 
     public User createUser(String aUsername)
     {
-        User user = new User();
-        user.setUsername(aUsername);
-        return testEntityManager.persist(user);
+        return testEntityManager.persist(new User(aUsername));
     }
 
     @SpringBootConfiguration

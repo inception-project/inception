@@ -92,7 +92,7 @@ public class FeatureChangeDetails
     private Object sanitize(Object aObject)
     {
         if (aObject instanceof Collection) {
-            Collection<?> values = (Collection) aObject;
+            Collection<?> values = (Collection<?>) aObject;
             return values.stream().map(it -> sanitize(it)).collect(Collectors.toList());
         }
         if (aObject instanceof FeatureStructure) {

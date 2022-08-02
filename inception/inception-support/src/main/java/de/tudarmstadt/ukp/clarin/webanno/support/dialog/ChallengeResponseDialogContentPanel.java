@@ -43,7 +43,7 @@ public class ChallengeResponseDialogContentPanel
     private Form<State> form;
     private Label title;
     private Label challenge;
-    private TextField<String> response;
+    private TextField<String> responseField;
     private LambdaAjaxLink cancel;
 
     private IModel<String> titleModel;
@@ -61,14 +61,14 @@ public class ChallengeResponseDialogContentPanel
         title = new Label("title", titleModel);
         challenge = new Label("challenge");
         challenge.setEscapeModelStrings(false);
-        response = new TextField<>("response");
+        responseField = new TextField<>("response");
         cancel = new LambdaAjaxLink("cancel", this::onCancelInternal);
         cancel.setOutputMarkupId(true);
 
         queue(new Label("feedback"));
         queue(new LambdaAjaxButton<>("confirm", this::onConfirmInternal));
         queue(new LambdaAjaxLink("closeDialog", this::onCancelInternal));
-        queue(title, challenge, response, cancel, form);
+        queue(title, challenge, responseField, cancel, form);
     }
 
     public void onShow(AjaxRequestTarget aTarget)
@@ -189,6 +189,7 @@ public class ChallengeResponseDialogContentPanel
         private static final long serialVersionUID = 4483229579553569947L;
 
         private String response;
+        @SuppressWarnings("unused")
         private String feedback;
     }
 }

@@ -26,8 +26,20 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 public interface DocumentImporter
 {
     /**
-     * @return a boolean value. True if import was successful. False if import was aborted because
-     *         the document already exists.
+     * @param aUser
+     *            the user importing the document
+     * @param aProject
+     *            the project into which the document is to be imported
+     * @param aCollectionId
+     *            the source collection Id
+     * @param aDocumentId
+     *            the source document Id
+     * @param aRepository
+     *            the source repository
+     * @return if import was successful. False if import was aborted because the document already
+     *         exists.
+     * @throws IOException
+     *             if there was an I/O problem
      */
     boolean importDocumentFromDocumentRepository(User aUser, Project aProject, String aCollectionId,
             String aDocumentId, DocumentRepository aRepository)

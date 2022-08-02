@@ -166,6 +166,7 @@ public class ConfirmationDialogContentPanel
     {
         private static final long serialVersionUID = 4483229579553569947L;
 
+        @SuppressWarnings("unused")
         private String feedback;
     }
 }

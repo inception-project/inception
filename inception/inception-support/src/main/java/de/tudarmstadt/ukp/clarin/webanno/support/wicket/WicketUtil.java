@@ -91,7 +91,9 @@ public class WicketUtil
     }
 
     /**
-     * Add call that wraps given script in try-catch block to script text
+     * @param aJsCall
+     *            the script to wrap
+     * @return given script wrapped in a try-catch block
      */
     public static String wrapInTryCatch(CharSequence aJsCall)
     {

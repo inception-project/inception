@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +37,9 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -49,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.schema.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.feature.LinkWithRoleModel;
 
+@ExtendWith(MockitoExtension.class)
 public class LinkFeatureSupportTest
 {
     private @Mock AnnotationSchemaService schemaService;
@@ -65,8 +67,6 @@ public class LinkFeatureSupportTest
     @BeforeEach
     public void setUp() throws Exception
     {
-        initMocks(this);
-
         sut = new LinkFeatureSupport(schemaService);
 
         slotFeature = new AnnotationFeature("links", "webanno.custom.SimpleSpan");

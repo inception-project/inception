@@ -20,18 +20,21 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Safelist;
 
 public class Utilities
 {
+    private static final String MARK = "mark";
+    private static final String EM = "em";
+
     public static String cleanHighlight(String aHighlight)
     {
-        Whitelist wl = new Whitelist();
-        wl.addTags("em");
+        var safeList = new Safelist();
+        safeList.addTags(EM);
         Document dirty = Jsoup.parseBodyFragment(aHighlight, "");
-        Cleaner cleaner = new Cleaner(wl);
+        Cleaner cleaner = new Cleaner(safeList);
         Document clean = cleaner.clean(dirty);
-        clean.select("em").tagName("mark");
+        clean.select(EM).tagName(MARK);
 
         return clean.body().html();
     }

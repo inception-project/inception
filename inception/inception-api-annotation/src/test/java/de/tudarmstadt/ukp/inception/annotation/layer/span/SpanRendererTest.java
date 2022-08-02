@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.annotation.layer.span;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static de.tudarmstadt.ukp.clarin.webanno.support.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -97,7 +99,7 @@ public class SpanRendererTest
         sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
 
         assertThat(vdoc.comments()) //
-                .usingFieldByFieldElementComparator() //
+                .usingRecursiveFieldByFieldElementComparator() //
                 .containsExactlyInAnyOrder(new VComment(ne, VCommentType.ERROR,
                         "Crossing sentence boundaries is not permitted."));
     }
@@ -125,37 +127,37 @@ public class SpanRendererTest
             vdoc.setWindowEnd(20);
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments()) //
-                    .usingFieldByFieldElementComparator() //
+                    .usingRecursiveFieldByFieldElementComparator() //
                     .containsExactlyInAnyOrder( //
                             new VComment(ne1, VCommentType.ERROR, "Stacking is not permitted."),
                             new VComment(ne2, VCommentType.ERROR, "Stacking is not permitted."));
         }
 
         {
-            neLayer.setOverlapMode(OverlapMode.OVERLAP_ONLY);
+            neLayer.setOverlapMode(OVERLAP_ONLY);
             VDocument vdoc = new VDocument();
             vdoc.setWindowEnd(20);
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
-            assertThat(vdoc.comments()).usingFieldByFieldElementComparator()
+            assertThat(vdoc.comments()).usingRecursiveFieldByFieldElementComparator()
                     .containsExactlyInAnyOrder(
                             new VComment(ne1, VCommentType.ERROR, "Stacking is not permitted."),
                             new VComment(ne2, VCommentType.ERROR, "Stacking is not permitted."));
         }
 
         {
-            neLayer.setOverlapMode(OverlapMode.STACKING_ONLY);
+            neLayer.setOverlapMode(STACKING_ONLY);
             VDocument vdoc = new VDocument();
             vdoc.setWindowEnd(20);
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
-            assertThat(vdoc.comments()).usingFieldByFieldElementComparator().isEmpty();
+            assertThat(vdoc.comments()).isEmpty();
         }
 
         {
-            neLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+            neLayer.setOverlapMode(ANY_OVERLAP);
             VDocument vdoc = new VDocument();
             vdoc.setWindowEnd(20);
             sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
-            assertThat(vdoc.comments()).usingFieldByFieldElementComparator().isEmpty();
+            assertThat(vdoc.comments()).isEmpty();
         }
     }
 }
