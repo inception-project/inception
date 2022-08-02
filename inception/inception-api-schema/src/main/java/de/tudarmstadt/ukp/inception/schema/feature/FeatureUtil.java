@@ -143,11 +143,12 @@ public class FeatureUtil
 
     }
 
+    @SuppressWarnings("unchecked")
     public static void setLinkFeatureValue(FeatureStructure aFS, Feature aFeature,
             List<FeatureStructure> linkFSes)
     {
         // Create a new array if size differs otherwise re-use existing one
-        ArrayFS array = (ArrayFS) ICasUtil.getFeatureFS(aFS, aFeature.getShortName());
+        var array = (ArrayFS<FeatureStructure>) ICasUtil.getFeatureFS(aFS, aFeature.getShortName());
         if (array == null || (array.size() != linkFSes.size())) {
             array = aFS.getCAS().createArrayFS(linkFSes.size());
         }
